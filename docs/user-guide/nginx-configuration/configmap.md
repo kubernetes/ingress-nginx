@@ -30,7 +30,9 @@ The following table shows a configuration option's name, type, and the default v
 |[add-headers](#add-headers)|string|""|
 |[allow-backend-server-header](#allow-backend-server-header)|bool|"false"|
 |[hide-headers](#hide-headers)|string array|empty|
+|[access-log-params](#access-log-params)|string|""|
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
+|[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"|
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
 |[enable-dynamic-tls-records](#enable-dynamic-tls-records)|bool|"true"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
@@ -131,6 +133,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-connect-timeout](#proxy-connect-timeout)|int|5|
 |[proxy-read-timeout](#proxy-read-timeout)|int|60|
 |[proxy-send-timeout](#proxy-send-timeout)|int|60|
+|[proxy-buffers-number](#proxy-buffers-number)|int|4|
 |[proxy-buffer-size](#proxy-buffer-size)|string|"4k"|
 |[proxy-cookie-path](#proxy-cookie-path)|string|"off"|
 |[proxy-cookie-domain](#proxy-cookie-domain)|string|"off"|
@@ -169,11 +172,22 @@ _**default:**_ empty
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header)
 
+## access-log-params
+
+Additional params for access_log. For example, buffer=16k, gzip, flush=1m
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log](http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log)
+
 ## access-log-path
 
 Access log path. Goes to `/var/log/nginx/access.log` by default.
 
 __Note:__ the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
+
+## enable-access-log-for-default-backend
+
+Enables logging access to default backend. _**default:**_ is disabled. 
 
 ## error-log-path
 
@@ -571,11 +585,12 @@ Sets the algorithm to use for load balancing.
 The value can either be:
 
 - round_robin: to use the default round robin loadbalancer
-- least_conn: to use the least connected method (_note_ that this is available only in non-dynamic mode: `--enable-dynamic-configuration=false`)
-- ip_hash: to use a hash of the server for routing (_note_ that this is available only in non-dynamic mode: `--enable-dynamic-configuration=false`, but alternatively you can consider using `nginx.ingress.kubernetes.io/upstream-hash-by`)
 - ewma: to use the Peak EWMA method for routing ([implementation](https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/balancer/ewma.lua))
 
 The default is `round_robin`.
+
+- To load balance using consistent hashing of IP or other variables, consider the `nginx.ingress.kubernetes.io/upstream-hash-by` annotation.
+- To load balance using session cookies, consider the `nginx.ingress.kubernetes.io/affinity` annotation.
 
 _References:_
 [http://nginx.org/en/docs/http/load_balancing.html](http://nginx.org/en/docs/http/load_balancing.html)
@@ -753,6 +768,10 @@ Sets the timeout in seconds for [reading a response from the proxied server](htt
 ## proxy-send-timeout
 
 Sets the timeout in seconds for [transmitting a request to the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
+
+## proxy-buffers-number
+
+Sets the number of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers) received from the proxied server. This part usually contains a small response header.
 
 ## proxy-buffer-size
 

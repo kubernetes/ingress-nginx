@@ -28,6 +28,7 @@ import (
 	"os/exec"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	text_template "text/template"
 	"time"
@@ -131,6 +132,8 @@ var (
 		"buildRateLimitZones":        buildRateLimitZones,
 		"buildRateLimit":             buildRateLimit,
 		"buildResolversForLua":       buildResolversForLua,
+		"configForLua":               configForLua,
+		"locationConfigForLua":       locationConfigForLua,
 		"buildResolvers":             buildResolvers,
 		"buildUpstreamName":          buildUpstreamName,
 		"isLocationInLocationList":   isLocationInLocationList,
@@ -150,17 +153,17 @@ var (
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
-		"isValidByteSize":              isValidByteSize,
-		"buildForwardedFor":            buildForwardedFor,
-		"buildAuthSignURL":             buildAuthSignURL,
-		"buildOpentracing":             buildOpentracing,
-		"proxySetHeader":               proxySetHeader,
-		"buildInfluxDB":                buildInfluxDB,
-		"enforceRegexModifier":         enforceRegexModifier,
-		"stripLocationModifer":         stripLocationModifer,
-		"buildCustomErrorDeps":         buildCustomErrorDeps,
-		"collectCustomErrorsPerServer": collectCustomErrorsPerServer,
-		"opentracingPropagateContext":  opentracingPropagateContext,
+		"isValidByteSize":                    isValidByteSize,
+		"buildForwardedFor":                  buildForwardedFor,
+		"buildAuthSignURL":                   buildAuthSignURL,
+		"buildOpentracing":                   buildOpentracing,
+		"proxySetHeader":                     proxySetHeader,
+		"buildInfluxDB":                      buildInfluxDB,
+		"enforceRegexModifier":               enforceRegexModifier,
+		"stripLocationModifer":               stripLocationModifer,
+		"buildCustomErrorDeps":               buildCustomErrorDeps,
+		"opentracingPropagateContext":        opentracingPropagateContext,
+		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 	}
 )
 
@@ -210,8 +213,6 @@ func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 	out := []string{
 		"lua_shared_dict configuration_data 5M",
 		"lua_shared_dict certificate_data 16M",
-		"lua_shared_dict locks 512k",
-		"lua_shared_dict sticky_sessions 1M",
 	}
 
 	if !disableLuaRestyWAF {
@@ -230,9 +231,6 @@ func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 		}
 	}
 
-	if len(out) == 0 {
-		return ""
-	}
 	return strings.Join(out, ";\n\r") + ";"
 }
 
@@ -254,13 +252,62 @@ func buildResolversForLua(res interface{}, disableIpv6 interface{}) string {
 
 	r := []string{}
 	for _, ns := range nss {
-		if ing_net.IsIPV6(ns) && no6 {
-			continue
+		if ing_net.IsIPV6(ns) {
+			if no6 {
+				continue
+			}
+			r = append(r, fmt.Sprintf("\"[%v]\"", ns))
+		} else {
+			r = append(r, fmt.Sprintf("\"%v\"", ns))
 		}
-		r = append(r, fmt.Sprintf("\"%v\"", ns))
 	}
 
 	return strings.Join(r, ", ")
+}
+
+// configForLua returns some general configuration as Lua table represented as string
+func configForLua(input interface{}) string {
+	all, ok := input.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was given", input)
+		return "{}"
+	}
+
+	return fmt.Sprintf(`{
+		use_forwarded_headers = %t,
+		is_ssl_passthrough_enabled = %t,
+		http_redirect_code = %v,
+		listen_ports = { ssl_proxy = "%v", https = "%v" },
+	}`, all.Cfg.UseForwardedHeaders, all.IsSSLPassthroughEnabled, all.Cfg.HTTPRedirectCode, all.ListenPorts.SSLProxy, all.ListenPorts.HTTPS)
+}
+
+// locationConfigForLua formats some location specific configuration into Lua table represented as string
+func locationConfigForLua(l interface{}, s interface{}, a interface{}) string {
+	location, ok := l.(*ingress.Location)
+	if !ok {
+		klog.Errorf("expected an '*ingress.Location' type but %T was given", l)
+		return "{}"
+	}
+
+	server, ok := s.(*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '*ingress.Server' type but %T was given", s)
+		return "{}"
+	}
+
+	all, ok := a.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was given", a)
+		return "{}"
+	}
+
+	forceSSLRedirect := location.Rewrite.ForceSSLRedirect || (len(server.SSLCert.PemFileName) > 0 && location.Rewrite.SSLRedirect)
+	forceSSLRedirect = forceSSLRedirect && !isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations)
+
+	return fmt.Sprintf(`{
+		force_ssl_redirect = %t,
+		use_port_in_redirects = %t,
+	}`, forceSSLRedirect, location.UsePortInRedirects)
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
@@ -456,8 +503,8 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	if len(location.Rewrite.Target) > 0 {
 		var xForwardedPrefix string
 
-		if location.XForwardedPrefix {
-			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", path)
+		if len(location.XForwardedPrefix) > 0 {
+			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", location.XForwardedPrefix)
 		}
 
 		return fmt.Sprintf(`
@@ -735,10 +782,16 @@ func (info *ingressInformation) Equal(other *ingressInformation) bool {
 	return true
 }
 
-func getIngressInformation(i, p interface{}) *ingressInformation {
+func getIngressInformation(i, h, p interface{}) *ingressInformation {
 	ing, ok := i.(*ingress.Ingress)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
+		return &ingressInformation{}
+	}
+
+	hostname, ok := h.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", h)
 		return &ingressInformation{}
 	}
 
@@ -764,6 +817,10 @@ func getIngressInformation(i, p interface{}) *ingressInformation {
 
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
+			continue
+		}
+
+		if hostname != "" && hostname != rule.Host {
 			continue
 		}
 
@@ -840,7 +897,9 @@ func buildOpentracing(input interface{}) string {
 	if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so 	 /etc/nginx/opentracing.json;")
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
+	} else if cfg.DatadogCollectorHost != "" {
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;")
 	}
 
 	buf.WriteString("\r\n")
@@ -887,41 +946,72 @@ func proxySetHeader(loc interface{}) string {
 
 // buildCustomErrorDeps is a utility function returning a struct wrapper with
 // the data required to build the 'CUSTOM_ERRORS' template
-func buildCustomErrorDeps(proxySetHeaders map[string]string, errorCodes []int, enableMetrics bool) interface{} {
+func buildCustomErrorDeps(upstreamName string, errorCodes []int, enableMetrics bool) interface{} {
 	return struct {
-		ProxySetHeaders map[string]string
-		ErrorCodes      []int
-		EnableMetrics   bool
+		UpstreamName  string
+		ErrorCodes    []int
+		EnableMetrics bool
 	}{
-		ProxySetHeaders: proxySetHeaders,
-		ErrorCodes:      errorCodes,
-		EnableMetrics:   enableMetrics,
+		UpstreamName:  upstreamName,
+		ErrorCodes:    errorCodes,
+		EnableMetrics: enableMetrics,
 	}
 }
 
-// collectCustomErrorsPerServer is a utility function which will collect all
+type errorLocation struct {
+	UpstreamName string
+	Codes        []int
+}
+
+// buildCustomErrorLocationsPerServer is a utility function which will collect all
 // custom error codes for all locations of a server block, deduplicates them,
-// and returns a unique set (for the template to create @custom_xxx locations)
-func collectCustomErrorsPerServer(input interface{}) []int {
+// and returns a set which is unique by default-upstream and error code. It returns an array
+// of errorLocations, each of which contain the upstream name and a list of
+// error codes for that given upstream, so that sufficiently unique
+// @custom error location blocks can be created in the template
+func buildCustomErrorLocationsPerServer(input interface{}) interface{} {
 	server, ok := input.(*ingress.Server)
 	if !ok {
 		klog.Errorf("expected a '*ingress.Server' type but %T was returned", input)
 		return nil
 	}
 
-	codesMap := make(map[int]bool)
+	codesMap := make(map[string]map[int]bool)
 	for _, loc := range server.Locations {
-		for _, code := range loc.CustomHTTPErrors {
-			codesMap[code] = true
+		backendUpstream := loc.DefaultBackendUpstreamName
+
+		var dedupedCodes map[int]bool
+		if existingMap, ok := codesMap[backendUpstream]; ok {
+			dedupedCodes = existingMap
+		} else {
+			dedupedCodes = make(map[int]bool)
 		}
+
+		for _, code := range loc.CustomHTTPErrors {
+			dedupedCodes[code] = true
+		}
+		codesMap[backendUpstream] = dedupedCodes
 	}
 
-	uniqueCodes := make([]int, 0, len(codesMap))
-	for key := range codesMap {
-		uniqueCodes = append(uniqueCodes, key)
+	errorLocations := []errorLocation{}
+
+	for upstream, dedupedCodes := range codesMap {
+		codesForUpstream := []int{}
+		for code := range dedupedCodes {
+			codesForUpstream = append(codesForUpstream, code)
+		}
+		sort.Ints(codesForUpstream)
+		errorLocations = append(errorLocations, errorLocation{
+			UpstreamName: upstream,
+			Codes:        codesForUpstream,
+		})
 	}
 
-	return uniqueCodes
+	sort.Slice(errorLocations, func(i, j int) bool {
+		return errorLocations[i].UpstreamName < errorLocations[j].UpstreamName
+	})
+
+	return errorLocations
 }
 
 func opentracingPropagateContext(loc interface{}) string {

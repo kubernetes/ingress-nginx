@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.75
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.83
 
 RUN clean-install \
   g++ \
@@ -25,9 +25,9 @@ RUN clean-install \
   python \
   pkg-config
 
-ENV GOLANG_VERSION 1.11.4
+ENV GOLANG_VERSION 1.12.1
 ENV GO_ARCH        linux-amd64
-ENV GOLANG_SHA     fb26c30e6a04ad937bbc657a1b5bba92f80096af1e8ee6da6430c045a8db3a5b
+ENV GOLANG_SHA     2a3fdabf665496a0db5f41ec6af7a9b15a49fbe71a85a50ca38b1f13a103aeec
 
 RUN set -eux; \
   url="https://golang.org/dl/go${GOLANG_VERSION}.${GO_ARCH}.tar.gz"; \
@@ -45,8 +45,9 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 WORKDIR $GOPATH
 
-ENV RESTY_CLI_VERSION 0.22rc2
-ENV RESTY_CLI_SHA     1ec64d204469a04da553c95eaafb2e5601a03acb8f26cc10ae16b15525228c12
+ENV RESTY_CLI_VERSION 0.23
+ENV RESTY_CLI_SHA     8715b9a6e33140fd468779cd561c0c622f7444a902dc578b1137941ff3fc1ed8
+
 RUN set -eux; \
   url="https://github.com/openresty/resty-cli/archive/v${RESTY_CLI_VERSION}.tar.gz"; \
   wget -O resty_cli.tgz "$url"; \
@@ -57,10 +58,10 @@ RUN set -eux; \
   resty -V
 
 RUN  luarocks install luacheck \
-  && luarocks install busted 2.0.rc12
+  && luarocks install busted
 
 RUN  go get github.com/onsi/ginkgo/ginkgo \
   && go get golang.org/x/lint/golint
 
-RUN  curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.12.4/bin/linux/amd64/kubectl \
+RUN  curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl \
   && chmod +x /usr/local/bin/kubectl

@@ -36,6 +36,9 @@ type Collector interface {
 	IncReloadCount()
 	IncReloadErrorCount()
 
+	OnStartedLeading(string)
+	OnStoppedLeading(string)
+
 	RemoveMetrics(ingresses, endpoints []string)
 
 	SetSSLExpireTime([]*ingress.Server)
@@ -59,7 +62,7 @@ type collector struct {
 }
 
 // NewCollector creates a new metric collector the for ingress controller
-func NewCollector(statusPort int, metricsPerHost bool, registry *prometheus.Registry) (Collector, error) {
+func NewCollector(metricsPerHost bool, registry *prometheus.Registry) (Collector, error) {
 	podNamespace := os.Getenv("POD_NAMESPACE")
 	if podNamespace == "" {
 		podNamespace = "default"
@@ -67,7 +70,7 @@ func NewCollector(statusPort int, metricsPerHost bool, registry *prometheus.Regi
 
 	podName := os.Getenv("POD_NAME")
 
-	nc, err := collectors.NewNGINXStatus(podName, podNamespace, class.IngressClass, statusPort)
+	nc, err := collectors.NewNGINXStatus(podName, podNamespace, class.IngressClass)
 	if err != nil {
 		return nil, err
 	}
@@ -146,4 +149,15 @@ func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 
 func (c *collector) SetHosts(hosts sets.String) {
 	c.socket.SetHosts(hosts)
+}
+
+// OnStartedLeading indicates the pod was elected as the leader
+func (c *collector) OnStartedLeading(electionID string) {
+	c.ingressController.OnStartedLeading(electionID)
+}
+
+// OnStoppedLeading indicates the pod stopped being the leader
+func (c *collector) OnStoppedLeading(electionID string) {
+	c.ingressController.OnStoppedLeading(electionID)
+	c.ingressController.RemoveAllSSLExpireMetrics(c.registry)
 }

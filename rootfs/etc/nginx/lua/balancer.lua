@@ -1,5 +1,5 @@
 local ngx_balancer = require("ngx.balancer")
-local json = require("cjson")
+local cjson = require("cjson.safe")
 local util = require("util")
 local dns_util = require("util.dns")
 local configuration = require("configuration")
@@ -75,7 +75,8 @@ end
 
 local function sync_backend(backend)
   if not backend.endpoints or #backend.endpoints == 0 then
-    ngx.log(ngx.INFO, string.format("there is no endpoint for backend %s. Skipping...", backend.name))
+    ngx.log(ngx.INFO, string.format("there is no endpoint for backend %s. Removing...", backend.name))
+    balancers[backend.name] = nil
     return
   end
 
@@ -114,9 +115,9 @@ local function sync_backends()
     return
   end
 
-  local ok, new_backends = pcall(json.decode, backends_data)
-  if not ok then
-    ngx.log(ngx.ERR,  "could not parse backends data: " .. tostring(new_backends))
+  local new_backends, err = cjson.decode(backends_data)
+  if not new_backends then
+    ngx.log(ngx.ERR, "could not parse backends data: ", err)
     return
   end
 
@@ -160,7 +161,11 @@ local function route_to_alternative_balancer(balancer)
   local target_header = util.replace_special_char(traffic_shaping_policy.header, "-", "_")
   local header = ngx.var["http_" .. target_header]
   if header then
-    if header == "always" then
+    if traffic_shaping_policy.headerValue and #traffic_shaping_policy.headerValue > 0 then
+      if traffic_shaping_policy.headerValue == header then
+        return true
+      end
+    elseif header == "always" then
       return true
     elseif header == "never" then
       return false

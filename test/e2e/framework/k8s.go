@@ -23,6 +23,7 @@ import (
 
 	. "github.com/onsi/gomega"
 
+	appsv1 "k8s.io/api/apps/v1"
 	api "k8s.io/api/core/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -108,11 +109,11 @@ func (f *Framework) EnsureService(service *core.Service) *core.Service {
 }
 
 // EnsureDeployment creates a Deployment object or returns it if it already exists.
-func (f *Framework) EnsureDeployment(deployment *extensions.Deployment) (*extensions.Deployment, error) {
-	d, err := f.KubeClientSet.Extensions().Deployments(deployment.Namespace).Update(deployment)
+func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	d, err := f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Update(deployment)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
-			return f.KubeClientSet.Extensions().Deployments(deployment.Namespace).Create(deployment)
+			return f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Create(deployment)
 		}
 		return nil, err
 	}
@@ -124,7 +125,7 @@ func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(opts)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 
 		r := 0
@@ -144,14 +145,17 @@ func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 
 // WaitForEndpoints waits for a given amount of time until an endpoint contains.
 func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration, name, ns string, expectedEndpoints int) error {
+	if expectedEndpoints == 0 {
+		return nil
+	}
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(name, metav1.GetOptions{})
 		if k8sErrors.IsNotFound(err) {
-			return false, err
+			return false, nil
 		}
 		Expect(err).NotTo(HaveOccurred())
 		if len(endpoint.Subsets) == 0 || len(endpoint.Subsets[0].Addresses) == 0 {
-			return false, err
+			return false, nil
 		}
 
 		r := 0
@@ -188,7 +192,7 @@ func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Po
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	if len(l.Items) == 0 {

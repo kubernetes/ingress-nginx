@@ -10,7 +10,7 @@
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
 # setup custom paths that do not require root access
-pid /tmp/nginx.pid;
+pid {{ .PID }};
 
 {{ if $cfg.UseGeoIP2 }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
@@ -73,6 +73,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           lua_ingress = res
+          lua_ingress.set_config({{ configForLua $all }})
         end
 
         ok, res = pcall(require, "configuration")
@@ -108,6 +109,15 @@ http {
         end
         {{ end }}
 
+        ok, res = pcall(require, "plugins")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          plugins = res
+        end
+        -- load all plugins that'll be used here
+        plugins.init({})
+
         ok, res = pcall(require, "statsd_monitor")
         if not ok then
           error("require(statsd_monitor) failed: " .. tostring(res))
@@ -123,6 +133,8 @@ http {
         {{ if $all.EnableMetrics }}
         monitor.init_worker()
         {{ end }}
+
+        plugins.run()
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -274,7 +286,7 @@ http {
     {{ if $cfg.EnableSyslog }}
     access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
     {{ else }}
-    access_log {{ $cfg.AccessLogPath }} upstreaminfo if=$loggable;
+    access_log {{ $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
     {{ end }}
     {{ end }}
 
@@ -307,64 +319,6 @@ http {
         default          $remote_addr;
     {{ end }}
     }
-
-    {{ if $cfg.UseForwardedHeaders }}
-    # trust http_x_forwarded_proto headers correctly indicate ssl offloading
-    map $http_x_forwarded_proto $pass_access_scheme {
-        default          $http_x_forwarded_proto;
-        ''               $scheme;
-    }
-
-    map $http_x_forwarded_port $pass_server_port {
-        default           $http_x_forwarded_port;
-        ''                $server_port;
-    }
-
-    # Obtain best http host
-    map $http_host $this_host {
-        default          $http_host;
-        ''               $host;
-    }
-
-    map $http_x_forwarded_host $best_http_host {
-        default          $http_x_forwarded_host;
-        ''               $this_host;
-    }
-    {{ else }}
-    map '' $pass_access_scheme {
-        default          $scheme;
-    }
-
-    map '' $pass_server_port {
-        default          $server_port;
-    }
-
-    # Obtain best http host
-    map $http_host $best_http_host {
-        default          $http_host;
-        ''               $host;
-    }
-    {{ end }}
-
-    # validate $pass_access_scheme and $scheme are http to force a redirect
-    map "$scheme:$pass_access_scheme" $redirect_to_https {
-        default          0;
-        "http:http"      1;
-        "https:http"     1;
-    }
-
-    {{ if $all.IsSSLPassthroughEnabled }}
-    # map port {{ $all.ListenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.SSLProxy }}              443;
-        default          $pass_server_port;
-    }
-    {{ else }}
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.HTTPS }}              443;
-        default          $pass_server_port;
-    }
-    {{ end }}
 
     # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
     # If no such header is provided, it can provide a random value.
@@ -433,13 +387,12 @@ http {
 
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
 
-    {{ if .CustomErrors }}
-    # Custom error pages
+    {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
     proxy_intercept_errors on;
     {{ end }}
 
     {{ range $errCode := $cfg.CustomHTTPErrors }}
-    error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
+    error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
     proxy_ssl_session_reuse on;
 
@@ -619,7 +572,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -629,7 +582,9 @@ http {
     server {
         listen {{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
         {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
-        set $proxy_upstream_name "-";
+        set $proxy_upstream_name "internal";
+
+        access_log off;
 
         location / {
           return 404;
@@ -638,35 +593,23 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
-        set $proxy_upstream_name "-";
+        listen unix:{{ .StatusSocket }};
+        set $proxy_upstream_name "internal";
 
-        {{ if gt (len $cfg.BlockUserAgents) 0 }}
-        if ($block_ua) {
-           return 403;
-        }
-        {{ end }}
-        {{ if gt (len $cfg.BlockReferers) 0 }}
-        if ($block_ref) {
-           return 403;
-        }
+        keepalive_timeout 0;
+        gzip off;
+
+        access_log off;
+
+        {{ if $cfg.EnableOpentracing }}
+        opentracing off;
         {{ end }}
 
         location {{ $healthzURI }} {
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-            access_log off;
             return 200;
         }
 
         location /is-dynamic-lb-initialized {
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-            access_log off;
-
             content_by_lua_block {
                 local configuration = require("configuration")
                 local backend_data = configuration.get_backends_data()
@@ -680,28 +623,11 @@ http {
             }
         }
 
-        location /nginx_status {
-            set $proxy_upstream_name "internal";
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-
-            access_log off;
+        location {{ .StatusPath }} {
             stub_status on;
         }
 
         location /configuration {
-            access_log off;
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-
-            allow 127.0.0.1;
-            {{ if $IsIPV6Enabled }}
-            allow ::1;
-            {{ end }}
-            deny all;
-
             # this should be equals to configuration_data dict
             client_max_body_size                    10m;
             client_body_buffer_size                 10m;
@@ -713,16 +639,10 @@ http {
         }
 
         location / {
-            {{ if .CustomErrors }}
-            proxy_set_header    X-Code 404;
-            {{ end }}
-            set $proxy_upstream_name "upstream-default-backend";
-            proxy_set_header    Host   $best_http_host;
-
-            proxy_pass          http://upstream_balancer;
+            content_by_lua_block {
+                ngx.exit(ngx.HTTP_NOT_FOUND)
+            }
         }
-
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
 }
 
@@ -739,12 +659,19 @@ stream {
         -- init modules
         local ok, res
 
+        ok, res = pcall(require, "configuration")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          configuration = res
+          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
+        end
+
         ok, res = pcall(require, "tcp_udp_configuration")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           tcp_udp_configuration = res
-          tcp_udp_configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "tcp_udp_balancer")
@@ -766,7 +693,7 @@ stream {
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
-    access_log {{ $cfg.AccessLogPath }} log_stream;
+    access_log {{ $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
     {{ end }}
 
     error_log  {{ $cfg.ErrorLogPath }};
@@ -780,7 +707,7 @@ stream {
     }
 
     server {
-        listen unix:/tmp/ingress-stream.sock;
+        listen unix:{{ .StreamSocket }};
 
         content_by_lua_block {
           tcp_udp_configuration.call()
@@ -842,10 +769,10 @@ stream {
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
-        {{ $proxySetHeaders := .ProxySetHeaders }}
         {{ $enableMetrics := .EnableMetrics }}
+        {{ $upstreamName := .UpstreamName }}
         {{ range $errCode := .ErrorCodes }}
-        location @custom_{{ $errCode }} {
+        location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
 
             proxy_intercept_errors off;
@@ -857,9 +784,10 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            proxy_set_header       X-Request-ID       $req_id;
             proxy_set_header       Host               $best_http_host;
 
-            set $proxy_upstream_name "upstream-default-backend";
+            set $proxy_upstream_name {{ $upstreamName }};
 
             rewrite                (.*) / break;
 
@@ -912,6 +840,10 @@ stream {
         {{ end }}
         {{ end }}
         set $proxy_upstream_name "-";
+        set $pass_access_scheme $scheme;
+        set $pass_server_port $server_port;
+        set $best_http_host $http_host;
+        set $pass_port $pass_server_port;
 
         {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
         {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
@@ -968,7 +900,10 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders (collectCustomErrorsPerServer $server) $all.EnableMetrics) }}
+        {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
+        {{ end }}
+
 
         {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
@@ -1020,7 +955,7 @@ stream {
 
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
-            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_http_version          1.1;
@@ -1053,7 +988,7 @@ stream {
         {{ end }}
 
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
+            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
             set $namespace      "{{ $ing.Namespace }}";
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
@@ -1065,12 +1000,13 @@ stream {
             {{ end }}
 
             rewrite_by_lua_block {
+                lua_ingress.rewrite({{ locationConfigForLua $location $server $all }})
                 balancer.rewrite()
+                plugins.run()
             }
 
-            {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
-
             access_by_lua_block {
+                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 
@@ -1111,8 +1047,10 @@ stream {
                 {{ end }}
 
                 waf:exec()
+                {{ end }}
+
+                plugins.run()
             }
-            {{ end }}
 
             header_filter_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
@@ -1120,6 +1058,8 @@ stream {
                 local waf = lua_resty_waf:new()
                 waf:exec()
                 {{ end }}
+
+                plugins.run()
             }
             body_filter_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
@@ -1139,6 +1079,8 @@ stream {
                 {{ if $all.EnableMetrics }}
                 monitor.call()
                 {{ end }}
+
+                plugins.run()
                 statsd_monitor.call()
             }
 
@@ -1165,24 +1107,6 @@ stream {
 
             set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
             set $proxy_host             $proxy_upstream_name;
-
-            {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
-            {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCert.PemFileName)) $location.Rewrite.SSLRedirect)) }}
-            {{ if not (isLocationInLocationList $location $all.Cfg.NoTLSRedirectLocations) }}
-            # enforce ssl on server side
-            if ($redirect_to_https) {
-                {{ if $location.UsePortInRedirects }}
-                # using custom ports require a different rewrite directive
-                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$host{{ $redirect_port }}$request_uri;
-
-                return 497;
-                {{ else }}
-                return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host$request_uri;
-                {{ end }}
-            }
-            {{ end }}
-            {{ end }}
 
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
             modsecurity on;
@@ -1319,7 +1243,7 @@ stream {
 
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
-            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_http_version                      1.1;
@@ -1347,6 +1271,11 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            proxy_set_header       X-Request-ID       $req_id;
+            {{ end }}
+
+            {{ if $location.Satisfy }}
+            satisfy {{ $location.Satisfy }};
             {{ end }}
 
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}
@@ -1356,8 +1285,7 @@ stream {
             {{ end }}
 
             {{ range $errCode := $location.CustomHTTPErrors }}
-            error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
-
+            error_page {{ $errCode }} = @custom_{{ $location.DefaultBackendUpstreamName }}_{{ $errCode }};{{ end }}
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}

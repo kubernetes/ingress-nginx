@@ -118,6 +118,8 @@ type TrafficShapingPolicy struct {
 	Weight int `json:"weight"`
 	// Header on which to redirect requests to this backend
 	Header string `json:"header"`
+	// HeaderValue on which to redirect requests to this backend
+	HeaderValue string `json:"headerValue"`
 	// Cookie on which to redirect requests to this backend
 	Cookie string `json:"cookie"`
 }
@@ -143,7 +145,6 @@ type SessionAffinityConfig struct {
 // +k8s:deepcopy-gen=true
 type CookieSessionAffinity struct {
 	Name      string              `json:"name"`
-	Hash      string              `json:"hash"`
 	Expires   string              `json:"expires,omitempty"`
 	MaxAge    string              `json:"maxage,omitempty"`
 	Locations map[string][]string `json:"locations,omitempty"`
@@ -237,7 +238,7 @@ type Location struct {
 	BasicDigestAuth auth.Config `json:"basicDigestAuth,omitempty"`
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
-	Denied error `json:"denied,omitempty"`
+	Denied *string `json:"denied,omitempty"`
 	// CorsConfig returns the Cors Configuration for the ingress rule
 	// +optional
 	CorsConfig cors.Config `json:"corsConfig,omitempty"`
@@ -285,10 +286,13 @@ type Location struct {
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
 	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty"`
+	// DefaultBackendUpstreamName is the upstream-formatted string for the name of
+	// this location's custom default backend
+	DefaultBackendUpstreamName string `json:"defaultBackendUpstreamName,omitempty"`
 	// XForwardedPrefix allows to add a header X-Forwarded-Prefix to the request with the
 	// original location.
 	// +optional
-	XForwardedPrefix bool `json:"xForwardedPrefix,omitempty"`
+	XForwardedPrefix string `json:"xForwardedPrefix,omitempty"`
 	// Logs allows to enable or disable the nginx logs
 	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`
@@ -306,6 +310,8 @@ type Location struct {
 	// ModSecurity allows to enable and configure modsecurity
 	// +optional
 	ModSecurity modsecurity.Config `json:"modsecurity"`
+	// Satisfy dictates allow access if any or all is set
+	Satisfy string `json:"satisfy"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

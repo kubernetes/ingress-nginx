@@ -40,7 +40,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 	It("should set valid auth-tls-secret", func() {
 		host := "authtls.foo.com"
-		nameSpace := f.IngressController.Namespace
+		nameSpace := f.Namespace
 
 		clientConfig, err := framework.CreateIngressMASecret(
 			f.KubeClientSet,
@@ -55,28 +55,13 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
-		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
-		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslKeyDirective := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-
-		sslVerify := "ssl_verify_client on;"
-		sslVerifyDepth := "ssl_verify_depth 1;"
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, sslCertDirective) &&
-					strings.Contains(server, sslKeyDirective) &&
-					strings.Contains(server, sslClientCertDirective) &&
-					strings.Contains(server, sslVerify) &&
-					strings.Contains(server, sslVerifyDepth)
-			})
+		assertSslClientCertificateConfig(f, host, "on", "1")
 
 		// Send Request without Client Certs
 		req := gorequest.New()
 		uri := "/"
 		resp, _, errs := req.
-			Get(f.IngressController.HTTPSURL+uri).
+			Get(f.GetURL(framework.HTTPS)+uri).
 			TLSClientConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 			Set("Host", host).
 			End()
@@ -85,7 +70,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		// Send Request Passing the Client Certs
 		resp, _, errs = req.
-			Get(f.IngressController.HTTPSURL+uri).
+			Get(f.GetURL(framework.HTTPS)+uri).
 			TLSClientConfig(clientConfig).
 			Set("Host", host).
 			End()
@@ -95,7 +80,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 	It("should set valid auth-tls-secret, sslVerify to off, and sslVerifyDepth to 2", func() {
 		host := "authtls.foo.com"
-		nameSpace := f.IngressController.Namespace
+		nameSpace := f.Namespace
 
 		_, err := framework.CreateIngressMASecret(
 			f.KubeClientSet,
@@ -112,24 +97,13 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
-		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
-		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslKeyDirective := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-
-		sslVerify := "ssl_verify_client off;"
-		sslVerifyDepth := "ssl_verify_depth 2;"
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, sslCertDirective) && strings.Contains(server, sslKeyDirective) && strings.Contains(server, sslClientCertDirective) && strings.Contains(server, sslVerify) && strings.Contains(server, sslVerifyDepth)
-			})
+		assertSslClientCertificateConfig(f, host, "off", "2")
 
 		// Send Request without Client Certs
 		req := gorequest.New()
 		uri := "/"
 		resp, _, errs := req.
-			Get(f.IngressController.HTTPSURL+uri).
+			Get(f.GetURL(framework.HTTPS)+uri).
 			TLSClientConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 			Set("Host", host).
 			End()
@@ -139,7 +113,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 	It("should set valid auth-tls-secret, pass certificate to upstream, and error page", func() {
 		host := "authtls.foo.com"
-		nameSpace := f.IngressController.Namespace
+		nameSpace := f.Namespace
 
 		errorPath := "/error"
 
@@ -152,30 +126,20 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-tls-secret":                       nameSpace + "/" + host,
-			"nginx.ingress.kubernetes.io/auth-tls-error-page":                   f.IngressController.HTTPURL + errorPath,
+			"nginx.ingress.kubernetes.io/auth-tls-error-page":                   f.GetURL(framework.HTTP) + errorPath,
 			"nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream": "true",
 		}
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
-		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
-		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslKeyDirective := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
+		assertSslClientCertificateConfig(f, host, "on", "1")
 
-		sslVerify := "ssl_verify_client on;"
-		sslVerifyDepth := "ssl_verify_depth 1;"
-		sslErrorPage := fmt.Sprintf("error_page 495 496 = %s;", f.IngressController.HTTPURL+errorPath)
+		sslErrorPage := fmt.Sprintf("error_page 495 496 = %s;", f.GetURL(framework.HTTP)+errorPath)
 		sslUpstreamClientCert := "proxy_set_header ssl-client-cert $ssl_client_escaped_cert;"
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, sslCertDirective) &&
-					strings.Contains(server, sslKeyDirective) &&
-					strings.Contains(server, sslClientCertDirective) &&
-					strings.Contains(server, sslVerify) &&
-					strings.Contains(server, sslVerifyDepth) &&
-					strings.Contains(server, sslErrorPage) &&
+				return strings.Contains(server, sslErrorPage) &&
 					strings.Contains(server, sslUpstreamClientCert)
 			})
 
@@ -183,18 +147,18 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 		req := gorequest.New()
 		uri := "/"
 		resp, _, errs := req.
-			Get(f.IngressController.HTTPSURL+uri).
+			Get(f.GetURL(framework.HTTPS)+uri).
 			TLSClientConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 			Set("Host", host).
 			RedirectPolicy(noRedirectPolicyFunc).
 			End()
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusFound))
-		Expect(resp.Header.Get("Location")).Should(Equal(f.IngressController.HTTPURL + errorPath))
+		Expect(resp.Header.Get("Location")).Should(Equal(f.GetURL(framework.HTTP) + errorPath))
 
 		// Send Request Passing the Client Certs
 		resp, _, errs = req.
-			Get(f.IngressController.HTTPSURL+uri).
+			Get(f.GetURL(framework.HTTPS)+uri).
 			TLSClientConfig(clientConfig).
 			Set("Host", host).
 			End()
@@ -202,3 +166,20 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 })
+
+func assertSslClientCertificateConfig(f *framework.Framework, host string, verifyClient string, verifyDepth string) {
+	sslCertDirective := "ssl_certificate /etc/ingress-controller/ssl/default-fake-certificate.pem;"
+	sslKeyDirective := "ssl_certificate_key /etc/ingress-controller/ssl/default-fake-certificate.pem;"
+	sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, host)
+	sslVerify := fmt.Sprintf("ssl_verify_client %s;", verifyClient)
+	sslVerifyDepth := fmt.Sprintf("ssl_verify_depth %s;", verifyDepth)
+
+	f.WaitForNginxServer(host,
+		func(server string) bool {
+			return strings.Contains(server, sslCertDirective) &&
+				strings.Contains(server, sslKeyDirective) &&
+				strings.Contains(server, sslClientCertDirective) &&
+				strings.Contains(server, sslVerify) &&
+				strings.Contains(server, sslVerifyDepth)
+		})
+}

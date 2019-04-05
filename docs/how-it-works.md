@@ -22,7 +22,7 @@ Building a model is an expensive operation, for this reason, the use of the sync
 
 Operations to build the model:
 
-- Order Ingress rules by `ResourceVersion` field, i.e., old rules first.
+- Order Ingress rules by `CreationTimestamp` field, i.e., old rules first.
 
   - If the same path for the same host is defined in more than one Ingress, the oldest rule wins.
   - If more than one Ingress contains a TLS section for the same host, the oldest rule wins.

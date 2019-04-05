@@ -4,9 +4,7 @@ approvers:
   - ingress-nginx-admins
   - ingress-nginx-maintainers
   - ElvinEfendi
-  - antoineco
 
 reviewers:
   - aledbf
   - ElvinEfendi
-  - antoineco

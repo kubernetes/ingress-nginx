@@ -1,0 +1,70 @@
+/*
+Copyright 2019 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package certs
+
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"k8s.io/ingress-nginx/cmd/plugin/kubectl"
+	"k8s.io/ingress-nginx/cmd/plugin/request"
+	"k8s.io/ingress-nginx/cmd/plugin/util"
+)
+
+// CreateCommand creates and returns this cobra subcommand
+func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
+	var pod, deployment *string
+	cmd := &cobra.Command{
+		Use:   "certs",
+		Short: "Output the certificate data stored in an ingress-nginx pod",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			host, err := cmd.Flags().GetString("host")
+			if err != nil {
+				return err
+			}
+
+			util.PrintError(certs(flags, *pod, *deployment, host))
+			return nil
+		},
+	}
+
+	cmd.Flags().String("host", "", "Get the cert for this hostname")
+	cobra.MarkFlagRequired(cmd.Flags(), "host")
+	pod = util.AddPodFlag(cmd)
+	deployment = util.AddDeploymentFlag(cmd)
+
+	return cmd
+}
+
+func certs(flags *genericclioptions.ConfigFlags, podName string, deployment string, host string) error {
+	command := []string{"/dbg", "certs", "get", host}
+
+	pod, err := request.ChoosePod(flags, podName, deployment)
+	if err != nil {
+		return err
+	}
+
+	out, err := kubectl.PodExecString(flags, &pod, command)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print(out)
+	return nil
+}

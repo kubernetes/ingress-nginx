@@ -1,4 +1,4 @@
-local json = require("cjson")
+local cjson = require("cjson.safe")
 
 -- this is the Lua representation of Configuration struct in internal/ingress/types.go
 local configuration_data = ngx.shared.configuration_data
@@ -49,9 +49,9 @@ local function handle_servers()
 
   local raw_servers = fetch_request_body()
 
-  local ok, servers = pcall(json.decode, raw_servers)
-  if not ok then
-    ngx.log(ngx.ERR, "could not parse servers: " .. tostring(servers))
+  local servers, err = cjson.decode(raw_servers)
+  if not servers then
+    ngx.log(ngx.ERR, "could not parse servers: ", err)
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
@@ -59,7 +59,8 @@ local function handle_servers()
   local err_buf = {}
   for _, server in ipairs(servers) do
     if server.hostname and server.sslCert.pemCertKey then
-      local success, err = certificate_data:safe_set(server.hostname, server.sslCert.pemCertKey)
+      local success
+      success, err = certificate_data:safe_set(server.hostname, server.sslCert.pemCertKey)
       if not success then
         if err == "no memory" then
           ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
@@ -109,6 +110,32 @@ local function handle_general()
   ngx.status = ngx.HTTP_CREATED
 end
 
+local function handle_certs()
+  if ngx.var.request_method ~= "GET" then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Only GET requests are allowed!")
+    return
+  end
+
+  local query = ngx.req.get_uri_args()
+  if not query["hostname"] then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Hostname must be specified.")
+    return
+  end
+
+  local key = _M.get_pem_cert_key(query["hostname"])
+  if key then
+    ngx.status = ngx.HTTP_OK
+    ngx.print(key)
+    return
+  else
+    ngx.status = ngx.HTTP_NOT_FOUND
+    ngx.print("No key associated with this hostname.")
+    return
+  end
+end
+
 function _M.call()
   if ngx.var.request_method ~= "POST" and ngx.var.request_method ~= "GET" then
     ngx.status = ngx.HTTP_BAD_REQUEST
@@ -123,6 +150,11 @@ function _M.call()
 
   if ngx.var.request_uri == "/configuration/general" then
     handle_general()
+    return
+  end
+
+  if ngx.var.uri == "/configuration/certs" then
+    handle_certs()
     return
   end
 

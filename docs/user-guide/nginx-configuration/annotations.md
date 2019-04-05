@@ -30,6 +30,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
+|[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string
 |[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-weight](#canary)|number|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
@@ -63,12 +64,12 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
+|[nginx.ingress.kubernetes.io/satisfy](#satisfy)|string|
 |[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
@@ -78,6 +79,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
+|[nginx.ingress.kubernetes.io/proxy-buffers-number](#proxy-buffers-number)|number|
 |[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
@@ -105,6 +107,8 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 In some cases, you may want to "canary" a new set of changes by sending a small number of requests to a different service than the production service. The canary annotation enables the Ingress spec to act as an alternative service for requests to route to depending on the rules applied. The following annotations to configure canary can be enabled after `nginx.ingress.kubernetes.io/canary: "true"` is set:
 
 * `nginx.ingress.kubernetes.io/canary-by-header`: The header to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to `always`, it will be routed to the canary. When the header is set to `never`, it will never be routed to the canary. For any other value, the header will be ignored and the request compared against the other canary rules by precedence.
+
+* `nginx.ingress.kubernetes.io/canary-by-header-value`: The header value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to this value, it will be routed to the canary. For any other header value, the header will be ignored and the request compared against the other canary rules by precedence. This annotation has to be used together with . The annotation is an extension of the `nginx.ingress.kubernetes.io/canary-by-header` to allow customizing the header value instead of using hardcoded values. It doesn't have any effect if the `nginx.ingress.kubernetes.io/canary-by-header` annotation is not defined.
 
 * `nginx.ingress.kubernetes.io/canary-by-cookie`: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to `always`, it will be routed to the canary. When the cookie is set to `never`, it will never be routed to the canary. For any other value, the cookie will be ingored and the request compared against the other canary rules by precedence. 
 
@@ -144,17 +148,7 @@ The only affinity type available for NGINX is `cookie`.
 
 If you use the ``cookie`` affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation `nginx.ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'INGRESSCOOKIE'.
 
-In case of NGINX the annotation `nginx.ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to hash the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
-
 The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.  
-
-!!! attention
-    The `index` option is not an actual hash; an in-memory index is used instead, which has less overhead.
-    However, with `index`, matching against a changing upstream server list is inconsistent.
-    So, at reload, if upstream servers have changed, index values are not guaranteed to correspond to the same server as before!
-    **Use `index` with caution** and only if you need to!
-
-In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf)
 
 
 ### Authentication
@@ -243,22 +237,22 @@ nginx.ingress.kubernetes.io/configuration-snippet: |
   more_set_headers "Request-Id: $req_id";
 ```
 
-### Default Backend
-
-The ingress controller requires a [default backend](../default-backend.md).
-This service handles the response when the service in the Ingress rule does not have endpoints.
-This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.
-
 ### Custom HTTP Errors
 
-Like the [`custom-http-errors`](./configmap.md#custom-http-errors) value in the ConfigMap, this annotation will set NGINX `proxy-intercept-errors`, but only for the NGINX location associated with this ingress.
+Like the [`custom-http-errors`](./configmap.md#custom-http-errors) value in the ConfigMap, this annotation will set NGINX `proxy-intercept-errors`, but only for the NGINX location associated with this ingress. If a [default backend annotation](#default-backend) is specified on the ingress, the errors will be routed to that annotation's default backend service (instead of the global default backend).
 Different ingresses can specify different sets of error codes. Even if multiple ingress objects share the same hostname, this annotation can be used to intercept different error codes for each ingress (for example, different error codes to be intercepted for different paths on the same hostname, if each path is on a different ingress).
 If `custom-http-errors` is also specified globally, the error values specified in this annotation will override the global value for the given ingress' hostname and path.
 
 Example usage:
 ```
-custom-http-errors: "404,415"
+nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
 ```
+
+### Default Backend
+
+This annotation is of the form `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.  This `<svc name>` is a reference to a service inside of the same namespace in which you are applying this annotation. This annotation overrides the global default backend.
+
+This service will be handle the response when the service in the Ingress rule does not have active endpoints. It will also handle the error responses if both this annotation and the [custom-http-errors annotation](#custom-http-errors) is set.
 
 ### Enable CORS
 
@@ -543,6 +537,16 @@ To use custom values in an Ingress rule define these annotation:
 nginx.ingress.kubernetes.io/proxy-buffering: "on"
 ```
 
+### Proxy buffers Number
+
+Sets the number of the buffers  in [`proxy_buffers`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers) used for reading the first part of the response received from the proxied server.
+By default proxy buffers number is set as 4
+
+To configure this setting globally, set `proxy-buffers-number` in [NGINX ConfigMap](./configmap.md#proxy-buffers-number). To use custom values in an Ingress rule, define this annotation:
+```yaml
+nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+```
+
 ### Proxy buffer size
 
 Sets the size of the buffer [`proxy_buffer_size`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) used for reading the first part of the response received from the proxied server.
@@ -724,7 +728,7 @@ an ip address to `nginx.ingress.kubernetes.io/influxdb-host`. If you deploy Infl
 
 ### Backend Protocol
 
-Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service.
+Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
 Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP
 
 By default NGINX uses `HTTP`.
@@ -757,3 +761,11 @@ When this annotation is set to `true`, the case insensitive regular expression [
 Additionally, if the [`rewrite-target` annotation](#rewrite) is used on any Ingress for a given host, then the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.  
 
 Please read about [ingress path matching](../ingress-path-matching.md) before using this modifier. 
+
+### Satisfy
+
+By default, a request would need to satisfy all authentication requirements in order to be allowed. By using this annotation, requests that satisfy either any or all authentication requirements are allowed, based on the configuration value.
+
+```yaml
+nginx.ingress.kubernetes.io/satisfy: "any"
+```

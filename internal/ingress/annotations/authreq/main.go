@@ -28,6 +28,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	"k8s.io/ingress-nginx/internal/sets"
 )
 
 // Config returns external authentication configuration for an Ingress rule
@@ -62,18 +63,12 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	if e1.Method != e2.Method {
 		return false
 	}
-	for _, ep1 := range e1.ResponseHeaders {
-		found := false
-		for _, ep2 := range e2.ResponseHeaders {
-			if ep1 == ep2 {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+
+	match := sets.StringElementsMatch(e1.ResponseHeaders, e2.ResponseHeaders)
+	if !match {
+		return false
 	}
+
 	if e1.RequestRedirect != e2.RequestRedirect {
 		return false
 	}
@@ -146,12 +141,12 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	// Optional Parameters
 	signIn, err := parser.GetStringAnnotation("auth-signin", ing)
 	if err != nil {
-		klog.Warning("auth-signin annotation is undefined and will not be set")
+		klog.V(3).Infof("auth-signin annotation is undefined and will not be set")
 	}
 
 	authSnippet, err := parser.GetStringAnnotation("auth-snippet", ing)
 	if err != nil {
-		klog.Warning("auth-snippet annotation is undefined and will not be set")
+		klog.V(3).Infof("auth-snippet annotation is undefined and will not be set")
 	}
 
 	responseHeaders := []string{}

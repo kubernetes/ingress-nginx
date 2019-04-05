@@ -55,7 +55,7 @@ describe("Sticky", function()
       it("returns an instance containing the corresponding cookie name", function()
         local sticky_balancer_instance = sticky:new(test_backend)
         local test_backend_cookie_name = test_backend.sessionAffinityConfig.cookieSessionAffinity.name
-        assert.equal(sticky_balancer_instance.cookie_name, test_backend_cookie_name)
+        assert.equal(sticky_balancer_instance:cookie_name(), test_backend_cookie_name)
       end)
     end)
 
@@ -65,27 +65,7 @@ describe("Sticky", function()
         temp_backend.sessionAffinityConfig.cookieSessionAffinity.name = nil
         local sticky_balancer_instance = sticky:new(temp_backend)
         local default_cookie_name = "route"
-        assert.equal(sticky_balancer_instance.cookie_name, default_cookie_name)
-      end)
-    end)
-
-    context("when backend specifies hash function", function()
-      it("returns an instance with the corresponding hash implementation", function()
-        local sticky_balancer_instance = sticky:new(test_backend)
-        local test_backend_hash_fn = test_backend.sessionAffinityConfig.cookieSessionAffinity.hash
-        local test_backend_hash_implementation = util[test_backend_hash_fn .. "_digest"]
-        assert.equal(sticky_balancer_instance.digest_func, test_backend_hash_implementation)
-      end)
-    end)
-
-    context("when backend does not specify hash function", function()
-      it("returns an instance with the default implementation (md5)", function()
-        local temp_backend = util.deepcopy(test_backend)
-        temp_backend.sessionAffinityConfig.cookieSessionAffinity.hash = nil
-        local sticky_balancer_instance = sticky:new(temp_backend)
-        local default_hash_fn = "md5"
-        local default_hash_implementation = util[default_hash_fn .. "_digest"]
-        assert.equal(sticky_balancer_instance.digest_func, default_hash_implementation)
+        assert.equal(sticky_balancer_instance:cookie_name(), default_cookie_name)
       end)
     end)
   end)
@@ -112,12 +92,9 @@ describe("Sticky", function()
       it("sets a cookie on the client", function()
         local s = {}
         cookie.new = function(self)
-          local test_backend_hash_fn = test_backend.sessionAffinityConfig.cookieSessionAffinity.hash
           local cookie_instance = {
             set = function(self, payload)
               assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
-              local expected_len = #util[test_backend_hash_fn .. "_digest"]("anything")
-              assert.equal(#payload.value, expected_len)
               assert.equal(payload.path, ngx.var.location_path)
               assert.equal(payload.domain, nil)
               assert.equal(payload.httponly, true)
@@ -141,12 +118,9 @@ describe("Sticky", function()
         ngx.var.https = "on"
         local s = {}
         cookie.new = function(self)
-          local test_backend_hash_fn = test_backend.sessionAffinityConfig.cookieSessionAffinity.hash
           local cookie_instance = {
             set = function(self, payload)
               assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
-              local expected_len = #util[test_backend_hash_fn .. "_digest"]("anything")
-              assert.equal(#payload.value, expected_len)
               assert.equal(payload.path, ngx.var.location_path)
               assert.equal(payload.domain, nil)
               assert.equal(payload.httponly, true)
@@ -177,12 +151,9 @@ describe("Sticky", function()
       it("does not set a cookie on the client", function()
         local s = {}
         cookie.new = function(self)
-          local test_backend_hash_fn = test_backend.sessionAffinityConfig.cookieSessionAffinity.hash
           local cookie_instance = {
             set = function(self, payload)
               assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
-              local expected_len = #util[test_backend_hash_fn .. "_digest"]("anything")
-              assert.equal(#payload.value, expected_len)
               assert.equal(payload.path, ngx.var.location_path)
               assert.equal(payload.domain, ngx.var.host)
               assert.equal(payload.httponly, true)

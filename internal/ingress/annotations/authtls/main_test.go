@@ -23,6 +23,9 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -60,49 +63,66 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
+// mocks the resolver for authTLS
+type mockSecret struct {
+	resolver.Mock
+}
+
+// GetAuthCertificate from mockSecret mocks the GetAuthCertificate for authTLS
+func (m mockSecret) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
+	if name != "default/demo-secret" {
+		return nil, errors.Errorf("there is no secret with name %v", name)
+	}
+
+	return &resolver.AuthSSLCert{
+		Secret:     "default/demo-secret",
+		CAFileName: "/ssl/ca.crt",
+		PemSHA:     "abc",
+	}, nil
+
+}
+
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
-
 	data := map[string]string{}
+
+	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "default/demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "1"
+	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
+	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
+
 	ing.SetAnnotations(data)
-	/*
-		tests := []struct {
-			title    string
-			url      string
-			method   string
-			sendBody bool
-			expErr   bool
-		}{
-			{"empty", "", "", false, true},
-			{"no scheme", "bar", "", false, true},
-			{"invalid host", "http://", "", false, true},
-			{"invalid host (multiple dots)", "http://foo..bar.com", "", false, true},
-			{"valid URL", "http://bar.foo.com/external-auth", "", false, false},
-			{"valid URL - send body", "http://foo.com/external-auth", "POST", true, false},
-			{"valid URL - send body", "http://foo.com/external-auth", "GET", true, false},
-		}
 
-		for _, test := range tests {
-			data[authTLSSecret] = ""
-			test.title
+	fakeSecret := &mockSecret{}
+	i, err := NewParser(fakeSecret).Parse(ing)
+	if err != nil {
+		t.Errorf("Uxpected error with ingress: %v", err)
+	}
 
-				u, err := ParseAnnotations(ing)
+	u, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
 
-				if test.expErr {
-					if err == nil {
-						t.Errorf("%v: expected error but retuned nil", test.title)
-					}
-					continue
-				}
+	secret, err := fakeSecret.GetAuthCertificate("default/demo-secret")
+	if err != nil {
+		t.Errorf("unexpected error getting secret %v", err)
+	}
 
-				if u.URL != test.url {
-					t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.url, u.URL)
-				}
-				if u.Method != test.method {
-					t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.method, u.Method)
-				}
-				if u.SendBody != test.sendBody {
-					t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.sendBody, u.SendBody)
-				}
-		}*/
+	if u.AuthSSLCert.Secret != secret.Secret {
+		t.Errorf("expected %v but got %v", secret.Secret, u.AuthSSLCert.Secret)
+	}
+	if u.VerifyClient != "off" {
+		t.Errorf("expected %v but got %v", "off", u.VerifyClient)
+	}
+	if u.ValidationDepth != 1 {
+		t.Errorf("expected %v but got %v", 1, u.ValidationDepth)
+	}
+	if u.ErrorPage != "ok.com/error" {
+		t.Errorf("expected %v but got %v", "ok.com/error", u.ErrorPage)
+	}
+	if u.PassCertToUpstream != true {
+		t.Errorf("expected %v but got %v", true, u.PassCertToUpstream)
+	}
 }

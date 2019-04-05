@@ -31,6 +31,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 func parseFlags() (bool, *controller.Configuration, error) {
@@ -105,7 +106,7 @@ Requires setting the publish-service parameter to a valid Service reference.`)
 		electionID = flags.String("election-id", "ingress-controller-leader",
 			`Election id to use for Ingress status updates.`)
 
-		forceIsolation = flags.Bool("force-namespace-isolation", false,
+		_ = flags.Bool("force-namespace-isolation", false,
 			`Force namespace isolation.
 Prevents Ingress objects from referencing Secrets and ConfigMaps located in a
 different namespace than their own. May be used together with watch-namespace.`)
@@ -140,7 +141,7 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", false,
+		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", true,
 			`Dynamically update SSL certificates instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
 
@@ -151,7 +152,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
-		statusPort    = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
+		_             = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
@@ -160,7 +161,8 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 			`Disable support for catch-all Ingresses`)
 	)
 
-	flags.MarkDeprecated("sort-backends", "Feature removed because of the lua load balancer that removed the need of reloads for change in endpoints")
+	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
+	flags.MarkDeprecated("force-namespace-isolation", `This flag doesn't do anything.`)
 
 	flag.Set("logtostderr", "true")
 
@@ -200,10 +202,6 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --https-port", *httpsPort)
 	}
 
-	if !ing_net.IsPortAvailable(*statusPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --status-port", *statusPort)
-	}
-
 	if !ing_net.IsPortAvailable(*defServerPort) {
 		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --default-server-port", *defServerPort)
 	}
@@ -224,6 +222,8 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		return false, nil, fmt.Errorf("Flags --publish-service and --publish-status-address are mutually exclusive")
 	}
 
+	nginx.HealthPath = *defHealthzURL
+
 	config := &controller.Configuration{
 		APIServerHost:              *apiserverHost,
 		KubeConfigFile:             *kubeConfigFile,
@@ -241,11 +241,9 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		TCPConfigMapName:           *tcpConfigMapName,
 		UDPConfigMapName:           *udpConfigMapName,
 		DefaultSSLCertificate:      *defSSLCertificate,
-		DefaultHealthzURL:          *defHealthzURL,
 		HealthCheckTimeout:         *healthCheckTimeout,
 		PublishService:             *publishSvc,
 		PublishStatusAddress:       *publishStatusAddress,
-		ForceNamespaceIsolation:    *forceIsolation,
 		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
 		UseNodeInternalIP:          *useNodeInternalIP,
 		SyncRateLimit:              *syncRateLimit,
@@ -256,7 +254,6 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 			HTTP:     *httpPort,
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
-			Status:   *statusPort,
 		},
 		DisableCatchAll: *disableCatchAll,
 	}

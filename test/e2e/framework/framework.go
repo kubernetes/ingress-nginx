@@ -15,7 +15,6 @@ package framework
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -65,13 +64,6 @@ type Framework struct {
 	// should abort, the AfterSuite hook should run all Cleanup actions.
 	cleanupHandle CleanupActionHandle
 
-	IngressController *ingressController
-}
-
-type ingressController struct {
-	HTTPURL  string
-	HTTPSURL string
-
 	Namespace string
 }
 
@@ -93,7 +85,11 @@ func (f *Framework) BeforeEach() {
 	f.cleanupHandle = AddCleanupAction(f.AfterEach)
 
 	By("Creating a kubernetes client")
-	kubeConfig, err := LoadConfig(TestContext.KubeConfig, TestContext.KubeContext)
+	kubeConfig, err := restclient.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+
 	Expect(err).NotTo(HaveOccurred())
 
 	f.KubeConfig = kubeConfig
@@ -104,24 +100,16 @@ func (f *Framework) BeforeEach() {
 	ingressNamespace, err := CreateKubeNamespace(f.BaseName, f.KubeClientSet)
 	Expect(err).NotTo(HaveOccurred())
 
-	f.IngressController = &ingressController{
-		Namespace: ingressNamespace,
-	}
+	f.Namespace = ingressNamespace
 
 	By("Starting new ingress controller")
-	err = f.NewIngressController(f.IngressController.Namespace)
+	err = f.NewIngressController(f.Namespace)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.IngressController.Namespace, metav1.ListOptions{
+	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	Expect(err).NotTo(HaveOccurred())
-
-	HTTPURL := f.GetNginxURL(HTTP)
-	f.IngressController.HTTPURL = HTTPURL
-
-	HTTPSURL := f.GetNginxURL(HTTPS)
-	f.IngressController.HTTPSURL = HTTPSURL
 
 	// we wait for any change in the informers and SSL certificate generation
 	time.Sleep(5 * time.Second)
@@ -132,7 +120,7 @@ func (f *Framework) AfterEach() {
 	RemoveCleanupAction(f.cleanupHandle)
 
 	By("Waiting for test namespace to no longer exist")
-	err := DeleteKubeNamespace(f.KubeClientSet, f.IngressController.Namespace)
+	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
 	Expect(err).NotTo(HaveOccurred())
 
 	if CurrentGinkgoTestDescription().Failed {
@@ -148,52 +136,34 @@ func IngressNginxDescribe(text string, body func()) bool {
 	return Describe("[nginx-ingress] "+text, body)
 }
 
-// GetNginxIP returns the IP address of the minikube cluster
-// where the NGINX ingress controller is running
+// GetNginxIP returns the number of TCP port where NGINX is running
 func (f *Framework) GetNginxIP() string {
-	nodeIP := os.Getenv("NODE_IP")
-	Expect(nodeIP).NotTo(BeEmpty(), "env variable NODE_IP is empty")
-	return nodeIP
-}
-
-// GetNginxPort returns the number of TCP port where NGINX is running
-func (f *Framework) GetNginxPort(name string) (int, error) {
 	s, err := f.KubeClientSet.
 		CoreV1().
-		Services(f.IngressController.Namespace).
+		Services(f.Namespace).
 		Get("ingress-nginx", metav1.GetOptions{})
-	if err != nil {
-		return -1, err
-	}
-
-	for _, p := range s.Spec.Ports {
-		if p.NodePort != 0 && p.Name == name {
-			return int(p.NodePort), nil
-		}
-	}
-
-	return -1, err
+	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX IP address")
+	return s.Spec.ClusterIP
 }
 
-// GetNginxURL returns the URL should be used to make a request to NGINX
-func (f *Framework) GetNginxURL(scheme RequestScheme) string {
+// GetURL returns the URL should be used to make a request to NGINX
+func (f *Framework) GetURL(scheme RequestScheme) string {
 	ip := f.GetNginxIP()
-	port, err := f.GetNginxPort(fmt.Sprintf("%v", scheme))
-	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX Port")
-
-	return fmt.Sprintf("%v://%v:%v", scheme, ip, port)
+	return fmt.Sprintf("%v://%v", scheme, ip)
 }
 
 // WaitForNginxServer waits until the nginx configuration contains a particular server section
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, time.Minute*5, f.matchNginxConditions(name, matcher))
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
+	time.Sleep(5 * time.Second)
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, time.Minute*5, f.matchNginxConditions("", matcher))
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
+	time.Sleep(5 * time.Second)
 }
 
 func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
@@ -211,14 +181,14 @@ func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
 
 // NginxLogs returns the logs of the nginx ingress controller pod running
 func (f *Framework) NginxLogs() (string, error) {
-	return nginxLogs(f.KubeClientSet, f.IngressController.Namespace)
+	return nginxLogs(f.KubeClientSet, f.Namespace)
 }
 
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
-		pod, err := getIngressNGINXPod(f.IngressController.Namespace, f.KubeClientSet)
+		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 
 		var cmd string
@@ -230,7 +200,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 
 		o, err := f.ExecCommand(pod, cmd)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 
 		var match bool
@@ -264,7 +234,7 @@ func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
 
 	config, err := f.KubeClientSet.
 		CoreV1().
-		ConfigMaps(f.IngressController.Namespace).
+		ConfigMaps(f.Namespace).
 		Get("nginx-configuration", metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -298,7 +268,7 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 
 	_, err = f.KubeClientSet.
 		CoreV1().
-		ConfigMaps(f.IngressController.Namespace).
+		ConfigMaps(f.Namespace).
 		Update(config)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -318,14 +288,14 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 // DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.
 // Grace period to wait for pod shutdown is in seconds.
 func (f *Framework) DeleteNGINXPod(grace int64) {
-	ns := f.IngressController.Namespace
+	ns := f.Namespace
 	pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
 	Expect(err).NotTo(HaveOccurred(), "expected ingress nginx pod to be running")
 
 	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(pod.GetName(), metav1.NewDeleteOptions(grace))
 	Expect(err).NotTo(HaveOccurred(), "unexpected error deleting ingress nginx pod")
 
-	err = wait.Poll(Poll, time.Minute*5, func() (bool, error) {
+	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
 		if err != nil || pod == nil {
 			return false, nil
@@ -397,6 +367,32 @@ func NewSingleIngress(name, path, host, ns, service string, port int, annotation
 	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, nil)
 }
 
+// NewSingleIngressWithMultiplePaths creates a simple ingress rule with multiple paths
+func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
+	spec := extensions.IngressSpec{
+		Rules: []extensions.IngressRule{
+			{
+				Host: host,
+				IngressRuleValue: extensions.IngressRuleValue{
+					HTTP: &extensions.HTTPIngressRuleValue{},
+				},
+			},
+		},
+	}
+
+	for _, path := range paths {
+		spec.Rules[0].IngressRuleValue.HTTP.Paths = append(spec.Rules[0].IngressRuleValue.HTTP.Paths, extensions.HTTPIngressPath{
+			Path: path,
+			Backend: extensions.IngressBackend{
+				ServiceName: service,
+				ServicePort: intstr.FromInt(port),
+			},
+		})
+	}
+
+	return newSingleIngress(name, ns, annotations, spec)
+}
+
 func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations *map[string]string, tlsHosts []string) *extensions.Ingress {
 
 	spec := extensions.IngressSpec{
@@ -427,6 +423,36 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 				SecretName: host,
 			},
 		}
+	}
+
+	return newSingleIngress(name, ns, annotations, spec)
+}
+
+// NewSingleIngressWithBackendAndRules creates an ingress with both a default backend and a rule
+func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations *map[string]string) *extensions.Ingress {
+	spec := extensions.IngressSpec{
+		Backend: &extensions.IngressBackend{
+			ServiceName: defaultService,
+			ServicePort: intstr.FromInt(defaultPort),
+		},
+		Rules: []extensions.IngressRule{
+			{
+				Host: host,
+				IngressRuleValue: extensions.IngressRuleValue{
+					HTTP: &extensions.HTTPIngressRuleValue{
+						Paths: []extensions.HTTPIngressPath{
+							{
+								Path: path,
+								Backend: extensions.IngressBackend{
+									ServiceName: service,
+									ServicePort: intstr.FromInt(port),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	return newSingleIngress(name, ns, annotations, spec)

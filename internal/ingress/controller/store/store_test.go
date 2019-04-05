@@ -245,7 +245,7 @@ func TestStore(t *testing.T) {
 		// Secret takes a bit to update
 		time.Sleep(3 * time.Second)
 
-		err = clientSet.Extensions().Ingresses(ni.Namespace).Delete(ni.Name, &metav1.DeleteOptions{})
+		err = clientSet.ExtensionsV1beta1().Ingresses(ni.Namespace).Delete(ni.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			t.Errorf("error creating ingress: %v", err)
 		}
@@ -803,13 +803,13 @@ func deleteConfigMap(cm, ns string, clientSet kubernetes.Interface, t *testing.T
 
 func ensureIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, t *testing.T) *extensions.Ingress {
 	t.Helper()
-	ing, err := clientSet.Extensions().Ingresses(ingress.Namespace).Update(ingress)
+	ing, err := clientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(ingress)
 
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			t.Logf("Ingress %v not found, creating", ingress)
 
-			ing, err = clientSet.Extensions().Ingresses(ingress.Namespace).Create(ingress)
+			ing, err = clientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress)
 			if err != nil {
 				t.Fatalf("error creating ingress %+v: %v", ingress, err)
 			}
@@ -828,7 +828,7 @@ func ensureIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, 
 
 func deleteIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, t *testing.T) {
 	t.Helper()
-	err := clientSet.Extensions().Ingresses(ingress.Namespace).Delete(ingress.Name, &metav1.DeleteOptions{})
+	err := clientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Delete(ingress.Name, &metav1.DeleteOptions{})
 
 	if err != nil {
 		t.Errorf("failed to delete ingress %+v: %v", ingress, err)
@@ -945,8 +945,6 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 func TestListIngresses(t *testing.T) {
 	s := newStore(t)
 
-	sameTime := metav1.NewTime(time.Now())
-
 	ingressToIgnore := &ingress.Ingress{
 		Ingress: extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -955,7 +953,7 @@ func TestListIngresses(t *testing.T) {
 				Annotations: map[string]string{
 					"kubernetes.io/ingress.class": "something",
 				},
-				CreationTimestamp: sameTime,
+				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
 			Spec: extensions.IngressSpec{
 				Backend: &extensions.IngressBackend{
@@ -972,7 +970,7 @@ func TestListIngresses(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:              "test-3",
 				Namespace:         "testns",
-				CreationTimestamp: sameTime,
+				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
 			Spec: extensions.IngressSpec{
 				Rules: []extensions.IngressRule{
