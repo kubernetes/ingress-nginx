@@ -1,5 +1,5 @@
-local statsd = require('statsd')
-local defer_to_timer = require("defer_to_timer")
+local statsd = require("plugins.statsd_monitor.statsd")
+local defer_to_timer = require("plugins.statsd_monitor.defer_to_timer")
 local split = require("util.split")
 
 local _M = {}
@@ -41,7 +41,11 @@ local function send_response_data(upstream_state, client_state)
   })
 end
 
-function _M.call()
+function _M.init_worker()
+  defer_to_timer.init_worker()
+end
+
+function _M.log()
   local status, status_err = split.split_upstream_var(ngx.var.upstream_status)
   if status_err then
     return nil, status_err

@@ -61,13 +61,6 @@ http {
         -- init modules
         local ok, res
 
-        ok, res = pcall(require, "defer_to_timer")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          defer_to_timer = res
-        end
-
         ok, res = pcall(require, "lua_ingress")
         if not ok then
           error("require failed: " .. tostring(res))
@@ -116,18 +109,10 @@ http {
           plugins = res
         end
         -- load all plugins that'll be used here
-        plugins.init({})
-
-        ok, res = pcall(require, "statsd_monitor")
-        if not ok then
-          error("require(statsd_monitor) failed: " .. tostring(res))
-        else
-          statsd_monitor = res
-        end
+        plugins.init({ "statsd_monitor" })
     }
 
     init_worker_by_lua_block {
-        defer_to_timer.init_worker()
         lua_ingress.init_worker()
         balancer.init_worker()
         {{ if $all.EnableMetrics }}
@@ -1081,7 +1066,6 @@ stream {
                 {{ end }}
 
                 plugins.run()
-                statsd_monitor.call()
             }
 
             {{ if (and (not (empty $server.SSLCert.PemFileName)) $all.Cfg.HSTS) }}
