@@ -16,7 +16,7 @@
 all: all-container
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.23.0
+TAG ?= 0.24.0
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 DOCKER ?= docker
 SED_I ?= sed -i
