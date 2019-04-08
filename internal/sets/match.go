@@ -93,7 +93,7 @@ func StringElementsMatch(a, b []string) bool {
 
 func isIterable(obj reflect.Value) bool {
 	switch reflect.TypeOf(obj).Kind() {
-	case reflect.Struct, reflect.Slice, reflect.Array:
+	case  reflect.Slice, reflect.Array:
 		return true
 	default:
 		return false
