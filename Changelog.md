@@ -1,5 +1,67 @@
 # Changelog
 
+### 0.24.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.24.0`
+
+_New Features:_
+
+- NGINX 1.15.10
+
+_Changes:_
+
+- [X] [#3743](https://github.com/kubernetes/ingress-nginx/pull/3743) Remove session-cookie-hash annotation
+- [X] [#3798](https://github.com/kubernetes/ingress-nginx/pull/3798) Move some configuration logic from Nginx config to Lua code
+- [X] [#3806](https://github.com/kubernetes/ingress-nginx/pull/3806) Migrate e2e cluster to kind
+- [X] [#3807](https://github.com/kubernetes/ingress-nginx/pull/3807) Lua plugin system - MVP
+- [X] [#3808](https://github.com/kubernetes/ingress-nginx/pull/3808) make dynamic SSL mode default
+- [X] [#3827](https://github.com/kubernetes/ingress-nginx/pull/3827) Fix plugin install location
+- [X] [#3829](https://github.com/kubernetes/ingress-nginx/pull/3829) Prevent e2e-tests from running on non-local clusters
+- [X] [#3833](https://github.com/kubernetes/ingress-nginx/pull/3833) bump luajit version to v2.1-20190228
+- [X] [#3835](https://github.com/kubernetes/ingress-nginx/pull/3835) Update nginx image
+- [X] [#3839](https://github.com/kubernetes/ingress-nginx/pull/3839) Fix panic on multiple non-matching canary
+- [X] [#3846](https://github.com/kubernetes/ingress-nginx/pull/3846) Fix race condition in metric process collector test
+- [X] [#3849](https://github.com/kubernetes/ingress-nginx/pull/3849) Use Gauge instead of Counter for connections_active Prometheus metric
+- [X] [#3853](https://github.com/kubernetes/ingress-nginx/pull/3853) Remove authbind
+- [X] [#3856](https://github.com/kubernetes/ingress-nginx/pull/3856) Fix ssl-dh-param issue when secret does not exit
+- [X] [#3864](https://github.com/kubernetes/ingress-nginx/pull/3864) ing.Service with multiple hosts fix
+- [X] [#3870](https://github.com/kubernetes/ingress-nginx/pull/3870) Improve kubectl plugin
+- [X] [#3871](https://github.com/kubernetes/ingress-nginx/pull/3871) Fix name of field used to sort ingresses [skip-ci]
+- [X] [#3875](https://github.com/kubernetes/ingress-nginx/pull/3875) Allow the use of a secret located in a different namespace
+- [X] [#3882](https://github.com/kubernetes/ingress-nginx/pull/3882) Add support for IPV6 resolvers
+- [X] [#3884](https://github.com/kubernetes/ingress-nginx/pull/3884) update GKE header to match link in contents
+- [X] [#3885](https://github.com/kubernetes/ingress-nginx/pull/3885) Refactor status update
+- [X] [#3886](https://github.com/kubernetes/ingress-nginx/pull/3886) Clean up ssl package and fix dynamic cert mode
+- [X] [#3887](https://github.com/kubernetes/ingress-nginx/pull/3887) Remove useless nodeip calls and deprecate --force-namespace-isolation
+- [X] [#3889](https://github.com/kubernetes/ingress-nginx/pull/3889) Separate out annotation assignment logic
+- [X] [#3895](https://github.com/kubernetes/ingress-nginx/pull/3895) Correctly format ipv6 resolver config for lua
+- [X] [#3900](https://github.com/kubernetes/ingress-nginx/pull/3900) Add lint subcommand to plugin
+- [X] [#3907](https://github.com/kubernetes/ingress-nginx/pull/3907) Remove unnecessary copy of GeoIP databases
+- [X] [#3908](https://github.com/kubernetes/ingress-nginx/pull/3908) Update nginx image
+- [X] [#3918](https://github.com/kubernetes/ingress-nginx/pull/3918) Set `X-Request-ID` for the `default-backend`, too.
+- [X] [#3927](https://github.com/kubernetes/ingress-nginx/pull/3927) Update apiVersion to apps/v1, drop duplicate line
+- [X] [#3932](https://github.com/kubernetes/ingress-nginx/pull/3932) Fix dynamic SSL certificate for aliases and redirect-from-to-www
+- [X] [#3933](https://github.com/kubernetes/ingress-nginx/pull/3933) Update nginx to 1.15.10
+- [X] [#3934](https://github.com/kubernetes/ingress-nginx/pull/3934) Update nginx image
+- [X] [#3943](https://github.com/kubernetes/ingress-nginx/pull/3943) Update dependencies
+- [X] [#3947](https://github.com/kubernetes/ingress-nginx/pull/3947) Adds a log warning when falling back to default fake cert
+- [X] [#3950](https://github.com/kubernetes/ingress-nginx/pull/3950) Fix forwarded host parsing
+- [X] [#3954](https://github.com/kubernetes/ingress-nginx/pull/3954) Fix load-balance configmap value
+- [X] [#3955](https://github.com/kubernetes/ingress-nginx/pull/3955) Plugin select deployment using replicaset name
+- [X] [#3958](https://github.com/kubernetes/ingress-nginx/pull/3958) Refactor equals
+- [X] [#3960](https://github.com/kubernetes/ingress-nginx/pull/3960) Fix segfault on reference to nonexistent configmap
+- [X] [#3968](https://github.com/kubernetes/ingress-nginx/pull/3968) Update nginx image
+- [X] [#3969](https://github.com/kubernetes/ingress-nginx/pull/3969) Update nginx image to 0.84
+
+_Documentation:_
+
+- [X] [#3841](https://github.com/kubernetes/ingress-nginx/pull/3841) Improve "Sticky session" docs
+- [X] [#3836](https://github.com/kubernetes/ingress-nginx/pull/3836) Update mkdocs [skip ci]
+- [X] [#3847](https://github.com/kubernetes/ingress-nginx/pull/3847) Add missing basic usage documentation link
+- [X] [#3874](https://github.com/kubernetes/ingress-nginx/pull/3874) Update embargo doc link in SECURITY_CONTACTS and change PST to PSC
+- [X] [#3890](https://github.com/kubernetes/ingress-nginx/pull/3890) Make sure cli-arguments doc is in alphabetical order
+- [X] [#3945](https://github.com/kubernetes/ingress-nginx/pull/3945) fix typo: delete '`'
+
 ### 0.23.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.23.0`
