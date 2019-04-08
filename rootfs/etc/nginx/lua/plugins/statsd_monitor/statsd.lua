@@ -4,7 +4,7 @@ local string_len = string.len
 local udp = ngx.socket.udp
 
 local util = require("util")
-local defer_to_timer = require("defer_to_timer")
+local defer_to_timer = require("plugins.statsd_monitor.defer_to_timer")
 
 local util_tablelength = util.tablelength
 
@@ -160,7 +160,7 @@ end
 _M.config = {
   host = os.getenv("STATSD_HOST"),
   port = os.getenv("STATSD_PORT"),
-  sampling_rate = 1.0,
+  sampling_rate = 0.1,
   tags = {
     pod_id = os.getenv("POD_NAME"),
     namespace = os.getenv("POD_NAMESPACE")
