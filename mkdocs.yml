@@ -34,6 +34,7 @@ nav:
       - Welcome: "index.md"
       - How it works: "how-it-works.md"
       - Troubleshooting: "troubleshooting.md"
+      - kubectl plugin: "kubectl-plugin.md"
       - Development: "development.md"
   - Deployment:
       - Installation Guide: "deploy/index.md"
