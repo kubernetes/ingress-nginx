@@ -3850,11 +3850,13 @@ By default worker processes are not bound to any specific CPUs. The value can be
 The value can either be:</p>
 <ul>
 <li>round_robin: to use the default round robin loadbalancer</li>
-<li>least_conn: to use the least connected method (<em>note</em> that this is available only in non-dynamic mode: <code class="codehilite">--enable-dynamic-configuration=false</code>)</li>
-<li>ip_hash: to use a hash of the server for routing (<em>note</em> that this is available only in non-dynamic mode: <code class="codehilite">--enable-dynamic-configuration=false</code>, but alternatively you can consider using <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code>)</li>
 <li>ewma: to use the Peak EWMA method for routing (<a href="https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/balancer/ewma.lua">implementation</a>)</li>
 </ul>
 <p>The default is <code class="codehilite">round_robin</code>.</p>
+<ul>
+<li>To load balance using consistent hashing of IP or other variables, consider the <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> annotation.</li>
+<li>To load balance using session cookies, consider the <code class="codehilite">nginx.ingress.kubernetes.io/affinity</code> annotation.</li>
+</ul>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/load_balancing.html">http://nginx.org/en/docs/http/load_balancing.html</a></p>
 <h2 id="variables-hash-bucket-size">variables-hash-bucket-size<a class="headerlink" href="#variables-hash-bucket-size" title="Permanent link">&para;</a></h2>
