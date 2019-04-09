@@ -36,7 +36,7 @@
     
     
       
-        <title>Kubectl plugin - NGINX Ingress Controller</title>
+        <title>kubectl plugin - NGINX Ingress Controller</title>
       
     
     
@@ -154,7 +154,7 @@
               NGINX Ingress Controller
             </span>
             <span class="md-header-nav__topic">
-              Kubectl plugin
+              kubectl plugin
             </span>
           
         </div>
@@ -221,7 +221,9 @@
       
         
 
-<nav class="md-tabs" data-md-component="tabs">
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
       
@@ -230,7 +232,7 @@
   
     <li class="md-tabs__item">
       
-        <a href=".." title="Welcome" class="md-tabs__link">
+        <a href=".." title="Welcome" class="md-tabs__link md-tabs__link--active">
           Welcome
         </a>
       
@@ -330,10 +332,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" checked>
     
     <label class="md-nav__link" for="nav-1">
       Welcome
@@ -378,6 +382,146 @@
     <a href="../troubleshooting/" title="Troubleshooting" class="md-nav__link">
       Troubleshooting
     </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        kubectl plugin
+      </label>
+    
+    <a href="./" title="kubectl plugin" class="md-nav__link md-nav__link--active">
+      kubectl plugin
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" title="Installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-flags" title="Common Flags" class="md-nav__link">
+    Common Flags
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subcommands" title="Subcommands" class="md-nav__link">
+    Subcommands
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backends" title="backends" class="md-nav__link">
+    backends
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#certs" title="certs" class="md-nav__link">
+    certs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conf" title="conf" class="md-nav__link">
+    conf
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exec" title="exec" class="md-nav__link">
+    exec
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general" title="general" class="md-nav__link">
+    general
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#info" title="info" class="md-nav__link">
+    info
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ingresses" title="ingresses" class="md-nav__link">
+    ingresses
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lint" title="lint" class="md-nav__link">
+    lint
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logs" title="logs" class="md-nav__link">
+    logs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssh" title="ssh" class="md-nav__link">
+    ssh
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -1532,6 +1676,41 @@ to make sure the plugin is properly installed and to get a list of commands:</p>
       
         
 <footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../troubleshooting/" title="Troubleshooting" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Troubleshooting
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../development/" title="Development" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Development
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
