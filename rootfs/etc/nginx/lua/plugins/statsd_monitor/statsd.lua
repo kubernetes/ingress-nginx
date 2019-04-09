@@ -17,6 +17,11 @@ local METRIC_HISTOGRAM = "h"
 local METRIC_SET       = "s"
 local MICROSECONDS     = 1000000
 
+local ENV_TAGS = {
+  kube_namespace = os.getenv("POD_NAMESPACE"),
+  deploy_stage = os.getenv("DEPLOY_STAGE"),
+}
+
 local function create_udp_socket(host, port)
   local sock, sock_err = udp()
   if not sock then
@@ -52,6 +57,24 @@ local function get_udp_socket(host, port)
   end
 
   return sock, nil
+end
+
+-- gets called once after statsd config is parsed
+-- the function expands default tags with environment specific ones
+local function expand_default_tags()
+  if not _M.config then
+    return
+  end
+
+  if not _M.config.tags then
+    _M.config.tags = {}
+  end
+
+  for k, v  in pairs(ENV_TAGS) do
+    if v then
+      _M.config.tags[k] = v
+    end
+  end
 end
 
 local function generate_tag_string(tags)
@@ -161,17 +184,16 @@ _M.config = {
   host = os.getenv("STATSD_HOST"),
   port = os.getenv("STATSD_PORT"),
   sampling_rate = 0.1,
-  tags = {
-    pod_id = os.getenv("POD_NAME"),
-    namespace = os.getenv("POD_NAMESPACE")
-  }
+  tags = {},
 }
 
 if not _M.config.host or not _M.config.port then
   error("STATSD_HOST and STATSD_PORT env variables must be set")
 end
 
-if _M.config.tags then
+expand_default_tags()
+
+if _M.config.tags and util_tablelength(_M.config.tags) > 0 then
   default_tag_string = generate_tag_string(_M.config.tags)
 end
 

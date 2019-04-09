@@ -16,13 +16,13 @@ local function send_response_data(upstream_state, client_state)
         status_class = string.sub(status, 0, 1) .. "xx"
       end
 
-      statsd.increment('ingress.nginx.upstream.response', 1, {
+      statsd.increment('nginx.upstream.response', 1, {
         status=status,
         status_class=status_class,
         upstream_name=client_state.upstream_name
       })
 
-      statsd.histogram('ingress.nginx.upstream.response_time',
+      statsd.histogram('nginx.upstream.response_time',
         upstream_state.response_time[i], {
           upstream_name=client_state.upstream_name
       })
@@ -30,13 +30,13 @@ local function send_response_data(upstream_state, client_state)
   end
 
   status_class = string.sub(client_state.status, 0, 1) .. "xx"
-  statsd.increment('ingress.nginx.client.response', 1, {
+  statsd.increment('nginx.client.response', 1, {
     status=client_state.status,
     status_class=status_class,
     upstream_name=client_state.upstream_name
   })
 
-  statsd.histogram('ingress.nginx.client.request_time', client_state.request_time, {
+  statsd.histogram('nginx.client.request_time', client_state.request_time, {
     upstream_name=client_state.upstream_name
   })
 end
