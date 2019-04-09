@@ -24,17 +24,18 @@ type equalFunction func(e1, e2 interface{}) bool
 
 // Compare checks if the parameters are iterable and contains the same elements
 func Compare(listA, listB interface{}, eq equalFunction) bool {
-	a := reflect.ValueOf(listA)
-	ok := isIterable(a)
+	ok := isIterable(listA)
 	if !ok {
 		return false
 	}
 
-	b := reflect.ValueOf(listB)
-	ok = isIterable(b)
+	ok = isIterable(listB)
 	if !ok {
 		return false
 	}
+
+	a := reflect.ValueOf(listA)
+	b := reflect.ValueOf(listB)
 
 	if a.IsNil() && b.IsNil() {
 		return true
@@ -91,9 +92,9 @@ func StringElementsMatch(a, b []string) bool {
 	return Compare(a, b, compareStrings)
 }
 
-func isIterable(obj reflect.Value) bool {
+func isIterable(obj interface{}) bool {
 	switch reflect.TypeOf(obj).Kind() {
-	case reflect.Struct, reflect.Slice, reflect.Array:
+	case reflect.Slice, reflect.Array:
 		return true
 	default:
 		return false
