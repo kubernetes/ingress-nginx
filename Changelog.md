@@ -11,6 +11,7 @@ _New Features:_
 _Changes:_
 
 - [X] [#3743](https://github.com/kubernetes/ingress-nginx/pull/3743) Remove session-cookie-hash annotation
+- [X] [#3786](https://github.com/kubernetes/ingress-nginx/pull/3786) Fix x-forwarded-prefix annotation
 - [X] [#3798](https://github.com/kubernetes/ingress-nginx/pull/3798) Move some configuration logic from Nginx config to Lua code
 - [X] [#3806](https://github.com/kubernetes/ingress-nginx/pull/3806) Migrate e2e cluster to kind
 - [X] [#3807](https://github.com/kubernetes/ingress-nginx/pull/3807) Lua plugin system - MVP
