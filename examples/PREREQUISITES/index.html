@@ -1217,20 +1217,26 @@ key/cert pair with an arbitrarily chosen hostname, created as follows</p>
 <p>Note: If using CA Authentication, described below, you will need to sign the server certificate with the CA.</p>
 <h2 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link">&para;</a></h2>
 <p>CA Authentication also known as Mutual Authentication allows both the server and client to verify each others
-identity via a common CA. </p>
+identity via a common CA.</p>
 <p>We have a CA Certificate which we obtain usually from a Certificate Authority and use that to sign
 both our server certificate and client certificate. Then every time we want to access our backend, we must
 pass the client certificate.</p>
 <p>These instructions are based on the following <a href="https://medium.com/@awkwardferny/configuring-certificate-based-mutual-authentication-with-kubernetes-ingress-nginx-20e7e38fdfca">blog</a></p>
-<p><strong>Generate the CA Key and Certificate:</strong>
-$ openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca.key -out ca.crt -days 356 -nodes -subj '/CN=My Cert Authority'</p>
-<p><strong>Generate the Server Key, and Certificate and Sign with the CA Certificate:</strong>
-$ openssl req -new -newkey rsa:4096 -keyout server.key -out server.csr -nodes -subj '/CN=mydomain.com'
-$ openssl x509 -req -sha256 -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt</p>
-<p><strong>Generate the Client Key, and Certificate and Sign with the CA Certificate:</strong>
-$ openssl req -new -newkey rsa:4096 -keyout client.key -out client.csr -nodes -subj '/CN=My Client'
-$ openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt</p>
-<p>Once this is complete you can continue to follow the instructions <a href="../auth/client-certs/">here</a></p>
+<p><strong>Generate the CA Key and Certificate:</strong></p>
+<div class="codehilite"><pre><span></span><span class="go">openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca.key -out ca.crt -days 356 -nodes -subj &#39;/CN=My Cert Authority&#39;</span>
+</pre></div>
+
+<p><strong>Generate the Server Key, and Certificate and Sign with the CA Certificate:</strong></p>
+<div class="codehilite"><pre><span></span><span class="go">openssl req -new -newkey rsa:4096 -keyout server.key -out server.csr -nodes -subj &#39;/CN=mydomain.com&#39;</span>
+<span class="go">openssl x509 -req -sha256 -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt</span>
+</pre></div>
+
+<p><strong>Generate the Client Key, and Certificate and Sign with the CA Certificate:</strong></p>
+<div class="codehilite"><pre><span></span><span class="go">openssl req -new -newkey rsa:4096 -keyout client.key -out client.csr -nodes -subj &#39;/CN=My Client&#39;</span>
+<span class="go">openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt</span>
+</pre></div>
+
+<p>Once this is complete you can continue to follow the instructions <a href="../auth/client-certs/#creating-certificate-secrets">here</a></p>
 <h2 id="test-http-service">Test HTTP Service<a class="headerlink" href="#test-http-service" title="Permanent link">&para;</a></h2>
 <p>All examples that require a test HTTP Service use the standard http-svc pod,
 which you can deploy as follows</p>

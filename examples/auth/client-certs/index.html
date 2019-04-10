@@ -1194,13 +1194,15 @@ Before getting started you must have the following Certificates Setup:</p>
 <li>Server Certificate(Signed by CA) and Key (CN should be equal the hostname you will use)</li>
 <li>Client Certificate(Signed by CA) and Key</li>
 </ol>
-<p>For more details on the generation process, checkout the Prerequisite <a href="../../PREREQUISITES/">docs</a>.</p>
-<p>You can have as many certificates as you want. If they're in the binary DER format, you can convert them as the following:
-<div class="codehilite"><pre><span></span>$ openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
+<p>For more details on the generation process, checkout the Prerequisite <a href="../../PREREQUISITES/#client-certificate-authentication">docs</a>.</p>
+<p>You can have as many certificates as you want. If they're in the binary DER format, you can convert them as the following:</p>
+<div class="codehilite"><pre><span></span>openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
 </pre></div>
-Then, you can concatenate them all in only one file, named 'ca.crt' as the following:
-<div class="codehilite"><pre><span></span>$ cat certificate1.crt certificate2.crt certificate3.crt &gt;&gt; ca.crt
-</pre></div></p>
+
+<p>Then, you can concatenate them all in only one file, named 'ca.crt' as the following:</p>
+<div class="codehilite"><pre><span></span>cat certificate1.crt certificate2.crt certificate3.crt &gt;&gt; ca.crt
+</pre></div>
+
 <p><strong>Note:</strong> Make sure that the Key Size is greater than 1024 and Hashing Algorithm(Digest) is something better than md5
 for each certificate generated. Otherwise you will receive an error.</p>
 <h2 id="creating-certificate-secrets">Creating Certificate Secrets<a class="headerlink" href="#creating-certificate-secrets" title="Permanent link">&para;</a></h2>
@@ -1209,16 +1211,18 @@ Authentication to work properly.</p>
 <ol>
 <li>
 <p>You can create a secret containing just the CA certificate and another
-    Secret containing the Server Certificate which is Signed by the CA.
-    <div class="codehilite"><pre><span></span>$ kubectl create secret generic ca-secret --from-file<span class="o">=</span>ca.crt<span class="o">=</span>ca.crt
-$ kubectl create secret generic tls-secret --from-file<span class="o">=</span>tls.crt<span class="o">=</span>server.crt --from-file<span class="o">=</span>tls.key<span class="o">=</span>server.key
-</pre></div></p>
+    Secret containing the Server Certificate which is Signed by the CA.</p>
+<div class="codehilite"><pre><span></span>kubectl create secret generic ca-secret --from-file<span class="o">=</span>ca.crt<span class="o">=</span>ca.crt
+kubectl create secret generic tls-secret --from-file<span class="o">=</span>tls.crt<span class="o">=</span>server.crt --from-file<span class="o">=</span>tls.key<span class="o">=</span>server.key
+</pre></div>
+
 </li>
 <li>
 <p>You can create a secret containing CA certificate along with the Server
-    Certificate, that can be used for both TLS and Client Auth.
-    <div class="codehilite"><pre><span></span>$ kubectl create secret generic ca-secret --from-file<span class="o">=</span>tls.crt<span class="o">=</span>server.crt --from-file<span class="o">=</span>tls.key<span class="o">=</span>server.key --from-file<span class="o">=</span>ca.crt<span class="o">=</span>ca.crt
-</pre></div></p>
+    Certificate, that can be used for both TLS and Client Auth.</p>
+<div class="codehilite"><pre><span></span>kubectl create secret generic ca-secret --from-file<span class="o">=</span>tls.crt<span class="o">=</span>server.crt --from-file<span class="o">=</span>tls.key<span class="o">=</span>server.key --from-file<span class="o">=</span>ca.crt<span class="o">=</span>ca.crt
+</pre></div>
+
 </li>
 </ol>
 <p>Note: The CA Certificate must contain the trusted certificate authority chain to verify client certificates.</p>
