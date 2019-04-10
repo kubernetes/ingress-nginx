@@ -31,7 +31,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
+var _ = framework.IngressNginxDescribe("Custom Default Backend", func() {
 	f := framework.NewDefaultFramework("custom-default-backend")
 
 	BeforeEach(func() {
