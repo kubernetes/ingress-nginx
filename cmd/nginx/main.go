@@ -170,16 +170,23 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan
 	klog.Info("Received SIGTERM, shutting down")
+	// 1. TODO(elvinefendi) at this point we should immediately fail readiness probe and sleep for some configurable time
+	// so that downstream components remove this pod from their upstream pool and don't proxy new requsts.
+	// However liveness probe should still be successfull so that we handle in-flight requests.
 
+	// 2. now that there's likely no more new requests being proxied to this replica, we can shutdown nginx
+	// this will also try to gracefully shutdown Nginx, so it will wait some time if there's still in-flight requests
 	exitCode := 0
 	if err := ngx.Stop(); err != nil {
 		klog.Infof("Error during shutdown: %v", err)
 		exitCode = 1
 	}
 
+	// these two lines are redundant
 	klog.Info("Handled quit, awaiting Pod deletion")
 	time.Sleep(10 * time.Second)
 
+	// 3. now that we stopped Nginx, we can exit
 	klog.Infof("Exiting with %v", exitCode)
 	exit(exitCode)
 }
