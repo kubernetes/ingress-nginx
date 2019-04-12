@@ -50,10 +50,18 @@ function _M.call()
     ngx.log(ngx.ERR, "Error getting the hostname, falling back on default certificate: " .. hostname_err)
     return
   end
+  if not hostname then
+    ngx.log(ngx.INFO, "hostname can not be obtained, falling back to default certificate")
+    return
+  end
 
   local pem_cert_key = get_pem_cert_key(hostname)
-  if not pem_cert_key or pem_cert_key == "" then
+  if not pem_cert_key then
     ngx.log(ngx.ERR, "Certificate not found, falling back on default certificate for hostname: " .. tostring(hostname))
+    return
+  end
+  if pem_cert_key == "" then
+    ngx.log(ngx.ERR, "Certificate is empty, falling back on default certificate for hostname: " .. tostring(hostname))
     return
   end
 
