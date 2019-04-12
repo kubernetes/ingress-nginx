@@ -55,7 +55,7 @@ const (
 	// client code is overriding it.
 	defaultBurst = 1e6
 
-	fakeCertificate = "default-fake-certificate"
+	fakeCertificateName = "default-fake-certificate"
 )
 
 func main() {
@@ -116,12 +116,12 @@ func main() {
 	if err != nil {
 		klog.Fatalf("unexpected error creating fake SSL Cert: %v", err)
 	}
-	err = ssl.StoreSSLCertOnDisk(fs, fakeCertificate, sslCert)
+	err = ssl.StoreSSLCertOnDisk(fs, fakeCertificateName, sslCert)
 	if err != nil {
 		klog.Fatalf("unexpected error storing fake SSL Cert: %v", err)
 	}
-	conf.FakeCertificatePath = sslCert.PemFileName
-	conf.FakeCertificateSHA = sslCert.PemSHA
+	conf.FakeCertificate = sslCert
+	klog.Infof("Created fake certificate with PemFileName: %v", conf.FakeCertificate.PemFileName)
 	// end create default fake SSL certificates
 
 	conf.Client = kubeClient
