@@ -18,7 +18,6 @@ package controller
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"syscall"
 
@@ -80,22 +79,8 @@ const (
 	cfgPath   = "/etc/nginx/nginx.conf"
 )
 
-var valgrind = []string{
-	"--tool=memcheck",
-	"--leak-check=full",
-	"--show-leak-kinds=all",
-	"--leak-check=yes",
-}
-
 func nginxExecCommand(args ...string) *exec.Cmd {
 	cmdArgs := []string{}
-
-	if os.Getenv("RUN_WITH_VALGRIND") == "true" {
-		cmdArgs = append(cmdArgs, valgrind...)
-		cmdArgs = append(cmdArgs, defBinary, "-c", cfgPath)
-		cmdArgs = append(cmdArgs, args...)
-		return exec.Command("valgrind", cmdArgs...)
-	}
 
 	cmdArgs = append(cmdArgs, "-c", cfgPath)
 	cmdArgs = append(cmdArgs, args...)
