@@ -25,7 +25,7 @@
 
 This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#understanding-configmaps-and-pods) to store the NGINX configuration. [Make Ingress-Nginx Work for you, and the Community](https://youtu.be/GDm-7BlmPPg) from KubeCon Europe 2018 is a great video to get you started!!
 
-Learn more about using Ingress on [k8s.io](http://kubernetes.io/docs/user-guide/ingress/)
+Learn more about using Ingress on [k8s.io](https://kubernetes.io/docs/concepts/services-networking/ingress/)
 
 ### What is an Ingress Controller?
 
