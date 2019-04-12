@@ -88,8 +88,7 @@ type Configuration struct {
 
 	EnableSSLChainCompletion bool
 
-	FakeCertificatePath string
-	FakeCertificateSHA  string
+	FakeCertificate *ingress.SSLCert
 
 	SyncRateLimit float32
 
@@ -829,6 +828,21 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	return upstreams, nil
 }
 
+// overridePemFileNameAndPemSHA should only be called when DynamicCertificatesEnabled
+// ideally this function should not exist, the only reason why we use it is that
+// we rely on PemFileName in nginx.tmpl to configure SSL directives
+// and PemSHA to force reload
+func (n *NGINXController) overridePemFileNameAndPemSHA(cert *ingress.SSLCert) {
+	// TODO(elvinefendi): It is not great but we currently use PemFileName to decide whether SSL needs to be configured
+	// in nginx configuration or not. The whole thing needs to be refactored, we should rely on a proper
+	// signal to configure SSL, not PemFileName.
+	cert.PemFileName = n.cfg.FakeCertificate.PemFileName
+
+	// TODO(elvinefendi): This is again another hacky way of avoiding Nginx reload when certificate
+	// changes in dynamic SSL mode since FakeCertificate never changes.
+	cert.PemSHA = n.cfg.FakeCertificate.PemSHA
+}
+
 // createServers builds a map of host name to Server structs from a map of
 // already computed Upstream structs. Each Server is configured with at least
 // one root location, which uses a default backend if left unspecified.
@@ -856,16 +870,16 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		ProxyBuffering:    bdef.ProxyBuffering,
 	}
 
-	// generated on Start() with createDefaultSSLCertificate()
-	defaultPemFileName := n.cfg.FakeCertificatePath
-	defaultPemSHA := n.cfg.FakeCertificateSHA
+	defaultCertificate := n.cfg.FakeCertificate
 
 	// read custom default SSL certificate, fall back to generated default certificate
 	if n.cfg.DefaultSSLCertificate != "" {
-		defaultCertificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
+		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
 		if err == nil {
-			defaultPemFileName = defaultCertificate.PemFileName
-			defaultPemSHA = defaultCertificate.PemSHA
+			defaultCertificate = certificate
+			if n.cfg.DynamicCertificatesEnabled {
+				n.overridePemFileNameAndPemSHA(defaultCertificate)
+			}
 		} else {
 			klog.Warningf("Error loading custom default certificate, falling back to generated default:\n%v", err)
 		}
@@ -874,10 +888,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	// initialize default server and root location
 	servers[defServerName] = &ingress.Server{
 		Hostname: defServerName,
-		SSLCert: ingress.SSLCert{
-			PemFileName: defaultPemFileName,
-			PemSHA:      defaultPemSHA,
-		},
+		SSLCert:  *defaultCertificate,
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
@@ -1021,8 +1032,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 			if tlsSecretName == "" {
 				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
-				servers[host].SSLCert.PemFileName = defaultPemFileName
-				servers[host].SSLCert.PemSHA = defaultPemSHA
+				servers[host].SSLCert = *defaultCertificate
 				continue
 			}
 
@@ -1030,8 +1040,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
 				klog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
-				servers[host].SSLCert.PemFileName = defaultPemFileName
-				servers[host].SSLCert.PemSHA = defaultPemSHA
+				servers[host].SSLCert = *defaultCertificate
 				continue
 			}
 
@@ -1046,16 +1055,13 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					klog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
 						secrKey, host, err)
 					klog.Warningf("Using default certificate")
-					servers[host].SSLCert.PemFileName = defaultPemFileName
-					servers[host].SSLCert.PemSHA = defaultPemSHA
+					servers[host].SSLCert = *defaultCertificate
 					continue
 				}
 			}
 
 			if n.cfg.DynamicCertificatesEnabled {
-				// useless placeholders: just to shut up NGINX configuration loader errors:
-				cert.PemFileName = defaultPemFileName
-				cert.PemSHA = defaultPemSHA
+				n.overridePemFileNameAndPemSHA(cert)
 			}
 
 			servers[host].SSLCert = *cert
