@@ -38,7 +38,10 @@ import (
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/ingress-nginx/internal/net/ssl"
 )
+
+const fakeCertificateName = "default-fake-certificate"
 
 func TestMergeAlternativeBackends(t *testing.T) {
 	testCases := map[string]struct {
@@ -918,7 +921,19 @@ func newNGINXController(t *testing.T) *NGINXController {
 		pod,
 		false)
 
+	// BEGIN create fake ssl cert
+	defCert, defKey := ssl.GetFakeSSLCert()
+	sslCert, err := ssl.CreateSSLCert(defCert, defKey)
+	if err != nil {
+		t.Fatalf("unexpected error creating fake SSL Cert: %v", err)
+	}
+	err = ssl.StoreSSLCertOnDisk(fs, fakeCertificateName, sslCert)
+	if err != nil {
+		t.Fatalf("unexpected error storing fake SSL Cert: %v", err)
+	}
+	// END create fake ssl cert
 	config := &Configuration{
+		FakeCertificate: sslCert,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default: 80,
 		},

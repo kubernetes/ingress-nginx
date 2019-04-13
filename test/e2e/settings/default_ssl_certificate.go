@@ -17,6 +17,7 @@ limitations under the License.
 package settings
 
 import (
+	"crypto/tls"
 	"fmt"
 	"strings"
 
@@ -28,14 +29,18 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Default SSL Certificate", func() {
+var _ = framework.IngressNginxDescribe("default-ssl-certificate", func() {
 	f := framework.NewDefaultFramework("default-ssl-certificate")
+	var tlsConfig *tls.Config
 	secretName := "my-custom-cert"
+	service := "http-svc"
+	port := 80
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
 
-		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
+		var err error
+		tlsConfig, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
 			[]string{"*"},
 			secretName,
 			f.Namespace)
@@ -55,33 +60,39 @@ var _ = framework.IngressNginxDescribe("Default SSL Certificate", func() {
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 	})
 
-	It("configures ssl certificate for catch-all ingress", func() {
-		ing := framework.NewSingleCatchAllIngress("catch-all", f.Namespace, "http-svc", 80, nil)
+	It("uses default ssl certificate for catch-all ingress", func() {
+		ing := framework.NewSingleCatchAllIngress("catch-all", f.Namespace, service, port, nil)
 		f.EnsureIngress(ing)
 
-		sslCertificate := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, secretName)
-		sslCertificateKey := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, secretName)
+		By("making sure new ingress is deployed")
+		expectedConfig := fmt.Sprintf("set $proxy_upstream_name \"%v-%v-%v\";", f.Namespace, service, port)
 		f.WaitForNginxServer("_", func(cfg string) bool {
-			return strings.Contains(cfg, sslCertificate) && strings.Contains(cfg, sslCertificateKey)
+			return strings.Contains(cfg, expectedConfig)
 		})
+
+		By("making sure new ingress is responding")
+
+		By("making sure the configured default ssl certificate is being used")
+		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 	})
 
-	It("configures ssl certificate for host based ingress with tls spec", func() {
+	It("uses default ssl certificate for host based ingress when configured certificate does not match host", func() {
 		host := "foo"
 
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
-		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
-			ing.Spec.TLS[0].Hosts,
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, service, port, nil))
+		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
+			[]string{"not.foo"},
 			ing.Spec.TLS[0].SecretName,
 			ing.Namespace)
 		Expect(err).NotTo(HaveOccurred())
 
-		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
-
-		sslCertificate := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, secretName)
-		sslCertificateKey := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, secretName)
+		By("making sure new ingress is deployed")
+		expectedConfig := fmt.Sprintf("set $proxy_upstream_name \"%v-%v-%v\";", f.Namespace, service, port)
 		f.WaitForNginxServer(host, func(cfg string) bool {
-			return strings.Contains(cfg, "server_name foo") && strings.Contains(cfg, sslCertificate) && strings.Contains(cfg, sslCertificateKey)
+			return strings.Contains(cfg, expectedConfig)
 		})
+
+		By("making sure the configured default ssl certificate is being used")
+		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 	})
 })
