@@ -52,7 +52,8 @@ function _M.call()
     ngx.log(ngx.ERR, "error while obtaining hostname: " .. hostname_err)
   end
   if not hostname then
-    ngx.log(ngx.INFO, "obtained hostname is nil (the client does not support SNI?), falling back to default certificate")
+    ngx.log(ngx.INFO,
+      "obtained hostname is nil (the client does not support SNI?), falling back to default certificate")
     hostname = DEFAULT_CERT_HOSTNAME
   end
 
