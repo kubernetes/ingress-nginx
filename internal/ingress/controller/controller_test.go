@@ -921,17 +921,7 @@ func newNGINXController(t *testing.T) *NGINXController {
 		pod,
 		false)
 
-	// BEGIN create fake ssl cert
-	defCert, defKey := ssl.GetFakeSSLCert()
-	sslCert, err := ssl.CreateSSLCert(defCert, defKey)
-	if err != nil {
-		t.Fatalf("unexpected error creating fake SSL Cert: %v", err)
-	}
-	err = ssl.StoreSSLCertOnDisk(fs, fakeCertificateName, sslCert)
-	if err != nil {
-		t.Fatalf("unexpected error storing fake SSL Cert: %v", err)
-	}
-	// END create fake ssl cert
+	sslCert := ssl.GetFakeSSLCert(fs)
 	config := &Configuration{
 		FakeCertificate: sslCert,
 		ListenPorts: &ngx_config.ListenPorts{
