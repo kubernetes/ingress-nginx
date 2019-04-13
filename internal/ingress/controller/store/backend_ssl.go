@@ -103,7 +103,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
 		}
 
-		if !s.isDynamicCertificatesEnabled || len(ca) > 0 || s.defaultSSLCertificate == secretName {
+		if !s.isDynamicCertificatesEnabled || len(ca) > 0 {
 			err = ssl.StoreSSLCertOnDisk(s.filesystem, nsSecName, sslCert)
 			if err != nil {
 				return nil, fmt.Errorf("error while storing certificate and key: %v", err)
