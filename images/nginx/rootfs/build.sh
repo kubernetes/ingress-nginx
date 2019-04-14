@@ -94,7 +94,6 @@ clean-install \
   libmaxminddb-dev \
   dumb-init \
   gdb \
-  valgrind \
   bc \
   || exit 1
 
