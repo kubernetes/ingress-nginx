@@ -139,20 +139,33 @@ func TestCACert(t *testing.T) {
 }
 
 func TestGetFakeSSLCert(t *testing.T) {
-	k, c := GetFakeSSLCert()
-	if len(k) == 0 {
-		t.Fatalf("expected a valid key")
+	fs := newFS(t)
+
+	sslCert := GetFakeSSLCert(fs)
+
+	if len(sslCert.PemCertKey) == 0 {
+		t.Fatalf("expected PemCertKey to not be empty")
 	}
-	if len(c) == 0 {
-		t.Fatalf("expected a valid certificate")
+
+	if len(sslCert.PemFileName) == 0 {
+		t.Fatalf("expected PemFileName to not be empty")
+	}
+
+	if len(sslCert.CN) != 2 {
+		t.Fatalf("expected 2 entries in CN, but got %v", len(sslCert.CN))
+	}
+
+	if sslCert.CN[0] != "Kubernetes Ingress Controller Fake Certificate" {
+		t.Fatalf("expected common name to be \"Kubernetes Ingress Controller Fake Certificate\" but got %v", sslCert.CN[0])
+	}
+
+	if sslCert.CN[1] != "ingress.local" {
+		t.Fatalf("expected a DNS name \"ingress.local\" but got: %v", sslCert.CN[1])
 	}
 }
 
 func TestConfigureCACert(t *testing.T) {
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		t.Fatalf("unexpected error creating filesystem: %v", err)
-	}
+	fs := newFS(t)
 
 	cn := "demo-ca"
 	_, ca, err := generateRSACerts(cn)
