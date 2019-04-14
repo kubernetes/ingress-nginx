@@ -46,6 +46,10 @@ var (
 	oidExtensionSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 )
 
+const (
+	fakeCertificateName = "default-fake-certificate"
+)
+
 // getPemFileName returns absolute file path and file name of pem cert related to given fullSecretName
 func getPemFileName(fullSecretName string) (string, string) {
 	pemName := fmt.Sprintf("%v.pem", fullSecretName)
@@ -355,8 +359,7 @@ func AddOrUpdateDHParam(name string, dh []byte, fs file.Filesystem) (string, err
 
 // GetFakeSSLCert creates a Self Signed Certificate
 // Based in the code https://golang.org/src/crypto/tls/generate_cert.go
-func GetFakeSSLCert() ([]byte, []byte) {
-
+func GetFakeSSLCert(fs file.Filesystem) *ingress.SSLCert {
 	var priv interface{}
 	var err error
 
@@ -400,7 +403,17 @@ func GetFakeSSLCert() ([]byte, []byte) {
 
 	key := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv.(*rsa.PrivateKey))})
 
-	return cert, key
+	sslCert, err := CreateSSLCert(cert, key)
+	if err != nil {
+		klog.Fatalf("unexpected error creating fake SSL Cert: %v", err)
+	}
+
+	err = StoreSSLCertOnDisk(fs, fakeCertificateName, sslCert)
+	if err != nil {
+		klog.Fatalf("unexpected error storing fake SSL Cert: %v", err)
+	}
+
+	return sslCert
 }
 
 // FullChainCert checks if a certificate file contains issues in the intermediate CA chain
