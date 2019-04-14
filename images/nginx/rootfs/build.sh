@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.10
+export NGINX_VERSION=1.15.12
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -33,13 +33,13 @@ export MSGPACK_VERSION=3.1.1
 export DATADOG_CPP_VERSION=0.4.2
 export LUA_BRIDGE_TRACER_VERSION=0.1.0
 export MODSECURITY_VERSION=fc061a57a8b0abda79b17cbe103d78db803fa575
-export LUA_NGX_VERSION=fd90f4e8252e9d06419317fdf525b55c65e15a50
-export LUA_STREAM_NGX_VERSION=0.0.6rc5
+export LUA_NGX_VERSION=0.10.15rc1
+export LUA_STREAM_NGX_VERSION=0.0.7rc1
 export LUA_UPSTREAM_VERSION=0.07
 export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export LUAJIT_VERSION=2.1-20190228
+export LUAJIT_VERSION=2.1-20190329
 
 export BUILD_PATH=/tmp/build
 
@@ -129,7 +129,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src b865743abd52bce4745d0f7e7fedde3cafbaaab617b022c105e3e4e456537c3c \
+get_src 3d5b90aa17de1700709ae4ec6c4d73d87c888b06c510391bf7104b006fdb2abe \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -171,20 +171,20 @@ get_src a3d1c03e7af570fa64c01df259e6e9bb78637a6bd9c65c6bf7e8703e466dc22f \
 get_src c29183001e3ab48299deecd02fb84b799b6627817c9baa66e4b342ac81dd6b40\
         "https://github.com/opentracing/lua-bridge-tracer/archive/v$LUA_BRIDGE_TRACER_VERSION.tar.gz"
 
-get_src 8ff5b18f4ff75ecdb852f50ce2069213d36285fa5f584c28e03ff978fe62d99a \
-        "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
+get_src b648be7ec7e486af665ec63811b65f1472382e94a626fc2221d77ef08a4a1804 \
+        "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
 
-get_src 4f3f6fa0f2b89e0f83b6881b25ed190fd5bc7d38c1db338526664c500f0dedc6 \
+get_src 01c6cd2499d7be4a305903cce66806f625b33ae6a8e1b9b334314b8814f23be7 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
 
-get_src 342709c8e55e9901a91e90cb83153ff588d88be27c4370954b5a2e470e53d26f \
-        "https://github.com/openresty/lua-resty-lrucache/archive/v0.09rc1.tar.gz"
+get_src 42f0384f80b6a9b4f42f91ee688baf69165d0573347e6ea84ebed95e928211d7 \
+        "https://github.com/openresty/lua-resty-lrucache/archive/v0.09.tar.gz"
 
-get_src a6bd1c27291eed3df01225931346a0c78651a71d7c52839227e466eec2df2e63 \
-        "https://github.com/openresty/lua-resty-core/archive/v0.1.16.tar.gz"
+get_src 8ed51466fbac2e34e722761774c61985b45c9e2ca5580fc9b3ca8c7d605edc23 \
+        "https://github.com/openresty/lua-resty-core/archive/v0.1.17rc1.tar.gz"
 
 get_src 517db9add320250b770f2daac83a49e38e6131611f2daa5ff05c69d5705e9746 \
         "https://github.com/openresty/lua-resty-lock/archive/v0.08rc1.tar.gz"
@@ -207,7 +207,7 @@ get_src 89cedd6466801bfef20499689ebb34ecf17a2e60a34cd06e13c0204ea1775588 \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 369bc5b37f0de1cfdab6f5691a7c6438d12214ba3adbf681ce2cebb59932d6b6 \
+get_src 862fed0fc48b1e3252cb226d25874e9dff261ee15e175c8e19a8c6da01006a18 \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 
 get_src c673fcee37c1c4794f921b6710b09e8a0e1e58117aa788f798507d033f737192 \
@@ -250,10 +250,10 @@ fi
 cd "$BUILD_PATH"
 luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
 
-cd "$BUILD_PATH/lua-resty-core-0.1.16"
+cd "$BUILD_PATH/lua-resty-core-0.1.17rc1"
 make install
 
-cd "$BUILD_PATH/lua-resty-lrucache-0.09rc1"
+cd "$BUILD_PATH/lua-resty-lrucache-0.09"
 make install
 
 cd "$BUILD_PATH/lua-resty-lock-0.08rc1"
