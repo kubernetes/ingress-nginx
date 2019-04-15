@@ -18,11 +18,12 @@ package controller
 
 import (
 	"fmt"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 
 	"github.com/mitchellh/hashstructure"
 	"k8s.io/klog"
@@ -855,19 +856,20 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 	bdef := n.store.GetDefaultBackend()
 	ngxProxy := proxy.Config{
-		BodySize:          bdef.ProxyBodySize,
-		ConnectTimeout:    bdef.ProxyConnectTimeout,
-		SendTimeout:       bdef.ProxySendTimeout,
-		ReadTimeout:       bdef.ProxyReadTimeout,
-		BuffersNumber:     bdef.ProxyBuffersNumber,
-		BufferSize:        bdef.ProxyBufferSize,
-		CookieDomain:      bdef.ProxyCookieDomain,
-		CookiePath:        bdef.ProxyCookiePath,
-		NextUpstream:      bdef.ProxyNextUpstream,
-		NextUpstreamTries: bdef.ProxyNextUpstreamTries,
-		RequestBuffering:  bdef.ProxyRequestBuffering,
-		ProxyRedirectFrom: bdef.ProxyRedirectFrom,
-		ProxyBuffering:    bdef.ProxyBuffering,
+		BodySize:            bdef.ProxyBodySize,
+		ConnectTimeout:      bdef.ProxyConnectTimeout,
+		SendTimeout:         bdef.ProxySendTimeout,
+		ReadTimeout:         bdef.ProxyReadTimeout,
+		BuffersNumber:       bdef.ProxyBuffersNumber,
+		BufferSize:          bdef.ProxyBufferSize,
+		CookieDomain:        bdef.ProxyCookieDomain,
+		CookiePath:          bdef.ProxyCookiePath,
+		NextUpstream:        bdef.ProxyNextUpstream,
+		NextUpstreamTimeout: bdef.ProxyNextUpstreamTimeout,
+		NextUpstreamTries:   bdef.ProxyNextUpstreamTries,
+		RequestBuffering:    bdef.ProxyRequestBuffering,
+		ProxyRedirectFrom:   bdef.ProxyRedirectFrom,
+		ProxyBuffering:      bdef.ProxyBuffering,
 	}
 
 	defaultCertificate := n.cfg.FakeCertificate
