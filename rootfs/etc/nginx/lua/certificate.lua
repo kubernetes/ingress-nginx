@@ -4,6 +4,8 @@ local re_sub = ngx.re.sub
 
 local _M = {}
 
+local DEFAULT_CERT_HOSTNAME = "_"
+
 local function set_pem_cert_key(pem_cert_key)
   local der_cert, der_cert_err = ssl.cert_pem_to_der(pem_cert_key)
   if not der_cert then
@@ -47,13 +49,20 @@ end
 function _M.call()
   local hostname, hostname_err = ssl.server_name()
   if hostname_err then
-    ngx.log(ngx.ERR, "Error getting the hostname, falling back on default certificate: " .. hostname_err)
-    return
+    ngx.log(ngx.ERR, "error while obtaining hostname: " .. hostname_err)
+  end
+  if not hostname then
+    ngx.log(ngx.INFO,
+      "obtained hostname is nil (the client does not support SNI?), falling back to default certificate")
+    hostname = DEFAULT_CERT_HOSTNAME
   end
 
   local pem_cert_key = get_pem_cert_key(hostname)
-  if not pem_cert_key or pem_cert_key == "" then
-    ngx.log(ngx.ERR, "Certificate not found, falling back on default certificate for hostname: " .. tostring(hostname))
+  if not pem_cert_key then
+    pem_cert_key = get_pem_cert_key(DEFAULT_CERT_HOSTNAME)
+  end
+  if not pem_cert_key then
+    ngx.log(ngx.ERR, "certificate not found, falling back to fake certificate for hostname: " .. tostring(hostname))
     return
   end
 

@@ -990,8 +990,12 @@ stream {
                 plugins.run()
             }
 
+            {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
+            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
+            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
+            # that means currently `satisfy any` and lua-resty-waf together will potentiall render any
+            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
             access_by_lua_block {
-                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 
@@ -1032,10 +1036,8 @@ stream {
                 {{ end }}
 
                 waf:exec()
-                {{ end }}
-
-                plugins.run()
             }
+            {{ end }}
 
             header_filter_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
@@ -1237,6 +1239,7 @@ stream {
 
             # In case of errors try the next upstream server before returning an error
             proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream $all.Cfg.RetryNonIdempotent }};
+            proxy_next_upstream_timeout             {{ $location.Proxy.NextUpstreamTimeout }};
             proxy_next_upstream_tries               {{ $location.Proxy.NextUpstreamTries }};
 
             {{/* Add any additional configuration defined */}}
