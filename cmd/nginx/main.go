@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -32,11 +33,14 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/wait"
 	discovery "k8s.io/apimachinery/pkg/version"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/transport"
 	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/file"
@@ -179,18 +183,59 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 // controller runs inside Kubernetes and fallback to the in-cluster config. If
 // the in-cluster config is missing or fails, we fallback to the default config.
 func createApiserverClient(apiserverHost, kubeConfig string) (*kubernetes.Clientset, error) {
-	cfg, err := clientcmd.BuildConfigFromFlags(apiserverHost, kubeConfig)
+	config, err := clientcmd.BuildConfigFromFlags(apiserverHost, kubeConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg.QPS = defaultQPS
-	cfg.Burst = defaultBurst
-	cfg.ContentType = "application/vnd.kubernetes.protobuf"
+	config.QPS = defaultQPS
+	config.Burst = defaultBurst
+	config.ContentType = "application/vnd.kubernetes.protobuf"
 
-	klog.Infof("Creating API client for %s", cfg.Host)
+	// For the purpose of this test, we want to force that clients
+	// do not share underlying transport (which is a default behavior
+	// in Kubernetes). Thus, we are explicitly creating transport for
+	// each client here.
+	transportConfig, err := config.TransportConfig()
+	if err != nil {
+		return nil, err
+	}
 
-	client, err := kubernetes.NewForConfig(cfg)
+	tlsConfig, err := transport.TLSConfigFor(transportConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	transport := utilnet.SetTransportDefaults(&http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ExpectContinueTimeout: 1 * time.Second,
+		ResponseHeaderTimeout: 10 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		TLSClientConfig:       tlsConfig,
+	})
+
+	config.Transport = transport
+	config.Dial = transportConfig.Dial
+
+	config.TLSClientConfig = restclient.TLSClientConfig{}
+
+	// https://github.com/golang/go/issues/23427
+	go func() {
+		for {
+			select {
+			case <-time.After(30 * time.Second):
+				transport.CloseIdleConnections()
+			}
+		}
+	}()
+
+	klog.Infof("Creating API client for %s", config.Host)
+
+	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
