@@ -33,12 +33,6 @@ var once sync.Once
 
 var isInitialism func(string) bool
 
-var (
-	splitRex1     *regexp.Regexp
-	splitRex2     *regexp.Regexp
-	splitReplacer *strings.Replacer
-)
-
 func init() {
 	// Taken from https://github.com/golang/lint/blob/3390df4df2787994aea98de825b964ac7944b817/lint.go#L732-L769
 	var configuredInitialisms = map[string]bool{
@@ -159,54 +153,49 @@ func SplitByFormat(data, format string) []string {
 	return result
 }
 
-type byInitialism []string
+type byLength []string
 
-func (s byInitialism) Len() int {
+func (s byLength) Len() int {
 	return len(s)
 }
-func (s byInitialism) Swap(i, j int) {
+func (s byLength) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-func (s byInitialism) Less(i, j int) bool {
-	if len(s[i]) != len(s[j]) {
-		return len(s[i]) < len(s[j])
-	}
-
-	return strings.Compare(s[i], s[j]) > 0
+func (s byLength) Less(i, j int) bool {
+	return len(s[i]) < len(s[j])
 }
 
 // Prepares strings by splitting by caps, spaces, dashes, and underscore
 func split(str string) []string {
-	// check if consecutive single char things make up an initialism
-	once.Do(func() {
-		splitRex1 = regexp.MustCompile(`(\p{Lu})`)
-		splitRex2 = regexp.MustCompile(`(\pL|\pM|\pN|\p{Pc})+`)
-		splitReplacer = strings.NewReplacer(
-			"@", "At ",
-			"&", "And ",
-			"|", "Pipe ",
-			"$", "Dollar ",
-			"!", "Bang ",
-			"-", " ",
-			"_", " ",
-		)
-		ensureSorted()
-	})
+	repl := strings.NewReplacer(
+		"@", "At ",
+		"&", "And ",
+		"|", "Pipe ",
+		"$", "Dollar ",
+		"!", "Bang ",
+		"-", " ",
+		"_", " ",
+	)
+
+	rex1 := regexp.MustCompile(`(\p{Lu})`)
+	rex2 := regexp.MustCompile(`(\pL|\pM|\pN|\p{Pc})+`)
 
 	str = trim(str)
 
 	// Convert dash and underscore to spaces
-	str = splitReplacer.Replace(str)
+	str = repl.Replace(str)
 
 	// Split when uppercase is found (needed for Snake)
-	str = splitRex1.ReplaceAllString(str, " $1")
+	str = rex1.ReplaceAllString(str, " $1")
 
+	// check if consecutive single char things make up an initialism
+	once.Do(ensureSorted)
 	for _, k := range initialisms {
-		str = strings.Replace(str, splitRex1.ReplaceAllString(k, " $1"), " "+k, -1)
+		str = strings.Replace(str, rex1.ReplaceAllString(k, " $1"), " "+k, -1)
 	}
 	// Get the final list of words
 	//words = rex2.FindAllString(str, -1)
-	return splitRex2.FindAllString(str, -1)
+	return rex2.FindAllString(str, -1)
 }
 
 // Removes leading whitespaces
@@ -226,7 +215,7 @@ func lower(str string) string {
 
 // Camelize an uppercased word
 func Camelize(word string) (camelized string) {
-	for pos, ru := range []rune(word) {
+	for pos, ru := range word {
 		if pos > 0 {
 			camelized += string(unicode.ToLower(ru))
 		} else {
@@ -282,7 +271,7 @@ func ToHumanNameTitle(name string) string {
 	for _, w := range in {
 		uw := upper(w)
 		if !isInitialism(uw) {
-			out = append(out, Camelize(w))
+			out = append(out, upper(w[:1])+lower(w[1:]))
 		} else {
 			out = append(out, w)
 		}
@@ -300,7 +289,7 @@ func ToJSONName(name string) string {
 			out = append(out, lower(w))
 			continue
 		}
-		out = append(out, Camelize(w))
+		out = append(out, upper(w[:1])+lower(w[1:]))
 	}
 	return strings.Join(out, "")
 }
@@ -326,15 +315,19 @@ func ToGoName(name string) string {
 		uw := upper(w)
 		mod := int(math.Min(float64(len(uw)), 2))
 		if !isInitialism(uw) && !isInitialism(uw[:len(uw)-mod]) {
-			uw = Camelize(w)
+			uw = upper(w[:1]) + lower(w[1:])
 		}
 		out = append(out, uw)
 	}
 
 	result := strings.Join(out, "")
 	if len(result) > 0 {
-		if !unicode.IsUpper([]rune(result)[0]) {
-			result = "X" + result
+		ud := upper(result[:1])
+		ru := []rune(ud)
+		if unicode.IsUpper(ru[0]) {
+			result = ud + result[1:]
+		} else {
+			result = "X" + ud + result[1:]
 		}
 	}
 	return result
