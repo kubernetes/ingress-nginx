@@ -1,5 +1,16 @@
 # Changelog
 
+### 0.24.1
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.24.1`
+
+_Changes:_
+
+- [X] [#3990](https://github.com/kubernetes/ingress-nginx/pull/3990) Fix dynamic cert issue with default-ssl-certificate
+- [X] [#3980](https://github.com/kubernetes/ingress-nginx/pull/3980) Refactor isIterable
+- [X] [#4000](https://github.com/kubernetes/ingress-nginx/pull/4000) Dynamic ssl improvements
+- [X] [#4007](https://github.com/kubernetes/ingress-nginx/pull/4007) do not create empty access_by_lua_block
+
 ### 0.24.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.24.0`
