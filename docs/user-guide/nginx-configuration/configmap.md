@@ -138,6 +138,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-cookie-path](#proxy-cookie-path)|string|"off"|
 |[proxy-cookie-domain](#proxy-cookie-domain)|string|"off"|
 |[proxy-next-upstream](#proxy-next-upstream)|string|"error timeout"|
+|[proxy-next-upstream-timeout](#proxy-next-upstream-timeout)|int|0|
 |[proxy-next-upstream-tries](#proxy-next-upstream-tries)|int|3|
 |[proxy-redirect-from](#proxy-redirect-from)|string|"off"|
 |[proxy-request-buffering](#proxy-request-buffering)|string|"on"|
@@ -788,6 +789,10 @@ Sets a text that [should be changed in the domain attribute](http://nginx.org/en
 ## proxy-next-upstream
 
 Specifies in [which cases](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream) a request should be passed to the next server.
+
+## proxy-next-upstream-timeout
+
+[Limits the time](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_timeout) in seconds during which a request can be passed to the next server.
 
 ## proxy-next-upstream-tries
 

@@ -180,8 +180,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 
 	It("should build proxy next upstream", func() {
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-next-upstream":       "error timeout http_502",
-			"nginx.ingress.kubernetes.io/proxy-next-upstream-tries": "5",
+			"nginx.ingress.kubernetes.io/proxy-next-upstream":         "error timeout http_502",
+			"nginx.ingress.kubernetes.io/proxy-next-upstream-timeout": "10",
+			"nginx.ingress.kubernetes.io/proxy-next-upstream-tries":   "5",
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
@@ -190,7 +191,27 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "proxy_next_upstream error timeout http_502;") &&
+					strings.Contains(server, "proxy_next_upstream_timeout 10;") &&
 					strings.Contains(server, "proxy_next_upstream_tries 5;")
+			})
+	})
+
+	It("should build proxy next upstream using configmap values", func() {
+		annotations := map[string]string{}
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.SetNginxConfigMapData(map[string]string{
+			"proxy-next-upstream":         "timeout http_502",
+			"proxy-next-upstream-timeout": "53",
+			"proxy-next-upstream-tries":   "44",
+		})
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_next_upstream timeout http_502;") &&
+					strings.Contains(server, "proxy_next_upstream_timeout 53;") &&
+					strings.Contains(server, "proxy_next_upstream_tries 44;")
 			})
 	})
 
