@@ -7,6 +7,7 @@ spec:
   description: |
     The official kubectl plugin for ingress-nginx.
   version: %%%tag%%%
+  homepage: https://kubernetes.github.io/ingress-nginx/kubectl-plugin/
   platforms:
   - uri: https://github.com/kubernetes/ingress-nginx/releases/download/nginx-%%%tag%%%/kubectl-ingress_nginx-darwin-amd64.tar.gz
     sha256: %%%shasum_darwin_amd64%%%
@@ -33,7 +34,7 @@ spec:
     files:
     - from: "*"
       to: "."
-    bin: "./kubectl-ingress_nginx"
+    bin: "./kubectl-ingress_nginx.exe"
     selector:
       matchLabels:
         os: windows
