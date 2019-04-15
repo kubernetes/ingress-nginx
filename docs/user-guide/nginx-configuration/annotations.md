@@ -58,6 +58,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
+|[nginx.ingress.kubernetes.io/proxy-next-upstream-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream-tries](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
@@ -489,6 +490,7 @@ In some scenarios is required to have different values. To allow this we provide
 - `nginx.ingress.kubernetes.io/proxy-send-timeout`
 - `nginx.ingress.kubernetes.io/proxy-read-timeout`
 - `nginx.ingress.kubernetes.io/proxy-next-upstream`
+- `nginx.ingress.kubernetes.io/proxy-next-upstream-timeout`
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-tries`
 - `nginx.ingress.kubernetes.io/proxy-request-buffering`
 

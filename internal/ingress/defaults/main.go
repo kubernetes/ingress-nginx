@@ -73,6 +73,10 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
 	ProxyNextUpstream string `json:"proxy-next-upstream"`
 
+	// Limits the time during which a request can be passed to the next server.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_timeout
+	ProxyNextUpstreamTimeout int `json:"proxy-next-upstream-timeout"`
+
 	// Limits the number of possible tries for passing a request to the next server.
 	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_tries
 	ProxyNextUpstreamTries int `json:"proxy-next-upstream-tries"`
