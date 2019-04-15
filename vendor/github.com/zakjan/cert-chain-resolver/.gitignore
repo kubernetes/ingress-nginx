@@ -1,9 +1,0 @@
-.idea
-*.iml
-
-/vendor
-
-/cert-chain-resolver
-/out
-
-tests/http-server
