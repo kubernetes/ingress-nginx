@@ -230,14 +230,23 @@ func (c Client) Do(r *http.Request) (*http.Response, error) {
 // sender returns the Sender to which to send requests.
 func (c Client) sender() Sender {
 	if c.Sender == nil {
-		j, _ := cookiejar.New(nil)
+		// Use behaviour compatible with DefaultTransport, but require TLS minimum version.
+		var defaultTransport = http.DefaultTransport.(*http.Transport)
+
 		tracing.Transport.Base = &http.Transport{
+			Proxy:                 defaultTransport.Proxy,
+			DialContext:           defaultTransport.DialContext,
+			MaxIdleConns:          defaultTransport.MaxIdleConns,
+			IdleConnTimeout:       defaultTransport.IdleConnTimeout,
+			TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+			ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
 			TLSClientConfig: &tls.Config{
 				MinVersion: tls.VersionTLS12,
 			},
 		}
-		client := &http.Client{Jar: j, Transport: tracing.Transport}
-		return client
+
+		j, _ := cookiejar.New(nil)
+		return &http.Client{Jar: j, Transport: tracing.Transport}
 	}
 
 	return c.Sender

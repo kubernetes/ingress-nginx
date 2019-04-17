@@ -245,9 +245,7 @@ check_dead_links:
 
 .PHONY: dep-ensure
 dep-ensure:
-	dep version || curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-	dep ensure -v
-	dep prune -v
+	GO111MODULE=on go mod tidy -v
 	find vendor -name '*_test.go' -delete
 
 .PHONY: dev-env
