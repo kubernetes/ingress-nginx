@@ -33,7 +33,7 @@ Rewriting can be controlled using the following annotations:
 Create an Ingress rule with a rewrite annotation:
 
 ```console
-$ echo "
+$ echo '
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -50,7 +50,7 @@ spec:
           serviceName: http-svc
           servicePort: 80
         path: /something/?(.*)
-" | kubectl create -f -
+' | kubectl create -f -
 ```
 
 In this ingress definition, any characters captured by `(.*)` will be assigned to the placeholder `$1`, which is then used as a parameter in the `rewrite-target` annotation. 
