@@ -1293,7 +1293,7 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <p><a href="https://www.regular-expressions.info/refcapture.html">Captured groups</a> are saved in numbered placeholders, chronologically, in the form <code class="codehilite">$1</code>, <code class="codehilite">$2</code> ... <code class="codehilite">$n</code>. These placeholders can be used as parameters in the <code class="codehilite">rewrite-target</code> annotation. </p>
 </div>
 <p>Create an Ingress rule with a rewrite annotation:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;</span>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="err">&#39;</span>
 <span class="go">apiVersion: extensions/v1beta1</span>
 <span class="go">kind: Ingress</span>
 <span class="go">metadata:</span>
@@ -1310,7 +1310,7 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <span class="go">          serviceName: http-svc</span>
 <span class="go">          servicePort: 80</span>
 <span class="go">        path: /something/?(.*)</span>
-<span class="go">&quot; | kubectl create -f -</span>
+<span class="go">&#39; | kubectl create -f -</span>
 </pre></div>
 
 <p>In this ingress definition, any characters captured by <code class="codehilite">(.*)</code> will be assigned to the placeholder <code class="codehilite">$1</code>, which is then used as a parameter in the <code class="codehilite">rewrite-target</code> annotation. </p>
