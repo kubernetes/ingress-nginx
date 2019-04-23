@@ -227,7 +227,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 	}
 }
 
-func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
+func (f *Framework) getConfigMap(name string) (*v1.ConfigMap, error) {
 	if f.KubeClientSet == nil {
 		return nil, fmt.Errorf("KubeClientSet not initialized")
 	}
@@ -235,7 +235,7 @@ func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
 	config, err := f.KubeClientSet.
 		CoreV1().
 		ConfigMaps(f.Namespace).
-		Get("nginx-configuration", metav1.GetOptions{})
+		Get(name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -243,9 +243,9 @@ func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
 	return config, err
 }
 
-// GetNginxConfigMapData gets ingress-nginx's nginx-configuration map's data
-func (f *Framework) GetNginxConfigMapData() (map[string]string, error) {
-	config, err := f.getNginxConfigMap()
+// GetConfigMapData gets the data for a config map with the given name in the controller namespace
+func (f *Framework) GetConfigMapData(name string) (map[string]string, error) {
+	config, err := f.getConfigMap(name)
 	if err != nil {
 		return nil, err
 	}
@@ -256,11 +256,32 @@ func (f *Framework) GetNginxConfigMapData() (map[string]string, error) {
 	return config.Data, err
 }
 
-// SetNginxConfigMapData sets ingress-nginx's nginx-configuration configMap data
-func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
+// GetNginxConfigMapData gets ingress-nginx's nginx-configuration map's data
+func (f *Framework) GetNginxConfigMapData() (map[string]string, error) {
+	return f.GetConfigMapData("nginx-configuration")
+}
+
+// CreateConfigMap creates a configmap in the controller namespace
+func (f *Framework) CreateConfigMap(name string, data map[string]string) {
+	cm := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Data: data,
+	}
+
+	_, err := f.KubeClientSet.
+		CoreV1().
+		ConfigMaps(f.Namespace).
+		Create(cm)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+// SetConfigMapData sets the data for a configmap with the given name in the nginx namespace
+func (f *Framework) SetConfigMapData(name string, cmData map[string]string) {
 	// Needs to do a Get and Set, Update will not take just the Data field
 	// or a configMap that is not the very last revision
-	config, err := f.getNginxConfigMap()
+	config, err := f.getConfigMap(name)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(config).NotTo(BeNil(), "expected a configmap but none returned")
 
@@ -273,6 +294,11 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 	Expect(err).NotTo(HaveOccurred())
 
 	time.Sleep(5 * time.Second)
+}
+
+// SetNginxConfigMapData sets ingress-nginx's nginx-configuration configMap data
+func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
+	f.SetConfigMapData("nginx-configuration", cmData)
 }
 
 // UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-configuration map data
