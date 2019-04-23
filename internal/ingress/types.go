@@ -50,6 +50,8 @@ var (
 // Configuration holds the definition of all the parts required to describe all
 // ingresses reachable by the ingress controller (using a filter by namespace)
 type Configuration struct {
+	AddHeaders      map[string]string
+	ProxySetHeaders map[string]string
 	// Backends are a list of backends used by all the Ingress rules in the
 	// ingress controller. This list includes the default backend
 	Backends []*Backend `json:"backends,omitempty"`

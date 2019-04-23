@@ -566,26 +566,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		cfg.MaxWorkerConnections = maxWorkerConnections
 	}
 
-	setHeaders := map[string]string{}
-	if cfg.ProxySetHeaders != "" {
-		cmap, err := n.store.GetConfigMap(cfg.ProxySetHeaders)
-		if err != nil {
-			klog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.ProxySetHeaders, err)
-		} else {
-			setHeaders = cmap.Data
-		}
-	}
-
-	addHeaders := map[string]string{}
-	if cfg.AddHeaders != "" {
-		cmap, err := n.store.GetConfigMap(cfg.AddHeaders)
-		if err != nil {
-			klog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.AddHeaders, err)
-		} else {
-			addHeaders = cmap.Data
-		}
-	}
-
 	sslDHParam := ""
 	if cfg.SSLDHParam != "" {
 		secretName := cfg.SSLDHParam
@@ -610,8 +590,8 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg.SSLDHParam = sslDHParam
 
 	tc := ngx_config.TemplateConfig{
-		ProxySetHeaders:            setHeaders,
-		AddHeaders:                 addHeaders,
+		ProxySetHeaders:            ingressCfg.ProxySetHeaders,
+		AddHeaders:                 ingressCfg.AddHeaders,
 		BacklogSize:                sysctlSomaxconn(),
 		Backends:                   ingressCfg.Backends,
 		PassthroughBackends:        ingressCfg.PassthroughBackends,

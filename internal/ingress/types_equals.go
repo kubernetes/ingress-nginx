@@ -17,6 +17,8 @@ limitations under the License.
 package ingress
 
 import (
+	"reflect"
+
 	"k8s.io/ingress-nginx/internal/sets"
 )
 
@@ -77,6 +79,14 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	}
 
 	if c1.ControllerPodsCount != c2.ControllerPodsCount {
+		return false
+	}
+
+	if !reflect.DeepEqual(c1.AddHeaders, c2.AddHeaders) {
+		return false
+	}
+
+	if !reflect.DeepEqual(c1.ProxySetHeaders, c2.ProxySetHeaders) {
 		return false
 	}
 

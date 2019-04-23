@@ -152,7 +152,33 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		}
 	}
 
+	cfgProxySetHeaders := n.store.GetBackendConfiguration().ProxySetHeaders
+	setHeaders := map[string]string{}
+	if cfgProxySetHeaders != "" {
+		cmap, err := n.store.GetConfigMap(cfgProxySetHeaders)
+		if err != nil {
+			klog.Warningf("Error reading ConfigMap %q from local store: %v", cfgProxySetHeaders, err)
+		} else {
+			setHeaders = cmap.Data
+		}
+	}
+
+	cfgAddHeaders := n.store.GetBackendConfiguration().AddHeaders
+	addHeaders := map[string]string{}
+	if cfgAddHeaders != "" {
+		cmap, err := n.store.GetConfigMap(cfgAddHeaders)
+		if err != nil {
+			klog.Warningf("Error reading ConfigMap %q from local store: %v", cfgAddHeaders, err)
+		} else {
+			addHeaders = cmap.Data
+		}
+	}
+
+	n.store.SetDynamicWatchedConfigMaps([]string{cfgAddHeaders, cfgProxySetHeaders})
+
 	pcfg := &ingress.Configuration{
+		AddHeaders:            addHeaders,
+		ProxySetHeaders:       setHeaders,
 		Backends:              upstreams,
 		Servers:               servers,
 		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),

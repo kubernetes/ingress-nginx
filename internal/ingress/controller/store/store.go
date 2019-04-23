@@ -96,6 +96,12 @@ type Storer interface {
 
 	// Run initiates the synchronization of the controllers
 	Run(stopCh chan struct{})
+
+	// IsConfigMapWatched returns true if the Storer cares about this configmap
+	IsConfigMapWatched(key string) bool
+
+	// SetDynamicWatchedConfigMaps sets the dynamic configmap keys the Storer is watching
+	SetDynamicWatchedConfigMaps(keys []string)
 }
 
 // EventType type of event associated with an informer
@@ -223,6 +229,11 @@ type k8sStore struct {
 	isDynamicCertificatesEnabled bool
 
 	pod *k8s.PodInfo
+
+	staticWatchedConfigMaps  []string
+	dynamicWatchedConfigMaps []string
+
+	watchedConfigMapsMu *sync.RWMutex
 }
 
 // New creates a new object store to be used in the ingress controller
@@ -250,6 +261,9 @@ func New(checkOCSP bool,
 		defaultSSLCertificate:        defaultSSLCertificate,
 		isDynamicCertificatesEnabled: isDynamicCertificatesEnabled,
 		pod:                          pod,
+		staticWatchedConfigMaps:      []string{configmap, tcp, udp},
+		dynamicWatchedConfigMaps:     []string{},
+		watchedConfigMapsMu:          &sync.RWMutex{},
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -529,7 +543,7 @@ func New(checkOCSP bool,
 			cm := obj.(*corev1.ConfigMap)
 			key := k8s.MetaNamespaceKey(cm)
 			// updates to configuration configmaps can trigger an update
-			if key == configmap || key == tcp || key == udp {
+			if store.IsConfigMapWatched(key) {
 				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
 				if key == configmap {
 					store.setConfig(cm)
@@ -545,7 +559,7 @@ func New(checkOCSP bool,
 				cm := cur.(*corev1.ConfigMap)
 				key := k8s.MetaNamespaceKey(cm)
 				// updates to configuration configmaps can trigger an update
-				if key == configmap || key == tcp || key == udp {
+				if store.IsConfigMapWatched(key) {
 					recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
 					if key == configmap {
 						store.setConfig(cm)
@@ -566,6 +580,20 @@ func New(checkOCSP bool,
 						Type: ConfigurationEvent,
 						Obj:  cur,
 					}
+				}
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			cm, ok := obj.(*corev1.ConfigMap)
+			key := k8s.MetaNamespaceKey(cm)
+			if store.IsConfigMapWatched(key) {
+				recorder.Eventf(cm, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("ConfigMap %v", key))
+				if ok {
+					store.listers.ConfigMap.Delete(cm)
+				}
+				updateCh.In() <- Event{
+					Type: ConfigurationEvent,
+					Obj:  obj,
 				}
 			}
 		},
@@ -883,4 +911,30 @@ func (s k8sStore) GetRunningControllerPodsCount() int {
 	}
 
 	return count
+}
+
+func (s *k8sStore) IsConfigMapWatched(key string) bool {
+	s.watchedConfigMapsMu.RLock()
+	defer s.watchedConfigMapsMu.RUnlock()
+
+	for _, watchedKey := range s.staticWatchedConfigMaps {
+		if watchedKey == key {
+			return true
+		}
+	}
+
+	for _, watchedKey := range s.dynamicWatchedConfigMaps {
+		if watchedKey == key {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *k8sStore) SetDynamicWatchedConfigMaps(keys []string) {
+	s.watchedConfigMapsMu.Lock()
+	defer s.watchedConfigMapsMu.Unlock()
+
+	s.dynamicWatchedConfigMaps = keys
 }
