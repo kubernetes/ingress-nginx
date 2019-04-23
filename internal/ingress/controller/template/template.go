@@ -121,6 +121,7 @@ var (
 			}
 			return true
 		},
+		"escapeDoubleQuote":          escapeDoubleQuote,
 		"escapeLiteralDollar":        escapeLiteralDollar,
 		"shouldConfigureLuaRestyWAF": shouldConfigureLuaRestyWAF,
 		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
@@ -166,6 +167,10 @@ var (
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 	}
 )
+
+func escapeDoubleQuote(input string) string {
+	return strings.Replace(input, `"`, `\"`, -1)
+}
 
 // escapeLiteralDollar will replace the $ character with ${literal_dollar}
 // which is made to work via the following configuration in the http section of

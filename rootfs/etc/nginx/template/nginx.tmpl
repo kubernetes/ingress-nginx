@@ -239,7 +239,7 @@ http {
 
     # Custom headers for response
     {{ range $k, $v := $addHeaders }}
-    add_header {{ $k }}            "{{ $v }}";
+    add_header {{ $k }}            "{{ escapeDoubleQuote $v }}";
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
@@ -1220,7 +1220,7 @@ stream {
 
             # Custom headers to proxied server
             {{ range $k, $v := $all.ProxySetHeaders }}
-            {{ $proxySetHeader }} {{ $k }}                    "{{ $v }}";
+            {{ $proxySetHeader }} {{ $k }}                    "{{ escapeDoubleQuote $v }}";
             {{ end }}
 
             proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
