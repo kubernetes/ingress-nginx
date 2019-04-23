@@ -868,13 +868,16 @@ func newStore(t *testing.T) *k8sStore {
 			IngressWithAnnotation: IngressWithAnnotationsLister{cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)},
 			Pod:                   PodLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
 		},
-		sslStore:         NewSSLCertTracker(),
-		filesystem:       fs,
-		updateCh:         channels.NewRingChannel(10),
-		syncSecretMu:     new(sync.Mutex),
-		backendConfigMu:  new(sync.RWMutex),
-		secretIngressMap: NewObjectRefMap(),
-		pod:              pod,
+		sslStore:                 NewSSLCertTracker(),
+		filesystem:               fs,
+		updateCh:                 channels.NewRingChannel(10),
+		syncSecretMu:             new(sync.Mutex),
+		backendConfigMu:          new(sync.RWMutex),
+		secretIngressMap:         NewObjectRefMap(),
+		staticWatchedConfigMaps:  []string{},
+		dynamicWatchedConfigMaps: []string{},
+		watchedConfigMapsMu:      new(sync.RWMutex),
+		pod:                      pod,
 	}
 }
 
@@ -1142,5 +1145,34 @@ func TestGetRunningControllerPodsCount(t *testing.T) {
 	podsCount := s.GetRunningControllerPodsCount()
 	if podsCount != 2 {
 		t.Errorf("Expected 1 controller Pods but got %v", s)
+	}
+}
+
+func TestIsConfigMapWatched(t *testing.T) {
+	s := newStore(t)
+	s.staticWatchedConfigMaps = []string{"a/b", "b/c", "e/f"}
+
+	if !s.IsConfigMapWatched("a/b") {
+		t.Errorf("static configmap a/b should be watched by the store")
+	}
+
+	if s.IsConfigMapWatched("g/h") {
+		t.Errorf("nonexistent configmap g/h is being watched")
+	}
+
+	s.SetDynamicWatchedConfigMaps([]string{"g/h", "i/j"})
+
+	if !s.IsConfigMapWatched("g/h") {
+		t.Errorf("dynamic configmap g/h is not being watched")
+	}
+
+	s.SetDynamicWatchedConfigMaps([]string{"i/j"})
+
+	if s.IsConfigMapWatched("g/h") {
+		t.Errorf("deleted dynamic configmap g/h is being watched")
+	}
+
+	if !s.IsConfigMapWatched("a/b") {
+		t.Errorf("static configmap a/b should be watched by the store")
 	}
 }
