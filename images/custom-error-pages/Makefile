@@ -3,7 +3,7 @@ all: all-container
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.3
+TAG?=0.4
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
 DOCKER?=docker
@@ -26,11 +26,11 @@ ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
 
-BASEIMAGE?=alpine:3.7
+BASEIMAGE?=alpine:3.9
 
 ALL_ARCH = amd64 arm arm64 ppc64le
 
-QEMUVERSION=v2.12.0-1
+QEMUVERSION=v3.0.0
 
 IMGNAME = custom-error-pages
 IMAGE = $(REGISTRY)/$(IMGNAME)
