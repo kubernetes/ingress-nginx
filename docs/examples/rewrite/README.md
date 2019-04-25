@@ -38,7 +38,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
   name: rewrite
   namespace: default
 spec:
@@ -49,7 +49,7 @@ spec:
       - backend:
           serviceName: http-svc
           servicePort: 80
-        path: /something/?(.*)
+        path: /something(/|$)(.*)
 ' | kubectl create -f -
 ```
 
