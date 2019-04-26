@@ -682,13 +682,17 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	err = n.testTemplate(content)
-	if err != nil {
-		return err
-	}
-
 	if n.isTest {
+		if err != nil {
+			panic(err)
+		}
+
 		n.generatedConfCh <- string(content)
 		return nil
+	}
+
+	if err != nil {
+		return err
 	}
 
 	if klog.V(2) {
