@@ -63,8 +63,12 @@ func (ct *configTest) GetController() *controller.NGINXController {
 	defer os.Setenv("POD_NAME", "")
 	defer os.Setenv("POD_NAMESPACE", "")
 
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+
+	os.Args = ct.args
 	ct.t.Logf("%v", ct.args)
-	_, conf, err := readFlags(ct.args)
+	_, conf, err := parseFlags()
 	if err != nil {
 		ct.t.Errorf("Unexpected error creating NGINX controller: %v", err)
 	}
@@ -112,7 +116,7 @@ func TestUseGeoIP2(t *testing.T) {
 	conf := ct.GetController().GenerateConfiguration()
 
 	if !strings.Contains(conf, "/etc/nginx/modules/ngx_http_geoip2_module.so") {
-		t.Fatalf("fuck")
+		t.Fatalf("The nginx.conf does not refer to ngx_http_geoip2_module.so")
 	}
 }
 
@@ -160,7 +164,7 @@ func TestProxyBufferSize(t *testing.T) {
 
 	conf := ct.GetController().GenerateConfiguration()
 	if !strings.Contains(conf, "99k") {
-		t.Fatalf(conf)
+		t.Fatalf("The nginx.conf does not contain the proxy-buffer-size value")
 	}
 }
 
