@@ -35,6 +35,10 @@ import (
 )
 
 func parseFlags() (bool, *controller.Configuration, error) {
+	return readFlags(os.Args)
+}
+
+func readFlags(args []string) (bool, *controller.Configuration, error) {
 	var (
 		flags = pflag.NewFlagSet("", pflag.ExitOnError)
 
@@ -166,12 +170,14 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 
 	flag.Set("logtostderr", "true")
 
-	flags.AddGoFlagSet(flag.CommandLine)
-	flags.Parse(os.Args)
+	commandLine := flag.NewFlagSet(args[0], flag.ExitOnError)
+
+	flags.AddGoFlagSet(commandLine)
+	flags.Parse(args)
 
 	// Workaround for this issue:
 	// https://github.com/kubernetes/kubernetes/issues/17162
-	flag.CommandLine.Parse([]string{})
+	commandLine.Parse([]string{})
 
 	pflag.VisitAll(func(flag *pflag.Flag) {
 		klog.V(2).Infof("FLAG: --%s=%q", flag.Name, flag.Value)

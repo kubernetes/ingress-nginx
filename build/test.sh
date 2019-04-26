@@ -23,5 +23,7 @@ if [ -z "${PKG}" ]; then
     exit 1
 fi
 
+mkdir -p /var/log/nginx
+
 go test -v -race -tags "cgo" \
     $(go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e' | grep -v images | grep -v "docs/examples")

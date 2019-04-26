@@ -19,6 +19,7 @@ package controller
 import (
 	"fmt"
 	"os/exec"
+	"sync/atomic"
 	"syscall"
 
 	"k8s.io/klog"
@@ -29,6 +30,25 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 )
+
+// AtomicBool is a simple implementation of an atomic boolean
+type AtomicBool struct {
+	inner int32
+}
+
+// Store sets the value of the AtomicBool
+func (b *AtomicBool) Store(value bool) {
+	var new int32
+	if value {
+		new = 1
+	}
+	atomic.StoreInt32(&b.inner, new)
+}
+
+// Load retreives the value of the atomic bool
+func (b *AtomicBool) Load() bool {
+	return atomic.LoadInt32(&b.inner) == 1
+}
 
 // newUpstream creates an upstream without servers.
 func newUpstream(name string) *ingress.Backend {

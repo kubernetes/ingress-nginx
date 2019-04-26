@@ -99,7 +99,7 @@ type Configuration struct {
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
-func (n NGINXController) GetPublishService() *apiv1.Service {
+func (n *NGINXController) GetPublishService() *apiv1.Service {
 	s, err := n.store.GetService(n.cfg.PublishService)
 	if err != nil {
 		return nil
@@ -182,6 +182,10 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			n.metricCollector.ConfigSuccess(hash, false)
 			klog.Errorf("Unexpected failure reloading the backend:\n%v", err)
 			return err
+		}
+
+		if n.isTest {
+			return nil
 		}
 
 		n.metricCollector.SetHosts(hosts)
