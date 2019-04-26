@@ -23,6 +23,8 @@ if [ -z "${PKG}" ]; then
     exit 1
 fi
 
+mkdir -p /var/log/nginx
+
 rm -rf coverage.txt
 for d in `go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e' | grep -v images`; do
     t=$(date +%s);
