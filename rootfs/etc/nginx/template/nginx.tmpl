@@ -867,9 +867,11 @@ stream {
         return 403;
         {{ else }}
 
+        {{ if not (empty $server.CertificateAuth.VerifyClient) }}
         {{ if not (empty $server.CertificateAuth.CAFileName) }}
         # PEM sha: {{ $server.CertificateAuth.PemSHA }}
         ssl_client_certificate                  {{ $server.CertificateAuth.CAFileName }};
+        {{ end }}
         ssl_verify_client                       {{ $server.CertificateAuth.VerifyClient }};
         ssl_verify_depth                        {{ $server.CertificateAuth.ValidationDepth }};
         {{ if not (empty $server.CertificateAuth.ErrorPage)}}
@@ -954,7 +956,7 @@ stream {
             {{ end }}
 
             # Pass the extracted client certificate to the auth provider
-            {{ if not (empty $server.CertificateAuth.CAFileName) }}
+            {{ if not (empty $server.CertificateAuth.VerifyClient) }}
             {{ if $server.CertificateAuth.PassCertToUpstream }}
             proxy_set_header ssl-client-cert        $ssl_client_escaped_cert;
             {{ end }}
@@ -1179,7 +1181,7 @@ stream {
             {{ end }}
 
             # Pass the extracted client certificate to the backend
-            {{ if not (empty $server.CertificateAuth.CAFileName) }}
+            {{ if not (empty $server.CertificateAuth.VerifyClient) }}
             {{ if $server.CertificateAuth.PassCertToUpstream }}
             {{ $proxySetHeader }} ssl-client-cert        $ssl_client_escaped_cert;
             {{ end }}
