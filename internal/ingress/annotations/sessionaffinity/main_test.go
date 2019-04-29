@@ -71,6 +71,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieExpires)] = "4500"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieMaxAge)] = "3000"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookiePath)] = "/foo"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieChangeOnFailure)] = "true"
 	ing.SetAnnotations(data)
 
 	affin, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -97,5 +98,9 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 
 	if nginxAffinity.Cookie.Path != "/foo" {
 		t.Errorf("expected /foo as session-cookie-path but returned %v", nginxAffinity.Cookie.Path)
+	}
+
+	if nginxAffinity.Cookie.ChangeOnFailure != "true" {
+		t.Errorf("expected change of failure parameter set to true but returned %v", nginxAffinity.Cookie.ChangeOnFailure)
 	}
 }
