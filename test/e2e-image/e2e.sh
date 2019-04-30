@@ -27,8 +27,6 @@ if [ ! -f ${HOME}/.kube/config ]; then
     kubectl config use-context default
 fi
 
-kubectl apply -f manifests/rbac.yaml
-
 ginkgo_args=(
     "-randomizeSuites"
     "-randomizeAllSpecs"

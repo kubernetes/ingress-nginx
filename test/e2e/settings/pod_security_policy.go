@@ -17,6 +17,7 @@ limitations under the License.
 package settings
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -48,7 +49,7 @@ var _ = framework.IngressNginxDescribe("[Serial] Pod Security Policies", func() 
 			Expect(err).NotTo(HaveOccurred(), "creating Pod Security Policy")
 		}
 
-		role, err := f.KubeClientSet.RbacV1().ClusterRoles().Get("nginx-ingress-clusterrole", metav1.GetOptions{})
+		role, err := f.KubeClientSet.RbacV1().ClusterRoles().Get(fmt.Sprintf("nginx-ingress-clusterrole-%v", f.Namespace), metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred(), "getting ingress controller cluster role")
 		Expect(role).NotTo(BeNil())
 
@@ -78,7 +79,7 @@ var _ = framework.IngressNginxDescribe("[Serial] Pod Security Policies", func() 
 	})
 
 	AfterEach(func() {
-		role, err := f.KubeClientSet.RbacV1().ClusterRoles().Get("nginx-ingress-clusterrole", metav1.GetOptions{})
+		role, err := f.KubeClientSet.RbacV1().ClusterRoles().Get(fmt.Sprintf("nginx-ingress-clusterrole-%v", f.Namespace), metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred(), "getting ingress controller cluster role")
 		Expect(role).NotTo(BeNil())
 
