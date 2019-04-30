@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 0
+      initContainers:
+        - name: enable-coredump
+          image: busybox
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ulimit -c unlimited
+              echo "/tmp/core.%e.%p" > /proc/sys/kernel/core_pattern
+              sysctl -w fs.suid_dumpable=2
+          securityContext:
+            privileged: true
+      containers:
+        - name: nginx-ingress-controller
+          livenessProbe:
+            timeoutSeconds: 1
+          readinessProbe:
+            timeoutSeconds: 1
