@@ -1261,7 +1261,7 @@ by a DHCP server.</p>
 <p class="admonition-title">Example</p>
 <p>Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
 environments this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe node
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
@@ -1330,7 +1330,7 @@ requests.</p>
 
 <p>and a Kubernetes node with the public IP address <code class="codehilite">203.0.113.2</code> (the external IP is added as an example, in most
 bare-metal environments this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe node
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
@@ -1367,7 +1367,7 @@ the NGINX Ingress controller should be scheduled or not scheduled.</p>
 <p class="admonition-title">Example</p>
 <p>In a Kubernetes cluster composed of 3 nodes (the external IP is added as an example, in most bare-metal environments
 this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe node
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
@@ -1408,7 +1408,7 @@ documentation as well as the section about <a href="#external-ips">External IPs<
 <p class="admonition-title">Example</p>
 <p>Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
 environments this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe node
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
@@ -1568,7 +1568,7 @@ Service. These IP addresses <strong>must belong to the target node</strong>.</p>
 <p class="admonition-title">Example</p>
 <p>Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
 environments this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe node
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
