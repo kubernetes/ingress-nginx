@@ -21,9 +21,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-
 	"k8s.io/apimachinery/pkg/util/sets"
-
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
@@ -38,6 +36,9 @@ type Collector interface {
 
 	OnStartedLeading(string)
 	OnStoppedLeading(string)
+
+	IncCheckCount(string, string)
+	IncCheckErrorCount(string, string)
 
 	RemoveMetrics(ingresses, endpoints []string)
 
@@ -101,6 +102,14 @@ func NewCollector(metricsPerHost bool, registry *prometheus.Registry) (Collector
 
 func (c *collector) ConfigSuccess(hash uint64, success bool) {
 	c.ingressController.ConfigSuccess(hash, success)
+}
+
+func (c *collector) IncCheckCount(namespace string, name string) {
+	c.ingressController.IncCheckCount(namespace, name)
+}
+
+func (c *collector) IncCheckErrorCount(namespace string, name string) {
+	c.ingressController.IncCheckErrorCount(namespace, name)
 }
 
 func (c *collector) IncReloadCount() {

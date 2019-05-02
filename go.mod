@@ -19,8 +19,10 @@ require (
 	github.com/evanphx/json-patch v4.1.0+incompatible // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
 	github.com/go-openapi/spec v0.19.0 // indirect
+	github.com/gofortune/gofortune v0.0.1-snapshot // indirect
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/google/gofuzz v1.0.0 // indirect
+	github.com/google/uuid v1.0.0
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/gophercloud/gophercloud v0.0.0-20190410012400-2c55d17f707c // indirect
 	github.com/imdario/mergo v0.3.7
@@ -54,7 +56,9 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926
+	github.com/vromero/gofortune v0.0.1-snapshot
 	github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
+	google.golang.org/grpc v1.19.1
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1

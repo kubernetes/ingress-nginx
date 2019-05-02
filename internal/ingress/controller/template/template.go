@@ -51,6 +51,11 @@ const (
 	defBufferSize = 65535
 )
 
+// TemplateWriter is the interface to render a template
+type TemplateWriter interface {
+	Write(conf config.TemplateConfig) ([]byte, error)
+}
+
 // Template ...
 type Template struct {
 	tmpl *text_template.Template

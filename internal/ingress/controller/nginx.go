@@ -45,9 +45,7 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
-	"k8s.io/klog"
-	"k8s.io/kubernetes/pkg/util/filesystem"
-
+	adm_controler "k8s.io/ingress-nginx/internal/admission/controller"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
@@ -64,6 +62,8 @@ import (
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
+	"k8s.io/klog"
+	"k8s.io/kubernetes/pkg/util/filesystem"
 )
 
 const (
@@ -110,6 +110,16 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		Proxy: &TCPProxy{},
 
 		metricCollector: mc,
+
+		command: NewNginxCommand(),
+	}
+
+	if n.cfg.ValidationWebhook != "" {
+		n.validationWebhookServer = &http.Server{
+			Addr:      config.ValidationWebhook,
+			Handler:   adm_controler.NewAdmissionControllerServer(&adm_controler.IngressAdmission{Checker: n}),
+			TLSConfig: ssl.NewTLSListener(n.cfg.ValidationWebhookCertPath, n.cfg.ValidationWebhookKeyPath).TLSConfig(),
+		}
 	}
 
 	pod, err := k8s.GetPodDetails(config.Client)
@@ -241,7 +251,7 @@ type NGINXController struct {
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
-	t *ngx_template.Template
+	t ngx_template.TemplateWriter
 
 	resolver []net.IP
 
@@ -258,6 +268,10 @@ type NGINXController struct {
 	metricCollector metric.Collector
 
 	currentLeader uint32
+
+	validationWebhookServer *http.Server
+
+	command NginxExecTester
 }
 
 // Start starts a new NGINX master process running in the foreground.
@@ -295,7 +309,7 @@ func (n *NGINXController) Start() {
 		PodNamespace: n.podInfo.Namespace,
 	})
 
-	cmd := nginxExecCommand()
+	cmd := n.command.ExecCommand()
 
 	// put NGINX in another process group to prevent it
 	// to receive signals meant for the controller
@@ -327,6 +341,13 @@ func (n *NGINXController) Start() {
 		}
 	}()
 
+	if n.validationWebhookServer != nil {
+		klog.Infof("Starting validation webhook on %s with keys %s %s", n.validationWebhookServer.Addr, n.cfg.ValidationWebhookCertPath, n.cfg.ValidationWebhookKeyPath)
+		go func() {
+			klog.Error(n.validationWebhookServer.ListenAndServeTLS("", ""))
+		}()
+	}
+
 	for {
 		select {
 		case err := <-n.ngxErrCh:
@@ -344,7 +365,7 @@ func (n *NGINXController) Start() {
 				// release command resources
 				cmd.Process.Release()
 				// start a new nginx master process if the controller is not being stopped
-				cmd = nginxExecCommand()
+				cmd = n.command.ExecCommand()
 				cmd.SysProcAttr = &syscall.SysProcAttr{
 					Setpgid: true,
 					Pgid:    0,
@@ -391,9 +412,17 @@ func (n *NGINXController) Stop() error {
 		n.syncStatus.Shutdown()
 	}
 
+	if n.validationWebhookServer != nil {
+		klog.Info("Stopping admission controller")
+		err := n.validationWebhookServer.Close()
+		if err != nil {
+			return err
+		}
+	}
+
 	// send stop signal to NGINX
 	klog.Info("Stopping NGINX process")
-	cmd := nginxExecCommand("-s", "quit")
+	cmd := n.command.ExecCommand("-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -437,45 +466,8 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 	}
 }
 
-// testTemplate checks if the NGINX configuration inside the byte array is valid
-// running the command "nginx -t" using a temporal file.
-func (n NGINXController) testTemplate(cfg []byte) error {
-	if len(cfg) == 0 {
-		return fmt.Errorf("invalid NGINX configuration (empty)")
-	}
-	tmpfile, err := ioutil.TempFile("", tempNginxPattern)
-	if err != nil {
-		return err
-	}
-	defer tmpfile.Close()
-	err = ioutil.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
-	if err != nil {
-		return err
-	}
-	out, err := nginxTestCommand(tmpfile.Name()).CombinedOutput()
-	if err != nil {
-		// this error is different from the rest because it must be clear why nginx is not working
-		oe := fmt.Sprintf(`
--------------------------------------------------------------------------------
-Error: %v
-%v
--------------------------------------------------------------------------------
-`, err, string(out))
-
-		return errors.New(oe)
-	}
-
-	os.Remove(tmpfile.Name())
-	return nil
-}
-
-// OnUpdate is called by the synchronization loop whenever configuration
-// changes were detected. The received backend Configuration is merged with the
-// configuration ConfigMap before generating the final configuration file.
-// Returns nil in case the backend was successfully reloaded.
-func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
-	cfg := n.store.GetBackendConfiguration()
-	cfg.Resolver = n.resolver
+// generateTemplate returns the nginx configuration file content
+func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
 
 	if n.cfg.EnableSSLPassthrough {
 		servers := []*TCPServer{}
@@ -638,7 +630,50 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
 
-	content, err := n.t.Write(tc)
+	return n.t.Write(tc)
+}
+
+// testTemplate checks if the NGINX configuration inside the byte array is valid
+// running the command "nginx -t" using a temporal file.
+func (n NGINXController) testTemplate(cfg []byte) error {
+	if len(cfg) == 0 {
+		return fmt.Errorf("invalid NGINX configuration (empty)")
+	}
+	tmpfile, err := ioutil.TempFile("", tempNginxPattern)
+	if err != nil {
+		return err
+	}
+	defer tmpfile.Close()
+	err = ioutil.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
+	if err != nil {
+		return err
+	}
+	out, err := n.command.Test(tmpfile.Name())
+	if err != nil {
+		// this error is different from the rest because it must be clear why nginx is not working
+		oe := fmt.Sprintf(`
+-------------------------------------------------------------------------------
+Error: %v
+%v
+-------------------------------------------------------------------------------
+`, err, string(out))
+
+		return errors.New(oe)
+	}
+
+	os.Remove(tmpfile.Name())
+	return nil
+}
+
+// OnUpdate is called by the synchronization loop whenever configuration
+// changes were detected. The received backend Configuration is merged with the
+// configuration ConfigMap before generating the final configuration file.
+// Returns nil in case the backend was successfully reloaded.
+func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
+	cfg := n.store.GetBackendConfiguration()
+	cfg.Resolver = n.resolver
+
+	content, err := n.generateTemplate(cfg, ingressCfg)
 	if err != nil {
 		return err
 	}
@@ -686,7 +721,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	o, err := nginxExecCommand("-s", "reload").CombinedOutput()
+	o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
 	}
