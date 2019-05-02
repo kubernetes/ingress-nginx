@@ -72,6 +72,8 @@ github.com/go-openapi/spec v0.19.0/go.mod h1:XkF/MOi14NmjsfZ8VtAKf8pIlbZzyoTvZsd
 github.com/go-openapi/swag v0.17.0 h1:iqrgMg7Q7SvtbWLlltPrkMs0UBJI6oTSs79JFRUi880=
 github.com/go-openapi/swag v0.17.0/go.mod h1:AByQ+nYG6gQg71GINrmuDXCPWdL640yX49/kXLo40Tg=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
+github.com/gofortune/gofortune v0.0.1-snapshot h1:0unUpPzS0PAdMrOvLAhmeaGtFlUPYv5aXUD/9XN5X9U=
+github.com/gofortune/gofortune v0.0.1-snapshot/go.mod h1:gzHWMyrWq6g1heq6667VSJTUxWXv+9mTry2HjUnEVB4=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.2.0 h1:xU6/SpYbvkNYiptHJYEDRseDLvYE7wSqhYYNy0QSUzI=
 github.com/gogo/protobuf v1.2.0/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
@@ -234,6 +236,8 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07/go.mod h1:kDXzergiv9cbyO7IOYJZWg1U88JhDg3PB6klq9Hg2pA=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926 h1:G3dpKMzFDjgEh2q1Z7zUUtKa8ViPtH+ocF0bE0g00O8=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
+github.com/vromero/gofortune v0.0.1-snapshot h1:+IDjezRGmRO1Mdm1Oh+DguaSkxjRpoevWlpdTSlwPkw=
+github.com/vromero/gofortune v0.0.1-snapshot/go.mod h1:t8EOM3RyBWLevtrXkmQtfAMmH5CU3/YcnpG5RZ/GQXQ=
 github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272 h1:scDk3LAM8x+NPuywVGC0q0/G+5Ed8M0+YXecz4XnWRM=
 github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272/go.mod h1:KNkcm66cr4ilOiEcjydK+tc2ShPUhqmuoXCljXUBPu8=
 go.opencensus.io v0.18.0/go.mod h1:vKdFvxhtzZ9onBp9VKHK8z/sRpBMnKAsufL7wlDrCOA=
