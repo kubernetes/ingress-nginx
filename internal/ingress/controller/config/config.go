@@ -603,7 +603,7 @@ func NewDefault() Configuration {
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
 	defProxyDeadlineDuration := time.Duration(5) * time.Second
-	degGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", append(defResponseHeaders, ""), "", ""}
+	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", append(defResponseHeaders, ""), "", ""}
 
 	cfg := Configuration{
 		AllowBackendServerHeader:         false,
@@ -722,7 +722,7 @@ func NewDefault() Configuration {
 		SyslogPort:                   514,
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",
-		GlobalExternalAuth:           degGlobalExternalAuth,
+		GlobalExternalAuth:           defGlobalExternalAuth,
 	}
 
 	if klog.V(5) {
