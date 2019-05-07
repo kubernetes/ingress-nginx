@@ -89,9 +89,17 @@ func TestGetStringAnnotation(t *testing.T) {
 		exp    string
 		expErr bool
 	}{
-		{"valid - A", "string", "A", "A", false},
-		{"valid - B", "string", "B", "B", false},
-		{"empty", "string", "", "", true},
+		{"valid - A", "string", "A ", "A", false},
+		{"valid - B", "string", "	B", "B", false},
+		{"empty", "string", " ", "", true},
+		{"valid multiline", "string", `
+		rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break; 	
+		rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;			
+		`, `
+rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break;
+rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;
+`,
+			false},
 	}
 
 	data := map[string]string{}
