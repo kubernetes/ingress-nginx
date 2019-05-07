@@ -25,9 +25,9 @@ RUN clean-install \
   python \
   pkg-config
 
-ENV GOLANG_VERSION 1.12.4
+ENV GOLANG_VERSION 1.12.5
 ENV GO_ARCH        linux-amd64
-ENV GOLANG_SHA     d7d1f1f88ddfe55840712dc1747f37a790cbcaa448f6c9cf51bbe10aa65442f5
+ENV GOLANG_SHA     aea86e3c73495f205929cfebba0d63f1382c8ac59be081b6351681415f4063cf
 
 RUN set -eux; \
   url="https://golang.org/dl/go${GOLANG_VERSION}.${GO_ARCH}.tar.gz"; \
@@ -63,5 +63,5 @@ RUN  luarocks install luacheck \
 RUN  go get github.com/onsi/ginkgo/ginkgo \
   && go get golang.org/x/lint/golint
 
-RUN  curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl \
+RUN  curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.14.1/bin/linux/amd64/kubectl \
   && chmod +x /usr/local/bin/kubectl

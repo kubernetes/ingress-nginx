@@ -45,8 +45,8 @@ jobs:
       if: (branch = master AND env(COMPONENT) != "docs") OR (type = pull_request AND commit_message !~ /(skip-e2e)/)
       before_script:
         - sudo mkdir -p /home/travis/.kube/ && sudo chmod 777 /home/travis/.kube/
-        - curl -sSL -o kubectl https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        - curl -sSL -o kind https://github.com/kubernetes-sigs/kind/releases/download/0.2.0/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
+        - curl -sSL -o kubectl https://storage.googleapis.com/kubernetes-release/release/v1.14.1/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        - curl -sSL -o kind https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
         - make e2e-test-image
       script:
         - test/e2e/run.sh
