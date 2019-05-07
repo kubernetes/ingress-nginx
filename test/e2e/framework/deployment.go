@@ -110,7 +110,7 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 
 	d, err := f.EnsureDeployment(deployment)
 	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
-	Expect(d).NotTo(BeNil(), "expected a deployement but none returned")
+	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
