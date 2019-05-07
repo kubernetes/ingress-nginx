@@ -246,6 +246,9 @@ type Location struct {
 	// authentication using an external provider
 	// +optional
 	ExternalAuth authreq.Config `json:"externalAuth,omitempty"`
+	// EnableGlobalAuth indicates if the access to this location requires
+	// authentication using an external provider defined in controller's config
+	EnableGlobalAuth bool `json:"enableGlobalAuth"`
 	// HTTP2PushPreload allows to configure the HTTP2 Push Preload from backend
 	// original location.
 	// +optional
