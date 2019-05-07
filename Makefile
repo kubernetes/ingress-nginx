@@ -184,10 +184,11 @@ lua-test:
 .PHONY: e2e-test
 e2e-test:
 	if  [ "$(KUBECTL_CONTEXT)" != "minikube" ] && \
-		[ "$(KUBECTL_CONTEXT)" =~ .*kind* ] && \
+		! echo $(KUBECTL_CONTEXT) | grep kind && \
+		! echo $(KUBECTL_CONTEXT) | grep ingress-nginx-dev && \
 		[ "$(KUBECTL_CONTEXT)" != "dind" ] && \
 		[ "$(KUBECTL_CONTEXT)" != "docker-for-desktop" ]; then \
-		echo "kubectl context is "$(KUBECTL_CONTEXT)", but must be one of [minikube, *kind*, dind, docker-for-deskop]"; \
+		echo "kubectl context is "$(KUBECTL_CONTEXT)", but must be one of [minikube, *kind*, *ingress-nginx-dev*, dind, docker-for-deskop]"; \
 		exit 1; \
 	fi
 
@@ -198,6 +199,11 @@ e2e-test:
 		--user=admin \
 		--user=kubelet \
 		--serviceaccount=default:ingress-nginx-e2e || true
+
+	until kubectl get secret | grep -q ^ingress-nginx-e2e-token; do \
+		echo "waiting for api token"; \
+		sleep 3; \
+	done
 
 	kubectl run --rm -i --tty \
 		--attach \
