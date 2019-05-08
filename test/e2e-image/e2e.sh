@@ -27,14 +27,6 @@ if [ ! -f ${HOME}/.kube/config ]; then
     kubectl config use-context default
 fi
 
-echo "Granting permissions to ingress-nginx e2e service account..."
-kubectl create serviceaccount ingress-nginx-e2e || true
-kubectl create clusterrolebinding permissive-binding \
---clusterrole=cluster-admin \
---user=admin \
---user=kubelet \
---serviceaccount=default:ingress-nginx-e2e || true
-
 kubectl apply -f manifests/rbac.yaml
 
 ginkgo_args=(
