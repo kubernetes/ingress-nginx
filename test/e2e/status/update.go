@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -50,7 +50,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 		Expect(err).NotTo(HaveOccurred(), "unexpected error starting kubectl proxy")
 
 		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1beta1.Deployment) error {
+			func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
 				args = append(args, fmt.Sprintf("--apiserver-host=http://%s:%d", address.String(), port))
 				args = append(args, "--publish-status-address=1.1.0.0")
@@ -67,7 +67,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 				}
 
 				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace).Update(deployment)
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
 				return err
 			})
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment flags")

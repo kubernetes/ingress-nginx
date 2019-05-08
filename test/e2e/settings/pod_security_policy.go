@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -65,11 +65,11 @@ var _ = framework.IngressNginxDescribe("[Serial] Pod Security Policies", func() 
 
 		// update the deployment just to trigger a rolling update and the use of the security policy
 		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1beta1.Deployment) error {
+			func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
 				args = append(args, "--v=2")
 				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace).Update(deployment)
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
 
 				return err
 			})
