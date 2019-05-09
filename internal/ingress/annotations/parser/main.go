@@ -19,6 +19,7 @@ package parser
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 
@@ -52,11 +53,12 @@ func (a ingAnnotations) parseBool(name string) (bool, error) {
 func (a ingAnnotations) parseString(name string) (string, error) {
 	val, ok := a[name]
 	if ok {
-		if len(val) == 0 {
+		s := normalizeString(val)
+		if len(s) == 0 {
 			return "", errors.NewInvalidAnnotationContent(name, val)
 		}
 
-		return val, nil
+		return s, nil
 	}
 	return "", errors.ErrMissingAnnotations
 }
@@ -118,4 +120,13 @@ func GetIntAnnotation(name string, ing *extensions.Ingress) (int, error) {
 // GetAnnotationWithPrefix returns the prefix of ingress annotations
 func GetAnnotationWithPrefix(suffix string) string {
 	return fmt.Sprintf("%v/%v", AnnotationsPrefix, suffix)
+}
+
+func normalizeString(input string) string {
+	trimmedContent := []string{}
+	for _, line := range strings.Split(input, "\n") {
+		trimmedContent = append(trimmedContent, strings.TrimSpace(line))
+	}
+
+	return strings.Join(trimmedContent, "\n")
 }
