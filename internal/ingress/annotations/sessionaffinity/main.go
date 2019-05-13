@@ -19,7 +19,7 @@ package sessionaffinity
 import (
 	"regexp"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -71,7 +71,7 @@ type Cookie struct {
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
-func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
+func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 	var err error
 
 	cookie := &Cookie{}
@@ -113,7 +113,7 @@ type affinity struct {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure the affinity directives
-func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 	cookie := &Cookie{}
 	// Check the type of affinity that will be used
 	at, err := parser.GetStringAnnotation(annotationAffinityType, ing)

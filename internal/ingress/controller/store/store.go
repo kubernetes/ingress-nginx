@@ -28,7 +28,7 @@ import (
 	"github.com/eapache/channels"
 
 	corev1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -308,7 +308,7 @@ func New(checkOCSP bool,
 	store.listers.Pod.Store = store.informers.Pod.GetStore()
 
 	ingDeleteHandler := func(obj interface{}) {
-		ing, ok := obj.(*extensions.Ingress)
+		ing, ok := obj.(*networking.Ingress)
 		if !ok {
 			// If we reached here it means the ingress was deleted but its final state is unrecorded.
 			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
@@ -316,7 +316,7 @@ func New(checkOCSP bool,
 				klog.Errorf("couldn't get object from tombstone %#v", obj)
 				return
 			}
-			ing, ok = tombstone.Obj.(*extensions.Ingress)
+			ing, ok = tombstone.Obj.(*networking.Ingress)
 			if !ok {
 				klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
 				return
@@ -345,7 +345,7 @@ func New(checkOCSP bool,
 
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			ing := obj.(*extensions.Ingress)
+			ing := obj.(*networking.Ingress)
 			if !class.IsValid(ing) {
 				a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
 				klog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
@@ -368,8 +368,8 @@ func New(checkOCSP bool,
 		},
 		DeleteFunc: ingDeleteHandler,
 		UpdateFunc: func(old, cur interface{}) {
-			oldIng := old.(*extensions.Ingress)
-			curIng := cur.(*extensions.Ingress)
+			oldIng := old.(*networking.Ingress)
+			curIng := cur.(*networking.Ingress)
 			validOld := class.IsValid(oldIng)
 			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
@@ -622,17 +622,17 @@ func New(checkOCSP bool,
 
 // isCatchAllIngress returns whether or not an ingress produces a
 // catch-all server, and so should be ignored when --disable-catch-all is set
-func isCatchAllIngress(spec extensions.IngressSpec) bool {
+func isCatchAllIngress(spec networking.IngressSpec) bool {
 	return spec.Backend != nil && len(spec.Rules) == 0
 }
 
 // syncIngress parses ingress annotations converting the value of the
 // annotation to a go struct
-func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
+func (s *k8sStore) syncIngress(ing *networking.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	klog.V(3).Infof("updating annotations information for ingress %v", key)
 
-	copyIng := &extensions.Ingress{}
+	copyIng := &networking.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
 	ing.Status.DeepCopyInto(&copyIng.Status)
@@ -660,7 +660,7 @@ func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 
 // updateSecretIngressMap takes an Ingress and updates all Secret objects it
 // references in secretIngressMap.
-func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
+func (s *k8sStore) updateSecretIngressMap(ing *networking.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	klog.V(3).Infof("updating references to secrets for ingress %v", key)
 
@@ -702,7 +702,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 
 // objectRefAnnotationNsKey returns an object reference formatted as a
 // 'namespace/name' key from the given annotation name.
-func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, error) {
+func objectRefAnnotationNsKey(ann string, ing *networking.Ingress) (string, error) {
 	annValue, err := parser.GetStringAnnotation(ann, ing)
 	if err != nil {
 		return "", err
@@ -721,7 +721,7 @@ func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, erro
 
 // syncSecrets synchronizes data from all Secrets referenced by the given
 // Ingress with the local store and file system.
-func (s *k8sStore) syncSecrets(ing *extensions.Ingress) {
+func (s *k8sStore) syncSecrets(ing *networking.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	for _, secrKey := range s.secretIngressMap.ReferencedBy(key) {
 		s.syncSecret(secrKey)
@@ -751,7 +751,7 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 }
 
 // getIngress returns the Ingress matching key.
-func (s *k8sStore) getIngress(key string) (*extensions.Ingress, error) {
+func (s *k8sStore) getIngress(key string) (*networking.Ingress, error) {
 	ing, err := s.listers.IngressWithAnnotation.ByKey(key)
 	if err != nil {
 		return nil, err

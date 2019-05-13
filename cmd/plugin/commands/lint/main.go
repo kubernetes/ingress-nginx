@@ -23,7 +23,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 
-	"k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	kmeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/ingress-nginx/cmd/plugin/lints"
@@ -178,7 +178,7 @@ func checkObjectArray(lints []lint, objects []kmeta.Object, opts lintOptions) {
 }
 
 func ingresses(opts lintOptions) error {
-	var ings []v1beta1.Ingress
+	var ings []networking.Ingress
 	var err error
 	if opts.allNamespaces {
 		ings, err = request.GetIngressDefinitions(opts.flags, "")

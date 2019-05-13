@@ -25,7 +25,7 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -200,8 +200,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 // CheckIngress returns an error in case the provided ingress, when added
 // to the current configuration, generates an invalid configuration
-func (n *NGINXController) CheckIngress(ing *extensions.Ingress) error {
-	//TODO: this is wrong
+func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if n == nil {
 		return fmt.Errorf("cannot check ingress on a nil ingress controller")
 	}
@@ -807,7 +806,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 // getServiceClusterEndpoint returns an Endpoint corresponding to the ClusterIP
 // field of a Service.
-func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *extensions.IngressBackend) (endpoint ingress.Endpoint, err error) {
+func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *networking.IngressBackend) (endpoint ingress.Endpoint, err error) {
 	svc, err := n.store.GetService(svcKey)
 	if err != nil {
 		return endpoint, fmt.Errorf("service %q does not exist", svcKey)

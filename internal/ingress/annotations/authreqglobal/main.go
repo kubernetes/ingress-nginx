@@ -17,7 +17,7 @@ limitations under the License.
 package authreqglobal
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -34,7 +34,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to enable or disable global external authentication
-func (a authReqGlobal) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a authReqGlobal) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	enableGlobalAuth, err := parser.GetBoolAnnotation("enable-global-auth", ing)
 	if err != nil {

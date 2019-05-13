@@ -87,11 +87,11 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 		err = cmd.Process.Kill()
 		Expect(err).NotTo(HaveOccurred(), "unexpected error terminating kubectl proxy")
 
-		ing, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+		ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred(), "unexpected error getting %s/%v Ingress", f.Namespace, host)
 
 		ing.Status.LoadBalancer.Ingress = []apiv1.LoadBalancerIngress{}
-		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).UpdateStatus(ing)
+		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).UpdateStatus(ing)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error cleaning Ingress status")
 		time.Sleep(10 * time.Second)
 
@@ -110,7 +110,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 		}()
 
 		err = wait.Poll(10*time.Second, framework.DefaultTimeout, func() (done bool, err error) {
-			ing, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			if err != nil {
 				return false, nil
 			}

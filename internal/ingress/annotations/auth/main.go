@@ -23,7 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress-nginx/internal/file"
@@ -92,7 +92,7 @@ func NewParser(authDirectory string, r resolver.Resolver) parser.IngressAnnotati
 // rule used to add authentication in the paths defined in the rule
 // and generated an htpasswd compatible file to be used as source
 // during the authentication process
-func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	at, err := parser.GetStringAnnotation("auth-type", ing)
 	if err != nil {
 		return nil, err

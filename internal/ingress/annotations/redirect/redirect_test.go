@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"testing"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
@@ -40,7 +40,7 @@ func TestPermanentRedirectWithDefaultCode(t *testing.T) {
 		t.Fatalf("Expected a parser.IngressAnnotation but returned nil")
 	}
 
-	ing := new(extensions.Ingress)
+	ing := new(networking.Ingress)
 
 	data := make(map[string]string, 1)
 	data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirectURL
@@ -78,7 +78,7 @@ func TestPermanentRedirectWithCustomCode(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			ing := new(extensions.Ingress)
+			ing := new(networking.Ingress)
 
 			data := make(map[string]string, 2)
 			data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirectURL
@@ -109,7 +109,7 @@ func TestTemporalRedirect(t *testing.T) {
 		t.Fatalf("Expected a parser.IngressAnnotation but returned nil")
 	}
 
-	ing := new(extensions.Ingress)
+	ing := new(networking.Ingress)
 
 	data := make(map[string]string, 1)
 	data[parser.GetAnnotationWithPrefix("from-to-www-redirect")] = "true"

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/eapache/channels"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -137,7 +137,7 @@ func TestStore(t *testing.T) {
 				if e.Obj == nil {
 					continue
 				}
-				if _, ok := e.Obj.(*extensions.Ingress); !ok {
+				if _, ok := e.Obj.(*networking.Ingress); !ok {
 					continue
 				}
 
@@ -169,22 +169,22 @@ func TestStore(t *testing.T) {
 
 		storer.Run(stopCh)
 
-		ing := ensureIngress(&extensions.Ingress{
+		ing := ensureIngress(&networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
 				Namespace: ns,
-				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/dummy", ns),
+				SelfLink:  fmt.Sprintf("/apis/networking/v1beta1/namespaces/%s/ingresses/dummy", ns),
 			},
-			Spec: extensions.IngressSpec{
-				Rules: []extensions.IngressRule{
+			Spec: networking.IngressSpec{
+				Rules: []networking.IngressRule{
 					{
 						Host: "dummy",
-						IngressRuleValue: extensions.IngressRuleValue{
-							HTTP: &extensions.HTTPIngressRuleValue{
-								Paths: []extensions.HTTPIngressPath{
+						IngressRuleValue: networking.IngressRuleValue{
+							HTTP: &networking.HTTPIngressRuleValue{
+								Paths: []networking.HTTPIngressPath{
 									{
 										Path: "/",
-										Backend: extensions.IngressBackend{
+										Backend: networking.IngressBackend{
 											ServiceName: "http-svc",
 											ServicePort: intstr.FromInt(80),
 										},
@@ -204,25 +204,25 @@ func TestStore(t *testing.T) {
 		time.Sleep(1 * time.Second)
 
 		// create an invalid ingress (different class)
-		invalidIngress := ensureIngress(&extensions.Ingress{
+		invalidIngress := ensureIngress(&networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "custom-class",
-				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/custom-class", ns),
+				SelfLink:  fmt.Sprintf("/apis/networking/v1beta1/namespaces/%s/ingresses/custom-class", ns),
 				Namespace: ns,
 				Annotations: map[string]string{
 					"kubernetes.io/ingress.class": "something",
 				},
 			},
-			Spec: extensions.IngressSpec{
-				Rules: []extensions.IngressRule{
+			Spec: networking.IngressSpec{
+				Rules: []networking.IngressRule{
 					{
 						Host: "dummy",
-						IngressRuleValue: extensions.IngressRuleValue{
-							HTTP: &extensions.HTTPIngressRuleValue{
-								Paths: []extensions.HTTPIngressPath{
+						IngressRuleValue: networking.IngressRuleValue{
+							HTTP: &networking.HTTPIngressRuleValue{
+								Paths: []networking.HTTPIngressPath{
 									{
 										Path: "/",
-										Backend: extensions.IngressBackend{
+										Backend: networking.IngressBackend{
 											ServiceName: "http-svc",
 											ServicePort: intstr.FromInt(80),
 										},
@@ -245,7 +245,7 @@ func TestStore(t *testing.T) {
 		// Secret takes a bit to update
 		time.Sleep(3 * time.Second)
 
-		err = clientSet.ExtensionsV1beta1().Ingresses(ni.Namespace).Delete(ni.Name, &metav1.DeleteOptions{})
+		err = clientSet.NetworkingV1beta1().Ingresses(ni.Namespace).Delete(ni.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			t.Errorf("error creating ingress: %v", err)
 		}
@@ -291,7 +291,7 @@ func TestStore(t *testing.T) {
 				if e.Obj == nil {
 					continue
 				}
-				if _, ok := e.Obj.(*extensions.Ingress); !ok {
+				if _, ok := e.Obj.(*networking.Ingress); !ok {
 					continue
 				}
 
@@ -324,25 +324,25 @@ func TestStore(t *testing.T) {
 		storer.Run(stopCh)
 
 		// create an invalid ingress (different class)
-		invalidIngress := ensureIngress(&extensions.Ingress{
+		invalidIngress := ensureIngress(&networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "custom-class",
-				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/custom-class", ns),
+				SelfLink:  fmt.Sprintf("/apis/networking/v1beta1/namespaces/%s/ingresses/custom-class", ns),
 				Namespace: ns,
 				Annotations: map[string]string{
 					"kubernetes.io/ingress.class": "something",
 				},
 			},
-			Spec: extensions.IngressSpec{
-				Rules: []extensions.IngressRule{
+			Spec: networking.IngressSpec{
+				Rules: []networking.IngressRule{
 					{
 						Host: "dummy",
-						IngressRuleValue: extensions.IngressRuleValue{
-							HTTP: &extensions.HTTPIngressRuleValue{
-								Paths: []extensions.HTTPIngressPath{
+						IngressRuleValue: networking.IngressRuleValue{
+							HTTP: &networking.HTTPIngressRuleValue{
+								Paths: []networking.HTTPIngressPath{
 									{
 										Path: "/",
-										Backend: extensions.IngressBackend{
+										Backend: networking.IngressBackend{
 											ServiceName: "http-svc",
 											ServicePort: intstr.FromInt(80),
 										},
@@ -526,19 +526,19 @@ func TestStore(t *testing.T) {
 		ingressName := "ingress-with-secret"
 		secretName := "referenced"
 
-		ing := ensureIngress(&extensions.Ingress{
+		ing := ensureIngress(&networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      ingressName,
 				Namespace: ns,
-				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/%s", ns, ingressName),
+				SelfLink:  fmt.Sprintf("/apis/networking/v1beta1/namespaces/%s/ingresses/%s", ns, ingressName),
 			},
-			Spec: extensions.IngressSpec{
-				TLS: []extensions.IngressTLS{
+			Spec: networking.IngressSpec{
+				TLS: []networking.IngressTLS{
 					{
 						SecretName: secretName,
 					},
 				},
-				Backend: &extensions.IngressBackend{
+				Backend: &networking.IngressBackend{
 					ServiceName: "http-svc",
 					ServicePort: intstr.FromInt(80),
 				},
@@ -640,28 +640,28 @@ func TestStore(t *testing.T) {
 		name := "ingress-with-secret"
 		secretHosts := []string{name}
 
-		ing := ensureIngress(&extensions.Ingress{
+		ing := ensureIngress(&networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: ns,
-				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/%s", ns, name),
+				SelfLink:  fmt.Sprintf("/apis/networking/v1beta1/namespaces/%s/ingresses/%s", ns, name),
 			},
-			Spec: extensions.IngressSpec{
-				TLS: []extensions.IngressTLS{
+			Spec: networking.IngressSpec{
+				TLS: []networking.IngressTLS{
 					{
 						Hosts:      secretHosts,
 						SecretName: name,
 					},
 				},
-				Rules: []extensions.IngressRule{
+				Rules: []networking.IngressRule{
 					{
 						Host: name,
-						IngressRuleValue: extensions.IngressRuleValue{
-							HTTP: &extensions.HTTPIngressRuleValue{
-								Paths: []extensions.HTTPIngressPath{
+						IngressRuleValue: networking.IngressRuleValue{
+							HTTP: &networking.HTTPIngressRuleValue{
+								Paths: []networking.HTTPIngressPath{
 									{
 										Path: "/",
-										Backend: extensions.IngressBackend{
+										Backend: networking.IngressBackend{
 											ServiceName: "http-svc",
 											ServicePort: intstr.FromInt(80),
 										},
@@ -801,15 +801,15 @@ func deleteConfigMap(cm, ns string, clientSet kubernetes.Interface, t *testing.T
 	t.Logf("Temporal configmap %v deleted", cm)
 }
 
-func ensureIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, t *testing.T) *extensions.Ingress {
+func ensureIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, t *testing.T) *networking.Ingress {
 	t.Helper()
-	ing, err := clientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(ingress)
+	ing, err := clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Update(ingress)
 
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			t.Logf("Ingress %v not found, creating", ingress)
 
-			ing, err = clientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress)
+			ing, err = clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Create(ingress)
 			if err != nil {
 				t.Fatalf("error creating ingress %+v: %v", ingress, err)
 			}
@@ -826,9 +826,9 @@ func ensureIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, 
 	return ing
 }
 
-func deleteIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, t *testing.T) {
+func deleteIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, t *testing.T) {
 	t.Helper()
-	err := clientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Delete(ingress.Name, &metav1.DeleteOptions{})
+	err := clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Delete(ingress.Name, &metav1.DeleteOptions{})
 
 	if err != nil {
 		t.Errorf("failed to delete ingress %+v: %v", ingress, err)
@@ -881,7 +881,7 @@ func newStore(t *testing.T) *k8sStore {
 func TestUpdateSecretIngressMap(t *testing.T) {
 	s := newStore(t)
 
-	ingTpl := &extensions.Ingress{
+	ingTpl := &networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "testns",
@@ -891,8 +891,8 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 
 	t.Run("with TLS secret", func(t *testing.T) {
 		ing := ingTpl.DeepCopy()
-		ing.Spec = extensions.IngressSpec{
-			TLS: []extensions.IngressTLS{{SecretName: "tls"}},
+		ing.Spec = networking.IngressSpec{
+			TLS: []networking.IngressTLS{{SecretName: "tls"}},
 		}
 		s.listers.Ingress.Update(ing)
 		s.updateSecretIngressMap(ing)
@@ -946,7 +946,7 @@ func TestListIngresses(t *testing.T) {
 	s := newStore(t)
 
 	ingressToIgnore := &ingress.Ingress{
-		Ingress: extensions.Ingress{
+		Ingress: networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-2",
 				Namespace: "testns",
@@ -955,8 +955,8 @@ func TestListIngresses(t *testing.T) {
 				},
 				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
-			Spec: extensions.IngressSpec{
-				Backend: &extensions.IngressBackend{
+			Spec: networking.IngressSpec{
+				Backend: &networking.IngressBackend{
 					ServiceName: "demo",
 					ServicePort: intstr.FromInt(80),
 				},
@@ -966,21 +966,21 @@ func TestListIngresses(t *testing.T) {
 	s.listers.IngressWithAnnotation.Add(ingressToIgnore)
 
 	ingressWithoutPath := &ingress.Ingress{
-		Ingress: extensions.Ingress{
+		Ingress: networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:              "test-3",
 				Namespace:         "testns",
 				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
-			Spec: extensions.IngressSpec{
-				Rules: []extensions.IngressRule{
+			Spec: networking.IngressSpec{
+				Rules: []networking.IngressRule{
 					{
 						Host: "foo.bar",
-						IngressRuleValue: extensions.IngressRuleValue{
-							HTTP: &extensions.HTTPIngressRuleValue{
-								Paths: []extensions.HTTPIngressPath{
+						IngressRuleValue: networking.IngressRuleValue{
+							HTTP: &networking.HTTPIngressRuleValue{
+								Paths: []networking.HTTPIngressPath{
 									{
-										Backend: extensions.IngressBackend{
+										Backend: networking.IngressBackend{
 											ServiceName: "demo",
 											ServicePort: intstr.FromInt(80),
 										},
@@ -996,7 +996,7 @@ func TestListIngresses(t *testing.T) {
 	s.listers.IngressWithAnnotation.Add(ingressWithoutPath)
 
 	ingressWithNginxClass := &ingress.Ingress{
-		Ingress: extensions.Ingress{
+		Ingress: networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-4",
 				Namespace: "testns",
@@ -1005,16 +1005,16 @@ func TestListIngresses(t *testing.T) {
 				},
 				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
-			Spec: extensions.IngressSpec{
-				Rules: []extensions.IngressRule{
+			Spec: networking.IngressSpec{
+				Rules: []networking.IngressRule{
 					{
 						Host: "foo.bar",
-						IngressRuleValue: extensions.IngressRuleValue{
-							HTTP: &extensions.HTTPIngressRuleValue{
-								Paths: []extensions.HTTPIngressPath{
+						IngressRuleValue: networking.IngressRuleValue{
+							HTTP: &networking.HTTPIngressRuleValue{
+								Paths: []networking.HTTPIngressPath{
 									{
 										Path: "/demo",
-										Backend: extensions.IngressBackend{
+										Backend: networking.IngressBackend{
 											ServiceName: "demo",
 											ServicePort: intstr.FromInt(80),
 										},

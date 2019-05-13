@@ -29,7 +29,7 @@ import (
 	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -908,7 +908,7 @@ func TestGetIngressInformation(t *testing.T) {
 	validIngress.Annotations = map[string]string{
 		"ingress.annotation": "ok",
 	}
-	validIngress.Spec.Backend = &extensions.IngressBackend{
+	validIngress.Spec.Backend = &networking.IngressBackend{
 		ServiceName: "a-svc",
 	}
 
@@ -926,15 +926,15 @@ func TestGetIngressInformation(t *testing.T) {
 	}
 
 	validIngress.Spec.Backend = nil
-	validIngress.Spec.Rules = []extensions.IngressRule{
+	validIngress.Spec.Rules = []networking.IngressRule{
 		{
 			Host: host,
-			IngressRuleValue: extensions.IngressRuleValue{
-				HTTP: &extensions.HTTPIngressRuleValue{
-					Paths: []extensions.HTTPIngressPath{
+			IngressRuleValue: networking.IngressRuleValue{
+				HTTP: &networking.HTTPIngressRuleValue{
+					Paths: []networking.HTTPIngressPath{
 						{
 							Path: "/ok",
-							Backend: extensions.IngressBackend{
+							Backend: networking.IngressBackend{
 								ServiceName: "b-svc",
 							},
 						},
@@ -958,14 +958,14 @@ func TestGetIngressInformation(t *testing.T) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}
 
-	validIngress.Spec.Rules = append(validIngress.Spec.Rules, extensions.IngressRule{
+	validIngress.Spec.Rules = append(validIngress.Spec.Rules, networking.IngressRule{
 		Host: "host2",
-		IngressRuleValue: extensions.IngressRuleValue{
-			HTTP: &extensions.HTTPIngressRuleValue{
-				Paths: []extensions.HTTPIngressPath{
+		IngressRuleValue: networking.IngressRuleValue{
+			HTTP: &networking.HTTPIngressRuleValue{
+				Paths: []networking.HTTPIngressPath{
 					{
 						Path: "/ok",
-						Backend: extensions.IngressBackend{
+						Backend: networking.IngressBackend{
 							ServiceName: "c-svc",
 						},
 					},
