@@ -1104,14 +1104,14 @@ stream {
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
             modsecurity on;
 
+            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+
             {{ if $location.ModSecurity.Snippet }}
             modsecurity_rules '
                 {{ $location.ModSecurity.Snippet }}
             ';
             {{ else if (or $location.ModSecurity.OWASPRules $all.Cfg.EnableOWASPCoreRules) }}
             modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
-            {{ else }}
-            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
             {{ end }}
 
             {{ if (not (empty $location.ModSecurity.TransactionID)) }}
