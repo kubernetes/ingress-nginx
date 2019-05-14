@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ifeq (run-in-docker,$(firstword $(MAKECMDGOALS)))
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(RUN_ARGS):;@:)
+endif
+
 .PHONY: all
 all: all-container
 
@@ -34,26 +39,30 @@ ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
 
-REPO_INFO=$(shell git config --get remote.origin.url)
-
-ifndef GIT_COMMIT
-  GIT_COMMIT := git-$(shell git rev-parse --short HEAD)
-endif
+REPO_INFO ?= $(shell git config --get remote.origin.url)
+GIT_COMMIT ?= git-$(shell git rev-parse --short HEAD)
 
 PKG = k8s.io/ingress-nginx
 
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
-KUBECTL_CONTEXT = $(shell kubectl config current-context)
 
-GOBUILD_FLAGS :=
+GOBUILD_FLAGS := -v
 
 ALL_ARCH = amd64 arm64
 
-QEMUVERSION = v3.0.0
+QEMUVERSION = v4.0.0
 
 BUSTED_ARGS =-v --pattern=_test
+
+export ARCH
+export TAG
+export PKG
+export GOARCH
+export GIT_COMMIT
+export GOBUILD_FLAGS
+export REPO_INFO
 
 IMGNAME = nginx-ingress-controller
 IMAGE = $(REGISTRY)/$(IMGNAME)
@@ -68,19 +77,7 @@ endif
 
 TEMP_DIR := $(shell mktemp -d)
 
-DEF_VARS:=ARCH=$(ARCH)           \
-	TAG=$(TAG)               \
-	PKG=$(PKG)               \
-	GOARCH=$(GOARCH)         \
-	GIT_COMMIT=$(GIT_COMMIT) \
-	REPO_INFO=$(REPO_INFO)   \
-	PWD=$(PWD)
-
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
-
-.PHONY: image-info
-image-info:
-	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
 
 .PHONY: sub-container-%
 sub-container-%:
@@ -101,11 +98,10 @@ container: clean-container .container-$(ARCH)
 
 .PHONY: .container-$(ARCH)
 .container-$(ARCH):
-	@echo "+ Copying artifact to temporary directory"
 	mkdir -p $(TEMP_DIR)/rootfs
 	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
 	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
-	@echo "+ Building container image $(MULTI_ARCH_IMG):$(TAG)"
+
 	cp -RP ./* $(TEMP_DIR)
 	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
 	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
@@ -129,7 +125,6 @@ endif
 
 .PHONY: clean-container
 clean-container:
-	@echo "+ Deleting container image $(MULTI_ARCH_IMG):$(TAG)"
 	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
 
 .PHONY: register-qemu
@@ -149,16 +144,11 @@ endif
 
 .PHONY: build
 build:
-	@echo "+ Building bin/$(ARCH)/nginx-ingress-controller"
-	@$(DEF_VARS) \
-	GOBUILD_FLAGS="$(GOBUILD_FLAGS)" \
-	build/go-in-docker.sh build/build.sh
+	build/build.sh
 
 .PHONY: build-plugin
 build-plugin:
-	@$(DEF_VARS) \
-	GOBUILD_FLAGS="$(GOBUILD_FLAGS)" \
-	build/go-in-docker.sh build/build-plugin.sh
+	build/build-plugin.sh
 
 .PHONY: clean
 clean:
@@ -166,32 +156,18 @@ clean:
 
 .PHONY: static-check
 static-check:
-	@$(DEF_VARS) \
-	build/go-in-docker.sh build/static-check.sh
+	build/static-check.sh
 
 .PHONY: test
 test:
-	@$(DEF_VARS)                 \
-	DOCKER_OPTS="-i --net=host"  \
-	build/go-in-docker.sh build/test.sh
+	build/test.sh
 
 .PHONY: lua-test
 lua-test:
-	@$(DEF_VARS)                 \
-	BUSTED_ARGS="$(BUSTED_ARGS)" \
-	build/go-in-docker.sh build/test-lua.sh
+	build/test-lua.sh
 
 .PHONY: e2e-test
 e2e-test:
-	if  [ "$(KUBECTL_CONTEXT)" != "minikube" ] && \
-		! echo $(KUBECTL_CONTEXT) | grep kind && \
-		! echo $(KUBECTL_CONTEXT) | grep ingress-nginx-dev && \
-		[ "$(KUBECTL_CONTEXT)" != "dind" ] && \
-		[ "$(KUBECTL_CONTEXT)" != "docker-for-desktop" ]; then \
-		echo "kubectl context is "$(KUBECTL_CONTEXT)", but must be one of [minikube, *kind*, *ingress-nginx-dev*, dind, docker-for-deskop]"; \
-		exit 1; \
-	fi
-
 	echo "Granting permissions to ingress-nginx e2e service account..."
 	kubectl create serviceaccount ingress-nginx-e2e || true
 	kubectl create clusterrolebinding permissive-binding \
@@ -205,7 +181,7 @@ e2e-test:
 		sleep 3; \
 	done
 
-	kubectl run --rm -i --tty \
+	kubectl run --rm \
 		--attach \
 		--restart=Never \
 		--generator=run-pod/v1 \
@@ -216,27 +192,22 @@ e2e-test:
 		e2e --image=nginx-ingress-controller:e2e
 
 .PHONY: e2e-test-image
-e2e-test-image:
+e2e-test-image: e2e-test-binary
 	make -C test/e2e-image
 
 .PHONY: e2e-test-binary
 e2e-test-binary:
-	@$(DEF_VARS)                 \
-	DOCKER_OPTS="-i --net=host"  \
-	build/go-in-docker.sh build/build-e2e.sh
+	ginkgo build ./test/e2e
 
 .PHONY: cover
 cover:
-	@$(DEF_VARS)                 \
-	DOCKER_OPTS="-i --net=host"  \
-	build/go-in-docker.sh build/cover.sh
-
+	build/cover.sh
 	echo "Uploading coverage results..."
-	@curl -s https://codecov.io/bash | bash
+	curl -s https://codecov.io/bash | bash
 
 .PHONY: vet
 vet:
-	@go vet $(shell go list ${PKG}/... | grep -v vendor)
+	go vet $(shell go list ${PKG}/... | grep -v vendor)
 
 .PHONY: release
 release: all-container all-push
@@ -256,22 +227,31 @@ dep-ensure:
 
 .PHONY: dev-env
 dev-env:
-	@build/dev-env.sh
+	build/dev-env.sh
 
 .PHONY: live-docs
 live-docs:
-	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
-	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
+	docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
 
 .PHONY: build-docs
 build-docs:
-	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
-	@docker run --rm -it -v ${PWD}:/docs ingress-nginx/mkdocs build
+	docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
 
 .PHONY: misspell
 misspell:
-	@go get github.com/client9/misspell/cmd/misspell
+	go get github.com/client9/misspell/cmd/misspell
 	misspell \
 		-locale US \
 		-error \
 		cmd/* internal/* deploy/* docs/* design/* test/* README.md
+
+.PHONE: kind-e2e-test
+kind-e2e-test:
+	test/e2e/run.sh
+
+.PHONE: run-in-docker
+run-in-docker:
+	# dummy target
+
