@@ -796,7 +796,7 @@ func (spt *ServicePrincipalToken) refreshInternal(ctx context.Context, resource 
 	if err != nil {
 		return fmt.Errorf("adal: Failed to build the refresh request. Error = '%v'", err)
 	}
-	req.Header.Add("User-Agent", userAgent())
+	req.Header.Add("User-Agent", UserAgent())
 	req = req.WithContext(ctx)
 	if !isIMDS(spt.inner.OauthConfig.TokenEndpoint) {
 		v := url.Values{}

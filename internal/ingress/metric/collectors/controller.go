@@ -21,15 +21,15 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/klog"
-
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/klog"
 )
 
 var (
-	operation    = []string{"controller_namespace", "controller_class", "controller_pod"}
-	sslLabelHost = []string{"namespace", "class", "host"}
+	operation        = []string{"controller_namespace", "controller_class", "controller_pod"}
+	ingressOperation = []string{"controller_namespace", "controller_class", "controller_pod", "namespace", "ingress"}
+	sslLabelHost     = []string{"namespace", "class", "host"}
 )
 
 // Controller defines base metrics about the ingress controller
@@ -40,12 +40,16 @@ type Controller struct {
 	configSuccess     prometheus.Gauge
 	configSuccessTime prometheus.Gauge
 
-	reloadOperation       *prometheus.CounterVec
-	reloadOperationErrors *prometheus.CounterVec
-	sslExpireTime         *prometheus.GaugeVec
+	reloadOperation             *prometheus.CounterVec
+	reloadOperationErrors       *prometheus.CounterVec
+	checkIngressOperation       *prometheus.CounterVec
+	checkIngressOperationErrors *prometheus.CounterVec
+	sslExpireTime               *prometheus.GaugeVec
 
 	constLabels prometheus.Labels
 	labels      prometheus.Labels
+
+	leaderElection *prometheus.GaugeVec
 }
 
 // NewController creates a new prometheus collector for the
@@ -103,6 +107,22 @@ func NewController(pod, namespace, class string) *Controller {
 			},
 			operation,
 		),
+		checkIngressOperationErrors: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: PrometheusNamespace,
+				Name:      "check_errors",
+				Help:      `Cumulative number of Ingress controller errors during syntax check operations`,
+			},
+			ingressOperation,
+		),
+		checkIngressOperation: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: PrometheusNamespace,
+				Name:      "check_success",
+				Help:      `Cumulative number of Ingress controller syntax check operations`,
+			},
+			ingressOperation,
+		),
 		sslExpireTime: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Namespace: PrometheusNamespace,
@@ -111,6 +131,15 @@ func NewController(pod, namespace, class string) *Controller {
 			An example to check if this certificate will expire in 10 days is: "nginx_ingress_controller_ssl_expire_time_seconds < (time() + (10 * 24 * 3600))"`,
 			},
 			sslLabelHost,
+		),
+		leaderElection: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace:   PrometheusNamespace,
+				Name:        "leader_election_status",
+				Help:        "Gauge reporting status of the leader election, 0 indicates follower, 1 indicates leader. 'name' is the string used to identify the lease",
+				ConstLabels: constLabels,
+			},
+			[]string{"name"},
 		),
 	}
 
@@ -125,6 +154,34 @@ func (cm *Controller) IncReloadCount() {
 // IncReloadErrorCount increment the reload error counter
 func (cm *Controller) IncReloadErrorCount() {
 	cm.reloadOperationErrors.With(cm.constLabels).Inc()
+}
+
+// OnStartedLeading indicates the pod was elected as the leader
+func (cm *Controller) OnStartedLeading(electionID string) {
+	cm.leaderElection.WithLabelValues(electionID).Set(1.0)
+}
+
+// OnStoppedLeading indicates the pod stopped being the leader
+func (cm *Controller) OnStoppedLeading(electionID string) {
+	cm.leaderElection.WithLabelValues(electionID).Set(0)
+}
+
+// IncCheckCount increment the check counter
+func (cm *Controller) IncCheckCount(namespace, name string) {
+	labels := prometheus.Labels{
+		"namespace": namespace,
+		"ingress":   name,
+	}
+	cm.checkIngressOperation.MustCurryWith(cm.constLabels).With(labels).Inc()
+}
+
+// IncCheckErrorCount increment the check error counter
+func (cm *Controller) IncCheckErrorCount(namespace, name string) {
+	labels := prometheus.Labels{
+		"namespace": namespace,
+		"ingress":   name,
+	}
+	cm.checkIngressOperationErrors.MustCurryWith(cm.constLabels).With(labels).Inc()
 }
 
 // ConfigSuccess set a boolean flag according to the output of the controller configuration reload
@@ -149,7 +206,10 @@ func (cm Controller) Describe(ch chan<- *prometheus.Desc) {
 	cm.configSuccessTime.Describe(ch)
 	cm.reloadOperation.Describe(ch)
 	cm.reloadOperationErrors.Describe(ch)
+	cm.checkIngressOperation.Describe(ch)
+	cm.checkIngressOperationErrors.Describe(ch)
 	cm.sslExpireTime.Describe(ch)
+	cm.leaderElection.Describe(ch)
 }
 
 // Collect implements the prometheus.Collector interface.
@@ -159,7 +219,10 @@ func (cm Controller) Collect(ch chan<- prometheus.Metric) {
 	cm.configSuccessTime.Collect(ch)
 	cm.reloadOperation.Collect(ch)
 	cm.reloadOperationErrors.Collect(ch)
+	cm.checkIngressOperation.Collect(ch)
+	cm.checkIngressOperationErrors.Collect(ch)
 	cm.sslExpireTime.Collect(ch)
+	cm.leaderElection.Collect(ch)
 }
 
 // SetSSLExpireTime sets the expiration time of SSL Certificates
@@ -179,13 +242,21 @@ func (cm *Controller) SetSSLExpireTime(servers []*ingress.Server) {
 
 // RemoveMetrics removes metrics for hostnames not available anymore
 func (cm *Controller) RemoveMetrics(hosts []string, registry prometheus.Gatherer) {
+	cm.removeSSLExpireMetrics(true, hosts, registry)
+}
+
+// RemoveAllSSLExpireMetrics removes metrics for expiration of SSL Certificates
+func (cm *Controller) RemoveAllSSLExpireMetrics(registry prometheus.Gatherer) {
+	cm.removeSSLExpireMetrics(false, []string{}, registry)
+}
+
+func (cm *Controller) removeSSLExpireMetrics(onlyDefinedHosts bool, hosts []string, registry prometheus.Gatherer) {
 	mfs, err := registry.Gather()
 	if err != nil {
 		klog.Errorf("Error gathering metrics: %v", err)
 		return
 	}
 
-	klog.V(2).Infof("removing SSL certificate metrics for %v hosts", hosts)
 	toRemove := sets.NewString(hosts...)
 
 	for _, mf := range mfs {
@@ -208,7 +279,7 @@ func (cm *Controller) RemoveMetrics(hosts []string, registry prometheus.Gatherer
 				continue
 			}
 
-			if !toRemove.Has(host) {
+			if onlyDefinedHosts && !toRemove.Has(host) {
 				continue
 			}
 

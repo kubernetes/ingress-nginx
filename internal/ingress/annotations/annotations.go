@@ -30,6 +30,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/alias"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/authreqglobal"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/backendprotocol"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/clientbodybuffersize"
@@ -84,6 +85,7 @@ type Ingress struct {
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
 	Denied             *string
 	ExternalAuth       authreq.Config
+	EnableGlobalAuth   bool
 	HTTP2PushPreload   bool
 	Proxy              proxy.Config
 	PublishService     string
@@ -101,7 +103,7 @@ type Ingress struct {
 	LoadBalancing      string
 	UpstreamVhost      string
 	Whitelist          ipwhitelist.SourceRange
-	XForwardedPrefix   bool
+	XForwardedPrefix   string
 	SSLCiphers         string
 	Logs               log.Config
 	LuaRestyWAF        luarestywaf.Config
@@ -129,6 +131,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
+			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
 			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"PublishService":       publishservice.NewParser(cfg),

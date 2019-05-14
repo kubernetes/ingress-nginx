@@ -246,6 +246,9 @@ type Location struct {
 	// authentication using an external provider
 	// +optional
 	ExternalAuth authreq.Config `json:"externalAuth,omitempty"`
+	// EnableGlobalAuth indicates if the access to this location requires
+	// authentication using an external provider defined in controller's config
+	EnableGlobalAuth bool `json:"enableGlobalAuth"`
 	// HTTP2PushPreload allows to configure the HTTP2 Push Preload from backend
 	// original location.
 	// +optional
@@ -292,7 +295,7 @@ type Location struct {
 	// XForwardedPrefix allows to add a header X-Forwarded-Prefix to the request with the
 	// original location.
 	// +optional
-	XForwardedPrefix bool `json:"xForwardedPrefix,omitempty"`
+	XForwardedPrefix string `json:"xForwardedPrefix,omitempty"`
 	// Logs allows to enable or disable the nginx logs
 	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`

@@ -1,7 +1,14 @@
+local ngx_re_split = require("ngx.re").split
+
+local original_randomseed = math.randomseed
+local string_format = string.format
+local ngx_redirect = ngx.redirect
+
 local _M = {}
 
 local seeds = {}
-local original_randomseed = math.randomseed
+-- general Nginx configuration passed by controller to be used in this module
+local config
 
 local function get_seed_from_urandom()
   local seed
@@ -47,8 +54,80 @@ local function randomseed()
   math.randomseed(seed)
 end
 
+local function redirect_to_https()
+  return ngx.var.pass_access_scheme == "http" and (ngx.var.scheme == "http" or ngx.var.scheme == "https")
+end
+
+local function redirect_host()
+  local host_port, err = ngx_re_split(ngx.var.best_http_host, ":")
+  if err then
+    ngx.log(ngx.ERR, "could not parse variable: ", err)
+    return ngx.var.best_http_host;
+  end
+
+  return host_port[1];
+end
+
+local function parse_x_forwarded_host()
+  local hosts, err = ngx_re_split(ngx.var.http_x_forwarded_host, ",")
+  if err then
+    ngx.log(ngx.ERR, string_format("could not parse variable: %s", err))
+    return ""
+  end
+
+  return hosts[1]
+end
+
 function _M.init_worker()
   randomseed()
+end
+
+function _M.set_config(new_config)
+  config = new_config
+end
+
+-- rewrite gets called in every location context.
+-- This is where we do variable assignments to be used in subsequent
+-- phases or redirection
+function _M.rewrite(location_config)
+  ngx.var.pass_access_scheme = ngx.var.scheme
+  ngx.var.pass_server_port = ngx.var.server_port
+  ngx.var.best_http_host = ngx.var.http_host or ngx.var.host
+
+  if config.use_forwarded_headers then
+    -- trust http_x_forwarded_proto headers correctly indicate ssl offloading
+    if ngx.var.http_x_forwarded_proto then
+      ngx.var.pass_access_scheme = ngx.var.http_x_forwarded_proto
+    end
+
+    if ngx.var.http_x_forwarded_port then
+      ngx.var.pass_server_port = ngx.var.http_x_forwarded_port
+    end
+
+    -- Obtain best http host
+    if ngx.var.http_x_forwarded_host then
+      ngx.var.best_http_host = parse_x_forwarded_host()
+    end
+  end
+
+  ngx.var.pass_port = ngx.var.pass_server_port
+  if config.is_ssl_passthrough_enabled then
+    if ngx.var.pass_server_port == config.listen_ports.ssl_proxy then
+      ngx.var.pass_port = 443
+    end
+  elseif ngx.var.pass_server_port == config.listen_ports.https then
+    ngx.var.pass_port = 443
+  end
+
+  if location_config.force_ssl_redirect and redirect_to_https() then
+    local uri = string_format("https://%s%s", redirect_host(), ngx.var.request_uri)
+
+    if location_config.use_port_in_redirects then
+      uri = string_format("https://%s:%s%s", redirect_host(), config.listen_ports.https, ngx.var.request_uri)
+    end
+
+    ngx_redirect(uri, config.http_redirect_code)
+  end
 end
 
 return _M

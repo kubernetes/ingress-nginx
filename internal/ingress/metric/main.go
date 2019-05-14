@@ -21,9 +21,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-
 	"k8s.io/apimachinery/pkg/util/sets"
-
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
@@ -35,6 +33,12 @@ type Collector interface {
 
 	IncReloadCount()
 	IncReloadErrorCount()
+
+	OnStartedLeading(string)
+	OnStoppedLeading(string)
+
+	IncCheckCount(string, string)
+	IncCheckErrorCount(string, string)
 
 	RemoveMetrics(ingresses, endpoints []string)
 
@@ -100,6 +104,14 @@ func (c *collector) ConfigSuccess(hash uint64, success bool) {
 	c.ingressController.ConfigSuccess(hash, success)
 }
 
+func (c *collector) IncCheckCount(namespace string, name string) {
+	c.ingressController.IncCheckCount(namespace, name)
+}
+
+func (c *collector) IncCheckErrorCount(namespace string, name string) {
+	c.ingressController.IncCheckErrorCount(namespace, name)
+}
+
 func (c *collector) IncReloadCount() {
 	c.ingressController.IncReloadCount()
 }
@@ -146,4 +158,15 @@ func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 
 func (c *collector) SetHosts(hosts sets.String) {
 	c.socket.SetHosts(hosts)
+}
+
+// OnStartedLeading indicates the pod was elected as the leader
+func (c *collector) OnStartedLeading(electionID string) {
+	c.ingressController.OnStartedLeading(electionID)
+}
+
+// OnStoppedLeading indicates the pod stopped being the leader
+func (c *collector) OnStoppedLeading(electionID string) {
+	c.ingressController.OnStoppedLeading(electionID)
+	c.ingressController.RemoveAllSSLExpireMetrics(c.registry)
 }

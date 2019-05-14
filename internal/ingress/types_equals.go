@@ -16,6 +16,10 @@ limitations under the License.
 
 package ingress
 
+import (
+	"k8s.io/ingress-nginx/internal/sets"
+)
+
 // Equal tests for equality between two Configuration types
 func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	if c1 == c2 {
@@ -25,21 +29,9 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		return false
 	}
 
-	if len(c1.Backends) != len(c2.Backends) {
+	match := compareBackends(c1.Backends, c2.Backends)
+	if !match {
 		return false
-	}
-
-	for _, c1b := range c1.Backends {
-		found := false
-		for _, c2b := range c2.Backends {
-			if c1b.Equal(c2b) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
 	if len(c1.Servers) != len(c2.Servers) {
@@ -53,41 +45,20 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
-	if len(c1.TCPEndpoints) != len(c2.TCPEndpoints) {
+	match = compareL4Service(c1.TCPEndpoints, c2.TCPEndpoints)
+	if !match {
 		return false
-	}
-	for _, tcp1 := range c1.TCPEndpoints {
-		found := false
-		for _, tcp2 := range c2.TCPEndpoints {
-			if (&tcp1).Equal(&tcp2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
-	if len(c1.UDPEndpoints) != len(c2.UDPEndpoints) {
+	match = compareL4Service(c1.UDPEndpoints, c2.UDPEndpoints)
+	if !match {
 		return false
-	}
-	for _, udp1 := range c1.UDPEndpoints {
-		found := false
-		for _, udp2 := range c2.UDPEndpoints {
-			if (&udp1).Equal(&udp2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
 	if len(c1.PassthroughBackends) != len(c2.PassthroughBackends) {
 		return false
 	}
+
 	for _, ptb1 := range c1.PassthroughBackends {
 		found := false
 		for _, ptb2 := range c2.PassthroughBackends {
@@ -158,38 +129,18 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		return false
 	}
 
-	if len(b1.Endpoints) != len(b2.Endpoints) {
+	match := compareEndpoints(b1.Endpoints, b2.Endpoints)
+	if !match {
 		return false
-	}
-
-	for _, udp1 := range b1.Endpoints {
-		found := false
-		for _, udp2 := range b2.Endpoints {
-			if (&udp1).Equal(&udp2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
 	if !b1.TrafficShapingPolicy.Equal(b2.TrafficShapingPolicy) {
 		return false
 	}
 
-	for _, vb1 := range b1.AlternativeBackends {
-		found := false
-		for _, vb2 := range b2.AlternativeBackends {
-			if vb1 == vb2 {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	match = sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
+	if !match {
+		return false
 	}
 
 	return true
@@ -401,6 +352,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.ExternalAuth).Equal(&l2.ExternalAuth) {
 		return false
 	}
+	if l1.EnableGlobalAuth != l2.EnableGlobalAuth {
+		return false
+	}
 	if l1.HTTP2PushPreload != l2.HTTP2PushPreload {
 		return false
 	}
@@ -452,20 +406,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if len(l1.CustomHTTPErrors) != len(l2.CustomHTTPErrors) {
+	match := compareInts(l1.CustomHTTPErrors, l2.CustomHTTPErrors)
+	if !match {
 		return false
-	}
-	for _, code1 := range l1.CustomHTTPErrors {
-		found := false
-		for _, code2 := range l2.CustomHTTPErrors {
-			if code1 == code2 {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
 	if !(&l1.ModSecurity).Equal(&l2.ModSecurity) {
@@ -530,21 +473,10 @@ func (e1 *L4Service) Equal(e2 *L4Service) bool {
 	if !(&e1.Backend).Equal(&e2.Backend) {
 		return false
 	}
-	if len(e1.Endpoints) != len(e2.Endpoints) {
-		return false
-	}
 
-	for _, ep1 := range e1.Endpoints {
-		found := false
-		for _, ep2 := range e2.Endpoints {
-			if (&ep1).Equal(&ep2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	match := compareEndpoints(e1.Endpoints, e2.Endpoints)
+	if !match {
+		return false
 	}
 
 	return true
@@ -598,18 +530,82 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 		return false
 	}
 
-	for _, cn1 := range s1.CN {
-		found := false
-		for _, cn2 := range s2.CN {
-			if cn1 == cn2 {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	match := sets.StringElementsMatch(s1.CN, s2.CN)
+	if !match {
+		return false
 	}
 
 	return true
+}
+
+var compareEndpointsFunc = func(e1, e2 interface{}) bool {
+	ep1, ok := e1.(Endpoint)
+	if !ok {
+		return false
+	}
+
+	ep2, ok := e2.(Endpoint)
+	if !ok {
+		return false
+	}
+
+	return (&ep1).Equal(&ep2)
+}
+
+func compareEndpoints(a, b []Endpoint) bool {
+	return sets.Compare(a, b, compareEndpointsFunc)
+}
+
+var compareBackendsFunc = func(e1, e2 interface{}) bool {
+	b1, ok := e1.(*Backend)
+	if !ok {
+		return false
+	}
+
+	b2, ok := e2.(*Backend)
+	if !ok {
+		return false
+	}
+
+	return b1.Equal(b2)
+}
+
+func compareBackends(a, b []*Backend) bool {
+	return sets.Compare(a, b, compareBackendsFunc)
+}
+
+var compareIntsFunc = func(e1, e2 interface{}) bool {
+	b1, ok := e1.(int)
+	if !ok {
+		return false
+	}
+
+	b2, ok := e2.(int)
+	if !ok {
+		return false
+	}
+
+	return b1 == b2
+}
+
+func compareInts(a, b []int) bool {
+	return sets.Compare(a, b, compareIntsFunc)
+}
+
+var compareL4ServiceFunc = func(e1, e2 interface{}) bool {
+	b1, ok := e1.(L4Service)
+	if !ok {
+		return false
+	}
+
+	b2, ok := e2.(L4Service)
+	if !ok {
+		return false
+	}
+
+	return (&b1).Equal(&b2)
+}
+
+func compareL4Service(a, b []L4Service) bool {
+	return sets.Compare(a, b, compareL4ServiceFunc)
 }

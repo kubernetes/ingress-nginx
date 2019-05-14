@@ -48,7 +48,7 @@ var (
 		Location         string
 		ProxyPass        string
 		Sticky           bool
-		XForwardedPrefix bool
+		XForwardedPrefix string
 		SecureBackend    bool
 		enforceRegex     bool
 	}{
@@ -58,7 +58,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			false,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -68,7 +68,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			false,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -78,7 +78,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			true,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -88,7 +88,7 @@ var (
 			"/",
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			false,
 		},
@@ -98,7 +98,7 @@ var (
 			"/",
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			false,
 		},
@@ -110,7 +110,7 @@ var (
 rewrite "(?i)/" /jenkins break;
 proxy_pass http://upstream_balancer;`,
 			false,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -122,7 +122,7 @@ proxy_pass http://upstream_balancer;`,
 rewrite "(?i)/" /something break;
 proxy_pass http://upstream_balancer;`,
 			true,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -134,7 +134,7 @@ proxy_pass http://upstream_balancer;`,
 rewrite "(?i)/" /something break;
 proxy_pass http://upstream_balancer;`,
 			true,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -147,7 +147,7 @@ rewrite "(?i)/there" /something break;
 proxy_set_header X-Forwarded-Prefix "/there";
 proxy_pass http://upstream_balancer;`,
 			true,
-			true,
+			"/there",
 			false,
 			true,
 		},
@@ -157,7 +157,7 @@ proxy_pass http://upstream_balancer;`,
 			`~* "^/something"`,
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -283,50 +283,105 @@ func TestBuildProxyPass(t *testing.T) {
 func TestBuildAuthLocation(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	actual := buildAuthLocation(invalidType)
+	actual := buildAuthLocation(invalidType, "")
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
 	authURL := "foo.com/auth"
+	globalAuthURL := "foo.com/global-auth"
 
 	loc := &ingress.Location{
 		ExternalAuth: authreq.Config{
 			URL: authURL,
 		},
-		Path: "/cat",
+		Path:             "/cat",
+		EnableGlobalAuth: true,
 	}
 
-	str := buildAuthLocation(loc)
-
 	encodedAuthURL := strings.Replace(base64.URLEncoding.EncodeToString([]byte(loc.Path)), "=", "", -1)
-	expected = fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
+	externalAuthPath := fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
 
-	if str != expected {
-		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, str)
+	testCases := []struct {
+		title                    string
+		authURL                  string
+		globalAuthURL            string
+		enableglobalExternalAuth bool
+		expected                 string
+	}{
+		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, externalAuthPath},
+		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, externalAuthPath},
+		{"authURL, empty globalAuthURL and enabled", authURL, "", true, externalAuthPath},
+		{"authURL, empty globalAuthURL and disabled", authURL, "", false, externalAuthPath},
+		{"globalAuthURL and enabled", "", globalAuthURL, true, externalAuthPath},
+		{"globalAuthURL and disabled", "", globalAuthURL, false, ""},
+		{"all empty and enabled", "", "", true, ""},
+		{"all empty and disabled", "", "", false, ""},
+	}
+
+	for _, testCase := range testCases {
+		loc.ExternalAuth.URL = testCase.authURL
+		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
+
+		str := buildAuthLocation(loc, testCase.globalAuthURL)
+		if str != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, str)
+		}
+	}
+}
+
+func TestShouldApplyGlobalAuth(t *testing.T) {
+
+	authURL := "foo.com/auth"
+	globalAuthURL := "foo.com/global-auth"
+
+	loc := &ingress.Location{
+		ExternalAuth: authreq.Config{
+			URL: authURL,
+		},
+		Path:             "/cat",
+		EnableGlobalAuth: true,
+	}
+
+	testCases := []struct {
+		title                    string
+		authURL                  string
+		globalAuthURL            string
+		enableglobalExternalAuth bool
+		expected                 bool
+	}{
+		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, false},
+		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, false},
+		{"authURL, empty globalAuthURL and enabled", authURL, "", true, false},
+		{"authURL, empty globalAuthURL and disabled", authURL, "", false, false},
+		{"globalAuthURL and enabled", "", globalAuthURL, true, true},
+		{"globalAuthURL and disabled", "", globalAuthURL, false, false},
+		{"all empty and enabled", "", "", true, false},
+		{"all empty and disabled", "", "", false, false},
+	}
+
+	for _, testCase := range testCases {
+		loc.ExternalAuth.URL = testCase.authURL
+		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
+
+		result := shouldApplyGlobalAuth(loc, testCase.globalAuthURL)
+		if result != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+		}
 	}
 }
 
 func TestBuildAuthResponseHeaders(t *testing.T) {
-	invalidType := &ingress.Ingress{}
-	expected := []string{}
-	actual := buildAuthResponseHeaders(invalidType)
-
-	if !reflect.DeepEqual(expected, actual) {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	loc := &ingress.Location{
-		ExternalAuth: authreq.Config{ResponseHeaders: []string{"h1", "H-With-Caps-And-Dashes"}},
-	}
-	headers := buildAuthResponseHeaders(loc)
-	expected = []string{
+	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
+	expected := []string{
 		"auth_request_set $authHeader0 $upstream_http_h1;",
 		"proxy_set_header 'h1' $authHeader0;",
 		"auth_request_set $authHeader1 $upstream_http_h_with_caps_and_dashes;",
 		"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
 	}
+
+	headers := buildAuthResponseHeaders(externalAuthResponseHeaders)
 
 	if !reflect.DeepEqual(expected, headers) {
 		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
@@ -516,7 +571,7 @@ func TestBuildResolversForLua(t *testing.T) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
-	expected = "\"192.0.0.1\", \"2001:db8:1234::\""
+	expected = "\"192.0.0.1\", \"[2001:db8:1234::]\""
 	actual = buildResolversForLua(ipList, false)
 
 	if expected != actual {
@@ -832,16 +887,17 @@ func TestOpentracingPropagateContext(t *testing.T) {
 func TestGetIngressInformation(t *testing.T) {
 	validIngress := &ingress.Ingress{}
 	invalidIngress := "wrongtype"
+	host := "host1"
 	validPath := "/ok"
 	invalidPath := 10
 
-	info := getIngressInformation(invalidIngress, validPath)
+	info := getIngressInformation(invalidIngress, host, validPath)
 	expected := &ingressInformation{}
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}
 
-	info = getIngressInformation(validIngress, invalidPath)
+	info = getIngressInformation(validIngress, host, invalidPath)
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}
@@ -856,7 +912,7 @@ func TestGetIngressInformation(t *testing.T) {
 		ServiceName: "a-svc",
 	}
 
-	info = getIngressInformation(validIngress, validPath)
+	info = getIngressInformation(validIngress, host, validPath)
 	expected = &ingressInformation{
 		Namespace: "default",
 		Rule:      "validIng",
@@ -872,6 +928,7 @@ func TestGetIngressInformation(t *testing.T) {
 	validIngress.Spec.Backend = nil
 	validIngress.Spec.Rules = []extensions.IngressRule{
 		{
+			Host: host,
 			IngressRuleValue: extensions.IngressRuleValue{
 				HTTP: &extensions.HTTPIngressRuleValue{
 					Paths: []extensions.HTTPIngressPath{
@@ -888,7 +945,7 @@ func TestGetIngressInformation(t *testing.T) {
 		{},
 	}
 
-	info = getIngressInformation(validIngress, validPath)
+	info = getIngressInformation(validIngress, host, validPath)
 	expected = &ingressInformation{
 		Namespace: "default",
 		Rule:      "validIng",
@@ -897,6 +954,33 @@ func TestGetIngressInformation(t *testing.T) {
 		},
 		Service: "b-svc",
 	}
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	validIngress.Spec.Rules = append(validIngress.Spec.Rules, extensions.IngressRule{
+		Host: "host2",
+		IngressRuleValue: extensions.IngressRuleValue{
+			HTTP: &extensions.HTTPIngressRuleValue{
+				Paths: []extensions.HTTPIngressPath{
+					{
+						Path: "/ok",
+						Backend: extensions.IngressBackend{
+							ServiceName: "c-svc",
+						},
+					},
+				},
+			},
+		},
+	})
+
+	info = getIngressInformation(validIngress, host, validPath)
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	info = getIngressInformation(validIngress, "host2", validPath)
+	expected.Service = "c-svc"
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}

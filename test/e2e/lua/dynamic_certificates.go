@@ -24,7 +24,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -36,23 +35,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 	host := "foo.com"
 
 	BeforeEach(func() {
-		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1beta1.Deployment) error {
-				args := deployment.Spec.Template.Spec.Containers[0].Args
-				args = append(args, "--enable-dynamic-certificates")
-				args = append(args, "--enable-ssl-chain-completion=false")
-				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace).Update(deployment)
-
-				return err
-			})
-		Expect(err).NotTo(HaveOccurred())
-
-		f.WaitForNginxConfiguration(
-			func(cfg string) bool {
-				return strings.Contains(cfg, "ok, res = pcall(require, \"certificate\")")
-			})
-
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 

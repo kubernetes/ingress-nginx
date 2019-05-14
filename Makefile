@@ -16,7 +16,7 @@
 all: all-container
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.23.0
+TAG ?= 0.24.1
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 DOCKER ?= docker
 SED_I ?= sed -i
@@ -26,7 +26,7 @@ GOHOSTOS ?= $(shell go env GOHOSTOS)
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 8
+E2E_NODES ?= 10
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
 
@@ -60,7 +60,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.81
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.85
 
 ifeq ($(ARCH),arm64)
 	QEMUARCH=aarch64
@@ -184,10 +184,11 @@ lua-test:
 .PHONY: e2e-test
 e2e-test:
 	if  [ "$(KUBECTL_CONTEXT)" != "minikube" ] && \
-		[ "$(KUBECTL_CONTEXT)" != "kind" ] && \
+		! echo $(KUBECTL_CONTEXT) | grep kind && \
+		! echo $(KUBECTL_CONTEXT) | grep ingress-nginx-dev && \
 		[ "$(KUBECTL_CONTEXT)" != "dind" ] && \
 		[ "$(KUBECTL_CONTEXT)" != "docker-for-desktop" ]; then \
-		echo "kubectl context is "$(KUBECTL_CONTEXT)", but must be one of [minikube, kind, dind, docker-for-deskop]"; \
+		echo "kubectl context is "$(KUBECTL_CONTEXT)", but must be one of [minikube, *kind*, *ingress-nginx-dev*, dind, docker-for-deskop]"; \
 		exit 1; \
 	fi
 
@@ -198,6 +199,11 @@ e2e-test:
 		--user=admin \
 		--user=kubelet \
 		--serviceaccount=default:ingress-nginx-e2e || true
+
+	until kubectl get secret | grep -q ^ingress-nginx-e2e-token; do \
+		echo "waiting for api token"; \
+		sleep 3; \
+	done
 
 	kubectl run --rm -i --tty \
 		--attach \
@@ -245,9 +251,7 @@ check_dead_links:
 
 .PHONY: dep-ensure
 dep-ensure:
-	dep version || curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-	dep ensure -v
-	dep prune -v
+	GO111MODULE=on go mod tidy -v
 	find vendor -name '*_test.go' -delete
 
 .PHONY: dev-env

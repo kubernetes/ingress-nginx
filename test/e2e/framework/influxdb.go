@@ -19,8 +19,8 @@ package framework
 import (
 	. "github.com/onsi/gomega"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 )
@@ -73,12 +73,12 @@ func (f *Framework) NewInfluxDBDeployment() {
 
 	Expect(cm).NotTo(BeNil(), "expected a configmap but none returned")
 
-	deployment := &extensions.Deployment{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "influxdb-svc",
 			Namespace: f.Namespace,
 		},
-		Spec: extensions.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Replicas: NewInt32(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -138,7 +138,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 	d, err := f.EnsureDeployment(deployment)
 	Expect(err).NotTo(HaveOccurred(), "failed to create an Influxdb deployment")
 
-	Expect(d).NotTo(BeNil(), "unexpected error creating deployement for influxdb")
+	Expect(d).NotTo(BeNil(), "unexpected error creating deployment for influxdb")
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),

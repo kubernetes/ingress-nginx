@@ -66,6 +66,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           lua_ingress = res
+          lua_ingress.set_config({{ configForLua $all }})
         end
 
         ok, res = pcall(require, "configuration")
@@ -100,6 +101,15 @@ http {
           certificate = res
         end
         {{ end }}
+
+        ok, res = pcall(require, "plugins")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          plugins = res
+        end
+        -- load all plugins that'll be used here
+        plugins.init({})
     }
 
     init_worker_by_lua_block {
@@ -108,6 +118,8 @@ http {
         {{ if $all.EnableMetrics }}
         monitor.init_worker()
         {{ end }}
+
+        plugins.run()
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -292,64 +304,6 @@ http {
         default          $remote_addr;
     {{ end }}
     }
-
-    {{ if $cfg.UseForwardedHeaders }}
-    # trust http_x_forwarded_proto headers correctly indicate ssl offloading
-    map $http_x_forwarded_proto $pass_access_scheme {
-        default          $http_x_forwarded_proto;
-        ''               $scheme;
-    }
-
-    map $http_x_forwarded_port $pass_server_port {
-        default           $http_x_forwarded_port;
-        ''                $server_port;
-    }
-
-    # Obtain best http host
-    map $http_host $this_host {
-        default          $http_host;
-        ''               $host;
-    }
-
-    map $http_x_forwarded_host $best_http_host {
-        default          $http_x_forwarded_host;
-        ''               $this_host;
-    }
-    {{ else }}
-    map '' $pass_access_scheme {
-        default          $scheme;
-    }
-
-    map '' $pass_server_port {
-        default          $server_port;
-    }
-
-    # Obtain best http host
-    map $http_host $best_http_host {
-        default          $http_host;
-        ''               $host;
-    }
-    {{ end }}
-
-    # validate $pass_access_scheme and $scheme are http to force a redirect
-    map "$scheme:$pass_access_scheme" $redirect_to_https {
-        default          0;
-        "http:http"      1;
-        "https:http"     1;
-    }
-
-    {{ if $all.IsSSLPassthroughEnabled }}
-    # map port {{ $all.ListenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.SSLProxy }}              443;
-        default          $pass_server_port;
-    }
-    {{ else }}
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.HTTPS }}              443;
-        default          $pass_server_port;
-    }
-    {{ end }}
 
     # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
     # If no such header is provided, it can provide a random value.
@@ -815,6 +769,7 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            proxy_set_header       X-Request-ID       $req_id;
             proxy_set_header       Host               $best_http_host;
 
             set $proxy_upstream_name {{ $upstreamName }};
@@ -870,6 +825,10 @@ stream {
         {{ end }}
         {{ end }}
         set $proxy_upstream_name "-";
+        set $pass_access_scheme $scheme;
+        set $pass_server_port $server_port;
+        set $best_http_host $http_host;
+        set $pass_port $pass_server_port;
 
         {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
         {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
@@ -935,7 +894,13 @@ stream {
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location $enforceRegex }}
         {{ $proxySetHeader := proxySetHeader $location }}
-        {{ $authPath := buildAuthLocation $location }}
+        {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
+        {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+
+        {{ $externalAuth := $location.ExternalAuth }}
+        {{ if eq $applyGlobalAuth true }}
+        {{ $externalAuth = $all.Cfg.GlobalExternalAuth }}
+        {{ end }}
 
         {{ if not (empty $location.Rewrite.AppRoot)}}
         if ($uri = /) {
@@ -956,13 +921,13 @@ stream {
             proxy_set_header            Content-Length "";
             proxy_set_header            X-Forwarded-Proto "";
 
-            {{ if $location.ExternalAuth.Method }}
-            proxy_method                {{ $location.ExternalAuth.Method }};
+            {{ if $externalAuth.Method }}
+            proxy_method                {{ $externalAuth.Method }};
             proxy_set_header            X-Original-URI          $request_uri;
             proxy_set_header            X-Scheme                $pass_access_scheme;
             {{ end }}
 
-            proxy_set_header            Host                    {{ $location.ExternalAuth.Host }};
+            proxy_set_header            Host                    {{ $externalAuth.Host }};
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Original-Method       $request_method;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
@@ -973,8 +938,8 @@ stream {
             proxy_set_header            X-Forwarded-For        $the_real_ip;
             {{ end }}
 
-            {{ if $location.ExternalAuth.RequestRedirect }}
-            proxy_set_header            X-Auth-Request-Redirect {{ $location.ExternalAuth.RequestRedirect }};
+            {{ if $externalAuth.RequestRedirect }}
+            proxy_set_header            X-Auth-Request-Redirect {{ $externalAuth.RequestRedirect }};
             {{ else }}
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
@@ -1004,17 +969,18 @@ stream {
             proxy_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
             {{ end }}
 
-            {{ if not (empty $location.ExternalAuth.AuthSnippet) }}
-            {{ $location.ExternalAuth.AuthSnippet }}
+            {{ if not (empty $externalAuth.AuthSnippet) }}
+            {{ $externalAuth.AuthSnippet }}
             {{ end }}
 
-            set $target {{ $location.ExternalAuth.URL }};
+            set $target {{ $externalAuth.URL }};
             proxy_pass $target;
         }
         {{ end }}
 
+
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
+            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
             set $namespace      "{{ $ing.Namespace }}";
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
@@ -1026,11 +992,16 @@ stream {
             {{ end }}
 
             rewrite_by_lua_block {
+                lua_ingress.rewrite({{ locationConfigForLua $location $server $all }})
                 balancer.rewrite()
+                plugins.run()
             }
 
             {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
-
+            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
+            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
+            # that means currently `satisfy any` and lua-resty-waf together will potentiall render any
+            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
             access_by_lua_block {
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
@@ -1081,6 +1052,8 @@ stream {
                 local waf = lua_resty_waf:new()
                 waf:exec()
                 {{ end }}
+
+                plugins.run()
             }
             body_filter_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
@@ -1100,6 +1073,8 @@ stream {
                 {{ if $all.EnableMetrics }}
                 monitor.call()
                 {{ end }}
+
+                plugins.run()
             }
 
             {{ if (and (not (empty $server.SSLCert.PemFileName)) $all.Cfg.HSTS) }}
@@ -1125,35 +1100,6 @@ stream {
 
             set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
             set $proxy_host             $proxy_upstream_name;
-
-            {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
-            {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCert.PemFileName)) $location.Rewrite.SSLRedirect)) }}
-            {{ if not (isLocationInLocationList $location $all.Cfg.NoTLSRedirectLocations) }}
-            # enforce ssl on server side
-            if ($redirect_to_https) {
-                set_by_lua_block $redirect_host {
-                    local ngx_re = require "ngx.re"
-
-                    local host_port, err = ngx_re.split(ngx.var.best_http_host, ":")
-                    if err then
-                        ngx.log(ngx.ERR, "could not parse variable: ", err)
-                        return ngx.var.best_http_host;
-                    end
-
-                    return host_port[1];
-                }
-
-                {{ if $location.UsePortInRedirects }}
-                # using custom ports require a different rewrite directive
-                # https://forum.nginx.org/read.php?2,155978,155978#msg-155978
-                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$redirect_host{{ printf ":%v" $all.ListenPorts.HTTPS }}$request_uri;
-                return 497;
-                {{ else }}
-                return {{ $all.Cfg.HTTPRedirectCode }} https://$redirect_host$request_uri;
-                {{ end }}
-            }
-            {{ end }}
-            {{ end }}
 
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
             modsecurity on;
@@ -1186,14 +1132,14 @@ stream {
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthResponseHeaders $location }}
+            {{- range $line := buildAuthResponseHeaders $externalAuth.ResponseHeaders }}
             {{ $line }}
             {{- end }}
             {{ end }}
 
-            {{ if $location.ExternalAuth.SigninURL }}
+            {{ if $externalAuth.SigninURL }}
             set_escape_uri $escaped_request_uri $request_uri;
-            error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
+            error_page 401 = {{ buildAuthSignURL $externalAuth.SigninURL }};
             {{ end }}
 
             {{ if $location.BasicDigestAuth.Secured }}
@@ -1300,6 +1246,7 @@ stream {
 
             # In case of errors try the next upstream server before returning an error
             proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream $all.Cfg.RetryNonIdempotent }};
+            proxy_next_upstream_timeout             {{ $location.Proxy.NextUpstreamTimeout }};
             proxy_next_upstream_tries               {{ $location.Proxy.NextUpstreamTries }};
 
             {{/* Add any additional configuration defined */}}
@@ -1318,6 +1265,7 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            proxy_set_header       X-Request-ID       $req_id;
             {{ end }}
 
             {{ if $location.Satisfy }}

@@ -54,8 +54,6 @@ const (
 	// High enough Burst to fit all expected use cases. Burst=0 is not set here, because
 	// client code is overriding it.
 	defaultBurst = 1e6
-
-	fakeCertificate = "default-fake-certificate"
 )
 
 func main() {
@@ -109,15 +107,8 @@ func main() {
 		}
 	}
 
-	// create the default SSL certificate (dummy)
-	defCert, defKey := ssl.GetFakeSSLCert()
-	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{}, fs)
-	if err != nil {
-		klog.Fatalf("Error generating self-signed certificate: %v", err)
-	}
-
-	conf.FakeCertificatePath = c.PemFileName
-	conf.FakeCertificateSHA = c.PemSHA
+	conf.FakeCertificate = ssl.GetFakeSSLCert(fs)
+	klog.Infof("Created fake certificate with PemFileName: %v", conf.FakeCertificate.PemFileName)
 
 	conf.Client = kubeClient
 

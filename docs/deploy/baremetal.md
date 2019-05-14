@@ -42,7 +42,7 @@ by a DHCP server.
     environments this value is <None\>)
 
     ```console
-    $ kubectl describe node
+    $ kubectl get node
     NAME     STATUS   ROLES    EXTERNAL-IP
     host-1   Ready    master   203.0.113.1
     host-2   Ready    node     203.0.113.2
@@ -126,7 +126,7 @@ requests.
     bare-metal environments this value is <None\>)
 
     ```console
-    $ kubectl describe node
+    $ kubectl get node
     NAME     STATUS   ROLES    EXTERNAL-IP
     host-1   Ready    master   203.0.113.1
     host-2   Ready    node     203.0.113.2
@@ -165,7 +165,7 @@ field of the `ingress-nginx` Service spec to `Local` ([example][preserve-ip]).
     this value is <None\>)
 
     ```console
-    $ kubectl describe node
+    $ kubectl get node
     NAME     STATUS   ROLES    EXTERNAL-IP
     host-1   Ready    master   203.0.113.1
     host-2   Ready    node     203.0.113.2
@@ -210,7 +210,7 @@ Service.
     environments this value is <None\>)
 
     ```console
-    $ kubectl describe node
+    $ kubectl get node
     NAME     STATUS   ROLES    EXTERNAL-IP
     host-1   Ready    master   203.0.113.1
     host-2   Ready    node     203.0.113.2
@@ -251,7 +251,7 @@ for generating redirect URLs that take into account the URL used by external cli
     Location: https://myapp.example.com/  #-> missing NodePort in HTTPS redirect
     ```
 
-[install-baremetal]: ./deploy/#baremetal
+[install-baremetal]: ./index.md#bare-metal
 [nodeport-def]: https://kubernetes.io/docs/concepts/services-networking/service/#nodeport
 [nodeport-nat]: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-type-nodeport
 [pod-assign]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
@@ -402,7 +402,7 @@ Service. These IP addresses **must belong to the target node**.
     environments this value is <None\>)
 
     ```console
-    $ kubectl describe node
+    $ kubectl get node
     NAME     STATUS   ROLES    EXTERNAL-IP
     host-1   Ready    master   203.0.113.1
     host-2   Ready    node     203.0.113.2

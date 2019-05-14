@@ -29,27 +29,34 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/runtime"
 )
 
 const (
-	customHTTPErrors         = "custom-http-errors"
-	skipAccessLogUrls        = "skip-access-log-urls"
-	whitelistSourceRange     = "whitelist-source-range"
-	proxyRealIPCIDR          = "proxy-real-ip-cidr"
-	bindAddress              = "bind-address"
-	httpRedirectCode         = "http-redirect-code"
-	blockCIDRs               = "block-cidrs"
-	blockUserAgents          = "block-user-agents"
-	blockReferers            = "block-referers"
-	proxyStreamResponses     = "proxy-stream-responses"
-	hideHeaders              = "hide-headers"
-	nginxStatusIpv4Whitelist = "nginx-status-ipv4-whitelist"
-	nginxStatusIpv6Whitelist = "nginx-status-ipv6-whitelist"
-	proxyHeaderTimeout       = "proxy-protocol-header-timeout"
-	workerProcesses          = "worker-processes"
+	customHTTPErrors          = "custom-http-errors"
+	skipAccessLogUrls         = "skip-access-log-urls"
+	whitelistSourceRange      = "whitelist-source-range"
+	proxyRealIPCIDR           = "proxy-real-ip-cidr"
+	bindAddress               = "bind-address"
+	httpRedirectCode          = "http-redirect-code"
+	blockCIDRs                = "block-cidrs"
+	blockUserAgents           = "block-user-agents"
+	blockReferers             = "block-referers"
+	proxyStreamResponses      = "proxy-stream-responses"
+	hideHeaders               = "hide-headers"
+	nginxStatusIpv4Whitelist  = "nginx-status-ipv4-whitelist"
+	nginxStatusIpv6Whitelist  = "nginx-status-ipv6-whitelist"
+	proxyHeaderTimeout        = "proxy-protocol-header-timeout"
+	workerProcesses           = "worker-processes"
+	globalAuthURL             = "global-auth-url"
+	globalAuthMethod          = "global-auth-method"
+	globalAuthSignin          = "global-auth-signin"
+	globalAuthResponseHeaders = "global-auth-response-headers"
+	globalAuthRequestRedirect = "global-auth-request-redirect"
+	globalAuthSnippet         = "global-auth-snippet"
 )
 
 var (
@@ -77,6 +84,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	blockCIDRList := make([]string, 0)
 	blockUserAgentList := make([]string, 0)
 	blockRefererList := make([]string, 0)
+	responseHeaders := make([]string, 0)
 
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
@@ -148,6 +156,74 @@ func ReadConfig(src map[string]string) config.Configuration {
 				klog.Warningf("The code %v is not a valid as HTTP redirect code. Using the default.", val)
 			}
 		}
+	}
+
+	// Verify that the configured global external authorization URL is parsable as URL. if not, set the default value
+	if val, ok := conf[globalAuthURL]; ok {
+		delete(conf, globalAuthURL)
+
+		authURL, message := authreq.ParseStringToURL(val)
+		if authURL == nil {
+			klog.Warningf("Global auth location denied - %v.", message)
+		} else {
+			to.GlobalExternalAuth.URL = val
+			to.GlobalExternalAuth.Host = authURL.Hostname()
+		}
+	}
+
+	// Verify that the configured global external authorization method is a valid HTTP method. if not, set the default value
+	if val, ok := conf[globalAuthMethod]; ok {
+		delete(conf, globalAuthMethod)
+
+		if len(val) != 0 && !authreq.ValidMethod(val) {
+			klog.Warningf("Global auth location denied - %v.", "invalid HTTP method")
+		} else {
+			to.GlobalExternalAuth.Method = val
+		}
+	}
+
+	// Verify that the configured global external authorization error page is set and valid. if not, set the default value
+	if val, ok := conf[globalAuthSignin]; ok {
+		delete(conf, globalAuthSignin)
+
+		signinURL, _ := authreq.ParseStringToURL(val)
+		if signinURL == nil {
+			klog.Warningf("Global auth location denied - %v.", "global-auth-signin setting is undefined and will not be set")
+		} else {
+			to.GlobalExternalAuth.SigninURL = val
+		}
+	}
+
+	// Verify that the configured global external authorization response headers are valid. if not, set the default value
+	if val, ok := conf[globalAuthResponseHeaders]; ok {
+		delete(conf, globalAuthResponseHeaders)
+
+		if len(val) != 0 {
+			harr := strings.Split(val, ",")
+			for _, header := range harr {
+				header = strings.TrimSpace(header)
+				if len(header) > 0 {
+					if !authreq.ValidHeader(header) {
+						klog.Warningf("Global auth location denied - %v.", "invalid headers list")
+					} else {
+						responseHeaders = append(responseHeaders, header)
+					}
+				}
+			}
+		}
+		to.GlobalExternalAuth.ResponseHeaders = responseHeaders
+	}
+
+	if val, ok := conf[globalAuthRequestRedirect]; ok {
+		delete(conf, globalAuthRequestRedirect)
+
+		to.GlobalExternalAuth.RequestRedirect = val
+	}
+
+	if val, ok := conf[globalAuthSnippet]; ok {
+		delete(conf, globalAuthSnippet)
+
+		to.GlobalExternalAuth.AuthSnippet = val
 	}
 
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value

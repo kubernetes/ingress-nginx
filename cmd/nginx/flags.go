@@ -106,7 +106,7 @@ Requires setting the publish-service parameter to a valid Service reference.`)
 		electionID = flags.String("election-id", "ingress-controller-leader",
 			`Election id to use for Ingress status updates.`)
 
-		forceIsolation = flags.Bool("force-namespace-isolation", false,
+		_ = flags.Bool("force-namespace-isolation", false,
 			`Force namespace isolation.
 Prevents Ingress objects from referencing Secrets and ConfigMaps located in a
 different namespace than their own. May be used together with watch-namespace.`)
@@ -141,7 +141,7 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", false,
+		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", true,
 			`Dynamically update SSL certificates instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
 
@@ -159,9 +159,18 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 
 		disableCatchAll = flags.Bool("disable-catch-all", false,
 			`Disable support for catch-all Ingresses`)
+
+		validationWebhook = flags.String("validating-webhook", "",
+			`The address to start an admission controller on to validate incoming ingresses.
+Takes the form "<host>:port". If not provided, no admission controller is started.`)
+		validationWebhookCert = flags.String("validating-webhook-certificate", "",
+			`The path of the validating webhook certificate PEM.`)
+		validationWebhookKey = flags.String("validating-webhook-key", "",
+			`The path of the validating webhook key PEM.`)
 	)
 
 	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
+	flags.MarkDeprecated("force-namespace-isolation", `This flag doesn't do anything.`)
 
 	flag.Set("logtostderr", "true")
 
@@ -243,7 +252,6 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		HealthCheckTimeout:         *healthCheckTimeout,
 		PublishService:             *publishSvc,
 		PublishStatusAddress:       *publishStatusAddress,
-		ForceNamespaceIsolation:    *forceIsolation,
 		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
 		UseNodeInternalIP:          *useNodeInternalIP,
 		SyncRateLimit:              *syncRateLimit,
@@ -255,7 +263,10 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
 		},
-		DisableCatchAll: *disableCatchAll,
+		DisableCatchAll:           *disableCatchAll,
+		ValidationWebhook:         *validationWebhook,
+		ValidationWebhookCertPath: *validationWebhookCert,
+		ValidationWebhookKeyPath:  *validationWebhookKey,
 	}
 
 	return false, config, nil

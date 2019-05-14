@@ -31,6 +31,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"text/template"
 	"time"
@@ -44,9 +45,7 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
-	"k8s.io/klog"
-	"k8s.io/kubernetes/pkg/util/filesystem"
-
+	adm_controler "k8s.io/ingress-nginx/internal/admission/controller"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
@@ -63,6 +62,8 @@ import (
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
+	"k8s.io/klog"
+	"k8s.io/kubernetes/pkg/util/filesystem"
 )
 
 const (
@@ -109,12 +110,23 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		Proxy: &TCPProxy{},
 
 		metricCollector: mc,
+
+		command: NewNginxCommand(),
+	}
+
+	if n.cfg.ValidationWebhook != "" {
+		n.validationWebhookServer = &http.Server{
+			Addr:      config.ValidationWebhook,
+			Handler:   adm_controler.NewAdmissionControllerServer(&adm_controler.IngressAdmission{Checker: n}),
+			TLSConfig: ssl.NewTLSListener(n.cfg.ValidationWebhookCertPath, n.cfg.ValidationWebhookKeyPath).TLSConfig(),
+		}
 	}
 
 	pod, err := k8s.GetPodDetails(config.Client)
 	if err != nil {
 		klog.Fatalf("unexpected error obtaining pod information: %v", err)
 	}
+	n.podInfo = pod
 
 	n.store = store.New(
 		config.EnableSSLChainCompletion,
@@ -132,15 +144,13 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.DisableCatchAll)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
+
 	if config.UpdateStatus {
-		n.syncStatus = status.NewStatusSyncer(status.Config{
+		n.syncStatus = status.NewStatusSyncer(pod, status.Config{
 			Client:                 config.Client,
 			PublishService:         config.PublishService,
 			PublishStatusAddress:   config.PublishStatusAddress,
 			IngressLister:          n.store,
-			ElectionID:             config.ElectionID,
-			IngressClass:           class.IngressClass,
-			DefaultIngressClass:    class.DefaultClass,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
 			UseNodeInternalIP:      config.UseNodeInternalIP,
 		})
@@ -215,13 +225,15 @@ Error loading new template: %v
 
 // NGINXController describes a NGINX Ingress controller.
 type NGINXController struct {
+	podInfo *k8s.PodInfo
+
 	cfg *Configuration
 
 	recorder record.EventRecorder
 
 	syncQueue *task.Queue
 
-	syncStatus status.Sync
+	syncStatus status.Syncer
 
 	syncRateLimiter flowcontrol.RateLimiter
 
@@ -239,7 +251,7 @@ type NGINXController struct {
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
-	t *ngx_template.Template
+	t ngx_template.TemplateWriter
 
 	resolver []net.IP
 
@@ -254,6 +266,12 @@ type NGINXController struct {
 	fileSystem filesystem.Filesystem
 
 	metricCollector metric.Collector
+
+	currentLeader uint32
+
+	validationWebhookServer *http.Server
+
+	command NginxExecTester
 }
 
 // Start starts a new NGINX master process running in the foreground.
@@ -262,11 +280,36 @@ func (n *NGINXController) Start() {
 
 	n.store.Run(n.stopCh)
 
-	if n.syncStatus != nil {
-		go n.syncStatus.Run()
+	// we need to use the defined ingress class to allow multiple leaders
+	// in order to update information about ingress status
+	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.DefaultClass)
+	if class.IngressClass != "" {
+		electionID = fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.IngressClass)
 	}
 
-	cmd := nginxExecCommand()
+	setupLeaderElection(&leaderElectionConfig{
+		Client:     n.cfg.Client,
+		ElectionID: electionID,
+		OnStartedLeading: func(stopCh chan struct{}) {
+			if n.syncStatus != nil {
+				go n.syncStatus.Run(stopCh)
+			}
+
+			n.setLeader(true)
+			n.metricCollector.OnStartedLeading(electionID)
+			// manually update SSL expiration metrics
+			// (to not wait for a reload)
+			n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
+		},
+		OnStoppedLeading: func() {
+			n.setLeader(false)
+			n.metricCollector.OnStoppedLeading(electionID)
+		},
+		PodName:      n.podInfo.Name,
+		PodNamespace: n.podInfo.Namespace,
+	})
+
+	cmd := n.command.ExecCommand()
 
 	// put NGINX in another process group to prevent it
 	// to receive signals meant for the controller
@@ -298,6 +341,13 @@ func (n *NGINXController) Start() {
 		}
 	}()
 
+	if n.validationWebhookServer != nil {
+		klog.Infof("Starting validation webhook on %s with keys %s %s", n.validationWebhookServer.Addr, n.cfg.ValidationWebhookCertPath, n.cfg.ValidationWebhookKeyPath)
+		go func() {
+			klog.Error(n.validationWebhookServer.ListenAndServeTLS("", ""))
+		}()
+	}
+
 	for {
 		select {
 		case err := <-n.ngxErrCh:
@@ -315,7 +365,7 @@ func (n *NGINXController) Start() {
 				// release command resources
 				cmd.Process.Release()
 				// start a new nginx master process if the controller is not being stopped
-				cmd = nginxExecCommand()
+				cmd = n.command.ExecCommand()
 				cmd.SysProcAttr = &syscall.SysProcAttr{
 					Setpgid: true,
 					Pgid:    0,
@@ -362,9 +412,17 @@ func (n *NGINXController) Stop() error {
 		n.syncStatus.Shutdown()
 	}
 
+	if n.validationWebhookServer != nil {
+		klog.Info("Stopping admission controller")
+		err := n.validationWebhookServer.Close()
+		if err != nil {
+			return err
+		}
+	}
+
 	// send stop signal to NGINX
 	klog.Info("Stopping NGINX process")
-	cmd := nginxExecCommand("-s", "quit")
+	cmd := n.command.ExecCommand("-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -408,45 +466,8 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 	}
 }
 
-// testTemplate checks if the NGINX configuration inside the byte array is valid
-// running the command "nginx -t" using a temporal file.
-func (n NGINXController) testTemplate(cfg []byte) error {
-	if len(cfg) == 0 {
-		return fmt.Errorf("invalid NGINX configuration (empty)")
-	}
-	tmpfile, err := ioutil.TempFile("", tempNginxPattern)
-	if err != nil {
-		return err
-	}
-	defer tmpfile.Close()
-	err = ioutil.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
-	if err != nil {
-		return err
-	}
-	out, err := nginxTestCommand(tmpfile.Name()).CombinedOutput()
-	if err != nil {
-		// this error is different from the rest because it must be clear why nginx is not working
-		oe := fmt.Sprintf(`
--------------------------------------------------------------------------------
-Error: %v
-%v
--------------------------------------------------------------------------------
-`, err, string(out))
-
-		return errors.New(oe)
-	}
-
-	os.Remove(tmpfile.Name())
-	return nil
-}
-
-// OnUpdate is called by the synchronization loop whenever configuration
-// changes were detected. The received backend Configuration is merged with the
-// configuration ConfigMap before generating the final configuration file.
-// Returns nil in case the backend was successfully reloaded.
-func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
-	cfg := n.store.GetBackendConfiguration()
-	cfg.Resolver = n.resolver
+// generateTemplate returns the nginx configuration file content
+func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
 
 	if n.cfg.EnableSSLPassthrough {
 		servers := []*TCPServer{}
@@ -542,9 +563,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		cmap, err := n.store.GetConfigMap(cfg.ProxySetHeaders)
 		if err != nil {
 			klog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.ProxySetHeaders, err)
+		} else {
+			setHeaders = cmap.Data
 		}
-
-		setHeaders = cmap.Data
 	}
 
 	addHeaders := map[string]string{}
@@ -552,9 +573,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		cmap, err := n.store.GetConfigMap(cfg.AddHeaders)
 		if err != nil {
 			klog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.AddHeaders, err)
+		} else {
+			addHeaders = cmap.Data
 		}
-
-		addHeaders = cmap.Data
 	}
 
 	sslDHParam := ""
@@ -609,7 +630,50 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
 
-	content, err := n.t.Write(tc)
+	return n.t.Write(tc)
+}
+
+// testTemplate checks if the NGINX configuration inside the byte array is valid
+// running the command "nginx -t" using a temporal file.
+func (n NGINXController) testTemplate(cfg []byte) error {
+	if len(cfg) == 0 {
+		return fmt.Errorf("invalid NGINX configuration (empty)")
+	}
+	tmpfile, err := ioutil.TempFile("", tempNginxPattern)
+	if err != nil {
+		return err
+	}
+	defer tmpfile.Close()
+	err = ioutil.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
+	if err != nil {
+		return err
+	}
+	out, err := n.command.Test(tmpfile.Name())
+	if err != nil {
+		// this error is different from the rest because it must be clear why nginx is not working
+		oe := fmt.Sprintf(`
+-------------------------------------------------------------------------------
+Error: %v
+%v
+-------------------------------------------------------------------------------
+`, err, string(out))
+
+		return errors.New(oe)
+	}
+
+	os.Remove(tmpfile.Name())
+	return nil
+}
+
+// OnUpdate is called by the synchronization loop whenever configuration
+// changes were detected. The received backend Configuration is merged with the
+// configuration ConfigMap before generating the final configuration file.
+// Returns nil in case the backend was successfully reloaded.
+func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
+	cfg := n.store.GetBackendConfiguration()
+	cfg.Resolver = n.resolver
+
+	content, err := n.generateTemplate(cfg, ingressCfg)
 	if err != nil {
 		return err
 	}
@@ -657,7 +721,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	o, err := nginxExecCommand("-s", "reload").CombinedOutput()
+	o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
 	}
@@ -935,6 +999,26 @@ func configureCertificates(pcfg *ingress.Configuration) error {
 				PemCertKey: server.SSLCert.PemCertKey,
 			},
 		})
+
+		if server.Alias != "" && server.SSLCert.PemCertKey != "" &&
+			ssl.IsValidHostname(server.Alias, server.SSLCert.CN) {
+			servers = append(servers, &ingress.Server{
+				Hostname: server.Alias,
+				SSLCert: ingress.SSLCert{
+					PemCertKey: server.SSLCert.PemCertKey,
+				},
+			})
+		}
+	}
+
+	redirects := buildRedirects(pcfg.Servers)
+	for _, redirect := range redirects {
+		servers = append(servers, &ingress.Server{
+			Hostname: redirect.From,
+			SSLCert: ingress.SSLCert{
+				PemCertKey: redirect.SSLCert.PemCertKey,
+			},
+		})
 	}
 
 	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/servers", "application/json", servers)
@@ -1098,4 +1182,16 @@ func buildRedirects(servers []*ingress.Server) []*redirect {
 	}
 
 	return redirectServers
+}
+
+func (n *NGINXController) setLeader(leader bool) {
+	var i uint32
+	if leader {
+		i = 1
+	}
+	atomic.StoreUint32(&n.currentLeader, i)
+}
+
+func (n *NGINXController) isLeader() bool {
+	return atomic.LoadUint32(&n.currentLeader) != 0
 }

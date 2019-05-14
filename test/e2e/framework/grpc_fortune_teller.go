@@ -19,8 +19,8 @@ package framework
 import (
 	. "github.com/onsi/gomega"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -35,12 +35,12 @@ func (f *Framework) NewGRPCFortuneTellerDeployment() {
 // NewNewGRPCFortuneTellerDeploymentWithReplicas creates a new deployment of the
 // fortune teller image in a particular namespace. Number of replicas is configurable
 func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32) {
-	deployment := &extensions.Deployment{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fortune-teller",
 			Namespace: f.Namespace,
 		},
-		Spec: extensions.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Replicas: NewInt32(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{

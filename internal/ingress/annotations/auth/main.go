@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -108,7 +109,18 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}
 	}
 
-	name := fmt.Sprintf("%v/%v", ing.Namespace, s)
+	sns, sname, err := cache.SplitMetaNamespaceKey(s)
+	if err != nil {
+		return nil, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "error reading secret name from annotation"),
+		}
+	}
+
+	if sns == "" {
+		sns = ing.Namespace
+	}
+
+	name := fmt.Sprintf("%v/%v", sns, sname)
 	secret, err := a.r.GetSecret(name)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{

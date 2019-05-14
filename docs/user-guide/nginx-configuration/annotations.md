@@ -27,6 +27,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
@@ -58,6 +59,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
+|[nginx.ingress.kubernetes.io/proxy-next-upstream-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream-tries](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
@@ -388,6 +390,14 @@ nginx.ingress.kubernetes.io/auth-snippet: |
 !!! example
     Please check the [external-auth](../../examples/auth/external-auth/README.md) example.
 
+#### Global External Authentication
+
+By default the controller redirects all requests to an existing service that provides authentication if `global-auth-url` is set in the NGINX ConfigMap. If you want to disable this behavior for that ingress, you can use `enable-global-auth: "false"` in the NGINX ConfigMap.
+`nginx.ingress.kubernetes.io/enable-global-auth`:
+   indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to `"true"`.
+
+!!! note For more information please see [global-auth-url](./configmap.md#global-auth-url).
+
 ### Rate limiting
 
 These annotations define a limit on the connections that can be opened by a single client IP address.
@@ -489,6 +499,7 @@ In some scenarios is required to have different values. To allow this we provide
 - `nginx.ingress.kubernetes.io/proxy-send-timeout`
 - `nginx.ingress.kubernetes.io/proxy-read-timeout`
 - `nginx.ingress.kubernetes.io/proxy-next-upstream`
+- `nginx.ingress.kubernetes.io/proxy-next-upstream-timeout`
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-tries`
 - `nginx.ingress.kubernetes.io/proxy-request-buffering`
 

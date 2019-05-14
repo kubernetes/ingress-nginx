@@ -51,6 +51,11 @@ const (
 	defBufferSize = 65535
 )
 
+// TemplateWriter is the interface to render a template
+type TemplateWriter interface {
+	Write(conf config.TemplateConfig) ([]byte, error)
+}
+
 // Template ...
 type Template struct {
 	tmpl *text_template.Template
@@ -126,12 +131,15 @@ var (
 		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
 		"buildLocation":              buildLocation,
 		"buildAuthLocation":          buildAuthLocation,
+		"shouldApplyGlobalAuth":      shouldApplyGlobalAuth,
 		"buildAuthResponseHeaders":   buildAuthResponseHeaders,
 		"buildProxyPass":             buildProxyPass,
 		"filterRateLimits":           filterRateLimits,
 		"buildRateLimitZones":        buildRateLimitZones,
 		"buildRateLimit":             buildRateLimit,
 		"buildResolversForLua":       buildResolversForLua,
+		"configForLua":               configForLua,
+		"locationConfigForLua":       locationConfigForLua,
 		"buildResolvers":             buildResolvers,
 		"buildUpstreamName":          buildUpstreamName,
 		"isLocationInLocationList":   isLocationInLocationList,
@@ -250,13 +258,62 @@ func buildResolversForLua(res interface{}, disableIpv6 interface{}) string {
 
 	r := []string{}
 	for _, ns := range nss {
-		if ing_net.IsIPV6(ns) && no6 {
-			continue
+		if ing_net.IsIPV6(ns) {
+			if no6 {
+				continue
+			}
+			r = append(r, fmt.Sprintf("\"[%v]\"", ns))
+		} else {
+			r = append(r, fmt.Sprintf("\"%v\"", ns))
 		}
-		r = append(r, fmt.Sprintf("\"%v\"", ns))
 	}
 
 	return strings.Join(r, ", ")
+}
+
+// configForLua returns some general configuration as Lua table represented as string
+func configForLua(input interface{}) string {
+	all, ok := input.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was given", input)
+		return "{}"
+	}
+
+	return fmt.Sprintf(`{
+		use_forwarded_headers = %t,
+		is_ssl_passthrough_enabled = %t,
+		http_redirect_code = %v,
+		listen_ports = { ssl_proxy = "%v", https = "%v" },
+	}`, all.Cfg.UseForwardedHeaders, all.IsSSLPassthroughEnabled, all.Cfg.HTTPRedirectCode, all.ListenPorts.SSLProxy, all.ListenPorts.HTTPS)
+}
+
+// locationConfigForLua formats some location specific configuration into Lua table represented as string
+func locationConfigForLua(l interface{}, s interface{}, a interface{}) string {
+	location, ok := l.(*ingress.Location)
+	if !ok {
+		klog.Errorf("expected an '*ingress.Location' type but %T was given", l)
+		return "{}"
+	}
+
+	server, ok := s.(*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '*ingress.Server' type but %T was given", s)
+		return "{}"
+	}
+
+	all, ok := a.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was given", a)
+		return "{}"
+	}
+
+	forceSSLRedirect := location.Rewrite.ForceSSLRedirect || (len(server.SSLCert.PemFileName) > 0 && location.Rewrite.SSLRedirect)
+	forceSSLRedirect = forceSSLRedirect && !isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations)
+
+	return fmt.Sprintf(`{
+		force_ssl_redirect = %t,
+		use_port_in_redirects = %t,
+	}`, forceSSLRedirect, location.UsePortInRedirects)
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
@@ -341,14 +398,14 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	return path
 }
 
-func buildAuthLocation(input interface{}) string {
+func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return ""
 	}
 
-	if location.ExternalAuth.URL == "" {
+	if (location.ExternalAuth.URL == "") && (!shouldApplyGlobalAuth(input, globalExternalAuthURL)) {
 		return ""
 	}
 
@@ -358,19 +415,29 @@ func buildAuthLocation(input interface{}) string {
 	return fmt.Sprintf("/_external-auth-%v", str)
 }
 
-func buildAuthResponseHeaders(input interface{}) []string {
+// shouldApplyGlobalAuth returns true only in case when ExternalAuth.URL is not set and
+// GlobalExternalAuth is set and enabled
+func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool {
 	location, ok := input.(*ingress.Location)
-	res := []string{}
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+	}
+
+	if (location.ExternalAuth.URL == "") && (globalExternalAuthURL != "") && (location.EnableGlobalAuth) {
+		return true
+	}
+
+	return false
+}
+
+func buildAuthResponseHeaders(headers []string) []string {
+	res := []string{}
+
+	if len(headers) == 0 {
 		return res
 	}
 
-	if len(location.ExternalAuth.ResponseHeaders) == 0 {
-		return res
-	}
-
-	for i, h := range location.ExternalAuth.ResponseHeaders {
+	for i, h := range headers {
 		hvar := strings.ToLower(h)
 		hvar = strings.NewReplacer("-", "_").Replace(hvar)
 		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
@@ -452,8 +519,8 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	if len(location.Rewrite.Target) > 0 {
 		var xForwardedPrefix string
 
-		if location.XForwardedPrefix {
-			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", path)
+		if len(location.XForwardedPrefix) > 0 {
+			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", location.XForwardedPrefix)
 		}
 
 		return fmt.Sprintf(`
@@ -731,10 +798,16 @@ func (info *ingressInformation) Equal(other *ingressInformation) bool {
 	return true
 }
 
-func getIngressInformation(i, p interface{}) *ingressInformation {
+func getIngressInformation(i, h, p interface{}) *ingressInformation {
 	ing, ok := i.(*ingress.Ingress)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
+		return &ingressInformation{}
+	}
+
+	hostname, ok := h.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", h)
 		return &ingressInformation{}
 	}
 
@@ -760,6 +833,10 @@ func getIngressInformation(i, p interface{}) *ingressInformation {
 
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
+			continue
+		}
+
+		if hostname != "" && hostname != rule.Host {
 			continue
 		}
 

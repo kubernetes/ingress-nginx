@@ -38,6 +38,12 @@ func (dc DummyCollector) IncReloadCount() {}
 // IncReloadErrorCount ...
 func (dc DummyCollector) IncReloadErrorCount() {}
 
+// IncCheckCount ...
+func (dc DummyCollector) IncCheckCount(string, string) {}
+
+// IncCheckErrorCount ...
+func (dc DummyCollector) IncCheckErrorCount(string, string) {}
+
 // RemoveMetrics ...
 func (dc DummyCollector) RemoveMetrics(ingresses, endpoints []string) {}
 
@@ -52,3 +58,9 @@ func (dc DummyCollector) SetSSLExpireTime([]*ingress.Server) {}
 
 // SetHosts ...
 func (dc DummyCollector) SetHosts(hosts sets.String) {}
+
+// OnStartedLeading indicates the pod is not the current leader
+func (dc DummyCollector) OnStartedLeading(electionID string) {}
+
+// OnStoppedLeading indicates the pod is not the current leader
+func (dc DummyCollector) OnStoppedLeading(electionID string) {}
