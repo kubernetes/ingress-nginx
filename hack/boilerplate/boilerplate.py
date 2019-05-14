@@ -139,6 +139,7 @@ skipped_dirs = [
     '.git',
     "vendor",
     "test/e2e/framework/framework.go",
+    "images"
 ]
 
 
