@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Running make run-in-docker allows the execution of a target
+# using a container intead of running the command locally
 ifeq (run-in-docker,$(firstword $(MAKECMDGOALS)))
   RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   $(eval $(RUN_ARGS):;@:)
@@ -116,21 +118,21 @@ else
 	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
 endif
 
-	$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
+	@$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
 
 ifeq ($(ARCH), amd64)
 	# This is for maintaining backward compatibility
-	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
+	@$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
 .PHONY: clean-container
 clean-container:
-	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
+	@$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
 
 .PHONY: register-qemu
 register-qemu:
 	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
+	@$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 
 .PHONY: push
 push: .push-$(ARCH)
@@ -144,11 +146,11 @@ endif
 
 .PHONY: build
 build:
-	build/build.sh
+	@build/build.sh
 
 .PHONY: build-plugin
 build-plugin:
-	build/build-plugin.sh
+	@build/build-plugin.sh
 
 .PHONY: clean
 clean:
@@ -156,15 +158,15 @@ clean:
 
 .PHONY: static-check
 static-check:
-	build/static-check.sh
+	@build/static-check.sh
 
 .PHONY: test
 test:
-	build/test.sh
+	@build/test.sh
 
 .PHONY: lua-test
 lua-test:
-	build/test-lua.sh
+	@build/test-lua.sh
 
 .PHONY: e2e-test
 e2e-test:
@@ -197,17 +199,17 @@ e2e-test-image: e2e-test-binary
 
 .PHONY: e2e-test-binary
 e2e-test-binary:
-	ginkgo build ./test/e2e
+	@ginkgo build ./test/e2e
 
 .PHONY: cover
 cover:
-	build/cover.sh
+	@build/cover.sh
 	echo "Uploading coverage results..."
-	curl -s https://codecov.io/bash | bash
+	@curl -s https://codecov.io/bash | bash
 
 .PHONY: vet
 vet:
-	go vet $(shell go list ${PKG}/... | grep -v vendor)
+	@go vet $(shell go list ${PKG}/internal/... | grep -v vendor)
 
 .PHONY: release
 release: all-container all-push
@@ -215,7 +217,7 @@ release: all-container all-push
 
 .PHONY: check_dead_links
 check_dead_links:
-	docker run -t \
+	@docker run -t \
 	  -v $$PWD:/tmp aledbf/awesome_bot:0.1 \
 	  --allow-dupe \
 	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
@@ -227,21 +229,21 @@ dep-ensure:
 
 .PHONY: dev-env
 dev-env:
-	build/dev-env.sh
+	@build/dev-env.sh
 
 .PHONY: live-docs
 live-docs:
-	docker build --pull -t ingress-nginx/mkdocs build/mkdocs
-	docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
+	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
 
 .PHONY: build-docs
 build-docs:
-	docker build --pull -t ingress-nginx/mkdocs build/mkdocs
-	docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
+	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
 
 .PHONY: misspell
 misspell:
-	go get github.com/client9/misspell/cmd/misspell
+	@go get github.com/client9/misspell/cmd/misspell
 	misspell \
 		-locale US \
 		-error \
