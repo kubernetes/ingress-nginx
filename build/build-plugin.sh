@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if ! [ -z $DEBUG ]; then
+	set -x
+fi
+
 set -o errexit
 set -o nounset
 set -o pipefail

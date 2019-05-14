@@ -15,7 +15,9 @@
 # limitations under the License.
 
 set -e
-set -x
+if ! [ -z $DEBUG ]; then
+	set -x
+fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
