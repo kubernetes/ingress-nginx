@@ -29,6 +29,8 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-
 #  k8s.io/ingress-nginx/pkg/client k8s.io/ingress-nginx/pkg/apis \
 #  nginxingress:v1alpha1 \
 #  --output-base "$(dirname ${BASH_SOURCE})/../../.."
+mkdir -p ${CODEGEN_PKG}/hack
+cp ${SCRIPT_ROOT}/hack/boilerplate/boilerplate.go.txt ${CODEGEN_PKG}/hack/boilerplate.go.txt
 
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy" \
   k8s.io/ingress-nginx/internal k8s.io/ingress-nginx/internal \
