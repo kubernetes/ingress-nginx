@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Running make run-in-docker allows the execution of a target
-# using a container intead of running the command locally
-ifeq (run-in-docker,$(firstword $(MAKECMDGOALS)))
-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  $(eval $(RUN_ARGS):;@:)
-endif
-
 .PHONY: all
 all: all-container
 
@@ -36,6 +29,7 @@ FOCUS ?= .*
 E2E_NODES ?= 10
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
+K8S_VERSION ?= v1.14.1
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -59,12 +53,14 @@ QEMUVERSION = v4.0.0
 BUSTED_ARGS =-v --pattern=_test
 
 export ARCH
+export DUMB_ARCH
 export TAG
 export PKG
 export GOARCH
 export GIT_COMMIT
 export GOBUILD_FLAGS
 export REPO_INFO
+export BUSTED_ARGS
 
 IMGNAME = nginx-ingress-controller
 IMAGE = $(REGISTRY)/$(IMGNAME)
@@ -252,7 +248,3 @@ misspell:
 .PHONE: kind-e2e-test
 kind-e2e-test:
 	test/e2e/run.sh
-
-.PHONE: run-in-docker
-run-in-docker:
-	# dummy target

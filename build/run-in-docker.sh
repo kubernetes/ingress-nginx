@@ -59,7 +59,6 @@ docker run                                       \
     ${MINIKUBE_VOLUME}                           \
     -w /go/src/${PKG}                            \
     --env-file .env                              \
-    --entrypoint ${FLAGS}                        \
-    ${E2E_IMAGE}
+    ${E2E_IMAGE} ${FLAGS}
 
 rm .env
