@@ -7,7 +7,11 @@ IMAGE = $(REGISTRY)/e2e-prow
 all: docker-build docker-push
 
 docker-build:
-	$(DOCKER) build -t $(IMAGE):$(TAG) .
+	$(DOCKER) build \
+		--pull \
+		--build-arg K8S_RELEASE=v1.14.1 \
+		--build-arg ETCD_VERSION=v3.3.12 \
+		-t $(IMAGE):$(TAG) .
 
 docker-push:
 	$(DOCKER) push $(IMAGE):$(TAG)
