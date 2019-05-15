@@ -41,11 +41,20 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # replace kubectl with one from K8S_RELEASE
-ARG K8S_RELEASE=latest
-RUN rm -f $(which kubectl) && \
-    export KUBECTL_VERSION=$(curl https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}.txt) && \
-    wget https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl && \
-    chmod +x /usr/local/bin/kubectl
+ARG K8S_RELEASE
+ARG ETCD_VERSION
+
+RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
+    && chmod +x /usr/local/bin/kubectl
+
+RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kube-apiserver -O /usr/local/bin/kube-apiserver \
+    && chmod +x /usr/local/bin/kube-apiserver
+
+RUN curl -L https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz \
+    && mkdir -p /tmp/etcd-download \
+    && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 \
+    && cp /tmp/etcd-download/etcd /usr/local/bin \
+    && rm -rf /tmp/etcd-download
 
 # install go
 ENV GO_VERSION 1.12.5
@@ -55,7 +64,8 @@ RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" && \
     rm "${GO_TARBALL}"
 
 RUN  go get github.com/onsi/ginkgo/ginkgo \
-    && go get golang.org/x/lint/golint
+    && go get golang.org/x/lint/golint \
+    && GO111MODULE="on" go get -u sigs.k8s.io/kind@master \
+    && rm -rf /go/src/github.com
 
-RUN curl -sSL -o /usr/local/bin/kind https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64 \
-    && chmod +x /usr/local/bin/kind
+ENV KUBEBUILDER_ASSETS /usr/local/bin
