@@ -103,7 +103,7 @@ func (f *Framework) BeforeEach() {
 	f.Namespace = ingressNamespace
 
 	By("Starting new ingress controller")
-	err = f.NewIngressController(f.Namespace)
+	err = f.NewIngressController(f.Namespace, f.BaseName)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{

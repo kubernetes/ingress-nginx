@@ -817,10 +817,6 @@ stream {
         {{ end }}
         {{ end }}
         set $proxy_upstream_name "-";
-        set $pass_access_scheme $scheme;
-        set $pass_server_port $server_port;
-        set $best_http_host $http_host;
-        set $pass_port $pass_server_port;
 
         {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
         {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
@@ -1109,6 +1105,10 @@ stream {
             set $balancer_ewma_score -1;
             set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
             set $proxy_host             $proxy_upstream_name;
+            set $pass_access_scheme $scheme;
+            set $pass_server_port $server_port;
+            set $best_http_host $http_host;
+            set $pass_port $pass_server_port;
 
             set $proxy_alternative_upstream_name "";
 
