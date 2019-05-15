@@ -14,8 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KIND_LOG_LEVEL="info"
+
 if ! [ -z $DEBUG ]; then
-	set -x
+  set -x
+  KIND_LOG_LEVEL="debug"
 fi
 
 set -o errexit
@@ -28,12 +31,19 @@ export TAG=dev
 export ARCH=amd64
 export REGISTRY=ingress-controller
 
+export K8S_VERSION=${K8S_VERSION:-v1.14.1}
+
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
 kind --version || $(echo "Please install kind before running e2e tests";exit 1)
 
 echo "[dev-env] creating Kubernetes cluster with kind"
-kind create cluster --name ${KIND_CLUSTER_NAME} --config ${DIR}/kind.yaml
+# TODO: replace the custom images after https://github.com/kubernetes-sigs/kind/issues/531
+kind create cluster \
+  --loglevel=${KIND_LOG_LEVEL} \
+  --name ${KIND_CLUSTER_NAME} \
+  --config ${DIR}/kind.yaml \
+  --image "aledbf/kind-node:${K8S_VERSION}"
 
 export KUBECONFIG="$(kind get kubeconfig-path --name="${KIND_CLUSTER_NAME}")"
 
@@ -52,3 +62,7 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-c
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
+
+kind delete cluster \
+  --loglevel=${KIND_LOG_LEVEL} \
+  --name ${KIND_CLUSTER_NAME}
