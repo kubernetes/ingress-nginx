@@ -137,6 +137,17 @@ http {
     {{ end }}
     {{ end }}
 
+    {{ if $all.Cfg.EnableModsecurity }}
+    modsecurity on;
+
+    modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+
+    {{ if $all.Cfg.EnableOWASPCoreRules }}
+    modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+    {{ end }}
+
+    {{ end }}
+
     {{ if $cfg.UseGeoIP }}
     {{/* databases used to determine the country depending on the client IP address */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
@@ -1102,15 +1113,17 @@ stream {
             set $proxy_host             $proxy_upstream_name;
 
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
+            {{ if not $all.Cfg.EnableModsecurity }}
             modsecurity on;
 
             modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+            {{ end }}
 
             {{ if $location.ModSecurity.Snippet }}
             modsecurity_rules '
                 {{ $location.ModSecurity.Snippet }}
             ';
-            {{ else if (or $location.ModSecurity.OWASPRules $all.Cfg.EnableOWASPCoreRules) }}
+            {{ else if (and ((not $all.Cfg.EnableOWASPCoreRules) $location.ModSecurity.OWASPRules))}}
             modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
             {{ end }}
 
