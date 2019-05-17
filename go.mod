@@ -19,7 +19,6 @@ require (
 	github.com/evanphx/json-patch v4.1.0+incompatible // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
 	github.com/go-openapi/spec v0.19.0 // indirect
-	github.com/gofortune/gofortune v0.0.1-snapshot // indirect
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/google/uuid v1.0.0
@@ -56,9 +55,7 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926
-	github.com/vromero/gofortune v0.0.1-snapshot
 	github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
-	google.golang.org/grpc v1.19.1
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
@@ -70,6 +67,7 @@ require (
 	k8s.io/cli-runtime v0.0.0-20190314001948-2899ed30580f
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/cloud-provider v0.0.0-20190323031113-9c9d72d1bf90 // indirect
+	k8s.io/code-generator v0.0.0-00010101000000-000000000000
 	k8s.io/component-base v0.0.0-20190313120452-4727f38490bc
 	k8s.io/klog v0.3.0
 	k8s.io/kube-openapi v0.0.0-20190320154901-5e45bb682580 // indirect
@@ -79,4 +77,7 @@ require (
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )
 
-replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.1
+replace (
+	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.1
+	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20190511023357-639c964206c2
+)
