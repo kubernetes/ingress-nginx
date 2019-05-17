@@ -254,13 +254,6 @@ func registerHandlers(mux *http.ServeMux) {
 		b, _ := json.Marshal(version.String())
 		w.Write(b)
 	})
-
-	mux.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		err := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		if err != nil {
-			klog.Errorf("Unexpected error: %v", err)
-		}
-	})
 }
 
 func registerHealthz(ic *controller.NGINXController, mux *http.ServeMux) {
