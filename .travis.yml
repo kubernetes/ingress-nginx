@@ -5,13 +5,6 @@ sudo: required
 services:
   - docker
 
-# FIXME(#46924): these two commands are required to enable IPv6,
-# they shouldn't exist, please revert once more official solutions appeared.
-# see https://github.com/travis-ci/travis-ci/issues/8891#issuecomment-353403729
-before_install:
-  - echo '{"ipv6":true,"fixed-cidr-v6":"2001:db8:1::/64"}' | sudo tee /etc/docker/daemon.json
-  - sudo service docker restart
-
 language: generic
 
 notifications:
@@ -22,8 +15,6 @@ notifications:
 # New secure variables can be added using travis encrypt -r kubernetes/ingress-nginx --add K=V
 env:
   global:
-    - DOCKER=docker
-    - SKIP_SNAPSHOT=true
     - GH_REF=github.com/kubernetes/ingress-nginx
     - secure: LIS2XpZufWTcJ53jiRsSZy2Gi1EUJ1XmLg7z3f2ZHeMnyG2Jhk3GW4vod1FNru+PY4PWgddLdCdIl+jqOYXndFlbdAWF3/Oy5fEkYLXdYV7tdlHcPWDkqNFrfiyZ4guChN+b2Nk6FqU7o5fsZAIR7VAbgqNRF5XMo9Mhn/vhDCQRcnbXy7uq7JTrYUkqDbQoyYvT6b480GCY5gags1zp/xZfPDNZEe936o8i5IPTyiykRyNOXN/AH6kd3pR5e1xYgcvJ9KpSVPghcwFE7kJ4fOVMRhRG5ML+IyML+xD0jX43EMNoqRKZ/HS42kIMCInFbJEcxVde7DPNBZ7Y3GAqh7HO6qrE70Dn3ha6DID6zCoH2ArW39BxG4zempjn2VxYoMRGREyZszWQb++dwGoHmo5FHt6zvIrYBG0dA0H8ja9VkZkjFwtYTGHU1ooPzUfJK4O4VBayV8LqZibyZQR+GrmyQc0aagUY7J/fe4A2PJyI4DbkeZ7GX1ELj0ciDz4urQSzUc8l/T3aU3X+FuJItjgYtMLPmqcjA5uifDCtutE8Z9L2gSpanqUdvLSOozuxPho/KNl+2YlF7fXqPW3LnRf5mHD+NbOff306pvKlHJOb2Vmth+HBQ1XDzt/Cy5+sfwS3E0Vmh6UTq/NtkUXxwH10BDMF7FMVlQ4zdHQvyZ0=
     - secure: rKDoy9IYYYy0fYBs4+9mwuBVq/TcxfFwMfE0ywYWhUUdgzrUYSJAwpoe/96EQ4YmESUefwC2nDNq4G3XzJKYOWf83PaIveb9Z//zmMrCQXjDuDBDLpwV3sXSh7evXiVDohJz4ogBCeMRUCMKYsyKBM9yWfa/iu+yI92dbphpK9peOKW6yBc0uspJlln4swN3GS2WT9LVuPY2Azv9U2UqrXufOPDKG/qEb/Vrn4yZ2lR/50r2k45e9nSvDoByvr10V8ubM5Zc0iP0vBuAUVRdByv6N53Q4gaBGapY6SxhIjIPC/h0rNnuT9EXp7MWaPT5FmBxLt9wnyleT9QhZJnFyaBYqFgcz/DKifYQkryY4M5dLMo/Rt3yATyAy8Y0df1TOoV2dKdqwOOwQ8bXB1wDfyrGxmQj9HY4Ffnphx3wPE1a+Sjuh+S5Epm7XJbPx5pZJqNO2hd4sTbk0Xp3gpPbihny2r/jtNwHl0wpFCfOM68RNrsVRlIwG3UhzbZvblbQ/M/mmWCdgzINjt07I2SGCJxfKG0e98Q49SKUoDoOgQTTRDqTC9IgOEDxyfAkT0Vr6BtlP88Nsgnf6kmboyigBrRAiaDQGTxn3SP6LnQI3CeopaRDYvFZe/rTwPXE9XlKoTn9FTWnAqF3MuWaLslDcDKYEh7OaYJjF01piu6g4Nc=
@@ -32,49 +23,6 @@ env:
 
 jobs:
   include:
-    - stage: Static Check
-      script:
-        - make static-check
-    - stage: Lua Unit Test
-      script:
-        - make lua-test
-    - stage: Coverage
-      script:
-        - make cover
-    - stage: e2e
-      if: (branch = master AND env(COMPONENT) != "docs") OR (type = pull_request AND commit_message !~ /(skip-e2e)/)
-      before_script:
-        - sudo mkdir -p /home/travis/.kube/ && sudo chmod 777 /home/travis/.kube/
-        - curl -sSL -o kubectl https://storage.googleapis.com/kubernetes-release/release/v1.14.1/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        - curl -sSL -o kind https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
-        - make e2e-test-image
-      script:
-        - test/e2e/run.sh
-    # split builds to avoid job timeouts
-    - stage: publish amd64
-      if: type = api AND branch = master AND repo = kubernetes/ingress-nginx AND env(COMPONENT) = "ingress-controller"
-      script:
-        - .travis/publish.sh amd64
-    - stage: publish arm
-      if: type = api AND branch = master AND repo = kubernetes/ingress-nginx AND env(COMPONENT) = "ingress-controller"
-      script:
-        - make register-qemu
-        - .travis/publish.sh arm
-    - stage: publish arm64
-      if: type = api AND branch = master AND repo = kubernetes/ingress-nginx AND env(COMPONENT) = "ingress-controller"
-      script:
-        - make register-qemu
-        - .travis/publish.sh arm64
-    - stage: publish ppc64le
-      if: type = api AND branch = master AND repo = kubernetes/ingress-nginx AND env(COMPONENT) = "ingress-controller"
-      script:
-        - make register-qemu
-        - .travis/publish.sh ppc64le
-    - stage: publish s390x
-      if: type = api AND branch = master AND repo = kubernetes/ingress-nginx AND env(COMPONENT) = "ingress-controller"
-      script:
-        - make register-qemu
-        - .travis/publish.sh s390x
     - stage: Publish docs
       if: type = api AND branch = master AND repo = kubernetes/ingress-nginx AND env(COMPONENT) = "docs"
       script:

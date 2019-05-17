@@ -119,7 +119,8 @@ def file_passes(filename, refs, regexs):
 
     # if we don't match the reference at this point, fail
     if ref != data:
-        print("Header in %s does not match reference, diff:" % filename, file=verbose_out)
+        print("Header in %s does not match reference, diff:" %
+              filename, file=verbose_out)
         if args.verbose:
             print(file=verbose_out)
             for line in difflib.unified_diff(ref, data, 'reference', filename, lineterm=''):
@@ -138,8 +139,7 @@ skipped_dirs = [
     '.git',
     "vendor",
     "test/e2e/framework/framework.go",
-    "hack/boilerplate/test",
-    "test/e2e/dind-cluster-v1.11.sh"
+    "images"
 ]
 
 

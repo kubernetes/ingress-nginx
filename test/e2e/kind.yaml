@@ -3,4 +3,4 @@ apiVersion: kind.sigs.k8s.io/v1alpha2
 nodes:
   - role: control-plane
   - role: worker
-    replicas: 3
+    replicas: 2
