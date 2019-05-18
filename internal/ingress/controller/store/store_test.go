@@ -1029,7 +1029,7 @@ func TestListIngresses(t *testing.T) {
 	}
 	s.listers.IngressWithAnnotation.Add(ingressWithNginxClass)
 
-	ingresses := s.ListIngresses()
+	ingresses := s.ListIngresses(nil)
 
 	if s := len(ingresses); s != 3 {
 		t.Errorf("Expected 3 Ingresses but got %v", s)

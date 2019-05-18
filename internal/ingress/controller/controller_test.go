@@ -30,12 +30,13 @@ import (
 	"time"
 
 	"github.com/eapache/channels"
-	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
+
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
@@ -76,7 +77,7 @@ func (fakeIngressStore) GetServiceEndpoints(key string) (*corev1.Endpoints, erro
 	return nil, fmt.Errorf("test error")
 }
 
-func (fis fakeIngressStore) ListIngresses() []*ingress.Ingress {
+func (fis fakeIngressStore) ListIngresses(store.IngressFilterFunc) []*ingress.Ingress {
 	return fis.ingresses
 }
 
@@ -209,7 +210,8 @@ func TestCheckIngress(t *testing.T) {
 			nginx.store = fakeIngressStore{
 				ingresses: []*ingress.Ingress{
 					{
-						Ingress: *ing,
+						Ingress:           *ing,
+						ParsedAnnotations: &annotations.Ingress{},
 					},
 				},
 			}
