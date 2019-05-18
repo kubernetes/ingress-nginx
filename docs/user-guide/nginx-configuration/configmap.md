@@ -525,8 +525,7 @@ _**default:**_ 5s
 
 ## use-gzip
 
-Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html).
-The default mime type list to compress is: `application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
+Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html). MIME types to compress are controlled by [gzip-types](#gzip-types). _**default:**_ true
 
 ## use-geoip
 
@@ -566,7 +565,8 @@ Sets the gzip Compression Level that will be used. _**default:**_ 5
 
 ## gzip-types
 
-Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type. Responses with the "text/html" type are always compressed if `use-gzip` is enabled.
+Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type. Responses with the "text/html" type are always compressed if `[use-gzip](#use-gzip)` is enabled.
+_**default:**_ `application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
 
 ## worker-processes
 
