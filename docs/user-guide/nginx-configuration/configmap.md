@@ -751,6 +751,8 @@ Adds custom configuration to all the servers in the nginx configuration.
 
 Adds custom configuration to all the locations in the nginx configuration.
 
+You can not use this to add new locations that proxy to the Kubernetes pods, as the snippet does not have access to the Go template functions. If you want to add custom locations you will have to [provide your own nginx.tmpl](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/custom-template/).
+
 ## custom-http-errors
 
 Enables which HTTP codes should be passed for processing with the [error_page directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page)
