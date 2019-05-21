@@ -1044,7 +1044,8 @@ const jaegerTmpl = `{
   "service_name": "{{ .JaegerServiceName }}",
   "sampler": {
 	"type": "{{ .JaegerSamplerType }}",
-	"param": {{ .JaegerSamplerParam }}
+	"param": {{ .JaegerSamplerParam }},
+	"samplingServerURL": "{{ .JaegerSamplerHost }}:{{ .JaegerSamplerPort }}/sampling"
   },
   "reporter": {
 	"localAgentHostPort": "{{ .JaegerCollectorHost }}:{{ .JaegerCollectorPort }}"
