@@ -52,6 +52,13 @@ jaeger-sampler-type
 # specifies the argument to be passed to the sampler constructor, Default: 1
 jaeger-sampler-param
 
+# Specifies the custom remote sampler host to be passed to the sampler constructor. Must be a valid URL.
+# Default: http://127.0.0.1
+jaeger-sampler-host
+
+# Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. Default: 5778
+jaeger-sampler-port
+
 # specifies the port to use when uploading traces, Default 8126
 datadog-collector-port
 
