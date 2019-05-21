@@ -259,11 +259,11 @@ _References:_
 
 ## disable-ipv6
 
-Disable listening on IPV6. _**default:**_ is disabled
+Disable listening on IPV6. _**default:**_ `false`; IPv6 listening is enabled
 
 ## disable-ipv6-dns
 
-Disable IPV6 for nginx DNS resolver. _**default:**_ is disabled
+Disable IPV6 for nginx DNS resolver. _**default:**_ `false`; IPv6 resolving enabled.
 
 ## enable-underscores-in-headers
 
