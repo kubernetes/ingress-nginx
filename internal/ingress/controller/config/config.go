@@ -495,6 +495,14 @@ type Configuration struct {
 	// Default: 1
 	JaegerSamplerParam string `json:"jaeger-sampler-param"`
 
+	// JaegerSamplerHost specifies the host used for remote sampling consultation
+	// Default: http://127.0.0.1
+	JaegerSamplerHost string `json:"jaeger-sampler-host"`
+
+	// JaegerSamplerHost specifies the host used for remote sampling consultation
+	// Default: 5778
+	JaegerSamplerPort int `json:"jaeger-sampler-port"`
+
 	// DatadogCollectorHost specifies the datadog agent host to use when uploading traces
 	DatadogCollectorHost string `json:"datadog-collector-host"`
 
@@ -714,6 +722,8 @@ func NewDefault() Configuration {
 		JaegerServiceName:            "nginx",
 		JaegerSamplerType:            "const",
 		JaegerSamplerParam:           "1",
+		JaegerSamplerPort:            5778,
+		JaegerSamplerHost:            "http://127.0.0.1",
 		DatadogServiceName:           "nginx",
 		DatadogCollectorPort:         8126,
 		DatadogOperationNameOverride: "nginx.handle",
