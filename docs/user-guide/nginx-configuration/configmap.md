@@ -124,6 +124,8 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
 |[jaeger-sampler-type](#jaeger-sampler-type)|string|"const"|
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
+|[jaeger-sampler-host](#jaeger-sampler-host)|string|"http://127.0.0.1"|
+|[jaeger-sampler-port](#jaeger-sampler-port)|int|5778|
 |[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
@@ -734,6 +736,15 @@ Specifies the sampler to be used when sampling traces. The available samplers ar
 
 Specifies the argument to be passed to the sampler constructor. Must be a number.
 For const this should be 0 to never sample and 1 to always sample. _**default:**_ 1
+
+## jaeger-sampler-host
+
+Specifies the custom remote sampler host to be passed to the sampler constructor. Must be a valid URL.
+Leave blank to use default value (localhost). _**default:**_ http://127.0.0.1
+
+## jaeger-sampler-port
+
+Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. _**default:**_ 5778
 
 ## main-snippet
 
