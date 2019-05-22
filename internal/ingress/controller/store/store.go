@@ -56,6 +56,9 @@ import (
 	"k8s.io/ingress-nginx/internal/k8s"
 )
 
+// IngressFilterFunc decides if an Ingress should be ommited or not
+type IngressFilterFunc func(*ingress.Ingress) bool
+
 // Storer is the interface that wraps the required methods to gather information
 // about ingresses, services, secrets and ingress annotations.
 type Storer interface {
@@ -75,7 +78,7 @@ type Storer interface {
 	GetServiceEndpoints(key string) (*corev1.Endpoints, error)
 
 	// ListIngresses returns a list of all Ingresses in the store.
-	ListIngresses() []*ingress.Ingress
+	ListIngresses(IngressFilterFunc) []*ingress.Ingress
 
 	// GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods.
 	GetRunningControllerPodsCount() int
@@ -758,11 +761,16 @@ func (s *k8sStore) getIngress(key string) (*extensions.Ingress, error) {
 }
 
 // ListIngresses returns the list of Ingresses
-func (s *k8sStore) ListIngresses() []*ingress.Ingress {
+func (s *k8sStore) ListIngresses(filter IngressFilterFunc) []*ingress.Ingress {
 	// filter ingress rules
 	ingresses := make([]*ingress.Ingress, 0)
 	for _, item := range s.listers.IngressWithAnnotation.List() {
 		ing := item.(*ingress.Ingress)
+
+		if filter != nil && filter(ing) {
+			continue
+		}
+
 		ingresses = append(ingresses, ing)
 	}
 

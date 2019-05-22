@@ -122,8 +122,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return nil
 	}
 
-	ings := n.store.ListIngresses()
-
+	ings := n.store.ListIngresses(nil)
 	hosts, servers, pcfg := n.getConfiguration(ings)
 
 	if n.runningConfig.Equal(pcfg) {
@@ -202,37 +201,36 @@ func (n *NGINXController) syncIngress(interface{}) error {
 // CheckIngress returns an error in case the provided ingress, when added
 // to the current configuration, generates an invalid configuration
 func (n *NGINXController) CheckIngress(ing *extensions.Ingress) error {
+	//TODO: this is wrong
 	if n == nil {
 		return fmt.Errorf("cannot check ingress on a nil ingress controller")
 	}
+
 	if ing == nil {
 		// no ingress to add, no state change
 		return nil
 	}
+
 	if !class.IsValid(ing) {
 		klog.Infof("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
 		return nil
 	}
+
 	if n.cfg.Namespace != "" && ing.ObjectMeta.Namespace != n.cfg.Namespace {
 		klog.Infof("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
 		return nil
 	}
 
-	ings := n.store.ListIngresses()
-	newIngress := &ingress.Ingress{
-		Ingress:           *ing,
-		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
+	filter := func(toCheck *ingress.Ingress) bool {
+		return toCheck.ObjectMeta.Namespace == ing.ObjectMeta.Namespace &&
+			toCheck.ObjectMeta.Name == ing.ObjectMeta.Name
 	}
 
-	for i, ingress := range ings {
-		if ingress.Ingress.ObjectMeta.Name == ing.ObjectMeta.Name && ingress.Ingress.ObjectMeta.Namespace == ing.ObjectMeta.Namespace {
-			ings[i] = newIngress
-			newIngress = nil
-		}
-	}
-	if newIngress != nil {
-		ings = append(ings, newIngress)
-	}
+	ings := n.store.ListIngresses(filter)
+	ings = append(ings, &ingress.Ingress{
+		Ingress:           *ing,
+		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
+	})
 
 	_, _, pcfg := n.getConfiguration(ings)
 
@@ -244,12 +242,14 @@ func (n *NGINXController) CheckIngress(ing *extensions.Ingress) error {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
 	}
+
 	err = n.testTemplate(content)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 	} else {
 		n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
 	}
+
 	return err
 }
 
