@@ -316,6 +316,12 @@ _New Features:_
 - Support for custom ModSecurity configuration
 - LUA upstream configuration for TCP and UDP services
 
+_Breaking changes:_
+
+- Annotation `nginx.ingress.kubernetes.io/secure-backends` removed and superseded by `nginx.ingress.kubernetes.io/backend-protocol`.
+
+  Refer to [Annotations reference](docs/user-guide/nginx-configuration/annotations.md#backend-protocol) for usage details.
+  
 _Changes:_
 
 - [X] [#3156](https://github.com/kubernetes/ingress-nginx/pull/3156) [404-server] Removes 404 server
