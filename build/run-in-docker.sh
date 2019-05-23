@@ -22,23 +22,14 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v05122019-7b3f69a3ba
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v05232019-ee1f36d8d
 
 DOCKER_OPTS=${DOCKER_OPTS:-""}
 
 FLAGS=$@
 
-tee .env << EOF
-PKG=${PKG:-""}
-ARCH=${ARCH:-""}
-GIT_COMMIT=${GIT_COMMIT:-""}
-TAG=${TAG:-"0.0"}
-GOARCH=${GOARCH:-""}
-GOBUILD_FLAGS=${GOBUILD_FLAGS:-"-v"}
-PWD=${PWD}
-BUSTED_ARGS=${BUSTED_ARGS:-""}
-REPO_INFO=${REPO_INFO:-local}
-EOF
+PKG=k8s.io/ingress-nginx
+ARCH=$(go env GOARCH)
 
 MINIKUBE_PATH=${HOME}/.minikube
 MINIKUBE_VOLUME="-v ${MINIKUBE_PATH}:${MINIKUBE_PATH}"
@@ -58,7 +49,4 @@ docker run                                       \
     -v /var/run/docker.sock:/var/run/docker.sock \
     ${MINIKUBE_VOLUME}                           \
     -w /go/src/${PKG}                            \
-    --env-file .env                              \
     ${E2E_IMAGE} ${FLAGS}
-
-rm .env

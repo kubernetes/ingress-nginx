@@ -15,3 +15,5 @@ docker-build:
 
 docker-push:
 	$(DOCKER) push $(IMAGE):$(TAG)
+	$(DOCKER) tag $(IMAGE):$(TAG) $(IMAGE):latest
+	$(DOCKER) push $(IMAGE):latest
