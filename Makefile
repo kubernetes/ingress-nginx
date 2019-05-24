@@ -52,11 +52,14 @@ QEMUVERSION = v4.0.0
 
 BUSTED_ARGS =-v --pattern=_test
 
+GOOS = linux
+
 export ARCH
 export DUMB_ARCH
 export TAG
 export PKG
 export GOARCH
+export GOOS
 export GIT_COMMIT
 export GOBUILD_FLAGS
 export REPO_INFO
