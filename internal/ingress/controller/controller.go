@@ -221,6 +221,26 @@ func (n *NGINXController) CheckIngress(ing *extensions.Ingress) error {
 		return nil
 	}
 
+	if ing.Spec.Backend != nil {
+		svcKey := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.Backend.ServiceName)
+		if _, err := n.getServiceClusterEndpoint(svcKey, ing.Spec.Backend); err != nil {
+			return err
+		}
+	} else {
+		for _, rule := range ing.Spec.Rules {
+			if rule.HTTP == nil {
+				continue
+			}
+
+			for _, path := range rule.HTTP.Paths {
+				svcKey := fmt.Sprintf("%v/%v", ing.Namespace, path.Backend.ServiceName)
+				if _, err := n.getServiceClusterEndpoint(svcKey, &path.Backend); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	filter := func(toCheck *ingress.Ingress) bool {
 		return toCheck.ObjectMeta.Namespace == ing.ObjectMeta.Namespace &&
 			toCheck.ObjectMeta.Name == ing.ObjectMeta.Name
