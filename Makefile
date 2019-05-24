@@ -150,7 +150,7 @@ build-plugin:
 
 .PHONY: clean
 clean:
-	rm -rf bin/ .gocache/ .env
+	rm -rf bin/ .gocache/
 
 .PHONY: static-check
 static-check:

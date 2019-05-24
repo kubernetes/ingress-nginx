@@ -40,7 +40,6 @@ RUN apt-get update && \
     rpm && \
     rm -rf /var/lib/apt/lists/*
 
-# replace kubectl with one from K8S_RELEASE
 ARG K8S_RELEASE
 ARG ETCD_VERSION
 
