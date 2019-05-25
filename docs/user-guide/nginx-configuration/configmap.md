@@ -115,6 +115,8 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"true"|
 |[generate-request-id](#generate-request-id)|bool|"true"|
 |[enable-opentracing](#enable-opentracing)|bool|"false"|
+|[opentracing-operation-name](#opentracing-operation-name)|string|""|
+|[opentracing-location-operation-name](#opentracing-location-operation-name)|string|""|
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
 |[zipkin-collector-port](#zipkin-collector-port)|int|9411|
 |[zipkin-service-name](#zipkin-service-name)|string|"nginx"|
@@ -699,6 +701,18 @@ Enables the nginx Opentracing extension. _**default:**_ is disabled
 
 _References:_
 [https://github.com/opentracing-contrib/nginx-opentracing](https://github.com/opentracing-contrib/nginx-opentracing)
+
+## opentracing-operation-name
+
+Specifies a custom name for the server span. _**default:**_ is empty
+
+For example, set to "HTTP $request_method $uri".
+
+## opentracing-location-operation-name
+
+Specifies a custom name for the location span. _**default:**_ is empty
+
+For example, set to "HTTP $request_method $uri".
 
 ## zipkin-collector-host
 
