@@ -1,0 +1,3 @@
+- op: add
+  path: /spec/template/spec/containers/0/args/-1
+  value: "--watch-namespace=$(POD_NAMESPACE)"

@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../../cloud-generic
+patchesStrategicMerge:
+- service-l4.yaml
+configMapGenerator:
+- name: nginx-configuration
+  behavior: merge
+  literals:
+  - use-proxy-protocol=true

@@ -9,7 +9,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
 
 The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
-Note that the yaml files used in this tutorial are stored in the [deploy/monitoring](https://github.com/kubernetes/ingress-nginx/tree/master/deploy/monitoring) folder of the GitHub repository [kubernetes/ingress-nginx](https://github.com/kubernetes/ingress-nginx).
+Note that the kustomize bases used in this tutorial are stored in the [deploy](https://github.com/kubernetes/ingress-nginx/tree/master/deploy) folder of the GitHub repository [kubernetes/ingress-nginx](https://github.com/kubernetes/ingress-nginx).
 
 ## Deploy and configure Prometheus Server
 
@@ -17,22 +17,16 @@ The Prometheus server must be configured so that it can discover endpoints of se
 
 If there is no existing Prometheus server running, the rest of this tutorial will guide you through the steps needed to deploy a properly configured Prometheus server.
 
-Running the following command deploys the prometheus configuration in Kubernetes:
-
-```console
-kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/monitoring/configuration.yaml
-configmap "prometheus-configuration" created
-```
-
 Running the following command deploys prometheus in Kubernetes:
 
 ```console
-kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/monitoring/prometheus.yaml
-clusterrole "prometheus-server" created
-serviceaccount "prometheus-server" created
-clusterrolebinding "prometheus-server" created
-deployment "prometheus-server" created
-service "prometheus-server" created
+kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/
+serviceaccount/prometheus-server created
+role.rbac.authorization.k8s.io/prometheus-server created
+rolebinding.rbac.authorization.k8s.io/prometheus-server created
+configmap/prometheus-configuration-bc6bcg7b65 created
+service/prometheus-server created
+deployment.apps/prometheus-server created
 ```
 
 ### Prometheus Dashboard
@@ -69,7 +63,7 @@ According to the above example, this URL will be http://10.192.0.3:32630
 ### Grafana
 
 ```console
-kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/monitoring/grafana.yaml
+kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/grafana/
 ```
 
 ```console

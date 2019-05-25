@@ -15,7 +15,10 @@ RUN curl -Lo /usr/local/bin/kubectl \
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/
 
 COPY e2e.sh             /e2e.sh
-COPY manifests          /manifests
+COPY cloud-generic      /cloud-generic
+COPY cluster-wide       /cluster-wide
+COPY overlay            /overlay
+RUN sed -E -i 's|^- .*deploy/cloud-generic$|- ../cloud-generic|' /overlay/kustomization.yaml
 COPY wait-for-nginx.sh  /
 COPY e2e.test           /
 
