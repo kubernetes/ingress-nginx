@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ingress-nginx
+commonLabels:
+  app.kubernetes.io/name: grafana
+  app.kubernetes.io/part-of: ingress-nginx
+resources:
+- deployment.yaml
+- service.yaml
+images:
+- name: grafana/grafana
+  newTag: 6.1.6

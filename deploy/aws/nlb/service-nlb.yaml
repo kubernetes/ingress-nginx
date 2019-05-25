@@ -1,0 +1,7 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: ingress-nginx
+  annotations:
+    # by default the type is elb (classic load balancer).
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb

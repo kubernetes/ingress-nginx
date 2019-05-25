@@ -17,7 +17,6 @@ limitations under the License.
 package defaultbackend
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -40,7 +39,7 @@ var _ = framework.IngressNginxDescribe("Custom Default Backend", func() {
 		framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1beta1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
-				args = append(args, fmt.Sprintf("--default-backend-service=%s/%s", f.Namespace, "http-svc"))
+				args = append(args, "--default-backend-service=$(POD_NAMESPACE)/http-svc")
 				deployment.Spec.Template.Spec.Containers[0].Args = args
 				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace).Update(deployment)
 
