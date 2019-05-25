@@ -35,6 +35,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -184,18 +185,18 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 		},
 	}
 
-	config := buildLuaSharedDictionaries(servers, false)
-	if !strings.Contains(config, "lua_shared_dict configuration_data") {
-		t.Errorf("expected to include 'configuration_data' but got %s", config)
+	configuration := buildLuaSharedDictionaries(servers, false)
+	if !strings.Contains(configuration, "lua_shared_dict configuration_data") {
+		t.Errorf("expected to include 'configuration_data' but got %s", configuration)
 	}
-	if strings.Contains(config, "waf_storage") {
-		t.Errorf("expected to not include 'waf_storage' but got %s", config)
+	if strings.Contains(configuration, "waf_storage") {
+		t.Errorf("expected to not include 'waf_storage' but got %s", configuration)
 	}
 
 	servers[1].Locations[0].LuaRestyWAF = luarestywaf.Config{Mode: "ACTIVE"}
-	config = buildLuaSharedDictionaries(servers, false)
-	if !strings.Contains(config, "lua_shared_dict waf_storage") {
-		t.Errorf("expected to configure 'waf_storage', but got %s", config)
+	configuration = buildLuaSharedDictionaries(servers, false)
+	if !strings.Contains(configuration, "lua_shared_dict waf_storage") {
+		t.Errorf("expected to configure 'waf_storage', but got %s", configuration)
 	}
 }
 
@@ -1208,6 +1209,59 @@ func TestStripLocationModifer(t *testing.T) {
 	expected := "ok.com"
 	actual := stripLocationModifer("~*ok.com")
 
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
+func TestShouldLoadModSecurityModule(t *testing.T) {
+	// ### Invalid argument type tests ###
+	// The first tests should return false.
+	expected := false
+
+	invalidType := &ingress.Ingress{}
+	actual := shouldLoadModSecurityModule(config.Configuration{}, invalidType)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	actual = shouldLoadModSecurityModule(invalidType, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	// ### Functional tests ###
+	actual = shouldLoadModSecurityModule(config.Configuration{}, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	// All further tests should return true.
+	expected = true
+
+	configuration := config.Configuration{EnableModsecurity: true}
+	actual = shouldLoadModSecurityModule(configuration, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	servers := []*ingress.Server{
+		{
+			Locations: []*ingress.Location{
+				{
+					ModSecurity: modsecurity.Config{
+						Enable: true,
+					},
+				},
+			},
+		},
+	}
+	actual = shouldLoadModSecurityModule(config.Configuration{}, servers)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	actual = shouldLoadModSecurityModule(configuration, servers)
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
