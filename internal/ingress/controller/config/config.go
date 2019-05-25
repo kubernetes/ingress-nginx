@@ -460,6 +460,11 @@ type Configuration struct {
 	// By default this is disabled
 	EnableOpentracing bool `json:"enable-opentracing"`
 
+	// OpentracingTraceLocations specifies whether locations should be traced as a separate span
+	// https://github.com/opentracing-contrib/nginx-opentracing
+	// By default this is enabled
+	OpentracingTraceLocations bool `json:"enable-opentracing"`
+
 	// ZipkinCollectorHost specifies the host to use when uploading traces
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
 
@@ -662,6 +667,7 @@ func NewDefault() Configuration {
 		NginxStatusIpv6Whitelist:         defNginxStatusIpv6Whitelist,
 		ProxyRealIPCIDR:                  defIPCIDR,
 		ProxyProtocolHeaderTimeout:       defProxyDeadlineDuration,
+		OpentracingTraceLocations:        true,
 		ServerNameHashMaxSize:            1024,
 		ProxyHeadersHashMaxSize:          512,
 		ProxyHeadersHashBucketSize:       64,

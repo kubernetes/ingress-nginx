@@ -30,6 +30,9 @@ have been tested.
 
 Other optional configuration options:
 ```
+# specifies whether locations should be traced as a separate span. Boolean, Default: true
+opentracing-trace-locations
+
 # specifies the port to use when uploading traces, Default: 9411
 zipkin-collector-port
 

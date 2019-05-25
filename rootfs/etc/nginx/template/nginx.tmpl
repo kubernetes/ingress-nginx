@@ -225,6 +225,9 @@ http {
 
     {{ if $cfg.EnableOpentracing }}
     opentracing on;
+    {{ if not $all.Cfg.OpentracingTraceLocations }}
+    opentracing_trace_locations off;
+    {{ end }}
     {{ end }}
 
     {{ buildOpentracing $cfg }}
