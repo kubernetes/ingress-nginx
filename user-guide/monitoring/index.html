@@ -473,6 +473,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../deploy/validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
+      Validating Webhook (admission controller)
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../deploy/upgrade/" title="Upgrade" class="md-nav__link">
       Upgrade
     </a>
@@ -1232,22 +1244,18 @@
 </div>
 <h2 id="before-you-begin">Before You Begin<a class="headerlink" href="#before-you-begin" title="Permanent link">&para;</a></h2>
 <p>The NGINX Ingress controller should already be deployed according to the deployment instructions <a href="../../deploy/">here</a>.</p>
-<p>Note that the yaml files used in this tutorial are stored in the <a href="https://github.com/kubernetes/ingress-nginx/tree/master/deploy/monitoring">deploy/monitoring</a> folder of the GitHub repository <a href="https://github.com/kubernetes/ingress-nginx">kubernetes/ingress-nginx</a>.</p>
+<p>Note that the kustomize bases used in this tutorial are stored in the <a href="https://github.com/kubernetes/ingress-nginx/tree/master/deploy">deploy</a> folder of the GitHub repository <a href="https://github.com/kubernetes/ingress-nginx">kubernetes/ingress-nginx</a>.</p>
 <h2 id="deploy-and-configure-prometheus-server">Deploy and configure Prometheus Server<a class="headerlink" href="#deploy-and-configure-prometheus-server" title="Permanent link">&para;</a></h2>
 <p>The Prometheus server must be configured so that it can discover endpoints of services. If a Prometheus server is already running in the cluster and if it is configured in a way that it can find the ingress controller pods, no extra configuration is needed.</p>
 <p>If there is no existing Prometheus server running, the rest of this tutorial will guide you through the steps needed to deploy a properly configured Prometheus server.</p>
-<p>Running the following command deploys the prometheus configuration in Kubernetes:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/monitoring/configuration.yaml</span>
-<span class="go">configmap &quot;prometheus-configuration&quot; created</span>
-</pre></div>
-
 <p>Running the following command deploys prometheus in Kubernetes:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/monitoring/prometheus.yaml</span>
-<span class="go">clusterrole &quot;prometheus-server&quot; created</span>
-<span class="go">serviceaccount &quot;prometheus-server&quot; created</span>
-<span class="go">clusterrolebinding &quot;prometheus-server&quot; created</span>
-<span class="go">deployment &quot;prometheus-server&quot; created</span>
-<span class="go">service &quot;prometheus-server&quot; created</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/</span>
+<span class="go">serviceaccount/prometheus-server created</span>
+<span class="go">role.rbac.authorization.k8s.io/prometheus-server created</span>
+<span class="go">rolebinding.rbac.authorization.k8s.io/prometheus-server created</span>
+<span class="go">configmap/prometheus-configuration-bc6bcg7b65 created</span>
+<span class="go">service/prometheus-server created</span>
+<span class="go">deployment.apps/prometheus-server created</span>
 </pre></div>
 
 <h3 id="prometheus-dashboard">Prometheus Dashboard<a class="headerlink" href="#prometheus-dashboard" title="Permanent link">&para;</a></h3>
@@ -1272,7 +1280,7 @@
 <p>According to the above example, this URL will be http://10.192.0.3:32630</p>
 <p><img alt="Dashboard" src="../../images/prometheus-dashboard.png" /></p>
 <h3 id="grafana">Grafana<a class="headerlink" href="#grafana" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="go">kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/monitoring/grafana.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/grafana/</span>
 </pre></div>
 
 <div class="codehilite"><pre><span></span><span class="go">kubectl get svc -n ingress-nginx</span>

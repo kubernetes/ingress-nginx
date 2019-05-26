@@ -473,6 +473,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../deploy/validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
+      Validating Webhook (admission controller)
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../deploy/upgrade/" title="Upgrade" class="md-nav__link">
       Upgrade
     </a>
@@ -711,6 +723,19 @@
   <a href="#external-authentication" title="External Authentication" class="md-nav__link">
     External Authentication
   </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-external-authentication" title="Global External Authentication" class="md-nav__link">
+    Global External Authentication
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1610,6 +1635,19 @@
     External Authentication
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-external-authentication" title="Global External Authentication" class="md-nav__link">
+    Global External Authentication
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1910,6 +1948,10 @@ table below.</p>
 <tr>
 <td><a href="#external-authentication">nginx.ingress.kubernetes.io/auth-snippet</a></td>
 <td>string</td>
+</tr>
+<tr>
+<td><a href="#external-authentication">nginx.ingress.kubernetes.io/enable-global-auth</a></td>
+<td>"true" or "false"</td>
 </tr>
 <tr>
 <td><a href="#backend-protocol">nginx.ingress.kubernetes.io/backend-protocol</a></td>
@@ -2470,6 +2512,11 @@ applied to each location provided in the ingress rule.</p>
 <p class="admonition-title">Example</p>
 <p>Please check the <a href="../../../examples/auth/external-auth/">external-auth</a> example.</p>
 </div>
+<h4 id="global-external-authentication">Global External Authentication<a class="headerlink" href="#global-external-authentication" title="Permanent link">&para;</a></h4>
+<p>By default the controller redirects all requests to an existing service that provides authentication if <code class="codehilite">global-auth-url</code> is set in the NGINX ConfigMap. If you want to disable this behavior for that ingress, you can use <code class="codehilite">enable-global-auth: &quot;false&quot;</code> in the NGINX ConfigMap.
+<code class="codehilite">nginx.ingress.kubernetes.io/enable-global-auth</code>:
+   indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to <code class="codehilite">&quot;true&quot;</code>.</p>
+<p>!!! note For more information please see <a href="../configmap/#global-auth-url">global-auth-url</a>.</p>
 <h3 id="rate-limiting">Rate limiting<a class="headerlink" href="#rate-limiting" title="Permanent link">&para;</a></h3>
 <p>These annotations define a limit on the connections that can be opened by a single client IP address.
 This can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus">DDoS Attacks</a>.</p>

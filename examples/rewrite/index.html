@@ -473,6 +473,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../deploy/validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
+      Validating Webhook (admission controller)
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../deploy/upgrade/" title="Upgrade" class="md-nav__link">
       Upgrade
     </a>
@@ -1313,7 +1325,7 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <span class="go">&#39; | kubectl create -f -</span>
 </pre></div>
 
-<p>In this ingress definition, any characters captured by <code class="codehilite">(.*)</code> will be assigned to the placeholder <code class="codehilite">$1</code>, which is then used as a parameter in the <code class="codehilite">rewrite-target</code> annotation. </p>
+<p>In this ingress definition, any characters captured by <code class="codehilite">(.*)</code> will be assigned to the placeholder <code class="codehilite">$2</code>, which is then used as a parameter in the <code class="codehilite">rewrite-target</code> annotation. </p>
 <p>For example, the ingress definition above will result in the following rewrites:
 - <code class="codehilite">rewrite.bar.com/something</code> rewrites to <code class="codehilite">rewrite.bar.com/</code>
 - <code class="codehilite">rewrite.bar.com/something/</code> rewrites to <code class="codehilite">rewrite.bar.com/</code>

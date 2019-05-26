@@ -629,6 +629,18 @@
 
 
   <li class="md-nav__item">
+    <a href="validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
+      Validating Webhook (admission controller)
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="upgrade/" title="Upgrade" class="md-nav__link">
       Upgrade
     </a>
@@ -1423,6 +1435,10 @@
 <p>The following <strong>Mandatory Command</strong> is required for all deployments.</p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
+<p>These commands depend on having kubectl version 1.14 or newer.</p>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
 <p>The default configuration watches Ingress object from all the namespaces.
 To change this behavior use the flag <code class="codehilite">--watch-namespace</code> to limit the scope to a particular namespace.</p>
 </div>
@@ -1430,22 +1446,24 @@ To change this behavior use the flag <code class="codehilite">--watch-namespace<
 <p class="admonition-title">Warning</p>
 <p>If multiple Ingresses define different paths for the same host, the ingress controller will merge the definitions.</p>
 </div>
-<div class="admonition attention">
-<p class="admonition-title">Attention</p>
-<p>If you're using GKE you need to initialize your user as a cluster-admin with the following command: 
-<code class="codehilite">kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)</code></p>
-</div>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl create namespace ingress-nginx</span>
+</pre></div>
+
+<div class="codehilite"><pre><span></span><span class="go">cat &lt;&lt; EOF &gt; kustomization.yaml</span>
+<span class="go">apiVersion: kustomize.config.k8s.io/v1beta1</span>
+<span class="go">kind: Kustomization</span>
+<span class="go">namespace: ingress-nginx</span>
+<span class="go">bases:</span>
+<span class="go">- github.com/kubernetes/ingress-nginx/deploy/cluster-wide</span>
+<span class="go">- # provider-specific, see below</span>
+<span class="go">EOF</span>
 </pre></div>
 
 <h3 id="provider-specific-steps">Provider Specific Steps<a class="headerlink" href="#provider-specific-steps" title="Permanent link">&para;</a></h3>
-<p>There are cloud provider specific yaml files.</p>
+<p>There are cloud provider specific kustomize bases.</p>
 <h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link">&para;</a></h4>
 <p>Kubernetes is available in Docker for Mac (from <a href="https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018">version 18.06.0-ce</a>)</p>
-<p>Create a service</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
-</pre></div>
-
+<p>Add <code class="codehilite">github.com/kubernetes/ingress-nginx/deploy/cloud-generic</code> to the <code class="codehilite">bases</code> list in <code class="codehilite">kustomization.yaml</code> and run <code class="codehilite">kubectl apply --kustomize .</code>.</p>
 <h4 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link">&para;</a></h4>
 <p>For standard usage:</p>
 <div class="codehilite"><pre><span></span><span class="go">minikube addons enable ingress</span>
@@ -1478,21 +1496,43 @@ Please check the <a href="https://aws.amazon.com/elasticloadbalancing/details/">
 <li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer">Layer 4</a>: use TCP as the listener protocol for ports 80 and 443.</li>
 <li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer">Layer 7</a>: use HTTP as the listener protocol for port 80 and terminate TLS in the ELB</li>
 </ul>
+<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to override the value of the annotation <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> on the service object.</p>
+<p>To do this, create a patch file which will replace the annotation.</p>
+<div class="codehilite"><pre><span></span>cat &lt;&lt; EOF &gt; elb-timeout.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: ingress-nginx
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: &quot;3600&quot; # Recommended value for WebSockets
+EOF
+</pre></div>
+
+<p>After creating the patch file, reference it in your <code class="codehilite">kustomization.yaml</code>:
+<div class="codehilite"><pre><span></span><span class="nt">patchesStrategicMerge</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">elb-timeout.yaml</span>
+</pre></div></p>
 <p>For L4:</p>
-<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code class="codehilite">provider/aws/service-l4.yaml</code></p>
-<p>Then execute:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l4.yaml</span>
-<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml</span>
-</pre></div>
-
+<p>To deploy the default example, add the base <code class="codehilite">github.com/kubernetes/ingress-nginx/deploy/aws/l4</code> and then run <code class="codehilite">kubectl apply --kustomize .</code></p>
 <p>For L7:</p>
-<p>Change line of the file <code class="codehilite">provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code class="codehilite">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</code></p>
-<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code class="codehilite">provider/aws/service-l7.yaml</code></p>
-<p>Then execute:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l7.yaml</span>
-<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l7.yaml</span>
+<p>Create a a patch that will annotate the ingress-controller's service with your ssl certificate id.</p>
+<div class="codehilite"><pre><span></span><span class="go">cat &lt;&lt; EOF &gt; elb-ssl.yaml</span>
+<span class="go">kind: Service</span>
+<span class="go">apiVersion: v1</span>
+<span class="go">metadata:</span>
+<span class="go">  name: ingress-nginx</span>
+<span class="go">  annotations:</span>
+<span class="gp">    #</span> replace with the correct value of the generated certificate in the AWS console
+<span class="go">    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: &quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</span>
+<span class="go">EOF</span>
 </pre></div>
 
+<p>Reference this patch in your <code class="codehilite">kustomization.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><span class="nt">patchesStrategicMerge</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">elb-ssl.yaml</span>
+</pre></div>
+
+<p>Then add the l7 base, <code class="codehilite">github.com/kubernetes/ingress-nginx/deploy/aws/l7</code> and execute <code class="codehilite">kubectl apply --kustomize .</code></p>
 <p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
 <p><img alt="Listeners" src="../images/elb-l7-listener.png" /></p>
 <h5 id="elb-idle-timeouts">ELB Idle Timeouts<a class="headerlink" href="#elb-idle-timeouts" title="Permanent link">&para;</a></h5>
@@ -1501,24 +1541,20 @@ Please check the <a href="https://aws.amazon.com/elasticloadbalancing/details/">
 <p><em>Please Note: An idle timeout of <code class="codehilite">3600s</code> is recommended when using WebSockets.</em></p>
 <p>More information with regards to idle timeouts for your Load Balancer can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/config-idle-timeout.html">official AWS documentation</a>.</p>
 <h5 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link">&para;</a></h5>
-<p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml</span>
-</pre></div>
-
+<p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.  Use the base <code class="codehilite">github.com/kubernetes/ingress-nginx/deploy/aws/nlb</code> and execute <code class="codehilite">kubectl apply --kustomize .</code></p>
 <h4 id="gce-gke">GCE-GKE<a class="headerlink" href="#gce-gke" title="Permanent link">&para;</a></h4>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
-</pre></div>
-
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>If you're using GKE you need to initialize your user as a cluster-admin with the following command: 
+<code class="codehilite">kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)</code></p>
+</div>
+<p>Use the base <code class="codehilite">github.com/kubernetes/ingress-nginx/deploy/cloud-generic</code> and execute <code class="codehilite">kubectl apply --kustomize .</code></p>
 <p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
 <h4 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link">&para;</a></h4>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
-</pre></div>
-
+<p>Use the base <code class="codehilite">github.com/kubernetes/ingress-nginx/deploy/cloud-generic</code> and execute <code class="codehilite">kubectl apply --kustomize .</code></p>
 <h4 id="bare-metal">Bare-metal<a class="headerlink" href="#bare-metal" title="Permanent link">&para;</a></h4>
 <p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml</span>
-</pre></div>
-
+<p>Use the base <code class="codehilite">github.com/kubernetes/ingress-nginx/deploy/baremetal</code> and execute <code class="codehilite">kubectl apply --kustomize .</code></p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>For extended notes regarding deployments on bare-metal, see <a href="baremetal/">Bare-metal considerations</a>.</p>

@@ -436,6 +436,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#avoiding-outage-from-wrong-configuration" title="Avoiding outage from wrong configuration" class="md-nav__link">
+    Avoiding outage from wrong configuration
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -544,6 +551,18 @@
   <li class="md-nav__item">
     <a href="../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../deploy/validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
+      Validating Webhook (admission controller)
     </a>
   </li>
 
@@ -1228,6 +1247,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#avoiding-outage-from-wrong-configuration" title="Avoiding outage from wrong configuration" class="md-nav__link">
+    Avoiding outage from wrong configuration
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1299,6 +1325,10 @@
 <h3 id="avoiding-reloads-on-endpoints-changes">Avoiding reloads on Endpoints changes<a class="headerlink" href="#avoiding-reloads-on-endpoints-changes" title="Permanent link">&para;</a></h3>
 <p>On every endpoint change the controller fetches endpoints from all the services it sees and generates corresponding Backend objects. It then sends these objects to a Lua handler running inside Nginx. The Lua code in turn stores those backends in a shared memory zone. Then for every request Lua code running in <a href="https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md"><code class="codehilite">balancer_by_lua</code></a> context detects what endpoints it should choose upstream peer from and applies the configured load balancing algorithm to choose the peer. Then Nginx takes care of the rest. This way we avoid reloading Nginx on endpoint changes. <em>Note</em> that this includes annotation changes that affects only <code class="codehilite">upstream</code> configuration in Nginx as well.</p>
 <p>In a relatively big clusters with frequently deploying apps this feature saves significant number of Nginx reloads which can otherwise affect response latency, load balancing quality (after every reload Nginx resets the state of load balancing) and so on.</p>
+<h3 id="avoiding-outage-from-wrong-configuration">Avoiding outage from wrong configuration<a class="headerlink" href="#avoiding-outage-from-wrong-configuration" title="Permanent link">&para;</a></h3>
+<p>Because the ingress controller works using the <a href="https://coreos.com/kubernetes/docs/latest/replication-controller.html#the-reconciliation-loop-in-detail">synchronization loop pattern</a>, it is applying the configuration for all matching objects. In case some Ingress objects have a broken configuration, for example a syntax error in the <code class="codehilite">nginx.ingress.kubernetes.io/configuration-snippet</code> annotation, the generated configuration becomes invalid, does not reload and hence no more ingresses will be taken into account.</p>
+<p>To prevent this situation to happen, the nginx ingress controller exposes optionnally a <a href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook">validating admission webhook server</a> to ensure the validity of incoming ingress objects.
+This webhook appends the incoming ingress objects to the list of ingresses, generates the configuration and calls nginx to ensure the configuration has no syntax errors.</p>
                 
                   
                 
