@@ -17,7 +17,9 @@ limitations under the License.
 package store
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -25,18 +27,15 @@ import (
 	"time"
 
 	"github.com/eapache/channels"
+	v1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/tools/cache"
-
-	"encoding/base64"
-	"io/ioutil"
-
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/tools/cache"
+	"sigs.k8s.io/controller-runtime/pkg/envtest"
+
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -53,13 +52,26 @@ func TestStore(t *testing.T) {
 		},
 	}
 
-	clientSet := fake.NewSimpleClientset()
+	//TODO: move env definition to docker image?
+	os.Setenv("KUBEBUILDER_ASSETS", "/usr/local/bin")
+
+	te := &envtest.Environment{}
+	cfg, err := te.Start()
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+
+	defer te.Stop()
+
+	clientSet, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
 
 	t.Run("should return an error searching for non existing objects", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
-		cm := createConfigMap(clientSet, ns, t)
-		defer deleteConfigMap(cm, ns, clientSet, t)
+		createConfigMap(clientSet, ns, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -116,8 +128,7 @@ func TestStore(t *testing.T) {
 	t.Run("should return one event for add, update and delete of ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
-		cm := createConfigMap(clientSet, ns, t)
-		defer deleteConfigMap(cm, ns, clientSet, t)
+		createConfigMap(clientSet, ns, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -270,8 +281,7 @@ func TestStore(t *testing.T) {
 	t.Run("should not receive updates for ingress with invalid class", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
-		cm := createConfigMap(clientSet, ns, t)
-		defer deleteConfigMap(cm, ns, clientSet, t)
+		createConfigMap(clientSet, ns, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -383,8 +393,7 @@ func TestStore(t *testing.T) {
 	t.Run("should not receive events from secret not referenced from ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
-		cm := createConfigMap(clientSet, ns, t)
-		defer deleteConfigMap(cm, ns, clientSet, t)
+		createConfigMap(clientSet, ns, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -474,8 +483,7 @@ func TestStore(t *testing.T) {
 	t.Run("should receive events from secret referenced from ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
-		cm := createConfigMap(clientSet, ns, t)
-		defer deleteConfigMap(cm, ns, clientSet, t)
+		createConfigMap(clientSet, ns, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -588,8 +596,7 @@ func TestStore(t *testing.T) {
 	t.Run("should create an ingress with a secret which does not exist", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
-		cm := createConfigMap(clientSet, ns, t)
-		defer deleteConfigMap(cm, ns, clientSet, t)
+		createConfigMap(clientSet, ns, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -742,11 +749,10 @@ func TestStore(t *testing.T) {
 
 func createNamespace(clientSet kubernetes.Interface, t *testing.T) string {
 	t.Helper()
-	t.Log("Creating temporal namespace")
 
 	namespace := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "store-test",
+			Name: fmt.Sprintf("store-test-%v", time.Now().Unix()),
 		},
 	}
 
@@ -754,25 +760,21 @@ func createNamespace(clientSet kubernetes.Interface, t *testing.T) string {
 	if err != nil {
 		t.Errorf("error creating the namespace: %v", err)
 	}
-	t.Logf("Temporal namespace %v created", ns)
 
 	return ns.Name
 }
 
 func deleteNamespace(ns string, clientSet kubernetes.Interface, t *testing.T) {
 	t.Helper()
-	t.Logf("Deleting temporal namespace %v", ns)
 
 	err := clientSet.CoreV1().Namespaces().Delete(ns, &metav1.DeleteOptions{})
 	if err != nil {
 		t.Errorf("error deleting the namespace: %v", err)
 	}
-	t.Logf("Temporal namespace %v deleted", ns)
 }
 
 func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) string {
 	t.Helper()
-	t.Log("Creating temporal config map")
 
 	configMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -785,20 +787,8 @@ func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) st
 	if err != nil {
 		t.Errorf("error creating the configuration map: %v", err)
 	}
-	t.Logf("Temporal configmap %v created", cm)
 
 	return cm.Name
-}
-
-func deleteConfigMap(cm, ns string, clientSet kubernetes.Interface, t *testing.T) {
-	t.Helper()
-	t.Logf("Deleting temporal configmap %v", cm)
-
-	err := clientSet.CoreV1().ConfigMaps(ns).Delete(cm, &metav1.DeleteOptions{})
-	if err != nil {
-		t.Errorf("error deleting the configmap: %v", err)
-	}
-	t.Logf("Temporal configmap %v deleted", cm)
 }
 
 func ensureIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, t *testing.T) *extensions.Ingress {
@@ -820,8 +810,6 @@ func ensureIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, 
 
 		t.Fatalf("error updating ingress %+v: %v", ingress, err)
 	}
-
-	t.Logf("Ingress %+v updated", ingress)
 
 	return ing
 }
