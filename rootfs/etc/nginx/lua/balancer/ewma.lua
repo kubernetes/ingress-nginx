@@ -8,6 +8,10 @@
 local util = require("util")
 local split = require("util.split")
 
+local string_format = string.format
+local ngx_log = ngx.log
+local INFO = ngx.INFO
+
 local DECAY_TIME = 10 -- this value is in seconds
 local PICK_SET_SIZE = 2
 
@@ -106,6 +110,8 @@ function _M.sync(self, backend)
   if not changed then
     return
   end
+
+  ngx_log(INFO, string_format("[%s] peers have changed for backend %s", self.name, backend.name))
 
   self.peers = backend.endpoints
   self.ewma = {}
