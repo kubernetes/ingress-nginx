@@ -4,6 +4,10 @@ local util = require("util")
 local ck = require("resty.cookie")
 local math = require("math")
 
+local string_format = string.format
+local ngx_log = ngx.log
+local INFO = ngx.INFO
+
 local _M = balancer_resty:new({ factory = resty_chash, name = "sticky" })
 local DEFAULT_COOKIE_NAME = "route"
 
@@ -97,6 +101,8 @@ function _M.sync(self, backend)
   if not changed then
     return
   end
+
+  ngx_log(INFO, string_format("[%s] nodes have changed for backend %s", self.name, backend.name))
 
   self.cookie_session_affinity = backend.sessionAffinityConfig.cookieSessionAffinity
 end
