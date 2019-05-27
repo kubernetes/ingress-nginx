@@ -4,6 +4,7 @@ local assert = assert
 local new_tab = require "table.new"
 local clear_tab = require "table.clear"
 local clone_tab = require "table.clone"
+local nkeys = require "table.nkeys"
 
 -- if an Nginx worker processes more than (MAX_BATCH_SIZE/FLUSH_INTERVAL) RPS then it will start dropping metrics
 local MAX_BATCH_SIZE = 10000
@@ -70,7 +71,7 @@ function _M.init_worker()
 end
 
 function _M.call()
-  local metrics_size = #metrics_batch
+  local metrics_size = nkeys(metrics_batch)
   if metrics_size >= MAX_BATCH_SIZE then
     ngx.log(ngx.WARN, "omitting metrics for the request, current batch is full")
     return
