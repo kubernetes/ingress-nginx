@@ -419,27 +419,6 @@ http {
         {{ end }}
     }
 
-    {{/* build the maps that will be use to validate the Whitelist */}}
-    {{ range $server := $servers }}
-    {{ $enforceRegex := enforceRegexModifier $server.Locations }}
-    {{ range $location := $server.Locations }}
-    {{ $path := buildLocation $location $enforceRegex }}
-
-    {{ if isLocationAllowed $location }}
-    {{ if gt (len $location.Whitelist.CIDR) 0 }}
-
-    # Deny for {{ print $server.Hostname  $path }}
-    geo $the_real_ip {{ buildDenyVariable (print $server.Hostname "_"  $path) }} {
-        default 1;
-
-        {{ range $ip := $location.Whitelist.CIDR }}
-        {{ $ip }} 0;{{ end }}
-    }
-    {{ end }}
-    {{ end }}
-    {{ end }}
-    {{ end }}
-
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
     geo $the_real_ip $whitelist_{{ $rl.ID }} {
@@ -1134,9 +1113,9 @@ stream {
 
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
-            if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
-                return 403;
-            }
+            {{ range $ip := $location.Whitelist.CIDR }}
+            allow {{ $ip }};{{ end }}
+            deny all;
             {{ end }}
 
             {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}
