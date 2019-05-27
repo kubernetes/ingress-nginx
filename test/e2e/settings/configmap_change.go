@@ -60,8 +60,7 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 					checksum = match[1]
 				}
 
-				return strings.Contains(cfg, "geo $the_real_ip $deny_") &&
-					strings.Contains(cfg, "1.1.1.1 0")
+				return strings.Contains(cfg, "allow 1.1.1.1;")
 			})
 		Expect(checksum).NotTo(BeEmpty())
 
