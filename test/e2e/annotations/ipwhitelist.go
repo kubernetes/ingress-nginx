@@ -17,7 +17,6 @@ limitations under the License.
 package annotations
 
 import (
-	"regexp"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -46,34 +45,11 @@ var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
-		denyRegex := regexp.MustCompile("geo \\$the_real_ip \\$deny_[A-Za-z]{32}")
-		denyString := ""
-
-		f.WaitForNginxConfiguration(
-			func(conf string) bool {
-
-				match := denyRegex.FindStringSubmatch(conf)
-				// If no match found, return false
-				if !(len(match) > 0) {
-					return false
-				}
-
-				denyString = strings.Replace(match[0], "geo $the_real_ip ", "", -1)
-				return strings.Contains(conf, match[0])
-			})
-
-		ipOne := "18.0.0.0/8 0;"
-		ipTwo := "56.0.0.0/8 0;"
-
-		f.WaitForNginxConfiguration(
-			func(conf string) bool {
-				return strings.Contains(conf, ipOne) && strings.Contains(conf, ipTwo)
-			})
-
-		denyStatement := "if (" + denyString + ")"
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, denyStatement)
+				return strings.Contains(server, "allow 18.0.0.0/8;") &&
+					strings.Contains(server, "allow 56.0.0.0/8;") &&
+					strings.Contains(server, "deny all;")
 			})
 	})
 })
