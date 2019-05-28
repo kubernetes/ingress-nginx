@@ -166,11 +166,44 @@ This type of load balancer is supported since v1.10.0 as an ALPHA feature.  Use 
 
 #### GCE-GKE
 
-!!! attention
-    If you're using GKE you need to initialize your user as a cluster-admin with the following command: 
-    ```kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)```
 
-Use the base `github.com/kubernetes/ingress-nginx/deploy/cloud-generic` and execute `kubectl apply --kustomize .`
+1)  To use GKE initialize your user as a cluster-admin: 
+    
+```
+kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)
+```
+
+2) Use base `github.com/kubernetes/ingress-nginx/deploy/cloud-generic` in `kustomization.yaml`:
+
+```
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ingress-nginx
+bases:
+- github.com/kubernetes/ingress-nginx/deploy/cluster-wide
+- github.com/kubernetes/ingress-nginx/deploy/cloud-generic
+```
+
+3) Apply with `kubectl apply --kustomize .`
+
+!!! attention
+  `--kustomize` is a new thing.  If `kubectl` says `unknown flag: --kustomize`, then gcloud's default kubectl version may be < 1.14.  If the steps below don't work, you may need to update your cluster Server Version if it is < 1.13. 
+
+Check and update your `kubectl` version:
+
+```
+$ kubectl version --short
+Client Version: v1.13.6
+Server Version: v1.13.6-gke.0
+
+$ gcloud components update
+```
+
+gcloud will update and may install `kubectl.1.14` alongside the default 1.13 `kubectl`.  Apply like this:
+
+```
+$ kubectl.1.14 apply --kustomize .
+```
 
 **Important Note:** proxy protocol is not supported in GCE/GKE
 
