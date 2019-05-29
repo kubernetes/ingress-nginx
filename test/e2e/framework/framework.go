@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -306,8 +306,8 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 }
 
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
-func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1beta1.Deployment) error) error {
-	deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
+func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1.Deployment) error) error {
+	deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -320,13 +320,13 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 
 	if *deployment.Spec.Replicas != int32(replicas) {
 		klog.Infof("updating replica count from %v to %v...", *deployment.Spec.Replicas, replicas)
-		deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
+		deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 
 		deployment.Spec.Replicas = NewInt32(int32(replicas))
-		_, err = kubeClientSet.AppsV1beta1().Deployments(namespace).Update(deployment)
+		_, err = kubeClientSet.AppsV1().Deployments(namespace).Update(deployment)
 		if err != nil {
 			return errors.Wrapf(err, "scaling the number of replicas to %v", replicas)
 		}
