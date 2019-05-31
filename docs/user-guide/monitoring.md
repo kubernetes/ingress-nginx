@@ -83,3 +83,9 @@ The username and password is `admin`
 After the login you can import the Grafana dashboard from _https://github.com/kubernetes/ingress-nginx/tree/master/deploy/grafana/dashboards_
 
 ![Dashboard](../images/grafana.png)
+
+## Caveats
+
+### Wildcard ingresses
+
+By default request metrics are labeled with the hostname. When you have a wildcard domain ingress, then there will be no metrics for that ingress (to prevent the metrics from exploding in cardinality). To get metrics in this case you need to run the ingress controller with `--metrics-per-host=false` (you will loose labeling by hostname, but still have labeling by ingress).
