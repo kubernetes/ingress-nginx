@@ -1298,6 +1298,11 @@ stream {
             return 200;
         }
 
+        {{ if not (empty $cfg.DefaultServerLocationSnippet) }}
+        # Custom default server location snippet via configmap
+        {{ $cfg.DefaultServerLocationSnippet }}
+        {{ end }}
+
         # this is required to avoid error if nginx is being monitored
         # with an external software (like sysdig)
         location /nginx_status {
