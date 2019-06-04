@@ -61,7 +61,8 @@ func TestStore(t *testing.T) {
 		t.Fatalf("error: %v", err)
 	}
 
-	defer te.Stop()
+	// TODO: this defer is called after any error (even the expected ones)
+	// defer te.Stop()
 
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
