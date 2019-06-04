@@ -72,6 +72,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"nginx-status-ipv4-whitelist":   "127.0.0.1,10.0.0.0/24",
 		"nginx-status-ipv6-whitelist":   "::1,2001::/16",
 		"proxy-add-original-uri-header": "false",
+		"disable-ipv6-dns":              "true",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -93,6 +94,8 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
 	def.ProxyAddOriginalURIHeader = false
+
+	def.DisableIpv6DNS = true
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",
@@ -121,6 +124,8 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
+	def.DisableIpv6DNS = true
+
 	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",
 	})
@@ -129,13 +134,16 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 	def.Checksum = fmt.Sprintf("%v", hash)
 
-	to = ReadConfig(map[string]string{})
+	to = ReadConfig(map[string]string{
+		"disable-ipv6-dns": "true",
+	})
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 
 	def = config.NewDefault()
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
+	def.DisableIpv6DNS = true
 
 	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",
@@ -147,6 +155,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 
 	to = ReadConfig(map[string]string{
 		"whitelist-source-range": "1.1.1.1/32",
+		"disable-ipv6-dns":       "true",
 	})
 
 	if diff := pretty.Compare(to, def); diff != "" {
