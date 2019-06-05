@@ -1268,7 +1268,8 @@
 <p class="admonition-title">Important</p>
 <p>Regular expressions and wild cards are not supported in the <code class="codehilite">spec.rules.host</code> field. Full hostnames must be used. </p>
 </div>
-<p>The ingress controller supports <strong>case insensitive</strong> regular expressions in the <code class="codehilite">spec.rules.http.paths.path</code> field.</p>
+<p>The ingress controller supports <strong>case insensitive</strong> regular expressions in the <code class="codehilite">spec.rules.http.paths.path</code> field.
+This can be enabled by setting the <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> annotation to <code class="codehilite">true</code> (the default is false).</p>
 <p>See the <a href="../nginx-configuration/annotations/#use-regex">description</a> of the <code class="codehilite">use-regex</code> annotation for more details.</p>
 <div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
