@@ -75,6 +75,41 @@ function _M.get_last_failure()
   return ngx_balancer.get_last_failure()
 end
 
+local function get_last_failed_upstream()
+  local upstream_addr = ngx.var.upstream_addr
+  return split.get_last_value(upstream_addr)
+end
+
+local function pick_new_upstream(self, last_failed_upstream, upstream_from_cookie)
+  for i = 1, MAX_UPSTREAM_CHECKS_COUNT do
+    local key = string.format("%s.%s.%s", ngx.now() + i, ngx.worker.pid(), math.random(999999))
+
+    local new_upstream = self.instance:find(key)
+
+    -- see TODO below
+    if new_upstream ~= failed_upstream and new_upstream ~= upstream_from_cookie then
+      return new_upstream
+    end
+  end
+
+  return nil
+end
+
+local function should_set_cookie(self)
+  if self.cookie_session_affinity.locations then
+    local locs = self.cookie_session_affinity.locations[ngx.var.host]
+    if locs ~= nil then
+      for _, path in pairs(locs) do
+        if ngx.var.location_path == path then
+          return true
+        end
+      end
+    end
+  end
+
+  return false
+end
+
 function _M.balance(self)
   local cookie, err = ck:new()
   if not cookie then
@@ -82,73 +117,32 @@ function _M.balance(self)
     return
   end
 
-  -- upstream_from_cookie: upstream which is pointed by sticky cookie
-  local upstream_from_cookie = nil
+  local upstream_from_cookie
 
   local key = cookie:get(self:cookie_name())
   if key then
     upstream_from_cookie = self.instance:find(key)
   end
 
-  -- get state of the previous attempt
-  local state_name = self.get_last_failure()
+  local last_failure = self.get_last_failure()
+  local should_pick_new_upstream = last_failure ~= nil and self.cookie_session_affinity.change_on_failure or upstream_from_cookie == nil
 
-  if upstream_from_cookie ~= nil then
-    -- use previous upstream if this is the first attempt or previous attempt succeeded
-    -- or ingress is configured to ignore previous request result
-    if state_name == nil or not self.cookie_session_affinity.change_on_failure then
-      return upstream_from_cookie
-    end
+  if not should_pick_new_upstream then
+    return upstream_from_cookie
   end
 
-  -- failed_upstream: upstream which failed during previous attempt
-  local failed_upstream = nil
+  -- TODO(elvinefendi) we should be checking all failing upstreams here
+  -- then we won't need to check new_upstream ~= upstream_from_cookie in pick_new_upstream
+  -- because it'll be included. Also if we don't check against all previously failed
+  -- upstreams then we might pick one of the previously failing upstreams again.
+  local last_failed_upstream = get_last_failed_upstream()
 
-  -- If previous attempt failed recent upstream can be obtained from ngx.var.upstream_addr.
-  -- Do nothing if ingress is configured to ignore previous request result.
-  if state_name ~= nil and self.cookie_session_affinity.change_on_failure then
-    local upstream_addr = ngx.var.upstream_addr
-    failed_upstream = split.get_last_value(upstream_addr)
-
-    if failed_upstream == nil then
-      ngx.log(ngx.ERR, string.format("failed to get failed_upstream from upstream_addr (%s)", upstream_addr))
-    end
+  local new_upstream = pick_new_upstream(self, last_failed_upstream, upstream_from_cookie)
+  if not new_upstream then
+    ngx.log(ngx.WARN, string.format("failed to get new upstream; using upstream %s", new_upstream))
+  elseif should_set_cookie(self) then
+    set_cookie(self, key)
   end
-
-  -- new_upstream: upstream which is pointed by new key
-  local new_upstream = nil
-
-  -- generate new upstream key if sticky cookie not set or previous attempt failed
-  for _ = 1, MAX_UPSTREAM_CHECKS_COUNT do
-    key = string.format("%s.%s.%s", ngx.now(), ngx.worker.pid(), math.random(999999))
-
-    new_upstream = self.instance:find(key)
-
-    if failed_upstream ~= new_upstream then
-      -- set cookie only when we get NOT THE SAME upstream
-      if upstream_from_cookie ~= new_upstream then
-        if self.cookie_session_affinity.locations then
-          local locs = self.cookie_session_affinity.locations[ngx.var.host]
-          if locs ~= nil then
-            for _, path in pairs(locs) do
-              if ngx.var.location_path == path then
-                set_cookie(self, key)
-                break
-              end
-            end
-          end
-        end
-
-      end
-
-      -- new upstream was obtained; return it to the balancer
-      do return new_upstream end
-    end
-
-    -- generated key points to the failed upstream; try another key
-  end
-
-  ngx.log(ngx.WARN, string.format("failed to get new upstream; using upstream %s", new_upstream))
 
   return new_upstream
 end
