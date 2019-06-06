@@ -125,10 +125,17 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	ings := n.store.ListIngresses(nil)
 	hosts, servers, pcfg := n.getConfiguration(ings)
 
+	if n.isLeader() {
+		klog.V(2).Infof("Updating ssl expiration metrics.")
+		n.metricCollector.SetSSLExpireTime(servers)
+	}
+
 	if n.runningConfig.Equal(pcfg) {
 		klog.V(3).Infof("No configuration change detected, skipping backend reload.")
 		return nil
 	}
+
+	n.metricCollector.SetHosts(hosts)
 
 	if !n.IsDynamicConfigurationEnough(pcfg) {
 		klog.Infof("Configuration changes detected, backend reload required.")
@@ -147,16 +154,9 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			return err
 		}
 
-		n.metricCollector.SetHosts(hosts)
-
 		klog.Infof("Backend successfully reloaded.")
 		n.metricCollector.ConfigSuccess(hash, true)
 		n.metricCollector.IncReloadCount()
-
-		if n.isLeader() {
-			klog.V(2).Infof("Updating ssl expiration metrics.")
-			n.metricCollector.SetSSLExpireTime(servers)
-		}
 	}
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
