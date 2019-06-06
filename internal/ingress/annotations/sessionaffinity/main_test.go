@@ -100,7 +100,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 		t.Errorf("expected /foo as session-cookie-path but returned %v", nginxAffinity.Cookie.Path)
 	}
 
-	if nginxAffinity.Cookie.ChangeOnFailure != "true" {
+	if !nginxAffinity.Cookie.ChangeOnFailure {
 		t.Errorf("expected change of failure parameter set to true but returned %v", nginxAffinity.Cookie.ChangeOnFailure)
 	}
 }
