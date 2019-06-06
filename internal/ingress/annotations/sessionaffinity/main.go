@@ -50,8 +50,7 @@ const (
 )
 
 var (
-	affinityCookieExpiresRegex         = regexp.MustCompile(`(^0|-?[1-9]\d*$)`)
-	affinityCookieChangeOnFailureRegex = regexp.MustCompile(`^(true|false)$`)
+	affinityCookieExpiresRegex = regexp.MustCompile(`(^0|-?[1-9]\d*$)`)
 )
 
 // Config describes the per ingress session affinity config
@@ -72,7 +71,7 @@ type Cookie struct {
 	// The path that a cookie will be set on
 	Path string `json:"path"`
 	// Flag that allows cookie regeneration on request failure
-	ChangeOnFailure string `json:"changeonfailure"`
+	ChangeOnFailure bool `json:"changeonfailure"`
 }
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
@@ -105,8 +104,8 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
 	}
 
-	cookie.ChangeOnFailure, err = parser.GetStringAnnotation(annotationAffinityCookieChangeOnFailure, ing)
-	if err != nil || !affinityCookieChangeOnFailureRegex.MatchString(cookie.ChangeOnFailure) {
+	cookie.ChangeOnFailure, err = parser.GetBoolAnnotation(annotationAffinityCookieChangeOnFailure, ing)
+	if err != nil {
 		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieChangeOnFailure)
 	}
 
