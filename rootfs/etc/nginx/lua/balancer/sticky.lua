@@ -96,7 +96,7 @@ function _M.balance(self)
   if upstream_from_cookie ~= nil then
     -- use previous upstream if this is the first attempt or previous attempt succeeded
     -- or ingress is configured to ignore previous request result
-    if state_name == nil or self.cookie_session_affinity.changeonfailure == "false" then
+    if state_name == nil or not self.cookie_session_affinity.change_on_failure then
       return upstream_from_cookie
     end
   end
@@ -106,7 +106,7 @@ function _M.balance(self)
 
   -- If previous attempt failed recent upstream can be obtained from ngx.var.upstream_addr.
   -- Do nothing if ingress is configured to ignore previous request result.
-  if state_name ~= nil and self.cookie_session_affinity.changeonfailure == "true" then
+  if state_name ~= nil and self.cookie_session_affinity.change_on_failure then
     local upstream_addr = ngx.var.upstream_addr
     failed_upstream = split.get_last_value(upstream_addr)
 

@@ -149,7 +149,7 @@ type CookieSessionAffinity struct {
 	MaxAge          string              `json:"maxage,omitempty"`
 	Locations       map[string][]string `json:"locations,omitempty"`
 	Path            string              `json:"path,omitempty"`
-	ChangeOnFailure string              `json:"changeonfailure"`
+	ChangeOnFailure bool                `json:"change_on_failure,omitempty"`
 }
 
 // UpstreamHashByConfig described setting from the upstream-hash-by* annotations.
