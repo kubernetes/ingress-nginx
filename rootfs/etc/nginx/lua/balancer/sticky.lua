@@ -75,24 +75,31 @@ function _M.get_last_failure()
   return ngx_balancer.get_last_failure()
 end
 
-local function get_last_failed_upstream()
-  local upstream_addr = ngx.var.upstream_addr
-  return split.get_last_value(upstream_addr)
+local function get_failed_upstreams()
+  local indexed_upstream_addrs = {}
+  local upstream_addrs = split.split_upstream_var(ngx.var.upstream_addr) or {}
+
+  for _, addr in ipairs(upstream_addrs) do
+    indexed_upstream_addrs[addr] = true
+  end
+
+  return indexed_upstream_addrs
 end
 
-local function pick_new_upstream(self, last_failed_upstream, upstream_from_cookie)
+local function pick_new_upstream(self)
+  local failed_upstreams = get_failed_upstreams()
+
   for i = 1, MAX_UPSTREAM_CHECKS_COUNT do
     local key = string.format("%s.%s.%s", ngx.now() + i, ngx.worker.pid(), math.random(999999))
 
     local new_upstream = self.instance:find(key)
 
-    -- see TODO below
-    if new_upstream ~= failed_upstream and new_upstream ~= upstream_from_cookie then
-      return new_upstream
+    if not failed_upstreams[new_upstream] then
+      return new_upstream, key
     end
   end
 
-  return nil
+  return nil, nil
 end
 
 local function should_set_cookie(self)
@@ -131,13 +138,7 @@ function _M.balance(self)
     return upstream_from_cookie
   end
 
-  -- TODO(elvinefendi) we should be checking all failing upstreams here
-  -- then we won't need to check new_upstream ~= upstream_from_cookie in pick_new_upstream
-  -- because it'll be included. Also if we don't check against all previously failed
-  -- upstreams then we might pick one of the previously failing upstreams again.
-  local last_failed_upstream = get_last_failed_upstream()
-
-  local new_upstream = pick_new_upstream(self, last_failed_upstream, upstream_from_cookie)
+  local new_upstream, key = pick_new_upstream(self)
   if not new_upstream then
     ngx.log(ngx.WARN, string.format("failed to get new upstream; using upstream %s", new_upstream))
   elseif should_set_cookie(self) then
