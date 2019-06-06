@@ -194,7 +194,7 @@ describe("Sticky", function()
     end)
   end)
 
-  local function get_several_test_backends(changeOnFailure)
+  local function get_several_test_backends(change_on_failure)
     return {
       name = "access-router-production-web-80",
       endpoints = {
@@ -203,7 +203,7 @@ describe("Sticky", function()
       },
       sessionAffinityConfig = {
         name = "cookie",
-        cookieSessionAffinity = { name = "test_name", hash = "sha1", changeonfailure = changeOnFailure }
+        cookieSessionAffinity = { name = "test_name", hash = "sha1", change_on_failure = change_on_failure }
       },
     }
   end
@@ -221,7 +221,7 @@ describe("Sticky", function()
     end)
 
     context("when request to upstream fails", function()
-      it("changes upstream when changeOnFailure option is true", function()
+      it("changes upstream when change_on_failure option is true", function()
         -- create sticky cookie
         cookie.new = function(self)
           local return_obj = {
@@ -231,7 +231,7 @@ describe("Sticky", function()
           return return_obj, false
         end
 
-        local options = {'false', 'true'}
+        local options = {false, true}
 
         for _, option in ipairs(options) do
           local sticky_balancer_instance = sticky:new(get_several_test_backends(option))
@@ -250,11 +250,11 @@ describe("Sticky", function()
 
           for _ = 1, 100 do
             local new_upstream = sticky_balancer_instance:balance()
-            if option == 'false' then
-              -- upstream should be the same inspite of error, if changeOnFailure option is false
+            if option == false then
+              -- upstream should be the same inspite of error, if change_on_failure option is false
               assert.equal(new_upstream, old_upstream)
             else
-              -- upstream should change after error, if changeOnFailure option is true
+              -- upstream should change after error, if change_on_failure option is true
               assert.not_equal(new_upstream, old_upstream)
             end
           end
