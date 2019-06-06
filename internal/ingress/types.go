@@ -144,11 +144,12 @@ type SessionAffinityConfig struct {
 // CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
 // +k8s:deepcopy-gen=true
 type CookieSessionAffinity struct {
-	Name      string              `json:"name"`
-	Expires   string              `json:"expires,omitempty"`
-	MaxAge    string              `json:"maxage,omitempty"`
-	Locations map[string][]string `json:"locations,omitempty"`
-	Path      string              `json:"path,omitempty"`
+	Name            string              `json:"name"`
+	Expires         string              `json:"expires,omitempty"`
+	MaxAge          string              `json:"maxage,omitempty"`
+	Locations       map[string][]string `json:"locations,omitempty"`
+	Path            string              `json:"path,omitempty"`
+	ChangeOnFailure string              `json:"changeonfailure"`
 }
 
 // UpstreamHashByConfig described setting from the upstream-hash-by* annotations.
