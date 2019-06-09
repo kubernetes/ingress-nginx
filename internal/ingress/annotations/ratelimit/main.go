@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -148,7 +148,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
 	lr, err := parser.GetIntAnnotation("limit-rate", ing)
 	if err != nil {

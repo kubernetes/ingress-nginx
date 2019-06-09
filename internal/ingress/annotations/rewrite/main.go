@@ -17,7 +17,7 @@ limitations under the License.
 package rewrite
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -75,7 +75,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 

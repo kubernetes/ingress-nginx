@@ -461,6 +461,7 @@ k8s.io/apimachinery/pkg/util/sets
 k8s.io/apimachinery/pkg/labels
 k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/watch
+k8s.io/apimachinery/pkg/util/version
 k8s.io/apimachinery/pkg/fields
 k8s.io/apimachinery/pkg/util/uuid
 k8s.io/apimachinery/pkg/api/resource

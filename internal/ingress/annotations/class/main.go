@@ -17,8 +17,9 @@ limitations under the License.
 package class
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/klog"
+
+	networking "k8s.io/api/networking/v1beta1"
 )
 
 const (
@@ -41,7 +42,7 @@ var (
 // IsValid returns true if the given Ingress either doesn't specify
 // the ingress.class annotation, or it's set to the configured in the
 // ingress controller.
-func IsValid(ing *extensions.Ingress) bool {
+func IsValid(ing *networking.Ingress) bool {
 	ingress, ok := ing.GetAnnotations()[IngressKey]
 	if !ok {
 		klog.V(3).Infof("annotation %v is not present in ingress %v/%v", IngressKey, ing.Namespace, ing.Name)

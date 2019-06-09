@@ -20,12 +20,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
+
+	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // PodExecString takes a pod and a command, uses kubectl exec to run the command in the pod

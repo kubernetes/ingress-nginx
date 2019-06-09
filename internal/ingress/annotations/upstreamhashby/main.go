@@ -17,7 +17,7 @@ limitations under the License.
 package upstreamhashby
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -40,7 +40,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 }
 
 // Parse parses the annotations contained in the ingress rule
-func (a upstreamhashby) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a upstreamhashby) Parse(ing *networking.Ingress) (interface{}, error) {
 	upstreamHashBy, _ := parser.GetStringAnnotation("upstream-hash-by", ing)
 	upstreamHashBySubset, _ := parser.GetBoolAnnotation("upstream-hash-by-subset", ing)
 	upstreamHashbySubsetSize, _ := parser.GetIntAnnotation("upstream-hash-by-subset-size", ing)

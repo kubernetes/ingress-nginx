@@ -110,6 +110,11 @@ func main() {
 	conf.FakeCertificate = ssl.GetFakeSSLCert(fs)
 	klog.Infof("Created fake certificate with PemFileName: %v", conf.FakeCertificate.PemFileName)
 
+	k8s.IsNetworkingIngressAvailable = k8s.NetworkingIngressAvailable(kubeClient)
+	if !k8s.IsNetworkingIngressAvailable {
+		klog.Warningf("Using deprecated \"k8s.io/api/extensions/v1beta1\" package because Kubernetes version is < v1.14.0")
+	}
+
 	conf.Client = kubeClient
 
 	reg := prometheus.NewRegistry()

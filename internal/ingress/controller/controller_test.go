@@ -32,7 +32,7 @@ import (
 	"github.com/eapache/channels"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
@@ -169,14 +169,14 @@ func TestCheckIngress(t *testing.T) {
 		ingresses: []*ingress.Ingress{},
 	}
 
-	ing := &extensions.Ingress{
+	ing := &networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "test-ingress",
 			Namespace:   "user-namespace",
 			Annotations: map[string]string{},
 		},
-		Spec: extensions.IngressSpec{
-			Rules: []extensions.IngressRule{
+		Spec: networking.IngressSpec{
+			Rules: []networking.IngressRule{
 				{
 					Host: "example.com",
 				},
@@ -262,20 +262,20 @@ func TestMergeAlternativeBackends(t *testing.T) {
 	}{
 		"alternative backend has no server and embeds into matching real backend": {
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "example",
 					},
-					Spec: extensions.IngressSpec{
-						Rules: []extensions.IngressRule{
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
 							{
 								Host: "example.com",
-								IngressRuleValue: extensions.IngressRuleValue{
-									HTTP: &extensions.HTTPIngressRuleValue{
-										Paths: []extensions.HTTPIngressPath{
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
 											{
 												Path: "/",
-												Backend: extensions.IngressBackend{
+												Backend: networking.IngressBackend{
 													ServiceName: "http-svc-canary",
 													ServicePort: intstr.IntOrString{
 														Type:   intstr.Int,
@@ -343,20 +343,20 @@ func TestMergeAlternativeBackends(t *testing.T) {
 		},
 		"alternative backend merges with the correct real backend when multiple are present": {
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "example",
 					},
-					Spec: extensions.IngressSpec{
-						Rules: []extensions.IngressRule{
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
 							{
 								Host: "foo.bar",
-								IngressRuleValue: extensions.IngressRuleValue{
-									HTTP: &extensions.HTTPIngressRuleValue{
-										Paths: []extensions.HTTPIngressPath{
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
 											{
 												Path: "/",
-												Backend: extensions.IngressBackend{
+												Backend: networking.IngressBackend{
 													ServiceName: "foo-http-svc-canary",
 													ServicePort: intstr.IntOrString{
 														Type:   intstr.Int,
@@ -370,12 +370,12 @@ func TestMergeAlternativeBackends(t *testing.T) {
 							},
 							{
 								Host: "example.com",
-								IngressRuleValue: extensions.IngressRuleValue{
-									HTTP: &extensions.HTTPIngressRuleValue{
-										Paths: []extensions.HTTPIngressPath{
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
 											{
 												Path: "/",
-												Backend: extensions.IngressBackend{
+												Backend: networking.IngressBackend{
 													ServiceName: "http-svc-canary",
 													ServicePort: intstr.IntOrString{
 														Type:   intstr.Int,
@@ -476,20 +476,20 @@ func TestMergeAlternativeBackends(t *testing.T) {
 		},
 		"alternative backend does not merge into itself": {
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "example",
 					},
-					Spec: extensions.IngressSpec{
-						Rules: []extensions.IngressRule{
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
 							{
 								Host: "example.com",
-								IngressRuleValue: extensions.IngressRuleValue{
-									HTTP: &extensions.HTTPIngressRuleValue{
-										Paths: []extensions.HTTPIngressPath{
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
 											{
 												Path: "/",
-												Backend: extensions.IngressBackend{
+												Backend: networking.IngressBackend{
 													ServiceName: "http-svc-canary",
 													ServicePort: intstr.IntOrString{
 														Type:   intstr.Int,
@@ -520,12 +520,12 @@ func TestMergeAlternativeBackends(t *testing.T) {
 		},
 		"catch-all alternative backend has no server and embeds into matching real backend": {
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "example",
 					},
-					Spec: extensions.IngressSpec{
-						Backend: &extensions.IngressBackend{
+					Spec: networking.IngressSpec{
+						Backend: &networking.IngressBackend{
 							ServiceName: "http-svc-canary",
 							ServicePort: intstr.IntOrString{
 								IntVal: 80,
@@ -586,12 +586,12 @@ func TestMergeAlternativeBackends(t *testing.T) {
 		},
 		"catch-all alternative backend does not merge into itself": {
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "example",
 					},
-					Spec: extensions.IngressSpec{
-						Backend: &extensions.IngressBackend{
+					Spec: networking.IngressSpec{
+						Backend: &networking.IngressBackend{
 							ServiceName: "http-svc-canary",
 							ServicePort: intstr.IntOrString{
 								IntVal: 80,
@@ -696,15 +696,15 @@ func TestExtractTLSSecretName(t *testing.T) {
 		"ingress tls, nil secret": {
 			"foo.bar",
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test",
 					},
-					Spec: extensions.IngressSpec{
-						TLS: []extensions.IngressTLS{
+					Spec: networking.IngressSpec{
+						TLS: []networking.IngressTLS{
 							{SecretName: "demo"},
 						},
-						Rules: []extensions.IngressRule{
+						Rules: []networking.IngressRule{
 							{
 								Host: "foo.bar",
 							},
@@ -720,15 +720,15 @@ func TestExtractTLSSecretName(t *testing.T) {
 		"ingress tls, no host, matching cert cn": {
 			"foo.bar",
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test",
 					},
-					Spec: extensions.IngressSpec{
-						TLS: []extensions.IngressTLS{
+					Spec: networking.IngressSpec{
+						TLS: []networking.IngressTLS{
 							{SecretName: "demo"},
 						},
-						Rules: []extensions.IngressRule{
+						Rules: []networking.IngressRule{
 							{
 								Host: "foo.bar",
 							},
@@ -746,17 +746,17 @@ func TestExtractTLSSecretName(t *testing.T) {
 		"ingress tls, no host, wildcard cert with matching cn": {
 			"foo.bar",
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test",
 					},
-					Spec: extensions.IngressSpec{
-						TLS: []extensions.IngressTLS{
+					Spec: networking.IngressSpec{
+						TLS: []networking.IngressTLS{
 							{
 								SecretName: "demo",
 							},
 						},
-						Rules: []extensions.IngressRule{
+						Rules: []networking.IngressRule{
 							{
 								Host: "test.foo.bar",
 							},
@@ -774,18 +774,18 @@ func TestExtractTLSSecretName(t *testing.T) {
 		"ingress tls, hosts, matching cert cn": {
 			"foo.bar",
 			&ingress.Ingress{
-				Ingress: extensions.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test",
 					},
-					Spec: extensions.IngressSpec{
-						TLS: []extensions.IngressTLS{
+					Spec: networking.IngressSpec{
+						TLS: []networking.IngressTLS{
 							{
 								Hosts:      []string{"foo.bar", "example.com"},
 								SecretName: "demo",
 							},
 						},
-						Rules: []extensions.IngressRule{
+						Rules: []networking.IngressRule{
 							{
 								Host: "foo.bar",
 							},
@@ -820,12 +820,12 @@ func TestGetBackendServers(t *testing.T) {
 		{
 			Ingresses: []*ingress.Ingress{
 				{
-					Ingress: extensions.Ingress{
+					Ingress: networking.Ingress{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "example",
 						},
-						Spec: extensions.IngressSpec{
-							Backend: &extensions.IngressBackend{
+						Spec: networking.IngressSpec{
+							Backend: &networking.IngressBackend{
 								ServiceName: "http-svc-canary",
 								ServicePort: intstr.IntOrString{
 									IntVal: 80,
@@ -862,12 +862,12 @@ func TestGetBackendServers(t *testing.T) {
 		{
 			Ingresses: []*ingress.Ingress{
 				{
-					Ingress: extensions.Ingress{
+					Ingress: networking.Ingress{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "example",
 						},
-						Spec: extensions.IngressSpec{
-							Backend: &extensions.IngressBackend{
+						Spec: networking.IngressSpec{
+							Backend: &networking.IngressBackend{
 								ServiceName: "http-svc-canary",
 								ServicePort: intstr.IntOrString{
 									IntVal: 80,
@@ -882,12 +882,12 @@ func TestGetBackendServers(t *testing.T) {
 					},
 				},
 				{
-					Ingress: extensions.Ingress{
+					Ingress: networking.Ingress{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "example",
 						},
-						Spec: extensions.IngressSpec{
-							Backend: &extensions.IngressBackend{
+						Spec: networking.IngressSpec{
+							Backend: &networking.IngressBackend{
 								ServiceName: "http-svc",
 								ServicePort: intstr.IntOrString{
 									IntVal: 80,
@@ -924,20 +924,20 @@ func TestGetBackendServers(t *testing.T) {
 		{
 			Ingresses: []*ingress.Ingress{
 				{
-					Ingress: extensions.Ingress{
+					Ingress: networking.Ingress{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "example",
 						},
-						Spec: extensions.IngressSpec{
-							Rules: []extensions.IngressRule{
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
 								{
 									Host: "example.com",
-									IngressRuleValue: extensions.IngressRuleValue{
-										HTTP: &extensions.HTTPIngressRuleValue{
-											Paths: []extensions.HTTPIngressPath{
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
 												{
 													Path: "/",
-													Backend: extensions.IngressBackend{
+													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-canary",
 														ServicePort: intstr.IntOrString{
 															Type:   intstr.Int,
@@ -981,21 +981,21 @@ func TestGetBackendServers(t *testing.T) {
 		{
 			Ingresses: []*ingress.Ingress{
 				{
-					Ingress: extensions.Ingress{
+					Ingress: networking.Ingress{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "example",
 							Namespace: "example",
 						},
-						Spec: extensions.IngressSpec{
-							Rules: []extensions.IngressRule{
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
 								{
 									Host: "example.com",
-									IngressRuleValue: extensions.IngressRuleValue{
-										HTTP: &extensions.HTTPIngressRuleValue{
-											Paths: []extensions.HTTPIngressPath{
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
 												{
 													Path: "/",
-													Backend: extensions.IngressBackend{
+													Backend: networking.IngressBackend{
 														ServiceName: "http-svc",
 														ServicePort: intstr.IntOrString{
 															Type:   intstr.Int,
@@ -1017,21 +1017,21 @@ func TestGetBackendServers(t *testing.T) {
 					},
 				},
 				{
-					Ingress: extensions.Ingress{
+					Ingress: networking.Ingress{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "example-canary",
 							Namespace: "example",
 						},
-						Spec: extensions.IngressSpec{
-							Rules: []extensions.IngressRule{
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
 								{
 									Host: "example.com",
-									IngressRuleValue: extensions.IngressRuleValue{
-										HTTP: &extensions.HTTPIngressRuleValue{
-											Paths: []extensions.HTTPIngressPath{
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
 												{
 													Path: "/",
-													Backend: extensions.IngressBackend{
+													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-canary",
 														ServicePort: intstr.IntOrString{
 															Type:   intstr.Int,

@@ -17,7 +17,7 @@ limitations under the License.
 package alias
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -34,6 +34,6 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress rule
 // used to add an alias to the provided hosts
-func (a alias) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a alias) Parse(ing *networking.Ingress) (interface{}, error) {
 	return parser.GetStringAnnotation("server-alias", ing)
 }
