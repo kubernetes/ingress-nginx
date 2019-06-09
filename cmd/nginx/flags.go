@@ -156,6 +156,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
+		healthzListenAddress = flags.String("healthz-listen-address", "", "Listen address to use for the healthz endpoint.")
 
 		disableCatchAll = flags.Bool("disable-catch-all", false,
 			`Disable support for catch-all Ingresses`)
@@ -259,6 +260,7 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
+			HealthAddress: *healthzListenAddress,
 			HTTP:     *httpPort,
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,

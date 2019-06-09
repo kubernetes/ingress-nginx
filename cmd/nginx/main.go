@@ -144,7 +144,7 @@ func main() {
 	registerMetrics(reg, mux)
 	registerHandlers(mux)
 
-	go startHTTPServer(conf.ListenPorts.Health, mux)
+	go startHTTPServer(conf.ListenPorts.HealthAddress, conf.ListenPorts.Health, mux)
 
 	ngx.Start()
 }
@@ -288,9 +288,9 @@ func registerProfiler(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }
 
-func startHTTPServer(port int, mux *http.ServeMux) {
+func startHTTPServer(listenAddr string, port int, mux *http.ServeMux) {
 	server := &http.Server{
-		Addr:              fmt.Sprintf(":%v", port),
+		Addr:              fmt.Sprintf("%s:%v", listenAddr, port),
 		Handler:           mux,
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,

@@ -787,6 +787,7 @@ type ListenPorts struct {
 	HTTP     int
 	HTTPS    int
 	Health   int
+	HealthAddress string
 	Default  int
 	SSLProxy int
 }
