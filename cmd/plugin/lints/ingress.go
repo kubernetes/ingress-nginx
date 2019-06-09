@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	kmeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/cmd/plugin/util"
 )
@@ -30,12 +30,12 @@ type IngressLint struct {
 	message string
 	issue   int
 	version string
-	f       func(ing v1beta1.Ingress) bool
+	f       func(ing networking.Ingress) bool
 }
 
 // Check returns true if the lint detects an issue
 func (lint IngressLint) Check(obj kmeta.Object) bool {
-	ing := obj.(*v1beta1.Ingress)
+	ing := obj.(*networking.Ingress)
 	return lint.f(*ing)
 }
 
@@ -87,7 +87,7 @@ func GetIngressLints() []IngressLint {
 	}
 }
 
-func xForwardedPrefixIsBool(ing v1beta1.Ingress) bool {
+func xForwardedPrefixIsBool(ing networking.Ingress) bool {
 	for name, val := range ing.Annotations {
 		if strings.HasSuffix(name, "/x-forwarded-prefix") && (val == "true" || val == "false") {
 			return true
@@ -96,7 +96,7 @@ func xForwardedPrefixIsBool(ing v1beta1.Ingress) bool {
 	return false
 }
 
-func annotationPrefixIsNginxCom(ing v1beta1.Ingress) bool {
+func annotationPrefixIsNginxCom(ing networking.Ingress) bool {
 	for name := range ing.Annotations {
 		if strings.HasPrefix(name, "nginx.com/") {
 			return true
@@ -105,7 +105,7 @@ func annotationPrefixIsNginxCom(ing v1beta1.Ingress) bool {
 	return false
 }
 
-func annotationPrefixIsNginxOrg(ing v1beta1.Ingress) bool {
+func annotationPrefixIsNginxOrg(ing networking.Ingress) bool {
 	for name := range ing.Annotations {
 		if strings.HasPrefix(name, "nginx.org/") {
 			return true
@@ -114,7 +114,7 @@ func annotationPrefixIsNginxOrg(ing v1beta1.Ingress) bool {
 	return false
 }
 
-func rewriteTargetWithoutCaptureGroup(ing v1beta1.Ingress) bool {
+func rewriteTargetWithoutCaptureGroup(ing networking.Ingress) bool {
 	for name, val := range ing.Annotations {
 		if strings.HasSuffix(name, "/rewrite-target") && !strings.Contains(val, "$1") {
 			return true
@@ -128,7 +128,7 @@ func removedAnnotation(annotationName string, issueNumber int, version string) I
 		message: fmt.Sprintf("Contains the removed %v annotation.", annotationName),
 		issue:   issueNumber,
 		version: version,
-		f: func(ing v1beta1.Ingress) bool {
+		f: func(ing networking.Ingress) bool {
 			for annotation := range ing.Annotations {
 				if strings.HasSuffix(annotation, "/"+annotationName) {
 					return true

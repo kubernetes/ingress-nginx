@@ -25,10 +25,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/eapache/channels"
+	"k8s.io/klog"
 
+	"github.com/eapache/channels"
 	corev1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -41,7 +43,6 @@ import (
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -274,7 +275,12 @@ func New(checkOCSP bool,
 		informers.WithNamespace(namespace),
 		informers.WithTweakListOptions(func(*metav1.ListOptions) {}))
 
-	store.informers.Ingress = infFactory.Extensions().V1beta1().Ingresses().Informer()
+	if k8s.IsNetworkingIngressAvailable {
+		store.informers.Ingress = infFactory.Networking().V1beta1().Ingresses().Informer()
+	} else {
+		store.informers.Ingress = infFactory.Extensions().V1beta1().Ingresses().Informer()
+	}
+
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
 
 	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
@@ -308,7 +314,7 @@ func New(checkOCSP bool,
 	store.listers.Pod.Store = store.informers.Pod.GetStore()
 
 	ingDeleteHandler := func(obj interface{}) {
-		ing, ok := obj.(*extensions.Ingress)
+		ing, ok := toIngress(obj)
 		if !ok {
 			// If we reached here it means the ingress was deleted but its final state is unrecorded.
 			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
@@ -316,12 +322,13 @@ func New(checkOCSP bool,
 				klog.Errorf("couldn't get object from tombstone %#v", obj)
 				return
 			}
-			ing, ok = tombstone.Obj.(*extensions.Ingress)
+			ing, ok = tombstone.Obj.(*networkingv1beta1.Ingress)
 			if !ok {
 				klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
 				return
 			}
 		}
+
 		if !class.IsValid(ing) {
 			klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
 			return
@@ -345,7 +352,7 @@ func New(checkOCSP bool,
 
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			ing := obj.(*extensions.Ingress)
+			ing, _ := toIngress(obj)
 			if !class.IsValid(ing) {
 				a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
 				klog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
@@ -368,8 +375,9 @@ func New(checkOCSP bool,
 		},
 		DeleteFunc: ingDeleteHandler,
 		UpdateFunc: func(old, cur interface{}) {
-			oldIng := old.(*extensions.Ingress)
-			curIng := cur.(*extensions.Ingress)
+			oldIng, _ := toIngress(old)
+			curIng, _ := toIngress(cur)
+
 			validOld := class.IsValid(oldIng)
 			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
@@ -622,17 +630,17 @@ func New(checkOCSP bool,
 
 // isCatchAllIngress returns whether or not an ingress produces a
 // catch-all server, and so should be ignored when --disable-catch-all is set
-func isCatchAllIngress(spec extensions.IngressSpec) bool {
+func isCatchAllIngress(spec networkingv1beta1.IngressSpec) bool {
 	return spec.Backend != nil && len(spec.Rules) == 0
 }
 
 // syncIngress parses ingress annotations converting the value of the
 // annotation to a go struct
-func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
+func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	klog.V(3).Infof("updating annotations information for ingress %v", key)
 
-	copyIng := &extensions.Ingress{}
+	copyIng := &networkingv1beta1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
 	ing.Status.DeepCopyInto(&copyIng.Status)
@@ -660,7 +668,7 @@ func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 
 // updateSecretIngressMap takes an Ingress and updates all Secret objects it
 // references in secretIngressMap.
-func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
+func (s *k8sStore) updateSecretIngressMap(ing *networkingv1beta1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	klog.V(3).Infof("updating references to secrets for ingress %v", key)
 
@@ -702,7 +710,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 
 // objectRefAnnotationNsKey returns an object reference formatted as a
 // 'namespace/name' key from the given annotation name.
-func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, error) {
+func objectRefAnnotationNsKey(ann string, ing *networkingv1beta1.Ingress) (string, error) {
 	annValue, err := parser.GetStringAnnotation(ann, ing)
 	if err != nil {
 		return "", err
@@ -721,7 +729,7 @@ func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, erro
 
 // syncSecrets synchronizes data from all Secrets referenced by the given
 // Ingress with the local store and file system.
-func (s *k8sStore) syncSecrets(ing *extensions.Ingress) {
+func (s *k8sStore) syncSecrets(ing *networkingv1beta1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	for _, secrKey := range s.secretIngressMap.ReferencedBy(key) {
 		s.syncSecret(secrKey)
@@ -751,7 +759,7 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 }
 
 // getIngress returns the Ingress matching key.
-func (s *k8sStore) getIngress(key string) (*extensions.Ingress, error) {
+func (s *k8sStore) getIngress(key string) (*networkingv1beta1.Ingress, error) {
 	ing, err := s.listers.IngressWithAnnotation.ByKey(key)
 	if err != nil {
 		return nil, err
@@ -891,4 +899,41 @@ func (s k8sStore) GetRunningControllerPodsCount() int {
 	}
 
 	return count
+}
+
+var runtimeScheme = k8sruntime.NewScheme()
+
+func init() {
+	extensionsv1beta1.AddToScheme(runtimeScheme)
+	networkingv1beta1.AddToScheme(runtimeScheme)
+}
+
+func fromExtensions(old *extensionsv1beta1.Ingress) (*networkingv1beta1.Ingress, error) {
+	networkingIngress := &networkingv1beta1.Ingress{}
+
+	err := runtimeScheme.Convert(old, networkingIngress, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return networkingIngress, nil
+}
+
+func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
+	oldVersion, inExtension := obj.(*extensionsv1beta1.Ingress)
+	if inExtension {
+		ing, err := fromExtensions(oldVersion)
+		if err != nil {
+			klog.Errorf("unexpected error converting Ingress from extensions package: %v", err)
+			return nil, false
+		}
+
+		return ing, true
+	}
+
+	if ing, ok := obj.(*networkingv1beta1.Ingress); ok {
+		return ing, true
+	}
+
+	return nil, false
 }

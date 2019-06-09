@@ -24,7 +24,7 @@ import (
 	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/file"
@@ -208,7 +208,7 @@ func (s *k8sStore) checkSSLChainIssues() {
 func (s *k8sStore) sendDummyEvent() {
 	s.updateCh.In() <- Event{
 		Type: UpdateEvent,
-		Obj: &extensions.Ingress{
+		Obj: &networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
 				Namespace: "dummy",
