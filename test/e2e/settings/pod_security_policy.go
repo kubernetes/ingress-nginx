@@ -93,13 +93,13 @@ var _ = framework.IngressNginxDescribe("Pod Security Policies", func() {
 })
 
 func createPodSecurityPolicy() *extensions.PodSecurityPolicy {
-	trueValue := true
+	falseValue := false
 	return &extensions.PodSecurityPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: ingressControllerPSP,
 		},
 		Spec: extensions.PodSecurityPolicySpec{
-			AllowPrivilegeEscalation: &trueValue,
+			AllowPrivilegeEscalation: &falseValue,
 			RequiredDropCapabilities: []corev1.Capability{"All"},
 			RunAsUser: extensions.RunAsUserStrategyOptions{
 				Rule: "RunAsAny",
@@ -127,5 +127,4 @@ func createPodSecurityPolicy() *extensions.PodSecurityPolicy {
 			},
 		},
 	}
-
 }

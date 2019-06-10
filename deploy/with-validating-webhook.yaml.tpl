@@ -65,7 +65,6 @@ spec:
             mountPath: "/usr/local/certificates/"
             readOnly: true
           securityContext:
-            allowPrivilegeEscalation: true
             capabilities:
               drop:
                 - ALL
