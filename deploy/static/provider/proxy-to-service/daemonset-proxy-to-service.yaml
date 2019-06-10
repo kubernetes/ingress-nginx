@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-ingress-proxy-to-service
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: nginx-ingress-proxy-to-service
+    app.kubernetes.io/part-of: ingress-nginx
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-ingress-proxy-to-service
+      app.kubernetes.io/part-of: ingress-nginx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nginx-ingress-proxy-to-service
+        app.kubernetes.io/part-of: ingress-nginx
+    spec:
+      containers:
+        - name: http
+          image: k8s.gcr.io/proxy-to-service:v2
+          args:
+            - tcp
+            - "80"
+            - ingress-nginx
+          ports:
+            - name: http
+              containerPort: 80
+              hostPort: 80
+        - name: https
+          image: k8s.gcr.io/proxy-to-service:v2
+          args:
+            - tcp
+            - "443"
+            - ingress-nginx
+          ports:
+            - name: https
+              containerPort: 443
+              hostPort: 443
+
+---
+

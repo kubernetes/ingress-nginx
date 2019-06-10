@@ -10,6 +10,7 @@
     - [GCE - GKE](#gce-gke)
     - [Azure](#azure)
     - [Bare-metal](#bare-metal)
+    - [Proxy-to-Service](#proxy-to-service)
   - [Verify installation](#verify-installation)
   - [Detect installed version](#detect-installed-version)
 - [Using Helm](#using-helm)
@@ -153,7 +154,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 #### Bare-metal
 
-Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
+Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport):
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
@@ -161,6 +162,15 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 !!! tip
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
+
+#### Proxy-to-Service
+
+Using [Proxy-to-Service](https://github.com/kubernetes-retired/contrib/tree/master/for-demos/proxy-to-service)
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/proxy-to-service/service-clusterip.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/proxy-to-service/daemonset-proxy-to-service.yaml
+```
 
 ### Verify installation
 
