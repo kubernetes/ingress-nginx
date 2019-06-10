@@ -9,7 +9,8 @@
     - [AWS](#aws)
     - [GCE - GKE](#gce-gke)
     - [Azure](#azure)
-    - [Bare-metal](#bare-metal)
+    - [NodePort](#nodeport)
+    - [ClusterIP](#clusterip)
   - [Verify installation](#verify-installation)
   - [Detect installed version](#detect-installed-version)
 - [Using Helm](#using-helm)
@@ -151,16 +152,25 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
 ```
 
-#### Bare-metal
+#### NodePort
 
-Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
+Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport):
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/nodeport/service-nodeport.yaml
 ```
 
 !!! tip
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
+
+#### ClusterIP
+
+By using [Socat](https://hub.docker.com/r/alpine/socat) we could expose both 80/443 with `hostPort` from DaemonSet, to a standard service with [ClusterIP](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types).
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/clusterip/service-clusterip.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/clusterip/daemonset-proxy.yaml
+```
 
 ### Verify installation
 
