@@ -16,7 +16,9 @@ pid {{ .PID }};
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
 
+{{ if (shouldLoadModSecurityModule $cfg $servers) }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
+{{ end }}
 
 {{ if $cfg.EnableOpentracing }}
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
