@@ -64,7 +64,6 @@ type Configuration struct {
 	// +optional
 	UDPConfigMapName string
 
-	HealthCheckTimeout    time.Duration
 	DefaultSSLCertificate string
 
 	// +optional
