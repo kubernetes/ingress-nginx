@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/pflag"
 
@@ -97,7 +98,7 @@ Takes the form "namespace/name".`)
 Configured inside the NGINX status server. All requests received on the port
 defined by the healthz-port parameter are forwarded internally to this path.`)
 
-		healthCheckTimeout = flags.Duration("health-check-timeout", 10, `Time limit, in seconds, for a probe to health-check-path to succeed.`)
+		defHealthCheckTimeout = flags.Int("health-check-timeout", 10, `Time limit, in seconds, for a probe to health-check-path to succeed.`)
 
 		updateStatus = flags.Bool("update-status", true,
 			`Update the load-balancer status of Ingress objects this controller satisfies.
@@ -232,6 +233,10 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 	nginx.HealthPath = *defHealthzURL
 
+	if *defHealthCheckTimeout > 0 {
+		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
+	}
+
 	config := &controller.Configuration{
 		APIServerHost:              *apiserverHost,
 		KubeConfigFile:             *kubeConfigFile,
@@ -249,7 +254,6 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		TCPConfigMapName:           *tcpConfigMapName,
 		UDPConfigMapName:           *udpConfigMapName,
 		DefaultSSLCertificate:      *defSSLCertificate,
-		HealthCheckTimeout:         *healthCheckTimeout,
 		PublishService:             *publishSvc,
 		PublishStatusAddress:       *publishStatusAddress,
 		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
