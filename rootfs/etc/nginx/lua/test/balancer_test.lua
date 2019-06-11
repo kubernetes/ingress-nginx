@@ -131,6 +131,48 @@ describe("Balancer", function()
         assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
       end)
     end)
+
+    context("canary by cookie", function()
+      it("returns correct result for given cookies", function()
+        backend.trafficShapingPolicy.cookie = "canaryCookie"
+        balancer.sync_backend(backend)
+        local test_patterns = {
+          {
+            case_title = "cookie_value is 'always'",
+            request_cookie_name = "canaryCookie",
+            request_cookie_value = "always",
+            expected_result = true,
+          },
+          {
+            case_title = "cookie_value is 'never'",
+            request_cookie_name = "canaryCookie",
+            request_cookie_value = "never",
+            expected_result = false,
+          },
+          {
+            case_title = "cookie_value is undefined",
+            request_cookie_name = "canaryCookie",
+            request_cookie_value = "foo",
+            expected_result = false,
+          },
+          {
+            case_title = "cookie_name is undefined",
+            request_cookie_name = "foo",
+            request_cookie_value = "always",
+            expected_result = false
+          },
+        }
+        for _, test_pattern in pairs(test_patterns) do
+          mock_ngx({ var = {
+            ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
+            request_uri = "/"
+          }})
+          assert.message("\nTest data pattern: " .. test_pattern.case_title)
+            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+          reset_ngx()
+        end
+      end)
+    end)
   end)
 
   describe("sync_backend()", function()
