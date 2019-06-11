@@ -117,6 +117,20 @@ describe("Balancer", function()
       _balancer.alternative_backends[1] = "nonExistingBackend"
       assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
     end)
+
+    context("canary by weight", function()
+      it("returns true when weight is 100", function()
+        backend.trafficShapingPolicy.weight = 100
+        balancer.sync_backend(backend)
+        assert.equal(true, balancer.route_to_alternative_balancer(_balancer))
+      end)
+
+      it("returns false when weight is 0", function()
+        backend.trafficShapingPolicy.weight = 0
+        balancer.sync_backend(backend)
+        assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+      end)
+    end)
   end)
 
   describe("sync_backend()", function()
