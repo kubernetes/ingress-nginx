@@ -173,6 +173,85 @@ describe("Balancer", function()
         end
       end)
     end)
+
+    context("canary by header", function()
+      it("returns correct result for given headers", function()
+        local test_patterns = {
+          -- with no header value setting
+          {
+            case_title = "no custom header value and header value is 'always'",
+            header_name = "canaryHeader",
+            header_value = "",
+            request_header_name = "canaryHeader",
+            request_header_value = "always",
+            expected_result = true,
+          },
+          {
+            case_title = "no custom header value and header value is 'never'",
+            header_name = "canaryHeader",
+            header_value = "",
+            request_header_name = "canaryHeader",
+            request_header_value = "never",
+            expected_result = false,
+          },
+          {
+            case_title = "no custom header value and header value is undefined",
+            header_name = "canaryHeader",
+            header_value = "",
+            request_header_name = "canaryHeader",
+            request_header_value = "foo",
+            expected_result = false,
+          },
+          {
+            case_title = "no custom header value and header name is undefined",
+            header_name = "canaryHeader",
+            header_value = "",
+            request_header_name = "foo",
+            request_header_value = "always",
+            expected_result = false,
+          },
+          -- with header value setting
+          {
+            case_title = "custom header value is set and header value is 'always'",
+            header_name = "canaryHeader",
+            header_value = "foo",
+            request_header_name = "canaryHeader",
+            request_header_value = "always",
+            expected_result = false,
+          },
+          {
+            case_title = "custom header value is set and header value match custom header value",
+            header_name = "canaryHeader",
+            header_value = "foo",
+            request_header_name = "canaryHeader",
+            request_header_value = "foo",
+            expected_result = true,
+          },
+          {
+            case_title = "custom header value is set and header name is undefined",
+            header_name = "canaryHeader",
+            header_value = "foo",
+            request_header_name = "bar",
+            request_header_value = "foo",
+            expected_result = false
+          },
+        }
+
+        for _, test_pattern in pairs(test_patterns) do
+          reset_balancer()
+          backend.trafficShapingPolicy.header = test_pattern.header_name
+          backend.trafficShapingPolicy.headerValue = test_pattern.header_value
+          balancer.sync_backend(backend)
+          mock_ngx({ var = {
+            ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
+            request_uri = "/"
+          }})
+          assert.message("\nTest data pattern: " .. test_pattern.case_title)
+            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+          reset_ngx()
+        end
+      end)
+    end)
   end)
 
   describe("sync_backend()", function()
