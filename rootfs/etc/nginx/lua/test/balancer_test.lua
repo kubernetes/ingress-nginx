@@ -1,6 +1,17 @@
 _G._TEST = true
 
 local balancer, expected_implementations, backends
+local original_ngx = ngx
+
+local function reset_ngx()
+  _G.ngx = original_ngx
+end
+
+local function mock_ngx(mock)
+  local _ngx = mock
+  setmetatable(_ngx, { __index = ngx })
+  _G.ngx = _ngx
+end
 
 local function reset_balancer()
   package.loaded["balancer"] = nil
@@ -30,6 +41,12 @@ local function reset_backends()
         { address = "10.184.98.239", port = "8080", maxFails = 0, failTimeout = 0 },
       },
       sessionAffinityConfig = { name = "", cookieSessionAffinity = { name = "" } },
+      trafficShapingPolicy = {
+        weight = 0,
+        header = "",
+        headerValue = "",
+        cookie = ""
+      },
     },
     { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
     { 
@@ -55,6 +72,10 @@ describe("Balancer", function()
     reset_backends()
   end)
 
+  after_each(function()
+    reset_ngx()
+  end)
+
   describe("get_implementation()", function()
     it("returns correct implementation for given backend", function()
       for _, backend in pairs(backends) do
@@ -62,6 +83,39 @@ describe("Balancer", function()
         local implementation = balancer.get_implementation(backend)
         assert.equal(expected_implementation, balancer.get_implementation(backend))
       end
+    end)
+  end)
+
+  describe("route_to_alternative_balancer()", function()
+    local backend, _balancer
+
+    before_each(function()
+      backend = backends[1]
+      _balancer = {
+        alternative_backends = {
+          backend.name,
+        }
+      }
+      mock_ngx({ var = { request_uri = "/" } })
+    end)
+
+    it("returns false when no trafficShapingPolicy is set", function()
+      balancer.sync_backend(backend)
+      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+    end)
+
+    it("returns false when no alternative backends is set", function()
+      backend.trafficShapingPolicy.weight = 100
+      balancer.sync_backend(backend)
+      _balancer.alternative_backends = nil
+      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+    end)
+
+    it("returns false when alternative backends name does not match", function()
+      backend.trafficShapingPolicy.weight = 100
+      balancer.sync_backend(backend)
+      _balancer.alternative_backends[1] = "nonExistingBackend"
+      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
     end)
   end)
 
