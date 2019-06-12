@@ -218,7 +218,7 @@ func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 	}
 
 	out := []string{
-		"lua_shared_dict configuration_data 5M",
+		"lua_shared_dict configuration_data 15M",
 		"lua_shared_dict certificate_data 16M",
 	}
 
