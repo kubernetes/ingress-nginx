@@ -38,6 +38,9 @@ var StatusSocket = "/tmp/nginx-status-server.sock"
 // HealthPath defines the path used to define the health check location in NGINX
 var HealthPath = "/healthz"
 
+// HealthCheckTimeout defines the time limit in seconds for a probe to health-check-path to succeed
+var HealthCheckTimeout = 10 * time.Second
+
 // StatusPath defines the path used to expose the NGINX status page
 // http://nginx.org/en/docs/http/ngx_http_stub_status_module.html
 var StatusPath = "/nginx_status"
@@ -47,12 +50,11 @@ var StreamSocket = "/tmp/ingress-stream.sock"
 
 var statusLocation = "nginx-status"
 
-var socketClient = buildUnixSocketClient()
-
 // NewGetStatusRequest creates a new GET request to the internal NGINX status server
 func NewGetStatusRequest(path string) (int, []byte, error) {
 	url := fmt.Sprintf("http+unix://%v%v", statusLocation, path)
-	res, err := socketClient.Get(url)
+
+	res, err := buildUnixSocketClient(HealthCheckTimeout).Get(url)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -75,7 +77,7 @@ func NewPostStatusRequest(path, contentType string, data interface{}) (int, []by
 		return 0, nil, err
 	}
 
-	res, err := socketClient.Post(url, contentType, bytes.NewReader(buf))
+	res, err := buildUnixSocketClient(HealthCheckTimeout).Post(url, contentType, bytes.NewReader(buf))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -128,11 +130,11 @@ func ReadFileToString(path string) (string, error) {
 	return string(contents), nil
 }
 
-func buildUnixSocketClient() *http.Client {
+func buildUnixSocketClient(timeout time.Duration) *http.Client {
 	u := &httpunix.Transport{
 		DialTimeout:           1 * time.Second,
-		RequestTimeout:        10 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
+		RequestTimeout:        timeout,
+		ResponseHeaderTimeout: timeout,
 	}
 	u.RegisterLocation(statusLocation, StatusSocket)
 
