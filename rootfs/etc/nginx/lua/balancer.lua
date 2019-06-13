@@ -257,6 +257,7 @@ end
 if _TEST then
   _M.get_implementation = get_implementation
   _M.sync_backend = sync_backend
+  _M.route_to_alternative_balancer = route_to_alternative_balancer
 end
 
 return _M
