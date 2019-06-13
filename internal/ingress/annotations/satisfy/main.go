@@ -17,7 +17,7 @@ limitations under the License.
 package satisfy
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -33,7 +33,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 }
 
 // Parse parses annotation contained in the ingress
-func (s satisfy) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (s satisfy) Parse(ing *networking.Ingress) (interface{}, error) {
 	satisfy, err := parser.GetStringAnnotation("satisfy", ing)
 
 	if err != nil || (satisfy != "any" && satisfy != "all") {

@@ -25,7 +25,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -85,23 +85,23 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 
 })
 
-func buildIngressWithNonexistentService(host, namespace, path string) *v1beta1.Ingress {
+func buildIngressWithNonexistentService(host, namespace, path string) *extensions.Ingress {
 	backendService := "nonexistent-svc"
-	return &v1beta1.Ingress{
+	return &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      host,
 			Namespace: namespace,
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: extensions.IngressSpec{
+			Rules: []extensions.IngressRule{
 				{
 					Host: host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
 								{
 									Path: path,
-									Backend: v1beta1.IngressBackend{
+									Backend: extensions.IngressBackend{
 										ServiceName: backendService,
 										ServicePort: intstr.FromInt(80),
 									},
@@ -115,23 +115,23 @@ func buildIngressWithNonexistentService(host, namespace, path string) *v1beta1.I
 	}
 }
 
-func buildIngressWithUnavailableServiceEndpoints(host, namespace, path string) (*v1beta1.Ingress, *corev1.Service) {
+func buildIngressWithUnavailableServiceEndpoints(host, namespace, path string) (*extensions.Ingress, *corev1.Service) {
 	backendService := "unavailable-svc"
-	return &v1beta1.Ingress{
+	return &extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      host,
 				Namespace: namespace,
 			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
+			Spec: extensions.IngressSpec{
+				Rules: []extensions.IngressRule{
 					{
 						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
+						IngressRuleValue: extensions.IngressRuleValue{
+							HTTP: &extensions.HTTPIngressRuleValue{
+								Paths: []extensions.HTTPIngressPath{
 									{
 										Path: path,
-										Backend: v1beta1.IngressBackend{
+										Backend: extensions.IngressBackend{
 											ServiceName: backendService,
 											ServicePort: intstr.FromInt(80),
 										},
