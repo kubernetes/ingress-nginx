@@ -24,7 +24,7 @@ import (
 	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/alias"
@@ -158,7 +158,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 }
 
 // Extract extracts the annotations from an Ingress
-func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
+func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 	pia := &Ingress{
 		ObjectMeta: ing.ObjectMeta,
 	}

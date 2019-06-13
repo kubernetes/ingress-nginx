@@ -18,7 +18,7 @@ package authtls
 
 import (
 	"github.com/pkg/errors"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"regexp"
 
@@ -86,7 +86,7 @@ type authTLS struct {
 
 // Parse parses the annotations contained in the ingress
 // rule used to use a Certificate as authentication method
-func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 

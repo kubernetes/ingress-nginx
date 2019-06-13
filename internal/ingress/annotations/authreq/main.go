@@ -24,7 +24,7 @@ import (
 
 	"k8s.io/klog"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
@@ -115,7 +115,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an Config URL as source for authentication
-func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	// Required Parameters
 	urlString, err := parser.GetStringAnnotation("auth-url", ing)
 	if err != nil {

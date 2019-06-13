@@ -17,7 +17,7 @@ limitations under the License.
 package serviceupstream
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -32,6 +32,6 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return serviceUpstream{r}
 }
 
-func (s serviceUpstream) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (s serviceUpstream) Parse(ing *networking.Ingress) (interface{}, error) {
 	return parser.GetBoolAnnotation("service-upstream", ing)
 }

@@ -18,11 +18,10 @@ package ingress
 
 import (
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/ingress-nginx/internal/ingress/annotations"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
@@ -32,6 +31,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
@@ -361,7 +361,7 @@ type ProxyProtocol struct {
 
 // Ingress holds the definition of an Ingress plus its annotations
 type Ingress struct {
-	extensions.Ingress
+	networking.Ingress
 	ParsedAnnotations *annotations.Ingress
 }
 

@@ -18,11 +18,11 @@ package ingresses
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"text/tabwriter"
 
-	"k8s.io/api/extensions/v1beta1"
+	"github.com/spf13/cobra"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"k8s.io/ingress-nginx/cmd/plugin/request"
@@ -130,7 +130,7 @@ type ingressRow struct {
 	NumEndpoints string
 }
 
-func getIngressRows(ingresses *[]v1beta1.Ingress) []ingressRow {
+func getIngressRows(ingresses *[]networking.Ingress) []ingressRow {
 	rows := make([]ingressRow, 0)
 
 	for _, ing := range *ingresses {

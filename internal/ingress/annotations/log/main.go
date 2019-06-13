@@ -17,7 +17,7 @@ limitations under the License.
 package log
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -53,7 +53,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should enable logs
-func (l log) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (l log) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 
