@@ -105,7 +105,16 @@ type Backend struct {
 	TrafficShapingPolicy TrafficShapingPolicy `json:"trafficShapingPolicy,omitempty"`
 	// Contains a list of backends without servers that are associated with this backend.
 	// +optional
-	AlternativeBackends []string `json:"alternativeBackends,omitempty"`
+	AlternativeBackends []AlternativeBackend `json:"alternativeBackends,omitempty"`
+}
+
+// AlternativeBackend describes a alternative backend for canary release which works for specific path
+// +k8s:deepcopy-gen=true
+type AlternativeBackend struct {
+	// Backend name
+	Name string `json:"name"`
+	// Path to apply alternative backend
+	Path string `json:"path,omitempty"`
 }
 
 // TrafficShapingPolicy describes the policies to put in place when a backend has no server and is used as an

@@ -138,7 +138,12 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		return false
 	}
 
-	return sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
+	match = compareAlternativeBackends(b1.AlternativeBackends, b2.AlternativeBackends)
+	if !match {
+		return false
+	}
+
+	return true
 }
 
 // Equal tests for equality between two SessionAffinityConfig types
@@ -229,6 +234,24 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 		if e1.Target.ResourceVersion != e2.Target.ResourceVersion {
 			return false
 		}
+	}
+
+	return true
+}
+
+// Equal checks the equality against an AlternativeBackend
+func (e1 *AlternativeBackend) Equal(e2 *AlternativeBackend) bool {
+	if e1 == e2 {
+		return true
+	}
+	if e1 == nil || e2 == nil {
+		return false
+	}
+	if e1.Name != e2.Name {
+		return false
+	}
+	if e1.Path != e2.Path {
+		return false
 	}
 
 	return true
@@ -536,6 +559,24 @@ var compareEndpointsFunc = func(e1, e2 interface{}) bool {
 
 func compareEndpoints(a, b []Endpoint) bool {
 	return sets.Compare(a, b, compareEndpointsFunc)
+}
+
+var compareAlternativeBackendsFunc = func(e1, e2 interface{}) bool {
+	ep1, ok := e1.(AlternativeBackend)
+	if !ok {
+		return false
+	}
+
+	ep2, ok := e2.(AlternativeBackend)
+	if !ok {
+		return false
+	}
+
+	return (&ep1).Equal(&ep2)
+}
+
+func compareAlternativeBackends(a, b []AlternativeBackend) bool {
+	return sets.Compare(a, b, compareAlternativeBackendsFunc)
 }
 
 var compareBackendsFunc = func(e1, e2 interface{}) bool {
