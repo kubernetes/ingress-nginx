@@ -140,9 +140,15 @@ local function route_to_alternative_balancer(balancer)
   end
 
   -- TODO: support traffic shaping for n > 1 alternative backends
-  local backend_name = balancer.alternative_backends[1]
+  local backend_name = balancer.alternative_backends[1].name
   if not backend_name then
     ngx.log(ngx.ERR, "empty alternative backend")
+    return false
+  end
+
+  -- TODO: support regular expression of uri path
+  local backend_path = balancer.alternative_backends[1].path
+  if not backend_path or ngx.var.request_uri:find("^" .. backend_path) == nil then
     return false
   end
 
@@ -198,7 +204,7 @@ local function get_balancer()
   end
 
   if route_to_alternative_balancer(balancer) then
-    local alternative_backend_name = balancer.alternative_backends[1]
+    local alternative_backend_name = balancer.alternative_backends[1].name
     ngx.var.proxy_alternative_upstream_name = alternative_backend_name
 
     return balancers[alternative_backend_name]

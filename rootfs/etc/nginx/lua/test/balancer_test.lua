@@ -93,7 +93,10 @@ describe("Balancer", function()
       backend = backends[1]
       _balancer = {
         alternative_backends = {
-          backend.name,
+          {
+            name = backend.name,
+            path = ""
+          }
         }
       }
       mock_ngx({ var = { request_uri = "/" } })
@@ -251,6 +254,59 @@ describe("Balancer", function()
           reset_ngx()
         end
       end)
+    end)
+
+    it("returns correct result for given alternative backend path and uri path", function()
+      backend.trafficShapingPolicy.weight = 100
+      balancer.sync_backend(backend)
+
+      local test_patterns = {
+        {
+          case_title = "no backend path is set and request URI is /",
+          backend_path = "",
+          request_uri = "/",
+          expected_result = true,
+        },
+        {
+          case_title = "backend path is / and request URI matches with it",
+          backend_path = "/",
+          request_uri = "/",
+          expected_result = true,
+        },
+        {
+          case_title = "no backend path is set and request URI is /foo/",
+          backend_path = "",
+          request_uri = "/foo/",
+          expected_result = true,
+        },
+        {
+          case_title = "backend path is /foo/ and request URI doesn't match with it",
+          backend_path = "/foo/",
+          request_uri = "/",
+          expected_result = false,
+        },
+        {
+          case_title = "backend path is /foo/ and request URI has that prefix",
+          backend_path = "/foo/",
+          request_uri = "/foo/bar",
+          expected_result = true,
+        },
+        --[[ lua's regular expression doesn't match with nginx's regular expression
+        {
+          case_title = "backend path uses regular expression and request uri matches with it",
+          backend_path = "/foo/[a-z]{3}",
+          request_uri = "/foo/bar",
+          expected_result = true,
+        }
+        ]]
+      }
+
+      for _, test_pattern in pairs(test_patterns) do
+        _balancer.alternative_backends[1].path = test_pattern.backend_path
+        mock_ngx({ var = { request_uri = test_pattern.request_uri } })
+        assert.message("\nTest data pattern: " .. test_pattern.case_title)
+          .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+      end
     end)
   end)
 
