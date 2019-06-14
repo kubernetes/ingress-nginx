@@ -315,9 +315,14 @@ func TestMergeAlternativeBackends(t *testing.T) {
 			},
 			map[string]*ingress.Backend{
 				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
-					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					AlternativeBackends: []ingress.AlternativeBackend{
+						{
+							Name: "example-http-svc-canary-80",
+							Path: "/",
+						},
+					},
 				},
 				"example-http-svc-canary-80": {
 					Name:     "example-http-svc-canary-80",
@@ -402,9 +407,14 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					},
 				},
 				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
-					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					AlternativeBackends: []ingress.AlternativeBackend{
+						{
+							Name: "example-http-svc-canary-80",
+							Path: "/",
+						},
+					},
 				},
 				"example-http-svc-canary-80": {
 					Name:     "example-http-svc-canary-80",
@@ -436,9 +446,14 @@ func TestMergeAlternativeBackends(t *testing.T) {
 			},
 			map[string]*ingress.Backend{
 				"example-foo-http-svc-80": {
-					Name:                "example-foo-http-svc-80",
-					NoServer:            false,
-					AlternativeBackends: []string{"example-foo-http-svc-canary-80"},
+					Name:     "example-foo-http-svc-80",
+					NoServer: false,
+					AlternativeBackends: []ingress.AlternativeBackend{
+						{
+							Name: "example-foo-http-svc-canary-80",
+							Path: "/",
+						},
+					},
 				},
 				"example-foo-http-svc-canary-80": {
 					Name:     "example-foo-http-svc-canary-80",
@@ -448,9 +463,14 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					},
 				},
 				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
-					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					AlternativeBackends: []ingress.AlternativeBackend{
+						{
+							Name: "example-http-svc-canary-80",
+							Path: "/",
+						},
+					},
 				},
 				"example-http-svc-canary-80": {
 					Name:     "example-http-svc-canary-80",
@@ -558,9 +578,14 @@ func TestMergeAlternativeBackends(t *testing.T) {
 			},
 			map[string]*ingress.Backend{
 				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
-					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					AlternativeBackends: []ingress.AlternativeBackend{
+						{
+							Name: "example-http-svc-canary-80",
+							Path: "",
+						},
+					},
 				},
 				"example-http-svc-canary-80": {
 					Name:     "example-http-svc-canary-80",
