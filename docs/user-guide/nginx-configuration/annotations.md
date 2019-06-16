@@ -35,6 +35,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string
 |[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|
+|[nginx.ingress.kubernetes.io/canary-by-cookie-value](#canary)|string
 |[nginx.ingress.kubernetes.io/canary-weight](#canary)|number|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
@@ -117,6 +118,8 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 * `nginx.ingress.kubernetes.io/canary-by-header-value`: The header value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to this value, it will be routed to the canary. For any other header value, the header will be ignored and the request compared against the other canary rules by precedence. This annotation has to be used together with . The annotation is an extension of the `nginx.ingress.kubernetes.io/canary-by-header` to allow customizing the header value instead of using hardcoded values. It doesn't have any effect if the `nginx.ingress.kubernetes.io/canary-by-header` annotation is not defined.
 
 * `nginx.ingress.kubernetes.io/canary-by-cookie`: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to `always`, it will be routed to the canary. When the cookie is set to `never`, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence.
+
+* `nginx.ingress.kubernetes.io/canary-by-cookie-value`: The cookie value (it is [regular expression of Lua](https://www.lua.org/pil/20.2.html)) to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to this value, it will be routed to the canary. If cookie value doesn't match as a regular expression, the cookie will be ignored and the request compared against the other canary rules by precedence. This annotation has to be used together with . The annotation is an extension of the `nginx.ingress.kubernetes.io/canary-by-cookie` to allow customizing the cookie value instead of using hardcoded values. It doesn't have any effect if the `nginx.ingress.kubernetes.io/canary-by-cookie` annotation is not defined.
 
 * `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - 100) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of 100 means implies all requests will be sent to the alternative service specified in the Ingress.
 
