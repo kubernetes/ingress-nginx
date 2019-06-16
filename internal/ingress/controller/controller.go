@@ -707,6 +707,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					Header:      anns.Canary.Header,
 					HeaderValue: anns.Canary.HeaderValue,
 					Cookie:      anns.Canary.Cookie,
+					CookieValue: anns.Canary.CookieValue,
 				}
 			}
 
@@ -772,6 +773,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 						Header:      anns.Canary.Header,
 						HeaderValue: anns.Canary.HeaderValue,
 						Cookie:      anns.Canary.Cookie,
+						CookieValue: anns.Canary.CookieValue,
 					}
 				}
 

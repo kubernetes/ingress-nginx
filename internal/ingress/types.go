@@ -122,6 +122,8 @@ type TrafficShapingPolicy struct {
 	HeaderValue string `json:"headerValue"`
 	// Cookie on which to redirect requests to this backend
 	Cookie string `json:"cookie"`
+	// CookieValue (regular expression of Lua) on which to redirect requests to this backend
+	CookieValue string `json:"cookieValue"`
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash
