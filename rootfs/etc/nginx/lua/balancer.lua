@@ -175,7 +175,11 @@ local function route_to_alternative_balancer(balancer)
   local target_cookie = traffic_shaping_policy.cookie
   local cookie = ngx.var["cookie_" .. target_cookie]
   if cookie then
-    if cookie == "always" then
+    if traffic_shaping_policy.cookieValue and #traffic_shaping_policy.cookieValue > 0 then
+      if cookie:find(traffic_shaping_policy.cookieValue) ~= nil then
+        return true
+      end
+    elseif cookie == "always" then
       return true
     elseif cookie == "never" then
       return false

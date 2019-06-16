@@ -45,7 +45,8 @@ local function reset_backends()
         weight = 0,
         header = "",
         headerValue = "",
-        cookie = ""
+        cookie = "",
+        cookieValue = "",
       },
     },
     { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
@@ -135,34 +136,77 @@ describe("Balancer", function()
     context("canary by cookie", function()
       it("returns correct result for given cookies", function()
         backend.trafficShapingPolicy.cookie = "canaryCookie"
-        balancer.sync_backend(backend)
         local test_patterns = {
+          -- with no cookie value setting
           {
-            case_title = "cookie_value is 'always'",
+            case_title = "requested cookie value is 'always'",
+            cookie_value = "",
             request_cookie_name = "canaryCookie",
             request_cookie_value = "always",
             expected_result = true,
           },
           {
-            case_title = "cookie_value is 'never'",
+            case_title = "requested cookie value is 'never'",
+            cookie_value = "",
             request_cookie_name = "canaryCookie",
             request_cookie_value = "never",
             expected_result = false,
           },
           {
-            case_title = "cookie_value is undefined",
+            case_title = "requested cookie value is undefined",
+            cookie_value = "",
             request_cookie_name = "canaryCookie",
             request_cookie_value = "foo",
             expected_result = false,
           },
           {
-            case_title = "cookie_name is undefined",
+            case_title = "requested cookie name is undefined",
+            cookie_value = "",
             request_cookie_name = "foo",
             request_cookie_value = "always",
             expected_result = false
           },
+          -- with cookie value setting
+          {
+            case_title = "cookie value is set and requested cookie value is 'always'",
+            cookie_value = "foo",
+            request_cookie_name = "canaryCookie",
+            request_cookie_value = "always",
+            expected_result = false,
+          },
+          {
+            case_title = "cookie value is set and requested cookie name is undefined",
+            cookie_value = "foo",
+            request_cookie_name = "bar",
+            request_cookie_value = "foo",
+            expected_result = false,
+          },
+          {
+            case_title = "cookie value is set and requested cookie value exactly matches",
+            cookie_value = "foo",
+            request_cookie_name = "canaryCookie",
+            request_cookie_value = "foo",
+            expected_result = true,
+          },
+          {
+            case_title = "cookie value is set and requested cookie value matches as regular expression",
+            cookie_value = "foo",
+            request_cookie_name = "canaryCookie",
+            request_cookie_value = "barfoobar",
+            expected_result = true,
+          },
+          {
+            case_title = "regular expression is set as cookie value and requested cookie value matches",
+            cookie_value = "^foo%d[0-1]$",
+            request_cookie_name = "canaryCookie",
+            request_cookie_value = "foo91",
+            expected_result = true,
+          },
         }
         for _, test_pattern in pairs(test_patterns) do
+          reset_balancer()
+          backend.trafficShapingPolicy.cookieValue = test_pattern.cookie_value
+          balancer.sync_backend(backend)
           mock_ngx({ var = {
             ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
             request_uri = "/"
