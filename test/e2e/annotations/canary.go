@@ -580,7 +580,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 		})
 	})
 
-	Context("when canaried by cookie", func() {
+	Context("when canaried by cookie with no value", func() {
 		It("should route requests to the correct upstream", func() {
 			host := "foo"
 			annotations := map[string]string{}
@@ -616,6 +616,84 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 			Expect(body).Should(ContainSubstring("http-svc-canary"))
+
+			By("routing requests to the mainline upstream when cookie is set to 'never'")
+
+			resp, body, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host).
+				AddCookie(&http.Cookie{Name: "Canary-By-Cookie", Value: "never"}).
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc"))
+			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+
+			By("routing requests to the mainline upstream when cookie is set to anything else")
+
+			resp, body, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host).
+				AddCookie(&http.Cookie{Name: "Canary-By-Cookie", Value: "badcookievalue"}).
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc"))
+			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+		})
+	})
+
+	Context("when canaried by cookie with value", func() {
+		It("should route requests to the correct upstream", func() {
+			host := "foo"
+			annotations := map[string]string{}
+
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring("server_name foo"))
+				})
+
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":                 "true",
+				"nginx.ingress.kubernetes.io/canary-by-cookie":       "Canary-By-Cookie",
+				"nginx.ingress.kubernetes.io/canary-by-cookie-value": "^DoCanary$",
+			}
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+				80, &canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			time.Sleep(waitForLuaSync)
+
+			By("routing requests to the canary upstream when cookie is set to 'DoCanary'")
+			resp, body, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host).
+				AddCookie(&http.Cookie{Name: "Canary-By-Cookie", Value: "DoCanary"}).
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc-canary"))
+
+			By("routing requests to the mainline upstream when cookie is set to 'always'")
+			resp, body, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host).
+				AddCookie(&http.Cookie{Name: "Canary-By-Cookie", Value: "always"}).
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc"))
+			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
 
 			By("routing requests to the mainline upstream when cookie is set to 'never'")
 
