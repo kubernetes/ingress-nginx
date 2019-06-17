@@ -168,7 +168,12 @@ proxy_pass http://upstream_balancer;`,
 func TestBuildLuaSharedDictionaries(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	actual := buildLuaSharedDictionaries(invalidType, true)
+	// config map
+	cfg := config.Configuration{
+		LuaSharedDictCfgData:  "100M",
+		LuaSharedDictCertData: "20M",
+	}
+	actual := buildLuaSharedDictionaries(cfg, invalidType, true)
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -185,7 +190,7 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 		},
 	}
 
-	configuration := buildLuaSharedDictionaries(servers, false)
+	configuration := buildLuaSharedDictionaries(cfg, servers, false)
 	if !strings.Contains(configuration, "lua_shared_dict configuration_data") {
 		t.Errorf("expected to include 'configuration_data' but got %s", configuration)
 	}
@@ -194,10 +199,16 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	}
 
 	servers[1].Locations[0].LuaRestyWAF = luarestywaf.Config{Mode: "ACTIVE"}
-	configuration = buildLuaSharedDictionaries(servers, false)
+	configuration = buildLuaSharedDictionaries(cfg, servers, false)
 	if !strings.Contains(configuration, "lua_shared_dict waf_storage") {
 		t.Errorf("expected to configure 'waf_storage', but got %s", configuration)
 	}
+	// test invalid config
+	configuration = buildLuaSharedDictionaries(invalidType, servers, false)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v' ", expected, actual)
+	}
+
 }
 
 func TestFormatIP(t *testing.T) {
