@@ -24,9 +24,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/golang/glog"
 	ps "github.com/mitchellh/go-ps"
 	"github.com/ncabatoff/process-exporter/proc"
+	"k8s.io/klog"
 )
 
 // IsRespawnIfRequired checks if error type is exec.ExitError or not
@@ -37,7 +37,7 @@ func IsRespawnIfRequired(err error) bool {
 	}
 
 	waitStatus := exitError.Sys().(syscall.WaitStatus)
-	glog.Warningf(`
+	klog.Warningf(`
 -------------------------------------------------------------------------------
 NGINX master process died (%v): %v
 -------------------------------------------------------------------------------
@@ -45,6 +45,8 @@ NGINX master process died (%v): %v
 	return true
 }
 
+// WaitUntilPortIsAvailable waits until there is no NGINX master or worker
+// process/es listening in a particular port.
 func WaitUntilPortIsAvailable(port int) {
 	// we wait until the workers are killed
 	for {
@@ -54,9 +56,9 @@ func WaitUntilPortIsAvailable(port int) {
 		}
 		conn.Close()
 		// kill nginx worker processes
-		fs, err := proc.NewFS("/proc")
+		fs, err := proc.NewFS("/proc", false)
 		if err != nil {
-			glog.Errorf("unexpected error reading /proc information: %v", err)
+			klog.Errorf("unexpected error reading /proc information: %v", err)
 			continue
 		}
 
@@ -64,14 +66,14 @@ func WaitUntilPortIsAvailable(port int) {
 		for _, p := range procs {
 			pn, err := p.Comm()
 			if err != nil {
-				glog.Errorf("unexpected error obtaining process information: %v", err)
+				klog.Errorf("unexpected error obtaining process information: %v", err)
 				continue
 			}
 
 			if pn == "nginx" {
 				osp, err := os.FindProcess(p.PID)
 				if err != nil {
-					glog.Errorf("unexpected error obtaining process information: %v", err)
+					klog.Errorf("unexpected error obtaining process information: %v", err)
 					continue
 				}
 				osp.Signal(syscall.SIGQUIT)

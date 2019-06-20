@@ -19,13 +19,12 @@ package auth
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path"
 	"regexp"
 
 	"github.com/pkg/errors"
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
+	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -47,6 +46,7 @@ type Config struct {
 	File    string `json:"file"`
 	Secured bool   `json:"secured"`
 	FileSHA string `json:"fileSha"`
+	Secret  string `json:"secret"`
 }
 
 // Equal tests for equality between two Config types
@@ -72,7 +72,9 @@ func (bd1 *Config) Equal(bd2 *Config) bool {
 	if bd1.FileSHA != bd2.FileSHA {
 		return false
 	}
-
+	if bd1.Secret != bd2.Secret {
+		return false
+	}
 	return true
 }
 
@@ -83,17 +85,6 @@ type auth struct {
 
 // NewParser creates a new authentication annotation parser
 func NewParser(authDirectory string, r resolver.Resolver) parser.IngressAnnotation {
-	os.MkdirAll(authDirectory, 0755)
-
-	currPath := authDirectory
-	for currPath != "/" {
-		currPath = path.Dir(currPath)
-		err := os.Chmod(currPath, 0755)
-		if err != nil {
-			break
-		}
-	}
-
 	return auth{r, authDirectory}
 }
 
@@ -101,7 +92,7 @@ func NewParser(authDirectory string, r resolver.Resolver) parser.IngressAnnotati
 // rule used to add authentication in the paths defined in the rule
 // and generated an htpasswd compatible file to be used as source
 // during the authentication process
-func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	at, err := parser.GetStringAnnotation("auth-type", ing)
 	if err != nil {
 		return nil, err
@@ -118,7 +109,18 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}
 	}
 
-	name := fmt.Sprintf("%v/%v", ing.Namespace, s)
+	sns, sname, err := cache.SplitMetaNamespaceKey(s)
+	if err != nil {
+		return nil, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "error reading secret name from annotation"),
+		}
+	}
+
+	if sns == "" {
+		sns = ing.Namespace
+	}
+
+	name := fmt.Sprintf("%v/%v", sns, sname)
 	secret, err := a.r.GetSecret(name)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
@@ -140,6 +142,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		File:    passFile,
 		Secured: true,
 		FileSHA: file.SHA1(passFile),
+		Secret:  name,
 	}, nil
 }
 
@@ -153,8 +156,7 @@ func dumpSecret(filename string, secret *api.Secret) error {
 		}
 	}
 
-	// TODO: check permissions required
-	err := ioutil.WriteFile(filename, val, 0777)
+	err := ioutil.WriteFile(filename, val, file.ReadWriteByUser)
 	if err != nil {
 		return ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "unexpected error creating password file"),

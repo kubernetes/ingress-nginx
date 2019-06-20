@@ -55,8 +55,7 @@
 		"sessionAffinityConfig": {
 			"name": "",
 			"cookieSessionAffinity": {
-				"name": "",
-				"hash": ""
+				"name": ""
 			}
 		}
 	}, {
@@ -128,8 +127,7 @@
 		"sessionAffinityConfig": {
 			"name": "",
 			"cookieSessionAffinity": {
-				"name": "",
-				"hash": ""
+				"name": ""
 			}
 		}
 	}, {
@@ -194,8 +192,7 @@
 		"sessionAffinityConfig": {
 			"name": "",
 			"cookieSessionAffinity": {
-				"name": "",
-				"hash": ""
+				"name": ""
 			}
 		}
 	}],
@@ -276,7 +273,6 @@
 			},
 			"redirect": {
 				"target": "",
-				"addBaseUrl": false,
 				"sslRedirect": false,
 				"forceSSLRedirect": false,
 				"appRoot": ""
@@ -384,7 +380,6 @@
 			},
 			"redirect": {
 				"target": "",
-				"addBaseUrl": false,
 				"sslRedirect": true,
 				"forceSSLRedirect": false,
 				"appRoot": ""
@@ -463,7 +458,6 @@
 			},
 			"redirect": {
 				"target": "",
-				"addBaseUrl": false,
 				"sslRedirect": false,
 				"forceSSLRedirect": false,
 				"appRoot": ""
@@ -576,7 +570,6 @@
 			},
 			"redirect": {
 				"target": "/",
-				"addBaseUrl": false,
 				"sslRedirect": true,
 				"forceSSLRedirect": false,
 				"appRoot": ""
@@ -675,7 +668,6 @@
 			},
 			"redirect": {
 				"target": "",
-				"addBaseUrl": false,
 				"sslRedirect": false,
 				"forceSSLRedirect": false,
 				"appRoot": ""

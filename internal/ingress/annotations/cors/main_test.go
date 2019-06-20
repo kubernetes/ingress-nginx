@@ -20,35 +20,35 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -62,37 +62,100 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
-func TestIngressCorsConfig(t *testing.T) {
+func TestIngressCorsConfigValid(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
+
+	// Valid
 	data[parser.GetAnnotationWithPrefix("enable-cors")] = "true"
 	data[parser.GetAnnotationWithPrefix("cors-allow-headers")] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
 	data[parser.GetAnnotationWithPrefix("cors-allow-credentials")] = "false"
-	data[parser.GetAnnotationWithPrefix("cors-allow-methods")] = "PUT, GET,OPTIONS, PATCH, $nginx_version"
+	data[parser.GetAnnotationWithPrefix("cors-allow-methods")] = "GET, PATCH"
 	data[parser.GetAnnotationWithPrefix("cors-allow-origin")] = "https://origin123.test.com:4443"
+	data[parser.GetAnnotationWithPrefix("cors-max-age")] = "600"
 	ing.SetAnnotations(data)
 
-	corst, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("error parsing annotations: %v", err)
+	}
+
 	nginxCors, ok := corst.(*Config)
 	if !ok {
-		t.Errorf("expected a Config type")
+		t.Errorf("expected a Config type but returned %t", corst)
 	}
 
 	if !nginxCors.CorsEnabled {
-		t.Errorf("expected cors enabled but returned %v", nginxCors.CorsEnabled)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("enable-cors")], nginxCors.CorsEnabled)
+	}
+
+	if nginxCors.CorsAllowCredentials {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-credentials")], nginxCors.CorsAllowCredentials)
 	}
 
 	if nginxCors.CorsAllowHeaders != "DNT,X-CustomHeader, Keep-Alive,User-Agent" {
-		t.Errorf("expected headers not found. Found %v", nginxCors.CorsAllowHeaders)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-headers")], nginxCors.CorsAllowHeaders)
 	}
 
-	if nginxCors.CorsAllowMethods != "GET, PUT, POST, DELETE, PATCH, OPTIONS" {
-		t.Errorf("expected default methods, but got  %v", nginxCors.CorsAllowMethods)
+	if nginxCors.CorsAllowMethods != "GET, PATCH" {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-methods")], nginxCors.CorsAllowMethods)
 	}
 
 	if nginxCors.CorsAllowOrigin != "https://origin123.test.com:4443" {
-		t.Errorf("expected origin https://origin123.test.com:4443, but got  %v", nginxCors.CorsAllowOrigin)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-origin")], nginxCors.CorsAllowOrigin)
 	}
 
+	if nginxCors.CorsMaxAge != 600 {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-max-age")], nginxCors.CorsMaxAge)
+	}
+}
+
+func TestIngressCorsConfigInvalid(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+
+	// Valid
+	data[parser.GetAnnotationWithPrefix("enable-cors")] = "yes"
+	data[parser.GetAnnotationWithPrefix("cors-allow-headers")] = "@alright, #ingress"
+	data[parser.GetAnnotationWithPrefix("cors-allow-credentials")] = "no"
+	data[parser.GetAnnotationWithPrefix("cors-allow-methods")] = "GET, PATCH, $nginx"
+	data[parser.GetAnnotationWithPrefix("cors-allow-origin")] = "origin123.test.com:4443"
+	data[parser.GetAnnotationWithPrefix("cors-max-age")] = "abcd"
+	ing.SetAnnotations(data)
+
+	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("error parsing annotations: %v", err)
+	}
+
+	nginxCors, ok := corst.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type but returned %t", corst)
+	}
+
+	if nginxCors.CorsEnabled {
+		t.Errorf("expected %v but returned %v", false, nginxCors.CorsEnabled)
+	}
+
+	if !nginxCors.CorsAllowCredentials {
+		t.Errorf("expected %v but returned %v", true, nginxCors.CorsAllowCredentials)
+	}
+
+	if nginxCors.CorsAllowHeaders != defaultCorsHeaders {
+		t.Errorf("expected %v but returned %v", defaultCorsHeaders, nginxCors.CorsAllowHeaders)
+	}
+
+	if nginxCors.CorsAllowMethods != defaultCorsMethods {
+		t.Errorf("expected %v but returned %v", defaultCorsHeaders, nginxCors.CorsAllowMethods)
+	}
+
+	if nginxCors.CorsAllowOrigin != "*" {
+		t.Errorf("expected %v but returned %v", "*", nginxCors.CorsAllowOrigin)
+	}
+
+	if nginxCors.CorsMaxAge != defaultCorsMaxAge {
+		t.Errorf("expected %v but returned %v", defaultCorsMaxAge, nginxCors.CorsMaxAge)
+	}
 }

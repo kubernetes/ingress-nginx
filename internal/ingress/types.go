@@ -17,23 +17,26 @@ limitations under the License.
 package ingress
 
 import (
-	"time"
-
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/internal/ingress/store"
 )
 
 var (
@@ -44,35 +47,33 @@ var (
 	DefaultSSLDirectory = "/ingress-controller/ssl"
 )
 
-// StoreLister returns the configured stores for ingresses, services,
-// endpoints, secrets and configmaps.
-type StoreLister struct {
-	Ingress           store.IngressLister
-	Service           store.ServiceLister
-	Endpoint          store.EndpointLister
-	Secret            store.SecretLister
-	ConfigMap         store.ConfigMapLister
-	IngressAnnotation store.IngressAnnotationsLister
-}
-
 // Configuration holds the definition of all the parts required to describe all
 // ingresses reachable by the ingress controller (using a filter by namespace)
 type Configuration struct {
 	// Backends are a list of backends used by all the Ingress rules in the
 	// ingress controller. This list includes the default backend
-	Backends []*Backend `json:"backends,omitEmpty"`
-	// Servers
-	Servers []*Server `json:"servers,omitEmpty"`
+	Backends []*Backend `json:"backends,omitempty"`
+	// Servers save the website config
+	Servers []*Server `json:"servers,omitempty"`
 	// TCPEndpoints contain endpoints for tcp streams handled by this backend
 	// +optional
 	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
 	// UDPEndpoints contain endpoints for udp streams handled by this backend
 	// +optional
 	UDPEndpoints []L4Service `json:"udpEndpoints,omitempty"`
-	// PassthroughBackend contains the backends used for SSL passthrough.
+	// PassthroughBackends contains the backends used for SSL passthrough.
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
 	PassthroughBackends []*SSLPassthroughBackend `json:"passthroughBackends,omitempty"`
+
+	// BackendConfigChecksum contains the particular checksum of a Configuration object
+	BackendConfigChecksum string `json:"BackendConfigChecksum,omitempty"`
+
+	// ConfigurationChecksum contains the particular checksum of a Configuration object
+	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
+
+	// ControllerPodsCount contains the list of running ingress controller Pod(s)
+	ControllerPodsCount int `json:"controllerPodsCount,omitempty"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -82,11 +83,6 @@ type Backend struct {
 	Name    string             `json:"name"`
 	Service *apiv1.Service     `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
-	// This indicates if the communication protocol between the backend and the endpoint is HTTP or HTTPS
-	// Allowing the use of HTTPS
-	// The endpoint/s must provide a TLS connection.
-	// The certificate used in the endpoint cannot be a self signed certificate
-	Secure bool `json:"secure"`
 	// SecureCACert has the filename and SHA1 of the certificate authorities used to validate
 	// a secured connection to the backend
 	SecureCACert resolver.AuthSSLCert `json:"secureCACert"`
@@ -94,10 +90,43 @@ type Backend struct {
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
-	// StickySessionAffinitySession contains the StickyConfig object with stickness configuration
+	// StickySessionAffinitySession contains the StickyConfig object with stickyness configuration
 	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
 	// Consistent hashing by NGINX variable
-	UpstreamHashBy string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashBy UpstreamHashByConfig `json:"upstreamHashByConfig,omitempty"`
+	// LB algorithm configuration per ingress
+	LoadBalancing string `json:"load-balance,omitempty"`
+	// Denotes if a backend has no server. The backend instead shares a server with another backend and acts as an
+	// alternative backend.
+	// This can be used to share multiple upstreams in the sam nginx server block.
+	NoServer bool `json:"noServer"`
+	// Policies to describe the characteristics of an alternative backend.
+	// +optional
+	TrafficShapingPolicy TrafficShapingPolicy `json:"trafficShapingPolicy,omitempty"`
+	// Contains a list of backends without servers that are associated with this backend.
+	// +optional
+	AlternativeBackends []string `json:"alternativeBackends,omitempty"`
+}
+
+// TrafficShapingPolicy describes the policies to put in place when a backend has no server and is used as an
+// alternative backend
+// +k8s:deepcopy-gen=true
+type TrafficShapingPolicy struct {
+	// Weight (0-100) of traffic to redirect to the backend.
+	// e.g. Weight 20 means 20% of traffic will be redirected to the backend and 80% will remain
+	// with the other backend. 0 weight will not send any traffic to this backend
+	Weight int `json:"weight"`
+	// Header on which to redirect requests to this backend
+	Header string `json:"header"`
+	// HeaderValue on which to redirect requests to this backend
+	HeaderValue string `json:"headerValue"`
+	// Cookie on which to redirect requests to this backend
+	Cookie string `json:"cookie"`
+}
+
+// HashInclude defines if a field should be used or not to calculate the hash
+func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
+	return (field != "Endpoints"), nil
 }
 
 // SessionAffinityConfig describes different affinity configurations for new sessions.
@@ -115,9 +144,19 @@ type SessionAffinityConfig struct {
 // CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
 // +k8s:deepcopy-gen=true
 type CookieSessionAffinity struct {
-	Name      string              `json:"name"`
-	Hash      string              `json:"hash"`
-	Locations map[string][]string `json:"locations,omitempty"`
+	Name            string              `json:"name"`
+	Expires         string              `json:"expires,omitempty"`
+	MaxAge          string              `json:"maxage,omitempty"`
+	Locations       map[string][]string `json:"locations,omitempty"`
+	Path            string              `json:"path,omitempty"`
+	ChangeOnFailure bool                `json:"change_on_failure,omitempty"`
+}
+
+// UpstreamHashByConfig described setting from the upstream-hash-by* annotations.
+type UpstreamHashByConfig struct {
+	UpstreamHashBy           string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashBySubset     bool   `json:"upstream-hash-by-subset,omitempty"`
+	UpstreamHashBySubsetSize int    `json:"upstream-hash-by-subset-size,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
@@ -127,16 +166,8 @@ type Endpoint struct {
 	Address string `json:"address"`
 	// Port number of the TCP port
 	Port string `json:"port"`
-	// MaxFails returns the number of unsuccessful attempts to communicate
-	// allowed before this should be considered dow.
-	// Setting 0 indicates that the check is performed by a Kubernetes probe
-	MaxFails int `json:"maxFails"`
-	// FailTimeout returns the time in seconds during which the specified number
-	// of unsuccessful attempts to communicate with the server should happen
-	// to consider the endpoint unavailable
-	FailTimeout int `json:"failTimeout"`
 	// Target returns a reference to the object providing the endpoint
-	Target *apiv1.ObjectReference `json:"target,omipempty"`
+	Target *apiv1.ObjectReference `json:"target,omitempty"`
 }
 
 // Server describes a website
@@ -146,18 +177,8 @@ type Server struct {
 	// SSLPassthrough indicates if the TLS termination is realized in
 	// the server or in the remote endpoint
 	SSLPassthrough bool `json:"sslPassthrough"`
-	// SSLCertificate path to the SSL certificate on disk
-	SSLCertificate string `json:"sslCertificate"`
-	// SSLFullChainCertificate path to the SSL certificate on disk
-	// This certificate contains the full chain (ca + intermediates + cert)
-	SSLFullChainCertificate string `json:"sslFullChainCertificate"`
-	// SSLExpireTime has the expire date of this certificate
-	SSLExpireTime time.Time `json:"sslExpireTime"`
-	// SSLPemChecksum returns the checksum of the certificate file on disk.
-	// There is no restriction in the hash generator. This checksim can be
-	// used to  determine if the secret changed without the use of file
-	// system notifications
-	SSLPemChecksum string `json:"sslPemChecksum"`
+	// SSLCert describes the certificate that will be used on the server
+	SSLCert SSLCert `json:"sslCert"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
 	// Alias return the alias of the server name
@@ -167,10 +188,13 @@ type Server struct {
 	// CertificateAuth indicates the this server requires mutual authentication
 	// +optional
 	CertificateAuth authtls.Config `json:"certificateAuth"`
-
 	// ServerSnippet returns the snippet of server
 	// +optional
 	ServerSnippet string `json:"serverSnippet"`
+	// SSLCiphers returns list of ciphers to be enabled
+	SSLCiphers string `json:"sslCiphers,omitempty"`
+	// AuthTLSError contains the reason why the access to a server should be denied
+	AuthTLSError string `json:"authTLSError,omitempty"`
 }
 
 // Location describes an URI inside a server.
@@ -198,7 +222,7 @@ type Location struct {
 	// uses the default backend.
 	IsDefBackend bool `json:"isDefBackend"`
 	// Ingress returns the ingress from which this location was generated
-	Ingress *extensions.Ingress `json:"ingress"`
+	Ingress *Ingress `json:"ingress"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
@@ -215,14 +239,21 @@ type Location struct {
 	BasicDigestAuth auth.Config `json:"basicDigestAuth,omitempty"`
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
-	Denied error `json:"denied,omitempty"`
-	// CorsConfig returns the Cors Configration for the ingress rule
+	Denied *string `json:"denied,omitempty"`
+	// CorsConfig returns the Cors Configuration for the ingress rule
 	// +optional
 	CorsConfig cors.Config `json:"corsConfig,omitempty"`
 	// ExternalAuth indicates the access to this location requires
 	// authentication using an external provider
 	// +optional
 	ExternalAuth authreq.Config `json:"externalAuth,omitempty"`
+	// EnableGlobalAuth indicates if the access to this location requires
+	// authentication using an external provider defined in controller's config
+	EnableGlobalAuth bool `json:"enableGlobalAuth"`
+	// HTTP2PushPreload allows to configure the HTTP2 Push Preload from backend
+	// original location.
+	// +optional
+	HTTP2PushPreload bool `json:"http2PushPreload,omitempty"`
 	// RateLimit describes a limit in the number of connections per IP
 	// address or connections per second.
 	// The Redirect annotation precedes RateLimit
@@ -245,13 +276,13 @@ type Location struct {
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"usePortInRedirects"`
-	// VtsFilterKey contains the vts filter key on the location level
-	// https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key
-	// +optional
-	VtsFilterKey string `json:"vtsFilterKey,omitempty"`
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
 	ConfigurationSnippet string `json:"configurationSnippet"`
+	// Connection contains connection header to override the default Connection header
+	// to the request.
+	// +optional
+	Connection connection.Config `json:"connection"`
 	// ClientBodyBufferSize allows for the configuration of the client body
 	// buffer size for a specific location.
 	// +optional
@@ -259,6 +290,32 @@ type Location struct {
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
 	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty"`
+	// DefaultBackendUpstreamName is the upstream-formatted string for the name of
+	// this location's custom default backend
+	DefaultBackendUpstreamName string `json:"defaultBackendUpstreamName,omitempty"`
+	// XForwardedPrefix allows to add a header X-Forwarded-Prefix to the request with the
+	// original location.
+	// +optional
+	XForwardedPrefix string `json:"xForwardedPrefix,omitempty"`
+	// Logs allows to enable or disable the nginx logs
+	// By default access logs are enabled and rewrite logs are disabled
+	Logs log.Config `json:"logs,omitempty"`
+	// LuaRestyWAF contains parameters to configure lua-resty-waf
+	LuaRestyWAF luarestywaf.Config `json:"luaRestyWAF"`
+	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database
+	// +optional
+	InfluxDB influxdb.Config `json:"influxDB,omitempty"`
+	// BackendProtocol indicates which protocol should be used to communicate with the service
+	// By default this is HTTP
+	BackendProtocol string `json:"backend-protocol"`
+	// CustomHTTPErrors specifies the error codes that should be intercepted.
+	// +optional
+	CustomHTTPErrors []int `json:"custom-http-errors"`
+	// ModSecurity allows to enable and configure modsecurity
+	// +optional
+	ModSecurity modsecurity.Config `json:"modsecurity"`
+	// Satisfy dictates allow access if any or all is set
+	Satisfy string `json:"satisfy"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
@@ -266,7 +323,7 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *apiv1.Service     `json:"service,omitEmpty"`
+	Service *apiv1.Service     `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
@@ -281,7 +338,9 @@ type L4Service struct {
 	// Backend of the service
 	Backend L4Backend `json:"backend"`
 	// Endpoints active endpoints of the service
-	Endpoints []Endpoint `json:"endpoins,omitEmpty"`
+	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	// k8s Service
+	Service *apiv1.Service `json:"service,omitempty"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
@@ -298,4 +357,15 @@ type L4Backend struct {
 type ProxyProtocol struct {
 	Decode bool `json:"decode"`
 	Encode bool `json:"encode"`
+}
+
+// Ingress holds the definition of an Ingress plus its annotations
+type Ingress struct {
+	networking.Ingress
+	ParsedAnnotations *annotations.Ingress
+}
+
+// GeneralConfig holds the definition of lua general configuration data
+type GeneralConfig struct {
+	ControllerPodsCount int `json:"controllerPodsCount"`
 }

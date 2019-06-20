@@ -18,26 +18,21 @@ package framework
 
 import (
 	"flag"
-	"os"
 
 	"github.com/onsi/ginkgo/config"
-
-	"k8s.io/client-go/tools/clientcmd"
 )
 
-const (
-	RecommendedConfigPathEnvVar = "INGRESSNGINXCONFIG"
-)
-
+// TestContextType describes the client context to use in communications with the Kubernetes API.
 type TestContextType struct {
-	KubeHost    string
-	KubeConfig  string
+	KubeHost string
+	//KubeConfig  string
 	KubeContext string
 }
 
+// TestContext is the global client context for tests.
 var TestContext TestContextType
 
-// Register flags common to all e2e test suites.
+// RegisterCommonFlags registers flags common to all e2e test suites.
 func RegisterCommonFlags() {
 	// Turn on verbose by default to get spec names
 	config.DefaultReporterConfig.Verbose = true
@@ -48,11 +43,16 @@ func RegisterCommonFlags() {
 	// Randomize specs as well as suites
 	config.GinkgoConfig.RandomizeAllSpecs = true
 
+	// Default SlowSpecThreshold is 5 seconds.
+	// Too low for the kind of operations we need to tests
+	config.DefaultReporterConfig.SlowSpecThreshold = 20
+
 	flag.StringVar(&TestContext.KubeHost, "kubernetes-host", "http://127.0.0.1:8080", "The kubernetes host, or apiserver, to connect to")
-	flag.StringVar(&TestContext.KubeConfig, "kubernetes-config", os.Getenv(clientcmd.RecommendedConfigPathEnvVar), "Path to config containing embedded authinfo for kubernetes. Default value is from environment variable "+clientcmd.RecommendedConfigPathEnvVar)
-	flag.StringVar(&TestContext.KubeContext, "kubernetes-context", "", "config context to use for kuberentes. If unset, will use value from 'current-context'")
+	//flag.StringVar(&TestContext.KubeConfig, "kubernetes-config", os.Getenv(clientcmd.RecommendedConfigPathEnvVar), "Path to config containing embedded authinfo for kubernetes. Default value is from environment variable "+clientcmd.RecommendedConfigPathEnvVar)
+	flag.StringVar(&TestContext.KubeContext, "kubernetes-context", "", "config context to use for kubernetes. If unset, will use value from 'current-context'")
 }
 
+// RegisterParseFlags registers and parses flags for the test binary.
 func RegisterParseFlags() {
 	RegisterCommonFlags()
 	flag.Parse()

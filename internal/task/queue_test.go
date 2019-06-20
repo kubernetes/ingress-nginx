@@ -71,7 +71,7 @@ func TestEnqueueSuccess(t *testing.T) {
 		k: "testKey",
 		v: "testValue",
 	}
-	q.Enqueue(mo)
+	q.EnqueueSkippableTask(mo)
 	// wait for 'mockSynFn'
 	time.Sleep(time.Millisecond * 10)
 	if atomic.LoadUint32(&sr) != 1 {
@@ -99,7 +99,7 @@ func TestEnqueueFailed(t *testing.T) {
 	q.Shutdown()
 	// wait for shutdown
 	time.Sleep(time.Millisecond * 10)
-	q.Enqueue(mo)
+	q.EnqueueSkippableTask(mo)
 	// wait for 'mockSynFn'
 	time.Sleep(time.Millisecond * 10)
 	// queue is shutdown, so mockSynFn should not be executed, so the result should be 0
@@ -121,7 +121,7 @@ func TestEnqueueKeyError(t *testing.T) {
 		v: "testValue",
 	}
 
-	q.Enqueue(mo)
+	q.EnqueueSkippableTask(mo)
 	// wait for 'mockSynFn'
 	time.Sleep(time.Millisecond * 10)
 	// key error, so the result should be 0
@@ -137,21 +137,21 @@ func TestSkipEnqueue(t *testing.T) {
 	atomic.StoreUint32(&sr, 0)
 	q := NewCustomTaskQueue(mockSynFn, mockKeyFn)
 	stopCh := make(chan struct{})
-	// run queue
-	go q.Run(time.Second, stopCh)
 	// mock object whichi will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
 		v: "testValue",
 	}
-	q.Enqueue(mo)
-	q.Enqueue(mo)
-	q.Enqueue(mo)
-	q.Enqueue(mo)
+	q.EnqueueSkippableTask(mo)
+	q.EnqueueSkippableTask(mo)
+	q.EnqueueTask(mo)
+	q.EnqueueSkippableTask(mo)
+	// run queue
+	go q.Run(time.Second, stopCh)
 	// wait for 'mockSynFn'
 	time.Sleep(time.Millisecond * 10)
-	if atomic.LoadUint32(&sr) != 1 {
-		t.Errorf("sr should be 1, but is %d", sr)
+	if atomic.LoadUint32(&sr) != 2 {
+		t.Errorf("sr should be 2, but is %d", sr)
 	}
 
 	// shutdown queue before exit

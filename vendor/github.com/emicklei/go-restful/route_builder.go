@@ -24,7 +24,7 @@ type RouteBuilder struct {
 	httpMethod  string        // required
 	function    RouteFunction // required
 	filters     []FilterFunction
-	conditions []RouteSelectionConditionFunction
+	conditions  []RouteSelectionConditionFunction
 
 	typeNameHandleFunc TypeNameHandleFunction // required
 
@@ -35,7 +35,9 @@ type RouteBuilder struct {
 	readSample, writeSample interface{}
 	parameters              []*Parameter
 	errorMap                map[int]ResponseError
+	defaultResponse         *ResponseError
 	metadata                map[string]interface{}
+	deprecated              bool
 }
 
 // Do evaluates each argument with the RouteBuilder itself.
@@ -98,15 +100,18 @@ func (b *RouteBuilder) Notes(notes string) *RouteBuilder {
 
 // Reads tells what resource type will be read from the request payload. Optional.
 // A parameter of type "body" is added ,required is set to true and the dataType is set to the qualified name of the sample's type.
-func (b *RouteBuilder) Reads(sample interface{}) *RouteBuilder {
+func (b *RouteBuilder) Reads(sample interface{}, optionalDescription ...string) *RouteBuilder {
 	fn := b.typeNameHandleFunc
 	if fn == nil {
 		fn = reflectTypeName
 	}
 	typeAsName := fn(sample)
-
+	description := ""
+	if len(optionalDescription) > 0 {
+		description = optionalDescription[0]
+	}
 	b.readSample = sample
-	bodyParameter := &Parameter{&ParameterData{Name: "body"}}
+	bodyParameter := &Parameter{&ParameterData{Name: "body", Description: description}}
 	bodyParameter.beBody()
 	bodyParameter.Required(true)
 	bodyParameter.DataType(typeAsName)
@@ -160,7 +165,7 @@ func (b *RouteBuilder) Returns(code int, message string, model interface{}) *Rou
 		Code:      code,
 		Message:   message,
 		Model:     model,
-		IsDefault: false,
+		IsDefault: false, // this field is deprecated, use default response instead.
 	}
 	// lazy init because there is no NewRouteBuilder (yet)
 	if b.errorMap == nil {
@@ -170,17 +175,11 @@ func (b *RouteBuilder) Returns(code int, message string, model interface{}) *Rou
 	return b
 }
 
-// DefaultReturns is a special Returns call that sets the default of the response ; the code is zero.
+// DefaultReturns is a special Returns call that sets the default of the response.
 func (b *RouteBuilder) DefaultReturns(message string, model interface{}) *RouteBuilder {
-	b.Returns(0, message, model)
-	// Modify the ResponseError just added/updated
-	re := b.errorMap[0]
-	// errorMap is initialized
-	b.errorMap[0] = ResponseError{
-		Code:      re.Code,
-		Message:   re.Message,
-		Model:     re.Model,
-		IsDefault: true,
+	b.defaultResponse = &ResponseError{
+		Message: message,
+		Model:   model,
 	}
 	return b
 }
@@ -191,6 +190,12 @@ func (b *RouteBuilder) Metadata(key string, value interface{}) *RouteBuilder {
 		b.metadata = map[string]interface{}{}
 	}
 	b.metadata[key] = value
+	return b
+}
+
+// Deprecate sets the value of deprecated to true.  Deprecated routes have a special UI treatment to warn against use
+func (b *RouteBuilder) Deprecate() *RouteBuilder {
+	b.deprecated = true
 	return b
 }
 
@@ -251,11 +256,11 @@ func (b *RouteBuilder) typeNameHandler(handler TypeNameHandleFunction) *RouteBui
 func (b *RouteBuilder) Build() Route {
 	pathExpr, err := newPathExpression(b.currentPath)
 	if err != nil {
-		log.Printf("[restful] Invalid path:%s because:%v", b.currentPath, err)
+		log.Printf("Invalid path:%s because:%v", b.currentPath, err)
 		os.Exit(1)
 	}
 	if b.function == nil {
-		log.Printf("[restful] No function specified for route:" + b.currentPath)
+		log.Printf("No function specified for route:" + b.currentPath)
 		os.Exit(1)
 	}
 	operationName := b.operation
@@ -264,23 +269,25 @@ func (b *RouteBuilder) Build() Route {
 		operationName = nameOfFunction(b.function)
 	}
 	route := Route{
-		Method:         b.httpMethod,
-		Path:           concatPath(b.rootPath, b.currentPath),
-		Produces:       b.produces,
-		Consumes:       b.consumes,
-		Function:       b.function,
-		Filters:        b.filters,
-		If:             b.conditions,
-		relativePath:   b.currentPath,
-		pathExpr:       pathExpr,
-		Doc:            b.doc,
-		Notes:          b.notes,
-		Operation:      operationName,
-		ParameterDocs:  b.parameters,
-		ResponseErrors: b.errorMap,
-		ReadSample:     b.readSample,
-		WriteSample:    b.writeSample,
-		Metadata:       b.metadata}
+		Method:          b.httpMethod,
+		Path:            concatPath(b.rootPath, b.currentPath),
+		Produces:        b.produces,
+		Consumes:        b.consumes,
+		Function:        b.function,
+		Filters:         b.filters,
+		If:              b.conditions,
+		relativePath:    b.currentPath,
+		pathExpr:        pathExpr,
+		Doc:             b.doc,
+		Notes:           b.notes,
+		Operation:       operationName,
+		ParameterDocs:   b.parameters,
+		ResponseErrors:  b.errorMap,
+		DefaultResponse: b.defaultResponse,
+		ReadSample:      b.readSample,
+		WriteSample:     b.writeSample,
+		Metadata:        b.metadata,
+		Deprecated:      b.deprecated}
 	route.postBuild()
 	return route
 }

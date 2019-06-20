@@ -81,7 +81,7 @@ func TestGetNodeIP(t *testing.T) {
 			},
 		}}}), "notexistnode", "", true},
 
-		// node  exist
+		// node exist
 		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "demo",

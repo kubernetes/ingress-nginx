@@ -21,4 +21,7 @@
 # 1. remove the return carrier character/s
 # 2. remove empty lines
 # 3. replace multiple empty lines
-sed -e 's/\r//g' | sed -e 's/^  *$/\'$'\n/g' | sed -e '/^$/{N;/^\n$/D;}'
+
+SCRIPT_ROOT=$(dirname ${BASH_SOURCE})
+
+sed -e 's/\r//g' | sed -e 's/^  *$/\'$'\n/g' | sed -e '/^$/{N;/^\n$/D;}' | ${SCRIPT_ROOT}/indent.sh

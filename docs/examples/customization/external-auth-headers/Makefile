@@ -3,7 +3,7 @@ all: push
 TAG=0.1
 PREFIX?=electroma/ingress-demo-
 ARCH?=amd64
-GOLANG_VERSION=1.8
+GOLANG_VERSION=1.9
 TEMP_DIR:=$(shell mktemp -d)
 
 build: clean

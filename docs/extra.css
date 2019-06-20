@@ -1,0 +1,10 @@
+.md-typeset__table {
+    min-width: 100%;
+}
+
+@media only screen and (min-width: 768px)
+{
+	td:nth-child(1){
+		white-space: nowrap;
+	}
+}

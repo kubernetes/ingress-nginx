@@ -17,7 +17,7 @@ limitations under the License.
 package sslpassthrough
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
@@ -35,7 +35,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to indicate if is required to configure
-func (a sslpt) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a sslpt) Parse(ing *networking.Ingress) (interface{}, error) {
 	if ing.GetAnnotations() == nil {
 		return false, ing_errors.ErrMissingAnnotations
 	}

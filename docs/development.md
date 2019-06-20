@@ -1,7 +1,45 @@
-# Getting Started
+# Developing for NGINX Ingress Controller
 
 This document explains how to get started with developing for NGINX Ingress controller.
 It includes how to build, test, and release ingress controllers.
+
+## Quick Start
+
+### Getting the code
+
+The code must be checked out as a subdirectory of k8s.io, and not github.com.
+
+```
+mkdir -p $GOPATH/src/k8s.io
+cd $GOPATH/src/k8s.io
+# Replace "$YOUR_GITHUB_USERNAME" below with your github username
+git clone https://github.com/$YOUR_GITHUB_USERNAME/ingress-nginx.git
+cd ingress-nginx
+```
+
+### Initial developer environment build
+
+>**Prequisites**: Minikube must be installed.
+See [releases](https://github.com/kubernetes/minikube/releases) for installation instructions. 
+
+If you are using **MacOS** and deploying to **minikube**, the following command will build the local nginx controller container image and deploy the ingress controller onto a minikube cluster with RBAC enabled in the namespace `ingress-nginx`:
+
+```
+$ make dev-env
+```
+
+### Updating the deployment
+
+The nginx controller container image can be rebuilt using:
+```
+$ ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build container
+```
+
+The image will only be used by pods created after the rebuild. To delete old pods which will cause new ones to spin up:
+```
+$ kubectl get pods -n ingress-nginx
+$ kubectl delete pod -n ingress-nginx nginx-ingress-controller-<unique-pod-id>
+```
 
 ## Dependencies
 
@@ -81,7 +119,7 @@ $ TAG=<tag> REGISTRY=$USER/ingress-controller make docker-push
 ## Deploying
 
 There are several ways to deploy the ingress controller onto a cluster.
-Please check the [deployment guide](../deploy/README.md)
+Please check the [deployment guide](./deploy)
 
 ## Testing
 
@@ -98,6 +136,16 @@ If you have access to a Kubernetes cluster, you can also run e2e tests using gin
 $ cd $GOPATH/src/k8s.io/ingress-nginx
 $ make e2e-test
 ```
+
+To run unit-tests for lua code locally, run:
+
+```console
+$ cd $GOPATH/src/k8s.io/ingress-nginx
+$ ./rootfs/etc/nginx/lua/test/up.sh
+$ make lua-test
+```
+
+Lua tests are located in `$GOPATH/src/k8s.io/ingress-nginx/rootfs/etc/nginx/lua/test`. When creating a new test file it must follow the naming convention `<mytest>_test.lua` or it will be ignored. 
 
 ## Releasing
 

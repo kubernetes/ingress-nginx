@@ -13,6 +13,7 @@ import (
 type Endpoint struct {
 	ID        string `json:"id"`
 	Region    string `json:"region"`
+	RegionID  string `json:"region_id"`
 	Interface string `json:"interface"`
 	URL       string `json:"url"`
 }
@@ -99,6 +100,13 @@ func (r commonResult) ExtractToken() (*Token, error) {
 	s.ID = r.Header.Get("X-Subject-Token")
 
 	return &s, err
+}
+
+// ExtractTokenID implements the gophercloud.AuthResult interface. The returned
+// string is the same as the ID field of the Token struct returned from
+// ExtractToken().
+func (r CreateResult) ExtractTokenID() (string, error) {
+	return r.Header.Get("X-Subject-Token"), r.Err
 }
 
 // ExtractServiceCatalog returns the ServiceCatalog that was generated along

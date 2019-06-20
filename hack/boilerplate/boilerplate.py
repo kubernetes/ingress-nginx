@@ -50,6 +50,7 @@ args = parser.parse_args()
 
 verbose_out = sys.stderr if args.verbose else open("/dev/null", "w")
 
+
 def get_refs():
     refs = {}
 
@@ -62,6 +63,7 @@ def get_refs():
         refs[extension] = ref
 
     return refs
+
 
 def file_passes(filename, refs, regexs):
     try:
@@ -117,7 +119,8 @@ def file_passes(filename, refs, regexs):
 
     # if we don't match the reference at this point, fail
     if ref != data:
-        print("Header in %s does not match reference, diff:" % filename, file=verbose_out)
+        print("Header in %s does not match reference, diff:" %
+              filename, file=verbose_out)
         if args.verbose:
             print(file=verbose_out)
             for line in difflib.unified_diff(ref, data, 'reference', filename, lineterm=''):
@@ -127,11 +130,18 @@ def file_passes(filename, refs, regexs):
 
     return True
 
+
 def file_extension(filename):
     return os.path.splitext(filename)[1].split(".")[-1].lower()
 
-skipped_dirs = ['Godeps', 'third_party', '_gopath', '_output', '.git', 'cluster/env.sh',
-                "vendor", "test/e2e/generated/bindata.go", "hack/boilerplate/test"]
+
+skipped_dirs = [
+    '.git',
+    "vendor",
+    "test/e2e/framework/framework.go",
+    "images"
+]
+
 
 def normalize_files(files):
     newfiles = []
@@ -143,6 +153,7 @@ def normalize_files(files):
         if not os.path.isabs(pathname):
             newfiles[i] = os.path.join(args.rootdir, pathname)
     return newfiles
+
 
 def get_files(extensions):
     files = []
@@ -171,18 +182,22 @@ def get_files(extensions):
             outfiles.append(pathname)
     return outfiles
 
+
 def get_regexs():
     regexs = {}
     # Search for "YEAR" which exists in the boilerplate, but shouldn't in the real thing
-    regexs["year"] = re.compile( 'YEAR' )
+    regexs["year"] = re.compile('YEAR')
     # dates can be 2014, 2015, 2016, ..., CURRENT_YEAR, company holder names can be anything
     years = range(2014, date.today().year + 1)
-    regexs["date"] = re.compile( '(%s)' % "|".join(map(lambda l: str(l), years)) )
+    regexs["date"] = re.compile(
+        '(%s)' % "|".join(map(lambda l: str(l), years)))
     # strip // +build \n\n build constraints
-    regexs["go_build_constraints"] = re.compile(r"^(// \+build.*\n)+\n", re.MULTILINE)
+    regexs["go_build_constraints"] = re.compile(
+        r"^(// \+build.*\n)+\n", re.MULTILINE)
     # strip #!.* from shell scripts
     regexs["shebang"] = re.compile(r"^(#!.*\n)\n*", re.MULTILINE)
     return regexs
+
 
 def main():
     regexs = get_regexs()
@@ -195,5 +210,6 @@ def main():
 
     return 0
 
+
 if __name__ == "__main__":
-  sys.exit(main())
+    sys.exit(main())

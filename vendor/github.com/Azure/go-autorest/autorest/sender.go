@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Azure/go-autorest/tracing"
 )
 
 // Sender is the interface that wraps the Do method to send HTTP requests.
@@ -38,7 +40,7 @@ func (sf SenderFunc) Do(r *http.Request) (*http.Response, error) {
 	return sf(r)
 }
 
-// SendDecorator takes and possibily decorates, by wrapping, a Sender. Decorators may affect the
+// SendDecorator takes and possibly decorates, by wrapping, a Sender. Decorators may affect the
 // http.Request and pass it along or, first, pass the http.Request along then react to the
 // http.Response result.
 type SendDecorator func(Sender) Sender
@@ -68,7 +70,7 @@ func DecorateSender(s Sender, decorators ...SendDecorator) Sender {
 //
 // Send will not poll or retry requests.
 func Send(r *http.Request, decorators ...SendDecorator) (*http.Response, error) {
-	return SendWithSender(&http.Client{}, r, decorators...)
+	return SendWithSender(&http.Client{Transport: tracing.Transport}, r, decorators...)
 }
 
 // SendWithSender sends the passed http.Request, through the provided Sender, returning the
@@ -86,7 +88,7 @@ func SendWithSender(s Sender, r *http.Request, decorators ...SendDecorator) (*ht
 func AfterDelay(d time.Duration) SendDecorator {
 	return func(s Sender) Sender {
 		return SenderFunc(func(r *http.Request) (*http.Response, error) {
-			if !DelayForBackoff(d, 0, r.Cancel) {
+			if !DelayForBackoff(d, 0, r.Context().Done()) {
 				return nil, fmt.Errorf("autorest: AfterDelay canceled before full delay")
 			}
 			return s.Do(r)
@@ -165,7 +167,7 @@ func DoPollForStatusCodes(duration time.Duration, delay time.Duration, codes ...
 			resp, err = s.Do(r)
 
 			if err == nil && ResponseHasStatusCode(resp, codes...) {
-				r, err = NewPollingRequest(resp, r.Cancel)
+				r, err = NewPollingRequestWithContext(r.Context(), resp)
 
 				for err == nil && ResponseHasStatusCode(resp, codes...) {
 					Respond(resp,
@@ -198,7 +200,9 @@ func DoRetryForAttempts(attempts int, backoff time.Duration) SendDecorator {
 				if err == nil {
 					return resp, err
 				}
-				DelayForBackoff(backoff, attempt, r.Cancel)
+				if !DelayForBackoff(backoff, attempt, r.Context().Done()) {
+					return nil, r.Context().Err()
+				}
 			}
 			return resp, err
 		})
@@ -214,20 +218,29 @@ func DoRetryForStatusCodes(attempts int, backoff time.Duration, codes ...int) Se
 		return SenderFunc(func(r *http.Request) (resp *http.Response, err error) {
 			rr := NewRetriableRequest(r)
 			// Increment to add the first call (attempts denotes number of retries)
-			attempts++
-			for attempt := 0; attempt < attempts; attempt++ {
+			for attempt := 0; attempt < attempts+1; {
 				err = rr.Prepare()
 				if err != nil {
 					return resp, err
 				}
 				resp, err = s.Do(rr.Request())
-				// we want to retry if err is not nil (e.g. transient network failure)
-				if err == nil && !ResponseHasStatusCode(resp, codes...) {
+				// if the error isn't temporary don't bother retrying
+				if err != nil && !IsTemporaryNetworkError(err) {
+					return nil, err
+				}
+				// we want to retry if err is not nil (e.g. transient network failure).  note that for failed authentication
+				// resp and err will both have a value, so in this case we don't want to retry as it will never succeed.
+				if err == nil && !ResponseHasStatusCode(resp, codes...) || IsTokenRefreshError(err) {
 					return resp, err
 				}
-				delayed := DelayWithRetryAfter(resp, r.Cancel)
-				if !delayed {
-					DelayForBackoff(backoff, attempt, r.Cancel)
+				delayed := DelayWithRetryAfter(resp, r.Context().Done())
+				if !delayed && !DelayForBackoff(backoff, attempt, r.Context().Done()) {
+					return resp, r.Context().Err()
+				}
+				// don't count a 429 against the number of attempts
+				// so that we continue to retry until it succeeds
+				if resp == nil || resp.StatusCode != http.StatusTooManyRequests {
+					attempt++
 				}
 			}
 			return resp, err
@@ -271,7 +284,9 @@ func DoRetryForDuration(d time.Duration, backoff time.Duration) SendDecorator {
 				if err == nil {
 					return resp, err
 				}
-				DelayForBackoff(backoff, attempt, r.Cancel)
+				if !DelayForBackoff(backoff, attempt, r.Context().Done()) {
+					return nil, r.Context().Err()
+				}
 			}
 			return resp, err
 		})

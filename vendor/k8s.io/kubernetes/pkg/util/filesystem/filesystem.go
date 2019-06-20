@@ -31,9 +31,11 @@ type Filesystem interface {
 	MkdirAll(path string, perm os.FileMode) error
 	Chtimes(name string, atime time.Time, mtime time.Time) error
 	RemoveAll(path string) error
+	Remove(name string) error
 
 	// from "io/ioutil"
 	ReadFile(filename string) ([]byte, error)
+	TempDir(dir, prefix string) (string, error)
 	TempFile(dir, prefix string) (File, error)
 	ReadDir(dirname string) ([]os.FileInfo, error)
 	Walk(root string, walkFn filepath.WalkFunc) error

@@ -3,3 +3,5 @@ TODO
 tmp/**/*
 *.coverprofile
 .vscode
+.idea/
+*.log

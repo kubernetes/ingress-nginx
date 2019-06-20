@@ -1,6 +1,7 @@
 # Basic Authentication
 
 This example shows how to add authentication in a Ingress rule using a secret that contains a file generated with `htpasswd`.
+It's important the file generated is named `auth` (actually - that the secret has a key `data.auth`), otherwise the ingress-controller returns a 503.
 
 ```console
 $ htpasswd -c auth foo
@@ -38,8 +39,8 @@ metadata:
     nginx.ingress.kubernetes.io/auth-type: basic
     # name of the secret that contains the user/password definitions
     nginx.ingress.kubernetes.io/auth-secret: basic-auth
-    # message to display with an appropiate context why the authentication is required
-    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - foo"
+    # message to display with an appropriate context why the authentication is required
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - foo'
 spec:
   rules:
   - host: foo.bar.com

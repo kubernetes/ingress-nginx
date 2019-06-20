@@ -17,10 +17,12 @@ limitations under the License.
 package ratelimit
 
 import (
+	"reflect"
+	"sort"
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -29,28 +31,28 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -83,7 +85,24 @@ func TestWithoutAnnotations(t *testing.T) {
 	}
 }
 
-func TestBadRateLimiting(t *testing.T) {
+func TestParseCIDRs(t *testing.T) {
+	cidr, _ := parseCIDRs("invalid.com")
+	if cidr != nil {
+		t.Errorf("expected %v but got %v", nil, cidr)
+	}
+
+	expected := []string{"192.0.0.1", "192.0.1.0/24"}
+	cidr, err := parseCIDRs("192.0.0.1, 192.0.1.0/24")
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+	sort.Strings(cidr)
+	if !reflect.DeepEqual(expected, cidr) {
+		t.Errorf("expected %v but got %v", expected, cidr)
+	}
+}
+
+func TestRateLimiting(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}

@@ -18,13 +18,14 @@ package framework
 
 import "sync"
 
+// CleanupActionHandle is a handle used to perform a cleanup action.
 type CleanupActionHandle *int
 
 var cleanupActionsLock sync.Mutex
 var cleanupActions = map[CleanupActionHandle]func(){}
 
 // AddCleanupAction installs a function that will be called in the event of the
-// whole test being terminated.  This allows arbitrary pieces of the overall
+// whole test being terminated. This allows arbitrary pieces of the overall
 // test to hook into SynchronizedAfterSuite().
 func AddCleanupAction(fn func()) CleanupActionHandle {
 	p := CleanupActionHandle(new(int))
@@ -41,7 +42,7 @@ func RemoveCleanupAction(p CleanupActionHandle) {
 	delete(cleanupActions, p)
 }
 
-// RunCleanupActions runs all functions installed by AddCleanupAction.  It does
+// RunCleanupActions runs all functions installed by AddCleanupAction. It does
 // not remove them (see RemoveCleanupAction) but it does run unlocked, so they
 // may remove themselves.
 func RunCleanupActions() {

@@ -82,7 +82,7 @@ fi
 function docker_tag_exists() {
     TAG=${2//\"/}
     IMAGES=$(curl -s -H "Authorization: Bearer ${QUAY_PASSWORD}" https://quay.io/api/v1/repository/$1-$3/image/ | jq '.images | sort_by(.sort_index) | .[] .tags | select(.[] !=null) | .[0]' | sed s/\"//g)
-    if echo "$IMAGES" | grep -q "$TAG" ; then
+    if echo "$IMAGES" | grep -q -P "(^|\s)$TAG(?=\s|$)" ; then
         return 0
     fi
 

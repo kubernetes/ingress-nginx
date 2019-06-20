@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -28,7 +28,6 @@ import (
 
 // Config describes SSL backend configuration
 type Config struct {
-	Secure bool                 `json:"secure"`
 	CACert resolver.AuthSSLCert `json:"caCert"`
 }
 
@@ -43,14 +42,14 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the upstream servers should use SSL
-func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
-	s, _ := parser.GetBoolAnnotation("secure-backends", ing)
+func (a su) Parse(ing *networking.Ingress) (interface{}, error) {
+	bp, _ := parser.GetStringAnnotation("backend-protocol", ing)
 	ca, _ := parser.GetStringAnnotation("secure-verify-ca-secret", ing)
 	secure := &Config{
-		Secure: s,
 		CACert: resolver.AuthSSLCert{},
 	}
-	if !s && ca != "" {
+
+	if (bp != "HTTPS" && bp != "GRPCS") && ca != "" {
 		return secure,
 			errors.Errorf("trying to use CA from secret %v/%v on a non secure backend", ing.Namespace, ca)
 	}
@@ -65,7 +64,6 @@ func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return secure, nil
 	}
 	return &Config{
-		Secure: s,
 		CACert: *caCert,
 	}, nil
 }

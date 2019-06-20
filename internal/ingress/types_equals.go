@@ -16,6 +16,10 @@ limitations under the License.
 
 package ingress
 
+import (
+	"k8s.io/ingress-nginx/internal/sets"
+)
+
 // Equal tests for equality between two Configuration types
 func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	if c1 == c2 {
@@ -25,21 +29,9 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		return false
 	}
 
-	if len(c1.Backends) != len(c2.Backends) {
+	match := compareBackends(c1.Backends, c2.Backends)
+	if !match {
 		return false
-	}
-
-	for _, c1b := range c1.Backends {
-		found := false
-		for _, c2b := range c2.Backends {
-			if c1b.Equal(c2b) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
 	if len(c1.Servers) != len(c2.Servers) {
@@ -53,38 +45,14 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
-	if len(c1.TCPEndpoints) != len(c2.TCPEndpoints) {
+	match = compareL4Service(c1.TCPEndpoints, c2.TCPEndpoints)
+	if !match {
 		return false
 	}
 
-	for _, tcp1 := range c1.TCPEndpoints {
-		found := false
-		for _, tcp2 := range c2.TCPEndpoints {
-			if (&tcp1).Equal(&tcp2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-
-	if len(c1.UDPEndpoints) != len(c2.UDPEndpoints) {
+	match = compareL4Service(c1.UDPEndpoints, c2.UDPEndpoints)
+	if !match {
 		return false
-	}
-
-	for _, udp1 := range c1.UDPEndpoints {
-		found := false
-		for _, udp2 := range c2.UDPEndpoints {
-			if (&udp1).Equal(&udp2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
 	if len(c1.PassthroughBackends) != len(c2.PassthroughBackends) {
@@ -104,6 +72,14 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
+	if c1.BackendConfigChecksum != c2.BackendConfigChecksum {
+		return false
+	}
+
+	if c1.ControllerPodsCount != c2.ControllerPodsCount {
+		return false
+	}
+
 	return true
 }
 
@@ -118,6 +94,9 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	if b1.Name != b2.Name {
 		return false
 	}
+	if b1.NoServer != b2.NoServer {
+		return false
+	}
 
 	if b1.Service != b2.Service {
 		if b1.Service == nil || b2.Service == nil {
@@ -129,15 +108,9 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		if b1.Service.GetName() != b2.Service.GetName() {
 			return false
 		}
-		if b1.Service.GetResourceVersion() != b2.Service.GetResourceVersion() {
-			return false
-		}
 	}
 
 	if b1.Port != b2.Port {
-		return false
-	}
-	if b1.Secure != b2.Secure {
 		return false
 	}
 	if !(&b1.SecureCACert).Equal(&b2.SecureCACert) {
@@ -152,22 +125,22 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	if b1.UpstreamHashBy != b2.UpstreamHashBy {
 		return false
 	}
-
-	if len(b1.Endpoints) != len(b2.Endpoints) {
+	if b1.LoadBalancing != b2.LoadBalancing {
 		return false
 	}
 
-	for _, udp1 := range b1.Endpoints {
-		found := false
-		for _, udp2 := range b2.Endpoints {
-			if (&udp1).Equal(&udp2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	match := compareEndpoints(b1.Endpoints, b2.Endpoints)
+	if !match {
+		return false
+	}
+
+	if !b1.TrafficShapingPolicy.Equal(b2.TrafficShapingPolicy) {
+		return false
+	}
+
+	match = sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
+	if !match {
+		return false
 	}
 
 	return true
@@ -202,7 +175,34 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	if csa1.Name != csa2.Name {
 		return false
 	}
-	if csa1.Hash != csa2.Hash {
+	if csa1.Path != csa2.Path {
+		return false
+	}
+	if csa1.Expires != csa2.Expires {
+		return false
+	}
+	if csa1.MaxAge != csa2.MaxAge {
+		return false
+	}
+
+	return true
+}
+
+//Equal checks the equality between UpstreamByConfig types
+func (u1 *UpstreamHashByConfig) Equal(u2 *UpstreamHashByConfig) bool {
+	if u1 == u2 {
+		return true
+	}
+	if u1 == nil || u2 == nil {
+		return false
+	}
+	if u1.UpstreamHashBy != u2.UpstreamHashBy {
+		return false
+	}
+	if u1.UpstreamHashBySubset != u2.UpstreamHashBySubset {
+		return false
+	}
+	if u1.UpstreamHashBySubsetSize != u2.UpstreamHashBySubsetSize {
 		return false
 	}
 
@@ -223,12 +223,6 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 	if e1.Port != e2.Port {
 		return false
 	}
-	if e1.MaxFails != e2.MaxFails {
-		return false
-	}
-	if e1.FailTimeout != e2.FailTimeout {
-		return false
-	}
 
 	if e1.Target != e2.Target {
 		if e1.Target == nil || e2.Target == nil {
@@ -245,6 +239,24 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 	return true
 }
 
+// Equal checks for equality between two TrafficShapingPolicies
+func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
+	if tsp1.Weight != tsp2.Weight {
+		return false
+	}
+	if tsp1.Header != tsp2.Header {
+		return false
+	}
+	if tsp1.HeaderValue != tsp2.HeaderValue {
+		return false
+	}
+	if tsp1.Cookie != tsp2.Cookie {
+		return false
+	}
+
+	return true
+}
+
 // Equal tests for equality between two Server types
 func (s1 *Server) Equal(s2 *Server) bool {
 	if s1 == s2 {
@@ -256,25 +268,28 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.Hostname != s2.Hostname {
 		return false
 	}
-	if s1.Alias != s2.Alias {
-		return false
-	}
 	if s1.SSLPassthrough != s2.SSLPassthrough {
 		return false
 	}
-	if s1.SSLCertificate != s2.SSLCertificate {
+	if !(&s1.SSLCert).Equal(&s2.SSLCert) {
 		return false
 	}
-	if s1.SSLPemChecksum != s2.SSLPemChecksum {
+	if s1.Alias != s2.Alias {
+		return false
+	}
+	if s1.RedirectFromToWWW != s2.RedirectFromToWWW {
 		return false
 	}
 	if !(&s1.CertificateAuth).Equal(&s2.CertificateAuth) {
 		return false
 	}
-	if s1.SSLFullChainCertificate != s2.SSLFullChainCertificate {
+	if s1.ServerSnippet != s2.ServerSnippet {
 		return false
 	}
-	if s1.RedirectFromToWWW != s2.RedirectFromToWWW {
+	if s1.SSLCiphers != s2.SSLCiphers {
+		return false
+	}
+	if s1.AuthTLSError != s2.AuthTLSError {
 		return false
 	}
 
@@ -320,9 +335,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		if l1.Service.GetName() != l2.Service.GetName() {
 			return false
 		}
-		if l1.Service.GetResourceVersion() != l2.Service.GetResourceVersion() {
-			return false
-		}
 	}
 
 	if l1.Port.StrVal != l2.Port.StrVal {
@@ -338,6 +350,12 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 	if !(&l1.ExternalAuth).Equal(&l2.ExternalAuth) {
+		return false
+	}
+	if l1.EnableGlobalAuth != l2.EnableGlobalAuth {
+		return false
+	}
+	if l1.HTTP2PushPreload != l2.HTTP2PushPreload {
 		return false
 	}
 	if !(&l1.RateLimit).Equal(&l2.RateLimit) {
@@ -365,6 +383,43 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 	if l1.UpstreamVhost != l2.UpstreamVhost {
+		return false
+	}
+	if l1.XForwardedPrefix != l2.XForwardedPrefix {
+		return false
+	}
+	if !(&l1.Connection).Equal(&l2.Connection) {
+		return false
+	}
+	if !(&l1.Logs).Equal(&l2.Logs) {
+		return false
+	}
+	if !(&l1.LuaRestyWAF).Equal(&l2.LuaRestyWAF) {
+		return false
+	}
+
+	if !(&l1.InfluxDB).Equal(&l2.InfluxDB) {
+		return false
+	}
+
+	if l1.BackendProtocol != l2.BackendProtocol {
+		return false
+	}
+
+	match := compareInts(l1.CustomHTTPErrors, l2.CustomHTTPErrors)
+	if !match {
+		return false
+	}
+
+	if !(&l1.ModSecurity).Equal(&l2.ModSecurity) {
+		return false
+	}
+
+	if l1.Satisfy != l2.Satisfy {
+		return false
+	}
+
+	if l1.DefaultBackendUpstreamName != l2.DefaultBackendUpstreamName {
 		return false
 	}
 
@@ -399,9 +454,6 @@ func (ptb1 *SSLPassthroughBackend) Equal(ptb2 *SSLPassthroughBackend) bool {
 		if ptb1.Service.GetName() != ptb2.Service.GetName() {
 			return false
 		}
-		if ptb1.Service.GetResourceVersion() != ptb2.Service.GetResourceVersion() {
-			return false
-		}
 	}
 
 	return true
@@ -421,21 +473,10 @@ func (e1 *L4Service) Equal(e2 *L4Service) bool {
 	if !(&e1.Backend).Equal(&e2.Backend) {
 		return false
 	}
-	if len(e1.Endpoints) != len(e2.Endpoints) {
-		return false
-	}
 
-	for _, ep1 := range e1.Endpoints {
-		found := false
-		for _, ep2 := range e2.Endpoints {
-			if (&ep1).Equal(&ep2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	match := compareEndpoints(e1.Endpoints, e2.Endpoints)
+	if !match {
+		return false
 	}
 
 	return true
@@ -465,7 +506,7 @@ func (l4b1 *L4Backend) Equal(l4b2 *L4Backend) bool {
 	return true
 }
 
-// Equal tests for equality between two L4Backend types
+// Equal tests for equality between two SSLCert types
 func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if s1 == s2 {
 		return true
@@ -482,19 +523,89 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if !s1.ExpireTime.Equal(s2.ExpireTime) {
 		return false
 	}
+	if s1.FullChainPemFileName != s2.FullChainPemFileName {
+		return false
+	}
+	if s1.PemCertKey != s2.PemCertKey {
+		return false
+	}
 
-	for _, cn1 := range s1.CN {
-		found := false
-		for _, cn2 := range s2.CN {
-			if cn1 == cn2 {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	match := sets.StringElementsMatch(s1.CN, s2.CN)
+	if !match {
+		return false
 	}
 
 	return true
+}
+
+var compareEndpointsFunc = func(e1, e2 interface{}) bool {
+	ep1, ok := e1.(Endpoint)
+	if !ok {
+		return false
+	}
+
+	ep2, ok := e2.(Endpoint)
+	if !ok {
+		return false
+	}
+
+	return (&ep1).Equal(&ep2)
+}
+
+func compareEndpoints(a, b []Endpoint) bool {
+	return sets.Compare(a, b, compareEndpointsFunc)
+}
+
+var compareBackendsFunc = func(e1, e2 interface{}) bool {
+	b1, ok := e1.(*Backend)
+	if !ok {
+		return false
+	}
+
+	b2, ok := e2.(*Backend)
+	if !ok {
+		return false
+	}
+
+	return b1.Equal(b2)
+}
+
+func compareBackends(a, b []*Backend) bool {
+	return sets.Compare(a, b, compareBackendsFunc)
+}
+
+var compareIntsFunc = func(e1, e2 interface{}) bool {
+	b1, ok := e1.(int)
+	if !ok {
+		return false
+	}
+
+	b2, ok := e2.(int)
+	if !ok {
+		return false
+	}
+
+	return b1 == b2
+}
+
+func compareInts(a, b []int) bool {
+	return sets.Compare(a, b, compareIntsFunc)
+}
+
+var compareL4ServiceFunc = func(e1, e2 interface{}) bool {
+	b1, ok := e1.(L4Service)
+	if !ok {
+		return false
+	}
+
+	b2, ok := e2.(L4Service)
+	if !ok {
+		return false
+	}
+
+	return (&b1).Equal(&b2)
+}
+
+func compareL4Service(a, b []L4Service) bool {
+	return sets.Compare(a, b, compareL4ServiceFunc)
 }

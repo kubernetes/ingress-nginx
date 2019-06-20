@@ -50,6 +50,10 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout
 	ProxySendTimeout int `json:"proxy-send-timeout"`
 
+	// Sets the number of the buffers used for reading a response from the proxied server
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers
+	ProxyBuffersNumber int `json:"proxy-buffers-number"`
+
 	// Sets the size of the buffer used for reading the first part of the response received from the
 	// proxied server. This part usually contains a small response header.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size)
@@ -69,8 +73,13 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
 	ProxyNextUpstream string `json:"proxy-next-upstream"`
 
-	// Parameters for proxy-pass directive (eg. Apache web server).
-	ProxyPassParams string `json:"proxy-pass-params"`
+	// Limits the time during which a request can be passed to the next server.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_timeout
+	ProxyNextUpstreamTimeout int `json:"proxy-next-upstream-timeout"`
+
+	// Limits the number of possible tries for passing a request to the next server.
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_tries
+	ProxyNextUpstreamTries int `json:"proxy-next-upstream-tries"`
 
 	// Sets the original text that should be changed in the "Location" and "Refresh" header fields of a proxied server response.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect
@@ -79,7 +88,7 @@ type Backend struct {
 
 	// Sets the replacement text that should be changed in the "Location" and "Refresh" header fields of a proxied server response.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect
-	// Default: ""
+	// Default: off
 	ProxyRedirectTo string `json:"proxy-redirect-to"`
 
 	// Enables or disables buffering of a client request body.
@@ -106,23 +115,22 @@ type Backend struct {
 	// Default: false
 	UsePortInRedirects bool `json:"use-port-in-redirects"`
 
-	// Number of unsuccessful attempts to communicate with the server that should happen in the
-	// duration set by the fail_timeout parameter to consider the server unavailable
-	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream
-	// Default: 0, ie use platform liveness probe
-	UpstreamMaxFails int `json:"upstream-max-fails"`
-
-	// Time during which the specified number of unsuccessful attempts to communicate with
-	// the server should happen to consider the server unavailable
-	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream
-	// Default: 0, ie use platform liveness probe
-	UpstreamFailTimeout int `json:"upstream-fail-timeout"`
-
 	// Enable stickiness by client-server mapping based on a NGINX variable, text or a combination of both.
 	// A consistent hashing method will be used which ensures only a few keys would be remapped to different
 	// servers on upstream group changes
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash
 	UpstreamHashBy string `json:"upstream-hash-by"`
+
+	// Consistent hashing subset flag.
+	// Default: false
+	UpstreamHashBySubset bool `json:"upstream-hash-by-subset"`
+
+	// Subset consistent hashing, subset size.
+	// Default 3
+	UpstreamHashBySubsetSize int `json:"upstream-hash-by-subset-size"`
+
+	// Let's us choose a load balancing algorithm per ingress
+	LoadBalancing string `json:"load-balance"`
 
 	// WhitelistSourceRange allows limiting access to certain client addresses
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
@@ -138,4 +146,8 @@ type Backend struct {
 	// Sets the initial amount after which the further transmission of a response to a client will be rate limited.
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after
 	LimitRateAfter int `json:"limit-rate-after"`
+
+	// Enables or disables buffering of responses from the proxied server.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering
+	ProxyBuffering string `json:"proxy-buffering"`
 }

@@ -131,6 +131,9 @@ func (f *File) Sync() error {
 }
 
 func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
+	if !f.fileData.dir {
+		return nil, &os.PathError{Op: "readdir", Path: f.fileData.name, Err: errors.New("not a dir")}
+	}
 	var outLength int64
 
 	f.fileData.Lock()
@@ -175,6 +178,9 @@ func (f *File) Read(b []byte) (n int, err error) {
 	}
 	if len(b) > 0 && int(f.at) == len(f.fileData.data) {
 		return 0, io.EOF
+	}
+	if int(f.at) > len(f.fileData.data) {
+		return 0, io.ErrUnexpectedEOF
 	}
 	if len(f.fileData.data)-int(f.at) >= len(b) {
 		n = len(b)

@@ -1,16 +1,16 @@
-all: push
+all: all-container
 
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.1
+TAG?=0.4
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
-DOCKER?=gcloud docker --
+DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
-PKG=k8s.io/ingress/images/custom-error-pages
+PKG=k8s.io/ingress-nginx/images/custom-error-pages
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -26,11 +26,11 @@ ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
 
-BASEIMAGE?=alpine:3.6
+BASEIMAGE?=alpine:3.9
 
 ALL_ARCH = amd64 arm arm64 ppc64le
 
-QEMUVERSION=v2.9.1
+QEMUVERSION=v3.0.0
 
 IMGNAME = custom-error-pages
 IMAGE = $(REGISTRY)/$(IMGNAME)
@@ -51,8 +51,6 @@ endif
 TEMP_DIR := $(shell mktemp -d)
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
-
-all: all-container
 
 sub-container-%:
 	$(MAKE) ARCH=$* build container
@@ -76,7 +74,7 @@ ifeq ($(ARCH),amd64)
 else
 	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
 	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
+	# $(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)/rootfs
 	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
 endif
@@ -105,3 +103,8 @@ build: clean
 
 release: all-container all-push
 	echo "done"
+
+.PHONY: register-qemu
+register-qemu:
+	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
