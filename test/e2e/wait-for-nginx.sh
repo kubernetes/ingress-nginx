@@ -14,56 +14,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
-if ! [ -z $DEBUG ]; then
-	set -x
-fi
+export JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "deploying NGINX Ingress controller"
+cat deploy/namespace.yaml | kubectl apply -f -
+cat deploy/default-backend.yaml | kubectl apply -f -
+cat deploy/configmap.yaml | kubectl apply -f -
+cat deploy/tcp-services-configmap.yaml | kubectl apply -f -
+cat deploy/udp-services-configmap.yaml | kubectl apply -f -
+cat deploy/without-rbac.yaml | kubectl apply -f -
+cat deploy/provider/baremetal/service-nodeport.yaml | kubectl apply -f -
 
-export NAMESPACE=$1
+echo "updating image..."
+kubectl set image \
+    deployments \
+    --namespace ingress-nginx \
+	--selector app=ingress-nginx \
+    nginx-ingress-controller=quay.io/kubernetes-ingress-controller/nginx-ingress-controller:test
 
-echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
+sleep 5
 
-function on_exit {
-    local error_code="$?"
+echo "waiting NGINX ingress pod..."
 
-    test $error_code == 0 && return;
-
-    echo "Obtaining ingress controller pod logs..."
-    kubectl logs -l app.kubernetes.io/name=ingress-nginx -n $NAMESPACE
+function waitForPod() {
+    until kubectl get pods -n ingress-nginx -l app=ingress-nginx -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True";
+    do
+        sleep 1;
+    done
 }
-trap on_exit EXIT
 
-CLUSTER_WIDE="$DIR/cluster-wide-$NAMESPACE"
+export -f waitForPod
 
-mkdir "$CLUSTER_WIDE"
+timeout 10s bash -c waitForPod
 
-cat << EOF > "$CLUSTER_WIDE/kustomization.yaml"
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-bases:
-- ../cluster-wide
-nameSuffix: "-$NAMESPACE"
-EOF
+if kubectl get pods -n ingress-nginx -l app=ingress-nginx -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True";
+then
+    echo "Kubernetes deployments started"
+else
+    echo "Kubernetes deployments with issues:"
+    kubectl get pods -n ingress-nginx
 
-OVERLAY="$DIR/overlay-$NAMESPACE"
-
-mkdir "$OVERLAY"
-
-cat << EOF > "$OVERLAY/kustomization.yaml"
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: $NAMESPACE
-bases:
-- ../overlay
-- ../cluster-wide-$NAMESPACE
-EOF
-
-kubectl apply --kustomize "$OVERLAY"
-
-# wait for the deployment and fail if there is an error before starting the execution of any test
-kubectl rollout status \
-    --request-timeout=3m \
-    --namespace $NAMESPACE \
-    deployment nginx-ingress-controller
+    echo "Reason:"
+    kubectl describe pods -n ingress-nginx
+    kubectl logs -n ingress-nginx -l app=ingress-nginx
+    exit 1
+fi

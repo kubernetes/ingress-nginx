@@ -10,10 +10,9 @@ First we deploy the docker registry in the cluster:
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/deployment.yaml
 ```
 
-!!! Important
-    **DO NOT RUN THIS IN PRODUCTION**
+**Important:** DO NOT RUN THIS IN PRODUCTION.
+This deployment uses `emptyDir` in the `volumeMount` which means the contents of the registry will be deleted when the pod dies.
 
-    This deployment uses `emptyDir` in the `volumeMount` which means the contents of the registry will be deleted when the pod dies.
 
 The next required step is creation of the ingress rules. To do this we have two options: with and without TLS
 
@@ -25,10 +24,8 @@ Download and edit the yaml deployment replacing `registry.<your domain>` with a 
 wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-without-tls.yaml
 ```
 
-!!! Important
-  Running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.
-
-  Please check [deploy a plain http registry](https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry)
+**Important:** running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.
+Please check [deploy a plain http registry](https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry)
 
 ### With TLS
 

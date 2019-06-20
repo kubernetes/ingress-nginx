@@ -22,12 +22,11 @@ import (
 	"sort"
 	"strings"
 
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/net"
-	"k8s.io/ingress-nginx/internal/sets"
 )
 
 const (
@@ -95,9 +94,17 @@ func (rt1 *Config) Equal(rt2 *Config) bool {
 		return false
 	}
 
-	match := sets.StringElementsMatch(rt1.Whitelist, rt2.Whitelist)
-	if !match {
-		return false
+	for _, r1l := range rt1.Whitelist {
+		found := false
+		for _, rl2 := range rt2.Whitelist {
+			if r1l == rl2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
 	return true
@@ -148,7 +155,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
+func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
 	lr, err := parser.GetIntAnnotation("limit-rate", ing)
 	if err != nil {

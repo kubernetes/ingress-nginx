@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"sort"
 	"strings"
 
 	"github.com/onsi/gomega/format"
@@ -70,7 +69,7 @@ func parseXmlContent(content string) (*xmlNode, error) {
 			if err == io.EOF {
 				break
 			}
-			return nil, fmt.Errorf("failed to decode next token: %v", err) // untested section
+			return nil, fmt.Errorf("failed to decode next token: %v", err)
 		}
 
 		lastNodeIndex := len(allNodes) - 1
@@ -83,8 +82,6 @@ func parseXmlContent(content string) (*xmlNode, error) {
 
 		switch tok := tok.(type) {
 		case xml.StartElement:
-			attrs := attributesSlice(tok.Attr)
-			sort.Sort(attrs)
 			allNodes = append(allNodes, &xmlNode{XMLName: tok.Name, XMLAttr: tok.Attr})
 		case xml.EndElement:
 			if len(allNodes) > 1 {
@@ -94,7 +91,7 @@ func parseXmlContent(content string) (*xmlNode, error) {
 		case xml.CharData:
 			lastNode.Content = append(lastNode.Content, tok.Copy()...)
 		case xml.Comment:
-			lastNode.Comments = append(lastNode.Comments, tok.Copy()) // untested section
+			lastNode.Comments = append(lastNode.Comments, tok.Copy())
 		case xml.ProcInst:
 			lastNode.ProcInsts = append(lastNode.ProcInsts, tok.Copy())
 		}

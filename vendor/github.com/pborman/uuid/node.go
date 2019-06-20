@@ -5,14 +5,24 @@
 package uuid
 
 import (
-	guuid "github.com/google/uuid"
+	"net"
+	"sync"
+)
+
+var (
+	nodeMu     sync.Mutex
+	interfaces []net.Interface // cached list of interfaces
+	ifname     string          // name of interface being used
+	nodeID     []byte          // hardware for version 1 UUIDs
 )
 
 // NodeInterface returns the name of the interface from which the NodeID was
 // derived.  The interface "user" is returned if the NodeID was set by
 // SetNodeID.
 func NodeInterface() string {
-	return guuid.NodeInterface()
+	defer nodeMu.Unlock()
+	nodeMu.Lock()
+	return ifname
 }
 
 // SetNodeInterface selects the hardware address to be used for Version 1 UUIDs.
@@ -22,20 +32,77 @@ func NodeInterface() string {
 //
 // SetNodeInterface never fails when name is "".
 func SetNodeInterface(name string) bool {
-	return guuid.SetNodeInterface(name)
+	defer nodeMu.Unlock()
+	nodeMu.Lock()
+	return setNodeInterface(name)
+}
+
+func setNodeInterface(name string) bool {
+	if interfaces == nil {
+		var err error
+		interfaces, err = net.Interfaces()
+		if err != nil && name != "" {
+			return false
+		}
+	}
+
+	for _, ifs := range interfaces {
+		if len(ifs.HardwareAddr) >= 6 && (name == "" || name == ifs.Name) {
+			if setNodeID(ifs.HardwareAddr) {
+				ifname = ifs.Name
+				return true
+			}
+		}
+	}
+
+	// We found no interfaces with a valid hardware address.  If name
+	// does not specify a specific interface generate a random Node ID
+	// (section 4.1.6)
+	if name == "" {
+		if nodeID == nil {
+			nodeID = make([]byte, 6)
+		}
+		randomBits(nodeID)
+		return true
+	}
+	return false
 }
 
 // NodeID returns a slice of a copy of the current Node ID, setting the Node ID
 // if not already set.
 func NodeID() []byte {
-	return guuid.NodeID()
+	defer nodeMu.Unlock()
+	nodeMu.Lock()
+	if nodeID == nil {
+		setNodeInterface("")
+	}
+	nid := make([]byte, 6)
+	copy(nid, nodeID)
+	return nid
 }
 
 // SetNodeID sets the Node ID to be used for Version 1 UUIDs.  The first 6 bytes
 // of id are used.  If id is less than 6 bytes then false is returned and the
 // Node ID is not set.
 func SetNodeID(id []byte) bool {
-	return guuid.SetNodeID(id)
+	defer nodeMu.Unlock()
+	nodeMu.Lock()
+	if setNodeID(id) {
+		ifname = "user"
+		return true
+	}
+	return false
+}
+
+func setNodeID(id []byte) bool {
+	if len(id) < 6 {
+		return false
+	}
+	if nodeID == nil {
+		nodeID = make([]byte, 6)
+	}
+	copy(nodeID, id)
+	return true
 }
 
 // NodeID returns the 6 byte node id encoded in uuid.  It returns nil if uuid is

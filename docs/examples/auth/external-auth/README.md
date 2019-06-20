@@ -1,4 +1,4 @@
-# External Basic Authentication
+# External authentication
 
 ### Example 1:
 
@@ -7,11 +7,9 @@ Use an external service (Basic Auth) located in `https://httpbin.org`
 ```
 $ kubectl create -f ingress.yaml
 ingress "external-auth" created
-
 $ kubectl get ing external-auth
 NAME            HOSTS                         ADDRESS       PORTS     AGE
 external-auth   external-auth-01.sample.com   172.17.4.99   80        13s
-
 $ kubectl get ing external-auth -o yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -23,7 +21,7 @@ metadata:
   name: external-auth
   namespace: default
   resourceVersion: "2068378"
-  selfLink: /apis/networking/v1beta1/namespaces/default/ingresses/external-auth
+  selfLink: /apis/extensions/v1beta1/namespaces/default/ingresses/external-auth
   uid: 5c388f1d-8970-11e6-9004-080027d2dc94
 spec:
   rules:

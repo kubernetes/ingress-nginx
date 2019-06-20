@@ -17,7 +17,7 @@ limitations under the License.
 package rewrite
 
 import (
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -27,14 +27,17 @@ import (
 type Config struct {
 	// Target URI where the traffic must be redirected
 	Target string `json:"target"`
+	// AddBaseURL indicates if is required to add a base tag in the head
+	// of the responses from the upstream servers
+	AddBaseURL bool `json:"addBaseUrl"`
+	// BaseURLScheme override for the scheme passed to the base tag
+	BaseURLScheme string `json:"baseUrlScheme"`
 	// SSLRedirect indicates if the location section is accessible SSL only
 	SSLRedirect bool `json:"sslRedirect"`
 	// ForceSSLRedirect indicates if the location section is accessible SSL only
 	ForceSSLRedirect bool `json:"forceSSLRedirect"`
-	// AppRoot defines the Application Root that the Controller must redirect if it's in '/' context
+	// AppRoot defines the Application Root that the Controller must redirect if it's not in '/' context
 	AppRoot string `json:"appRoot"`
-	// UseRegex indicates whether or not the locations use regex paths
-	UseRegex bool `json:"useRegex"`
 }
 
 // Equal tests for equality between two Redirect types
@@ -48,6 +51,12 @@ func (r1 *Config) Equal(r2 *Config) bool {
 	if r1.Target != r2.Target {
 		return false
 	}
+	if r1.AddBaseURL != r2.AddBaseURL {
+		return false
+	}
+	if r1.BaseURLScheme != r2.BaseURLScheme {
+		return false
+	}
 	if r1.SSLRedirect != r2.SSLRedirect {
 		return false
 	}
@@ -55,9 +64,6 @@ func (r1 *Config) Equal(r2 *Config) bool {
 		return false
 	}
 	if r1.AppRoot != r2.AppRoot {
-		return false
-	}
-	if r1.UseRegex != r2.UseRegex {
 		return false
 	}
 
@@ -68,30 +74,33 @@ type rewrite struct {
 	r resolver.Resolver
 }
 
-// NewParser creates a new rewrite annotation parser
+// NewParser creates a new reqrite annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return rewrite{r}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
-	var err error
-	config := &Config{}
-
-	config.Target, _ = parser.GetStringAnnotation("rewrite-target", ing)
-	config.SSLRedirect, err = parser.GetBoolAnnotation("ssl-redirect", ing)
+func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
+	rt, _ := parser.GetStringAnnotation("rewrite-target", ing)
+	sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing)
 	if err != nil {
-		config.SSLRedirect = a.r.GetDefaultBackend().SSLRedirect
+		sslRe = a.r.GetDefaultBackend().SSLRedirect
 	}
-
-	config.ForceSSLRedirect, err = parser.GetBoolAnnotation("force-ssl-redirect", ing)
+	fSslRe, err := parser.GetBoolAnnotation("force-ssl-redirect", ing)
 	if err != nil {
-		config.ForceSSLRedirect = a.r.GetDefaultBackend().ForceSSLRedirect
+		fSslRe = a.r.GetDefaultBackend().ForceSSLRedirect
 	}
+	abu, _ := parser.GetBoolAnnotation("add-base-url", ing)
+	bus, _ := parser.GetStringAnnotation("base-url-scheme", ing)
+	ar, _ := parser.GetStringAnnotation("app-root", ing)
 
-	config.AppRoot, _ = parser.GetStringAnnotation("app-root", ing)
-	config.UseRegex, _ = parser.GetBoolAnnotation("use-regex", ing)
-
-	return config, nil
+	return &Config{
+		Target:           rt,
+		AddBaseURL:       abu,
+		BaseURLScheme:    bus,
+		SSLRedirect:      sslRe,
+		ForceSSLRedirect: fSslRe,
+		AppRoot:          ar,
+	}, nil
 }

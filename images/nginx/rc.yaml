@@ -3,42 +3,35 @@ kind: Service
 metadata:
   name: nginxsvc
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app: nginx
 spec:
   type: NodePort
   ports:
-    - port: 80
-      protocol: TCP
-      name: http
-    - port: 443
-      protocol: TCP
-      name: https
+  - port: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    protocol: TCP
+    name: https
   selector:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app: nginx
 ---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: nginx
-  labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
 spec:
   replicas: 1
   selector:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app: nginx
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/part-of: ingress-nginx
+        app: nginx
+        name: frontend
     spec:
       containers:
-        - name: nginx
-          image: quay.io/kubernetes-ingress-controller/nginx:0.84
-          ports:
-            - containerPort: 80
-            - containerPort: 443
+      - name: nginx
+        image: quay.io/kubernetes-ingress-controller/nginx:0.30
+        ports:
+        - containerPort: 80

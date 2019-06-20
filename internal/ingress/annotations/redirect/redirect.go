@@ -21,14 +21,12 @@ import (
 	"net/url"
 	"strings"
 
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
-
-const defaultPermanentRedirectCode = http.StatusMovedPermanently
 
 // Config returns the redirect configuration for an Ingress rule
 type Config struct {
@@ -50,7 +48,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to create a redirect in the paths defined in the rule.
 // If the Ingress contains both annotations the execution order is
 // temporal and then permanent
-func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
+func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 	r3w, _ := parser.GetBoolAnnotation("from-to-www-redirect", ing)
 
 	tr, err := parser.GetStringAnnotation("temporal-redirect", ing)
@@ -75,19 +73,20 @@ func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
-	prc, err := parser.GetIntAnnotation("permanent-redirect-code", ing)
-	if err != nil && !errors.IsMissingAnnotations(err) {
-		return nil, err
-	}
+	if pr != "" {
+		if err := isValidURL(pr); err != nil {
+			return nil, err
+		}
 
-	if prc < http.StatusMultipleChoices || prc > http.StatusPermanentRedirect {
-		prc = defaultPermanentRedirectCode
-	}
-
-	if pr != "" || r3w {
 		return &Config{
 			URL:       pr,
-			Code:      prc,
+			Code:      http.StatusMovedPermanently,
+			FromToWWW: r3w,
+		}, nil
+	}
+
+	if r3w {
+		return &Config{
 			FromToWWW: r3w,
 		}, nil
 	}

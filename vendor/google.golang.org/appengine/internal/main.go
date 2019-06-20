@@ -11,6 +11,5 @@ import (
 )
 
 func Main() {
-	MainPath = ""
 	appengine_internal.Main()
 }

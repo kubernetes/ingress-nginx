@@ -24,10 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/klog"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/diff"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 var mutationDetectionEnabled = false
@@ -45,7 +44,6 @@ func NewCacheMutationDetector(name string) CacheMutationDetector {
 	if !mutationDetectionEnabled {
 		return dummyMutationDetector{}
 	}
-	klog.Warningln("Mutation detector is enabled, this will result in memory leakage.")
 	return &defaultCacheMutationDetector{name: name, period: 1 * time.Second}
 }
 
@@ -98,13 +96,18 @@ func (d *defaultCacheMutationDetector) AddObject(obj interface{}) {
 	if _, ok := obj.(DeletedFinalStateUnknown); ok {
 		return
 	}
-	if obj, ok := obj.(runtime.Object); ok {
-		copiedObj := obj.DeepCopyObject()
-
-		d.lock.Lock()
-		defer d.lock.Unlock()
-		d.cachedObjs = append(d.cachedObjs, cacheObj{cached: obj, copied: copiedObj})
+	if _, ok := obj.(runtime.Object); !ok {
+		return
 	}
+
+	copiedObj, err := scheme.Scheme.Copy(obj.(runtime.Object))
+	if err != nil {
+		return
+	}
+
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	d.cachedObjs = append(d.cachedObjs, cacheObj{cached: obj, copied: copiedObj})
 }
 
 func (d *defaultCacheMutationDetector) CompareObjects() {

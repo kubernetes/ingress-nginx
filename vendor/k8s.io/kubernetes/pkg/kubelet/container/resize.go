@@ -32,7 +32,11 @@ func HandleResizing(resize <-chan remotecommand.TerminalSize, resizeFunc func(si
 	go func() {
 		defer runtime.HandleCrash()
 
-		for size := range resize {
+		for {
+			size, ok := <-resize
+			if !ok {
+				return
+			}
 			if size.Height < 1 || size.Width < 1 {
 				continue
 			}

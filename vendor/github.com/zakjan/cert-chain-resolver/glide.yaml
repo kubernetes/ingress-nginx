@@ -1,0 +1,7 @@
+package: github.com/zakjan/cert-chain-resolver
+import:
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+- package: github.com/fullsailor/pkcs7
+- package: github.com/urfave/cli

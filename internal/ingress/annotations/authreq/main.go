@@ -17,19 +17,15 @@ limitations under the License.
 package authreq
 
 import (
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
 
-	"k8s.io/klog"
-
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/internal/sets"
 )
 
 // Config returns external authentication configuration for an Ingress rule
@@ -39,9 +35,7 @@ type Config struct {
 	Host            string   `json:"host"`
 	SigninURL       string   `json:"signinUrl"`
 	Method          string   `json:"method"`
-	ResponseHeaders []string `json:"responseHeaders,omitempty"`
-	RequestRedirect string   `json:"requestRedirect"`
-	AuthSnippet     string   `json:"authSnippet"`
+	ResponseHeaders []string `json:"responseHeaders,omitEmpty"`
 }
 
 // Equal tests for equality between two Config types
@@ -64,17 +58,21 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	if e1.Method != e2.Method {
 		return false
 	}
-
-	match := sets.StringElementsMatch(e1.ResponseHeaders, e2.ResponseHeaders)
-	if !match {
+	if e1.Method != e2.Method {
 		return false
 	}
 
-	if e1.RequestRedirect != e2.RequestRedirect {
-		return false
-	}
-	if e1.AuthSnippet != e2.AuthSnippet {
-		return false
+	for _, ep1 := range e1.ResponseHeaders {
+		found := false
+		for _, ep2 := range e2.ResponseHeaders {
+			if ep1 == ep2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
 	return true
@@ -85,8 +83,7 @@ var (
 	headerRegexp = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
 )
 
-// ValidMethod checks is the provided string a valid HTTP method
-func ValidMethod(method string) bool {
+func validMethod(method string) bool {
 	if len(method) == 0 {
 		return false
 	}
@@ -99,8 +96,7 @@ func ValidMethod(method string) bool {
 	return false
 }
 
-// ValidHeader checks is the provided string satisfies the header's name regex
-func ValidHeader(header string) bool {
+func validHeader(header string) bool {
 	return headerRegexp.Match([]byte(header))
 }
 
@@ -115,77 +111,59 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an Config URL as source for authentication
-func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
-	// Required Parameters
-	urlString, err := parser.GetStringAnnotation("auth-url", ing)
+func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
+	str, err := parser.GetStringAnnotation("auth-url", ing)
 	if err != nil {
 		return nil, err
 	}
 
-	authURL, message := ParseStringToURL(urlString)
-	if authURL == nil {
-		return nil, ing_errors.NewLocationDenied(message)
+	if str == "" {
+		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
 	}
 
-	authMethod, _ := parser.GetStringAnnotation("auth-method", ing)
-	if len(authMethod) != 0 && !ValidMethod(authMethod) {
+	signin, _ := parser.GetStringAnnotation("auth-signin", ing)
+
+	ur, err := url.Parse(str)
+	if err != nil {
+		return nil, err
+	}
+	if ur.Scheme == "" {
+		return nil, ing_errors.NewLocationDenied("url scheme is empty")
+	}
+	if ur.Host == "" {
+		return nil, ing_errors.NewLocationDenied("url host is empty")
+	}
+
+	if strings.Contains(ur.Host, "..") {
+		return nil, ing_errors.NewLocationDenied("invalid url host")
+	}
+
+	m, _ := parser.GetStringAnnotation("auth-method", ing)
+	if len(m) != 0 && !validMethod(m) {
 		return nil, ing_errors.NewLocationDenied("invalid HTTP method")
 	}
 
-	// Optional Parameters
-	signIn, err := parser.GetStringAnnotation("auth-signin", ing)
-	if err != nil {
-		klog.V(3).Infof("auth-signin annotation is undefined and will not be set")
-	}
-
-	authSnippet, err := parser.GetStringAnnotation("auth-snippet", ing)
-	if err != nil {
-		klog.V(3).Infof("auth-snippet annotation is undefined and will not be set")
-	}
-
-	responseHeaders := []string{}
+	h := []string{}
 	hstr, _ := parser.GetStringAnnotation("auth-response-headers", ing)
 	if len(hstr) != 0 {
+
 		harr := strings.Split(hstr, ",")
 		for _, header := range harr {
 			header = strings.TrimSpace(header)
 			if len(header) > 0 {
-				if !ValidHeader(header) {
+				if !validHeader(header) {
 					return nil, ing_errors.NewLocationDenied("invalid headers list")
 				}
-				responseHeaders = append(responseHeaders, header)
+				h = append(h, header)
 			}
 		}
 	}
 
-	requestRedirect, _ := parser.GetStringAnnotation("auth-request-redirect", ing)
-
 	return &Config{
-		URL:             urlString,
-		Host:            authURL.Hostname(),
-		SigninURL:       signIn,
-		Method:          authMethod,
-		ResponseHeaders: responseHeaders,
-		RequestRedirect: requestRedirect,
-		AuthSnippet:     authSnippet,
+		URL:             str,
+		Host:            ur.Hostname(),
+		SigninURL:       signin,
+		Method:          m,
+		ResponseHeaders: h,
 	}, nil
-}
-
-// ParseStringToURL parses the provided string into URL and returns error
-// message in case of failure
-func ParseStringToURL(input string) (*url.URL, string) {
-
-	parsedURL, err := url.Parse(input)
-	if err != nil {
-		return nil, fmt.Sprintf("%v is not a valid URL: %v", input, err)
-	}
-	if parsedURL.Scheme == "" {
-		return nil, "url scheme is empty."
-	} else if parsedURL.Host == "" {
-		return nil, "url host is empty."
-	} else if strings.Contains(parsedURL.Host, "..") {
-		return nil, "invalid url host."
-	}
-	return parsedURL, ""
-
 }

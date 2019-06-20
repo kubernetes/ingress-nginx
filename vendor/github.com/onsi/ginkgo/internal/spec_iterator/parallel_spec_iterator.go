@@ -2,6 +2,7 @@ package spec_iterator
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -30,7 +31,7 @@ func (s *ParallelIterator) Next() (*spec.Spec, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code %d", resp.StatusCode)
+		return nil, errors.New(fmt.Sprintf("unexpected status code %d", resp.StatusCode))
 	}
 
 	var counter Counter

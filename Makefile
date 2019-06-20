@@ -15,70 +15,67 @@
 .PHONY: all
 all: all-container
 
-# Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.24.1
-REGISTRY ?= quay.io/kubernetes-ingress-controller
-DOCKER ?= docker
-SED_I ?= sed -i
-GOHOSTOS ?= $(shell go env GOHOSTOS)
+BUILDTAGS=
 
-# e2e settings
-# Allow limiting the scope of the e2e tests. By default run everything
-FOCUS ?= .*
-# number of parallel test
-E2E_NODES ?= 10
-# slow test only if takes > 50s
-SLOW_E2E_THRESHOLD ?= 50
-K8S_VERSION ?= v1.14.1
+# Use the 0.0 tag for testing, it shouldn't clobber any release builds
+TAG?=0.9.0-beta.19
+REGISTRY?=quay.io/kubernetes-ingress-controller
+GOOS?=linux
+DOCKER?=gcloud docker --
+SED_I?=sed -i
+GOHOSTOS ?= $(shell go env GOHOSTOS)
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
 
-REPO_INFO ?= $(shell git config --get remote.origin.url)
-GIT_COMMIT ?= git-$(shell git rev-parse --short HEAD)
+REPO_INFO=$(shell git config --get remote.origin.url)
 
-PKG = k8s.io/ingress-nginx
+ifndef COMMIT
+  COMMIT := git-$(shell git rev-parse --short HEAD)
+endif
+
+PKG=k8s.io/ingress-nginx
 
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
 
-GOBUILD_FLAGS := -v
+ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
-ALL_ARCH = amd64 arm64
-
-QEMUVERSION = v4.0.0
-
-BUSTED_ARGS =-v --pattern=_test
-
-GOOS = linux
-
-export ARCH
-export DUMB_ARCH
-export TAG
-export PKG
-export GOARCH
-export GOOS
-export GIT_COMMIT
-export GOBUILD_FLAGS
-export REPO_INFO
-export BUSTED_ARGS
+QEMUVERSION=v2.9.1
 
 IMGNAME = nginx-ingress-controller
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.87
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.30
 
+ifeq ($(ARCH),arm)
+	QEMUARCH=arm
+	GOARCH=arm
+	DUMB_ARCH=armhf
+endif
 ifeq ($(ARCH),arm64)
-	QEMUARCH=aarch64
+    QEMUARCH=aarch64
+endif
+ifeq ($(ARCH),ppc64le)
+	QEMUARCH=ppc64le
+	GOARCH=ppc64le
+	DUMB_ARCH=ppc64el
+endif
+ifeq ($(ARCH),s390x)
+    QEMUARCH=s390x
 endif
 
 TEMP_DIR := $(shell mktemp -d)
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
+
+.PHONY: image-info
+image-info:
+	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
 
 .PHONY: sub-container-%
 sub-container-%:
@@ -95,16 +92,12 @@ all-container: $(addprefix sub-container-,$(ALL_ARCH))
 all-push: $(addprefix sub-push-,$(ALL_ARCH))
 
 .PHONY: container
-container: clean-container .container-$(ARCH)
+container: .container-$(ARCH)
 
 .PHONY: .container-$(ARCH)
 .container-$(ARCH):
-	mkdir -p $(TEMP_DIR)/rootfs
-	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
-	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
-
 	cp -RP ./* $(TEMP_DIR)
-	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
+	$(SED_I) 's|BASEIMAGE|$(BASEIMAGE)|g' $(DOCKERFILE)
 	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
 	$(SED_I) "s|DUMB_ARCH|$(DUMB_ARCH)|g" $(DOCKERFILE)
 
@@ -113,25 +106,18 @@ ifeq ($(ARCH),amd64)
 	$(SED_I) "/CROSS_BUILD_/d" $(DOCKERFILE)
 else
 	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
+	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)/rootfs
 	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
 endif
 
-	@$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
+	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
 
 ifeq ($(ARCH), amd64)
-	# This is for maintaining backward compatibility
-	@$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
+	# This is for to maintain the backward compatibility
+	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
-
-.PHONY: clean-container
-clean-container:
-	@$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
-
-.PHONY: register-qemu
-register-qemu:
-	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	@$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 
 .PHONY: push
 push: .push-$(ARCH)
@@ -143,111 +129,67 @@ ifeq ($(ARCH), amd64)
 	$(DOCKER) push $(IMAGE):$(TAG)
 endif
 
-.PHONY: build
-build:
-	@build/build.sh
-
-.PHONY: build-plugin
-build-plugin:
-	@build/build-plugin.sh
-
 .PHONY: clean
 clean:
-	rm -rf bin/ .gocache/
+	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
 
-.PHONY: static-check
-static-check:
-	@build/static-check.sh
+.PHONE: code-generator
+code-generator:
+		go-bindata -o internal/file/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
+
+.PHONY: build
+build: clean
+	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
+		-ldflags "-s -w -X ${PKG}/version.RELEASE=${TAG} -X ${PKG}/version.COMMIT=${COMMIT} -X ${PKG}/version.REPO=${REPO_INFO}" \
+		-o ${TEMP_DIR}/rootfs/nginx-ingress-controller ${PKG}/cmd/nginx
+
+.PHONY: fmt
+fmt:
+	@echo "+ $@"
+	@go list -f '{{if len .TestGoFiles}}"gofmt -s -l {{.Dir}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
+
+.PHONY: lint
+lint:
+	@echo "+ $@"
+	@go list -f '{{if len .TestGoFiles}}"golint {{.Dir}}/..."{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
 
 .PHONY: test
-test:
-	@build/test.sh
+test: fmt lint vet
+	@echo "+ $@"
+	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
-.PHONY: lua-test
-lua-test:
-	@build/test-lua.sh
+.PHONY: e2e-image
+e2e-image: sub-container-amd64
+	TAG=$(TAG) IMAGE=$(MULTI_ARCH_IMG) docker tag $(IMAGE):$(TAG) $(IMAGE):test
+	docker images
 
 .PHONY: e2e-test
 e2e-test:
-	echo "Granting permissions to ingress-nginx e2e service account..."
-	kubectl create serviceaccount ingress-nginx-e2e || true
-	kubectl create clusterrolebinding permissive-binding \
-		--clusterrole=cluster-admin \
-		--user=admin \
-		--user=kubelet \
-		--serviceaccount=default:ingress-nginx-e2e || true
-
-	until kubectl get secret | grep -q ^ingress-nginx-e2e-token; do \
-		echo "waiting for api token"; \
-		sleep 3; \
-	done
-
-	kubectl run --rm \
-		--attach \
-		--restart=Never \
-		--generator=run-pod/v1 \
-		--env="E2E_NODES=$(E2E_NODES)" \
-		--env="FOCUS=$(FOCUS)" \
-		--env="SLOW_E2E_THRESHOLD=$(SLOW_E2E_THRESHOLD)" \
-		--overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
-		e2e --image=nginx-ingress-controller:e2e
-
-.PHONY: e2e-test-image
-e2e-test-image: e2e-test-binary
-	make -C test/e2e-image
-
-.PHONY: e2e-test-binary
-e2e-test-binary:
-	@ginkgo build ./test/e2e
+	@go test -o e2e-tests -c ./test/e2e
+	@KUBECONFIG=${HOME}/.kube/config INGRESSNGINXCONFIG=${HOME}/.kube/config ./e2e-tests
 
 .PHONY: cover
 cover:
-	@build/cover.sh
-	echo "Uploading coverage results..."
-	@curl -s https://codecov.io/bash | bash
+	@echo "+ $@"
+	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
+	gover
+	goveralls -coverprofile=gover.coverprofile -service travis-ci -repotoken $$COVERALLS_TOKEN
 
 .PHONY: vet
 vet:
-	@go vet $(shell go list ${PKG}/internal/... | grep -v vendor)
+	@echo "+ $@"
+	@go vet $(shell go list ${PKG}/... | grep -v vendor)
 
 .PHONY: release
 release: all-container all-push
 	echo "done"
 
+.PHONY: docker-build
+docker-build: all-container
+
+.PHONY: docker-push
+docker-push: all-push
+
 .PHONY: check_dead_links
 check_dead_links:
-	@docker run -t \
-	  -v $$PWD:/tmp aledbf/awesome_bot:0.1 \
-	  --allow-dupe \
-	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
-
-.PHONY: dep-ensure
-dep-ensure:
-	GO111MODULE=on go mod tidy -v
-	find vendor -name '*_test.go' -delete
-
-.PHONY: dev-env
-dev-env:
-	@build/dev-env.sh
-
-.PHONY: live-docs
-live-docs:
-	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
-	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
-
-.PHONY: build-docs
-build-docs:
-	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
-	@docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
-
-.PHONY: misspell
-misspell:
-	@go get github.com/client9/misspell/cmd/misspell
-	misspell \
-		-locale US \
-		-error \
-		cmd/* internal/* deploy/* docs/* design/* test/* README.md
-
-.PHONE: kind-e2e-test
-kind-e2e-test:
-	test/e2e/run.sh
+	docker run -t -v $$PWD:/tmp rubygem/awesome_bot --allow-dupe --allow-redirect $(shell find $$PWD -name "*.md" -mindepth 1 -printf '%P\n' | grep -v vendor | grep -v Changelog.md)

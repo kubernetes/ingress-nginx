@@ -3,67 +3,38 @@ package yaml
 import (
 	"encoding"
 	"fmt"
-	"io"
 	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 )
-
-// jsonNumber is the interface of the encoding/json.Number datatype.
-// Repeating the interface here avoids a dependency on encoding/json, and also
-// supports other libraries like jsoniter, which use a similar datatype with
-// the same interface. Detecting this interface is useful when dealing with
-// structures containing json.Number, which is a string under the hood. The
-// encoder should prefer the use of Int64(), Float64() and string(), in that
-// order, when encoding this type.
-type jsonNumber interface {
-	Float64() (float64, error)
-	Int64() (int64, error)
-	String() string
-}
 
 type encoder struct {
 	emitter yaml_emitter_t
 	event   yaml_event_t
 	out     []byte
 	flow    bool
-	// doneInit holds whether the initial stream_start_event has been
-	// emitted.
-	doneInit bool
 }
 
-func newEncoder() *encoder {
-	e := &encoder{}
-	yaml_emitter_initialize(&e.emitter)
+func newEncoder() (e *encoder) {
+	e = &encoder{}
+	e.must(yaml_emitter_initialize(&e.emitter))
 	yaml_emitter_set_output_string(&e.emitter, &e.out)
 	yaml_emitter_set_unicode(&e.emitter, true)
-	return e
-}
-
-func newEncoderWithWriter(w io.Writer) *encoder {
-	e := &encoder{}
-	yaml_emitter_initialize(&e.emitter)
-	yaml_emitter_set_output_writer(&e.emitter, w)
-	yaml_emitter_set_unicode(&e.emitter, true)
-	return e
-}
-
-func (e *encoder) init() {
-	if e.doneInit {
-		return
-	}
-	yaml_stream_start_event_initialize(&e.event, yaml_UTF8_ENCODING)
+	e.must(yaml_stream_start_event_initialize(&e.event, yaml_UTF8_ENCODING))
 	e.emit()
-	e.doneInit = true
+	e.must(yaml_document_start_event_initialize(&e.event, nil, nil, true))
+	e.emit()
+	return e
 }
 
 func (e *encoder) finish() {
+	e.must(yaml_document_end_event_initialize(&e.event, true))
+	e.emit()
 	e.emitter.open_ended = false
-	yaml_stream_end_event_initialize(&e.event)
+	e.must(yaml_stream_end_event_initialize(&e.event))
 	e.emit()
 }
 
@@ -73,7 +44,9 @@ func (e *encoder) destroy() {
 
 func (e *encoder) emit() {
 	// This will internally delete the e.event value.
-	e.must(yaml_emitter_emit(&e.emitter, &e.event))
+	if !yaml_emitter_emit(&e.emitter, &e.event) && e.event.typ != yaml_DOCUMENT_END_EVENT && e.event.typ != yaml_STREAM_END_EVENT {
+		e.must(false)
+	}
 }
 
 func (e *encoder) must(ok bool) {
@@ -86,43 +59,13 @@ func (e *encoder) must(ok bool) {
 	}
 }
 
-func (e *encoder) marshalDoc(tag string, in reflect.Value) {
-	e.init()
-	yaml_document_start_event_initialize(&e.event, nil, nil, true)
-	e.emit()
-	e.marshal(tag, in)
-	yaml_document_end_event_initialize(&e.event, true)
-	e.emit()
-}
-
 func (e *encoder) marshal(tag string, in reflect.Value) {
-	if !in.IsValid() || in.Kind() == reflect.Ptr && in.IsNil() {
+	if !in.IsValid() {
 		e.nilv()
 		return
 	}
 	iface := in.Interface()
-	switch m := iface.(type) {
-	case jsonNumber:
-		integer, err := m.Int64()
-		if err == nil {
-			// In this case the json.Number is a valid int64
-			in = reflect.ValueOf(integer)
-			break
-		}
-		float, err := m.Float64()
-		if err == nil {
-			// In this case the json.Number is a valid float64
-			in = reflect.ValueOf(float)
-			break
-		}
-		// fallback case - no number could be obtained
-		in = reflect.ValueOf(m.String())
-	case time.Time, *time.Time:
-		// Although time.Time implements TextMarshaler,
-		// we don't want to treat it as a string for YAML
-		// purposes because YAML has special support for
-		// timestamps.
-	case Marshaler:
+	if m, ok := iface.(Marshaler); ok {
 		v, err := m.MarshalYAML()
 		if err != nil {
 			fail(err)
@@ -132,34 +75,31 @@ func (e *encoder) marshal(tag string, in reflect.Value) {
 			return
 		}
 		in = reflect.ValueOf(v)
-	case encoding.TextMarshaler:
+	} else if m, ok := iface.(encoding.TextMarshaler); ok {
 		text, err := m.MarshalText()
 		if err != nil {
 			fail(err)
 		}
 		in = reflect.ValueOf(string(text))
-	case nil:
-		e.nilv()
-		return
 	}
 	switch in.Kind() {
 	case reflect.Interface:
-		e.marshal(tag, in.Elem())
+		if in.IsNil() {
+			e.nilv()
+		} else {
+			e.marshal(tag, in.Elem())
+		}
 	case reflect.Map:
 		e.mapv(tag, in)
 	case reflect.Ptr:
-		if in.Type() == ptrTimeType {
-			e.timev(tag, in.Elem())
+		if in.IsNil() {
+			e.nilv()
 		} else {
 			e.marshal(tag, in.Elem())
 		}
 	case reflect.Struct:
-		if in.Type() == timeType {
-			e.timev(tag, in)
-		} else {
-			e.structv(tag, in)
-		}
-	case reflect.Slice, reflect.Array:
+		e.structv(tag, in)
+	case reflect.Slice:
 		if in.Type().Elem() == mapItemType {
 			e.itemsv(tag, in)
 		} else {
@@ -251,10 +191,10 @@ func (e *encoder) mappingv(tag string, f func()) {
 		e.flow = false
 		style = yaml_FLOW_MAPPING_STYLE
 	}
-	yaml_mapping_start_event_initialize(&e.event, nil, []byte(tag), implicit, style)
+	e.must(yaml_mapping_start_event_initialize(&e.event, nil, []byte(tag), implicit, style))
 	e.emit()
 	f()
-	yaml_mapping_end_event_initialize(&e.event)
+	e.must(yaml_mapping_end_event_initialize(&e.event))
 	e.emit()
 }
 
@@ -300,36 +240,23 @@ var base60float = regexp.MustCompile(`^[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+(?:\.[0
 func (e *encoder) stringv(tag string, in reflect.Value) {
 	var style yaml_scalar_style_t
 	s := in.String()
-	canUsePlain := true
-	switch {
-	case !utf8.ValidString(s):
-		if tag == yaml_BINARY_TAG {
+	rtag, rs := resolve("", s)
+	if rtag == yaml_BINARY_TAG {
+		if tag == "" || tag == yaml_STR_TAG {
+			tag = rtag
+			s = rs.(string)
+		} else if tag == yaml_BINARY_TAG {
 			failf("explicitly tagged !!binary data must be base64-encoded")
-		}
-		if tag != "" {
+		} else {
 			failf("cannot marshal invalid UTF-8 data as %s", shortTag(tag))
 		}
-		// It can't be encoded directly as YAML so use a binary tag
-		// and encode it as base64.
-		tag = yaml_BINARY_TAG
-		s = encodeBase64(s)
-	case tag == "":
-		// Check to see if it would resolve to a specific
-		// tag when encoded unquoted. If it doesn't,
-		// there's no need to quote it.
-		rtag, _ := resolve("", s)
-		canUsePlain = rtag == yaml_STR_TAG && !isBase60Float(s)
 	}
-	// Note: it's possible for user code to emit invalid YAML
-	// if they explicitly specify a tag and a string containing
-	// text that's incompatible with that tag.
-	switch {
-	case strings.Contains(s, "\n"):
-		style = yaml_LITERAL_SCALAR_STYLE
-	case canUsePlain:
-		style = yaml_PLAIN_SCALAR_STYLE
-	default:
+	if tag == "" && (rtag != yaml_STR_TAG || isBase60Float(s)) {
 		style = yaml_DOUBLE_QUOTED_SCALAR_STYLE
+	} else if strings.Contains(s, "\n") {
+		style = yaml_LITERAL_SCALAR_STYLE
+	} else {
+		style = yaml_PLAIN_SCALAR_STYLE
 	}
 	e.emitScalar(s, "", tag, style)
 }
@@ -354,20 +281,9 @@ func (e *encoder) uintv(tag string, in reflect.Value) {
 	e.emitScalar(s, "", tag, yaml_PLAIN_SCALAR_STYLE)
 }
 
-func (e *encoder) timev(tag string, in reflect.Value) {
-	t := in.Interface().(time.Time)
-	s := t.Format(time.RFC3339Nano)
-	e.emitScalar(s, "", tag, yaml_PLAIN_SCALAR_STYLE)
-}
-
 func (e *encoder) floatv(tag string, in reflect.Value) {
-	// Issue #352: When formatting, use the precision of the underlying value
-	precision := 64
-	if in.Kind() == reflect.Float32 {
-		precision = 32
-	}
-
-	s := strconv.FormatFloat(in.Float(), 'g', -1, precision)
+	// FIXME: Handle 64 bits here.
+	s := strconv.FormatFloat(float64(in.Float()), 'g', -1, 32)
 	switch s {
 	case "+Inf":
 		s = ".inf"

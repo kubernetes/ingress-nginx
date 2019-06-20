@@ -22,13 +22,14 @@ import (
 	"time"
 
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/kubernetes/pkg/api"
 
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/controller/store"
+	"k8s.io/ingress-nginx/internal/ingress/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -68,21 +69,6 @@ func buildSimpleClientSet() *testclient.Clientset {
 				Spec: apiv1.PodSpec{
 					NodeName: "foo_node_2",
 				},
-				Status: apiv1.PodStatus{
-					Phase: apiv1.PodRunning,
-				},
-			},
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo1-unknown",
-					Namespace: apiv1.NamespaceDefault,
-				},
-				Spec: apiv1.PodSpec{
-					NodeName: "foo_node_1",
-				},
-				Status: apiv1.PodStatus{
-					Phase: apiv1.PodUnknown,
-				},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{
@@ -96,16 +82,13 @@ func buildSimpleClientSet() *testclient.Clientset {
 			{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo3",
-					Namespace: metav1.NamespaceSystem,
+					Namespace: api.NamespaceSystem,
 					Labels: map[string]string{
 						"lable_sig": "foo_pod",
 					},
 				},
 				Spec: apiv1.PodSpec{
 					NodeName: "foo_node_2",
-				},
-				Status: apiv1.PodStatus{
-					Phase: apiv1.PodRunning,
 				},
 			},
 		}},
@@ -168,9 +151,10 @@ func buildSimpleClientSet() *testclient.Clientset {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ingress-controller-leader",
 					Namespace: apiv1.NamespaceDefault,
+					SelfLink:  "/api/v1/namespaces/default/endpoints/ingress-controller-leader",
 				},
 			}}},
-		&networking.IngressList{Items: buildExtensionsIngresses()},
+		&extensions.IngressList{Items: buildExtensionsIngresses()},
 	)
 }
 
@@ -178,14 +162,14 @@ func fakeSynFn(interface{}) error {
 	return nil
 }
 
-func buildExtensionsIngresses() []networking.Ingress {
-	return []networking.Ingress{
+func buildExtensionsIngresses() []extensions.Ingress {
+	return []extensions.Ingress{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "foo_ingress_1",
 				Namespace: apiv1.NamespaceDefault,
 			},
-			Status: networking.IngressStatus{
+			Status: extensions.IngressStatus{
 				LoadBalancer: apiv1.LoadBalancerStatus{
 					Ingress: []apiv1.LoadBalancerIngress{
 						{
@@ -199,12 +183,12 @@ func buildExtensionsIngresses() []networking.Ingress {
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "foo_ingress_different_class",
-				Namespace: metav1.NamespaceDefault,
+				Namespace: api.NamespaceDefault,
 				Annotations: map[string]string{
 					class.IngressKey: "no-nginx",
 				},
 			},
-			Status: networking.IngressStatus{
+			Status: extensions.IngressStatus{
 				LoadBalancer: apiv1.LoadBalancerStatus{
 					Ingress: []apiv1.LoadBalancerIngress{
 						{
@@ -220,7 +204,7 @@ func buildExtensionsIngresses() []networking.Ingress {
 				Name:      "foo_ingress_2",
 				Namespace: apiv1.NamespaceDefault,
 			},
-			Status: networking.IngressStatus{
+			Status: extensions.IngressStatus{
 				LoadBalancer: apiv1.LoadBalancerStatus{
 					Ingress: []apiv1.LoadBalancerIngress{},
 				},
@@ -229,36 +213,26 @@ func buildExtensionsIngresses() []networking.Ingress {
 	}
 }
 
-type testIngressLister struct {
-}
-
-func (til *testIngressLister) ListIngresses(store.IngressFilterFunc) []*ingress.Ingress {
-	var ingresses []*ingress.Ingress
-	ingresses = append(ingresses, &ingress.Ingress{
-		Ingress: networking.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "foo_ingress_non_01",
-				Namespace: apiv1.NamespaceDefault,
-			}}})
-
-	ingresses = append(ingresses, &ingress.Ingress{
-		Ingress: networking.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "foo_ingress_1",
-				Namespace: apiv1.NamespaceDefault,
-			},
-			Status: networking.IngressStatus{
-				LoadBalancer: apiv1.LoadBalancerStatus{
-					Ingress: buildLoadBalancerIngressByIP(),
-				},
-			},
+func buildIngressListener() store.IngressLister {
+	s := cache.NewStore(cache.MetaNamespaceKeyFunc)
+	s.Add(&extensions.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "foo_ingress_non_01",
+			Namespace: apiv1.NamespaceDefault,
 		}})
+	s.Add(&extensions.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "foo_ingress_1",
+			Namespace: apiv1.NamespaceDefault,
+		},
+		Status: extensions.IngressStatus{
+			LoadBalancer: apiv1.LoadBalancerStatus{
+				Ingress: buildLoadBalancerIngressByIP(),
+			},
+		},
+	})
 
-	return ingresses
-}
-
-func buildIngressLister() ingressLister {
-	return &testIngressLister{}
+	return store.IngressLister{Store: s}
 }
 
 func buildStatusSync() statusSync {
@@ -274,7 +248,7 @@ func buildStatusSync() statusSync {
 		Config: Config{
 			Client:         buildSimpleClientSet(),
 			PublishService: apiv1.NamespaceDefault + "/" + "foo",
-			IngressLister:  buildIngressLister(),
+			IngressLister:  buildIngressListener(),
 		},
 	}
 }
@@ -286,32 +260,22 @@ func TestStatusActions(t *testing.T) {
 	c := Config{
 		Client:                 buildSimpleClientSet(),
 		PublishService:         "",
-		IngressLister:          buildIngressLister(),
+		IngressLister:          buildIngressListener(),
+		DefaultIngressClass:    "nginx",
+		IngressClass:           "",
 		UpdateStatusOnShutdown: true,
 	}
-
 	// create object
-	fkSync := NewStatusSyncer(&k8s.PodInfo{
-		Name:      "foo_base_pod",
-		Namespace: apiv1.NamespaceDefault,
-		Labels: map[string]string{
-			"lable_sig": "foo_pod",
-		},
-	}, c)
+	fkSync := NewStatusSyncer(c)
 	if fkSync == nil {
 		t.Fatalf("expected a valid Sync")
 	}
 
-	// assume k8s >= 1.14 as the rest of the test
-	k8s.IsNetworkingIngressAvailable = true
-
 	fk := fkSync.(statusSync)
 
+	ns := make(chan struct{})
 	// start it and wait for the election and syn actions
-	stopCh := make(chan struct{})
-	defer close(stopCh)
-
-	go fk.Run(stopCh)
+	go fk.Run(ns)
 	//  wait for the election
 	time.Sleep(100 * time.Millisecond)
 	// execute sync
@@ -321,7 +285,7 @@ func TestStatusActions(t *testing.T) {
 	newIPs := []apiv1.LoadBalancerIngress{{
 		IP: "11.0.0.2",
 	}}
-	fooIngress1, err1 := fk.Client.NetworkingV1beta1().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
+	fooIngress1, err1 := fk.Client.ExtensionsV1beta1().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
 	if err1 != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -330,13 +294,11 @@ func TestStatusActions(t *testing.T) {
 		t.Fatalf("returned %v but expected %v", fooIngress1CurIPs, newIPs)
 	}
 
-	time.Sleep(1 * time.Second)
-
 	// execute shutdown
 	fk.Shutdown()
 	// ingress should be empty
 	newIPs2 := []apiv1.LoadBalancerIngress{}
-	fooIngress2, err2 := fk.Client.NetworkingV1beta1().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
+	fooIngress2, err2 := fk.Client.ExtensionsV1beta1().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
 	if err2 != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -345,13 +307,16 @@ func TestStatusActions(t *testing.T) {
 		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, newIPs2)
 	}
 
-	oic, err := fk.Client.NetworkingV1beta1().Ingresses(metav1.NamespaceDefault).Get("foo_ingress_different_class", metav1.GetOptions{})
+	oic, err := fk.Client.ExtensionsV1beta1().Ingresses(api.NamespaceDefault).Get("foo_ingress_different_class", metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("unexpected error")
 	}
 	if oic.Status.LoadBalancer.Ingress[0].IP != "0.0.0.0" && oic.Status.LoadBalancer.Ingress[0].Hostname != "foo.bar.com" {
 		t.Fatalf("invalid ingress status for rule with different class")
 	}
+
+	// end test
+	ns <- struct{}{}
 }
 
 func TestCallback(t *testing.T) {
@@ -360,7 +325,6 @@ func TestCallback(t *testing.T) {
 
 func TestKeyfunc(t *testing.T) {
 	fk := buildStatusSync()
-
 	i := "foo_base_pod"
 	r, err := fk.keyfunc(i)
 
@@ -400,25 +364,6 @@ func TestRunningAddresessWithPods(t *testing.T) {
 	rv := r[0]
 	if rv != "11.0.0.2" {
 		t.Errorf("returned %v but expected %v", rv, "11.0.0.2")
-	}
-}
-
-func TestRunningAddresessWithPublishStatusAddress(t *testing.T) {
-	fk := buildStatusSync()
-	fk.PublishService = ""
-	fk.PublishStatusAddress = "127.0.0.1"
-
-	r, _ := fk.runningAddresses()
-	if r == nil {
-		t.Fatalf("returned nil but expected valid []string")
-	}
-	rl := len(r)
-	if len(r) != 1 {
-		t.Errorf("returned %v but expected %v", rl, 1)
-	}
-	rv := r[0]
-	if rv != "127.0.0.1" {
-		t.Errorf("returned %v but expected %v", rv, "127.0.0.1")
 	}
 }
 

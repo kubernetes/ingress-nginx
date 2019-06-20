@@ -23,13 +23,18 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 )
 
 // NewDeltaFIFO returns a Store which can be used process changes to items.
 //
 // keyFunc is used to figure out what key an object should have. (It's
 // exposed in the returned DeltaFIFO's KeyOf() method, with bonus features.)
+//
+// 'compressor' may compress as many or as few items as it wants
+// (including returning an empty slice), but it should do what it
+// does quickly since it is called while the queue is locked.
+// 'compressor' may be nil if you don't want any delta compression.
 //
 // 'keyLister' is expected to return a list of keys that the consumer of
 // this queue "knows about". It is used to decide which items are missing
@@ -38,30 +43,18 @@ import (
 // TODO: consider merging keyLister with this object, tracking a list of
 //       "known" keys when Pop() is called. Have to think about how that
 //       affects error retrying.
-// NOTE: It is possible to misuse this and cause a race when using an
-//       external known object source.
-//       Whether there is a potential race depends on how the comsumer
-//       modifies knownObjects. In Pop(), process function is called under
-//       lock, so it is safe to update data structures in it that need to be
-//       in sync with the queue (e.g. knownObjects).
-//
-//       Example:
-//       In case of sharedIndexInformer being a consumer
-//       (https://github.com/kubernetes/kubernetes/blob/0cdd940f/staging/
-//       src/k8s.io/client-go/tools/cache/shared_informer.go#L192),
-//       there is no race as knownObjects (s.indexer) is modified safely
-//       under DeltaFIFO's lock. The only exceptions are GetStore() and
-//       GetIndexer() methods, which expose ways to modify the underlying
-//       storage. Currently these two methods are used for creating Lister
-//       and internal tests.
+// TODO(lavalamp): I believe there is a possible race only when using an
+//                 external known object source that the above TODO would
+//                 fix.
 //
 // Also see the comment on DeltaFIFO.
-func NewDeltaFIFO(keyFunc KeyFunc, knownObjects KeyListerGetter) *DeltaFIFO {
+func NewDeltaFIFO(keyFunc KeyFunc, compressor DeltaCompressor, knownObjects KeyListerGetter) *DeltaFIFO {
 	f := &DeltaFIFO{
-		items:        map[string]Deltas{},
-		queue:        []string{},
-		keyFunc:      keyFunc,
-		knownObjects: knownObjects,
+		items:           map[string]Deltas{},
+		queue:           []string{},
+		keyFunc:         keyFunc,
+		deltaCompressor: compressor,
+		knownObjects:    knownObjects,
 	}
 	f.cond.L = &f.lock
 	return f
@@ -93,6 +86,9 @@ func NewDeltaFIFO(keyFunc KeyFunc, knownObjects KeyListerGetter) *DeltaFIFO {
 // items have been deleted when Replace() or Delete() are called. The deleted
 // object will be included in the DeleteFinalStateUnknown markers. These objects
 // could be stale.
+//
+// You may provide a function to compress deltas (e.g., represent a
+// series of Updates as a single Update).
 type DeltaFIFO struct {
 	// lock/cond protects access to 'items' and 'queue'.
 	lock sync.RWMutex
@@ -114,6 +110,10 @@ type DeltaFIFO struct {
 	// insertion and retrieval, and should be deterministic.
 	keyFunc KeyFunc
 
+	// deltaCompressor tells us how to combine two or more
+	// deltas. It may be nil.
+	deltaCompressor DeltaCompressor
+
 	// knownObjects list keys that are "known", for the
 	// purpose of figuring out which items have been deleted
 	// when Replace() or Delete() is called.
@@ -133,6 +133,7 @@ var (
 var (
 	// ErrZeroLengthDeltasObject is returned in a KeyError if a Deltas
 	// object with zero length is encountered (should be impossible,
+	// even if such an object is accidentally produced by a DeltaCompressor--
 	// but included for completeness).
 	ErrZeroLengthDeltasObject = errors.New("0 length Deltas object; can't get key")
 )
@@ -212,6 +213,8 @@ func (f *DeltaFIFO) Delete(obj interface{}) error {
 		if err == nil && !exists && !itemsExist {
 			// Presumably, this was deleted when a relist happened.
 			// Don't provide a second report of the same deletion.
+			// TODO(lavalamp): This may be racy-- we aren't properly locked
+			// with knownObjects.
 			return nil
 		}
 	}
@@ -302,8 +305,8 @@ func (f *DeltaFIFO) willObjectBeDeletedLocked(id string) bool {
 	return len(deltas) > 0 && deltas[len(deltas)-1].Type == Deleted
 }
 
-// queueActionLocked appends to the delta list for the object.
-// Caller must lock first.
+// queueActionLocked appends to the delta list for the object, calling
+// f.deltaCompressor if needed. Caller must lock first.
 func (f *DeltaFIFO) queueActionLocked(actionType DeltaType, obj interface{}) error {
 	id, err := f.KeyOf(obj)
 	if err != nil {
@@ -319,16 +322,22 @@ func (f *DeltaFIFO) queueActionLocked(actionType DeltaType, obj interface{}) err
 
 	newDeltas := append(f.items[id], Delta{actionType, obj})
 	newDeltas = dedupDeltas(newDeltas)
+	if f.deltaCompressor != nil {
+		newDeltas = f.deltaCompressor.Compress(newDeltas)
+	}
 
+	_, exists := f.items[id]
 	if len(newDeltas) > 0 {
-		if _, exists := f.items[id]; !exists {
+		if !exists {
 			f.queue = append(f.queue, id)
 		}
 		f.items[id] = newDeltas
 		f.cond.Broadcast()
-	} else {
-		// We need to remove this from our map (extra items in the queue are
-		// ignored if they are not in the map).
+	} else if exists {
+		// The compression step removed all deltas, so
+		// we need to remove this from our map (extra items
+		// in the queue are ignored if they are not in the
+		// map).
 		delete(f.items, id)
 	}
 	return nil
@@ -346,6 +355,9 @@ func (f *DeltaFIFO) List() []interface{} {
 func (f *DeltaFIFO) listLocked() []interface{} {
 	list := make([]interface{}, 0, len(f.items))
 	for _, item := range f.items {
+		// Copy item's slice so operations on this slice (delta
+		// compression) won't interfere with the object we return.
+		item = copyDeltas(item)
 		list = append(list, item.Newest().Object)
 	}
 	return list
@@ -382,8 +394,8 @@ func (f *DeltaFIFO) GetByKey(key string) (item interface{}, exists bool, err err
 	defer f.lock.RUnlock()
 	d, exists := f.items[key]
 	if exists {
-		// Copy item's slice so operations on this slice
-		// won't interfere with the object we return.
+		// Copy item's slice so operations on this slice (delta
+		// compression) won't interfere with the object we return.
 		d = copyDeltas(d)
 	}
 	return d, exists, nil
@@ -393,7 +405,10 @@ func (f *DeltaFIFO) GetByKey(key string) (item interface{}, exists bool, err err
 func (f *DeltaFIFO) IsClosed() bool {
 	f.closedLock.Lock()
 	defer f.closedLock.Unlock()
-	return f.closed
+	if f.closed {
+		return true
+	}
+	return false
 }
 
 // Pop blocks until an item is added to the queue, and then returns it.  If
@@ -424,10 +439,10 @@ func (f *DeltaFIFO) Pop(process PopProcessFunc) (interface{}, error) {
 		}
 		id := f.queue[0]
 		f.queue = f.queue[1:]
+		item, ok := f.items[id]
 		if f.initialPopulationCount > 0 {
 			f.initialPopulationCount--
 		}
-		item, ok := f.items[id]
 		if !ok {
 			// Item may have been deleted subsequently.
 			continue
@@ -466,7 +481,6 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 
 	if f.knownObjects == nil {
 		// Do deletion detection against our own list.
-		queuedDeletions := 0
 		for k, oldItem := range f.items {
 			if keys.Has(k) {
 				continue
@@ -475,7 +489,6 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 			if n := oldItem.Newest(); n != nil {
 				deletedObj = n.Object
 			}
-			queuedDeletions++
 			if err := f.queueActionLocked(Deleted, DeletedFinalStateUnknown{k, deletedObj}); err != nil {
 				return err
 			}
@@ -483,15 +496,15 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 
 		if !f.populated {
 			f.populated = true
-			// While there shouldn't be any queued deletions in the initial
-			// population of the queue, it's better to be on the safe side.
-			f.initialPopulationCount = len(list) + queuedDeletions
+			f.initialPopulationCount = len(list)
 		}
 
 		return nil
 	}
 
 	// Detect deletions not already in the queue.
+	// TODO(lavalamp): This may be racy-- we aren't properly locked
+	// with knownObjects. Unproven.
 	knownKeys := f.knownObjects.ListKeys()
 	queuedDeletions := 0
 	for _, k := range knownKeys {
@@ -502,10 +515,10 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 		deletedObj, exists, err := f.knownObjects.GetByKey(k)
 		if err != nil {
 			deletedObj = nil
-			klog.Errorf("Unexpected error %v during lookup of key %v, placing DeleteFinalStateUnknown marker without object", err, k)
+			glog.Errorf("Unexpected error %v during lookup of key %v, placing DeleteFinalStateUnknown marker without object", err, k)
 		} else if !exists {
 			deletedObj = nil
-			klog.Infof("Key %v does not exist in known objects store, placing DeleteFinalStateUnknown marker without object", k)
+			glog.Infof("Key %v does not exist in known objects store, placing DeleteFinalStateUnknown marker without object", k)
 		}
 		queuedDeletions++
 		if err := f.queueActionLocked(Deleted, DeletedFinalStateUnknown{k, deletedObj}); err != nil {
@@ -526,10 +539,6 @@ func (f *DeltaFIFO) Resync() error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	if f.knownObjects == nil {
-		return nil
-	}
-
 	keys := f.knownObjects.ListKeys()
 	for _, k := range keys {
 		if err := f.syncKeyLocked(k); err != nil {
@@ -549,10 +558,10 @@ func (f *DeltaFIFO) syncKey(key string) error {
 func (f *DeltaFIFO) syncKeyLocked(key string) error {
 	obj, exists, err := f.knownObjects.GetByKey(key)
 	if err != nil {
-		klog.Errorf("Unexpected error %v during lookup of key %v, unable to queue object for sync", err, key)
+		glog.Errorf("Unexpected error %v during lookup of key %v, unable to queue object for sync", err, key)
 		return nil
 	} else if !exists {
-		klog.Infof("Key %v does not exist in known objects store, unable to queue object for sync", key)
+		glog.Infof("Key %v does not exist in known objects store, unable to queue object for sync", key)
 		return nil
 	}
 
@@ -588,6 +597,23 @@ type KeyLister interface {
 // A KeyGetter is anything that knows how to get the value stored under a given key.
 type KeyGetter interface {
 	GetByKey(key string) (interface{}, bool, error)
+}
+
+// DeltaCompressor is an algorithm that removes redundant changes.
+type DeltaCompressor interface {
+	Compress(Deltas) Deltas
+}
+
+// DeltaCompressorFunc should remove redundant changes; but changes that
+// are redundant depend on one's desired semantics, so this is an
+// injectable function.
+//
+// DeltaCompressorFunc adapts a raw function to be a DeltaCompressor.
+type DeltaCompressorFunc func(Deltas) Deltas
+
+// Compress just calls dc.
+func (dc DeltaCompressorFunc) Compress(d Deltas) Deltas {
+	return dc(d)
 }
 
 // DeltaType is the type of a change (addition, deletion, etc)
@@ -638,7 +664,7 @@ func (d Deltas) Newest() *Delta {
 
 // copyDeltas returns a shallow copy of d; that is, it copies the slice but not
 // the objects in the slice. This allows Get/List to return an object that we
-// know won't be clobbered by a subsequent modifications.
+// know won't be clobbered by a subsequent call to a delta compressor.
 func copyDeltas(d Deltas) Deltas {
 	d2 := make(Deltas, len(d))
 	copy(d2, d)

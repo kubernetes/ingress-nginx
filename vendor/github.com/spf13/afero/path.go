@@ -60,7 +60,7 @@ func walk(fs Fs, path string, info os.FileInfo, walkFn filepath.WalkFunc) error 
 
 	for _, name := range names {
 		filename := filepath.Join(path, name)
-		fileInfo, err := lstatIfPossible(fs, filename)
+		fileInfo, err := lstatIfOs(fs, filename)
 		if err != nil {
 			if err := walkFn(filename, fileInfo, err); err != nil && err != filepath.SkipDir {
 				return err
@@ -77,13 +77,15 @@ func walk(fs Fs, path string, info os.FileInfo, walkFn filepath.WalkFunc) error 
 	return nil
 }
 
-// if the filesystem supports it, use Lstat, else use fs.Stat
-func lstatIfPossible(fs Fs, path string) (os.FileInfo, error) {
-	if lfs, ok := fs.(Lstater); ok {
-		fi, _, err := lfs.LstatIfPossible(path)
-		return fi, err
+// if the filesystem is OsFs use Lstat, else use fs.Stat
+func lstatIfOs(fs Fs, path string) (info os.FileInfo, err error) {
+	_, ok := fs.(*OsFs)
+	if ok {
+		info, err = os.Lstat(path)
+	} else {
+		info, err = fs.Stat(path)
 	}
-	return fs.Stat(path)
+	return
 }
 
 // Walk walks the file tree rooted at root, calling walkFn for each file or
@@ -98,7 +100,7 @@ func (a Afero) Walk(root string, walkFn filepath.WalkFunc) error {
 }
 
 func Walk(fs Fs, root string, walkFn filepath.WalkFunc) error {
-	info, err := lstatIfPossible(fs, root)
+	info, err := lstatIfOs(fs, root)
 	if err != nil {
 		return walkFn(root, nil, err)
 	}

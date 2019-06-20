@@ -22,18 +22,17 @@ import (
 
 	"github.com/pkg/errors"
 
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/ingress-nginx/internal/net"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/internal/sets"
 )
 
 // SourceRange returns the CIDR
 type SourceRange struct {
-	CIDR []string `json:"cidr,omitempty"`
+	CIDR []string `json:"cidr,omitEmpty"`
 }
 
 // Equal tests for equality between two SourceRange types
@@ -45,9 +44,21 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 		return false
 	}
 
-	match := sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
-	if !match {
+	if len(sr1.CIDR) != len(sr2.CIDR) {
 		return false
+	}
+
+	for _, s1l := range sr1.CIDR {
+		found := false
+		for _, sl2 := range sr2.CIDR {
+			if s1l == sl2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
 	return true
@@ -66,7 +77,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to limit access to certain client addresses or networks.
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`
-func (a ipwhitelist) Parse(ing *networking.Ingress) (interface{}, error) {
+func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
 	sort.Strings(defBackend.WhitelistSourceRange)
 

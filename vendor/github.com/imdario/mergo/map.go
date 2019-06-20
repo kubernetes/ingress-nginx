@@ -31,8 +31,7 @@ func isExported(field reflect.StructField) bool {
 // Traverses recursively both values, assigning src's fields values to dst.
 // The map argument tracks comparisons that have already been seen, which allows
 // short circuiting on recursive types.
-func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, config *Config) (err error) {
-	overwrite := config.Overwrite
+func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, overwrite bool) (err error) {
 	if dst.CanAddr() {
 		addr := dst.UnsafeAddr()
 		h := 17 * addr
@@ -72,7 +71,6 @@ func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, conf
 	case reflect.Struct:
 		srcMap := src.Interface().(map[string]interface{})
 		for key := range srcMap {
-			config.overwriteWithEmptyValue = true
 			srcValue := srcMap[key]
 			fieldName := changeInitialCase(key, unicode.ToUpper)
 			dstElement := dst.FieldByName(fieldName)
@@ -99,15 +97,15 @@ func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, conf
 				continue
 			}
 			if srcKind == dstKind {
-				if err = deepMerge(dstElement, srcElement, visited, depth+1, config); err != nil {
+				if err = deepMerge(dstElement, srcElement, visited, depth+1, overwrite); err != nil {
 					return
 				}
 			} else if dstKind == reflect.Interface && dstElement.Kind() == reflect.Interface {
-				if err = deepMerge(dstElement, srcElement, visited, depth+1, config); err != nil {
+				if err = deepMerge(dstElement, srcElement, visited, depth+1, overwrite); err != nil {
 					return
 				}
 			} else if srcKind == reflect.Map {
-				if err = deepMap(dstElement, srcElement, visited, depth+1, config); err != nil {
+				if err = deepMap(dstElement, srcElement, visited, depth+1, overwrite); err != nil {
 					return
 				}
 			} else {
@@ -129,35 +127,28 @@ func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, conf
 // doesn't apply if dst is a map.
 // This is separated method from Merge because it is cleaner and it keeps sane
 // semantics: merging equal types, mapping different (restricted) types.
-func Map(dst, src interface{}, opts ...func(*Config)) error {
-	return _map(dst, src, opts...)
+func Map(dst, src interface{}) error {
+	return _map(dst, src, false)
 }
 
-// MapWithOverwrite will do the same as Map except that non-empty dst attributes will be overridden by
+// MapWithOverwrite will do the same as Map except that non-empty dst attributes will be overriden by
 // non-empty src attribute values.
-// Deprecated: Use Map(…) with WithOverride
-func MapWithOverwrite(dst, src interface{}, opts ...func(*Config)) error {
-	return _map(dst, src, append(opts, WithOverride)...)
+func MapWithOverwrite(dst, src interface{}) error {
+	return _map(dst, src, true)
 }
 
-func _map(dst, src interface{}, opts ...func(*Config)) error {
+func _map(dst, src interface{}, overwrite bool) error {
 	var (
 		vDst, vSrc reflect.Value
 		err        error
 	)
-	config := &Config{}
-
-	for _, opt := range opts {
-		opt(config)
-	}
-
 	if vDst, vSrc, err = resolveValues(dst, src); err != nil {
 		return err
 	}
 	// To be friction-less, we redirect equal-type arguments
 	// to deepMerge. Only because arguments can be anything.
 	if vSrc.Kind() == vDst.Kind() {
-		return deepMerge(vDst, vSrc, make(map[uintptr]*visit), 0, config)
+		return deepMerge(vDst, vSrc, make(map[uintptr]*visit), 0, overwrite)
 	}
 	switch vSrc.Kind() {
 	case reflect.Struct:
@@ -171,5 +162,5 @@ func _map(dst, src interface{}, opts ...func(*Config)) error {
 	default:
 		return ErrNotSupported
 	}
-	return deepMap(vDst, vSrc, make(map[uintptr]*visit), 0, config)
+	return deepMap(vDst, vSrc, make(map[uintptr]*visit), 0, overwrite)
 }

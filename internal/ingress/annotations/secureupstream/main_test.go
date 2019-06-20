@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -29,28 +29,28 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *networking.Ingress {
-	defaultBackend := networking.IngressBackend{
+func buildIngress() *extensions.Ingress {
+	defaultBackend := extensions.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &networking.Ingress{
+	return &extensions.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: networking.IngressSpec{
-			Backend: &networking.IngressBackend{
+		Spec: extensions.IngressSpec{
+			Backend: &extensions.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []networking.IngressRule{
+			Rules: []extensions.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: networking.IngressRuleValue{
-						HTTP: &networking.HTTPIngressRuleValue{
-							Paths: []networking.HTTPIngressPath{
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -76,26 +76,10 @@ func (cfg mockCfg) GetAuthCertificate(secret string) (*resolver.AuthSSLCert, err
 	return nil, fmt.Errorf("secret not found: %v", secret)
 }
 
-func TestNoCA(t *testing.T) {
-	ing := buildIngress()
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTPS"
-	ing.SetAnnotations(data)
-
-	_, err := NewParser(mockCfg{
-		certs: map[string]resolver.AuthSSLCert{
-			"default/secure-verify-ca": {},
-		},
-	}).Parse(ing)
-	if err != nil {
-		t.Errorf("Unexpected error on ingress: %v", err)
-	}
-}
-
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTPS"
+	data[parser.GetAnnotationWithPrefix("secure-backends")] = "true"
 	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 
@@ -112,7 +96,7 @@ func TestAnnotations(t *testing.T) {
 func TestSecretNotFound(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTPS"
+	data[parser.GetAnnotationWithPrefix("secure-backends")] = "true"
 	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 	_, err := NewParser(mockCfg{}).Parse(ing)
@@ -124,7 +108,7 @@ func TestSecretNotFound(t *testing.T) {
 func TestSecretOnNonSecure(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTP"
+	data[parser.GetAnnotationWithPrefix("secure-backends")] = "false"
 	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 	_, err := NewParser(mockCfg{

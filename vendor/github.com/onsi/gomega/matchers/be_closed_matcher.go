@@ -2,9 +2,8 @@ package matchers
 
 import (
 	"fmt"
-	"reflect"
-
 	"github.com/onsi/gomega/format"
+	"reflect"
 )
 
 type BeClosedMatcher struct {
@@ -23,8 +22,8 @@ func (matcher *BeClosedMatcher) Match(actual interface{}) (success bool, err err
 	}
 
 	winnerIndex, _, open := reflect.Select([]reflect.SelectCase{
-		{Dir: reflect.SelectRecv, Chan: channelValue},
-		{Dir: reflect.SelectDefault},
+		reflect.SelectCase{Dir: reflect.SelectRecv, Chan: channelValue},
+		reflect.SelectCase{Dir: reflect.SelectDefault},
 	})
 
 	var closed bool

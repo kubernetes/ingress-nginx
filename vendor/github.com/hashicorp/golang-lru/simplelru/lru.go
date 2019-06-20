@@ -36,7 +36,7 @@ func NewLRU(size int, onEvict EvictCallback) (*LRU, error) {
 	return c, nil
 }
 
-// Purge is used to completely clear the cache.
+// Purge is used to completely clear the cache
 func (c *LRU) Purge() {
 	for k, v := range c.items {
 		if c.onEvict != nil {
@@ -48,7 +48,7 @@ func (c *LRU) Purge() {
 }
 
 // Add adds a value to the cache.  Returns true if an eviction occurred.
-func (c *LRU) Add(key, value interface{}) (evicted bool) {
+func (c *LRU) Add(key, value interface{}) bool {
 	// Check for existing item
 	if ent, ok := c.items[key]; ok {
 		c.evictList.MoveToFront(ent)
@@ -78,18 +78,17 @@ func (c *LRU) Get(key interface{}) (value interface{}, ok bool) {
 	return
 }
 
-// Contains checks if a key is in the cache, without updating the recent-ness
+// Check if a key is in the cache, without updating the recent-ness
 // or deleting it for being stale.
 func (c *LRU) Contains(key interface{}) (ok bool) {
 	_, ok = c.items[key]
 	return ok
 }
 
-// Peek returns the key value (or undefined if not found) without updating
+// Returns the key value (or undefined if not found) without updating
 // the "recently used"-ness of the key.
 func (c *LRU) Peek(key interface{}) (value interface{}, ok bool) {
-	var ent *list.Element
-	if ent, ok = c.items[key]; ok {
+	if ent, ok := c.items[key]; ok {
 		return ent.Value.(*entry).value, true
 	}
 	return nil, ok
@@ -97,7 +96,7 @@ func (c *LRU) Peek(key interface{}) (value interface{}, ok bool) {
 
 // Remove removes the provided key from the cache, returning if the
 // key was contained.
-func (c *LRU) Remove(key interface{}) (present bool) {
+func (c *LRU) Remove(key interface{}) bool {
 	if ent, ok := c.items[key]; ok {
 		c.removeElement(ent)
 		return true
@@ -106,7 +105,7 @@ func (c *LRU) Remove(key interface{}) (present bool) {
 }
 
 // RemoveOldest removes the oldest item from the cache.
-func (c *LRU) RemoveOldest() (key interface{}, value interface{}, ok bool) {
+func (c *LRU) RemoveOldest() (interface{}, interface{}, bool) {
 	ent := c.evictList.Back()
 	if ent != nil {
 		c.removeElement(ent)
@@ -117,7 +116,7 @@ func (c *LRU) RemoveOldest() (key interface{}, value interface{}, ok bool) {
 }
 
 // GetOldest returns the oldest entry
-func (c *LRU) GetOldest() (key interface{}, value interface{}, ok bool) {
+func (c *LRU) GetOldest() (interface{}, interface{}, bool) {
 	ent := c.evictList.Back()
 	if ent != nil {
 		kv := ent.Value.(*entry)

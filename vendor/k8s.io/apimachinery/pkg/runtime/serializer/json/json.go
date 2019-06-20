@@ -22,9 +22,8 @@ import (
 	"strconv"
 	"unsafe"
 
+	"github.com/ghodss/yaml"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/modern-go/reflect2"
-	"sigs.k8s.io/yaml"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -69,85 +68,41 @@ type Serializer struct {
 var _ runtime.Serializer = &Serializer{}
 var _ recognizer.RecognizingDecoder = &Serializer{}
 
-type customNumberExtension struct {
-	jsoniter.DummyExtension
-}
-
-func (cne *customNumberExtension) CreateDecoder(typ reflect2.Type) jsoniter.ValDecoder {
-	if typ.String() == "interface {}" {
-		return customNumberDecoder{}
-	}
-	return nil
-}
-
-type customNumberDecoder struct {
-}
-
-func (customNumberDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
-	switch iter.WhatIsNext() {
-	case jsoniter.NumberValue:
-		var number jsoniter.Number
-		iter.ReadVal(&number)
-		i64, err := strconv.ParseInt(string(number), 10, 64)
-		if err == nil {
-			*(*interface{})(ptr) = i64
-			return
+func init() {
+	// Force jsoniter to decode number to interface{} via ints, if possible.
+	decodeNumberAsInt64IfPossible := func(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+		switch iter.WhatIsNext() {
+		case jsoniter.NumberValue:
+			var number json.Number
+			iter.ReadVal(&number)
+			u64, err := strconv.ParseUint(string(number), 10, 64)
+			if err == nil {
+				*(*interface{})(ptr) = u64
+				return
+			}
+			i64, err := strconv.ParseInt(string(number), 10, 64)
+			if err == nil {
+				*(*interface{})(ptr) = i64
+				return
+			}
+			f64, err := strconv.ParseFloat(string(number), 64)
+			if err == nil {
+				*(*interface{})(ptr) = f64
+				return
+			}
+			// Not much we can do here.
+		default:
+			*(*interface{})(ptr) = iter.Read()
 		}
-		f64, err := strconv.ParseFloat(string(number), 64)
-		if err == nil {
-			*(*interface{})(ptr) = f64
-			return
-		}
-		iter.ReportError("DecodeNumber", err.Error())
-	default:
-		*(*interface{})(ptr) = iter.Read()
 	}
-}
-
-// CaseSensitiveJsonIterator returns a jsoniterator API that's configured to be
-// case-sensitive when unmarshalling, and otherwise compatible with
-// the encoding/json standard library.
-func CaseSensitiveJsonIterator() jsoniter.API {
-	config := jsoniter.Config{
-		EscapeHTML:             true,
-		SortMapKeys:            true,
-		ValidateJsonRawMessage: true,
-		CaseSensitive:          true,
-	}.Froze()
-	// Force jsoniter to decode number to interface{} via int64/float64, if possible.
-	config.RegisterExtension(&customNumberExtension{})
-	return config
-}
-
-// Private copy of jsoniter to try to shield against possible mutations
-// from outside. Still does not protect from package level jsoniter.Register*() functions - someone calling them
-// in some other library will mess with every usage of the jsoniter library in the whole program.
-// See https://github.com/json-iterator/go/issues/265
-var caseSensitiveJsonIterator = CaseSensitiveJsonIterator()
-
-// gvkWithDefaults returns group kind and version defaulting from provided default
-func gvkWithDefaults(actual, defaultGVK schema.GroupVersionKind) schema.GroupVersionKind {
-	if len(actual.Kind) == 0 {
-		actual.Kind = defaultGVK.Kind
-	}
-	if len(actual.Version) == 0 && len(actual.Group) == 0 {
-		actual.Group = defaultGVK.Group
-		actual.Version = defaultGVK.Version
-	}
-	if len(actual.Version) == 0 && actual.Group == defaultGVK.Group {
-		actual.Version = defaultGVK.Version
-	}
-	return actual
+	jsoniter.RegisterTypeDecoderFunc("interface {}", decodeNumberAsInt64IfPossible)
 }
 
 // Decode attempts to convert the provided data into YAML or JSON, extract the stored schema kind, apply the provided default gvk, and then
-// load that data into an object matching the desired schema kind or the provided into.
-// If into is *runtime.Unknown, the raw data will be extracted and no decoding will be performed.
-// If into is not registered with the typer, then the object will be straight decoded using normal JSON/YAML unmarshalling.
-// If into is provided and the original data is not fully qualified with kind/version/group, the type of the into will be used to alter the returned gvk.
-// If into is nil or data's gvk different from into's gvk, it will generate a new Object with ObjectCreater.New(gvk)
-// On success or most errors, the method will return the calculated schema kind.
-// The gvk calculate priority will be originalData > default gvk > into
+// load that data into an object matching the desired schema kind or the provided into. If into is *runtime.Unknown, the raw data will be
+// extracted and no decoding will be performed. If into is not registered with the typer, then the object will be straight decoded using
+// normal JSON/YAML unmarshalling. If into is provided and the original data is not fully qualified with kind/version/group, the type of
+// the into will be used to alter the returned gvk. On success or most errors, the method will return the calculated schema kind.
 func (s *Serializer) Decode(originalData []byte, gvk *schema.GroupVersionKind, into runtime.Object) (runtime.Object, *schema.GroupVersionKind, error) {
 	if versioned, ok := into.(*runtime.VersionedObjects); ok {
 		into = versioned.Last()
@@ -174,7 +129,17 @@ func (s *Serializer) Decode(originalData []byte, gvk *schema.GroupVersionKind, i
 	}
 
 	if gvk != nil {
-		*actual = gvkWithDefaults(*actual, *gvk)
+		// apply kind and version defaulting from provided default
+		if len(actual.Kind) == 0 {
+			actual.Kind = gvk.Kind
+		}
+		if len(actual.Version) == 0 && len(actual.Group) == 0 {
+			actual.Group = gvk.Group
+			actual.Version = gvk.Version
+		}
+		if len(actual.Version) == 0 && actual.Group == gvk.Group {
+			actual.Version = gvk.Version
+		}
 	}
 
 	if unk, ok := into.(*runtime.Unknown); ok && unk != nil {
@@ -185,18 +150,27 @@ func (s *Serializer) Decode(originalData []byte, gvk *schema.GroupVersionKind, i
 	}
 
 	if into != nil {
-		_, isUnstructured := into.(runtime.Unstructured)
 		types, _, err := s.typer.ObjectKinds(into)
 		switch {
-		case runtime.IsNotRegisteredError(err), isUnstructured:
-			if err := caseSensitiveJsonIterator.Unmarshal(data, into); err != nil {
+		case runtime.IsNotRegisteredError(err):
+			if err := jsoniter.ConfigFastest.Unmarshal(data, into); err != nil {
 				return nil, actual, err
 			}
 			return into, actual, nil
 		case err != nil:
 			return nil, actual, err
 		default:
-			*actual = gvkWithDefaults(*actual, types[0])
+			typed := types[0]
+			if len(actual.Kind) == 0 {
+				actual.Kind = typed.Kind
+			}
+			if len(actual.Version) == 0 && len(actual.Group) == 0 {
+				actual.Group = typed.Group
+				actual.Version = typed.Version
+			}
+			if len(actual.Version) == 0 && actual.Group == typed.Group {
+				actual.Version = typed.Version
+			}
 		}
 	}
 
@@ -213,7 +187,7 @@ func (s *Serializer) Decode(originalData []byte, gvk *schema.GroupVersionKind, i
 		return nil, actual, err
 	}
 
-	if err := caseSensitiveJsonIterator.Unmarshal(data, obj); err != nil {
+	if err := jsoniter.ConfigFastest.Unmarshal(data, obj); err != nil {
 		return nil, actual, err
 	}
 	return obj, actual, nil
@@ -222,7 +196,7 @@ func (s *Serializer) Decode(originalData []byte, gvk *schema.GroupVersionKind, i
 // Encode serializes the provided object to the given writer.
 func (s *Serializer) Encode(obj runtime.Object, w io.Writer) error {
 	if s.yaml {
-		json, err := caseSensitiveJsonIterator.Marshal(obj)
+		json, err := jsoniter.ConfigFastest.Marshal(obj)
 		if err != nil {
 			return err
 		}
@@ -235,7 +209,7 @@ func (s *Serializer) Encode(obj runtime.Object, w io.Writer) error {
 	}
 
 	if s.pretty {
-		data, err := caseSensitiveJsonIterator.MarshalIndent(obj, "", "  ")
+		data, err := jsoniter.ConfigFastest.MarshalIndent(obj, "", "  ")
 		if err != nil {
 			return err
 		}
@@ -273,7 +247,7 @@ func (jsonFramer) NewFrameReader(r io.ReadCloser) io.ReadCloser {
 	return framer.NewJSONFramedReader(r)
 }
 
-// YAMLFramer is the default JSON framing behavior, with newlines delimiting individual objects.
+// Framer is the default JSON framing behavior, with newlines delimiting individual objects.
 var YAMLFramer = yamlFramer{}
 
 type yamlFramer struct{}

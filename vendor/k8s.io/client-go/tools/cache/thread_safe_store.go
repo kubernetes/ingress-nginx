@@ -148,19 +148,12 @@ func (c *threadSafeMap) Index(indexName string, obj interface{}) ([]interface{},
 	}
 	index := c.indices[indexName]
 
-	var returnKeySet sets.String
-	if len(indexKeys) == 1 {
-		// In majority of cases, there is exactly one value matching.
-		// Optimize the most common path - deduping is not needed here.
-		returnKeySet = index[indexKeys[0]]
-	} else {
-		// Need to de-dupe the return list.
-		// Since multiple keys are allowed, this can happen.
-		returnKeySet = sets.String{}
-		for _, indexKey := range indexKeys {
-			for key := range index[indexKey] {
-				returnKeySet.Insert(key)
-			}
+	// need to de-dupe the return list.  Since multiple keys are allowed, this can happen.
+	returnKeySet := sets.String{}
+	for _, indexKey := range indexKeys {
+		set := index[indexKey]
+		for _, key := range set.UnsortedList() {
+			returnKeySet.Insert(key)
 		}
 	}
 
@@ -248,7 +241,7 @@ func (c *threadSafeMap) AddIndexers(newIndexers Indexers) error {
 
 // updateIndices modifies the objects location in the managed indexes, if this is an update, you must provide an oldObj
 // updateIndices must be called from a function that already has a lock on the cache
-func (c *threadSafeMap) updateIndices(oldObj interface{}, newObj interface{}, key string) {
+func (c *threadSafeMap) updateIndices(oldObj interface{}, newObj interface{}, key string) error {
 	// if we got an old object, we need to remove it before we add it again
 	if oldObj != nil {
 		c.deleteFromIndices(oldObj, key)
@@ -256,7 +249,7 @@ func (c *threadSafeMap) updateIndices(oldObj interface{}, newObj interface{}, ke
 	for name, indexFunc := range c.indexers {
 		indexValues, err := indexFunc(newObj)
 		if err != nil {
-			panic(fmt.Errorf("unable to calculate an index entry for key %q on index %q: %v", key, name, err))
+			return err
 		}
 		index := c.indices[name]
 		if index == nil {
@@ -273,15 +266,16 @@ func (c *threadSafeMap) updateIndices(oldObj interface{}, newObj interface{}, ke
 			set.Insert(key)
 		}
 	}
+	return nil
 }
 
 // deleteFromIndices removes the object from each of the managed indexes
 // it is intended to be called from a function that already has a lock on the cache
-func (c *threadSafeMap) deleteFromIndices(obj interface{}, key string) {
+func (c *threadSafeMap) deleteFromIndices(obj interface{}, key string) error {
 	for name, indexFunc := range c.indexers {
 		indexValues, err := indexFunc(obj)
 		if err != nil {
-			panic(fmt.Errorf("unable to calculate an index entry for key %q on index %q: %v", key, name, err))
+			return err
 		}
 
 		index := c.indices[name]
@@ -295,6 +289,7 @@ func (c *threadSafeMap) deleteFromIndices(obj interface{}, key string) {
 			}
 		}
 	}
+	return nil
 }
 
 func (c *threadSafeMap) Resync() error {

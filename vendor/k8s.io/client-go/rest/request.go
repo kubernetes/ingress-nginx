@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/glog"
 	"golang.org/x/net/http2"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +44,6 @@ import (
 	restclientwatch "k8s.io/client-go/rest/watch"
 	"k8s.io/client-go/tools/metrics"
 	"k8s.io/client-go/util/flowcontrol"
-	"k8s.io/klog"
 )
 
 var (
@@ -112,9 +112,9 @@ type Request struct {
 }
 
 // NewRequest creates a new request helper object for accessing runtime.Objects on a server.
-func NewRequest(client HTTPClient, verb string, baseURL *url.URL, versionedAPIPath string, content ContentConfig, serializers Serializers, backoff BackoffManager, throttle flowcontrol.RateLimiter, timeout time.Duration) *Request {
+func NewRequest(client HTTPClient, verb string, baseURL *url.URL, versionedAPIPath string, content ContentConfig, serializers Serializers, backoff BackoffManager, throttle flowcontrol.RateLimiter) *Request {
 	if backoff == nil {
-		klog.V(2).Infof("Not implementing request backoff strategy.")
+		glog.V(2).Infof("Not implementing request backoff strategy.")
 		backoff = &NoBackoff{}
 	}
 
@@ -131,7 +131,6 @@ func NewRequest(client HTTPClient, verb string, baseURL *url.URL, versionedAPIPa
 		serializers: serializers,
 		backoffMgr:  backoff,
 		throttle:    throttle,
-		timeout:     timeout,
 	}
 	switch {
 	case len(content.AcceptContentTypes) > 0:
@@ -180,25 +179,7 @@ func (r *Request) Resource(resource string) *Request {
 	return r
 }
 
-// BackOff sets the request's backoff manager to the one specified,
-// or defaults to the stub implementation if nil is provided
-func (r *Request) BackOff(manager BackoffManager) *Request {
-	if manager == nil {
-		r.backoffMgr = &NoBackoff{}
-		return r
-	}
-
-	r.backoffMgr = manager
-	return r
-}
-
-// Throttle receives a rate-limiter and sets or replaces an existing request limiter
-func (r *Request) Throttle(limiter flowcontrol.RateLimiter) *Request {
-	r.throttle = limiter
-	return r
-}
-
-// SubResource sets a sub-resource path which can be multiple segments after the resource
+// SubResource sets a sub-resource path which can be multiple segments segment after the resource
 // name but before the suffix.
 func (r *Request) SubResource(subresources ...string) *Request {
 	if r.err != nil {
@@ -317,14 +298,10 @@ func (r *Request) Param(paramName, s string) *Request {
 // VersionedParams will not write query parameters that have omitempty set and are empty. If a
 // parameter has already been set it is appended to (Params and VersionedParams are additive).
 func (r *Request) VersionedParams(obj runtime.Object, codec runtime.ParameterCodec) *Request {
-	return r.SpecificallyVersionedParams(obj, codec, *r.content.GroupVersion)
-}
-
-func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec runtime.ParameterCodec, version schema.GroupVersion) *Request {
 	if r.err != nil {
 		return r
 	}
-	params, err := codec.EncodeParameters(obj, version)
+	params, err := codec.EncodeParameters(obj, *r.content.GroupVersion)
 	if err != nil {
 		r.err = err
 		return r
@@ -357,8 +334,8 @@ func (r *Request) SetHeader(key string, values ...string) *Request {
 	return r
 }
 
-// Timeout makes the request use the given duration as an overall timeout for the
-// request. Additionally, if set passes the value as "timeout" parameter in URL.
+// Timeout makes the request use the given duration as a timeout. Sets the "timeout"
+// parameter.
 func (r *Request) Timeout(d time.Duration) *Request {
 	if r.err != nil {
 		return r
@@ -455,9 +432,17 @@ func (r *Request) URL() *url.URL {
 
 // finalURLTemplate is similar to URL(), but will make all specific parameter values equal
 // - instead of name or namespace, "{name}" and "{namespace}" will be used, and all query
-// parameters will be reset. This creates a copy of the url so as not to change the
-// underlying object.
+// parameters will be reset. This creates a copy of the request so as not to change the
+// underlying object.  This means some useful request info (like the types of field
+// selectors in use) will be lost.
+// TODO: preserve field selector keys
 func (r Request) finalURLTemplate() url.URL {
+	if len(r.resourceName) != 0 {
+		r.resourceName = "{name}"
+	}
+	if r.namespaceSet && len(r.namespace) != 0 {
+		r.namespace = "{namespace}"
+	}
 	newParams := url.Values{}
 	v := []string{"{value}"}
 	for k := range r.params {
@@ -465,59 +450,6 @@ func (r Request) finalURLTemplate() url.URL {
 	}
 	r.params = newParams
 	url := r.URL()
-	segments := strings.Split(r.URL().Path, "/")
-	groupIndex := 0
-	index := 0
-	if r.URL() != nil && r.baseURL != nil && strings.Contains(r.URL().Path, r.baseURL.Path) {
-		groupIndex += len(strings.Split(r.baseURL.Path, "/"))
-	}
-	if groupIndex >= len(segments) {
-		return *url
-	}
-
-	const CoreGroupPrefix = "api"
-	const NamedGroupPrefix = "apis"
-	isCoreGroup := segments[groupIndex] == CoreGroupPrefix
-	isNamedGroup := segments[groupIndex] == NamedGroupPrefix
-	if isCoreGroup {
-		// checking the case of core group with /api/v1/... format
-		index = groupIndex + 2
-	} else if isNamedGroup {
-		// checking the case of named group with /apis/apps/v1/... format
-		index = groupIndex + 3
-	} else {
-		// this should not happen that the only two possibilities are /api... and /apis..., just want to put an
-		// outlet here in case more API groups are added in future if ever possible:
-		// https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups
-		// if a wrong API groups name is encountered, return the {prefix} for url.Path
-		url.Path = "/{prefix}"
-		url.RawQuery = ""
-		return *url
-	}
-	//switch segLength := len(segments) - index; segLength {
-	switch {
-	// case len(segments) - index == 1:
-	// resource (with no name) do nothing
-	case len(segments)-index == 2:
-		// /$RESOURCE/$NAME: replace $NAME with {name}
-		segments[index+1] = "{name}"
-	case len(segments)-index == 3:
-		if segments[index+2] == "finalize" || segments[index+2] == "status" {
-			// /$RESOURCE/$NAME/$SUBRESOURCE: replace $NAME with {name}
-			segments[index+1] = "{name}"
-		} else {
-			// /namespace/$NAMESPACE/$RESOURCE: replace $NAMESPACE with {namespace}
-			segments[index+1] = "{namespace}"
-		}
-	case len(segments)-index >= 4:
-		segments[index+1] = "{namespace}"
-		// /namespace/$NAMESPACE/$RESOURCE/$NAME: replace $NAMESPACE with {namespace},  $NAME with {name}
-		if segments[index+3] != "finalize" && segments[index+3] != "status" {
-			// /$RESOURCE/$NAME/$SUBRESOURCE: replace $NAME with {name}
-			segments[index+3] = "{name}"
-		}
-	}
-	url.Path = path.Join(segments...)
 	return *url
 }
 
@@ -527,26 +459,13 @@ func (r *Request) tryThrottle() {
 		r.throttle.Accept()
 	}
 	if latency := time.Since(now); latency > longThrottleLatency {
-		klog.V(4).Infof("Throttling request took %v, request: %s:%s", latency, r.verb, r.URL().String())
+		glog.V(4).Infof("Throttling request took %v, request: %s:%s", latency, r.verb, r.URL().String())
 	}
 }
 
 // Watch attempts to begin watching the requested location.
 // Returns a watch.Interface, or an error.
 func (r *Request) Watch() (watch.Interface, error) {
-	return r.WatchWithSpecificDecoders(
-		func(body io.ReadCloser) streaming.Decoder {
-			framer := r.serializers.Framer.NewFrameReader(body)
-			return streaming.NewDecoder(framer, r.serializers.StreamingSerializer)
-		},
-		r.serializers.Decoder,
-	)
-}
-
-// WatchWithSpecificDecoders attempts to begin watching the requested location with a *different* decoder.
-// Turns out that you want one "standard" decoder for the watch event and one "personal" decoder for the content
-// Returns a watch.Interface, or an error.
-func (r *Request) WatchWithSpecificDecoders(wrapperDecoderFn func(io.ReadCloser) streaming.Decoder, embeddedDecoder runtime.Decoder) (watch.Interface, error) {
 	// We specifically don't want to rate limit watches, so we
 	// don't use r.throttle here.
 	if r.err != nil {
@@ -594,8 +513,9 @@ func (r *Request) WatchWithSpecificDecoders(wrapperDecoderFn func(io.ReadCloser)
 		}
 		return nil, fmt.Errorf("for request '%+v', got status: %v", url, resp.StatusCode)
 	}
-	wrapperDecoder := wrapperDecoderFn(resp.Body)
-	return watch.NewStreamWatcher(restclientwatch.NewDecoder(wrapperDecoder, embeddedDecoder)), nil
+	framer := r.serializers.Framer.NewFrameReader(resp.Body)
+	decoder := streaming.NewDecoder(framer, r.serializers.StreamingSerializer)
+	return watch.NewStreamWatcher(restclientwatch.NewDecoder(decoder, r.serializers.Decoder)), nil
 }
 
 // updateURLMetrics is a convenience function for pushing metrics.
@@ -683,7 +603,7 @@ func (r *Request) request(fn func(*http.Request, *http.Response)) error {
 	}()
 
 	if r.err != nil {
-		klog.V(4).Infof("Error in request: %v", r.err)
+		glog.V(4).Infof("Error in request: %v", r.err)
 		return r.err
 	}
 
@@ -701,6 +621,7 @@ func (r *Request) request(fn func(*http.Request, *http.Response)) error {
 	}
 
 	// Right now we make about ten retry attempts if we get a Retry-After response.
+	// TODO: Change to a timeout based approach.
 	maxRetries := 10
 	retries := 0
 	for {
@@ -708,14 +629,6 @@ func (r *Request) request(fn func(*http.Request, *http.Response)) error {
 		req, err := http.NewRequest(r.verb, url, r.body)
 		if err != nil {
 			return err
-		}
-		if r.timeout > 0 {
-			if r.ctx == nil {
-				r.ctx = context.Background()
-			}
-			var cancelFn context.CancelFunc
-			r.ctx, cancelFn = context.WithTimeout(r.ctx, r.timeout)
-			defer cancelFn()
 		}
 		if r.ctx != nil {
 			req = req.WithContext(r.ctx)
@@ -770,13 +683,13 @@ func (r *Request) request(fn func(*http.Request, *http.Response)) error {
 				if seeker, ok := r.body.(io.Seeker); ok && r.body != nil {
 					_, err := seeker.Seek(0, 0)
 					if err != nil {
-						klog.V(4).Infof("Could not retry request, can't Seek() back to beginning of body for %T", r.body)
+						glog.V(4).Infof("Could not retry request, can't Seek() back to beginning of body for %T", r.body)
 						fn(req, resp)
 						return true
 					}
 				}
 
-				klog.V(4).Infof("Got a Retry-After %ds response for attempt %d to %v", seconds, retries, url)
+				glog.V(4).Infof("Got a Retry-After %s response for attempt %d to %v", seconds, retries, url)
 				r.backoffMgr.Sleep(time.Duration(seconds) * time.Second)
 				return false
 			}
@@ -844,13 +757,13 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 			// 2. Apiserver sends back the headers and then part of the body
 			// 3. Apiserver closes connection.
 			// 4. client-go should catch this and return an error.
-			klog.V(2).Infof("Stream error %#v when reading response body, may be caused by closed connection.", err)
+			glog.V(2).Infof("Stream error %#v when reading response body, may be caused by closed connection.", err)
 			streamErr := fmt.Errorf("Stream error %#v when reading response body, may be caused by closed connection. Please retry.", err)
 			return Result{
 				err: streamErr,
 			}
 		default:
-			klog.Errorf("Unexpected error when reading response body: %#v", err)
+			glog.Errorf("Unexpected error when reading response body: %#v", err)
 			unexpectedErr := fmt.Errorf("Unexpected error %#v when reading response body. Please retry.", err)
 			return Result{
 				err: unexpectedErr,
@@ -910,36 +823,17 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 	}
 }
 
-// truncateBody decides if the body should be truncated, based on the glog Verbosity.
-func truncateBody(body string) string {
-	max := 0
-	switch {
-	case bool(klog.V(10)):
-		return body
-	case bool(klog.V(9)):
-		max = 10240
-	case bool(klog.V(8)):
-		max = 1024
-	}
-
-	if len(body) <= max {
-		return body
-	}
-
-	return body[:max] + fmt.Sprintf(" [truncated %d chars]", len(body)-max)
-}
-
 // glogBody logs a body output that could be either JSON or protobuf. It explicitly guards against
 // allocating a new string for the body output unless necessary. Uses a simple heuristic to determine
 // whether the body is printable.
 func glogBody(prefix string, body []byte) {
-	if klog.V(8) {
+	if glog.V(8) {
 		if bytes.IndexFunc(body, func(r rune) bool {
 			return r < 0x0a
 		}) != -1 {
-			klog.Infof("%s:\n%s", prefix, truncateBody(hex.Dump(body)))
+			glog.Infof("%s:\n%s", prefix, hex.Dump(body))
 		} else {
-			klog.Infof("%s: %s", prefix, truncateBody(string(body)))
+			glog.Infof("%s: %s", prefix, string(body))
 		}
 	}
 }
@@ -1100,8 +994,7 @@ func (r Result) Into(obj runtime.Object) error {
 		return fmt.Errorf("serializer for %s doesn't exist", r.contentType)
 	}
 	if len(r.body) == 0 {
-		return fmt.Errorf("0-length response with status code: %d and content type: %s",
-			r.statusCode, r.contentType)
+		return fmt.Errorf("0-length response")
 	}
 
 	out, _, err := r.decoder.Decode(r.body, nil, obj)
@@ -1142,7 +1035,7 @@ func (r Result) Error() error {
 	// to be backwards compatible with old servers that do not return a version, default to "v1"
 	out, _, err := r.decoder.Decode(r.body, &schema.GroupVersionKind{Version: "v1"}, nil)
 	if err != nil {
-		klog.V(5).Infof("body was not decodable (unable to check for Status): %v", err)
+		glog.V(5).Infof("body was not decodable (unable to check for Status): %v", err)
 		return r.err
 	}
 	switch t := out.(type) {
@@ -1196,6 +1089,7 @@ func IsValidPathSegmentPrefix(name string) []string {
 func ValidatePathSegmentName(name string, prefix bool) []string {
 	if prefix {
 		return IsValidPathSegmentPrefix(name)
+	} else {
+		return IsValidPathSegmentName(name)
 	}
-	return IsValidPathSegmentName(name)
 }

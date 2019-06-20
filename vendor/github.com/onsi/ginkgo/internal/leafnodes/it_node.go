@@ -1,10 +1,9 @@
 package leafnodes
 
 import (
-	"time"
-
 	"github.com/onsi/ginkgo/internal/failer"
 	"github.com/onsi/ginkgo/types"
+	"time"
 )
 
 type ItNode struct {

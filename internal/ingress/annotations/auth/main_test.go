@@ -26,36 +26,35 @@ import (
 	"github.com/pkg/errors"
 
 	api "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *networking.Ingress {
-	defaultBackend := networking.IngressBackend{
+func buildIngress() *extensions.Ingress {
+	defaultBackend := extensions.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &networking.Ingress{
+	return &extensions.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: networking.IngressSpec{
-			Backend: &networking.IngressBackend{
+		Spec: extensions.IngressSpec{
+			Backend: &extensions.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []networking.IngressRule{
+			Rules: []extensions.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: networking.IngressRuleValue{
-						HTTP: &networking.HTTPIngressRuleValue{
-							Paths: []networking.HTTPIngressPath{
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -94,42 +93,6 @@ func TestIngressWithoutAuth(t *testing.T) {
 	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
-	}
-}
-
-func TestIngressAuthBadAuthType(t *testing.T) {
-	ing := buildIngress()
-
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("auth-type")] = "invalid"
-	ing.SetAnnotations(data)
-
-	_, dir, _ := dummySecretContent(t)
-	defer os.RemoveAll(dir)
-
-	expected := ing_errors.NewLocationDenied("invalid authentication type")
-	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
-	if err.Error() != expected.Error() {
-		t.Errorf("expected '%v' but got '%v'", expected, err)
-	}
-}
-
-func TestInvalidIngressAuthNoSecret(t *testing.T) {
-	ing := buildIngress()
-
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
-	ing.SetAnnotations(data)
-
-	_, dir, _ := dummySecretContent(t)
-	defer os.RemoveAll(dir)
-
-	expected := ing_errors.LocationDenied{
-		Reason: errors.New("error reading secret name from annotation: ingress rule without annotations"),
-	}
-	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
-	if err.Error() != expected.Reason.Error() {
-		t.Errorf("expected '%v' but got '%v'", expected, err)
 	}
 }
 

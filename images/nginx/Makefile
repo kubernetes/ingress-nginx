@@ -13,12 +13,12 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.87
+TAG ?= 0.30
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
-DOCKER ?= docker
+DOCKER ?= gcloud docker --
 
-ALL_ARCH = amd64 arm64
+ALL_ARCH = amd64 arm arm64 ppc64le s390x
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
@@ -26,17 +26,26 @@ ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
 
-QEMUVERSION=v3.0.0
+QEMUVERSION=v2.9.1
 
 IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/debian-base-$(ARCH):0.1
+BASEIMAGE?=gcr.io/google-containers/debian-base-$(ARCH):0.3
 
+ifeq ($(ARCH),arm)
+	QEMUARCH=arm
+endif
 ifeq ($(ARCH),arm64)
 	QEMUARCH=aarch64
+endif
+ifeq ($(ARCH),ppc64le)
+	QEMUARCH=ppc64le
+endif
+ifeq ($(ARCH),s390x)
+	QEMUARCH=s390x
 endif
 
 TEMP_DIR := $(shell mktemp -d)
@@ -58,7 +67,7 @@ all-push: $(addprefix sub-push-,$(ALL_ARCH))
 
 container: .container-$(ARCH)
 .container-$(ARCH):
-	cp -r ./rootfs/* $(TEMP_DIR)
+	cp ./* $(TEMP_DIR)
 	cd $(TEMP_DIR) && $(SED_I) 's|BASEIMAGE|$(BASEIMAGE)|g' Dockerfile
 	cd $(TEMP_DIR) && $(SED_I) "s|ARCH|$(QEMUARCH)|g" Dockerfile
 
@@ -67,21 +76,18 @@ ifeq ($(ARCH),amd64)
 	cd $(TEMP_DIR) && $(SED_I) "/CROSS_BUILD_/d" Dockerfile
 else
 	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
+	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)
 	cd $(TEMP_DIR) && $(SED_I) "s/CROSS_BUILD_//g" Dockerfile
 endif
 
-	$(DOCKER) build --no-cache -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)
+	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)
 
 ifeq ($(ARCH), amd64)
 	# This is for to maintain the backward compatibility
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
-
-.PHONY: register-qemu
-register-qemu:
-	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 
 push: .push-$(ARCH)
 .push-$(ARCH): .container-$(ARCH)

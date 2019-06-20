@@ -15,27 +15,35 @@ package autorest
 //  limitations under the License.
 
 import (
+	"bytes"
 	"fmt"
-	"runtime"
+	"strings"
+	"sync"
 )
 
-const number = "v11.7.1"
-
-var (
-	userAgent = fmt.Sprintf("Go/%s (%s-%s) go-autorest/%s",
-		runtime.Version(),
-		runtime.GOARCH,
-		runtime.GOOS,
-		number,
-	)
+const (
+	major = 8
+	minor = 0
+	patch = 0
+	tag   = ""
 )
 
-// UserAgent returns a string containing the Go version, system architecture and OS, and the go-autorest version.
-func UserAgent() string {
-	return userAgent
-}
+var once sync.Once
+var version string
 
 // Version returns the semantic version (see http://semver.org).
 func Version() string {
-	return number
+	once.Do(func() {
+		semver := fmt.Sprintf("%d.%d.%d", major, minor, patch)
+		verBuilder := bytes.NewBufferString(semver)
+		if tag != "" && tag != "-" {
+			updated := strings.TrimPrefix(tag, "-")
+			_, err := verBuilder.WriteString("-" + updated)
+			if err == nil {
+				verBuilder = bytes.NewBufferString(semver)
+			}
+		}
+		version = verBuilder.String()
+	})
+	return version
 }

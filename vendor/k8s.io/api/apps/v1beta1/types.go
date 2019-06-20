@@ -17,7 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -26,7 +26,6 @@ import (
 const (
 	ControllerRevisionHashLabelKey = "controller-revision-hash"
 	StatefulSetRevisionLabel       = ControllerRevisionHashLabelKey
-	StatefulSetPodNameLabel        = "statefulset.kubernetes.io/pod-name"
 )
 
 // ScaleSpec describes the attributes of a scale subresource
@@ -55,6 +54,8 @@ type ScaleStatus struct {
 	TargetSelector string `json:"targetSelector,omitempty" protobuf:"bytes,3,opt,name=targetSelector"`
 }
 
+// +genclient
+// +genclient:noVerbs
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Scale represents a scaling request for a resource.
@@ -111,7 +112,7 @@ const (
 	// ParallelPodManagement will create and delete pods as soon as the stateful set
 	// replica count is changed, and will not wait for pods to be ready or complete
 	// termination.
-	ParallelPodManagement PodManagementPolicyType = "Parallel"
+	ParallelPodManagement = "Parallel"
 )
 
 // StatefulSetUpdateStrategy indicates the strategy that the StatefulSet
@@ -246,31 +247,6 @@ type StatefulSetStatus struct {
 	// newest ControllerRevision.
 	// +optional
 	CollisionCount *int32 `json:"collisionCount,omitempty" protobuf:"varint,9,opt,name=collisionCount"`
-
-	// Represents the latest available observations of a statefulset's current state.
-	// +optional
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	Conditions []StatefulSetCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,10,rep,name=conditions"`
-}
-
-type StatefulSetConditionType string
-
-// StatefulSetCondition describes the state of a statefulset at a certain point.
-type StatefulSetCondition struct {
-	// Type of statefulset condition.
-	Type StatefulSetConditionType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=StatefulSetConditionType"`
-	// Status of the condition, one of True, False, Unknown.
-	Status v1.ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=k8s.io/api/core/v1.ConditionStatus"`
-	// Last time the condition transitioned from one status to another.
-	// +optional
-	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" protobuf:"bytes,3,opt,name=lastTransitionTime"`
-	// The reason for the condition's last transition.
-	// +optional
-	Reason string `json:"reason,omitempty" protobuf:"bytes,4,opt,name=reason"`
-	// A human readable message indicating details about the transition.
-	// +optional
-	Message string `json:"message,omitempty" protobuf:"bytes,5,opt,name=message"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -321,8 +297,7 @@ type DeploymentSpec struct {
 
 	// The deployment strategy to use to replace existing pods with new ones.
 	// +optional
-	// +patchStrategy=retainKeys
-	Strategy DeploymentStrategy `json:"strategy,omitempty" patchStrategy:"retainKeys" protobuf:"bytes,4,opt,name=strategy"`
+	Strategy DeploymentStrategy `json:"strategy,omitempty" protobuf:"bytes,4,opt,name=strategy"`
 
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing, for it to be considered available.
@@ -378,8 +353,8 @@ type RollbackConfig struct {
 
 const (
 	// DefaultDeploymentUniqueLabelKey is the default key of the selector that is added
-	// to existing ReplicaSets (and label key that is added to its pods) to prevent the existing ReplicaSets
-	// to select new pods (and old pods being select by new ReplicaSet).
+	// to existing RCs (and label key that is added to its pods) to prevent the existing RCs
+	// to select new pods (and old pods being select by new RC).
 	DefaultDeploymentUniqueLabelKey string = "pod-template-hash"
 )
 
@@ -404,7 +379,7 @@ const (
 	// Kill all existing pods before creating new ones.
 	RecreateDeploymentStrategyType DeploymentStrategyType = "Recreate"
 
-	// Replace the old ReplicaSets by new one using rolling update i.e gradually scale down the old ReplicaSets and scale up the new one.
+	// Replace the old RCs by new one using rolling update i.e gradually scale down the old RCs and scale up the new one.
 	RollingUpdateDeploymentStrategyType DeploymentStrategyType = "RollingUpdate"
 )
 
@@ -415,9 +390,9 @@ type RollingUpdateDeployment struct {
 	// Absolute number is calculated from percentage by rounding down.
 	// This can not be 0 if MaxSurge is 0.
 	// Defaults to 25%.
-	// Example: when this is set to 30%, the old ReplicaSet can be scaled down to 70% of desired pods
-	// immediately when the rolling update starts. Once new pods are ready, old ReplicaSet
-	// can be scaled down further, followed by scaling up the new ReplicaSet, ensuring
+	// Example: when this is set to 30%, the old RC can be scaled down to 70% of desired pods
+	// immediately when the rolling update starts. Once new pods are ready, old RC
+	// can be scaled down further, followed by scaling up the new RC, ensuring
 	// that the total number of pods available at all times during the update is at
 	// least 70% of desired pods.
 	// +optional
@@ -429,11 +404,11 @@ type RollingUpdateDeployment struct {
 	// This can not be 0 if MaxUnavailable is 0.
 	// Absolute number is calculated from percentage by rounding up.
 	// Defaults to 25%.
-	// Example: when this is set to 30%, the new ReplicaSet can be scaled up immediately when
+	// Example: when this is set to 30%, the new RC can be scaled up immediately when
 	// the rolling update starts, such that the total number of old and new pods do not exceed
 	// 130% of desired pods. Once old pods have been killed,
-	// new ReplicaSet can be scaled up further, ensuring that total number of pods running
-	// at any time during the update is at most 130% of desired pods.
+	// new RC can be scaled up further, ensuring that total number of pods running
+	// at any time during the update is atmost 130% of desired pods.
 	// +optional
 	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty" protobuf:"bytes,2,opt,name=maxSurge"`
 }

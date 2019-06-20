@@ -2,9 +2,8 @@ package matchers
 
 import (
 	"fmt"
-	"reflect"
-
 	"github.com/onsi/gomega/format"
+	"reflect"
 )
 
 type MatchErrorMatcher struct {
@@ -22,12 +21,12 @@ func (matcher *MatchErrorMatcher) Match(actual interface{}) (success bool, err e
 
 	actualErr := actual.(error)
 
-	if isError(matcher.Expected) {
-		return reflect.DeepEqual(actualErr, matcher.Expected), nil
+	if isString(matcher.Expected) {
+		return reflect.DeepEqual(actualErr.Error(), matcher.Expected), nil
 	}
 
-	if isString(matcher.Expected) {
-		return actualErr.Error() == matcher.Expected, nil
+	if isError(matcher.Expected) {
+		return reflect.DeepEqual(actualErr, matcher.Expected), nil
 	}
 
 	var subMatcher omegaMatcher

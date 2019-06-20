@@ -24,9 +24,6 @@ import (
 
 	"github.com/ncabatoff/process-exporter/proc"
 	"github.com/pkg/errors"
-	"k8s.io/klog"
-
-	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 // Name returns the healthcheck name
@@ -36,41 +33,29 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n *NGINXController) Check(_ *http.Request) error {
-	statusCode, _, err := nginx.NewGetStatusRequest(nginx.HealthPath)
+	res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath))
 	if err != nil {
-		klog.Errorf("healthcheck error: %v", err)
 		return err
 	}
-
-	if statusCode != 200 {
-		klog.Errorf("healthcheck error: %v", statusCode)
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
 		return fmt.Errorf("ingress controller is not healthy")
 	}
 
-	statusCode, _, err = nginx.NewGetStatusRequest("/is-dynamic-lb-initialized")
-	if err != nil {
-		klog.Errorf("healthcheck error: %v", err)
-		return err
-	}
-
-	if statusCode != 200 {
-		klog.Errorf("healthcheck error: %v", statusCode)
-		return fmt.Errorf("dynamic load balancer not started")
-	}
-
 	// check the nginx master process is running
-	fs, err := proc.NewFS("/proc", false)
+	fs, err := proc.NewFS("/proc")
 	if err != nil {
 		return errors.Wrap(err, "unexpected error reading /proc directory")
 	}
-	f, err := n.fileSystem.ReadFile(nginx.PID)
+	f, err := n.fileSystem.ReadFile("/run/nginx.pid")
 	if err != nil {
-		return errors.Wrapf(err, "unexpected error reading %v", nginx.PID)
+		return errors.Wrap(err, "unexpected error reading /run/nginx.pid")
 	}
 	pid, err := strconv.Atoi(strings.TrimRight(string(f), "\r\n"))
 	if err != nil {
-		return errors.Wrapf(err, "unexpected error reading the nginx PID from %v", nginx.PID)
+		return errors.Wrap(err, "unexpected error reading the PID from /run/nginx.pid")
 	}
 	_, err = fs.NewProc(pid)
+
 	return err
 }

@@ -110,9 +110,7 @@ func ReadInfoFromBytes(filename string, bytes []byte) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(filename) > 0 {
-		infoCache[filename] = info
-	}
+	infoCache[filename] = info
 	return info, nil
 }
 

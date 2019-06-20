@@ -23,47 +23,41 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/fake"
-
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 )
 
 func TestCreateApiserverClient(t *testing.T) {
-	_, err := createApiserverClient("", "")
+	home := os.Getenv("HOME")
+	kubeConfigFile := fmt.Sprintf("%v/.kube/config", home)
+
+	cli, err := createApiserverClient("", kubeConfigFile)
+	if err != nil {
+		t.Fatalf("unexpected error creating api server client: %v", err)
+	}
+	if cli == nil {
+		t.Fatalf("expected a kubernetes client but none returned")
+	}
+
+	_, err = createApiserverClient("", "")
 	if err == nil {
-		t.Fatal("Expected an error creating REST client without an API server URL or kubeconfig file.")
+		t.Fatalf("expected an error creating api server client without an api server URL or kubeconfig file")
 	}
 }
 
 func TestHandleSigterm(t *testing.T) {
-	clientSet := fake.NewSimpleClientset()
+	home := os.Getenv("HOME")
+	kubeConfigFile := fmt.Sprintf("%v/.kube/config", home)
 
-	ns := "test"
-
-	cm := createConfigMap(clientSet, ns, t)
-	defer deleteConfigMap(cm, ns, clientSet, t)
-
-	name := "test"
-	pod := v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: ns,
-		},
-	}
-
-	_, err := clientSet.CoreV1().Pods(ns).Create(&pod)
+	cli, err := createApiserverClient("", kubeConfigFile)
 	if err != nil {
-		t.Fatalf("error creating pod %v: %v", pod, err)
+		t.Fatalf("unexpected error creating api server client: %v", err)
 	}
 
 	resetForTesting(func() { t.Fatal("bad parse") })
 
-	os.Setenv("POD_NAME", name)
-	os.Setenv("POD_NAMESPACE", ns)
+	os.Setenv("POD_NAME", "test")
+	os.Setenv("POD_NAMESPACE", "test")
 	defer os.Setenv("POD_NAME", "")
 	defer os.Setenv("POD_NAMESPACE", "")
 
@@ -73,20 +67,20 @@ func TestHandleSigterm(t *testing.T) {
 
 	_, conf, err := parseFlags()
 	if err != nil {
-		t.Errorf("Unexpected error creating NGINX controller: %v", err)
+		t.Errorf("unexpected error creating NGINX controller: %v", err)
 	}
-	conf.Client = clientSet
+	conf.Client = cli
 
 	fs, err := file.NewFakeFS()
 	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
 
-	ngx := controller.NewNGINXController(conf, nil, fs)
+	ngx := controller.NewNGINXController(conf, fs)
 
 	go handleSigterm(ngx, func(code int) {
 		if code != 1 {
-			t.Errorf("Expected exit code 1 but %d received", code)
+			t.Errorf("expected exit code 1 but %v received", code)
 		}
 
 		return
@@ -94,45 +88,12 @@ func TestHandleSigterm(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	t.Logf("Sending SIGTERM to PID %d", syscall.Getpid())
+	t.Logf("sending SIGTERM to process PID %v", syscall.Getpid())
 	err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 	if err != nil {
-		t.Error("Unexpected error sending SIGTERM signal.")
-	}
-
-	err = clientSet.CoreV1().Pods(ns).Delete(name, &metav1.DeleteOptions{})
-	if err != nil {
-		t.Fatalf("error deleting pod %v: %v", pod, err)
+		t.Errorf("unexpected error sending SIGTERM signal")
 	}
 }
 
-func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) string {
-	t.Helper()
-	t.Log("Creating temporal config map")
-
-	configMap := &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:     "config",
-			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
-		},
-	}
-
-	cm, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
-	if err != nil {
-		t.Errorf("error creating the configuration map: %v", err)
-	}
-	t.Logf("Temporal configmap %v created", cm)
-
-	return cm.Name
-}
-
-func deleteConfigMap(cm, ns string, clientSet kubernetes.Interface, t *testing.T) {
-	t.Helper()
-	t.Logf("Deleting temporal configmap %v", cm)
-
-	err := clientSet.CoreV1().ConfigMaps(ns).Delete(cm, &metav1.DeleteOptions{})
-	if err != nil {
-		t.Errorf("error deleting the configmap: %v", err)
-	}
-	t.Logf("Temporal configmap %v deleted", cm)
+func TestRegisterHandlers(t *testing.T) {
 }

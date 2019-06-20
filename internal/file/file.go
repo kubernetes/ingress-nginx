@@ -20,7 +20,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"io/ioutil"
-	"k8s.io/klog"
 )
 
 // SHA1 returns the SHA1 of a file.
@@ -28,7 +27,6 @@ func SHA1(filename string) string {
 	hasher := sha1.New()
 	s, err := ioutil.ReadFile(filename)
 	if err != nil {
-		klog.Errorf("Error reading file %v", err)
 		return ""
 	}
 

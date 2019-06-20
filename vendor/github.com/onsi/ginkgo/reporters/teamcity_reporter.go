@@ -10,11 +10,10 @@ package reporters
 
 import (
 	"fmt"
-	"io"
-	"strings"
-
 	"github.com/onsi/ginkgo/config"
 	"github.com/onsi/ginkgo/types"
+	"io"
+	"strings"
 )
 
 const (

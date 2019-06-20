@@ -11,7 +11,6 @@ type curlyRoute struct {
 	staticCount int
 }
 
-// sortableCurlyRoutes orders by most parameters and path elements first.
 type sortableCurlyRoutes []curlyRoute
 
 func (s *sortableCurlyRoutes) add(route curlyRoute) {
@@ -19,7 +18,6 @@ func (s *sortableCurlyRoutes) add(route curlyRoute) {
 }
 
 func (s sortableCurlyRoutes) routes() (routes []Route) {
-	routes = make([]Route, 0, len(s))
 	for _, each := range s {
 		routes = append(routes, each.route) // TODO change return type
 	}
@@ -33,22 +31,22 @@ func (s sortableCurlyRoutes) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 func (s sortableCurlyRoutes) Less(i, j int) bool {
-	a := s[j]
-	b := s[i]
+	ci := s[i]
+	cj := s[j]
 
 	// primary key
-	if a.staticCount < b.staticCount {
+	if ci.staticCount < cj.staticCount {
 		return true
 	}
-	if a.staticCount > b.staticCount {
+	if ci.staticCount > cj.staticCount {
 		return false
 	}
 	// secundary key
-	if a.paramCount < b.paramCount {
+	if ci.paramCount < cj.paramCount {
 		return true
 	}
-	if a.paramCount > b.paramCount {
+	if ci.paramCount > cj.paramCount {
 		return false
 	}
-	return a.route.Path < b.route.Path
+	return ci.route.Path < cj.route.Path
 }

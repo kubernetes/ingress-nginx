@@ -5,6 +5,7 @@ package restful
 // that can be found in the LICENSE file.
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"strings"
 	"sync"
@@ -127,7 +128,7 @@ type entityJSONAccess struct {
 
 // Read unmarshalls the value from JSON
 func (e entityJSONAccess) Read(req *Request, v interface{}) error {
-	decoder := NewDecoder(req.Request.Body)
+	decoder := json.NewDecoder(req.Request.Body)
 	decoder.UseNumber()
 	return decoder.Decode(v)
 }
@@ -146,7 +147,7 @@ func writeJSON(resp *Response, status int, contentType string, v interface{}) er
 	}
 	if resp.prettyPrint {
 		// pretty output must be created and written explicitly
-		output, err := MarshalIndent(v, "", " ")
+		output, err := json.MarshalIndent(v, " ", " ")
 		if err != nil {
 			return err
 		}
@@ -158,5 +159,5 @@ func writeJSON(resp *Response, status int, contentType string, v interface{}) er
 	// not-so-pretty
 	resp.Header().Set(HEADER_ContentType, contentType)
 	resp.WriteHeader(status)
-	return NewEncoder(resp).Encode(v)
+	return json.NewEncoder(resp).Encode(v)
 }

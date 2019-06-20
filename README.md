@@ -1,31 +1,18 @@
-## Help us to improve the NGINX Ingress controller [completing the survey](https://docs.google.com/forms/d/15ULTOvYDsV920V0GWrspew4yyjEmTAi740Wr34UgKwA/viewform)
+The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](https://github.com/kubernetes/ingress-gce).
 
 ---
 
 # NGINX Ingress Controller
 
 [![Build Status](https://travis-ci.org/kubernetes/ingress-nginx.svg?branch=master)](https://travis-ci.org/kubernetes/ingress-nginx)
-[![Coverage Status](https://codecov.io/gh/kubernetes/ingress-nginx/branch/master/graph/badge.svg)](https://codecov.io/gh/kubernetes/ingress-nginx)
+[![Coverage Status](https://coveralls.io/repos/github/kubernetes/ingress-nginx/badge.svg?branch=master)](https://coveralls.io/github/kubernetes/ingress-nginx?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx)
-[![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/stargazers)
-[![GitHub stars](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx?ref=badge_shield)
-
-# Get Involved
-
-- **Contributing**: Pull requests are welcome!
-  - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and check out [help-wanted](https://github.com/kubernetes/ingress-nginx/labels/help%20wanted) issues
-  - Submit github issues for any feature enhancements, bugs or documentation problems
-- **Support**: Join to [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions to get support from the maintainers and other developers
-  - Questions/comments can also be posted as [github issues](https://github.com/kubernetes/ingress-nginx/issues)
-- **Discuss**: Tweet using the `#IngressNginx` hashtag
 
 ## Description
 
-This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#understanding-configmaps-and-pods) to store the NGINX configuration. [Make Ingress-Nginx Work for you, and the Community](https://youtu.be/GDm-7BlmPPg) from KubeCon Europe 2018 is a great video to get you started!!
+This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the NGINX configuration.
 
-Learn more about using Ingress on [k8s.io](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+Learn more about using Ingress on [k8s.io](http://kubernetes.io/docs/user-guide/ingress/)
 
 ### What is an Ingress Controller?
 
@@ -35,33 +22,156 @@ The Ingress resource embodies this idea, and an Ingress controller is meant to h
 
 An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches the apiserver's `/ingresses` endpoint for updates to the [Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/). Its job is to satisfy requests for Ingresses.
 
-## Documentation
+## Contents
 
-To check out [Live Docs](https://kubernetes.github.io/ingress-nginx/)
+- [Conventions](#conventions)
+- [Requirements](#requirements)
+- [Deployment](deploy/README.md)
+- [Command line arguments](docs/user-guide/cli-arguments.md)
+- [Contribute](CONTRIBUTING.md)
+- [TLS](docs/user-guide/tls.md)
+- [Annotation ingress.class](#annotation-ingressclass)
+- [Customizing NGINX](#customizing-nginx)
+  - [Custom NGINX configuration](docs/user-guide/configmap.md)
+  - [Annotations](docs/user-guide/annotations.md)
+- [Source IP address](#source-ip-address)
+- [Exposing TCP and UDP Services](docs/user-guide/exposing-tcp-udp-services.md)
+- [Proxy Protocol](#proxy-protocol)
+- [ModSecurity Web Application Firewall](docs/user-guide/modsecurity.md)
+- [OpenTracing](docs/user-guide/opentracing.md)
+- [VTS and Prometheus metrics](docs/examples/customization/custom-vts-metrics-prometheus/README.md)
+- [Custom errors](docs/user-guide/custom-errors.md)
+- [NGINX status page](docs/user-guide/nginx-status-page.md)
+- [Running multiple ingress controllers](#running-multiple-ingress-controllers)
+- [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
+- [Retries in non-idempotent methods](#retries-in-non-idempotent-methods)
+- [Log format](docs/user-guide/log-format.md)
+- [Websockets](#websockets)
+- [Optimizing TLS Time To First Byte (TTTFB)](#optimizing-tls-time-to-first-byte-tttfb)
+- [Debug & Troubleshooting](docs/troubleshooting.md)
+- [Limitations](#limitations)
+- [Why endpoints and not services?](#why-endpoints-and-not-services)
+- [External Articles](docs/user-guide/external-articles.md)
 
-## Questions
+## Conventions
 
-For questions and support please use the [#ingress-nginx](https://kubernetes.slack.com/messages/CANQGM8BA/) channel in the [Kubernetes Slack](http://slack.kubernetes.io/) or post to the [Kubernetes Forum](https://discuss.kubernetes.io). The issue list of this repo is **exclusively** for bug reports and feature requests.
+Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). You can generate such a certificate with:
+`openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}"`
+and create the secret via `kubectl create secret tls ${CERT_NAME} --key ${KEY_FILE} --cert ${CERT_FILE}`
 
-## Issues
+## Requirements
 
-Please make sure to read the [Issue Reporting Checklist](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines may be closed immediately.
+The default backend is a service which handles all url paths and hosts the nginx controller doesn't understand (i.e., all the requests that are not mapped with an Ingress).
+Basically a default backend exposes two URLs:
 
-## Changelog
+- `/healthz` that returns 200
+- `/` that returns 404
 
-Detailed changes for each release are documented in the [Changelog.md](Changelog.md)
+The sub-directory [`/images/404-server`](https://github.com/kubernetes/ingress-nginx/tree/master/images/404-server) provides a service which satisfies the requirements for a default backend.  The sub-directory [`/images/custom-error-pages`](https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages) provides an additional service for the purpose of customizing the error pages served via the default backend.
 
-## Contribution
+## Annotation ingress.class
 
-Please make sure to read the [Contributing Guide](CONTRIBUTING.md) before making a pull request.
+If you have multiple Ingress controllers in a single cluster, you can pick one by specifying the `ingress.class` 
+annotation, eg creating an Ingress with an annotation like
 
-Thank you to all the people who already contributed to NGINX Ingress Controller!
+```yaml
+metadata:
+  name: foo
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+```
 
-## Code of Conduct
+will target the GCE controller, forcing the nginx controller to ignore it, while an annotation like
 
-This project adheres to the [Kubernetes Community Code of Conduct](https://git.k8s.io/community/code-of-conduct.md).
-By participating in this project you agree to abide by its terms.
+```yaml
+metadata:
+  name: foo
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+```
 
-## License
+will target the nginx controller, forcing the GCE controller to ignore it.
 
-[Apache License 2.0](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
+__Note__: Deploying multiple ingress controller and not specifying the annotation will result in both controllers fighting to satisfy the Ingress.
+
+### Customizing NGINX
+
+There are three  ways to customize NGINX:
+
+1. [ConfigMap](docs/user-guide/configmap.md): using a Configmap to set global configurations in NGINX.
+2. [Annotations](docs/user-guide/annotations.md): use this if you want a specific configuration for a particular Ingress rule.
+3. [Custom template](docs/user-guide/custom-template.md): when more specific settings are required, like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change the configuration through the ConfigMap.
+
+## Source IP address
+
+By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of trusted external load balancer.
+
+If the ingress controller is running in AWS we need to use the VPC IPv4 CIDR.
+
+Another option is to enable proxy protocol using `use-proxy-protocol: "true"`.
+
+In this mode NGINX does not use the content of the header to get the source IP address of the connection.
+
+## Proxy Protocol
+
+If you are using a L4 proxy to forward the traffic to the NGINX pods and terminate HTTP/HTTPS there, you will lose the remote endpoint's IP address. To prevent this you could use the [Proxy Protocol](http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt) for forwarding traffic, this will send the connection details before forwarding the actual TCP connection itself.
+
+Amongst others [ELBs in AWS](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-proxy-protocol.html) and [HAProxy](http://www.haproxy.org/) support Proxy Protocol.
+
+### Running multiple ingress controllers
+
+If you're running multiple ingress controllers, or running on a cloud provider that natively handles ingress, you need to specify the annotation `kubernetes.io/ingress.class: "nginx"` in all ingresses that you would like this controller to claim.  This mechanism also provides users the ability to run _multiple_ NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).  When utilizing this functionality the option `--ingress-class` should be changed to a value unique for the cluster within the definition of the replication controller. Here is a partial example:
+
+```
+spec:
+  template:
+     spec:
+       containers:
+         - name: nginx-ingress-internal-controller
+           args:
+             - /nginx-ingress-controller
+             - '--default-backend-service=ingress/nginx-ingress-default-backend'
+             - '--election-id=ingress-controller-leader-internal'
+             - '--ingress-class=nginx-internal'
+             - '--configmap=ingress/nginx-ingress-internal-controller'
+```
+
+Not specifying the annotation will lead to multiple ingress controllers claiming the same ingress. Specifying a value which does not match the class of any existing ingress controllers will result in all ingress controllers ignoring the ingress.
+
+The use of multiple ingress controllers in a single cluster is supported in Kubernetes versions >= 1.3.
+
+### Websockets
+
+Support for websockets is provided by NGINX out of the box. No special configuration required.
+
+The only requirement to avoid the close of connections is the increase of the values of `proxy-read-timeout` and `proxy-send-timeout`.
+
+The default value of this settings is `60 seconds`.
+
+A more adequate value to support websockets is a value higher than one hour (`3600`).
+
+### Optimizing TLS Time To First Byte (TTTFB)
+
+NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) to allow the optimization of the TLS record size.
+
+This improves the [Time To First Byte](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) (TTTFB).
+The default value in the Ingress controller is `4k` (NGINX default is `16k`).
+
+### Retries in non-idempotent methods
+
+Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error.
+The previous behavior can be restored using `retry-non-idempotent=true` in the configuration ConfigMap.
+
+### Disabling NGINX ingress controller
+
+Setting the annotation `kubernetes.io/ingress.class` to any value other which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.  If you are only running a single NGINX ingress controller, this can be achieved by setting this to any value except "nginx" or an empty string.
+
+Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
+
+### Limitations
+
+- Ingress rules for TLS require the definition of the field `host`
+
+### Why endpoints and not services
+
+The NGINX ingress controller does not use [Services](http://kubernetes.io/docs/user-guide/services) to route traffic to the pods. Instead it uses the Endpoints API in order to bypass [kube-proxy](http://kubernetes.io/docs/admin/kube-proxy/) to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.

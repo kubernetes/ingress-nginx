@@ -17,15 +17,14 @@ limitations under the License.
 package controller
 
 import (
-	"fmt"
-	"os/exec"
 	"syscall"
 
+	"github.com/golang/glog"
+
 	api "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/util/sysctl"
+
+	"k8s.io/ingress-nginx/internal/ingress"
 )
 
 // newUpstream creates an upstream without servers.
@@ -42,71 +41,37 @@ func newUpstream(name string) *ingress.Backend {
 	}
 }
 
-// upstreamName returns a formatted upstream name based on namespace, service, and port
-func upstreamName(namespace string, service string, port intstr.IntOrString) string {
-	return fmt.Sprintf("%v-%v-%v", namespace, service, port.String())
-}
-
-// sysctlSomaxconn returns the maximum number of connections that can be queued
-// for acceptance (value of net.core.somaxconn)
+// sysctlSomaxconn returns the value of net.core.somaxconn, i.e.
+// maximum number of connections that can be queued for acceptance
 // http://nginx.org/en/docs/http/ngx_http_core_module.html#listen
 func sysctlSomaxconn() int {
 	maxConns, err := sysctl.New().GetSysctl("net/core/somaxconn")
 	if err != nil || maxConns < 512 {
-		klog.V(3).Infof("net.core.somaxconn=%v (using system default)", maxConns)
+		glog.V(3).Infof("system net.core.somaxconn=%v (using system default)", maxConns)
 		return 511
 	}
 
 	return maxConns
 }
 
-// rlimitMaxNumFiles returns hard limit for RLIMIT_NOFILE
-func rlimitMaxNumFiles() int {
+// sysctlFSFileMax returns the value of fs.file-max, i.e.
+// maximum number of open file descriptors
+func sysctlFSFileMax() int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		klog.Errorf("Error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
+		glog.Errorf("unexpected error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
+		// returning 0 means don't render the value
 		return 0
 	}
-	klog.V(2).Infof("rlimit.max=%v", rLimit.Max)
 	return int(rLimit.Max)
 }
 
-const (
-	defBinary = "/usr/sbin/nginx"
-	cfgPath   = "/etc/nginx/nginx.conf"
-)
-
-// NginxExecTester defines the interface to execute
-// command like reload or test configuration
-type NginxExecTester interface {
-	ExecCommand(args ...string) *exec.Cmd
-	Test(cfg string) ([]byte, error)
-}
-
-// NginxCommand stores context around a given nginx executable path
-type NginxCommand struct {
-	Binary string
-}
-
-// NewNginxCommand returns a new NginxCommand from which path
-// has been detected from environment variable NGINX_BINARY or default
-func NewNginxCommand() NginxCommand {
-	return NginxCommand{
-		Binary: defBinary,
+func intInSlice(i int, list []int) bool {
+	for _, v := range list {
+		if v == i {
+			return true
+		}
 	}
-}
-
-// ExecCommand instanciates an exec.Cmd object to call nginx program
-func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
-	cmdArgs := []string{}
-
-	cmdArgs = append(cmdArgs, "-c", cfgPath)
-	cmdArgs = append(cmdArgs, args...)
-	return exec.Command(nc.Binary, cmdArgs...)
-}
-
-// Test checks if config file is a syntax valid nginx configuration
-func (nc NginxCommand) Test(cfg string) ([]byte, error) {
-	return exec.Command(nc.Binary, "-c", cfg, "-t").CombinedOutput()
+	return false
 }

@@ -45,7 +45,7 @@ func NewServer(parallelTotal int) (*Server, error) {
 		listener:        listener,
 		lock:            &sync.Mutex{},
 		alives:          make([]func() bool, parallelTotal),
-		beforeSuiteData: types.RemoteBeforeSuiteData{Data: nil, State: types.RemoteBeforeSuiteStatePending},
+		beforeSuiteData: types.RemoteBeforeSuiteData{nil, types.RemoteBeforeSuiteStatePending},
 		parallelTotal:   parallelTotal,
 	}, nil
 }

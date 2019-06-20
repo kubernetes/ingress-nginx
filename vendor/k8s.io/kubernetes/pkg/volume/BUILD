@@ -1,4 +1,10 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+package(default_visibility = ["//visibility:public"])
+
+load(
+    "@io_bazel_rules_go//go:def.bzl",
+    "go_library",
+    "go_test",
+)
 
 go_library(
     name = "go_default_library",
@@ -9,51 +15,73 @@ go_library(
         "metrics_errors.go",
         "metrics_nil.go",
         "metrics_statfs.go",
-        "noop_expandable_plugin.go",
         "plugins.go",
+        "util.go",
         "volume.go",
-        "volume_linux.go",
         "volume_unsupported.go",
-    ],
-    importpath = "k8s.io/kubernetes/pkg/volume",
-    visibility = ["//visibility:public"],
+    ] + select({
+        "@io_bazel_rules_go//go/platform:linux_amd64": [
+            "volume_linux.go",
+        ],
+        "//conditions:default": [],
+    }),
     deps = [
+        "//pkg/cloudprovider:go_default_library",
+        "//pkg/util/io:go_default_library",
         "//pkg/util/mount:go_default_library",
-        "//pkg/volume/util/fs:go_default_library",
-        "//pkg/volume/util/recyclerclient:go_default_library",
-        "//pkg/volume/util/subpath:go_default_library",
-        "//staging/src/k8s.io/api/authentication/v1:go_default_library",
-        "//staging/src/k8s.io/api/core/v1:go_default_library",
-        "//staging/src/k8s.io/apimachinery/pkg/api/resource:go_default_library",
-        "//staging/src/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
-        "//staging/src/k8s.io/apimachinery/pkg/types:go_default_library",
-        "//staging/src/k8s.io/apimachinery/pkg/util/errors:go_default_library",
-        "//staging/src/k8s.io/apimachinery/pkg/util/validation:go_default_library",
-        "//staging/src/k8s.io/client-go/kubernetes:go_default_library",
-        "//staging/src/k8s.io/client-go/listers/storage/v1beta1:go_default_library",
-        "//staging/src/k8s.io/client-go/tools/record:go_default_library",
-        "//staging/src/k8s.io/cloud-provider:go_default_library",
-        "//vendor/k8s.io/klog:go_default_library",
+        "//pkg/volume/util:go_default_library",
+        "//vendor/github.com/golang/glog:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/api/errors:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/fields:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/types:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/util/errors:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/util/sets:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/util/validation:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/watch:go_default_library",
+        "//vendor/k8s.io/client-go/kubernetes:go_default_library",
     ],
 )
 
 go_test(
     name = "go_default_test",
     srcs = [
-        "metrics_du_test.go",
         "metrics_nil_test.go",
-        "metrics_statfs_test.go",
         "plugins_test.go",
+        "util_test.go",
     ],
-    embed = [":go_default_library"],
+    library = ":go_default_library",
     deps = [
-        "//pkg/volume/testing:go_default_library",
-        "//staging/src/k8s.io/api/core/v1:go_default_library",
-        "//staging/src/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
-        "//staging/src/k8s.io/apimachinery/pkg/types:go_default_library",
-        "//staging/src/k8s.io/client-go/util/testing:go_default_library",
+        "//pkg/api:go_default_library",
+        "//pkg/util/slice:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/api/errors:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/types:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/util/sets:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/watch:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_xtest",
+    srcs = [
+        "metrics_statfs_test.go",
     ] + select({
-        "@io_bazel_rules_go//go/platform:linux": [
+        "@io_bazel_rules_go//go/platform:linux_amd64": [
+            "metrics_du_test.go",
+        ],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":go_default_library",
+        "//pkg/volume/testing:go_default_library",
+        "//vendor/k8s.io/client-go/util/testing:go_default_library",
+    ] + select({
+        "@io_bazel_rules_go//go/platform:linux_amd64": [
             "//vendor/golang.org/x/sys/unix:go_default_library",
         ],
         "//conditions:default": [],
@@ -71,19 +99,18 @@ filegroup(
     name = "all-srcs",
     srcs = [
         ":package-srcs",
-        "//pkg/volume/awsebs:all-srcs",
+        "//pkg/volume/aws_ebs:all-srcs",
         "//pkg/volume/azure_dd:all-srcs",
         "//pkg/volume/azure_file:all-srcs",
         "//pkg/volume/cephfs:all-srcs",
         "//pkg/volume/cinder:all-srcs",
         "//pkg/volume/configmap:all-srcs",
-        "//pkg/volume/csi:all-srcs",
         "//pkg/volume/downwardapi:all-srcs",
-        "//pkg/volume/emptydir:all-srcs",
+        "//pkg/volume/empty_dir:all-srcs",
         "//pkg/volume/fc:all-srcs",
         "//pkg/volume/flexvolume:all-srcs",
         "//pkg/volume/flocker:all-srcs",
-        "//pkg/volume/gcepd:all-srcs",
+        "//pkg/volume/gce_pd:all-srcs",
         "//pkg/volume/git_repo:all-srcs",
         "//pkg/volume/glusterfs:all-srcs",
         "//pkg/volume/host_path:all-srcs",
@@ -104,5 +131,4 @@ filegroup(
         "//pkg/volume/vsphere_volume:all-srcs",
     ],
     tags = ["automanaged"],
-    visibility = ["//visibility:public"],
 )

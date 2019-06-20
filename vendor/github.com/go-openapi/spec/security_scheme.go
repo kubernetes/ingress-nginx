@@ -78,7 +78,6 @@ func OAuth2AccessToken(authorizationURL, tokenURL string) *SecurityScheme {
 	}}
 }
 
-// SecuritySchemeProps describes a swagger security scheme in the securityDefinitions section
 type SecuritySchemeProps struct {
 	Description      string            `json:"description,omitempty"`
 	Type             string            `json:"type"`
@@ -136,5 +135,8 @@ func (s *SecurityScheme) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s.SecuritySchemeProps); err != nil {
 		return err
 	}
-	return json.Unmarshal(data, &s.VendorExtensible)
+	if err := json.Unmarshal(data, &s.VendorExtensible); err != nil {
+		return err
+	}
+	return nil
 }

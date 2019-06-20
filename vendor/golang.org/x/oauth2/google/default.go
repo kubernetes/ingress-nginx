@@ -5,7 +5,6 @@
 package google
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -15,13 +14,14 @@ import (
 	"runtime"
 
 	"cloud.google.com/go/compute/metadata"
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 )
 
-// Credentials holds Google credentials, including "Application Default Credentials".
+// DefaultCredentials holds "Application Default Credentials".
 // For more details, see:
 // https://developers.google.com/accounts/docs/application-default-credentials
-type Credentials struct {
+type DefaultCredentials struct {
 	ProjectID   string // may be empty
 	TokenSource oauth2.TokenSource
 
@@ -31,11 +31,6 @@ type Credentials struct {
 	// running on Google Cloud Platform.
 	JSON []byte
 }
-
-// DefaultCredentials is the old name of Credentials.
-//
-// Deprecated: use Credentials instead.
-type DefaultCredentials = Credentials
 
 // DefaultClient returns an HTTP Client that uses the
 // DefaultTokenSource to obtain authentication credentials.
@@ -68,17 +63,15 @@ func DefaultTokenSource(ctx context.Context, scope ...string) (oauth2.TokenSourc
 //   2. A JSON file in a location known to the gcloud command-line tool.
 //      On Windows, this is %APPDATA%/gcloud/application_default_credentials.json.
 //      On other systems, $HOME/.config/gcloud/application_default_credentials.json.
-//   3. On Google App Engine standard first generation runtimes (<= Go 1.9) it uses
-//      the appengine.AccessToken function.
-//   4. On Google Compute Engine, Google App Engine standard second generation runtimes
-//      (>= Go 1.11), and Google App Engine flexible environment, it fetches
+//   3. On Google App Engine it uses the appengine.AccessToken function.
+//   4. On Google Compute Engine and Google App Engine Managed VMs, it fetches
 //      credentials from the metadata server.
 //      (In this final case any provided scopes are ignored.)
-func FindDefaultCredentials(ctx context.Context, scopes ...string) (*Credentials, error) {
+func FindDefaultCredentials(ctx context.Context, scope ...string) (*DefaultCredentials, error) {
 	// First, try the environment variable.
 	const envVar = "GOOGLE_APPLICATION_CREDENTIALS"
 	if filename := os.Getenv(envVar); filename != "" {
-		creds, err := readCredentialsFile(ctx, filename, scopes)
+		creds, err := readCredentialsFile(ctx, filename, scope)
 		if err != nil {
 			return nil, fmt.Errorf("google: error getting credentials using %v environment variable: %v", envVar, err)
 		}
@@ -87,24 +80,21 @@ func FindDefaultCredentials(ctx context.Context, scopes ...string) (*Credentials
 
 	// Second, try a well-known file.
 	filename := wellKnownFile()
-	if creds, err := readCredentialsFile(ctx, filename, scopes); err == nil {
+	if creds, err := readCredentialsFile(ctx, filename, scope); err == nil {
 		return creds, nil
 	} else if !os.IsNotExist(err) {
 		return nil, fmt.Errorf("google: error getting credentials using well-known file (%v): %v", filename, err)
 	}
 
-	// Third, if we're on a Google App Engine standard first generation runtime (<= Go 1.9)
-	// use those credentials. App Engine standard second generation runtimes (>= Go 1.11)
-	// and App Engine flexible use ComputeTokenSource and the metadata server.
-	if appengineTokenFunc != nil {
+	// Third, if we're on Google App Engine use those credentials.
+	if appengineTokenFunc != nil && !appengineFlex {
 		return &DefaultCredentials{
 			ProjectID:   appengineAppIDFunc(ctx),
-			TokenSource: AppEngineTokenSource(ctx, scopes...),
+			TokenSource: AppEngineTokenSource(ctx, scope...),
 		}, nil
 	}
 
-	// Fourth, if we're on Google Compute Engine, an App Engine standard second generation runtime,
-	// or App Engine flexible, use the metadata server.
+	// Fourth, if we're on Google Compute Engine use the metadata server.
 	if metadata.OnGCE() {
 		id, _ := metadata.ProjectID()
 		return &DefaultCredentials{
@@ -116,26 +106,6 @@ func FindDefaultCredentials(ctx context.Context, scopes ...string) (*Credentials
 	// None are found; return helpful error.
 	const url = "https://developers.google.com/accounts/docs/application-default-credentials"
 	return nil, fmt.Errorf("google: could not find default credentials. See %v for more information.", url)
-}
-
-// CredentialsFromJSON obtains Google credentials from a JSON value. The JSON can
-// represent either a Google Developers Console client_credentials.json file (as in
-// ConfigFromJSON) or a Google Developers service account key file (as in
-// JWTConfigFromJSON).
-func CredentialsFromJSON(ctx context.Context, jsonData []byte, scopes ...string) (*Credentials, error) {
-	var f credentialsFile
-	if err := json.Unmarshal(jsonData, &f); err != nil {
-		return nil, err
-	}
-	ts, err := f.tokenSource(ctx, append([]string(nil), scopes...))
-	if err != nil {
-		return nil, err
-	}
-	return &DefaultCredentials{
-		ProjectID:   f.ProjectID,
-		TokenSource: ts,
-		JSON:        jsonData,
-	}, nil
 }
 
 func wellKnownFile() string {
@@ -151,5 +121,17 @@ func readCredentialsFile(ctx context.Context, filename string, scopes []string) 
 	if err != nil {
 		return nil, err
 	}
-	return CredentialsFromJSON(ctx, b, scopes...)
+	var f credentialsFile
+	if err := json.Unmarshal(b, &f); err != nil {
+		return nil, err
+	}
+	ts, err := f.tokenSource(ctx, append([]string(nil), scopes...))
+	if err != nil {
+		return nil, err
+	}
+	return &DefaultCredentials{
+		ProjectID:   f.ProjectID,
+		TokenSource: ts,
+		JSON:        b,
+	}, nil
 }

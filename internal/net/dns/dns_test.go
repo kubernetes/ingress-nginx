@@ -21,8 +21,6 @@ import (
 	"net"
 	"os"
 	"testing"
-
-	"k8s.io/ingress-nginx/internal/file"
 )
 
 func TestGetDNSServers(t *testing.T) {
@@ -34,22 +32,22 @@ func TestGetDNSServers(t *testing.T) {
 		t.Error("expected at least 1 nameserver in /etc/resolv.conf")
 	}
 
-	f, err := ioutil.TempFile("", "fw")
+	file, err := ioutil.TempFile("", "fw")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	defer f.Close()
-	defer os.Remove(f.Name())
+	defer file.Close()
+	defer os.Remove(file.Name())
 
-	ioutil.WriteFile(f.Name(), []byte(`
+	ioutil.WriteFile(file.Name(), []byte(`
 	# comment
 	; comment
 	nameserver 2001:4860:4860::8844
 	nameserver 2001:4860:4860::8888
 	nameserver 8.8.8.8
-	`), file.ReadWriteByUser)
+	`), 0644)
 
-	defResolvConf = f.Name()
+	defResolvConf = file.Name()
 	s, err = GetSystemNameServers()
 	if err != nil {
 		t.Fatalf("unexpected error reading /etc/resolv.conf file: %v", err)

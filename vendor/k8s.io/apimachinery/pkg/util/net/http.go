@@ -19,7 +19,6 @@ package net
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -31,8 +30,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang/glog"
 	"golang.org/x/net/http2"
-	"k8s.io/klog"
 )
 
 // JoinPreservingTrailingSlash does a path.Join of the specified elements,
@@ -62,23 +61,17 @@ func JoinPreservingTrailingSlash(elem ...string) string {
 // differentiate probable errors in connection behavior between normal "this is
 // disconnected" should use the method.
 func IsProbableEOF(err error) bool {
-	if err == nil {
-		return false
-	}
 	if uerr, ok := err.(*url.Error); ok {
 		err = uerr.Err
 	}
-	msg := err.Error()
 	switch {
 	case err == io.EOF:
 		return true
-	case msg == "http: can't write HTTP request on broken connection":
+	case err.Error() == "http: can't write HTTP request on broken connection":
 		return true
-	case strings.Contains(msg, "http2: server sent GOAWAY and closed the connection"):
+	case strings.Contains(err.Error(), "connection reset by peer"):
 		return true
-	case strings.Contains(msg, "connection reset by peer"):
-		return true
-	case strings.Contains(strings.ToLower(msg), "use of closed network connection"):
+	case strings.Contains(strings.ToLower(err.Error()), "use of closed network connection"):
 		return true
 	}
 	return false
@@ -94,9 +87,8 @@ func SetOldTransportDefaults(t *http.Transport) *http.Transport {
 		// ProxierWithNoProxyCIDR allows CIDR rules in NO_PROXY
 		t.Proxy = NewProxierWithNoProxyCIDR(http.ProxyFromEnvironment)
 	}
-	// If no custom dialer is set, use the default context dialer
-	if t.DialContext == nil && t.Dial == nil {
-		t.DialContext = defaultTransport.DialContext
+	if t.Dial == nil {
+		t.Dial = defaultTransport.Dial
 	}
 	if t.TLSHandshakeTimeout == 0 {
 		t.TLSHandshakeTimeout = defaultTransport.TLSHandshakeTimeout
@@ -110,10 +102,10 @@ func SetTransportDefaults(t *http.Transport) *http.Transport {
 	t = SetOldTransportDefaults(t)
 	// Allow clients to disable http2 if needed.
 	if s := os.Getenv("DISABLE_HTTP2"); len(s) > 0 {
-		klog.Infof("HTTP2 has been explicitly disabled")
+		glog.Infof("HTTP2 has been explicitly disabled")
 	} else {
 		if err := http2.ConfigureTransport(t); err != nil {
-			klog.Warningf("Transport failed http2 configuration: %v", err)
+			glog.Warningf("Transport failed http2 configuration: %v", err)
 		}
 	}
 	return t
@@ -124,7 +116,7 @@ type RoundTripperWrapper interface {
 	WrappedRoundTripper() http.RoundTripper
 }
 
-type DialFunc func(ctx context.Context, net, addr string) (net.Conn, error)
+type DialFunc func(net, addr string) (net.Conn, error)
 
 func DialerFor(transport http.RoundTripper) (DialFunc, error) {
 	if transport == nil {
@@ -133,18 +125,7 @@ func DialerFor(transport http.RoundTripper) (DialFunc, error) {
 
 	switch transport := transport.(type) {
 	case *http.Transport:
-		// transport.DialContext takes precedence over transport.Dial
-		if transport.DialContext != nil {
-			return transport.DialContext, nil
-		}
-		// adapt transport.Dial to the DialWithContext signature
-		if transport.Dial != nil {
-			return func(ctx context.Context, net, addr string) (net.Conn, error) {
-				return transport.Dial(net, addr)
-			}, nil
-		}
-		// otherwise return nil
-		return nil, nil
+		return transport.Dial, nil
 	case RoundTripperWrapper:
 		return DialerFor(transport.WrappedRoundTripper())
 	default:
@@ -182,8 +163,10 @@ func FormatURL(scheme string, host string, port int, path string) *url.URL {
 }
 
 func GetHTTPClient(req *http.Request) string {
-	if ua := req.UserAgent(); len(ua) != 0 {
-		return ua
+	if userAgent, ok := req.Header["User-Agent"]; ok {
+		if len(userAgent) > 0 {
+			return userAgent[0]
+		}
 	}
 	return "unknown"
 }
@@ -273,11 +256,8 @@ func isDefault(transportProxier func(*http.Request) (*url.URL, error)) bool {
 // NewProxierWithNoProxyCIDR constructs a Proxier function that respects CIDRs in NO_PROXY and delegates if
 // no matching CIDRs are found
 func NewProxierWithNoProxyCIDR(delegate func(req *http.Request) (*url.URL, error)) func(req *http.Request) (*url.URL, error) {
-	// we wrap the default method, so we only need to perform our check if the NO_PROXY (or no_proxy) envvar has a CIDR in it
+	// we wrap the default method, so we only need to perform our check if the NO_PROXY envvar has a CIDR in it
 	noProxyEnv := os.Getenv("NO_PROXY")
-	if noProxyEnv == "" {
-		noProxyEnv = os.Getenv("no_proxy")
-	}
 	noProxyRules := strings.Split(noProxyEnv, ",")
 
 	cidrs := []*net.IPNet{}
@@ -293,7 +273,17 @@ func NewProxierWithNoProxyCIDR(delegate func(req *http.Request) (*url.URL, error
 	}
 
 	return func(req *http.Request) (*url.URL, error) {
-		ip := net.ParseIP(req.URL.Hostname())
+		host := req.URL.Host
+		// for some urls, the Host is already the host, not the host:port
+		if net.ParseIP(host) == nil {
+			var err error
+			host, _, err = net.SplitHostPort(req.URL.Host)
+			if err != nil {
+				return delegate(req)
+			}
+		}
+
+		ip := net.ParseIP(host)
 		if ip == nil {
 			return delegate(req)
 		}
@@ -324,10 +314,9 @@ type Dialer interface {
 
 // ConnectWithRedirects uses dialer to send req, following up to 10 redirects (relative to
 // originalLocation). It returns the opened net.Conn and the raw response bytes.
-// If requireSameHostRedirects is true, only redirects to the same host are permitted.
-func ConnectWithRedirects(originalMethod string, originalLocation *url.URL, header http.Header, originalBody io.Reader, dialer Dialer, requireSameHostRedirects bool) (net.Conn, []byte, error) {
+func ConnectWithRedirects(originalMethod string, originalLocation *url.URL, header http.Header, originalBody io.Reader, dialer Dialer) (net.Conn, []byte, error) {
 	const (
-		maxRedirects    = 9     // Fail on the 10th redirect
+		maxRedirects    = 10
 		maxResponseSize = 16384 // play it safe to allow the potential for lots of / large headers
 	)
 
@@ -371,7 +360,7 @@ redirectLoop:
 		resp, err := http.ReadResponse(respReader, nil)
 		if err != nil {
 			// Unable to read the backend response; let the client handle it.
-			klog.Warningf("Error reading backend response: %v", err)
+			glog.Warningf("Error reading backend response: %v", err)
 			break redirectLoop
 		}
 
@@ -391,6 +380,10 @@ redirectLoop:
 
 		resp.Body.Close() // not used
 
+		// Reset the connection.
+		intermediateConn.Close()
+		intermediateConn = nil
+
 		// Prepare to follow the redirect.
 		redirectStr := resp.Header.Get("Location")
 		if redirectStr == "" {
@@ -404,15 +397,6 @@ redirectLoop:
 		if err != nil {
 			return nil, nil, fmt.Errorf("malformed Location header: %v", err)
 		}
-
-		// Only follow redirects to the same host. Otherwise, propagate the redirect response back.
-		if requireSameHostRedirects && location.Hostname() != originalLocation.Hostname() {
-			break redirectLoop
-		}
-
-		// Reset the connection.
-		intermediateConn.Close()
-		intermediateConn = nil
 	}
 
 	connToReturn := intermediateConn

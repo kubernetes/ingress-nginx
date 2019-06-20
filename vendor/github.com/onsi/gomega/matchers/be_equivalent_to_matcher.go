@@ -2,9 +2,8 @@ package matchers
 
 import (
 	"fmt"
-	"reflect"
-
 	"github.com/onsi/gomega/format"
+	"reflect"
 )
 
 type BeEquivalentToMatcher struct {

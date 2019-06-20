@@ -1,5 +1,3 @@
-# See the OWNERS docs at https://go.k8s.io/owners
-
 reviewers:
 - thockin
 - smarterclayton
@@ -18,6 +16,7 @@ reviewers:
 - janetkuo
 - justinsb
 - ncdc
+- timothysc
 - soltysh
 - dims
 - madhusudancs

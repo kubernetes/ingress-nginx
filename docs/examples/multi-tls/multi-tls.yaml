@@ -3,8 +3,7 @@ kind: Service
 metadata:
   name: nginx
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app: nginx
 spec:
   ports:
   - port: 80
@@ -12,23 +11,18 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app: nginx
 ---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: nginx
-  labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/part-of: ingress-nginx
+        app: nginx
     spec:
       containers:
       - name: nginx
@@ -41,8 +35,7 @@ kind: Service
 metadata:
   name: http-svc
   labels:
-    app.kubernetes.io/name: http-svc
-    app.kubernetes.io/part-of: ingress-nginx
+    app: http-svc
 spec:
   ports:
   - port: 80
@@ -50,27 +43,22 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app.kubernetes.io/name: http-svc
-    app.kubernetes.io/part-of: ingress-nginx
+    app: http-svc
 ---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: http-svc
-  labels:
-    app.kubernetes.io/name: http-svc
-    app.kubernetes.io/part-of: ingress-nginx
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: http-svc
-        app.kubernetes.io/part-of: ingress-nginx
+        app: http-svc
     spec:
       containers:
       - name: http-svc
-        image: gcr.io/kubernetes-e2e-test-images/echoserver:2.1
+        image: gcr.io/google_containers/echoserver:1.8
         ports:
         - containerPort: 8080
         env:
@@ -103,13 +91,17 @@ spec:
     - foo.bar.com
     # This secret must exist beforehand
     # The cert must also contain the subj-name foo.bar.com
-    # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
+    # You can create it via:
+    # make keys secret SECRET=/tmp/foobar.json HOST=foo.bar.com NAME=foobar
+    # https://github.com/kubernetes/ingress/tree/master/controllers/gce/examples/https
     secretName: foobar
   - hosts:
     - bar.baz.com
     # This secret must exist beforehand
     # The cert must also contain the subj-name bar.baz.com
-    # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
+    # You can create it via:
+    # make keys secret SECRET=/tmp/barbaz.json HOST=bar.baz.com NAME=barbaz
+    # https://github.com/kubernetes/ingress/tree/master/controllers/gce/examples/https
     secretName: barbaz
   rules:
   - host: foo.bar.com

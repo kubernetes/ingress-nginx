@@ -9,42 +9,37 @@ import (
 
 type Assertion struct {
 	actualInput interface{}
-	failWrapper *types.GomegaFailWrapper
+	fail        types.GomegaFailHandler
 	offset      int
 	extra       []interface{}
 }
 
-func New(actualInput interface{}, failWrapper *types.GomegaFailWrapper, offset int, extra ...interface{}) *Assertion {
+func New(actualInput interface{}, fail types.GomegaFailHandler, offset int, extra ...interface{}) *Assertion {
 	return &Assertion{
 		actualInput: actualInput,
-		failWrapper: failWrapper,
+		fail:        fail,
 		offset:      offset,
 		extra:       extra,
 	}
 }
 
 func (assertion *Assertion) Should(matcher types.GomegaMatcher, optionalDescription ...interface{}) bool {
-	assertion.failWrapper.TWithHelper.Helper()
 	return assertion.vetExtras(optionalDescription...) && assertion.match(matcher, true, optionalDescription...)
 }
 
 func (assertion *Assertion) ShouldNot(matcher types.GomegaMatcher, optionalDescription ...interface{}) bool {
-	assertion.failWrapper.TWithHelper.Helper()
 	return assertion.vetExtras(optionalDescription...) && assertion.match(matcher, false, optionalDescription...)
 }
 
 func (assertion *Assertion) To(matcher types.GomegaMatcher, optionalDescription ...interface{}) bool {
-	assertion.failWrapper.TWithHelper.Helper()
 	return assertion.vetExtras(optionalDescription...) && assertion.match(matcher, true, optionalDescription...)
 }
 
 func (assertion *Assertion) ToNot(matcher types.GomegaMatcher, optionalDescription ...interface{}) bool {
-	assertion.failWrapper.TWithHelper.Helper()
 	return assertion.vetExtras(optionalDescription...) && assertion.match(matcher, false, optionalDescription...)
 }
 
 func (assertion *Assertion) NotTo(matcher types.GomegaMatcher, optionalDescription ...interface{}) bool {
-	assertion.failWrapper.TWithHelper.Helper()
 	return assertion.vetExtras(optionalDescription...) && assertion.match(matcher, false, optionalDescription...)
 }
 
@@ -60,9 +55,8 @@ func (assertion *Assertion) buildDescription(optionalDescription ...interface{})
 func (assertion *Assertion) match(matcher types.GomegaMatcher, desiredMatch bool, optionalDescription ...interface{}) bool {
 	matches, err := matcher.Match(assertion.actualInput)
 	description := assertion.buildDescription(optionalDescription...)
-	assertion.failWrapper.TWithHelper.Helper()
 	if err != nil {
-		assertion.failWrapper.Fail(description+err.Error(), 2+assertion.offset)
+		assertion.fail(description+err.Error(), 2+assertion.offset)
 		return false
 	}
 	if matches != desiredMatch {
@@ -72,7 +66,7 @@ func (assertion *Assertion) match(matcher types.GomegaMatcher, desiredMatch bool
 		} else {
 			message = matcher.NegatedFailureMessage(assertion.actualInput)
 		}
-		assertion.failWrapper.Fail(description+message, 2+assertion.offset)
+		assertion.fail(description+message, 2+assertion.offset)
 		return false
 	}
 
@@ -86,8 +80,7 @@ func (assertion *Assertion) vetExtras(optionalDescription ...interface{}) bool {
 	}
 
 	description := assertion.buildDescription(optionalDescription...)
-	assertion.failWrapper.TWithHelper.Helper()
-	assertion.failWrapper.Fail(description+message, 2+assertion.offset)
+	assertion.fail(description+message, 2+assertion.offset)
 	return false
 }
 

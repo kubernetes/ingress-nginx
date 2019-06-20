@@ -45,14 +45,14 @@ func (c CurlyRouter) SelectRoute(
 
 // selectRoutes return a collection of Route from a WebService that matches the path tokens from the request.
 func (c CurlyRouter) selectRoutes(ws *WebService, requestTokens []string) sortableCurlyRoutes {
-	candidates := make(sortableCurlyRoutes, 0, 8)
+	candidates := sortableCurlyRoutes{}
 	for _, each := range ws.routes {
 		matches, paramCount, staticCount := c.matchesRouteByPathTokens(each.pathParts, requestTokens)
 		if matches {
 			candidates.add(curlyRoute{each, paramCount, staticCount}) // TODO make sure Routes() return pointers?
 		}
 	}
-	sort.Sort(candidates)
+	sort.Sort(sort.Reverse(candidates))
 	return candidates
 }
 

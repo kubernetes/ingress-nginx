@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -30,19 +30,22 @@ import (
 )
 
 var (
+	annotationSecureUpstream       = parser.GetAnnotationWithPrefix("secure-backends")
 	annotationSecureVerifyCACert   = parser.GetAnnotationWithPrefix("secure-verify-ca-secret")
+	annotationUpsMaxFails          = parser.GetAnnotationWithPrefix("upstream-max-fails")
+	annotationUpsFailTimeout       = parser.GetAnnotationWithPrefix("upstream-fail-timeout")
 	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
 	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
 	annotationCorsEnabled          = parser.GetAnnotationWithPrefix("enable-cors")
+	annotationCorsAllowOrigin      = parser.GetAnnotationWithPrefix("cors-allow-origin")
 	annotationCorsAllowMethods     = parser.GetAnnotationWithPrefix("cors-allow-methods")
 	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
 	annotationCorsAllowCredentials = parser.GetAnnotationWithPrefix("cors-allow-credentials")
-	backendProtocol                = parser.GetAnnotationWithPrefix("backend-protocol")
 	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
 	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
+	annotationAffinityCookieHash   = parser.GetAnnotationWithPrefix("session-cookie-hash")
 	annotationUpstreamHashBy       = parser.GetAnnotationWithPrefix("upstream-hash-by")
-	annotationCustomHTTPErrors     = parser.GetAnnotationWithPrefix("custom-http-errors")
 )
 
 type mockCfg struct {
@@ -74,28 +77,28 @@ func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) 
 	return nil, nil
 }
 
-func buildIngress() *networking.Ingress {
-	defaultBackend := networking.IngressBackend{
+func buildIngress() *extensions.Ingress {
+	defaultBackend := extensions.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &networking.Ingress{
+	return &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: apiv1.NamespaceDefault,
 		},
-		Spec: networking.IngressSpec{
-			Backend: &networking.IngressBackend{
+		Spec: extensions.IngressSpec{
+			Backend: &extensions.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []networking.IngressRule{
+			Rules: []extensions.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: networking.IngressRuleValue{
-						HTTP: &networking.HTTPIngressRuleValue{
-							Paths: []networking.HTTPIngressPath{
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -106,6 +109,30 @@ func buildIngress() *networking.Ingress {
 				},
 			},
 		},
+	}
+}
+
+func TestSecureUpstream(t *testing.T) {
+	ec := NewAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		er          bool
+	}{
+		{map[string]string{annotationSecureUpstream: "true"}, true},
+		{map[string]string{annotationSecureUpstream: "false"}, false},
+		{map[string]string{annotationSecureUpstream + "_no": "true"}, false},
+		{map[string]string{}, false},
+		{nil, false},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.Extract(ing).SecureUpstream
+		if r.Secure != foo.er {
+			t.Errorf("Returned %v but expected %v", r, foo.er)
+		}
 	}
 }
 
@@ -125,11 +152,11 @@ func TestSecureVerifyCACert(t *testing.T) {
 		annotations map[string]string
 		exists      bool
 	}{
-		{1, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert: "not"}, false},
-		{2, map[string]string{backendProtocol: "HTTP", annotationSecureVerifyCACert: "secure-verify-ca"}, false},
-		{3, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert: "secure-verify-ca"}, true},
-		{4, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert + "_not": "secure-verify-ca"}, false},
-		{5, map[string]string{backendProtocol: "HTTPS"}, false},
+		{1, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert: "not"}, false},
+		{2, map[string]string{annotationSecureUpstream: "false", annotationSecureVerifyCACert: "secure-verify-ca"}, false},
+		{3, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert: "secure-verify-ca"}, true},
+		{4, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert + "_not": "secure-verify-ca"}, false},
+		{5, map[string]string{annotationSecureUpstream: "true"}, false},
 		{6, map[string]string{}, false},
 		{7, nil, false},
 	}
@@ -140,6 +167,36 @@ func TestSecureVerifyCACert(t *testing.T) {
 		su := ec.Extract(ing).SecureUpstream
 		if (su.CACert.CAFileName != "") != ann.exists {
 			t.Errorf("Expected exists was %v on iteration %v", ann.exists, ann.it)
+		}
+	}
+}
+
+func TestHealthCheck(t *testing.T) {
+	ec := NewAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		eumf        int
+		euft        int
+	}{
+		{map[string]string{annotationUpsMaxFails: "3", annotationUpsFailTimeout: "10"}, 3, 10},
+		{map[string]string{annotationUpsMaxFails: "3"}, 3, 0},
+		{map[string]string{annotationUpsFailTimeout: "10"}, 0, 10},
+		{map[string]string{}, 0, 0},
+		{nil, 0, 0},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.Extract(ing).HealthCheck
+
+		if r.FailTimeout != foo.euft {
+			t.Errorf("Returned %d but expected %d for FailTimeout", r.FailTimeout, foo.euft)
+		}
+
+		if r.MaxFails != foo.eumf {
+			t.Errorf("Returned %d but expected %d for MaxFails", r.MaxFails, foo.eumf)
 		}
 	}
 }
@@ -185,7 +242,7 @@ func TestUpstreamHashBy(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).UpstreamHashBy.UpstreamHashBy
+		r := ec.Extract(ing).UpstreamHashBy
 		if r != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
 		}
@@ -199,19 +256,24 @@ func TestAffinitySession(t *testing.T) {
 	fooAnns := []struct {
 		annotations  map[string]string
 		affinitytype string
+		hash         string
 		name         string
 	}{
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: "route"}, "cookie", "route"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: "route1"}, "cookie", "route1"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: ""}, "cookie", "INGRESSCOOKIE"},
-		{map[string]string{}, "", ""},
-		{nil, "", ""},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "md5", annotationAffinityCookieName: "route"}, "cookie", "md5", "route"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "xpto", annotationAffinityCookieName: "route1"}, "cookie", "md5", "route1"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "", annotationAffinityCookieName: ""}, "cookie", "md5", "INGRESSCOOKIE"},
+		{map[string]string{}, "", "", ""},
+		{nil, "", "", ""},
 	}
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
 		r := ec.Extract(ing).SessionAffinity
-		t.Logf("Testing pass %v %v", foo.affinitytype, foo.name)
+		t.Logf("Testing pass %v %v %v", foo.affinitytype, foo.hash, foo.name)
+
+		if r.Cookie.Hash != foo.hash {
+			t.Errorf("Returned %v but expected %v for Hash", r.Cookie.Hash, foo.hash)
+		}
 
 		if r.Cookie.Name != foo.name {
 			t.Errorf("Returned %v but expected %v for Name", r.Cookie.Name, foo.name)
@@ -263,41 +325,6 @@ func TestCors(t *testing.T) {
 			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowCredentials, foo.credentials)
 		}
 
-	}
-}
-func TestCustomHTTPErrors(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
-	ing := buildIngress()
-
-	fooAnns := []struct {
-		annotations map[string]string
-		er          []int
-	}{
-		{map[string]string{annotationCustomHTTPErrors: "404,415"}, []int{404, 415}},
-		{map[string]string{annotationCustomHTTPErrors: "404"}, []int{404}},
-		{map[string]string{annotationCustomHTTPErrors: ""}, []int{}},
-		{map[string]string{annotationCustomHTTPErrors + "_no": "404"}, []int{}},
-		{map[string]string{}, []int{}},
-		{nil, []int{}},
-	}
-
-	for _, foo := range fooAnns {
-		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).CustomHTTPErrors
-
-		// Check that expected codes were created
-		for i := range foo.er {
-			if r[i] != foo.er[i] {
-				t.Errorf("Returned %v but expected %v", r, foo.er)
-			}
-		}
-
-		// Check that no unexpected codes were also created
-		for i := range r {
-			if r[i] != foo.er[i] {
-				t.Errorf("Returned %v but expected %v", r, foo.er)
-			}
-		}
 	}
 }
 

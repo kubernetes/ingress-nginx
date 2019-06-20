@@ -1,5 +1,4 @@
 .*.sw?
 process-exporter
-load-generator
-integration-tester
-dist
+.tarballs
+process-exporter-*.tar.gz

@@ -19,7 +19,6 @@ package field
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -48,7 +47,7 @@ func (v *Error) ErrorBody() string {
 	var s string
 	switch v.Type {
 	case ErrorTypeRequired, ErrorTypeForbidden, ErrorTypeTooLong, ErrorTypeInternal:
-		s = v.Type.String()
+		s = fmt.Sprintf("%s", v.Type)
 	default:
 		value := v.BadValue
 		valueType := reflect.TypeOf(value)
@@ -176,11 +175,7 @@ func Invalid(field *Path, value interface{}, detail string) *Error {
 func NotSupported(field *Path, value interface{}, validValues []string) *Error {
 	detail := ""
 	if validValues != nil && len(validValues) > 0 {
-		quotedValues := make([]string, len(validValues))
-		for i, v := range validValues {
-			quotedValues[i] = strconv.Quote(v)
-		}
-		detail = "supported values: " + strings.Join(quotedValues, ", ")
+		detail = "supported values: " + strings.Join(validValues, ", ")
 	}
 	return &Error{ErrorTypeNotSupported, field.String(), value, detail}
 }

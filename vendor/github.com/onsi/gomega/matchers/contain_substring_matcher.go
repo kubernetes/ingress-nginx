@@ -2,9 +2,8 @@ package matchers
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/onsi/gomega/format"
+	"strings"
 )
 
 type ContainSubstringMatcher struct {

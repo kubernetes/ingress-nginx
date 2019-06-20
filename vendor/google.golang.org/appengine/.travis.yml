@@ -1,20 +1,18 @@
 language: go
 
-go_import_path: google.golang.org/appengine
+go:
+  - 1.6.3
+  - 1.7.1
 
 install:
-  - ./travis_install.sh
+  - go get -v -t -d google.golang.org/appengine/...
+  - mkdir sdk
+  - curl -o sdk.zip "https://storage.googleapis.com/appengine-sdks/featured/go_appengine_sdk_linux_amd64-1.9.40.zip"
+  - unzip -q sdk.zip -d sdk
+  - export APPENGINE_DEV_APPSERVER=$(pwd)/sdk/go_appengine/dev_appserver.py
 
 script:
-  - ./travis_test.sh
-
-matrix:
-  include:
-    - go: 1.8.x
-      env: GOAPP=true
-    - go: 1.9.x
-      env: GOAPP=true
-    - go: 1.10.x
-      env: GOAPP=false
-    - go: 1.11.x
-      env: GO111MODULE=on
+  - go version
+  - go test -v google.golang.org/appengine/...
+  - go test -v -race google.golang.org/appengine/...
+  - sdk/go_appengine/goapp test -v google.golang.org/appengine/...

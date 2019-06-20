@@ -39,7 +39,6 @@ package unix
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-#include <sys/utsname.h>
 #include <sys/wait.h>
 #include <net/bpf.h>
 #include <net/if.h>
@@ -70,14 +69,14 @@ struct sockaddr_any {
 */
 import "C"
 
-// Machine characteristics
+// Machine characteristics; for internal use.
 
 const (
-	SizeofPtr      = C.sizeofPtr
-	SizeofShort    = C.sizeof_short
-	SizeofInt      = C.sizeof_int
-	SizeofLong     = C.sizeof_long
-	SizeofLongLong = C.sizeof_longlong
+	sizeofPtr      = C.sizeofPtr
+	sizeofShort    = C.sizeof_short
+	sizeofInt      = C.sizeof_int
+	sizeofLong     = C.sizeof_long
+	sizeofLongLong = C.sizeof_longlong
 )
 
 // Basic types
@@ -271,7 +270,3 @@ const (
 	POLLWRBAND = C.POLLWRBAND
 	POLLWRNORM = C.POLLWRNORM
 )
-
-// uname
-
-type Utsname C.struct_utsname

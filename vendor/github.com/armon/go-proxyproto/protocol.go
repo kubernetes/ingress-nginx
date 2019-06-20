@@ -28,13 +28,12 @@ var (
 // passed in as an argument. If the function returns an error due to the source
 // being disallowed, it should return ErrInvalidUpstream.
 //
-// If error is not nil, the call to Accept() will fail. If the reason for
+// Behavior is as follows:
+// * If error is not nil, the call to Accept() will fail. If the reason for
 // triggering this failure is due to a disallowed source, it should return
 // ErrInvalidUpstream.
-//
-// If bool is true, the PROXY-set address is used.
-//
-// If bool is false, the connection's remote address is used, rather than the
+// * If bool is true, the PROXY-set address is used.
+// * If bool is false, the connection's remote address is used, rather than the
 // address claimed in the PROXY info.
 type SourceChecker func(net.Addr) (bool, error)
 
@@ -59,7 +58,7 @@ type Conn struct {
 	conn               net.Conn
 	dstAddr            *net.TCPAddr
 	srcAddr            *net.TCPAddr
-	useConnAddr        bool
+	useConnRemoteAddr  bool
 	once               sync.Once
 	proxyHeaderTimeout time.Duration
 }
@@ -71,18 +70,18 @@ func (p *Listener) Accept() (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	var useConnAddr bool
+	var useConnRemoteAddr bool
 	if p.SourceCheck != nil {
 		allowed, err := p.SourceCheck(conn.RemoteAddr())
 		if err != nil {
 			return nil, err
 		}
 		if !allowed {
-			useConnAddr = true
+			useConnRemoteAddr = true
 		}
 	}
 	newConn := NewConn(conn, p.ProxyHeaderTimeout)
-	newConn.useConnAddr = useConnAddr
+	newConn.useConnRemoteAddr = useConnRemoteAddr
 	return newConn, nil
 }
 
@@ -128,10 +127,6 @@ func (p *Conn) Close() error {
 }
 
 func (p *Conn) LocalAddr() net.Addr {
-	p.checkPrefixOnce()
-	if p.dstAddr != nil && !p.useConnAddr {
-		return p.dstAddr
-	}
 	return p.conn.LocalAddr()
 }
 
@@ -143,8 +138,14 @@ func (p *Conn) LocalAddr() net.Addr {
 // client is slow. Using a Deadline is recommended if this is called
 // before Read()
 func (p *Conn) RemoteAddr() net.Addr {
-	p.checkPrefixOnce()
-	if p.srcAddr != nil && !p.useConnAddr {
+	p.once.Do(func() {
+		if err := p.checkPrefix(); err != nil && err != io.EOF {
+			log.Printf("[ERR] Failed to read proxy prefix: %v", err)
+			p.Close()
+			p.bufReader = bufio.NewReader(p.conn)
+		}
+	})
+	if p.srcAddr != nil && !p.useConnRemoteAddr {
 		return p.srcAddr
 	}
 	return p.conn.RemoteAddr()
@@ -160,16 +161,6 @@ func (p *Conn) SetReadDeadline(t time.Time) error {
 
 func (p *Conn) SetWriteDeadline(t time.Time) error {
 	return p.conn.SetWriteDeadline(t)
-}
-
-func (p *Conn) checkPrefixOnce() {
-	p.once.Do(func() {
-		if err := p.checkPrefix(); err != nil && err != io.EOF {
-			log.Printf("[ERR] Failed to read proxy prefix: %v", err)
-			p.Close()
-			p.bufReader = bufio.NewReader(p.conn)
-		}
-	})
 }
 
 func (p *Conn) checkPrefix() error {

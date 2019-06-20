@@ -16,18 +16,14 @@ package autorest
 
 import (
 	"bytes"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
-	"strings"
+	"runtime"
 	"time"
-
-	"github.com/Azure/go-autorest/logger"
-	"github.com/Azure/go-autorest/tracing"
 )
 
 const (
@@ -45,6 +41,15 @@ const (
 )
 
 var (
+	// defaultUserAgent builds a string containing the Go version, system archityecture and OS,
+	// and the go-autorest version.
+	defaultUserAgent = fmt.Sprintf("Go/%s (%s-%s) go-autorest/%s",
+		runtime.Version(),
+		runtime.GOARCH,
+		runtime.GOOS,
+		Version(),
+	)
+
 	// StatusCodesForRetry are a defined group of status code for which the client will retry
 	StatusCodesForRetry = []int{
 		http.StatusRequestTimeout,      // 408
@@ -148,7 +153,6 @@ type Client struct {
 	PollingDelay time.Duration
 
 	// PollingDuration sets the maximum polling time after which an error is returned.
-	// Setting this to zero will use the provided context to control the duration.
 	PollingDuration time.Duration
 
 	// RetryAttempts sets the default number of retry attempts for client.
@@ -162,9 +166,6 @@ type Client struct {
 	UserAgent string
 
 	Jar http.CookieJar
-
-	// Set to true to skip attempted registration of resource providers (false by default).
-	SkipResourceProviderRegistration bool
 }
 
 // NewClientWithUserAgent returns an instance of a Client with the UserAgent set to the passed
@@ -175,7 +176,7 @@ func NewClientWithUserAgent(ua string) Client {
 		PollingDuration: DefaultPollingDuration,
 		RetryAttempts:   DefaultRetryAttempts,
 		RetryDuration:   DefaultRetryDuration,
-		UserAgent:       UserAgent(),
+		UserAgent:       defaultUserAgent,
 	}
 	c.Sender = c.sender()
 	c.AddToUserAgent(ua)
@@ -199,30 +200,14 @@ func (c Client) Do(r *http.Request) (*http.Response, error) {
 		r, _ = Prepare(r,
 			WithUserAgent(c.UserAgent))
 	}
-	// NOTE: c.WithInspection() must be last in the list so that it can inspect all preceding operations
 	r, err := Prepare(r,
-		c.WithAuthorization(),
-		c.WithInspection())
+		c.WithInspection(),
+		c.WithAuthorization())
 	if err != nil {
-		var resp *http.Response
-		if detErr, ok := err.(DetailedError); ok {
-			// if the authorization failed (e.g. invalid credentials) there will
-			// be a response associated with the error, be sure to return it.
-			resp = detErr.Response
-		}
-		return resp, NewErrorWithError(err, "autorest/Client", "Do", nil, "Preparing request failed")
+		return nil, NewErrorWithError(err, "autorest/Client", "Do", nil, "Preparing request failed")
 	}
-	logger.Instance.WriteRequest(r, logger.Filter{
-		Header: func(k string, v []string) (bool, []string) {
-			// remove the auth token from the log
-			if strings.EqualFold(k, "Authorization") || strings.EqualFold(k, "Ocp-Apim-Subscription-Key") {
-				v = []string{"**REDACTED**"}
-			}
-			return true, v
-		},
-	})
+
 	resp, err := SendWithSender(c.sender(), r)
-	logger.Instance.WriteResponse(resp, logger.Filter{})
 	Respond(resp, c.ByInspecting())
 	return resp, err
 }
@@ -230,25 +215,9 @@ func (c Client) Do(r *http.Request) (*http.Response, error) {
 // sender returns the Sender to which to send requests.
 func (c Client) sender() Sender {
 	if c.Sender == nil {
-		// Use behaviour compatible with DefaultTransport, but require TLS minimum version.
-		var defaultTransport = http.DefaultTransport.(*http.Transport)
-
-		tracing.Transport.Base = &http.Transport{
-			Proxy:                 defaultTransport.Proxy,
-			DialContext:           defaultTransport.DialContext,
-			MaxIdleConns:          defaultTransport.MaxIdleConns,
-			IdleConnTimeout:       defaultTransport.IdleConnTimeout,
-			TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
-			ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
-			TLSClientConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
-			},
-		}
-
 		j, _ := cookiejar.New(nil)
-		return &http.Client{Jar: j, Transport: tracing.Transport}
+		return &http.Client{Jar: j}
 	}
-
 	return c.Sender
 }
 

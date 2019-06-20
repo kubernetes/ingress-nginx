@@ -76,9 +76,9 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 
 			switch test.Scheme {
 			case framework.HTTP:
-				cm = request.CustomMethod(test.Method, f.GetURL(framework.HTTP))
+				cm = request.CustomMethod(test.Method, f.NginxHTTPURL)
 			case framework.HTTPS:
-				cm = request.CustomMethod(test.Method, f.GetURL(framework.HTTPS))
+				cm = request.CustomMethod(test.Method, f.NginxHTTPSURL)
 				// the default backend uses a self generated certificate
 				cm.Transport = &http.Transport{
 					TLSClientConfig: &tls.Config{
@@ -94,39 +94,8 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 			}
 
 			resp, _, errs := cm.End()
-			Expect(errs).Should(BeEmpty())
+			Expect(len(errs)).Should(BeNumerically("==", 0))
 			Expect(resp.StatusCode).Should(Equal(test.Status))
 		}
-	})
-	It("enables access logging for default backend", func() {
-		f.UpdateNginxConfigMapData("enable-access-log-for-default-backend", "true")
-		host := "foo"
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/somethingOne").
-			Set("Host", host).
-			End()
-
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
-
-		logs, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(logs).To(ContainSubstring("/somethingOne"))
-	})
-
-	It("disables access logging for default backend", func() {
-		f.UpdateNginxConfigMapData("enable-access-log-for-default-backend", "false")
-		host := "bar"
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/somethingTwo").
-			Set("Host", host).
-			End()
-
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
-
-		logs, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(logs).ToNot(ContainSubstring("/somethingTwo"))
 	})
 })

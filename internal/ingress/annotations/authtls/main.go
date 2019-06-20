@@ -18,7 +18,7 @@ package authtls
 
 import (
 	"github.com/pkg/errors"
-	networking "k8s.io/api/networking/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	"regexp"
 
@@ -37,7 +37,7 @@ var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 )
 
-// Config contains the AuthSSLCert used for mutual authentication
+// Config contains the AuthSSLCert used for muthual autentication
 // and the configured ValidationDepth
 type Config struct {
 	resolver.AuthSSLCert
@@ -45,7 +45,6 @@ type Config struct {
 	ValidationDepth    int    `json:"validationDepth"`
 	ErrorPage          string `json:"errorPage"`
 	PassCertToUpstream bool   `json:"passCertToUpstream"`
-	AuthTLSError       string
 }
 
 // Equal tests for equality between two Config types
@@ -86,13 +85,15 @@ type authTLS struct {
 
 // Parse parses the annotations contained in the ingress
 // rule used to use a Certificate as authentication method
-func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
-	var err error
-	config := &Config{}
+func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	tlsauthsecret, err := parser.GetStringAnnotation("auth-tls-secret", ing)
 	if err != nil {
 		return &Config{}, err
+	}
+
+	if tlsauthsecret == "" {
+		return &Config{}, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
 	_, _, err = k8s.ParseNameNS(tlsauthsecret)
@@ -100,32 +101,38 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 		return &Config{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
+	tlsVerifyClient, err := parser.GetStringAnnotation("auth-tls-verify-client", ing)
+	if err != nil || !authVerifyClientRegex.MatchString(tlsVerifyClient) {
+		tlsVerifyClient = defaultAuthVerifyClient
+	}
+
+	tlsdepth, err := parser.GetIntAnnotation("auth-tls-verify-depth", ing)
+	if err != nil || tlsdepth == 0 {
+		tlsdepth = defaultAuthTLSDepth
+	}
+
 	authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
 	if err != nil {
-		e := errors.Wrap(err, "error obtaining certificate")
-		return &Config{}, ing_errors.LocationDenied{Reason: e}
-	}
-	config.AuthSSLCert = *authCert
-
-	config.VerifyClient, err = parser.GetStringAnnotation("auth-tls-verify-client", ing)
-	if err != nil || !authVerifyClientRegex.MatchString(config.VerifyClient) {
-		config.VerifyClient = defaultAuthVerifyClient
+		return &Config{}, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "error obtaining certificate"),
+		}
 	}
 
-	config.ValidationDepth, err = parser.GetIntAnnotation("auth-tls-verify-depth", ing)
-	if err != nil || config.ValidationDepth == 0 {
-		config.ValidationDepth = defaultAuthTLSDepth
+	errorpage, err := parser.GetStringAnnotation("auth-tls-error-page", ing)
+	if err != nil || errorpage == "" {
+		errorpage = ""
 	}
 
-	config.ErrorPage, err = parser.GetStringAnnotation("auth-tls-error-page", ing)
+	passCert, err := parser.GetBoolAnnotation("auth-tls-pass-certificate-to-upstream", ing)
 	if err != nil {
-		config.ErrorPage = ""
+		passCert = false
 	}
 
-	config.PassCertToUpstream, err = parser.GetBoolAnnotation("auth-tls-pass-certificate-to-upstream", ing)
-	if err != nil {
-		config.PassCertToUpstream = false
-	}
-
-	return config, nil
+	return &Config{
+		AuthSSLCert:        *authCert,
+		VerifyClient:       tlsVerifyClient,
+		ValidationDepth:    tlsdepth,
+		ErrorPage:          errorpage,
+		PassCertToUpstream: passCert,
+	}, nil
 }

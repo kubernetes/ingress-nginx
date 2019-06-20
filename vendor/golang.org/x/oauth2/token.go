@@ -5,14 +5,13 @@
 package oauth2
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2/internal"
 )
 
@@ -118,16 +117,13 @@ func (t *Token) Extra(key string) interface{} {
 	return v
 }
 
-// timeNow is time.Now but pulled out as a variable for tests.
-var timeNow = time.Now
-
 // expired reports whether the token is expired.
 // t must be non-nil.
 func (t *Token) expired() bool {
 	if t.Expiry.IsZero() {
 		return false
 	}
-	return t.Expiry.Round(0).Add(-expiryDelta).Before(timeNow())
+	return t.Expiry.Add(-expiryDelta).Before(time.Now())
 }
 
 // Valid reports whether t is non-nil, has an AccessToken, and is not expired.
@@ -154,25 +150,9 @@ func tokenFromInternal(t *internal.Token) *Token {
 // This token is then mapped from *internal.Token into an *oauth2.Token which is returned along
 // with an error..
 func retrieveToken(ctx context.Context, c *Config, v url.Values) (*Token, error) {
-	tk, err := internal.RetrieveToken(ctx, c.ClientID, c.ClientSecret, c.Endpoint.TokenURL, v, internal.AuthStyle(c.Endpoint.AuthStyle))
+	tk, err := internal.RetrieveToken(ctx, c.ClientID, c.ClientSecret, c.Endpoint.TokenURL, v)
 	if err != nil {
-		if rErr, ok := err.(*internal.RetrieveError); ok {
-			return nil, (*RetrieveError)(rErr)
-		}
 		return nil, err
 	}
 	return tokenFromInternal(tk), nil
-}
-
-// RetrieveError is the error returned when the token endpoint returns a
-// non-2XX HTTP status code.
-type RetrieveError struct {
-	Response *http.Response
-	// Body is the body that was consumed by reading Response.Body.
-	// It may be truncated.
-	Body []byte
-}
-
-func (r *RetrieveError) Error() string {
-	return fmt.Sprintf("oauth2: cannot fetch token: %v\nResponse: %s", r.Response.Status, r.Body)
 }

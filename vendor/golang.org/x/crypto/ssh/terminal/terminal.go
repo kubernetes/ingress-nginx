@@ -159,10 +159,6 @@ func bytesToKey(b []byte, pasteActive bool) (rune, []byte) {
 			return keyClearScreen, b[1:]
 		case 23: // ^W
 			return keyDeleteWord, b[1:]
-		case 14: // ^N
-			return keyDown, b[1:]
-		case 16: // ^P
-			return keyUp, b[1:]
 		}
 	}
 
@@ -621,7 +617,7 @@ func writeWithCRLF(w io.Writer, buf []byte) (n int, err error) {
 			if _, err = w.Write(crlf); err != nil {
 				return n, err
 			}
-			n++
+			n += 1
 			buf = buf[1:]
 		}
 	}

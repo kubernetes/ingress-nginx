@@ -26,7 +26,7 @@ func main() {
 }
 
 // bidiClass names and codes taken from class "bc" in
-// https://www.unicode.org/Public/8.0.0/ucd/PropertyValueAliases.txt
+// http://www.unicode.org/Public/8.0.0/ucd/PropertyValueAliases.txt
 var bidiClass = map[string]Class{
 	"AL":  AL,  // ArabicLetter
 	"AN":  AN,  // ArabicNumber
@@ -59,7 +59,7 @@ func genTables() {
 		log.Fatalf("Too many Class constants (%#x > 0x0F).", numClass)
 	}
 	w := gen.NewCodeWriter()
-	defer w.WriteVersionedGoFile(*outputFile, "bidi")
+	defer w.WriteGoFile(*outputFile, "bidi")
 
 	gen.WriteUnicodeVersion(w)
 
