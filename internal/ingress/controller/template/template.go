@@ -216,6 +216,7 @@ func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
 	return false
 }
 
+// build lua shared dict configuration data / certificate data / waf_storage
 func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF bool) string {
 
 	var out []string
@@ -231,23 +232,19 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF
 		return ""
 	}
 
-	// check if config-map contain lua "configuration_data" value, otherwise use default
-	luaCfg := "lua_shared_dict configuration_data "
-	if len(cfg.LuaSharedDictCfgData) > 0 {
-		luaCfg += cfg.LuaSharedDictCfgData
-	} else {
-		luaCfg += "15MB"
+	// check if config contains lua "lua_configuration_data" value otherwise, use default
+	cfgData, ok := cfg.LuaSharedDicts["configuration_data"]
+	if !ok {
+		cfgData = 15
 	}
-	out = append(out, luaCfg)
+	out = append(out, fmt.Sprintf("lua_shared_dict configuration_data %dM", cfgData))
 
-	// check if config-map contain lua "certificate_data" value, otherwise use default
-	luaCert := "lua_shared_dict certificate_data "
-	if len(cfg.LuaSharedDictCertData) > 0 {
-		luaCert += cfg.LuaSharedDictCertData
-	} else {
-		luaCert += "16MB"
+	// check if config contains "lua_certificate_data" value otherwise, use default
+	certData, ok := cfg.LuaSharedDicts["certificate_data"]
+	if !ok {
+		certData = 16
 	}
-	out = append(out, luaCert)
+	out = append(out, fmt.Sprintf("lua_shared_dict certificate_data %dM", certData))
 
 	if !disableLuaRestyWAF {
 		luaRestyWAFEnabled := func() bool {

@@ -608,11 +608,8 @@ type Configuration struct {
 	// Block all requests with given Referer headers
 	BlockReferers []string `json:"block-referers"`
 
-	// Lua Configuration data
-	LuaSharedDictCfgData string `json:"lua-shared-dict-configuration-data"`
-
-	// Lua Certificate data
-	LuaSharedDictCertData string `json:"lua-shared-dict-certificate-data"`
+	// Lua shared dict configuration data / certificate data
+	LuaSharedDicts map[string]int `json:"lua-shared-dicts"`
 }
 
 // NewDefault returns the default nginx configuration

@@ -166,12 +166,15 @@ proxy_pass http://upstream_balancer;`,
 )
 
 func TestBuildLuaSharedDictionaries(t *testing.T) {
+
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	// config map
+
+	// config lua dict
 	cfg := config.Configuration{
-		LuaSharedDictCfgData:  "100M",
-		LuaSharedDictCertData: "20M",
+		LuaSharedDicts: map[string]int{
+			"configuration_data": 10, "certificate_data": 20,
+		},
 	}
 	actual := buildLuaSharedDictionaries(cfg, invalidType, true)
 
@@ -189,9 +192,9 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 			Locations: []*ingress.Location{{Path: "/", LuaRestyWAF: luarestywaf.Config{}}},
 		},
 	}
-
+	// returns value from config
 	configuration := buildLuaSharedDictionaries(cfg, servers, false)
-	if !strings.Contains(configuration, "lua_shared_dict configuration_data") {
+	if !strings.Contains(configuration, "lua_shared_dict configuration_data 10M;\n\rlua_shared_dict certificate_data 20M;") {
 		t.Errorf("expected to include 'configuration_data' but got %s", configuration)
 	}
 	if strings.Contains(configuration, "waf_storage") {
