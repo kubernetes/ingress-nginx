@@ -33,8 +33,6 @@ require (
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
 	github.com/ncabatoff/go-seq v0.0.0-20180805175032-b08ef85ed833 // indirect
@@ -46,8 +44,6 @@ require (
 	github.com/opencontainers/runc v0.1.1
 	github.com/parnurzeal/gorequest v0.2.15
 	github.com/paultag/sniff v0.0.0-20170624152000-87325c3dddf4
-	github.com/pborman/uuid v1.2.0 // indirect
-	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90
@@ -68,26 +64,30 @@ require (
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
 
-	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
+	k8s.io/api v0.0.0-20190612125737-db0771252981
 	k8s.io/apiextensions-apiserver v0.0.0-20190315093550-53c4693659ed
-	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
+	k8s.io/apimachinery v0.0.0-20190612125636-6a5db36e93ad
 	k8s.io/apiserver v0.0.0-20190313205120-8b27c41bdbb1
 	k8s.io/cli-runtime v0.0.0-20190314001948-2899ed30580f
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/cloud-provider v0.0.0-20190323031113-9c9d72d1bf90 // indirect
-	k8s.io/code-generator v0.0.0-00010101000000-000000000000
+	k8s.io/code-generator v0.0.0
 	k8s.io/component-base v0.0.0-20190313120452-4727f38490bc
-	k8s.io/klog v0.3.0
+	k8s.io/klog v0.3.1
 	k8s.io/kube-openapi v0.0.0-20190320154901-5e45bb682580 // indirect
-	k8s.io/kubernetes v1.14.1
+	k8s.io/kubernetes v1.14.3
 	k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7 // indirect
 	sigs.k8s.io/controller-runtime v0.1.10
 	sigs.k8s.io/kustomize v2.0.3+incompatible // indirect
 	sigs.k8s.io/testing_frameworks v0.1.1 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )
 
 replace (
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.1
-	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20190511023357-639c964206c2
+
+	k8s.io/api => k8s.io/api v0.0.0-20190612125737-db0771252981
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190612125636-6a5db36e93ad
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20190612125919-5c45477a8ae7
+	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20190612125529-c522cb6c26aa
+	k8s.io/kubernetes => k8s.io/kubernetes v1.14.3
 )
