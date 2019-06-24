@@ -71,10 +71,10 @@ github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
-github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes
-github.com/golang/protobuf/ptypes/timestamp
+github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/wrappers
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/protoc-gen-go/generator
@@ -145,6 +145,8 @@ github.com/modern-go/concurrent
 github.com/modern-go/reflect2
 # github.com/moul/http2curl v1.0.0
 github.com/moul/http2curl
+# github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
+github.com/moul/pb/grpcbin/go-grpc
 # github.com/ncabatoff/go-seq v0.0.0-20180805175032-b08ef85ed833
 github.com/ncabatoff/go-seq/seq
 # github.com/ncabatoff/process-exporter v0.0.0-20180915144445-bdf24ef23850
@@ -258,18 +260,18 @@ go.uber.org/zap/internal/exit
 # golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/net v0.0.0-20190311183353-d8887717615a
+golang.org/x/net/context
 golang.org/x/net/publicsuffix
+golang.org/x/net/trace
 golang.org/x/net/http2
 golang.org/x/net/html/charset
-golang.org/x/net/http/httpguts
+golang.org/x/net/internal/timeseries
 golang.org/x/net/http2/hpack
+golang.org/x/net/http/httpguts
 golang.org/x/net/idna
-golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/context/ctxhttp
-golang.org/x/net/trace
 golang.org/x/net/html/atom
-golang.org/x/net/internal/timeseries
 # golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
 golang.org/x/oauth2
 golang.org/x/oauth2/google
@@ -360,11 +362,11 @@ google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/protobuf/field_mask
 # google.golang.org/grpc v1.19.1
 google.golang.org/grpc
+google.golang.org/grpc/credentials
 google.golang.org/grpc/balancer
 google.golang.org/grpc/balancer/roundrobin
 google.golang.org/grpc/codes
 google.golang.org/grpc/connectivity
-google.golang.org/grpc/credentials
 google.golang.org/grpc/encoding
 google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/grpclog
@@ -386,8 +388,8 @@ google.golang.org/grpc/resolver/passthrough
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-google.golang.org/grpc/balancer/base
 google.golang.org/grpc/credentials/internal
+google.golang.org/grpc/balancer/base
 google.golang.org/grpc/binarylog/grpc_binarylog_v1
 google.golang.org/grpc/internal/syscall
 # gopkg.in/fsnotify.v1 v1.4.7
@@ -460,7 +462,6 @@ k8s.io/apimachinery/pkg/util/intstr
 k8s.io/apimachinery/pkg/util/sets
 k8s.io/apimachinery/pkg/labels
 k8s.io/apimachinery/pkg/util/runtime
-k8s.io/apimachinery/pkg/util/version
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/pkg/util/version
 k8s.io/apimachinery/pkg/fields
