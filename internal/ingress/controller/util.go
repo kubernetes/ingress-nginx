@@ -73,7 +73,7 @@ func rlimitMaxNumFiles() int {
 }
 
 const (
-	defBinary = "/usr/sbin/nginx"
+	defBinary = "/usr/local/openresty/nginx/sbin/nginx"
 	cfgPath   = "/etc/nginx/nginx.conf"
 )
 
