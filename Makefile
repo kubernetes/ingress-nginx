@@ -225,6 +225,7 @@ check_dead_links:
 dep-ensure:
 	GO111MODULE=on go mod tidy -v
 	find vendor -name '*_test.go' -delete
+	GO111MODULE=on go mod vendor
 
 .PHONY: dev-env
 dev-env:
