@@ -1,4 +1,4 @@
-FROM quay.io/kubernetes-ingress-controller/e2e:v06042019-0c7a34696 AS BASE
+FROM quay.io/kubernetes-ingress-controller/e2e:v06232019-5bb168152 AS BASE
 
 FROM quay.io/kubernetes-ingress-controller/debian-base-amd64:0.1
 
@@ -9,7 +9,7 @@ RUN clean-install \
     tzdata
 
 RUN curl -Lo /usr/local/bin/kubectl \
-    https://storage.googleapis.com/kubernetes-release/release/v1.14.1/bin/linux/amd64/kubectl \
+    https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl \
     && chmod +x /usr/local/bin/kubectl
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/
