@@ -56,7 +56,7 @@ RUN curl -L https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERS
     && rm -rf /tmp/etcd-download
 
 # install go
-ENV GO_VERSION 1.12.5
+ENV GO_VERSION 1.12.6
 ENV GO_TARBALL "go${GO_VERSION}.linux-amd64.tar.gz"
 RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" && \
     tar xzf "${GO_TARBALL}" -C /usr/local && \

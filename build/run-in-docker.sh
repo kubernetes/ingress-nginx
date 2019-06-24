@@ -22,7 +22,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v06042019-0c7a34696
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v06232019-5bb168152
 
 DOCKER_OPTS=${DOCKER_OPTS:-""}
 
