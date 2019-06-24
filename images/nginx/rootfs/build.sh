@@ -19,10 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.17.0
-export NDK_VERSION=0.3.1rc1
-export SETMISC_VERSION=0.32
-export MORE_HEADERS_VERSION=0.33
+export OPENRESTY_VERSION=1.15.8.1
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.8.0
@@ -30,18 +27,15 @@ export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=cdfaf5bb25ff5f8ec179fd548e6c7c2ade9a6a09
 export MSGPACK_VERSION=3.1.1
-export DATADOG_CPP_VERSION=0.4.2
+export DATADOG_CPP_VERSION=0.4.3
 export MODSECURITY_VERSION=d7101e13685efd7e7c9f808871b202656a969f4b
 export MODSECURITY_LIB_VERSION=3.0.3
 export OWASP_MODSECURITY_CRS_VERSION=3.1.0
-export LUA_BRIDGE_TRACER_VERSION=0.1.0
-export LUA_NGX_VERSION=0.10.15
-export LUA_STREAM_NGX_VERSION=0.0.7
-export LUA_UPSTREAM_VERSION=0.07
+export LUA_BRIDGE_TRACER_VERSION=da8889d872dbea9864f45ed8c04680a01a9dd2e6
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export LUAJIT_VERSION=2.1-20190507
+export RESTY_LUAROCKS_VERSION=3.1.3
 
 export BUILD_PATH=/tmp/build
 
@@ -60,6 +54,7 @@ get_src()
   tar xzf "$f"
   rm -rf "$f"
 }
+
 
 apt-get update && apt-get dist-upgrade -y
 
@@ -82,7 +77,6 @@ clean-install \
   libperl-dev \
   cmake \
   util-linux \
-  lua5.1 liblua5.1-0 liblua5.1-dev \
   lmdb-utils \
   wget \
   libcurl4-openssl-dev \
@@ -90,24 +84,14 @@ clean-install \
   libz-dev \
   procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
-  lua-cjson \
   python \
-  luarocks \
   libmaxminddb-dev \
   dumb-init \
   gdb \
   bc \
+  unzip \
+  nano \
   || exit 1
-
-if [[ ${ARCH} == "x86_64" ]]; then
-  ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
-  ln -s /usr/lib/x86_64-linux-gnu /usr/lib/lua-platform-path
-fi
-
-if [[ ${ARCH} == "aarch64" ]]; then
-  ln -s /usr/lib/aarch64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
-  ln -s /usr/lib/aarch64-linux-gnu /usr/lib/lua-platform-path
-fi
 
 mkdir -p /etc/nginx
 
@@ -131,17 +115,8 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src e21b5d06cd53e86afb94f0b3678e0abb0c0f011433471fa3d895cefa65ae0fab \
-        "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
-
-get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
-        "https://github.com/simpl/ngx_devel_kit/archive/v$NDK_VERSION.tar.gz"
-
-get_src f1ad2459c4ee6a61771aa84f77871f4bfe42943a4aa4c30c62ba3f981f52c201 \
-        "https://github.com/openresty/set-misc-nginx-module/archive/v$SETMISC_VERSION.tar.gz"
-
-get_src a3dcbab117a9c103bc1ea5200fc00a7b7d2af97ff7fd525f16f8ac2632e30fbf \
-        "https://github.com/openresty/headers-more-nginx-module/archive/v$MORE_HEADERS_VERSION.tar.gz"
+get_src 89a1238ca177692d6903c0adbea5bdf2a0b82c383662a73c03ebf5ef9f570842 \
+        "https://openresty.org/download/openresty-$OPENRESTY_VERSION.tar.gz"
 
 get_src fe683831f832aae4737de1e1026a4454017c2d5f98cb88b08c5411dc380062f8 \
         "https://github.com/atomx/nginx-http-auth-digest/archive/$NGINX_DIGEST_AUTH.tar.gz"
@@ -167,50 +142,11 @@ get_src 3183450d897baa9309347c8617edc0c97c5b29ffc32bd2d12f498edf2dcbeffa \
 get_src bda49f996a73d2c6080ff0523e7b535917cd28c8a79c3a5da54fc29332d61d1e \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src a3d1c03e7af570fa64c01df259e6e9bb78637a6bd9c65c6bf7e8703e466dc22f \
+get_src 7ef075c5936cfcca37d32c3b83b3b05d86f8a919d61fc94634f97a5c6542cff4 \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
-get_src c29183001e3ab48299deecd02fb84b799b6627817c9baa66e4b342ac81dd6b40\
-        "https://github.com/opentracing/lua-bridge-tracer/archive/v$LUA_BRIDGE_TRACER_VERSION.tar.gz"
-
-get_src 7d5f3439c8df56046d0564b5857fd8a30296ab1bd6df0f048aed7afb56a0a4c2 \
-        "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
-
-get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
-        "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
-
-get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
-        "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
-
-get_src 42f0384f80b6a9b4f42f91ee688baf69165d0573347e6ea84ebed95e928211d7 \
-        "https://github.com/openresty/lua-resty-lrucache/archive/v0.09.tar.gz"
-
-get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
-        "https://github.com/openresty/lua-resty-core/archive/v0.1.17.tar.gz"
-
-get_src 517db9add320250b770f2daac83a49e38e6131611f2daa5ff05c69d5705e9746 \
-        "https://github.com/openresty/lua-resty-lock/archive/v0.08rc1.tar.gz"
-
-get_src 3917d506e2d692088f7b4035c589cc32634de4ea66e40fc51259fbae43c9258d \
-        "https://github.com/hamishforbes/lua-resty-iputils/archive/v0.3.0.tar.gz"
-
-get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
-        "https://github.com/openresty/lua-resty-upload/archive/v0.10.tar.gz"
-
-get_src 4aca34f324d543754968359672dcf5f856234574ee4da360ce02c778d244572a \
-        "https://github.com/openresty/lua-resty-dns/archive/v0.21.tar.gz"
-
-get_src 095615fe94e64615c4a27f4f4475b91c047cf8d10bc2dbde8d5ba6aa625fc5ab \
-        "https://github.com/openresty/lua-resty-string/archive/v0.11.tar.gz"
-
-get_src 89cedd6466801bfef20499689ebb34ecf17a2e60a34cd06e13c0204ea1775588 \
-        "https://github.com/openresty/lua-resty-balancer/archive/v0.02rc5.tar.gz"
-
-get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
-        "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
-
-get_src 9b5294fb2ecb76f7e7cb12169a29b75b6a9ead2d639095e903c8db1c7d95bd3a \
-        "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
+get_src f5470132d8756eef293833e30508926894883924a445e3b9a07c869d26d4706d \
+        "https://github.com/opentracing/lua-bridge-tracer/archive/$LUA_BRIDGE_TRACER_VERSION.tar.gz"
 
 get_src 1af5a5632dc8b00ae103d51b7bf225de3a7f0df82f5c6a401996c080106e600e \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
@@ -221,6 +157,9 @@ get_src 15bd1005228cf2c869a6f09e8c41a6aaa6846e4936c473106786ae8ac860fab7 \
 get_src 5f629a50ba22347c441421091da70fdc2ac14586619934534e5a0f8a1390a950 \
         "https://github.com/yaoweibin/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
+get_src c573435f495aac159e34eaa0a3847172a2298eb6295fcdc35d565f9f9b990513 \
+        "https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz"
+
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
 
@@ -229,16 +168,6 @@ export CTEST_BUILD_FLAGS=${MAKEFLAGS}
 export HUNTER_JOBS_NUMBER=${CORES}
 export HUNTER_KEEP_PACKAGE_SOURCES=false
 export HUNTER_USE_CACHE_SERVERS=true
-
-# Install luajit from openresty fork
-export LUAJIT_LIB=/usr/local/lib
-export LUA_LIB_DIR="$LUAJIT_LIB/lua"
-
-cd "$BUILD_PATH/luajit2-$LUAJIT_VERSION"
-make CCDEBUG=-g
-make install
-
-export LUAJIT_INC=/usr/local/include/luajit-2.1
 
 # Installing luarocks packages
 if [[ ${ARCH} == "x86_64" ]]; then
@@ -250,38 +179,8 @@ if [[ ${ARCH} == "aarch64" ]]; then
 fi
 
 cd "$BUILD_PATH"
-luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
 
-cd "$BUILD_PATH/lua-resty-core-0.1.17"
-make install
-
-cd "$BUILD_PATH/lua-resty-lrucache-0.09"
-make install
-
-cd "$BUILD_PATH/lua-resty-lock-0.08rc1"
-make install
-
-cd "$BUILD_PATH/lua-resty-iputils-0.3.0"
-make install
-
-cd "$BUILD_PATH/lua-resty-upload-0.10"
-make install
-
-cd "$BUILD_PATH/lua-resty-dns-0.21"
-make install
-
-cd "$BUILD_PATH/lua-resty-string-0.11"
-make install
-
-cd "$BUILD_PATH/lua-resty-balancer-0.02rc5"
-make all
-make install
-
-cd "$BUILD_PATH/lua-resty-cookie-0.1.0"
-make install
-
-# build and install lua-resty-waf with dependencies
-/install_lua_resty_waf.sh
+export PATH=$PATH:/usr/local/openresty/luajit
 
 # install openresty-gdb-utils
 cd /
@@ -391,14 +290,6 @@ cmake ..
 make
 make install
 
-# build Lua bridge tracer
-cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"
-mkdir .build
-cd .build
-cmake ..
-make
-make install
-
 # Get Brotli source and deps
 cd "$BUILD_PATH"
 git clone --depth=1 https://github.com/google/ngx_brotli.git
@@ -423,6 +314,7 @@ cp unicode.mapping /etc/nginx/modsecurity/unicode.mapping
 
 # Download owasp modsecurity crs
 cd /etc/nginx/
+
 git clone -b v$OWASP_MODSECURITY_CRS_VERSION https://github.com/SpiderLabs/owasp-modsecurity-crs
 cd owasp-modsecurity-crs
 
@@ -464,10 +356,7 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTE
 " > /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 
 # build nginx
-cd "$BUILD_PATH/nginx-$NGINX_VERSION"
-
-# apply Nginx patches
-patch -p1 < /patches/openresty-ssl_cert_cb_yield.patch
+cd "$BUILD_PATH/openresty-$OPENRESTY_VERSION"
 
 WITH_FLAGS="--with-debug \
   --with-compat \
@@ -487,7 +376,10 @@ WITH_FLAGS="--with-debug \
   --with-stream_ssl_preread_module \
   --with-threads \
   --with-http_secure_link_module \
-  --with-http_gunzip_module"
+  --with-http_gunzip_module \
+  --with-md5-asm \
+  --with-sha1-asm \
+  -j${CORES} "
 
 if [[ ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
@@ -513,14 +405,8 @@ if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=native'
 fi
 
-WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
-  --add-module=$BUILD_PATH/set-misc-nginx-module-$SETMISC_VERSION \
-  --add-module=$BUILD_PATH/headers-more-nginx-module-$MORE_HEADERS_VERSION \
-  --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
+WITH_MODULES="--add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
-  --add-module=$BUILD_PATH/lua-nginx-module-$LUA_NGX_VERSION \
-  --add-module=$BUILD_PATH/stream-lua-nginx-module-$LUA_STREAM_NGX_VERSION \
-  --add-module=$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION \
   --add-module=$BUILD_PATH/nginx-influxdb-module-$NGINX_INFLUXDB_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
@@ -529,18 +415,6 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/ngx_brotli"
 
 ./configure \
-  --prefix=/usr/share/nginx \
-  --conf-path=/etc/nginx/nginx.conf \
-  --modules-path=/etc/nginx/modules \
-  --http-log-path=/var/log/nginx/access.log \
-  --error-log-path=/var/log/nginx/error.log \
-  --lock-path=/var/lock/nginx.lock \
-  --pid-path=/run/nginx.pid \
-  --http-client-body-temp-path=/var/lib/nginx/body \
-  --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
-  --http-proxy-temp-path=/var/lib/nginx/proxy \
-  --http-scgi-temp-path=/var/lib/nginx/scgi \
-  --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
   ${WITH_FLAGS} \
   --without-mail_pop3_module \
   --without-mail_smtp_module \
@@ -556,11 +430,44 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
 make || exit 1
 make install || exit 1
 
+cd "$BUILD_PATH/luarocks-${RESTY_LUAROCKS_VERSION}"
+./configure \
+  --prefix=/usr/local/openresty/luajit \
+  --with-lua=/usr/local/openresty/luajit \
+  --lua-suffix=jit-2.1.0-beta3 \
+  --with-lua-include=/usr/local/openresty/luajit/include/luajit-2.1
+
+make || exit 1
+make install || exit 1
+
+export PATH=$PATH:/usr/local/openresty/luajit/bin
+
+cd /usr/local/openresty
+
+# build and install lua-resty-waf with dependencies
+export LUA_LIB_DIR=/usr/local/openresty/lualib
+export LUA_INCLUDE_DIR=/tmp/build/openresty-1.15.8.1/build/luajit-root/usr/local/openresty/luajit/include/luajit-2.1
+
+luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
+luarocks install lua-resty-iputils 0.3.0-1
+luarocks install lua-resty-balancer 0.02rc5-0
+luarocks install lua-resty-cookie 0.1.0-1
+
+ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
+
+/install_lua_resty_waf.sh
+
+# build Lua bridge tracer
+cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"
+mkdir .build
+cd .build
+cmake ..
+make
+make install
+
 echo "Cleaning..."
 
 cd /
-
-mv /usr/share/nginx/sbin/nginx /usr/sbin
 
 apt-mark unmarkauto \
   bash \
@@ -610,11 +517,12 @@ rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
 rm -rf $HOME/.hunter
 
+rm -rf $LUA_INCLUDE_DIR /usr/include/lua5.1
+
 # update image permissions
 writeDirs=( \
   /etc/nginx \
-  /var/lib/nginx \
-  /var/log/nginx \
+  /usr/local/openresty/nginx \
   /opt/modsecurity/var/log \
   /opt/modsecurity/var/upload \
   /opt/modsecurity/var/audit \
