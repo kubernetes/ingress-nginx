@@ -128,6 +128,20 @@ func (f *Framework) AfterEach() {
 		Expect(err).ToNot(HaveOccurred())
 		By("Dumping NGINX logs after a failure running a test")
 		Logf("%v", log)
+
+		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
+		if err != nil {
+			return
+		}
+
+		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf")
+		o, err := f.ExecCommand(pod, cmd)
+		if err != nil {
+			return
+		}
+
+		By("Dumping NGINX configuration after a failure running a test")
+		Logf("%v", o)
 	}
 }
 
