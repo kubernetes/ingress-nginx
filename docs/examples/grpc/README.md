@@ -102,3 +102,16 @@ $ grpcurl fortune-teller.stack.build:443 build.stack.fortune.FortuneTeller/Predi
 > If you are developing public gRPC endpoints, check out
 > https://proto.stack.build, a protocol buffer / gRPC build service that can use
 > to help make it easier for your users to consume your API.
+
+> See also the specific GRPC settings of NGINX: https://nginx.org/en/docs/http/ngx_http_grpc_module.html
+
+### Notes on using response/request streams
+
+1. If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the `grpc_read_timeout` to acommodate for this.
+2. If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the 
+`grpc_send_timeout` and the `client_body_timeout`.
+3. If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: `grpc_read_timeout`, `grpc_send_timeout` and `client_body_timeout`.
+
+Values for the timeouts must be specified as e.g. `"1200s"`.
+
+> On the most recent versions of nginx-ingress, changing these timeouts requires using the `nginx.ingress.kubernetes.io/server-snippet` annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout seperately.
