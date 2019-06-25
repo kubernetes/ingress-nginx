@@ -36,6 +36,7 @@ export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 export RESTY_LUAROCKS_VERSION=3.1.3
+export LUA_RESTY_BALANCER_VERSION=0.03
 
 export BUILD_PATH=/tmp/build
 
@@ -159,6 +160,9 @@ get_src 5f629a50ba22347c441421091da70fdc2ac14586619934534e5a0f8a1390a950 \
 
 get_src c573435f495aac159e34eaa0a3847172a2298eb6295fcdc35d565f9f9b990513 \
         "https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz"
+
+get_src 82209d5a5d9545c6dde3db7857f84345db22162fdea9743d5e2b2094d8d407f8 \
+        "https://github.com/openresty/lua-resty-balancer/archive/v${LUA_RESTY_BALANCER_VERSION}.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
@@ -450,8 +454,12 @@ export LUA_INCLUDE_DIR=/tmp/build/openresty-1.15.8.1/build/luajit-root/usr/local
 
 luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
 luarocks install lua-resty-iputils 0.3.0-1
-luarocks install lua-resty-balancer 0.02rc5-0
 luarocks install lua-resty-cookie 0.1.0-1
+
+cd "$BUILD_PATH/lua-resty-balancer-$LUA_RESTY_BALANCER_VERSION"
+
+make
+make install
 
 ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
 
