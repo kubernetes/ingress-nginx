@@ -43,7 +43,7 @@ type SSLCert struct {
 	// ExpiresTime contains the expiration of this SSL certificate in timestamp format
 	ExpireTime time.Time `json:"expires"`
 	// Pem encoded certificate and key concatenated
-	PemCertKey string `json:"pemCertKey"`
+	PemCertKey string `json:"pemCertKey,omitempty"`
 }
 
 // GetObjectKind implements the ObjectKind interface as a noop
