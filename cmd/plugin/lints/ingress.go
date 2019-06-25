@@ -58,7 +58,7 @@ func (lint IngressLint) Version() string {
 	return lint.version
 }
 
-// GetIngressLints retuns all of the lints for ingresses
+// GetIngressLints returns all of the lints for ingresses
 func GetIngressLints() []IngressLint {
 	return []IngressLint{
 		removedAnnotation("add-base-url", 3174, "0.22.0"),

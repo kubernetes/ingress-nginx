@@ -60,7 +60,7 @@ func printOrError(s string, e error) error {
 	return nil
 }
 
-// ParseVersionString returns the major, minor, and patch numbers of a verison string
+// ParseVersionString returns the major, minor, and patch numbers of a version string
 func ParseVersionString(v string) (int, int, int, error) {
 	parts := versionRegex.FindStringSubmatch(v)
 
