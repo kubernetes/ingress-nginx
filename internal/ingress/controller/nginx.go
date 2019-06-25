@@ -994,6 +994,10 @@ func configureCertificates(pcfg *ingress.Configuration) error {
 	var servers []*ingress.Server
 
 	for _, server := range pcfg.Servers {
+		if server.SSLCert.PemCertKey == "" {
+			continue
+		}
+
 		servers = append(servers, &ingress.Server{
 			Hostname: server.Hostname,
 			SSLCert: ingress.SSLCert{
@@ -1001,8 +1005,7 @@ func configureCertificates(pcfg *ingress.Configuration) error {
 			},
 		})
 
-		if server.Alias != "" && server.SSLCert.PemCertKey != "" &&
-			ssl.IsValidHostname(server.Alias, server.SSLCert.CN) {
+		if server.Alias != "" && ssl.IsValidHostname(server.Alias, server.SSLCert.CN) {
 			servers = append(servers, &ingress.Server{
 				Hostname: server.Alias,
 				SSLCert: ingress.SSLCert{
@@ -1014,6 +1017,10 @@ func configureCertificates(pcfg *ingress.Configuration) error {
 
 	redirects := buildRedirects(pcfg.Servers)
 	for _, redirect := range redirects {
+		if redirect.SSLCert.PemCertKey == "" {
+			continue
+		}
+
 		servers = append(servers, &ingress.Server{
 			Hostname: redirect.From,
 			SSLCert: ingress.SSLCert{
