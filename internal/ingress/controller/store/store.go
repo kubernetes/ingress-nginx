@@ -57,7 +57,7 @@ import (
 	"k8s.io/ingress-nginx/internal/k8s"
 )
 
-// IngressFilterFunc decides if an Ingress should be ommited or not
+// IngressFilterFunc decides if an Ingress should be omitted or not
 type IngressFilterFunc func(*ingress.Ingress) bool
 
 // Storer is the interface that wraps the required methods to gather information
