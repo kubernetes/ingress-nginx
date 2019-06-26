@@ -19,6 +19,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+export DEBIAN_FRONTEND=noninteractive
+
 export OPENRESTY_VERSION=1.15.8.1
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
@@ -56,7 +58,6 @@ get_src()
   rm -rf "$f"
 }
 
-
 apt-get update && apt-get dist-upgrade -y
 
 # install required packages to build
@@ -92,7 +93,15 @@ clean-install \
   bc \
   unzip \
   nano \
+  ssdeep \
   || exit 1
+
+# https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1667178.html
+if [[ ${ARCH} == "armv7l" ]]; then
+  echo "Fixing ca-certificates"
+  touch /etc/ssl/certs/ca-certificates.crt
+  c_rehash
+fi
 
 mkdir -p /etc/nginx
 
@@ -173,7 +182,10 @@ export HUNTER_JOBS_NUMBER=${CORES}
 export HUNTER_KEEP_PACKAGE_SOURCES=false
 export HUNTER_USE_CACHE_SERVERS=true
 
-# Installing luarocks packages
+if [[ ${ARCH} == "armv7l" ]]; then
+  export PCRE_DIR=/usr/lib/arm-linux-gnueabihf
+fi
+
 if [[ ${ARCH} == "x86_64" ]]; then
   export PCRE_DIR=/usr/lib/x86_64-linux-gnu
 fi
@@ -216,11 +228,12 @@ cmake   -DCMAKE_BUILD_TYPE=Release \
 make
 make install
 
-# build jaeger lib
-cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
-sed -i 's/-Werror/-Wno-psabi/' CMakeLists.txt
+if [[ ${ARCH} != "armv7l" ]]; then
+  # build jaeger lib
+  cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
+  sed -i 's/-Werror/-Wno-psabi/' CMakeLists.txt
 
-cat <<EOF > export.map
+  cat <<EOF > export.map
 {
     global:
         OpenTracingMakeTracerFactory;
@@ -228,24 +241,25 @@ cat <<EOF > export.map
 };
 EOF
 
-mkdir .build
-cd .build
+  mkdir .build
+  cd .build
 
-cmake -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_TESTING=OFF \
-      -DJAEGERTRACING_BUILD_EXAMPLES=OFF \
-      -DJAEGERTRACING_BUILD_CROSSDOCK=OFF \
-      -DJAEGERTRACING_COVERAGE=OFF \
-      -DJAEGERTRACING_PLUGIN=ON \
-      -DHUNTER_CONFIGURATION_TYPES=Release \
-      -DJAEGERTRACING_WITH_YAML_CPP=ON ..
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTING=OFF \
+        -DJAEGERTRACING_BUILD_EXAMPLES=OFF \
+        -DJAEGERTRACING_BUILD_CROSSDOCK=OFF \
+        -DJAEGERTRACING_COVERAGE=OFF \
+        -DJAEGERTRACING_PLUGIN=ON \
+        -DHUNTER_CONFIGURATION_TYPES=Release \
+        -DJAEGERTRACING_WITH_YAML_CPP=ON ..
 
-make
-make install
+  make
+  make install
 
-export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir) \
+  export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir) \
 
-mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
+  mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
+fi
 
 # build zipkin lib
 cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
@@ -385,10 +399,6 @@ WITH_FLAGS="--with-debug \
   --with-sha1-asm \
   -j${CORES} "
 
-if [[ ${ARCH} != "aarch64" ]]; then
-  WITH_FLAGS+=" --with-file-aio"
-fi
-
 # "Combining -flto with -g is currently experimental and expected to produce unexpected results."
 # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
 CC_OPT="-g -Og -fPIE -fstack-protector-strong \
@@ -400,10 +410,18 @@ CC_OPT="-g -Og -fPIE -fstack-protector-strong \
   --param=ssp-buffer-size=4 \
   -DTCP_FASTOPEN=23 \
   -fPIC \
-  -I$HUNTER_INSTALL_DIR/include \
   -Wno-cast-function-type"
 
-LD_OPT="-fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
+LD_OPT="-fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now"
+
+if [[ ${ARCH} != "armv7l" ]]; then
+  CC_OPT+=" -I$HUNTER_INSTALL_DIR/include"
+  LD_OPT+=" -L$HUNTER_INSTALL_DIR/lib"
+fi
+
+if [[ ${ARCH} != "aarch64" ]]; then
+  WITH_FLAGS+=" --with-file-aio"
+fi
 
 if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=native'
@@ -450,7 +468,7 @@ cd /usr/local/openresty
 
 # build and install lua-resty-waf with dependencies
 export LUA_LIB_DIR=/usr/local/openresty/lualib
-export LUA_INCLUDE_DIR=/tmp/build/openresty-1.15.8.1/build/luajit-root/usr/local/openresty/luajit/include/luajit-2.1
+export LUA_INCLUDE_DIR=/tmp/build/openresty-$OPENRESTY_VERSION/build/luajit-root/usr/local/openresty/luajit/include/luajit-2.1
 
 luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
 luarocks install lua-resty-iputils 0.3.0-1
@@ -463,7 +481,9 @@ make install
 
 ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
 
-/install_lua_resty_waf.sh
+if [[ ${ARCH} != "armv7l" ]]; then
+  /install_lua_resty_waf.sh
+fi
 
 # build Lua bridge tracer
 cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"

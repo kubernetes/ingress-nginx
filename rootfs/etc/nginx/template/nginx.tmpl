@@ -57,8 +57,10 @@ http {
         require("resty.core")
         collectgarbage("collect")
 
+        {{ if not $all.Cfg.DisableLuaRestyWAF }}
         local lua_resty_waf = require("resty.waf")
         lua_resty_waf.init()
+        {{ end }}
 
         -- init modules
         local ok, res
