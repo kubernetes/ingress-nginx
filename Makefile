@@ -46,13 +46,18 @@ DUMB_ARCH = ${ARCH}
 
 GOBUILD_FLAGS := -v
 
-ALL_ARCH = amd64 arm64
+ALL_ARCH = amd64 arm arm64
 
 QEMUVERSION = v4.0.0
 
 BUSTED_ARGS =-v --pattern=_test
 
 GOOS = linux
+
+IMGNAME = nginx-ingress-controller
+IMAGE = $(REGISTRY)/$(IMGNAME)
+
+MULTI_ARCH_IMG = ${IMAGE}-${ARCH}
 
 export ARCH
 export DUMB_ARCH
@@ -64,14 +69,14 @@ export GIT_COMMIT
 export GOBUILD_FLAGS
 export REPO_INFO
 export BUSTED_ARGS
-
-IMGNAME = nginx-ingress-controller
-IMAGE = $(REGISTRY)/$(IMGNAME)
-MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
+export IMAGE
 
 # Set default base image dynamically for each arch
 BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.90
 
+ifeq ($(ARCH),arm)
+	QEMUARCH=arm
+endif
 ifeq ($(ARCH),arm64)
 	QEMUARCH=aarch64
 endif
@@ -131,7 +136,7 @@ clean-container:
 .PHONY: register-qemu
 register-qemu:
 	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	@$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
+	@$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset >&2
 
 .PHONY: push
 push: .push-$(ARCH)
@@ -249,6 +254,10 @@ misspell:
 		-error \
 		cmd/* internal/* deploy/* docs/* design/* test/* README.md
 
-.PHONE: kind-e2e-test
+.PHONY: kind-e2e-test
 kind-e2e-test:
 	test/e2e/run.sh
+
+.PHONY: run-ingress-controller
+run-ingress-controller:
+	@build/run-ingress-controller.sh
