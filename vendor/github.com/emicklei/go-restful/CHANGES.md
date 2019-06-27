@@ -1,6 +1,18 @@
 ## Change history of go-restful
 
 
+v2.9.5
+- fix panic in Response.WriteError if err == nil
+
+v2.9.4
+
+- fix issue #400 , parsing mime type quality
+- Route Builder added option for contentEncodingEnabled (#398)
+
+v2.9.3
+
+- Avoid return of 415 Unsupported Media Type when request body is empty (#396)
+
 v2.9.2
 
 - Reduce allocations in per-request methods to improve performance (#395)
