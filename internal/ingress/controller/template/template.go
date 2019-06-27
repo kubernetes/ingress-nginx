@@ -28,6 +28,7 @@ import (
 	"os/exec"
 	"reflect"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	text_template "text/template"
@@ -90,6 +91,11 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 
 	outCmdBuf := t.bp.Get()
 	defer t.bp.Put(outCmdBuf)
+
+	// TODO: remove once we found a fix for coredump running luarocks install lrexlib
+	if runtime.GOARCH == "arm" {
+		conf.Cfg.DisableLuaRestyWAF = true
+	}
 
 	if klog.V(3) {
 		b, err := json.Marshal(conf)
@@ -914,7 +920,11 @@ func buildOpentracing(input interface{}) string {
 	if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
+		if runtime.GOARCH == "arm" {
+			buf.WriteString("# Jaeger tracer is not available for ARM https://github.com/jaegertracing/jaeger-client-cpp/issues/151")
+		} else {
+			buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
+		}
 	} else if cfg.DatadogCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;")
 	}
