@@ -147,7 +147,12 @@ func (f *Framework) AfterEach() {
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.
 func IngressNginxDescribe(text string, body func()) bool {
-	return Describe("[nginx-ingress] "+text, body)
+	return Describe("[ingress-nginx] "+text, body)
+}
+
+// MemoryLeakIt is wrapper function for ginkgo It.  Adds "[MemoryLeak]" tag and makes static analysis easier.
+func MemoryLeakIt(text string, body interface{}, timeout ...float64) bool {
+	return It(text+" [MemoryLeak]", body, timeout...)
 }
 
 // GetNginxIP returns the number of TCP port where NGINX is running
