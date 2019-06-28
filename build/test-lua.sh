@@ -15,7 +15,7 @@
 # limitations under the License.
 
 
-if ! [ -z $DEBUG ]; then
+if [ -n "$DEBUG" ]; then
 	set -x
 fi
 
@@ -25,8 +25,6 @@ set -o pipefail
 
 resty \
   -I ./rootfs/etc/nginx/lua \
-  -I /usr/local/lib/lua \
-  -I /usr/lib/lua-platform-path/lua/5.1 \
   --shdict "configuration_data 5M" \
   --shdict "certificate_data 16M" \
   --shdict "balancer_ewma 1M" \
