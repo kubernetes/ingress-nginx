@@ -31,6 +31,8 @@ E2E_NODES ?= 10
 SLOW_E2E_THRESHOLD ?= 50
 K8S_VERSION ?= v1.14.1
 
+E2E_CHECK_LEAKS ?=
+
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
@@ -70,6 +72,9 @@ export GOBUILD_FLAGS
 export REPO_INFO
 export BUSTED_ARGS
 export IMAGE
+export E2E_NODES
+export E2E_CHECK_LEAKS
+export SLOW_E2E_THRESHOLD
 
 # Set default base image dynamically for each arch
 BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.90
@@ -174,28 +179,7 @@ lua-test:
 
 .PHONY: e2e-test
 e2e-test:
-	echo "Granting permissions to ingress-nginx e2e service account..."
-	kubectl create serviceaccount ingress-nginx-e2e || true
-	kubectl create clusterrolebinding permissive-binding \
-		--clusterrole=cluster-admin \
-		--user=admin \
-		--user=kubelet \
-		--serviceaccount=default:ingress-nginx-e2e || true
-
-	until kubectl get secret | grep -q ^ingress-nginx-e2e-token; do \
-		echo "waiting for api token"; \
-		sleep 3; \
-	done
-
-	kubectl run --rm \
-		--attach \
-		--restart=Never \
-		--generator=run-pod/v1 \
-		--env="E2E_NODES=$(E2E_NODES)" \
-		--env="FOCUS=$(FOCUS)" \
-		--env="SLOW_E2E_THRESHOLD=$(SLOW_E2E_THRESHOLD)" \
-		--overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
-		e2e --image=nginx-ingress-controller:e2e
+	@build/run-e2e-suite.sh
 
 .PHONY: e2e-test-image
 e2e-test-image: e2e-test-binary
