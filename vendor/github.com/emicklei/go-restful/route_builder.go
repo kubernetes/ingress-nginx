@@ -38,6 +38,7 @@ type RouteBuilder struct {
 	defaultResponse         *ResponseError
 	metadata                map[string]interface{}
 	deprecated              bool
+	contentEncodingEnabled  *bool
 }
 
 // Do evaluates each argument with the RouteBuilder itself.
@@ -233,6 +234,12 @@ func (b *RouteBuilder) If(condition RouteSelectionConditionFunction) *RouteBuild
 	return b
 }
 
+// ContentEncodingEnabled allows you to override the Containers value for auto-compressing this route response.
+func (b *RouteBuilder) ContentEncodingEnabled(enabled bool) *RouteBuilder {
+	b.contentEncodingEnabled = &enabled
+	return b
+}
+
 // If no specific Route path then set to rootPath
 // If no specific Produces then set to rootProduces
 // If no specific Consumes then set to rootConsumes
@@ -269,25 +276,27 @@ func (b *RouteBuilder) Build() Route {
 		operationName = nameOfFunction(b.function)
 	}
 	route := Route{
-		Method:          b.httpMethod,
-		Path:            concatPath(b.rootPath, b.currentPath),
-		Produces:        b.produces,
-		Consumes:        b.consumes,
-		Function:        b.function,
-		Filters:         b.filters,
-		If:              b.conditions,
-		relativePath:    b.currentPath,
-		pathExpr:        pathExpr,
-		Doc:             b.doc,
-		Notes:           b.notes,
-		Operation:       operationName,
-		ParameterDocs:   b.parameters,
-		ResponseErrors:  b.errorMap,
-		DefaultResponse: b.defaultResponse,
-		ReadSample:      b.readSample,
-		WriteSample:     b.writeSample,
-		Metadata:        b.metadata,
-		Deprecated:      b.deprecated}
+		Method:                 b.httpMethod,
+		Path:                   concatPath(b.rootPath, b.currentPath),
+		Produces:               b.produces,
+		Consumes:               b.consumes,
+		Function:               b.function,
+		Filters:                b.filters,
+		If:                     b.conditions,
+		relativePath:           b.currentPath,
+		pathExpr:               pathExpr,
+		Doc:                    b.doc,
+		Notes:                  b.notes,
+		Operation:              operationName,
+		ParameterDocs:          b.parameters,
+		ResponseErrors:         b.errorMap,
+		DefaultResponse:        b.defaultResponse,
+		ReadSample:             b.readSample,
+		WriteSample:            b.writeSample,
+		Metadata:               b.metadata,
+		Deprecated:             b.deprecated,
+		contentEncodingEnabled: b.contentEncodingEnabled,
+	}
 	route.postBuild()
 	return route
 }
