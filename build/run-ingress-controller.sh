@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ! [ -z "$DEBUG" ]; then
+if [ -n "$DEBUG" ]; then
 	set -x
 fi
 
@@ -47,7 +47,7 @@ fi
 function cleanup {
     echo -e "${BGREEN}Stoping kubectl proxy${NC}"
     rm -rf "${SSL_VOLUME}"
-    kill $proxy_pid
+    kill "$proxy_pid"
 }
 trap cleanup EXIT
 
@@ -78,7 +78,7 @@ sleep 1
 
 echo -e "\n${BGREEN}kubectl proxy PID: ${BGREEN}$proxy_pid${NC}"
 
-until $(curl --output /dev/null -fsSL http://localhost:8001/); do
+until curl --output /dev/null -fsSL http://localhost:8001/; do
   echo -e "${RED}waiting for kubectl proxy${NC}"
   sleep 5
 done
