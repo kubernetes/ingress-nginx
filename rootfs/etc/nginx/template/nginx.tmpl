@@ -54,7 +54,6 @@ http {
     {{ buildLuaSharedDictionaries $servers $all.Cfg.DisableLuaRestyWAF }}
 
     init_by_lua_block {
-        require("resty.core")
         collectgarbage("collect")
 
         {{ if not $all.Cfg.DisableLuaRestyWAF }}
@@ -632,7 +631,6 @@ stream {
     lua_shared_dict tcp_udp_configuration_data 5M;
 
     init_by_lua_block {
-        require("resty.core")
         collectgarbage("collect")
 
         -- init modules
