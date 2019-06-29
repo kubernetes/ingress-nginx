@@ -130,6 +130,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 			ensureHTTPSRequest(f.GetURL(framework.HTTPS), host, host)
 		})
 
+		It("supports requests with domain with trailing dot", func() {
+			ensureHTTPSRequest(f.GetURL(framework.HTTPS), host+".", host)
+		})
+
 		It("picks up the updated certificate without reloading", func() {
 			ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			Expect(err).ToNot(HaveOccurred())
