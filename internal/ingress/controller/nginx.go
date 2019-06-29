@@ -31,7 +31,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"syscall"
 	"text/template"
 	"time"
@@ -268,8 +267,6 @@ type NGINXController struct {
 
 	metricCollector metric.Collector
 
-	currentLeader uint32
-
 	validationWebhookServer *http.Server
 
 	command NginxExecTester
@@ -296,14 +293,12 @@ func (n *NGINXController) Start() {
 				go n.syncStatus.Run(stopCh)
 			}
 
-			n.setLeader(true)
 			n.metricCollector.OnStartedLeading(electionID)
 			// manually update SSL expiration metrics
 			// (to not wait for a reload)
 			n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
 		},
 		OnStoppedLeading: func() {
-			n.setLeader(false)
 			n.metricCollector.OnStoppedLeading(electionID)
 		},
 		PodName:      n.podInfo.Name,
@@ -1191,16 +1186,4 @@ func buildRedirects(servers []*ingress.Server) []*redirect {
 	}
 
 	return redirectServers
-}
-
-func (n *NGINXController) setLeader(leader bool) {
-	var i uint32
-	if leader {
-		i = 1
-	}
-	atomic.StoreUint32(&n.currentLeader, i)
-}
-
-func (n *NGINXController) isLeader() bool {
-	return atomic.LoadUint32(&n.currentLeader) != 0
 }

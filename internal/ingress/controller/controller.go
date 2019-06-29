@@ -124,10 +124,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	ings := n.store.ListIngresses(nil)
 	hosts, servers, pcfg := n.getConfiguration(ings)
 
-	if n.isLeader() {
-		klog.V(2).Infof("Updating ssl expiration metrics.")
-		n.metricCollector.SetSSLExpireTime(servers)
-	}
+	n.metricCollector.SetSSLExpireTime(servers)
 
 	if n.runningConfig.Equal(pcfg) {
 		klog.V(3).Infof("No configuration change detected, skipping backend reload.")
