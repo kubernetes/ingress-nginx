@@ -61,6 +61,8 @@ func (lint IngressLint) Version() string {
 // GetIngressLints returns all of the lints for ingresses
 func GetIngressLints() []IngressLint {
 	return []IngressLint{
+		removedAnnotation("secure-backends", 3203, "0.21.0"),
+		removedAnnotation("grpc-backend", 3203, "0.21.0"),
 		removedAnnotation("add-base-url", 3174, "0.22.0"),
 		removedAnnotation("base-url-scheme", 3174, "0.22.0"),
 		removedAnnotation("session-cookie-hash", 3743, "0.24.0"),
@@ -83,6 +85,10 @@ func GetIngressLints() []IngressLint {
 			issue:   3786,
 			version: "0.24.0",
 			f:       xForwardedPrefixIsBool,
+		},
+		{
+			message: "Contains an configuration-snippet that contains a Satisfy directive.\nPlease use https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#satisfy",
+			f:       satisfyDirective,
 		},
 	}
 }
@@ -137,4 +143,18 @@ func removedAnnotation(annotationName string, issueNumber int, version string) I
 			return false
 		},
 	}
+}
+
+func satisfyDirective(ing networking.Ingress) bool {
+	for name, val := range ing.Annotations {
+		if strings.HasSuffix(name, "/configuration-snippet") {
+			if strings.Index(val, "satisfy") != -1 {
+				return true
+			}
+
+			return false
+		}
+	}
+
+	return false
 }
