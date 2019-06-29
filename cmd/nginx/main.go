@@ -47,15 +47,6 @@ import (
 	"k8s.io/ingress-nginx/version"
 )
 
-const (
-	// High enough QPS to fit all expected use cases. QPS=0 is not set here, because
-	// client code is overriding it.
-	defaultQPS = 1e6
-	// High enough Burst to fit all expected use cases. Burst=0 is not set here, because
-	// client code is overriding it.
-	defaultBurst = 1e6
-)
-
 func main() {
 	klog.InitFlags(nil)
 
@@ -188,10 +179,6 @@ func createApiserverClient(apiserverHost, kubeConfig string) (*kubernetes.Client
 	if err != nil {
 		return nil, err
 	}
-
-	cfg.QPS = defaultQPS
-	cfg.Burst = defaultBurst
-	cfg.ContentType = "application/vnd.kubernetes.protobuf"
 
 	klog.Infof("Creating API client for %s", cfg.Host)
 
