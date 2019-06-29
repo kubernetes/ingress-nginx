@@ -35,36 +35,39 @@ RUN mkdir -p /go/src/k8s.io/kubernetes \
 # - graphviz package for graphing profiles
 # - bc for shell to junit
 # - rpm for building RPMs with Bazel
-RUN apt-get update && \
-    apt-get install -y bc \
-    rpm && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && apt-get install -y \
+        bc \
+        rpm \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG K8S_RELEASE
 ARG ETCD_VERSION
 
-RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
+RUN curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl
 
-RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kube-apiserver -O /usr/local/bin/kube-apiserver \
+RUN curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kube-apiserver -o /usr/local/bin/kube-apiserver \
     && chmod +x /usr/local/bin/kube-apiserver
 
-RUN curl -L https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz \
+RUN curl -sSL https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz \
     && mkdir -p /tmp/etcd-download \
     && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 \
     && cp /tmp/etcd-download/etcd /usr/local/bin \
     && rm -rf /tmp/etcd-download
 
+RUN curl -sSL https://github.com/kubernetes-sigs/kind/releases/download/v0.4.0/kind-linux-amd64 -o /usr/local/bin/kind \
+    && chmod +x /usr/local/bin/kind
+
 # install go
 ENV GO_VERSION 1.12.6
 ENV GO_TARBALL "go${GO_VERSION}.linux-amd64.tar.gz"
-RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" && \
-    tar xzf "${GO_TARBALL}" -C /usr/local && \
-    rm "${GO_TARBALL}"
+RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" \
+    && tar xzf "${GO_TARBALL}" -C /usr/local \
+    && rm "${GO_TARBALL}"
 
-RUN  go get github.com/onsi/ginkgo/ginkgo \
+RUN go get github.com/onsi/ginkgo/ginkgo \
     && go get golang.org/x/lint/golint \
-    && GO111MODULE="on" go get -u sigs.k8s.io/kind@master \
     && rm -rf /go/src/github.com
 
 ENV KUBEBUILDER_ASSETS /usr/local/bin
