@@ -70,6 +70,30 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		})
 	})
 
+	Context("Lua shared dict", func() {
+		It("update config", func() {
+
+			host := "foo.com"
+			ingress := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+			f.EnsureIngress(ingress)
+
+			lkey := "lua-shared-dicts"
+			lval := "configuration_data:5,certificate_data:5"
+
+			By("update shared dict")
+
+			f.UpdateNginxConfigMapData(lkey, lval)
+
+			var nginxConfig string
+			f.WaitForNginxConfiguration(func(cfg string) bool {
+				nginxConfig = cfg
+				return true
+			})
+
+			Expect(strings.ContainsAny(nginxConfig, "configuration_data:5,certificate_data:5"), true)
+		})
+	})
+
 	Context("when only backends change", func() {
 		It("handles endpoints only changes", func() {
 			var nginxConfig string
