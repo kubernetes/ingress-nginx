@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"os/exec"
 
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // Logs returns the log entries of a given Pod.
-func Logs(pod *v1.Pod) (string, error) {
+func Logs(pod *corev1.Pod) (string, error) {
 	var (
 		execOut bytes.Buffer
 		execErr bytes.Buffer
