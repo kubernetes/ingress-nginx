@@ -35,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
@@ -187,8 +186,6 @@ func (i *Informer) Run(stopCh chan struct{}) {
 
 // k8sStore internal Storer implementation using informers and thread safe stores
 type k8sStore struct {
-	isOCSPCheckEnabled bool
-
 	// backendConfig contains the running configuration from the configmap
 	// this is required because this rarely changes but is a very expensive
 	// operation to execute in each OnUpdate invocation
@@ -224,36 +221,31 @@ type k8sStore struct {
 
 	defaultSSLCertificate string
 
-	isDynamicCertificatesEnabled bool
-
 	pod *k8s.PodInfo
 }
 
 // New creates a new object store to be used in the ingress controller
-func New(checkOCSP bool,
+func New(
 	namespace, configmap, tcp, udp, defaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	fs file.Filesystem,
 	updateCh *channels.RingChannel,
-	isDynamicCertificatesEnabled bool,
 	pod *k8s.PodInfo,
 	disableCatchAll bool) Storer {
 
 	store := &k8sStore{
-		isOCSPCheckEnabled:           checkOCSP,
-		informers:                    &Informer{},
-		listers:                      &Lister{},
-		sslStore:                     NewSSLCertTracker(),
-		filesystem:                   fs,
-		updateCh:                     updateCh,
-		backendConfig:                ngx_config.NewDefault(),
-		syncSecretMu:                 &sync.Mutex{},
-		backendConfigMu:              &sync.RWMutex{},
-		secretIngressMap:             NewObjectRefMap(),
-		defaultSSLCertificate:        defaultSSLCertificate,
-		isDynamicCertificatesEnabled: isDynamicCertificatesEnabled,
-		pod:                          pod,
+		informers:             &Informer{},
+		listers:               &Lister{},
+		sslStore:              NewSSLCertTracker(),
+		filesystem:            fs,
+		updateCh:              updateCh,
+		backendConfig:         ngx_config.NewDefault(),
+		syncSecretMu:          &sync.Mutex{},
+		backendConfigMu:       &sync.RWMutex{},
+		secretIngressMap:      NewObjectRefMap(),
+		defaultSSLCertificate: defaultSSLCertificate,
+		pod:                   pod,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -878,10 +870,6 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 func (s *k8sStore) Run(stopCh chan struct{}) {
 	// start informers
 	s.informers.Run(stopCh)
-
-	if s.isOCSPCheckEnabled {
-		go wait.Until(s.checkSSLChainIssues, 60*time.Second, stopCh)
-	}
 }
 
 // GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods

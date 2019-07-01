@@ -223,10 +223,6 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		klog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}
 
-	if *enableSSLChainCompletion && *dynamicCertificatesEnabled {
-		return false, nil, fmt.Errorf(`SSL certificate chain completion cannot be enabled when dynamic certificates functionality is enabled. Please check the flags --enable-ssl-chain-completion`)
-	}
-
 	if *publishSvc != "" && *publishStatusAddress != "" {
 		return false, nil, fmt.Errorf("Flags --publish-service and --publish-status-address are mutually exclusive")
 	}
@@ -237,29 +233,30 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
 	}
 
+	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
+	ngx_config.DynamicCertificatesEnabled = *dynamicCertificatesEnabled
+
 	config := &controller.Configuration{
-		APIServerHost:              *apiserverHost,
-		KubeConfigFile:             *kubeConfigFile,
-		UpdateStatus:               *updateStatus,
-		ElectionID:                 *electionID,
-		EnableProfiling:            *profiling,
-		EnableMetrics:              *enableMetrics,
-		MetricsPerHost:             *metricsPerHost,
-		EnableSSLPassthrough:       *enableSSLPassthrough,
-		EnableSSLChainCompletion:   *enableSSLChainCompletion,
-		ResyncPeriod:               *resyncPeriod,
-		DefaultService:             *defaultSvc,
-		Namespace:                  *watchNamespace,
-		ConfigMapName:              *configMap,
-		TCPConfigMapName:           *tcpConfigMapName,
-		UDPConfigMapName:           *udpConfigMapName,
-		DefaultSSLCertificate:      *defSSLCertificate,
-		PublishService:             *publishSvc,
-		PublishStatusAddress:       *publishStatusAddress,
-		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
-		UseNodeInternalIP:          *useNodeInternalIP,
-		SyncRateLimit:              *syncRateLimit,
-		DynamicCertificatesEnabled: *dynamicCertificatesEnabled,
+		APIServerHost:          *apiserverHost,
+		KubeConfigFile:         *kubeConfigFile,
+		UpdateStatus:           *updateStatus,
+		ElectionID:             *electionID,
+		EnableProfiling:        *profiling,
+		EnableMetrics:          *enableMetrics,
+		MetricsPerHost:         *metricsPerHost,
+		EnableSSLPassthrough:   *enableSSLPassthrough,
+		ResyncPeriod:           *resyncPeriod,
+		DefaultService:         *defaultSvc,
+		Namespace:              *watchNamespace,
+		ConfigMapName:          *configMap,
+		TCPConfigMapName:       *tcpConfigMapName,
+		UDPConfigMapName:       *udpConfigMapName,
+		DefaultSSLCertificate:  *defSSLCertificate,
+		PublishService:         *publishSvc,
+		PublishStatusAddress:   *publishStatusAddress,
+		UpdateStatusOnShutdown: *updateStatusOnShutdown,
+		UseNodeInternalIP:      *useNodeInternalIP,
+		SyncRateLimit:          *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,

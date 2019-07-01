@@ -44,9 +44,6 @@ if [ "$missing" = true ]; then
   exit 1
 fi
 
-# temporal directory for the fake SSL certificate
-SSL_VOLUME=$(mktemp -d)
-
 function cleanup {
     echo -e "${BGREEN}Stoping kubectl proxy${NC}"
     rm -rf "${SSL_VOLUME}"
@@ -86,10 +83,8 @@ until curl --output /dev/null -fsSL http://localhost:8001/; do
   sleep 5
 done
 
-MINIKUBE_VOLUME=
-if [[ -d "${HOME}/.minikube" ]]; then
-  MINIKUBE_VOLUME=" -v ${HOME}/.minikube:${HOME}/.minikube "
-fi
+# temporal directory for the fake SSL certificate
+SSL_VOLUME=$(mktemp -d)
 
 # if we run as user we cannot bind to port 80 and 443
 docker run \
@@ -101,7 +96,6 @@ docker run \
   -e POD_NAME="${POD_NAME}" \
   -v "${SSL_VOLUME}:/etc/ingress-controller/ssl/" \
   -v "${HOME}/.kube:${HOME}/.kube:ro" \
-  ${MINIKUBE_VOLUME} \
   "${IMAGE}-${ARCH}:local" /nginx-ingress-controller \
   --update-status=false \
   --v=2 \

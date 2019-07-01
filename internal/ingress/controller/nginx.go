@@ -129,7 +129,6 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 	n.podInfo = pod
 
 	n.store = store.New(
-		config.EnableSSLChainCompletion,
 		config.Namespace,
 		config.ConfigMapName,
 		config.TCPConfigMapName,
@@ -139,7 +138,6 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.Client,
 		fs,
 		n.updateCh,
-		config.DynamicCertificatesEnabled,
 		pod,
 		config.DisableCatchAll)
 
@@ -614,7 +612,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		IsSSLPassthroughEnabled:    n.cfg.EnableSSLPassthrough,
 		ListenPorts:                n.cfg.ListenPorts,
 		PublishService:             n.GetPublishService(),
-		DynamicCertificatesEnabled: n.cfg.DynamicCertificatesEnabled,
+		DynamicCertificatesEnabled: ngx_config.DynamicCertificatesEnabled,
 		EnableMetrics:              n.cfg.EnableMetrics,
 
 		HealthzURI:   nginx.HealthPath,
@@ -851,7 +849,7 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 	copyOfRunningConfig.ControllerPodsCount = 0
 	copyOfPcfg.ControllerPodsCount = 0
 
-	if n.cfg.DynamicCertificatesEnabled {
+	if ngx_config.DynamicCertificatesEnabled {
 		clearCertificates(&copyOfRunningConfig)
 		clearCertificates(&copyOfPcfg)
 	}
@@ -861,7 +859,7 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 
 // configureDynamically encodes new Backends in JSON format and POSTs the
 // payload to an internal HTTP endpoint handled by Lua.
-func configureDynamically(pcfg *ingress.Configuration, isDynamicCertificatesEnabled bool) error {
+func configureDynamically(pcfg *ingress.Configuration) error {
 	backends := make([]*ingress.Backend, len(pcfg.Backends))
 
 	for i, backend := range pcfg.Backends {
@@ -949,7 +947,7 @@ func configureDynamically(pcfg *ingress.Configuration, isDynamicCertificatesEnab
 		return fmt.Errorf("unexpected error code: %d", statusCode)
 	}
 
-	if isDynamicCertificatesEnabled {
+	if ngx_config.DynamicCertificatesEnabled {
 		err = configureCertificates(pcfg)
 		if err != nil {
 			return err

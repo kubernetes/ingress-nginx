@@ -17,6 +17,7 @@ limitations under the License.
 package loadbalance
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -52,8 +53,20 @@ var _ = framework.IngressNginxDescribe("Load Balance - Configmap value", func() 
 			})
 		time.Sleep(waitForLuaSync)
 
-		algorithm, err := f.GetLbAlgorithm("http-svc", 80)
+		getCmd := "/dbg backends all"
+		output, err := f.ExecIngressPod(getCmd)
 		Expect(err).Should(BeNil())
-		Expect(algorithm).Should(Equal("ewma"))
+
+		var backends []map[string]interface{}
+		unmarshalErr := json.Unmarshal([]byte(output), &backends)
+		Expect(unmarshalErr).Should(BeNil())
+
+		for _, backend := range backends {
+			if backend["name"].(string) != "upstream-default-backend" {
+				lb, ok := backend["load-balance"].(string)
+				Expect(ok).Should(Equal(true))
+				Expect(lb).Should(Equal("ewma"))
+			}
+		}
 	})
 })
