@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // ExecIngressPod executes a command inside the first container in ingress controller running pod
@@ -39,7 +39,7 @@ func (f *Framework) ExecIngressPod(command string) (string, error) {
 }
 
 // ExecCommand executes a command inside a the first container in a running pod
-func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
+func (f *Framework) ExecCommand(pod *corev1.Pod, command string) (string, error) {
 	var (
 		execOut bytes.Buffer
 		execErr bytes.Buffer
