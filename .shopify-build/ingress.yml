@@ -1,0 +1,10 @@
+containers:
+  default:
+    docker: circleci/ruby:2.5.1-node-browsers
+
+steps:
+- label: Tests
+  timeout: 5m
+  run:
+  - echo "Hello World"
+
