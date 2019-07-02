@@ -26,6 +26,43 @@ function _M.lua_ngx_var(ngx_var)
   return ngx.var[var_name]
 end
 
+-- normalize_endpoints takes endpoints as an array of endpoint objects
+-- and returns a table where keys are string that's endpoint.address .. ":" .. endpoint.port
+-- and values are all true
+local function normalize_endpoints(endpoints)
+  local normalized_endpoints = {}
+
+  for _, endpoint in pairs(endpoints) do
+    local endpoint_string = endpoint.address .. ":" .. endpoint.port
+    normalized_endpoints[endpoint_string] = true
+  end
+
+  return normalized_endpoints
+end
+
+-- diff_endpoints compares old and new
+-- and as a first argument returns what endpoints are in new
+-- but are not in old, and as a second argument it returns
+-- what endpoints are in old but are in new.
+function _M.diff_endpoints(old, new)
+  local endpoints_added, endpoints_removed = {}, {}
+  local normalized_old, normalized_new = normalize_endpoints(old), normalize_endpoints(new)
+
+  for endpoint_string, _ in pairs(normalized_old) do
+    if not normalized_new[endpoint_string] then
+      table.insert(endpoints_removed, endpoint_string)
+    end
+  end
+
+  for endpoint_string, _ in pairs(normalized_new) do
+    if not normalized_old[endpoint_string] then
+      table.insert(endpoints_added, endpoint_string)
+    end
+  end
+
+  return endpoints_added, endpoints_removed
+end
+
 -- this implementation is taken from
 -- https://web.archive.org/web/20131225070434/http://snippets.luacode.org/snippets/Deep_Comparison_of_Two_Values_3
 -- and modified for use in this project

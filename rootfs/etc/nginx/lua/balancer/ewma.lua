@@ -153,15 +153,33 @@ function _M.sync(self, backend)
   self.traffic_shaping_policy = backend.trafficShapingPolicy
   self.alternative_backends = backend.alternativeBackends
 
-  local changed = not util.deep_compare(self.peers, backend.endpoints)
-  if not changed then
+  local normalized_endpoints_added, normalized_endpoints_removed = util.diff_endpoints(self.peers, backend.endpoints)
+
+  if #normalized_endpoints_added == 0 and #normalized_endpoints_removed == 0 then
+    ngx.log(ngx.INFO, "endpoints did not change for backend " .. tostring(backend.name))
     return
   end
 
   self.peers = backend.endpoints
 
-  ngx.shared.balancer_ewma:flush_all()
-  ngx.shared.balancer_ewma_last_touched_at:flush_all()
+  for _, endpoint_string in ipairs(normalized_endpoints_removed) do
+    ngx.shared.balancer_ewma:delete(endpoint_string)
+    ngx.shared.balancer_ewma_last_touched_at:delete(endpoint_string)
+  end
+
+  -- Calculate slow start EWMA
+  local slow_start_ewma = 0
+  for _, ewma in pairs(self.ewma) do
+    if slow_start_ewma < ewma then
+      slow_start_ewma = ewma
+    end
+  end
+
+  local now = ngx.now()
+  for _, endpoint_string in ipairs(normalized_endpoints_added) do
+    ngx.shared.balancer_ewma:set(endpoint_string)
+    ngx.shared.balancer_ewma_last_touched_at:set(now)
+  end
 end
 
 function _M.new(self, backend)
