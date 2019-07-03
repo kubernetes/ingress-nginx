@@ -33,7 +33,7 @@ describe("Balancer ewma", function()
   local backend, instance
 
   before_each(function()
-    mock_ngx({ now = function() return ngx_now end, var = {} })
+    mock_ngx({ now = function() return ngx_now end, var = { balancer_ewma_score = -1 } })
 
     backend = {
       name = "namespace-service-port", ["load-balance"] = "ewma",
@@ -45,7 +45,7 @@ describe("Balancer ewma", function()
     }
     store_ewma_stats("10.10.10.1:8080", 0.2, ngx_now - 1)
     store_ewma_stats("10.10.10.2:8080", 0.3, ngx_now - 5)
-    store_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 100)
+    store_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 20)
 
     instance = balancer_ewma:new(backend)
   end)
@@ -79,6 +79,7 @@ describe("Balancer ewma", function()
       local peer = single_endpoint_instance:balance()
 
       assert.are.equals("10.10.10.1:8080", peer)
+      assert.are.equals(-1, ngx.var.balancer_ewma_score)
     end)
 
     it("picks the endpoint with lowest decayed score", function()
@@ -91,6 +92,7 @@ describe("Balancer ewma", function()
       -- even though 10.10.10.1:8080 has a lower ewma score
       -- algorithm picks 10.10.10.3:8080 because its decayed score is even lower
       assert.equal("10.10.10.3:8080", peer)
+      assert.are.equals(0.16240233988393523723, ngx.var.balancer_ewma_score)
     end)
   end)
 
@@ -104,7 +106,7 @@ describe("Balancer ewma", function()
 
       assert_ewma_stats("10.10.10.1:8080", 0.2, ngx_now - 1)
       assert_ewma_stats("10.10.10.2:8080", 0.3, ngx_now - 5)
-      assert_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 100)
+      assert_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 20)
     end)
 
     it("updates peers, deletes stats for old endpoints and sets average ewma score to new ones", function()
@@ -122,7 +124,7 @@ describe("Balancer ewma", function()
 
       assert_ewma_stats("10.10.10.1:8080", 0.2, ngx_now - 1)
       assert_ewma_stats("10.10.10.2:8080", nil, nil)
-      assert_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 100)
+      assert_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 20)
 
       local slow_start_ewma = (0.2 + 1.2) / 2
       assert_ewma_stats("10.10.10.4:8080", slow_start_ewma, ngx_now)

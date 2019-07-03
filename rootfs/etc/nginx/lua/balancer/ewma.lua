@@ -123,7 +123,7 @@ local function pick_and_score(peers, k)
       lowest_score_index, lowest_score = i, new_score
     end
   end
-  return peers[lowest_score_index]
+  return peers[lowest_score_index], lowest_score
 end
 
 -- slow_start_ewma is something we use to avoid sending too many requests
@@ -148,13 +148,15 @@ end
 
 function _M.balance(self)
   local peers = self.peers
-  local endpoint = peers[1]
+  local endpoint, ewma_score = peers[1], -1
 
   if #peers > 1 then
     local k = (#peers < PICK_SET_SIZE) and #peers or PICK_SET_SIZE
     local peer_copy = util.deepcopy(peers)
-    endpoint = pick_and_score(peer_copy, k)
+    endpoint, ewma_score = pick_and_score(peer_copy, k)
   end
+
+  ngx.var.balancer_ewma_score = ewma_score
 
   -- TODO(elvinefendi) move this processing to _M.sync
   return endpoint.address .. ":" .. endpoint.port
