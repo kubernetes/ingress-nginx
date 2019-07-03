@@ -1,5 +1,6 @@
 local string_len = string.len
 local string_sub = string.sub
+local string_format = string.format
 
 local _M = {}
 
@@ -33,7 +34,7 @@ local function normalize_endpoints(endpoints)
   local normalized_endpoints = {}
 
   for _, endpoint in pairs(endpoints) do
-    local endpoint_string = endpoint.address .. ":" .. endpoint.port
+    local endpoint_string = string_format("%s:%s", endpoint.address, endpoint.port)
     normalized_endpoints[endpoint_string] = true
   end
 
@@ -44,6 +45,7 @@ end
 -- and as a first argument returns what endpoints are in new
 -- but are not in old, and as a second argument it returns
 -- what endpoints are in old but are in new.
+-- Both return values are normalized (ip:port).
 function _M.diff_endpoints(old, new)
   local endpoints_added, endpoints_removed = {}, {}
   local normalized_old, normalized_new = normalize_endpoints(old), normalize_endpoints(new)

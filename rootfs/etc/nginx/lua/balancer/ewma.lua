@@ -169,7 +169,9 @@ function _M.sync(self, backend)
 
   -- Calculate slow start EWMA
   local slow_start_ewma = 0
-  for _, ewma in pairs(self.ewma) do
+  for _, endpoint in pairs(self.peers) do
+    local endpoint_string = endpoint.address .. ":" .. endpoint.port
+    local ewma = get_or_update_ewma(endpoint_string, 0, false)
     if slow_start_ewma < ewma then
       slow_start_ewma = ewma
     end
