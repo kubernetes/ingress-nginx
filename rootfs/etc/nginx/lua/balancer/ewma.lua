@@ -126,6 +126,26 @@ local function pick_and_score(peers, k)
   return peers[lowest_score_index]
 end
 
+-- slow_start_ewma is something we use to avoid sending too many requests
+-- to the newly introduced endpoints. We currently use average ewma values
+-- of existing endpoints.
+local function calculate_slow_start_ewma(self)
+  local total_ewma = 0
+  local endpoints_count = 0
+
+  for _, endpoint in pairs(self.peers) do
+    local endpoint_string = endpoint.address .. ":" .. endpoint.port
+    local ewma = ngx.shared.balancer_ewma:get(endpoint_string)
+
+    if ewma then
+      endpoints_count = endpoints_count + 1
+      total_ewma = total_ewma + ewma
+    end
+  end
+
+  return total_ewma / endpoints_count
+end
+
 function _M.balance(self)
   local peers = self.peers
   local endpoint = peers[1]
@@ -170,19 +190,7 @@ function _M.sync(self, backend)
     ngx.shared.balancer_ewma_last_touched_at:delete(endpoint_string)
   end
 
-  -- Calculate slow start EWMA
-  local total_ewma = 0
-  local endpoints_count = 0
-  for _, endpoint in pairs(self.peers) do
-    local endpoint_string = endpoint.address .. ":" .. endpoint.port
-    local ewma = ngx.shared.balancer_ewma:get(endpoint_string)
-    if ewma then
-      endpoints_count = endpoints_count + 1
-      total_ewma = total_ewma + ewma
-    end
-  end
-  local slow_start_ewma = total_ewma / endpoints_count
-
+  local slow_start_ewma = calculate_slow_start_ewma(self)
   local now = ngx.now()
   for _, endpoint_string in ipairs(normalized_endpoints_added) do
     store_stats(endpoint_string, slow_start_ewma, now)
