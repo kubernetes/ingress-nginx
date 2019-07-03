@@ -73,18 +73,20 @@ local function pick_and_score(self, peers, k)
       lowest_score_index, lowest_score = i, new_score
     end
   end
-  return peers[lowest_score_index]
+  return peers[lowest_score_index], lowest_score
 end
 
 function _M.balance(self)
   local peers = self.peers
-  local endpoint = peers[1]
+  local endpoint, score = peers[1], -1
 
   if #peers > 1 then
     local k = (#peers < PICK_SET_SIZE) and #peers or PICK_SET_SIZE
     local peer_copy = util.deepcopy(peers)
-    endpoint = pick_and_score(self, peer_copy, k)
+    endpoint, score = pick_and_score(self, peer_copy, k)
   end
+
+  ngx.var.balancer_ewma_score = score
 
   -- TODO(elvinefendi) move this processing to _M.sync
   return endpoint.address .. ":" .. endpoint.port
