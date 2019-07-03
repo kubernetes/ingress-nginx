@@ -16,8 +16,8 @@ describe("Balancer ewma", function()
       local instance = balancer_ewma:new(backend)
 
       instance:after_balance()
-      assert.equal(0.27, instance.ewma[ngx.var.upstream_addr])
-      assert.equal(ngx_now, instance.ewma_last_touched_at[ngx.var.upstream_addr])
+      assert.equal(0.27, ngx.shared.balancer_ewma:get(ngx.var.upstream_addr))
+      assert.equal(ngx_now, ngx.shared.balancer_ewma_last_touched_at:get(ngx.var.upstream_addr))
     end)
   end)
 

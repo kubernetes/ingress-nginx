@@ -5,13 +5,40 @@
 --   /finagle-core/src/main/scala/com/twitter/finagle/loadbalancer/PeakEwma.scala
 
 
+local resty_lock = require("resty.lock")
 local util = require("util")
 local split = require("util.split")
 
 local DECAY_TIME = 10 -- this value is in seconds
+local LOCK_KEY = ":ewma_key"
 local PICK_SET_SIZE = 2
 
+local ewma_lock, ewma_lock_err = resty_lock:new("balancer_ewma_locks", {timeout = 0, exptime = 0.1})
+if not ewma_lock then
+  error(ewma_lock_err)
+end
+
 local _M = { name = "ewma" }
+
+local function lock(upstream)
+  local _, err = ewma_lock:lock(upstream .. LOCK_KEY)
+  if err then
+    if err ~= "timeout" then
+      ngx.log(ngx.ERR, string.format("EWMA Balancer failed to lock: %s", tostring(err)))
+    end
+  end
+
+  return err
+end
+
+local function unlock()
+  local ok, err = ewma_lock:unlock()
+  if not ok then
+    ngx.log(ngx.ERR, string.format("EWMA Balancer failed to unlock: %s", tostring(err)))
+  end
+
+  return err
+end
 
 local function decay_ewma(ewma, last_touched_at, rtt, now)
   local td = now - last_touched_at
@@ -22,28 +49,51 @@ local function decay_ewma(ewma, last_touched_at, rtt, now)
   return ewma
 end
 
-local function get_or_update_ewma(self, upstream, rtt, update)
-  local ewma = self.ewma[upstream] or 0
+local function get_or_update_ewma(upstream, rtt, update)
+  local lock_err = nil
+  if update then
+    lock_err = lock(upstream)
+  end
+  local ewma = ngx.shared.balancer_ewma:get(upstream) or 0
+  if lock_err ~= nil then
+    return ewma, lock_err
+  end
 
   local now = ngx.now()
-  local last_touched_at = self.ewma_last_touched_at[upstream] or 0
+  local last_touched_at = ngx.shared.balancer_ewma_last_touched_at:get(upstream) or 0
   ewma = decay_ewma(ewma, last_touched_at, rtt, now)
 
   if not update then
     return ewma, nil
   end
 
-  self.ewma[upstream] = ewma
-  self.ewma_last_touched_at[upstream] = now
+  local success, err, forcible = ngx.shared.balancer_ewma_last_touched_at:set(upstream, now)
+  if not success then
+    ngx.log(ngx.WARN, "balancer_ewma_last_touched_at:set failed " .. err)
+  end
+  if forcible then
+    ngx.log(ngx.WARN, "balancer_ewma_last_touched_at:set valid items forcibly overwritten")
+  end
+
+  success, err, forcible = ngx.shared.balancer_ewma:set(upstream, ewma)
+  if not success then
+    ngx.log(ngx.WARN, "balancer_ewma:set failed " .. err)
+  end
+  if forcible then
+    ngx.log(ngx.WARN, "balancer_ewma:set valid items forcibly overwritten")
+  end
+
+  unlock()
+
   return ewma, nil
 end
 
 
-local function score(self, upstream)
+local function score(upstream)
   -- Original implementation used names
   -- Endpoints don't have names, so passing in IP:Port as key instead
   local upstream_name = upstream.address .. ":" .. upstream.port
-  return get_or_update_ewma(self, upstream_name, 0, false)
+  return get_or_update_ewma(upstream_name, 0, false)
 end
 
 -- implementation similar to https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
@@ -59,12 +109,12 @@ local function shuffle_peers(peers, k)
   -- peers[1 .. k] will now contain a randomly selected k from #peers
 end
 
-local function pick_and_score(self, peers, k)
+local function pick_and_score(peers, k)
   shuffle_peers(peers, k)
   local lowest_score_index = 1
-  local lowest_score = score(self, peers[lowest_score_index])
+  local lowest_score = score(peers[lowest_score_index])
   for i = 2, k do
-    local new_score = score(self, peers[i])
+    local new_score = score(peers[i])
     if new_score < lowest_score then
       lowest_score_index, lowest_score = i, new_score
     end
@@ -79,14 +129,14 @@ function _M.balance(self)
   if #peers > 1 then
     local k = (#peers < PICK_SET_SIZE) and #peers or PICK_SET_SIZE
     local peer_copy = util.deepcopy(peers)
-    endpoint = pick_and_score(self, peer_copy, k)
+    endpoint = pick_and_score(peer_copy, k)
   end
 
   -- TODO(elvinefendi) move this processing to _M.sync
   return endpoint.address .. ":" .. endpoint.port
 end
 
-function _M.after_balance(self)
+function _M.after_balance(_)
   local response_time = tonumber(split.get_first_value(ngx.var.upstream_response_time)) or 0
   local connect_time = tonumber(split.get_first_value(ngx.var.upstream_connect_time)) or 0
   local rtt = connect_time + response_time
@@ -95,7 +145,8 @@ function _M.after_balance(self)
   if util.is_blank(upstream) then
     return
   end
-  get_or_update_ewma(self, upstream, rtt, true)
+
+  get_or_update_ewma(upstream, rtt, true)
 end
 
 function _M.sync(self, backend)
@@ -108,15 +159,14 @@ function _M.sync(self, backend)
   end
 
   self.peers = backend.endpoints
-  self.ewma = {}
-  self.ewma_last_touched_at = {}
+
+  ngx.shared.balancer_ewma:flush_all()
+  ngx.shared.balancer_ewma_last_touched_at:flush_all()
 end
 
 function _M.new(self, backend)
   local o = {
     peers = backend.endpoints,
-    ewma = {},
-    ewma_last_touched_at = {},
     traffic_shaping_policy = backend.trafficShapingPolicy,
     alternative_backends = backend.alternativeBackends,
   }

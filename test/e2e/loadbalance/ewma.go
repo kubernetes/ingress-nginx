@@ -17,8 +17,11 @@ limitations under the License.
 package loadbalance
 
 import (
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/parnurzeal/gorequest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -26,24 +29,17 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-const (
-	waitForLuaSync = 5 * time.Second
-)
-
-var _ = framework.IngressNginxDescribe("Load Balance - Configmap value", func() {
-	f := framework.NewDefaultFramework("lb-configmap")
+var _ = framework.IngressNginxDescribe("Load Balance - EWMA", func() {
+	f := framework.NewDefaultFramework("ewma")
 
 	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
-	})
-
-	AfterEach(func() {
-	})
-
-	It("should apply the configmap load-balance setting", func() {
-		host := "load-balance.com"
-
+		f.NewEchoDeploymentWithReplicas(3)
+		f.UpdateNginxConfigMapData("worker-processes", "2")
 		f.UpdateNginxConfigMapData("load-balance", "ewma")
+	})
+
+	It("does not fail requests", func() {
+		host := "load-balance.com"
 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
 		f.WaitForNginxServer(host,
@@ -55,5 +51,32 @@ var _ = framework.IngressNginxDescribe("Load Balance - Configmap value", func() 
 		algorithm, err := f.GetLbAlgorithm("http-svc", 80)
 		Expect(err).Should(BeNil())
 		Expect(algorithm).Should(Equal("ewma"))
+
+		re, _ := regexp.Compile(`http-svc.*`)
+		replicaRequestCount := map[string]int{}
+
+		for i := 0; i < 30; i++ {
+			_, body, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host).
+				End()
+			Expect(errs).Should(BeEmpty())
+
+			replica := re.FindString(body)
+			Expect(replica).ShouldNot(Equal(""))
+
+			if _, ok := replicaRequestCount[replica]; !ok {
+				replicaRequestCount[replica] = 1
+			} else {
+				replicaRequestCount[replica]++
+			}
+		}
+		framework.Logf("Request distribution: %v", replicaRequestCount)
+
+		actualCount := 0
+		for _, v := range replicaRequestCount {
+			actualCount += v
+		}
+		Expect(actualCount).Should(Equal(30))
 	})
 })
