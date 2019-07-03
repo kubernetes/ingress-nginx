@@ -49,6 +49,24 @@ local function decay_ewma(ewma, last_touched_at, rtt, now)
   return ewma
 end
 
+local function store_stats(upstream, ewma, now)
+  local success, err, forcible = ngx.shared.balancer_ewma_last_touched_at:set(upstream, now)
+  if not success then
+    ngx.log(ngx.WARN, "balancer_ewma_last_touched_at:set failed " .. err)
+  end
+  if forcible then
+    ngx.log(ngx.WARN, "balancer_ewma_last_touched_at:set valid items forcibly overwritten")
+  end
+
+  success, err, forcible = ngx.shared.balancer_ewma:set(upstream, ewma)
+  if not success then
+    ngx.log(ngx.WARN, "balancer_ewma:set failed " .. err)
+  end
+  if forcible then
+    ngx.log(ngx.WARN, "balancer_ewma:set valid items forcibly overwritten")
+  end
+end
+
 local function get_or_update_ewma(upstream, rtt, update)
   local lock_err = nil
   if update then
@@ -67,21 +85,7 @@ local function get_or_update_ewma(upstream, rtt, update)
     return ewma, nil
   end
 
-  local success, err, forcible = ngx.shared.balancer_ewma_last_touched_at:set(upstream, now)
-  if not success then
-    ngx.log(ngx.WARN, "balancer_ewma_last_touched_at:set failed " .. err)
-  end
-  if forcible then
-    ngx.log(ngx.WARN, "balancer_ewma_last_touched_at:set valid items forcibly overwritten")
-  end
-
-  success, err, forcible = ngx.shared.balancer_ewma:set(upstream, ewma)
-  if not success then
-    ngx.log(ngx.WARN, "balancer_ewma:set failed " .. err)
-  end
-  if forcible then
-    ngx.log(ngx.WARN, "balancer_ewma:set valid items forcibly overwritten")
-  end
+  store_stats(upstream, ewma, now)
 
   unlock()
 
@@ -150,18 +154,39 @@ function _M.after_balance(_)
 end
 
 function _M.sync(self, backend)
-  self.traffic_shaping_policy = backend.trafficShapingPolicy
-  self.alternative_backends = backend.alternativeBackends
+  local normalized_endpoints_added, normalized_endpoints_removed = util.diff_endpoints(self.peers, backend.endpoints)
 
-  local changed = not util.deep_compare(self.peers, backend.endpoints)
-  if not changed then
+  if #normalized_endpoints_added == 0 and #normalized_endpoints_removed == 0 then
+    ngx.log(ngx.INFO, "endpoints did not change for backend " .. tostring(backend.name))
     return
   end
 
+  self.traffic_shaping_policy = backend.trafficShapingPolicy
+  self.alternative_backends = backend.alternativeBackends
   self.peers = backend.endpoints
 
-  ngx.shared.balancer_ewma:flush_all()
-  ngx.shared.balancer_ewma_last_touched_at:flush_all()
+  for _, endpoint_string in ipairs(normalized_endpoints_removed) do
+    ngx.shared.balancer_ewma:delete(endpoint_string)
+    ngx.shared.balancer_ewma_last_touched_at:delete(endpoint_string)
+  end
+
+  -- Calculate slow start EWMA
+  local total_ewma = 0
+  local endpoints_count = 0
+  for _, endpoint in pairs(self.peers) do
+    local endpoint_string = endpoint.address .. ":" .. endpoint.port
+    local ewma = ngx.shared.balancer_ewma:get(endpoint_string)
+    if ewma then
+      endpoints_count = endpoints_count + 1
+      total_ewma = total_ewma + ewma
+    end
+  end
+  local slow_start_ewma = total_ewma / endpoints_count
+
+  local now = ngx.now()
+  for _, endpoint_string in ipairs(normalized_endpoints_added) do
+    store_stats(endpoint_string, slow_start_ewma, now)
+  end
 end
 
 function _M.new(self, backend)
