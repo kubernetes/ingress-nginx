@@ -131,8 +131,7 @@ Requires the update-status parameter.`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
-A valid certificate chain is required to enable OCSP stapling. Certificates
-uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
+Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
 extension for this to succeed.`)
 
 		syncRateLimit = flags.Float32("sync-rate-limit", 0.3,
@@ -142,9 +141,8 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", true,
-			`Dynamically update SSL certificates instead of reloading NGINX.
-Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
+		enableDynamicCertificates = flags.Bool("enable-dynamic-certificates", true,
+			`Dynamically update SSL certificates instead of reloading NGINX. Feature backed by OpenResty Lua libraries.`)
 
 		enableMetrics = flags.Bool("enable-metrics", true,
 			`Enables the collection of NGINX metrics`)
@@ -223,10 +221,6 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		klog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}
 
-	if *enableSSLChainCompletion && *dynamicCertificatesEnabled {
-		return false, nil, fmt.Errorf(`SSL certificate chain completion cannot be enabled when dynamic certificates functionality is enabled. Please check the flags --enable-ssl-chain-completion`)
-	}
-
 	if *publishSvc != "" && *publishStatusAddress != "" {
 		return false, nil, fmt.Errorf("Flags --publish-service and --publish-status-address are mutually exclusive")
 	}
@@ -237,29 +231,30 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
 	}
 
+	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
+	ngx_config.EnableDynamicCertificates = *enableDynamicCertificates
+
 	config := &controller.Configuration{
-		APIServerHost:              *apiserverHost,
-		KubeConfigFile:             *kubeConfigFile,
-		UpdateStatus:               *updateStatus,
-		ElectionID:                 *electionID,
-		EnableProfiling:            *profiling,
-		EnableMetrics:              *enableMetrics,
-		MetricsPerHost:             *metricsPerHost,
-		EnableSSLPassthrough:       *enableSSLPassthrough,
-		EnableSSLChainCompletion:   *enableSSLChainCompletion,
-		ResyncPeriod:               *resyncPeriod,
-		DefaultService:             *defaultSvc,
-		Namespace:                  *watchNamespace,
-		ConfigMapName:              *configMap,
-		TCPConfigMapName:           *tcpConfigMapName,
-		UDPConfigMapName:           *udpConfigMapName,
-		DefaultSSLCertificate:      *defSSLCertificate,
-		PublishService:             *publishSvc,
-		PublishStatusAddress:       *publishStatusAddress,
-		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
-		UseNodeInternalIP:          *useNodeInternalIP,
-		SyncRateLimit:              *syncRateLimit,
-		DynamicCertificatesEnabled: *dynamicCertificatesEnabled,
+		APIServerHost:          *apiserverHost,
+		KubeConfigFile:         *kubeConfigFile,
+		UpdateStatus:           *updateStatus,
+		ElectionID:             *electionID,
+		EnableProfiling:        *profiling,
+		EnableMetrics:          *enableMetrics,
+		MetricsPerHost:         *metricsPerHost,
+		EnableSSLPassthrough:   *enableSSLPassthrough,
+		ResyncPeriod:           *resyncPeriod,
+		DefaultService:         *defaultSvc,
+		Namespace:              *watchNamespace,
+		ConfigMapName:          *configMap,
+		TCPConfigMapName:       *tcpConfigMapName,
+		UDPConfigMapName:       *udpConfigMapName,
+		DefaultSSLCertificate:  *defSSLCertificate,
+		PublishService:         *publishSvc,
+		PublishStatusAddress:   *publishStatusAddress,
+		UpdateStatusOnShutdown: *updateStatusOnShutdown,
+		UseNodeInternalIP:      *useNodeInternalIP,
+		SyncRateLimit:          *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
