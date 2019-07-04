@@ -41,6 +41,7 @@ import (
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -87,7 +88,7 @@ func TestStore(t *testing.T) {
 		}(updateCh)
 
 		fs := newFS(t)
-		storer := New(true,
+		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -97,7 +98,6 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false,
 			pod,
 			false)
 
@@ -168,7 +168,7 @@ func TestStore(t *testing.T) {
 		}(updateCh)
 
 		fs := newFS(t)
-		storer := New(true,
+		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -178,7 +178,6 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false,
 			pod,
 			false)
 
@@ -319,7 +318,7 @@ func TestStore(t *testing.T) {
 		}(updateCh)
 
 		fs := newFS(t)
-		storer := New(true,
+		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -329,7 +328,6 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false,
 			pod,
 			false)
 
@@ -426,7 +424,7 @@ func TestStore(t *testing.T) {
 		}(updateCh)
 
 		fs := newFS(t)
-		storer := New(true,
+		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -436,7 +434,6 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false,
 			pod,
 			false)
 
@@ -516,7 +513,7 @@ func TestStore(t *testing.T) {
 		}(updateCh)
 
 		fs := newFS(t)
-		storer := New(true,
+		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -526,7 +523,6 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false,
 			pod,
 			false)
 
@@ -628,7 +624,7 @@ func TestStore(t *testing.T) {
 		}(updateCh)
 
 		fs := newFS(t)
-		storer := New(true,
+		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -638,7 +634,6 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false,
 			pod,
 			false)
 
@@ -708,6 +703,9 @@ func TestStore(t *testing.T) {
 		}
 
 		t.Run("should exists a secret in the local store and filesystem", func(t *testing.T) {
+			ngx_config.EnableDynamicCertificates = false
+			defer func() { ngx_config.EnableDynamicCertificates = true }()
+
 			err := framework.WaitForSecretInNamespace(clientSet, ns, name)
 			if err != nil {
 				t.Errorf("error waiting for secret: %v", err)

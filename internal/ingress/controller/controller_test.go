@@ -1116,7 +1116,7 @@ func newNGINXController(t *testing.T) *NGINXController {
 		t.Fatalf("error: %v", err)
 	}
 
-	storer := store.New(true,
+	storer := store.New(
 		ns,
 		fmt.Sprintf("%v/config", ns),
 		fmt.Sprintf("%v/tcp", ns),
@@ -1126,7 +1126,6 @@ func newNGINXController(t *testing.T) *NGINXController {
 		clientSet,
 		fs,
 		channels.NewRingChannel(10),
-		false,
 		pod,
 		false)
 

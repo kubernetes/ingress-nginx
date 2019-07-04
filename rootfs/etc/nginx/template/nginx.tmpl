@@ -96,7 +96,7 @@ http {
         end
         {{ end }}
 
-        {{ if $all.DynamicCertificatesEnabled }}
+        {{ if $all.EnableDynamicCertificates }}
         ok, res = pcall(require, "certificate")
         if not ok then
           error("require failed: " .. tostring(res))
@@ -492,13 +492,8 @@ http {
         # PEM sha: {{ $redirect.SSLCert.PemSHA }}
         ssl_certificate                         {{ $redirect.SSLCert.PemFileName }};
         ssl_certificate_key                     {{ $redirect.SSLCert.PemFileName }};
-        {{ if not (empty $redirect.SSLCert.FullChainPemFileName)}}
-        ssl_trusted_certificate                 {{ $redirect.SSLCert.FullChainPemFileName }};
-        ssl_stapling                            on;
-        ssl_stapling_verify                     on;
-        {{ end }}
 
-        {{ if $all.DynamicCertificatesEnabled}}
+        {{ if $all.EnableDynamicCertificates}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
@@ -841,13 +836,8 @@ stream {
         # PEM sha: {{ $server.SSLCert.PemSHA }}
         ssl_certificate                         {{ $server.SSLCert.PemFileName }};
         ssl_certificate_key                     {{ $server.SSLCert.PemFileName }};
-        {{ if not (empty $server.SSLCert.FullChainPemFileName)}}
-        ssl_trusted_certificate                 {{ $server.SSLCert.FullChainPemFileName }};
-        ssl_stapling                            on;
-        ssl_stapling_verify                     on;
-        {{ end }}
 
-        {{ if $all.DynamicCertificatesEnabled}}
+        {{ if $all.EnableDynamicCertificates}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }

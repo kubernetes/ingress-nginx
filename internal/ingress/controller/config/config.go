@@ -30,6 +30,13 @@ import (
 	"k8s.io/ingress-nginx/internal/runtime"
 )
 
+var (
+	// EnableSSLChainCompletion Autocomplete SSL certificate chains with missing intermediate CA certificates.
+	EnableSSLChainCompletion = false
+	// EnableDynamicCertificates Dynamically update SSL certificates instead of reloading NGINX
+	EnableDynamicCertificates = true
+)
+
 const (
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
@@ -755,25 +762,25 @@ func (cfg Configuration) BuildLogFormatUpstream() string {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
-	ProxySetHeaders            map[string]string
-	AddHeaders                 map[string]string
-	BacklogSize                int
-	Backends                   []*ingress.Backend
-	PassthroughBackends        []*ingress.SSLPassthroughBackend
-	Servers                    []*ingress.Server
-	TCPBackends                []ingress.L4Service
-	UDPBackends                []ingress.L4Service
-	HealthzURI                 string
-	Cfg                        Configuration
-	IsIPV6Enabled              bool
-	IsSSLPassthroughEnabled    bool
-	NginxStatusIpv4Whitelist   []string
-	NginxStatusIpv6Whitelist   []string
-	RedirectServers            interface{}
-	ListenPorts                *ListenPorts
-	PublishService             *apiv1.Service
-	DynamicCertificatesEnabled bool
-	EnableMetrics              bool
+	ProxySetHeaders           map[string]string
+	AddHeaders                map[string]string
+	BacklogSize               int
+	Backends                  []*ingress.Backend
+	PassthroughBackends       []*ingress.SSLPassthroughBackend
+	Servers                   []*ingress.Server
+	TCPBackends               []ingress.L4Service
+	UDPBackends               []ingress.L4Service
+	HealthzURI                string
+	Cfg                       Configuration
+	IsIPV6Enabled             bool
+	IsSSLPassthroughEnabled   bool
+	NginxStatusIpv4Whitelist  []string
+	NginxStatusIpv6Whitelist  []string
+	RedirectServers           interface{}
+	ListenPorts               *ListenPorts
+	PublishService            *apiv1.Service
+	EnableDynamicCertificates bool
+	EnableMetrics             bool
 
 	PID          string
 	StatusSocket string
