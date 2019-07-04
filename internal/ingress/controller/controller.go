@@ -84,13 +84,9 @@ type Configuration struct {
 	EnableMetrics  bool
 	MetricsPerHost bool
 
-	EnableSSLChainCompletion bool
-
 	FakeCertificate *ingress.SSLCert
 
 	SyncRateLimit float32
-
-	DynamicCertificatesEnabled bool
 
 	DisableCatchAll bool
 
@@ -171,7 +167,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := configureDynamically(pcfg, n.cfg.DynamicCertificatesEnabled)
+		err := configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
@@ -890,7 +886,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	return upstreams, nil
 }
 
-// overridePemFileNameAndPemSHA should only be called when DynamicCertificatesEnabled
+// overridePemFileNameAndPemSHA should only be called when EnableDynamicCertificates
 // ideally this function should not exist, the only reason why we use it is that
 // we rely on PemFileName in nginx.tmpl to configure SSL directives
 // and PemSHA to force reload
@@ -940,7 +936,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
 		if err == nil {
 			defaultCertificate = certificate
-			if n.cfg.DynamicCertificatesEnabled {
+			if ngx_config.EnableDynamicCertificates {
 				n.overridePemFileNameAndPemSHA(defaultCertificate)
 			}
 		} else {
@@ -1123,7 +1119,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				}
 			}
 
-			if n.cfg.DynamicCertificatesEnabled {
+			if ngx_config.EnableDynamicCertificates {
 				n.overridePemFileNameAndPemSHA(cert)
 			}
 

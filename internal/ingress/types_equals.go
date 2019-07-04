@@ -523,9 +523,6 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if !s1.ExpireTime.Equal(s2.ExpireTime) {
 		return false
 	}
-	if s1.FullChainPemFileName != s2.FullChainPemFileName {
-		return false
-	}
 	if s1.PemCertKey != s2.PemCertKey {
 		return false
 	}

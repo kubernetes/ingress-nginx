@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/watch"
 	"k8s.io/klog"
 )
@@ -74,8 +75,18 @@ func verifyPemCertAgainstRootCA(pemCert *x509.Certificate, ca []byte) error {
 // CreateSSLCert validates cert and key, extracts common names and returns corresponding SSLCert object
 func CreateSSLCert(cert, key []byte) (*ingress.SSLCert, error) {
 	var pemCertBuffer bytes.Buffer
-
 	pemCertBuffer.Write(cert)
+
+	if ngx_config.EnableSSLChainCompletion {
+		data, err := fullChainCert(cert)
+		if err != nil {
+			klog.Errorf("Error generating certificate chain for Secret: %v", err)
+		} else {
+			pemCertBuffer.Reset()
+			pemCertBuffer.Write(data)
+		}
+	}
+
 	pemCertBuffer.Write([]byte("\n"))
 	pemCertBuffer.Write(key)
 
@@ -376,7 +387,6 @@ func GetFakeSSLCert(fs file.Filesystem) *ingress.SSLCert {
 }
 
 func getFakeHostSSLCert(host string) ([]byte, []byte) {
-
 	var priv interface{}
 	var err error
 
@@ -423,16 +433,11 @@ func getFakeHostSSLCert(host string) ([]byte, []byte) {
 	return cert, key
 }
 
-// FullChainCert checks if a certificate file contains issues in the intermediate CA chain
+// fullChainCert checks if a certificate file contains issues in the intermediate CA chain
 // Returns a new certificate with the intermediate certificates.
 // If the certificate does not contains issues with the chain it return an empty byte array
-func FullChainCert(in string, fs file.Filesystem) ([]byte, error) {
-	data, err := fs.ReadFile(in)
-	if err != nil {
-		return nil, err
-	}
-
-	cert, err := certUtil.DecodeCertificate(data)
+func fullChainCert(in []byte) ([]byte, error) {
+	cert, err := certUtil.DecodeCertificate(in)
 	if err != nil {
 		return nil, err
 	}
@@ -448,11 +453,6 @@ func FullChainCert(in string, fs file.Filesystem) ([]byte, error) {
 	}
 
 	certs, err := certUtil.FetchCertificateChain(cert)
-	if err != nil {
-		return nil, err
-	}
-
-	certs, err = certUtil.AddRootCA(certs)
 	if err != nil {
 		return nil, err
 	}
