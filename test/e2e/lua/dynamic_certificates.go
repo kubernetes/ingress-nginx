@@ -130,6 +130,11 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 			ensureHTTPSRequest(f.GetURL(framework.HTTPS), host, host)
 		})
 
+		/*
+			TODO(elvinefendi): this test currently does not work as expected
+			because Go transport code strips (https://github.com/golang/go/blob/431b5c69ca214ce4291f008c1ce2a50b22bc2d2d/src/crypto/tls/handshake_messages.go#L424)
+			trailing dot from SNI as suggest by the standard (https://tools.ietf.org/html/rfc6066#section-3).
+		*/
 		It("supports requests with domain with trailing dot", func() {
 			ensureHTTPSRequest(f.GetURL(framework.HTTPS), host+".", host)
 		})
