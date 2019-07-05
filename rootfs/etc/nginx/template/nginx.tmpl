@@ -1084,6 +1084,8 @@ stream {
             set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
             set $proxy_host             $proxy_upstream_name;
 
+            set $proxy_alternative_upstream_name "";
+
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
             {{ if not $all.Cfg.EnableModsecurity }}
             modsecurity on;
