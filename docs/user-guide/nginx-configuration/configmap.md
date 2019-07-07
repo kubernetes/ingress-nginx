@@ -160,6 +160,8 @@ The following table shows a configuration option's name, type, and the default v
 |[global-auth-response-headers](#global-auth-response-headers)|string|""|
 |[global-auth-request-redirect](#global-auth-request-redirect)|string|""|
 |[global-auth-snippet](#global-auth-snippet)|string|""|
+|[global-auth-cache-key](#global-auth-cache-key)|string|""|
+|[global-auth-cache-duration](#global-auth-cache-duration)|string|"200 202 401 5m"|
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
 |[block-cidrs](#block-cidrs)|[]string|""|
 |[block-user-agents](#block-user-agents)|[]string|""|
@@ -196,7 +198,7 @@ __Note:__ the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
 
 ## enable-access-log-for-default-backend
 
-Enables logging access to default backend. _**default:**_ is disabled. 
+Enables logging access to default backend. _**default:**_ is disabled.
 
 ## error-log-path
 
@@ -439,7 +441,7 @@ _References:_
 Instructs NGINX to create an individual listening socket for each worker process (using the SO_REUSEPORT socket option), allowing a kernel to distribute incoming connections between worker processes
 _**default:**_ true
 
-## proxy-headers-hash-bucket-size 
+## proxy-headers-hash-bucket-size
 
 Sets the size of the bucket for the proxy headers hash tables.
 
@@ -503,7 +505,7 @@ Enables or disables session resumption through [TLS session tickets](http://ngin
 Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
 To create a ticket: `openssl rand 80 | openssl enc -A -base64`
 
-[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used. 
+[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used.
 
 ## ssl-session-timeout
 
@@ -622,7 +624,7 @@ _References:_
 
 Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle
 keepalive connections to upstream servers that are preserved in the cache of each worker process. When this number is
-exceeded, the least recently used connections are closed. 
+exceeded, the least recently used connections are closed.
 _**default:**_ 32
 
 _References:_
@@ -643,7 +645,7 @@ _References:_
 Sets the maximum number of requests that can be served through one keepalive connection. After the maximum number of
 requests is made, the connection is closed.
 _**default:**_ 100
-	
+
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests)
@@ -921,6 +923,14 @@ _**default:**_ ""
 Sets a custom snippet to use with external authentication. Applied to all the locations.
 Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-request-redirect`.
 _**default:**_ ""
+
+## global-auth-cache-key
+
+Enables caching for global auth requests. Specify a lookup key for auth responses, e.g. `$remote_user$http_authorization`.
+
+## global-auth-cache-duration
+
+Set a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
 
 ## no-auth-locations
 

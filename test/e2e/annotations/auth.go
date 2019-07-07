@@ -260,6 +260,26 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 	})
 
+	It(`should set cache_key when external auth cache is configured`, func() {
+		host := "auth"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-url":            "http://foo.bar/basic-auth/user/password",
+			"nginx.ingress.kubernetes.io/auth-cache-key":      "foo",
+			"nginx.ingress.kubernetes.io/auth-cache-duration": "200 202 401 30m",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(MatchRegexp(`\$cache_key.*foo`)) &&
+					Expect(server).Should(ContainSubstring(`proxy_cache_valid 200 202 401 30m;`))
+
+			})
+	})
+
 	Context("when external authentication is configured", func() {
 		host := "auth"
 
@@ -320,6 +340,185 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			}
 			Expect(resp.StatusCode).Should(Equal(http.StatusFound))
 			Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d"))))
+		})
+	})
+
+	Context("when external authentication with caching is configured", func() {
+		thisHost := "auth"
+		thatHost := "different"
+
+		fooPath := "/foo"
+		barPath := "/bar"
+
+		BeforeEach(func() {
+			f.NewHttpbinDeployment()
+
+			var httpbinIP string
+
+			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.Namespace, 1)
+			Expect(err).NotTo(HaveOccurred())
+
+			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get("httpbin", metav1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+
+			httpbinIP = e.Subsets[0].Addresses[0].IP
+
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/auth-url":            fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
+				"nginx.ingress.kubernetes.io/auth-signin":         "http://$host/auth/start",
+				"nginx.ingress.kubernetes.io/auth-cache-key":      "fixed",
+				"nginx.ingress.kubernetes.io/auth-cache-duration": "200 201 401 30m",
+			}
+
+			for _, host := range []string{thisHost, thatHost} {
+				By("Adding an ingress rule for /foo")
+				fooIng := framework.NewSingleIngress(fmt.Sprintf("foo-%s-ing", host), fooPath, host, f.Namespace, "http-svc", 80, &annotations)
+				f.EnsureIngress(fooIng)
+				f.WaitForNginxServer(host, func(server string) bool {
+					return Expect(server).Should(ContainSubstring("location /foo"))
+				})
+
+				By("Adding an ingress rule for /bar")
+				barIng := framework.NewSingleIngress(fmt.Sprintf("bar-%s-ing", host), barPath, host, f.Namespace, "http-svc", 80, &annotations)
+				f.EnsureIngress(barIng)
+				f.WaitForNginxServer(host, func(server string) bool {
+					return Expect(server).Should(ContainSubstring("location /bar"))
+				})
+			}
+		})
+
+		It("should return status code 200 when signed in after auth backend is deleted ", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			err := f.DeleteDeployment("httpbin")
+			Expect(err).NotTo(HaveOccurred())
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		})
+
+		It("should deny login for different location on same server", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			err := f.DeleteDeployment("httpbin")
+			Expect(err).NotTo(HaveOccurred())
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+barPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			By("receiving an internal server error without cache on location /bar")
+			Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+		})
+
+		It("should deny login for different servers", func() {
+			By("logging into server thisHost /foo")
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			err := f.DeleteDeployment("httpbin")
+			Expect(err).NotTo(HaveOccurred())
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thatHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			By("receiving an internal server error without cache on thisHost location /bar")
+			Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+		})
+
+		It("should redirect to signin url when not signed in", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				RedirectPolicy(func(req gorequest.Request, via []gorequest.Request) error {
+					return http.ErrUseLastResponse
+				}).
+				Param("a", "b").
+				Param("c", "d").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusFound))
+			Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", thisHost, thisHost, url.QueryEscape("/?a=b&c=d"))))
 		})
 	})
 })

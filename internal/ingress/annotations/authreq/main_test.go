@@ -79,17 +79,19 @@ func TestAnnotations(t *testing.T) {
 		method          string
 		requestRedirect string
 		authSnippet     string
+		authCacheKey    string
 		expErr          bool
 	}{
-		{"empty", "", "", "", "", "", true},
-		{"no scheme", "bar", "bar", "", "", "", true},
-		{"invalid host", "http://", "http://", "", "", "", true},
-		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", true},
-		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "", "", false},
-		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "http://foo.com/redirect-me", "", false},
-		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "proxy_set_header My-Custom-Header 42;", false},
+		{"empty", "", "", "", "", "", "", true},
+		{"no scheme", "bar", "bar", "", "", "", "", true},
+		{"invalid host", "http://", "http://", "", "", "", "", true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", "", true},
+		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", "", "", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "", "", "", false},
+		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "http://foo.com/redirect-me", "", "", false},
+		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "proxy_set_header My-Custom-Header 42;", "", false},
+		{"auth cache ", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "$foo$bar", false},
 	}
 
 	for _, test := range tests {
@@ -98,6 +100,7 @@ func TestAnnotations(t *testing.T) {
 		data[parser.GetAnnotationWithPrefix("auth-method")] = fmt.Sprintf("%v", test.method)
 		data[parser.GetAnnotationWithPrefix("auth-request-redirect")] = test.requestRedirect
 		data[parser.GetAnnotationWithPrefix("auth-snippet")] = test.authSnippet
+		data[parser.GetAnnotationWithPrefix("auth-cache-key")] = test.authCacheKey
 
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
@@ -128,6 +131,9 @@ func TestAnnotations(t *testing.T) {
 		}
 		if u.AuthSnippet != test.authSnippet {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.authSnippet, u.AuthSnippet)
+		}
+		if u.AuthCacheKey != test.authCacheKey {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.authCacheKey, u.AuthCacheKey)
 		}
 	}
 }
@@ -180,6 +186,54 @@ func TestHeaderAnnotations(t *testing.T) {
 	}
 }
 
+func TestCacheDurationAnnotations(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	tests := []struct {
+		title          string
+		url            string
+		duration       string
+		parsedDuration []string
+		expErr         bool
+	}{
+		{"nothing", "http://goog.url", "", []string{DefaultCacheDuration}, false},
+		{"spaces", "http://goog.url", "  ", []string{DefaultCacheDuration}, false},
+		{"one duration", "http://goog.url", "5m", []string{"5m"}, false},
+		{"two durations", "http://goog.url", "200 202 10m, 401 5m", []string{"200 202 10m", "401 5m"}, false},
+		{"two durations and empty entries", "http://goog.url", ",5m,,401 10m,", []string{"5m", "401 10m"}, false},
+		{"only status code provided", "http://goog.url", "200", []string{DefaultCacheDuration}, true},
+		{"mixed valid/invalid", "http://goog.url", "5m, xaxax", []string{DefaultCacheDuration}, true},
+		{"code after duration", "http://goog.url", "5m 200", []string{DefaultCacheDuration}, true},
+	}
+
+	for _, test := range tests {
+		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
+		data[parser.GetAnnotationWithPrefix("auth-cache-duration")] = test.duration
+
+		i, err := NewParser(&resolver.Mock{}).Parse(ing)
+		if test.expErr {
+			if err == nil {
+				t.Errorf("%v: expected error but retuned nil", err.Error())
+			}
+			continue
+		}
+
+		t.Log(i)
+		u, ok := i.(*Config)
+		if !ok {
+			t.Errorf("%v: expected an External type", test.title)
+			continue
+		}
+
+		if !reflect.DeepEqual(u.AuthCacheDuration, test.parsedDuration) {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.duration, u.AuthCacheDuration)
+		}
+	}
+}
+
 func TestParseStringToURL(t *testing.T) {
 	validURL := "http://bar.foo.com/external-auth"
 	validParsedURL, _ := url.Parse(validURL)
@@ -210,6 +264,38 @@ func TestParseStringToURL(t *testing.T) {
 
 		if i.String() != test.parsed.String() {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.parsed, i)
+		}
+	}
+
+}
+
+func TestParseStringToCacheDurations(t *testing.T) {
+
+	tests := []struct {
+		title             string
+		duration          string
+		expectedDurations []string
+		expErr            bool
+	}{
+		{"empty", "", []string{DefaultCacheDuration}, false},
+		{"invalid", ",200,", []string{DefaultCacheDuration}, true},
+		{"single", ",200 5m,", []string{"200 5m"}, false},
+		{"multiple with duration", ",5m,,401 10m,", []string{"5m", "401 10m"}, false},
+		{"multiple durations", "200 202 401 5m, 418 30m", []string{"200 202 401 5m", "418 30m"}, false},
+	}
+
+	for _, test := range tests {
+
+		dur, err := ParseStringToCacheDurations(test.duration)
+		if test.expErr {
+			if err == nil {
+				t.Errorf("%v: expected error but nil was returned", test.title)
+			}
+			continue
+		}
+
+		if !reflect.DeepEqual(dur, test.expectedDurations) {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedDurations, dur)
 		}
 	}
 

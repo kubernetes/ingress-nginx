@@ -26,6 +26,8 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
@@ -113,18 +115,18 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 
 * `nginx.ingress.kubernetes.io/canary-by-header-value`: The header value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to this value, it will be routed to the canary. For any other header value, the header will be ignored and the request compared against the other canary rules by precedence. This annotation has to be used together with . The annotation is an extension of the `nginx.ingress.kubernetes.io/canary-by-header` to allow customizing the header value instead of using hardcoded values. It doesn't have any effect if the `nginx.ingress.kubernetes.io/canary-by-header` annotation is not defined.
 
-* `nginx.ingress.kubernetes.io/canary-by-cookie`: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to `always`, it will be routed to the canary. When the cookie is set to `never`, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence. 
+* `nginx.ingress.kubernetes.io/canary-by-cookie`: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to `always`, it will be routed to the canary. When the cookie is set to `never`, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence.
 
-* `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - 100) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of 100 means implies all requests will be sent to the alternative service specified in the Ingress.   
+* `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - 100) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of 100 means implies all requests will be sent to the alternative service specified in the Ingress.
 
-Canary rules are evaluated in order of precedence. Precedence is as follows: 
-`canary-by-header -> canary-by-cookie -> canary-weight` 
+Canary rules are evaluated in order of precedence. Precedence is as follows:
+`canary-by-header -> canary-by-cookie -> canary-weight`
 
 **Note** that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except `nginx.ingress.kubernetes.io/load-balance` and `nginx.ingress.kubernetes.io/upstream-hash-by`.
 
 **Known Limitations**
 
-Currently a maximum of one canary ingress can be applied per Ingress rule. 
+Currently a maximum of one canary ingress can be applied per Ingress rule.
 
 ### Rewrite
 
@@ -142,7 +144,7 @@ The annotation `nginx.ingress.kubernetes.io/affinity` enables and sets the affin
 The only affinity type available for NGINX is `cookie`.
 
 !!! attention
-    If more than one Ingress is defined for a host and at least one Ingress uses `nginx.ingress.kubernetes.io/affinity: cookie`, then only paths on the Ingress using `nginx.ingress.kubernetes.io/affinity` will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server. 
+    If more than one Ingress is defined for a host and at least one Ingress uses `nginx.ingress.kubernetes.io/affinity: cookie`, then only paths on the Ingress using `nginx.ingress.kubernetes.io/affinity` will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server.
 
 !!! example
     Please check the [affinity](../../examples/affinity/cookie/README.md) example.
@@ -151,7 +153,7 @@ The only affinity type available for NGINX is `cookie`.
 
 If you use the ``cookie`` affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation `nginx.ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'INGRESSCOOKIE'.
 
-The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.  
+The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.
 
 
 ### Authentication
@@ -294,7 +296,7 @@ CORS can be controlled with the following annotations:
   Example: `nginx.ingress.kubernetes.io/cors-max-age: 600`
 
 !!! note
-    For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html) 
+    For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html)
 
 ### HTTP2 Push Preload.
 
@@ -327,11 +329,11 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/server-snippet: |
         set $agentflag 0;
-        
+
         if ($http_user_agent ~* "(Mobile)" ){
           set $agentflag 1;
         }
-        
+
         if ( $agentflag = 1 ) {
           return 301 https://m.example.com;
         }
@@ -378,6 +380,10 @@ Additionally it is possible to set:
   `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authentication request completes.
 * `nginx.ingress.kubernetes.io/auth-request-redirect`:
   `<Request_Redirect_URL>`  to specify the X-Auth-Request-Redirect header value.
+* `nginx.ingress.kubernetes.io/auth-cache-key`:
+  `<Cache_Key>` this enables caching for auth requests. specify a lookup key for auth responses. e.g. `$remote_user$http_authorization`. Each server and location has it's own keyspace. Hence a cached response is only valid on a per-server and per-location basis.
+* `nginx.ingress.kubernetes.io/auth-cache-duration`:
+  `<Cache_duration>` to specify a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
 * `nginx.ingress.kubernetes.io/auth-snippet`:
   `<Auth_Snippet>` to specify a custom snippet to use with external authentication, e.g.
 
@@ -681,7 +687,7 @@ of ingress locations. The ModSecurity module must first be enabled by enabling M
 [ConfigMap](./configmap.md#enable-modsecurity). Note this will enable ModSecurity for all paths, and each path
 must be disabled manually.
 
-It can be enabled using the following annotation: 
+It can be enabled using the following annotation:
 ```yaml
 nginx.ingress.kubernetes.io/enable-modsecurity: "true"
 ```
@@ -706,7 +712,7 @@ SecDebugLog /tmp/modsec_debug.log
 ```
 
 Note: If you use both `enable-owasp-core-rules` and `modsecurity-snippet` annotations together, only the
-`modsecurity-snippet` will take effect. If you wish to include the [OWASP Core Rule Set](https://www.modsecurity.org/CRS/Documentation/) or 
+`modsecurity-snippet` will take effect. If you wish to include the [OWASP Core Rule Set](https://www.modsecurity.org/CRS/Documentation/) or
 [recommended configuration](https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended) simply use the include
 statement:
 ```yaml
@@ -730,7 +736,7 @@ nginx.ingress.kubernetes.io/influxdb-server-name: "nginx-ingress"
 
 For the `influxdb-host` parameter you have two options:
 
-- Use an InfluxDB server configured with the  [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/) enabled. 
+- Use an InfluxDB server configured with the  [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/) enabled.
 - Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
 anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.7/plugins/outputs) like InfluxDB, Apache Kafka,
 Prometheus, etc.. (recommended)
@@ -754,7 +760,7 @@ nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 ### Use Regex
 
 !!! attention
-When using this annotation with the NGINX annotation `nginx.ingress.kubernetes.io/affinity` of type `cookie`,  `nginx.ingress.kubernetes.io/session-cookie-path` must be also set; Session cookie paths do not support regex.  
+When using this annotation with the NGINX annotation `nginx.ingress.kubernetes.io/affinity` of type `cookie`,  `nginx.ingress.kubernetes.io/session-cookie-path` must be also set; Session cookie paths do not support regex.
 
 Using the `nginx.ingress.kubernetes.io/use-regex` annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is `false`.
 
@@ -770,9 +776,9 @@ nginx.ingress.kubernetes.io/use-regex: "false"
 
 When this annotation is set to `true`, the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.
 
-Additionally, if the [`rewrite-target` annotation](#rewrite) is used on any Ingress for a given host, then the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.  
+Additionally, if the [`rewrite-target` annotation](#rewrite) is used on any Ingress for a given host, then the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.
 
-Please read about [ingress path matching](../ingress-path-matching.md) before using this modifier. 
+Please read about [ingress path matching](../ingress-path-matching.md) before using this modifier.
 
 ### Satisfy
 

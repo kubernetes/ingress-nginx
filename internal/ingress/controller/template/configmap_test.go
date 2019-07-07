@@ -25,6 +25,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/mitchellh/hashstructure"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 )
 
@@ -277,6 +278,28 @@ func TestGlobalExternalAuthSnippetParsing(t *testing.T) {
 		cfg := ReadConfig(map[string]string{"global-auth-snippet": tc.authSnippet})
 		if cfg.GlobalExternalAuth.AuthSnippet != tc.expect {
 			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.AuthSnippet)
+		}
+	}
+}
+
+func TestGlobalExternalAuthCacheDurationParsing(t *testing.T) {
+	testCases := map[string]struct {
+		durations string
+		expect    []string
+	}{
+		"nothing":                         {"", []string{authreq.DefaultCacheDuration}},
+		"spaces":                          {"  ", []string{authreq.DefaultCacheDuration}},
+		"one duration":                    {"5m", []string{"5m"}},
+		"two durations and empty entries": {",200 5m,,401 30m,", []string{"200 5m", "401 30m"}},
+		"only status code provided":       {"200", []string{authreq.DefaultCacheDuration}},
+		"mixed valid/invalid":             {"5m, xaxax", []string{authreq.DefaultCacheDuration}},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-cache-duration": tc.durations})
+
+		if !reflect.DeepEqual(cfg.GlobalExternalAuth.AuthCacheDuration, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.AuthCacheDuration)
 		}
 	}
 }
