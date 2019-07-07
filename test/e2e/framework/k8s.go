@@ -143,6 +143,21 @@ func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 	})
 }
 
+// WaitForPodsDeleted waits for a given amount of time until a group of Pods are deleted in the given namespace.
+func WaitForPodsDeleted(kubeClientSet kubernetes.Interface, timeout time.Duration, namespace string, opts metav1.ListOptions) error {
+	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
+		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(opts)
+		if err != nil {
+			return false, nil
+		}
+
+		if len(pl.Items) == 0 {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
 // WaitForEndpoints waits for a given amount of time until an endpoint contains.
 func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration, name, ns string, expectedEndpoints int) error {
 	if expectedEndpoints == 0 {

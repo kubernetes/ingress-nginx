@@ -36,13 +36,18 @@ import (
 type Config struct {
 	URL string `json:"url"`
 	// Host contains the hostname defined in the URL
-	Host            string   `json:"host"`
-	SigninURL       string   `json:"signinUrl"`
-	Method          string   `json:"method"`
-	ResponseHeaders []string `json:"responseHeaders,omitempty"`
-	RequestRedirect string   `json:"requestRedirect"`
-	AuthSnippet     string   `json:"authSnippet"`
+	Host              string   `json:"host"`
+	SigninURL         string   `json:"signinUrl"`
+	Method            string   `json:"method"`
+	ResponseHeaders   []string `json:"responseHeaders,omitempty"`
+	RequestRedirect   string   `json:"requestRedirect"`
+	AuthSnippet       string   `json:"authSnippet"`
+	AuthCacheKey      string   `json:"authCacheKey"`
+	AuthCacheDuration []string `json:"authCacheDuration"`
 }
+
+// DefaultCacheDuration is the fallback value if no cache duration is provided
+const DefaultCacheDuration = "200 202 401 5m"
 
 // Equal tests for equality between two Config types
 func (e1 *Config) Equal(e2 *Config) bool {
@@ -77,12 +82,23 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		return false
 	}
 
+	if e1.AuthCacheKey != e2.AuthCacheKey {
+		return false
+	}
+
+	match = sets.StringElementsMatch(e1.AuthCacheDuration, e2.AuthCacheDuration)
+	if !match {
+		return false
+	}
+
 	return true
 }
 
 var (
-	methods      = []string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE"}
-	headerRegexp = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
+	methods         = []string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE"}
+	headerRegexp    = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
+	statusCodeRegex = regexp.MustCompile(`^[\d]{3}$`)
+	durationRegex   = regexp.MustCompile(`^[\d]+(ms|s|m|h|d|w|M|y)$`) // see http://nginx.org/en/docs/syntax.html
 )
 
 // ValidMethod checks is the provided string a valid HTTP method
@@ -102,6 +118,31 @@ func ValidMethod(method string) bool {
 // ValidHeader checks is the provided string satisfies the header's name regex
 func ValidHeader(header string) bool {
 	return headerRegexp.Match([]byte(header))
+}
+
+// ValidCacheDuration checks if the provided string is a valid cache duration
+// spec: [code ...] [time ...];
+// with: code is an http status code
+//       time must match the time regex and may appear multiple times, e.g. `1h 30m`
+func ValidCacheDuration(duration string) bool {
+	elements := strings.Split(duration, " ")
+	seenDuration := false
+
+	for _, element := range elements {
+		if len(element) == 0 {
+			continue
+		}
+		if statusCodeRegex.Match([]byte(element)) {
+			if seenDuration {
+				return false // code after duration
+			}
+			continue
+		}
+		if durationRegex.Match([]byte(element)) {
+			seenDuration = true
+		}
+	}
+	return seenDuration
 }
 
 type authReq struct {
@@ -143,6 +184,17 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		klog.V(3).Infof("auth-snippet annotation is undefined and will not be set")
 	}
 
+	authCacheKey, err := parser.GetStringAnnotation("auth-cache-key", ing)
+	if err != nil {
+		klog.V(3).Infof("auth-cache-key annotation is undefined and will not be set")
+	}
+
+	durstr, _ := parser.GetStringAnnotation("auth-cache-duration", ing)
+	authCacheDuration, err := ParseStringToCacheDurations(durstr)
+	if err != nil {
+		return nil, err
+	}
+
 	responseHeaders := []string{}
 	hstr, _ := parser.GetStringAnnotation("auth-response-headers", ing)
 	if len(hstr) != 0 {
@@ -161,13 +213,15 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	requestRedirect, _ := parser.GetStringAnnotation("auth-request-redirect", ing)
 
 	return &Config{
-		URL:             urlString,
-		Host:            authURL.Hostname(),
-		SigninURL:       signIn,
-		Method:          authMethod,
-		ResponseHeaders: responseHeaders,
-		RequestRedirect: requestRedirect,
-		AuthSnippet:     authSnippet,
+		URL:               urlString,
+		Host:              authURL.Hostname(),
+		SigninURL:         signIn,
+		Method:            authMethod,
+		ResponseHeaders:   responseHeaders,
+		RequestRedirect:   requestRedirect,
+		AuthSnippet:       authSnippet,
+		AuthCacheKey:      authCacheKey,
+		AuthCacheDuration: authCacheDuration,
 	}, nil
 }
 
@@ -188,4 +242,29 @@ func ParseStringToURL(input string) (*url.URL, string) {
 	}
 	return parsedURL, ""
 
+}
+
+// ParseStringToCacheDurations parses and validates the provided string
+// into a list of cache durations.
+// It will always return at least one duration (the default duration)
+func ParseStringToCacheDurations(input string) ([]string, error) {
+	authCacheDuration := []string{}
+	if len(input) != 0 {
+		arr := strings.Split(input, ",")
+		for _, duration := range arr {
+			duration = strings.TrimSpace(duration)
+			if len(duration) > 0 {
+				if !ValidCacheDuration(duration) {
+					authCacheDuration = []string{DefaultCacheDuration}
+					return authCacheDuration, ing_errors.NewLocationDenied(fmt.Sprintf("invalid cache duration: %s", duration))
+				}
+				authCacheDuration = append(authCacheDuration, duration)
+			}
+		}
+	}
+
+	if len(authCacheDuration) == 0 {
+		authCacheDuration = append(authCacheDuration, DefaultCacheDuration)
+	}
+	return authCacheDuration, nil
 }
