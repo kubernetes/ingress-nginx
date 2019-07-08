@@ -138,12 +138,7 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		return false
 	}
 
-	match = sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
-	if !match {
-		return false
-	}
-
-	return true
+	return sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
 }
 
 // Equal tests for equality between two SessionAffinityConfig types
@@ -474,12 +469,7 @@ func (e1 *L4Service) Equal(e2 *L4Service) bool {
 		return false
 	}
 
-	match := compareEndpoints(e1.Endpoints, e2.Endpoints)
-	if !match {
-		return false
-	}
-
-	return true
+	return compareEndpoints(e1.Endpoints, e2.Endpoints)
 }
 
 // Equal tests for equality between two L4Backend types
@@ -527,12 +517,7 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 		return false
 	}
 
-	match := sets.StringElementsMatch(s1.CN, s2.CN)
-	if !match {
-		return false
-	}
-
-	return true
+	return sets.StringElementsMatch(s1.CN, s2.CN)
 }
 
 var compareEndpointsFunc = func(e1, e2 interface{}) bool {

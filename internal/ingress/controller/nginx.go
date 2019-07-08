@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"net"
 	"net/http"
 	"os"
@@ -547,7 +546,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 	}
 
 	if cfg.MaxWorkerConnections == 0 {
-		maxWorkerConnections := int(math.Ceil(float64(cfg.MaxWorkerOpenFiles * 3.0 / 4)))
+		maxWorkerConnections := int(float64(cfg.MaxWorkerOpenFiles * 3.0 / 4))
 		klog.V(3).Infof("Adjusting MaxWorkerConnections variable to %d", maxWorkerConnections)
 		cfg.MaxWorkerConnections = maxWorkerConnections
 	}
@@ -1090,7 +1089,7 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	}
 
 	// Expand possible environment variables before writing the configuration to file.
-	expanded := os.ExpandEnv(string(tmplBuf.Bytes()))
+	expanded := os.ExpandEnv(tmplBuf.String())
 
 	return ioutil.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
 }

@@ -45,27 +45,12 @@ func PrintError(e error) {
 	}
 }
 
-func printWithError(s string, e error) {
-	if e != nil {
-		fmt.Println(e)
-	}
-	fmt.Print(s)
-}
-
-func printOrError(s string, e error) error {
-	if e != nil {
-		return e
-	}
-	fmt.Print(s)
-	return nil
-}
-
 // ParseVersionString returns the major, minor, and patch numbers of a version string
 func ParseVersionString(v string) (int, int, int, error) {
 	parts := versionRegex.FindStringSubmatch(v)
 
 	if len(parts) != 4 {
-		return 0, 0, 0, fmt.Errorf("Could not parse %v as a version string (like 0.20.3)", v)
+		return 0, 0, 0, fmt.Errorf("could not parse %v as a version string (like 0.20.3)", v)
 	}
 
 	major, _ := strconv.Atoi(parts[1])

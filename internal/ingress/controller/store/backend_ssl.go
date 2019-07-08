@@ -121,7 +121,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		}
 		klog.V(3).Info(msg)
 
-	} else if ca != nil && len(ca) > 0 {
+	} else if len(ca) > 0 {
 		sslCert, err = ssl.CreateCACert(ca)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
