@@ -40,6 +40,7 @@ type Config struct {
 	ProxyRedirectTo     string `json:"proxyRedirectTo"`
 	RequestBuffering    string `json:"requestBuffering"`
 	ProxyBuffering      string `json:"proxyBuffering"`
+	ProxyHTTPVersion    string `json:"proxyHTTPVersion"`
 }
 
 // Equal tests for equality between two Configuration types
@@ -93,6 +94,9 @@ func (l1 *Config) Equal(l2 *Config) bool {
 		return false
 	}
 	if l1.ProxyBuffering != l2.ProxyBuffering {
+		return false
+	}
+	if l1.ProxyHTTPVersion != l2.ProxyHTTPVersion {
 		return false
 	}
 
@@ -189,6 +193,11 @@ func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.ProxyBuffering, err = parser.GetStringAnnotation("proxy-buffering", ing)
 	if err != nil {
 		config.ProxyBuffering = defBackend.ProxyBuffering
+	}
+
+	config.ProxyHTTPVersion, err = parser.GetStringAnnotation("proxy-http-version", ing)
+	if err != nil {
+		config.ProxyHTTPVersion = defBackend.ProxyHTTPVersion
 	}
 
 	return config, nil

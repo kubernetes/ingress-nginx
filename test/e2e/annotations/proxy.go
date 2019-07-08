@@ -230,4 +230,19 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 					strings.Contains(server, "proxy_cookie_path /one/ /;")
 			})
 	})
+
+	It("should change the default proxy HTTP version", func() {
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/proxy-http-version": "1.0",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_http_version 1.0;")
+			})
+	})
+
 })
