@@ -1172,7 +1172,7 @@ func TestIngressConversion(t *testing.T) {
 		t.Fatalf("unexpected error marshalling Ingress: %v", err)
 	}
 
-	if bytes.Compare(m1, m2) != 0 {
+	if !bytes.Equal(m1, m2) {
 		t.Fatalf("Expected marshalling of types should be equal")
 	}
 }

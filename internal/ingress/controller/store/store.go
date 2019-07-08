@@ -166,7 +166,7 @@ func (i *Informer) Run(stopCh chan struct{}) {
 		i.Secret.HasSynced,
 		i.ConfigMap.HasSynced,
 	) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
 
 	// in big clusters, deltas can keep arriving even after HasSynced
@@ -180,7 +180,7 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	if !cache.WaitForCacheSync(stopCh,
 		i.Ingress.HasSynced,
 	) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
 }
 

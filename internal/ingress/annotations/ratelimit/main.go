@@ -95,12 +95,7 @@ func (rt1 *Config) Equal(rt2 *Config) bool {
 		return false
 	}
 
-	match := sets.StringElementsMatch(rt1.Whitelist, rt2.Whitelist)
-	if !match {
-		return false
-	}
-
-	return true
+	return sets.StringElementsMatch(rt1.Whitelist, rt2.Whitelist)
 }
 
 // Zone returns information about the NGINX rate limit (limit_req_zone)

@@ -133,7 +133,7 @@ func backendsAll() {
 		return
 	}
 
-	fmt.Println(string(prettyBuffer.Bytes()))
+	fmt.Println(prettyBuffer.String())
 }
 
 func backendsList() {
@@ -228,7 +228,7 @@ func general() {
 		return
 	}
 
-	fmt.Println(string(prettyBuffer.Bytes()))
+	fmt.Println(prettyBuffer.String())
 }
 
 func readNginxConf() {

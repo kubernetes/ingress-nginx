@@ -98,13 +98,13 @@ func GetServerBlock(conf string, host string) (string, error) {
 
 	blockStart := strings.Index(conf, startMsg)
 	if blockStart < 0 {
-		return "", fmt.Errorf("Host %v was not found in the controller's nginx.conf", host)
+		return "", fmt.Errorf("host %v was not found in the controller's nginx.conf", host)
 	}
 	blockStart = blockStart + len(startMsg)
 
 	blockEnd := strings.Index(conf, endMsg)
 	if blockEnd < 0 {
-		return "", fmt.Errorf("The end of the host server block could not be found, but the beginning was")
+		return "", fmt.Errorf("the end of the host server block could not be found, but the beginning was")
 	}
 
 	return conf[blockStart:blockEnd], nil

@@ -342,19 +342,6 @@ func newSignedCert(cfg certutil.Config, key crypto.Signer, caCert *x509.Certific
 	return x509.ParseCertificate(certDERBytes)
 }
 
-// encodePublicKeyPEM returns PEM-encoded public data
-func encodePublicKeyPEM(key *rsa.PublicKey) ([]byte, error) {
-	der, err := x509.MarshalPKIXPublicKey(key)
-	if err != nil {
-		return []byte{}, err
-	}
-	block := pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: der,
-	}
-	return pem.EncodeToMemory(&block), nil
-}
-
 // encodePrivateKeyPEM returns PEM-encoded private key data
 func encodePrivateKeyPEM(key *rsa.PrivateKey) []byte {
 	block := pem.Block{

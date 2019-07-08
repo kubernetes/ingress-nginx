@@ -148,11 +148,7 @@ func removedAnnotation(annotationName string, issueNumber int, version string) I
 func satisfyDirective(ing networking.Ingress) bool {
 	for name, val := range ing.Annotations {
 		if strings.HasSuffix(name, "/configuration-snippet") {
-			if strings.Index(val, "satisfy") != -1 {
-				return true
-			}
-
-			return false
+			return strings.Contains(val, "satisfy")
 		}
 	}
 
