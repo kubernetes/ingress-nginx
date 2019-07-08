@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
+	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/resource"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
@@ -268,6 +269,7 @@ func (ae *Exporter) dialToAgent() (*grpc.ClientConn, error) {
 	if ae.compressor != "" {
 		dialOpts = append(dialOpts, grpc.WithDefaultCallOptions(grpc.UseCompressor(ae.compressor)))
 	}
+	dialOpts = append(dialOpts, grpc.WithStatsHandler(&ocgrpc.ClientHandler{}))
 
 	ctx := context.Background()
 	if len(ae.headers) > 0 {

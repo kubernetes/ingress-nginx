@@ -19,7 +19,7 @@ package sessionaffinity
 import (
 	"regexp"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -44,6 +44,9 @@ const (
 
 	// This is used to control the cookie path when use-regex is set to true
 	annotationAffinityCookiePath = "session-cookie-path"
+
+	// This is used to control the cookie change after request failure
+	annotationAffinityCookieChangeOnFailure = "session-cookie-change-on-failure"
 )
 
 var (
@@ -67,11 +70,13 @@ type Cookie struct {
 	MaxAge string `json:"maxage"`
 	// The path that a cookie will be set on
 	Path string `json:"path"`
+	// Flag that allows cookie regeneration on request failure
+	ChangeOnFailure bool `json:"changeonfailure"`
 }
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
-func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
+func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 	var err error
 
 	cookie := &Cookie{}
@@ -99,6 +104,16 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
 	}
 
+	cookie.ChangeOnFailure, err = parser.GetBoolAnnotation(annotationAffinityCookieChangeOnFailure, ing)
+	if err != nil {
+		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieChangeOnFailure)
+	}
+
+	cookie.ChangeOnFailure, err = parser.GetBoolAnnotation(annotationAffinityCookieChangeOnFailure, ing)
+	if err != nil {
+		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieChangeOnFailure)
+	}
+
 	return cookie
 }
 
@@ -113,7 +128,7 @@ type affinity struct {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure the affinity directives
-func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 	cookie := &Cookie{}
 	// Check the type of affinity that will be used
 	at, err := parser.GetStringAnnotation(annotationAffinityType, ing)

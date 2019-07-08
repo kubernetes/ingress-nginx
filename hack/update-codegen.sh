@@ -19,7 +19,7 @@ set -o nounset
 set -o pipefail
 
 SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
-CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
+CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
 
 # generate the code with:
 # --output-base    because this script should also be able to run inside the vendor dir of
@@ -29,6 +29,9 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-ge
 #  k8s.io/ingress-nginx/pkg/client k8s.io/ingress-nginx/pkg/apis \
 #  nginxingress:v1alpha1 \
 #  --output-base "$(dirname ${BASH_SOURCE})/../../.."
+mkdir -p ${CODEGEN_PKG}/hack
+cp ${SCRIPT_ROOT}/hack/boilerplate/boilerplate.go.txt ${CODEGEN_PKG}/hack/boilerplate.go.txt
+chmod +x ${CODEGEN_PKG}/*.sh
 
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy" \
   k8s.io/ingress-nginx/internal k8s.io/ingress-nginx/internal \

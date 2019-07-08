@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -48,7 +48,7 @@ func TestHandleSigterm(t *testing.T) {
 	defer deleteConfigMap(cm, ns, clientSet, t)
 
 	name := "test"
-	pod := v1.Pod{
+	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: ns,
@@ -110,7 +110,7 @@ func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) st
 	t.Helper()
 	t.Log("Creating temporal config map")
 
-	configMap := &v1.ConfigMap{
+	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:     "config",
 			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),

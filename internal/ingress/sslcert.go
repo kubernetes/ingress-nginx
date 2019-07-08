@@ -32,9 +32,6 @@ type SSLCert struct {
 	CAFileName string `json:"caFileName"`
 	// PemFileName contains the path to the file with the certificate and key concatenated
 	PemFileName string `json:"pemFileName"`
-	// FullChainPemFileName contains the path to the file with the certificate and key concatenated
-	// This certificate contains the full chain (ca + intermediates + cert)
-	FullChainPemFileName string `json:"fullChainPemFileName"`
 	// PemSHA contains the sha1 of the pem file.
 	// This is used to detect changes in the secret that contains the certificates
 	PemSHA string `json:"pemSha"`
@@ -43,7 +40,7 @@ type SSLCert struct {
 	// ExpiresTime contains the expiration of this SSL certificate in timestamp format
 	ExpireTime time.Time `json:"expires"`
 	// Pem encoded certificate and key concatenated
-	PemCertKey string `json:"pemCertKey"`
+	PemCertKey string `json:"pemCertKey,omitempty"`
 }
 
 // GetObjectKind implements the ObjectKind interface as a noop

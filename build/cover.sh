@@ -14,22 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ -n "$DEBUG" ]; then
+	set -x
+fi
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
 if [ -z "${PKG}" ]; then
-    echo "PKG must be set"
-    exit 1
+  echo "PKG must be set"
+  exit 1
 fi
 
 rm -rf coverage.txt
-for d in `go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e' | grep -v images`; do
-    t=$(date +%s);
-    go test -coverprofile=cover.out -covermode=atomic $d || exit 1;
-    echo "Coverage test $d took $(($(date +%s)-$t)) seconds";
-    if [ -f cover.out ]; then
-        cat cover.out >> coverage.txt;
-        rm cover.out;
-    fi;
+for d in $(go list "${PKG}/..." | grep -v vendor | grep -v '/test/e2e' | grep -v images); do
+  t=$(date +%s);
+  go test -coverprofile=cover.out -covermode=atomic "$d" || exit 1;
+  echo "Coverage test $d took $(($(date +%s)-$t)) seconds";
+  if [ -f cover.out ]; then
+    cat cover.out >> coverage.txt;
+    rm cover.out;
+  fi;
 done

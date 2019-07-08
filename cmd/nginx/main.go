@@ -47,15 +47,6 @@ import (
 	"k8s.io/ingress-nginx/version"
 )
 
-const (
-	// High enough QPS to fit all expected use cases. QPS=0 is not set here, because
-	// client code is overriding it.
-	defaultQPS = 1e6
-	// High enough Burst to fit all expected use cases. Burst=0 is not set here, because
-	// client code is overriding it.
-	defaultBurst = 1e6
-)
-
 func main() {
 	klog.InitFlags(nil)
 
@@ -109,6 +100,11 @@ func main() {
 
 	conf.FakeCertificate = ssl.GetFakeSSLCert(fs)
 	klog.Infof("Created fake certificate with PemFileName: %v", conf.FakeCertificate.PemFileName)
+
+	k8s.IsNetworkingIngressAvailable = k8s.NetworkingIngressAvailable(kubeClient)
+	if !k8s.IsNetworkingIngressAvailable {
+		klog.Warningf("Using deprecated \"k8s.io/api/extensions/v1beta1\" package because Kubernetes version is < v1.14.0")
+	}
 
 	conf.Client = kubeClient
 
@@ -184,10 +180,6 @@ func createApiserverClient(apiserverHost, kubeConfig string) (*kubernetes.Client
 		return nil, err
 	}
 
-	cfg.QPS = defaultQPS
-	cfg.Burst = defaultBurst
-	cfg.ContentType = "application/vnd.kubernetes.protobuf"
-
 	klog.Infof("Creating API client for %s", cfg.Host)
 
 	client, err := kubernetes.NewForConfig(cfg)
@@ -253,13 +245,6 @@ func registerHandlers(mux *http.ServeMux) {
 		w.WriteHeader(http.StatusOK)
 		b, _ := json.Marshal(version.String())
 		w.Write(b)
-	})
-
-	mux.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		err := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		if err != nil {
-			klog.Errorf("Unexpected error: %v", err)
-		}
 	})
 }
 

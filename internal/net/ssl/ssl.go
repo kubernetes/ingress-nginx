@@ -31,15 +31,16 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/zakjan/cert-chain-resolver/certUtil"
-	"k8s.io/klog"
-
 	"k8s.io/apimachinery/pkg/util/sets"
-
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/watch"
+	"k8s.io/klog"
 )
 
 var (
@@ -74,8 +75,18 @@ func verifyPemCertAgainstRootCA(pemCert *x509.Certificate, ca []byte) error {
 // CreateSSLCert validates cert and key, extracts common names and returns corresponding SSLCert object
 func CreateSSLCert(cert, key []byte) (*ingress.SSLCert, error) {
 	var pemCertBuffer bytes.Buffer
-
 	pemCertBuffer.Write(cert)
+
+	if ngx_config.EnableSSLChainCompletion {
+		data, err := fullChainCert(cert)
+		if err != nil {
+			klog.Errorf("Error generating certificate chain for Secret: %v", err)
+		} else {
+			pemCertBuffer.Reset()
+			pemCertBuffer.Write(data)
+		}
+	}
+
 	pemCertBuffer.Write([]byte("\n"))
 	pemCertBuffer.Write(key)
 
@@ -360,6 +371,22 @@ func AddOrUpdateDHParam(name string, dh []byte, fs file.Filesystem) (string, err
 // GetFakeSSLCert creates a Self Signed Certificate
 // Based in the code https://golang.org/src/crypto/tls/generate_cert.go
 func GetFakeSSLCert(fs file.Filesystem) *ingress.SSLCert {
+	cert, key := getFakeHostSSLCert("ingress.local")
+
+	sslCert, err := CreateSSLCert(cert, key)
+	if err != nil {
+		klog.Fatalf("unexpected error creating fake SSL Cert: %v", err)
+	}
+
+	err = StoreSSLCertOnDisk(fs, fakeCertificateName, sslCert)
+	if err != nil {
+		klog.Fatalf("unexpected error storing fake SSL Cert: %v", err)
+	}
+
+	return sslCert
+}
+
+func getFakeHostSSLCert(host string) ([]byte, []byte) {
 	var priv interface{}
 	var err error
 
@@ -392,7 +419,7 @@ func GetFakeSSLCert(fs file.Filesystem) *ingress.SSLCert {
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
-		DNSNames:              []string{"ingress.local"},
+		DNSNames:              []string{host},
 	}
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.(*rsa.PrivateKey).PublicKey, priv)
 	if err != nil {
@@ -403,29 +430,14 @@ func GetFakeSSLCert(fs file.Filesystem) *ingress.SSLCert {
 
 	key := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv.(*rsa.PrivateKey))})
 
-	sslCert, err := CreateSSLCert(cert, key)
-	if err != nil {
-		klog.Fatalf("unexpected error creating fake SSL Cert: %v", err)
-	}
-
-	err = StoreSSLCertOnDisk(fs, fakeCertificateName, sslCert)
-	if err != nil {
-		klog.Fatalf("unexpected error storing fake SSL Cert: %v", err)
-	}
-
-	return sslCert
+	return cert, key
 }
 
-// FullChainCert checks if a certificate file contains issues in the intermediate CA chain
+// fullChainCert checks if a certificate file contains issues in the intermediate CA chain
 // Returns a new certificate with the intermediate certificates.
 // If the certificate does not contains issues with the chain it return an empty byte array
-func FullChainCert(in string, fs file.Filesystem) ([]byte, error) {
-	data, err := fs.ReadFile(in)
-	if err != nil {
-		return nil, err
-	}
-
-	cert, err := certUtil.DecodeCertificate(data)
+func fullChainCert(in []byte) ([]byte, error) {
+	cert, err := certUtil.DecodeCertificate(in)
 	if err != nil {
 		return nil, err
 	}
@@ -441,11 +453,6 @@ func FullChainCert(in string, fs file.Filesystem) ([]byte, error) {
 	}
 
 	certs, err := certUtil.FetchCertificateChain(cert)
-	if err != nil {
-		return nil, err
-	}
-
-	certs, err = certUtil.AddRootCA(certs)
 	if err != nil {
 		return nil, err
 	}
@@ -469,4 +476,65 @@ func IsValidHostname(hostname string, commonNames []string) bool {
 	}
 
 	return false
+}
+
+// TLSListener implements a dynamic certificate loader
+type TLSListener struct {
+	certificatePath string
+	keyPath         string
+	fs              file.Filesystem
+	certificate     *tls.Certificate
+	err             error
+	lock            sync.Mutex
+}
+
+// NewTLSListener watches changes to th certificate and key paths
+// and reloads it whenever it changes
+func NewTLSListener(certificate, key string) *TLSListener {
+	fs, err := file.NewLocalFS()
+	if err != nil {
+		panic(fmt.Sprintf("failed to instanciate certificate: %v", err))
+	}
+	l := TLSListener{
+		certificatePath: certificate,
+		keyPath:         key,
+		fs:              fs,
+		lock:            sync.Mutex{},
+	}
+	l.load()
+	watch.NewFileWatcher(certificate, l.load)
+	watch.NewFileWatcher(key, l.load)
+	return &l
+}
+
+// GetCertificate implements the tls.Config.GetCertificate interface
+func (tl *TLSListener) GetCertificate(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+	tl.lock.Lock()
+	defer tl.lock.Unlock()
+	return tl.certificate, tl.err
+}
+
+// TLSConfig instanciates a TLS configuration, always providing an up to date certificate
+func (tl *TLSListener) TLSConfig() *tls.Config {
+	return &tls.Config{
+		GetCertificate: tl.GetCertificate,
+	}
+}
+
+func (tl *TLSListener) load() {
+	klog.Infof("loading tls certificate from certificate path %s and key path %s", tl.certificatePath, tl.keyPath)
+	certBytes, err := tl.fs.ReadFile(tl.certificatePath)
+	if err != nil {
+		tl.certificate = nil
+		tl.err = err
+	}
+	keyBytes, err := tl.fs.ReadFile(tl.keyPath)
+	if err != nil {
+		tl.certificate = nil
+		tl.err = err
+	}
+	cert, err := tls.X509KeyPair(certBytes, keyBytes)
+	tl.lock.Lock()
+	defer tl.lock.Unlock()
+	tl.certificate, tl.err = &cert, err
 }

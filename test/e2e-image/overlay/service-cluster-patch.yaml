@@ -1,0 +1,4 @@
+- op: remove
+  path: /spec/externalTrafficPolicy
+- op: remove
+  path: /spec/type

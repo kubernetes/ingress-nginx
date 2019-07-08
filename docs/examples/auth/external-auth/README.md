@@ -23,7 +23,7 @@ metadata:
   name: external-auth
   namespace: default
   resourceVersion: "2068378"
-  selfLink: /apis/extensions/v1beta1/namespaces/default/ingresses/external-auth
+  selfLink: /apis/networking/v1beta1/namespaces/default/ingresses/external-auth
   uid: 5c388f1d-8970-11e6-9004-080027d2dc94
 spec:
   rules:

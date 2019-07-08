@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ -n "$DEBUG" ]; then
+	set -x
+fi
+
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -31,7 +35,7 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
 if [ -z "${SKIP_MINIKUBE_START}" ]; then
-    test $(minikube status | grep Running | wc -l) -ge 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
+    test "$(minikube status | grep -c Running) -ge 2 && $(minikube status | grep -q 'Correctly Configured')" || minikube start \
         --extra-config=kubelet.sync-frequency=1s \
         --extra-config=apiserver.authorization-mode=RBAC
 
@@ -43,16 +47,21 @@ make build container
 
 docker save "${DEV_IMAGE}" | (eval $(minikube docker-env --shell bash) && docker load) || true
 
-echo "[dev-env] installing kubectl"
-kubectl version || brew install kubectl
+for tool in kubectl kustomize; do
+  echo "[dev-env] installing $tool"
+  $tool version || brew install $tool
+done
+
+if ! kubectl get namespace "${NAMESPACE}"; then
+  kubectl create namespace "${NAMESPACE}"
+fi
+
+ROOT=./deploy/minikube
+
+pushd $ROOT
+kustomize edit set namespace "${NAMESPACE}"
+kustomize edit set image "quay.io/kubernetes-ingress-controller/nginx-ingress-controller=${DEV_IMAGE}"
+popd
 
 echo "[dev-env] deploying NGINX Ingress controller in namespace $NAMESPACE"
-cat ./deploy/mandatory.yaml                            | kubectl apply --namespace=$NAMESPACE -f -
-cat ./deploy/provider/baremetal/service-nodeport.yaml  | kubectl apply --namespace=$NAMESPACE -f -
-
-echo "updating image..."
-kubectl set image \
-    deployments \
-    --namespace ingress-nginx \
-    --selector app.kubernetes.io/name=ingress-nginx \
-    nginx-ingress-controller=${DEV_IMAGE}
+kustomize build $ROOT | kubectl apply -f -

@@ -28,6 +28,7 @@ import (
 	"os/exec"
 	"reflect"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	text_template "text/template"
@@ -50,6 +51,11 @@ const (
 	nonIdempotent = "non_idempotent"
 	defBufferSize = 65535
 )
+
+// TemplateWriter is the interface to render a template
+type TemplateWriter interface {
+	Write(conf config.TemplateConfig) ([]byte, error)
+}
 
 // Template ...
 type Template struct {
@@ -85,6 +91,11 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 
 	outCmdBuf := t.bp.Get()
 	defer t.bp.Put(outCmdBuf)
+
+	// TODO: remove once we found a fix for coredump running luarocks install lrexlib
+	if runtime.GOARCH == "arm" {
+		conf.Cfg.DisableLuaRestyWAF = true
+	}
 
 	if klog.V(3) {
 		b, err := json.Marshal(conf)
@@ -126,6 +137,7 @@ var (
 		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
 		"buildLocation":              buildLocation,
 		"buildAuthLocation":          buildAuthLocation,
+		"shouldApplyGlobalAuth":      shouldApplyGlobalAuth,
 		"buildAuthResponseHeaders":   buildAuthResponseHeaders,
 		"buildProxyPass":             buildProxyPass,
 		"filterRateLimits":           filterRateLimits,
@@ -164,6 +176,7 @@ var (
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
 		"opentracingPropagateContext":        opentracingPropagateContext,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
+		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
 	}
 )
 
@@ -211,7 +224,7 @@ func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 	}
 
 	out := []string{
-		"lua_shared_dict configuration_data 5M",
+		"lua_shared_dict configuration_data 15M",
 		"lua_shared_dict certificate_data 16M",
 		"lua_shared_dict balancer_ewma 5M",
 		"lua_shared_dict balancer_ewma_last_touched_at 5M",
@@ -395,14 +408,14 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	return path
 }
 
-func buildAuthLocation(input interface{}) string {
+func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return ""
 	}
 
-	if location.ExternalAuth.URL == "" {
+	if (location.ExternalAuth.URL == "") && (!shouldApplyGlobalAuth(input, globalExternalAuthURL)) {
 		return ""
 	}
 
@@ -412,19 +425,29 @@ func buildAuthLocation(input interface{}) string {
 	return fmt.Sprintf("/_external-auth-%v", str)
 }
 
-func buildAuthResponseHeaders(input interface{}) []string {
+// shouldApplyGlobalAuth returns true only in case when ExternalAuth.URL is not set and
+// GlobalExternalAuth is set and enabled
+func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool {
 	location, ok := input.(*ingress.Location)
-	res := []string{}
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+	}
+
+	if (location.ExternalAuth.URL == "") && (globalExternalAuthURL != "") && (location.EnableGlobalAuth) {
+		return true
+	}
+
+	return false
+}
+
+func buildAuthResponseHeaders(headers []string) []string {
+	res := []string{}
+
+	if len(headers) == 0 {
 		return res
 	}
 
-	if len(location.ExternalAuth.ResponseHeaders) == 0 {
-		return res
-	}
-
-	for i, h := range location.ExternalAuth.ResponseHeaders {
+	for i, h := range headers {
 		hvar := strings.ToLower(h)
 		hvar = strings.NewReplacer("-", "_").Replace(hvar)
 		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
@@ -900,7 +923,11 @@ func buildOpentracing(input interface{}) string {
 	if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
+		if runtime.GOARCH == "arm" {
+			buf.WriteString("# Jaeger tracer is not available for ARM https://github.com/jaegertracing/jaeger-client-cpp/issues/151")
+		} else {
+			buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
+		}
 	} else if cfg.DatadogCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;")
 	}
@@ -1029,4 +1056,38 @@ func opentracingPropagateContext(loc interface{}) string {
 	}
 
 	return "opentracing_propagate_context"
+}
+
+// shouldLoadModSecurityModule determines whether or not the ModSecurity module needs to be loaded.
+// First, it checks if `enable-modsecurity` is set in the ConfigMap. If it is not, it iterates over all locations to
+// check if ModSecurity is enabled by the annotation `nginx.ingress.kubernetes.io/enable-modsecurity`.
+func shouldLoadModSecurityModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	// Determine if ModSecurity is enabled globally.
+	if cfg.EnableModsecurity {
+		return true
+	}
+
+	// If ModSecurity is not enabled globally, check if any location has it enabled via annotation.
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.ModSecurity.Enable {
+				return true
+			}
+		}
+	}
+
+	// Not enabled globally nor via annotation on a location, no need to load the module.
+	return false
 }

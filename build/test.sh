@@ -14,14 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+if [ -n "$DEBUG" ]; then
+	set -x
+fi
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
 if [ -z "${PKG}" ]; then
-    echo "PKG must be set"
-    exit 1
+  echo "PKG must be set"
+  exit 1
 fi
 
 go test -v -race -tags "cgo" \
-    $(go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e' | grep -v images | grep -v "docs/examples")
+  $(go list "${PKG}/..." | grep -v vendor | grep -v '/test/e2e' | grep -v images | grep -v "docs/examples")

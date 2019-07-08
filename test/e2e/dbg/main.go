@@ -76,6 +76,7 @@ var _ = framework.IngressNginxDescribe("Debug Tool", func() {
 
 		getCmd := "/dbg backends get " + backends[0]
 		output, err = f.ExecIngressPod(getCmd)
+		Expect(err).Should(BeNil())
 
 		var f map[string]interface{}
 		unmarshalErr := json.Unmarshal([]byte(output), &f)

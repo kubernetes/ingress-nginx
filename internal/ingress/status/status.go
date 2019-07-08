@@ -35,6 +35,7 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -52,7 +53,7 @@ type Syncer interface {
 
 type ingressLister interface {
 	// ListIngresses returns the list of Ingresses
-	ListIngresses() []*ingress.Ingress
+	ListIngresses(store.IngressFilterFunc) []*ingress.Ingress
 }
 
 // Config ...
@@ -255,7 +256,7 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 
 // updateStatus changes the status information of Ingress rules
 func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
-	ings := s.IngressLister.ListIngresses()
+	ings := s.IngressLister.ListIngresses(nil)
 
 	p := pool.NewLimited(10)
 	defer p.Close()
@@ -285,18 +286,32 @@ func runUpdate(ing *ingress.Ingress, status []apiv1.LoadBalancerIngress,
 			return nil, nil
 		}
 
-		ingClient := client.ExtensionsV1beta1().Ingresses(ing.Namespace)
+		if k8s.IsNetworkingIngressAvailable {
+			ingClient := client.NetworkingV1beta1().Ingresses(ing.Namespace)
+			currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
+			}
 
-		currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
-		}
+			klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
+			currIng.Status.LoadBalancer.Ingress = status
+			_, err = ingClient.UpdateStatus(currIng)
+			if err != nil {
+				klog.Warningf("error updating ingress rule: %v", err)
+			}
+		} else {
+			ingClient := client.ExtensionsV1beta1().Ingresses(ing.Namespace)
+			currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
+			}
 
-		klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
-		currIng.Status.LoadBalancer.Ingress = status
-		_, err = ingClient.UpdateStatus(currIng)
-		if err != nil {
-			klog.Warningf("error updating ingress rule: %v", err)
+			klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
+			currIng.Status.LoadBalancer.Ingress = status
+			_, err = ingClient.UpdateStatus(currIng)
+			if err != nil {
+				klog.Warningf("error updating ingress rule: %v", err)
+			}
 		}
 
 		return true, nil

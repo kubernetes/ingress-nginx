@@ -18,11 +18,10 @@ package ingress
 
 import (
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/ingress-nginx/internal/ingress/annotations"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
@@ -32,6 +31,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
@@ -144,11 +144,12 @@ type SessionAffinityConfig struct {
 // CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
 // +k8s:deepcopy-gen=true
 type CookieSessionAffinity struct {
-	Name      string              `json:"name"`
-	Expires   string              `json:"expires,omitempty"`
-	MaxAge    string              `json:"maxage,omitempty"`
-	Locations map[string][]string `json:"locations,omitempty"`
-	Path      string              `json:"path,omitempty"`
+	Name            string              `json:"name"`
+	Expires         string              `json:"expires,omitempty"`
+	MaxAge          string              `json:"maxage,omitempty"`
+	Locations       map[string][]string `json:"locations,omitempty"`
+	Path            string              `json:"path,omitempty"`
+	ChangeOnFailure bool                `json:"change_on_failure,omitempty"`
 }
 
 // UpstreamHashByConfig described setting from the upstream-hash-by* annotations.
@@ -246,6 +247,9 @@ type Location struct {
 	// authentication using an external provider
 	// +optional
 	ExternalAuth authreq.Config `json:"externalAuth,omitempty"`
+	// EnableGlobalAuth indicates if the access to this location requires
+	// authentication using an external provider defined in controller's config
+	EnableGlobalAuth bool `json:"enableGlobalAuth"`
 	// HTTP2PushPreload allows to configure the HTTP2 Push Preload from backend
 	// original location.
 	// +optional
@@ -357,7 +361,7 @@ type ProxyProtocol struct {
 
 // Ingress holds the definition of an Ingress plus its annotations
 type Ingress struct {
-	extensions.Ingress
+	networking.Ingress
 	ParsedAnnotations *annotations.Ingress
 }
 

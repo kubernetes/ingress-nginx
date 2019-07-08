@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -92,13 +92,13 @@ var RunID = uuid.NewUUID()
 // CreateKubeNamespace creates a new namespace in the cluster
 func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
 	ts := time.Now().UnixNano()
-	ns := &v1.Namespace{
+	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("e2e-tests-%v-%v-", baseName, ts),
 		},
 	}
 	// Be robust about making the namespace creation call.
-	var got *v1.Namespace
+	var got *corev1.Namespace
 	var err error
 
 	err = wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
@@ -171,8 +171,8 @@ func noPodsInNamespace(c kubernetes.Interface, namespace string) wait.ConditionF
 
 // WaitForPodRunningInNamespace waits a default amount of time (PodStartTimeout) for the specified pod to become running.
 // Returns an error if timeout occurs first, or pod goes in to failed state.
-func WaitForPodRunningInNamespace(c kubernetes.Interface, pod *v1.Pod) error {
-	if pod.Status.Phase == v1.PodRunning {
+func WaitForPodRunningInNamespace(c kubernetes.Interface, pod *corev1.Pod) error {
+	if pod.Status.Phase == corev1.PodRunning {
 		return nil
 	}
 	return waitTimeoutForPodRunningInNamespace(c, pod.Name, pod.Namespace, DefaultTimeout)
@@ -279,9 +279,9 @@ func podRunning(c kubernetes.Interface, podName, namespace string) wait.Conditio
 			return false, nil
 		}
 		switch pod.Status.Phase {
-		case v1.PodRunning:
+		case corev1.PodRunning:
 			return true, nil
-		case v1.PodFailed, v1.PodSucceeded:
+		case corev1.PodFailed, corev1.PodSucceeded:
 			return false, fmt.Errorf("pod ran to completion")
 		}
 		return false, nil

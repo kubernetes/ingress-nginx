@@ -15,7 +15,9 @@
 # limitations under the License.
 
 set -e
-set -x
+if ! [ -z $DEBUG ]; then
+	set -x
+fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -33,10 +35,32 @@ function on_exit {
 }
 trap on_exit EXIT
 
-kubectl apply --namespace=$NAMESPACE -f $DIR/manifests/service.yaml
+CLUSTER_WIDE="$DIR/cluster-wide-$NAMESPACE"
 
-sed "s@\${NAMESPACE}@${NAMESPACE}@" $DIR/manifests/mandatory.yaml | kubectl apply --namespace=$NAMESPACE -f -
-cat $DIR/manifests/service.yaml | kubectl apply --namespace=$NAMESPACE -f -
+mkdir "$CLUSTER_WIDE"
+
+cat << EOF > "$CLUSTER_WIDE/kustomization.yaml"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../cluster-wide
+nameSuffix: "-$NAMESPACE"
+EOF
+
+OVERLAY="$DIR/overlay-$NAMESPACE"
+
+mkdir "$OVERLAY"
+
+cat << EOF > "$OVERLAY/kustomization.yaml"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: $NAMESPACE
+bases:
+- ../overlay
+- ../cluster-wide-$NAMESPACE
+EOF
+
+kubectl apply --kustomize "$OVERLAY"
 
 # wait for the deployment and fail if there is an error before starting the execution of any test
 kubectl rollout status \

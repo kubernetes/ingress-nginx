@@ -26,7 +26,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -104,8 +104,8 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 	})
 })
 
-func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName string) *v1beta1.Ingress {
-	return &v1beta1.Ingress{
+func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName string) *extensions.Ingress {
+	return &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      host,
 			Namespace: namespace,
@@ -114,23 +114,23 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 				"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 			},
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: extensions.IngressSpec{
+			Rules: []extensions.IngressRule{
 				{
 					Host: host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
 								{
 									Path: "/",
-									Backend: v1beta1.IngressBackend{
+									Backend: extensions.IngressBackend{
 										ServiceName: "http-svc",
 										ServicePort: intstr.FromInt(80),
 									},
 								},
 								{
 									Path: pathName,
-									Backend: v1beta1.IngressBackend{
+									Backend: extensions.IngressBackend{
 										ServiceName: "http-svc",
 										ServicePort: intstr.FromInt(80),
 									},

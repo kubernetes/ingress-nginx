@@ -1,0 +1,50 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ingress-nginx
+commonLabels:
+  app.kubernetes.io/name: ingress-nginx
+  app.kubernetes.io/part-of: ingress-nginx
+resources:
+- deployment.yaml
+- role-binding.yaml
+- role.yaml
+- service-account.yaml
+- service.yaml
+images:
+- name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
+  newTag: 0.25.0
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: NGINX_CONFIGMAP_NAME
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: nginx-configuration
+- fieldref:
+    fieldPath: metadata.name
+  name: TCP_CONFIGMAP_NAME
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: tcp-services
+- fieldref:
+    fieldPath: metadata.name
+  name: UDP_CONFIGMAP_NAME
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: udp-services
+- fieldref:
+    fieldPath: metadata.name
+  name: SERVICE_NAME
+  objref:
+    apiVersion: v1
+    kind: Service
+    name: ingress-nginx
+configMapGenerator:
+- name: nginx-configuration
+- name: tcp-services
+- name: udp-services
+generatorOptions:
+  disableNameSuffixHash: true

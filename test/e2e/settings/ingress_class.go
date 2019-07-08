@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -76,11 +76,11 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 	Context("With a specific ingress-class", func() {
 		BeforeEach(func() {
 			framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-				func(deployment *appsv1beta1.Deployment) error {
+				func(deployment *appsv1.Deployment) error {
 					args := deployment.Spec.Template.Spec.Containers[0].Args
 					args = append(args, "--ingress-class=testclass")
 					deployment.Spec.Template.Spec.Containers[0].Args = args
-					_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace).Update(deployment)
+					_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
 
 					return err
 				})

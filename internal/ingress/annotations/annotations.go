@@ -24,12 +24,13 @@ import (
 	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/alias"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/authreqglobal"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/backendprotocol"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/clientbodybuffersize"
@@ -83,6 +84,7 @@ type Ingress struct {
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
 	Denied             *string
 	ExternalAuth       authreq.Config
+	EnableGlobalAuth   bool
 	HTTP2PushPreload   bool
 	Proxy              proxy.Config
 	RateLimit          ratelimit.Config
@@ -127,6 +129,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
+			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
 			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
@@ -155,7 +158,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 }
 
 // Extract extracts the annotations from an Ingress
-func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
+func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 	pia := &Ingress{
 		ObjectMeta: ing.ObjectMeta,
 	}

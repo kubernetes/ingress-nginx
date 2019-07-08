@@ -138,7 +138,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 	d, err := f.EnsureDeployment(deployment)
 	Expect(err).NotTo(HaveOccurred(), "failed to create an Influxdb deployment")
 
-	Expect(d).NotTo(BeNil(), "unexpected error creating deployement for influxdb")
+	Expect(d).NotTo(BeNil(), "unexpected error creating deployment for influxdb")
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),

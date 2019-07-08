@@ -30,6 +30,13 @@ import (
 	"k8s.io/ingress-nginx/internal/runtime"
 )
 
+var (
+	// EnableSSLChainCompletion Autocomplete SSL certificate chains with missing intermediate CA certificates.
+	EnableSSLChainCompletion = false
+	// EnableDynamicCertificates Dynamically update SSL certificates instead of reloading NGINX
+	EnableDynamicCertificates = true
+)
+
 const (
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
@@ -46,11 +53,11 @@ const (
 	// max-age is the time, in seconds, that the browser should remember that this site is only to be accessed using HTTPS.
 	hstsMaxAge = "15724800"
 
-	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
+	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"
 
-	brotliTypes = "application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
+	brotliTypes = "application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"
 
-	logFormatUpstream = `%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`
+	logFormatUpstream = `%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`
 
 	logFormatStream = `[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`
 
@@ -495,6 +502,14 @@ type Configuration struct {
 	// Default: 1
 	JaegerSamplerParam string `json:"jaeger-sampler-param"`
 
+	// JaegerSamplerHost specifies the host used for remote sampling consultation
+	// Default: http://127.0.0.1
+	JaegerSamplerHost string `json:"jaeger-sampler-host"`
+
+	// JaegerSamplerHost specifies the host used for remote sampling consultation
+	// Default: 5778
+	JaegerSamplerPort int `json:"jaeger-sampler-port"`
+
 	// DatadogCollectorHost specifies the datadog agent host to use when uploading traces
 	DatadogCollectorHost string `json:"datadog-collector-host"`
 
@@ -563,6 +578,11 @@ type Configuration struct {
 	// should not get authenticated
 	NoAuthLocations string `json:"no-auth-locations"`
 
+	// GlobalExternalAuth indicates the access to all locations requires
+	// authentication using an external provider
+	// +optional
+	GlobalExternalAuth GlobalExternalAuth `json:"global-external-auth"`
+
 	// DisableLuaRestyWAF disables lua-resty-waf globally regardless
 	// of whether there's an ingress that has enabled the WAF using annotation
 	DisableLuaRestyWAF bool `json:"disable-lua-resty-waf"`
@@ -592,11 +612,13 @@ func NewDefault() Configuration {
 	defBlockEntity := make([]string, 0)
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
+	defResponseHeaders := make([]string, 0)
 
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
 	defProxyDeadlineDuration := time.Duration(5) * time.Second
+	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", append(defResponseHeaders, ""), "", ""}
 
 	cfg := Configuration{
 		AllowBackendServerHeader:         false,
@@ -707,6 +729,8 @@ func NewDefault() Configuration {
 		JaegerServiceName:            "nginx",
 		JaegerSamplerType:            "const",
 		JaegerSamplerParam:           "1",
+		JaegerSamplerPort:            5778,
+		JaegerSamplerHost:            "http://127.0.0.1",
 		DatadogServiceName:           "nginx",
 		DatadogCollectorPort:         8126,
 		DatadogOperationNameOverride: "nginx.handle",
@@ -715,6 +739,7 @@ func NewDefault() Configuration {
 		SyslogPort:                   514,
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",
+		GlobalExternalAuth:           defGlobalExternalAuth,
 	}
 
 	if klog.V(5) {
@@ -737,25 +762,25 @@ func (cfg Configuration) BuildLogFormatUpstream() string {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
-	ProxySetHeaders            map[string]string
-	AddHeaders                 map[string]string
-	BacklogSize                int
-	Backends                   []*ingress.Backend
-	PassthroughBackends        []*ingress.SSLPassthroughBackend
-	Servers                    []*ingress.Server
-	TCPBackends                []ingress.L4Service
-	UDPBackends                []ingress.L4Service
-	HealthzURI                 string
-	Cfg                        Configuration
-	IsIPV6Enabled              bool
-	IsSSLPassthroughEnabled    bool
-	NginxStatusIpv4Whitelist   []string
-	NginxStatusIpv6Whitelist   []string
-	RedirectServers            interface{}
-	ListenPorts                *ListenPorts
-	PublishService             *apiv1.Service
-	DynamicCertificatesEnabled bool
-	EnableMetrics              bool
+	ProxySetHeaders           map[string]string
+	AddHeaders                map[string]string
+	BacklogSize               int
+	Backends                  []*ingress.Backend
+	PassthroughBackends       []*ingress.SSLPassthroughBackend
+	Servers                   []*ingress.Server
+	TCPBackends               []ingress.L4Service
+	UDPBackends               []ingress.L4Service
+	HealthzURI                string
+	Cfg                       Configuration
+	IsIPV6Enabled             bool
+	IsSSLPassthroughEnabled   bool
+	NginxStatusIpv4Whitelist  []string
+	NginxStatusIpv6Whitelist  []string
+	RedirectServers           interface{}
+	ListenPorts               *ListenPorts
+	PublishService            *apiv1.Service
+	EnableDynamicCertificates bool
+	EnableMetrics             bool
 
 	PID          string
 	StatusSocket string
@@ -771,4 +796,17 @@ type ListenPorts struct {
 	Health   int
 	Default  int
 	SSLProxy int
+}
+
+// GlobalExternalAuth describe external authentication configuration for the
+// NGINX Ingress controller
+type GlobalExternalAuth struct {
+	URL string `json:"url"`
+	// Host contains the hostname defined in the URL
+	Host            string   `json:"host"`
+	SigninURL       string   `json:"signinUrl"`
+	Method          string   `json:"method"`
+	ResponseHeaders []string `json:"responseHeaders,omitempty"`
+	RequestRedirect string   `json:"requestRedirect"`
+	AuthSnippet     string   `json:"authSnippet"`
 }

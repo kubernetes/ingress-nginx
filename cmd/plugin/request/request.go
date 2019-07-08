@@ -21,12 +21,13 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	appsv1client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	extensions "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	typednetworking "k8s.io/client-go/kubernetes/typed/networking/v1beta1"
+
 	"k8s.io/ingress-nginx/cmd/plugin/util"
 )
 
@@ -90,20 +91,20 @@ func GetDeployments(flags *genericclioptions.ConfigFlags, namespace string) ([]a
 }
 
 // GetIngressDefinitions returns an array of Ingress resource definitions
-func GetIngressDefinitions(flags *genericclioptions.ConfigFlags, namespace string) ([]v1beta1.Ingress, error) {
+func GetIngressDefinitions(flags *genericclioptions.ConfigFlags, namespace string) ([]networking.Ingress, error) {
 	rawConfig, err := flags.ToRESTConfig()
 	if err != nil {
-		return make([]v1beta1.Ingress, 0), err
+		return make([]networking.Ingress, 0), err
 	}
 
-	api, err := extensions.NewForConfig(rawConfig)
+	api, err := typednetworking.NewForConfig(rawConfig)
 	if err != nil {
-		return make([]v1beta1.Ingress, 0), err
+		return make([]networking.Ingress, 0), err
 	}
 
 	pods, err := api.Ingresses(namespace).List(metav1.ListOptions{})
 	if err != nil {
-		return make([]v1beta1.Ingress, 0), err
+		return make([]networking.Ingress, 0), err
 	}
 
 	return pods.Items, nil
