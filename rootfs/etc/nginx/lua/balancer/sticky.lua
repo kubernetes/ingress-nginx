@@ -132,13 +132,16 @@ function _M.balance(self)
   end
 
   local last_failure = self.get_last_failure()
-  local should_pick_new_upstream = last_failure ~= nil and self.cookie_session_affinity.change_on_failure or upstream_from_cookie == nil
+  local should_pick_new_upstream = last_failure ~= nil and self.cookie_session_affinity.change_on_failure or
+    upstream_from_cookie == nil
 
   if not should_pick_new_upstream then
     return upstream_from_cookie
   end
 
-  local new_upstream, key = pick_new_upstream(self)
+  local new_upstream
+
+  new_upstream, key = pick_new_upstream(self)
   if not new_upstream then
     ngx.log(ngx.WARN, string.format("failed to get new upstream; using upstream %s", new_upstream))
   elseif should_set_cookie(self) then

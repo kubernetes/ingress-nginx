@@ -59,13 +59,14 @@ local function handle_servers()
   local err_buf = {}
   for _, server in ipairs(servers) do
     if server.hostname and server.sslCert.pemCertKey then
-      local success, err, forcible = certificate_data:set(server.hostname, server.sslCert.pemCertKey)
+      local success, set_err, forcible = certificate_data:set(server.hostname, server.sslCert.pemCertKey)
       if not success then
-        local err_msg = string.format("error setting certificate for %s: %s\n", server.hostname, tostring(err))
+        local err_msg = string.format("error setting certificate for %s: %s\n", server.hostname, tostring(set_err))
         table.insert(err_buf, err_msg)
       end
       if forcible then
-        local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s", server.hostname)
+        local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s",
+          server.hostname)
         ngx.log(ngx.WARN, msg)
       end
     else
