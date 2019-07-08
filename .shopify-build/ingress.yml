@@ -34,3 +34,6 @@ steps:
   - cd $GOPATH/src/$PKG && build/run-e2e-suite.sh
   env:
     PKG: k8s.io/ingress-nginx
+    E2E_NODES: 10
+    SLOW_E2E_THRESHOLD: 50
+    K8S_VERSION: v1.14.1
