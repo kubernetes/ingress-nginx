@@ -64,6 +64,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
+|[nginx.ingress.kubernetes.io/proxy-http-version](#proxy-http-version)|"1.0" or "1.1"|
 |[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[nginx.ingress.kubernetes.io/satisfy](#satisfy)|string|
@@ -567,6 +568,15 @@ By default proxy buffer size is set as "4k"
 To configure this setting globally, set `proxy-buffer-size` in [NGINX ConfigMap](./configmap.md#proxy-buffer-size). To use custom values in an Ingress rule, define this annotation:
 ```yaml
 nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+```
+
+### Proxy HTTP version
+
+Using this annotation sets the [`proxy_http_version`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version) that the Nginx reverse proxy will use to communicate with the backend.
+By default this is set to "1.1".
+
+```yaml
+nginx.ingress.kubernetes.io/proxy-http-version: "1.0"
 ```
 
 ### SSL ciphers

@@ -437,6 +437,10 @@ type Configuration struct {
 	// Default: 1
 	ProxyStreamResponses int `json:"proxy-stream-responses,omitempty"`
 
+	// Modifies the HTTP version the proxy uses to interact with the backend.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
+	ProxyHTTPVersion string `json:"proxy-http-version"`
+
 	// Sets the ipv4 addresses on which the server will accept requests.
 	BindAddressIpv4 []string `json:"bind-address-ipv4,omitempty"`
 
@@ -715,6 +719,7 @@ func NewDefault() Configuration {
 			LimitRate:                0,
 			LimitRateAfter:           0,
 			ProxyBuffering:           "off",
+			ProxyHTTPVersion:         "1.1",
 		},
 		UpstreamKeepaliveConnections: 32,
 		UpstreamKeepaliveTimeout:     60,
