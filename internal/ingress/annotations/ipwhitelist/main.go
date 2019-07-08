@@ -45,12 +45,7 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 		return false
 	}
 
-	match := sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
-	if !match {
-		return false
-	}
-
-	return true
+	return sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
 }
 
 type ipwhitelist struct {

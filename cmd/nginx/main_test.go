@@ -88,8 +88,6 @@ func TestHandleSigterm(t *testing.T) {
 		if code != 1 {
 			t.Errorf("Expected exit code 1 but %d received", code)
 		}
-
-		return
 	})
 
 	time.Sleep(1 * time.Second)

@@ -53,7 +53,7 @@ func GetNamedPod(flags *genericclioptions.ConfigFlags, name string) (apiv1.Pod, 
 		}
 	}
 
-	return apiv1.Pod{}, fmt.Errorf("Pod %v not found in namespace %v", name, util.GetNamespace(flags))
+	return apiv1.Pod{}, fmt.Errorf("pod %v not found in namespace %v", name, util.GetNamespace(flags))
 }
 
 // GetDeploymentPod finds a pod from a given deployment
@@ -64,7 +64,7 @@ func GetDeploymentPod(flags *genericclioptions.ConfigFlags, deployment string) (
 	}
 
 	if len(ings) == 0 {
-		return apiv1.Pod{}, fmt.Errorf("No pods for deployment %v found in namespace %v", deployment, util.GetNamespace(flags))
+		return apiv1.Pod{}, fmt.Errorf("no pods for deployment %v found in namespace %v", deployment, util.GetNamespace(flags))
 	}
 
 	return ings[0], nil
@@ -222,7 +222,7 @@ func GetServiceByName(flags *genericclioptions.ConfigFlags, name string, service
 		}
 	}
 
-	return apiv1.Service{}, fmt.Errorf("Could not find service %v in namespace %v", name, util.GetNamespace(flags))
+	return apiv1.Service{}, fmt.Errorf("could not find service %v in namespace %v", name, util.GetNamespace(flags))
 }
 
 func getPods(flags *genericclioptions.ConfigFlags) ([]apiv1.Pod, error) {
