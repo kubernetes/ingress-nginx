@@ -184,10 +184,6 @@ func StoreSSLCertOnDisk(fs file.Filesystem, name string, sslCert *ingress.SSLCer
 	return nil
 }
 
-func isSSLCertStoredOnDisk(sslCert *ingress.SSLCert) bool {
-	return len(sslCert.PemFileName) > 0
-}
-
 // ConfigureCACertWithCertAndKey appends ca into existing PEM file consisting of cert and key
 // and sets relevant fields in sslCert object
 func ConfigureCACertWithCertAndKey(fs file.Filesystem, name string, ca []byte, sslCert *ingress.SSLCert) error {

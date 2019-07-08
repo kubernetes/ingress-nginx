@@ -202,19 +202,19 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --http-port", *httpPort)
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --http-port", *httpPort)
 	}
 
 	if !ing_net.IsPortAvailable(*httpsPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --https-port", *httpsPort)
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --https-port", *httpsPort)
 	}
 
 	if !ing_net.IsPortAvailable(*defServerPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --default-server-port", *defServerPort)
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --default-server-port", *defServerPort)
 	}
 
 	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)
 	}
 
 	if !*enableSSLChainCompletion {
@@ -222,7 +222,7 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 	}
 
 	if *publishSvc != "" && *publishStatusAddress != "" {
-		return false, nil, fmt.Errorf("Flags --publish-service and --publish-status-address are mutually exclusive")
+		return false, nil, fmt.Errorf("flags --publish-service and --publish-status-address are mutually exclusive")
 	}
 
 	nginx.HealthPath = *defHealthzURL

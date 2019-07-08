@@ -51,8 +51,6 @@ import (
 	"k8s.io/ingress-nginx/internal/net/ssl"
 )
 
-const fakeCertificateName = "default-fake-certificate"
-
 type fakeIngressStore struct {
 	ingresses []*ingress.Ingress
 }
