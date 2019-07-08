@@ -5,6 +5,13 @@ sudo: required
 services:
   - docker
 
+# FIXME(#46924): these two commands are required to enable IPv6,
+# they shouldn't exist, please revert once more official solutions appeared.
+# see https://github.com/travis-ci/travis-ci/issues/8891#issuecomment-353403729
+before_install:
+  - echo '{"ipv6":true,"fixed-cidr-v6":"2001:db8:1::/64"}' | sudo tee /etc/docker/daemon.json
+  - sudo service docker restart
+
 language: generic
 
 notifications:
@@ -15,6 +22,8 @@ notifications:
 # New secure variables can be added using travis encrypt -r kubernetes/ingress-nginx --add K=V
 env:
   global:
+    - DOCKER=docker
+    - SKIP_SNAPSHOT=true
     - GH_REF=github.com/kubernetes/ingress-nginx
 branches:
   only:
