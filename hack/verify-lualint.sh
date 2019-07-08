@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2018 The Kubernetes Authors.
+# Copyright 2014 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -n "$DEBUG" ]; then
-	set -x
-fi
-
 set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${PKG}" ]; then
-  echo "PKG must be set"
-  exit 1
-fi
-
-hack/verify-all.sh
+luacheck --codes -q rootfs/etc/nginx/lua/
