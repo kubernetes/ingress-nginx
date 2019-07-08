@@ -78,15 +78,15 @@ end
 
 function _M.balance(self)
   local peers = self.peers
-  local endpoint, score = peers[1], -1
+  local endpoint, ewma_score = peers[1], -1
 
   if #peers > 1 then
     local k = (#peers < PICK_SET_SIZE) and #peers or PICK_SET_SIZE
     local peer_copy = util.deepcopy(peers)
-    endpoint, score = pick_and_score(self, peer_copy, k)
+    endpoint, ewma_score = pick_and_score(self, peer_copy, k)
   end
 
-  ngx.var.balancer_ewma_score = score
+  ngx.var.balancer_ewma_score = ewma_score
 
   -- TODO(elvinefendi) move this processing to _M.sync
   return endpoint.address .. ":" .. endpoint.port
