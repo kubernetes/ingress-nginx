@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  X-Different-Name: "true"
+  X-Request-Start: t=${msec}
+  X-Using-Nginx-Controller: "true"
+kind: ConfigMap
+metadata:
+  name: custom-headers
+  namespace: ingress-nginx

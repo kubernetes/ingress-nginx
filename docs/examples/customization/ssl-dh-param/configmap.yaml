@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  ssl-dh-param: "ingress-nginx/lb-dhparam"
+kind: ConfigMap
+metadata:
+  name: nginx-configuration
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx

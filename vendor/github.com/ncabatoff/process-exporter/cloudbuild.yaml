@@ -1,0 +1,32 @@
+steps:
+# - name: string
+#   args: string
+#   env: string
+#   dir: string
+#   id: string
+#   waitFor: string
+#   entrypoint: string
+#   secretEnv: string
+# - name: gcr.io/cloud-builders/curl
+#   args: ['-L', '-s', '-o', 'dep', 'https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64']
+# - name: ubuntu
+#   args: ['chmod', '+x', 'dep']
+  # Setup the workspace
+  - name: gcr.io/cloud-builders/go
+    env: ['PROJECT_ROOT=github.com/ncabatoff/process-exporter']
+    args: ['env']
+  # Run dep in the workspace created in previous step
+# - name: gcr.io/cloud-builders/go
+#   entrypoint: /bin/sh
+#   dir: gopath/src/github.com
+#   env: ['GOPATH=/workspace/gopath']
+#   args: ['-c', 'cd ncabatoff/process-exporter && /workspace/dep ensure -vendor-only' ]
+  - name: gcr.io/cloud-builders/go
+    entrypoint: /bin/sh
+    dir: gopath/src/github.com
+    env: ['GOPATH=/workspace/gopath']
+    args: ['-c', 'make -C ncabatoff/process-exporter style vet test build integ install' ]
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '--tag=gcr.io/$PROJECT_ID/process-exporter', '.', '-f', 'Dockerfile.cloudbuild']
+images: ['gcr.io/$PROJECT_ID/process-exporter']
+    

@@ -1,0 +1,257 @@
+{
+	"backends": [{
+		"name": "upstream-default-backend",
+		"service": null,
+		"port": 0,
+		"secure": false,
+		"secureCert": {
+			"secret": "",
+			"caFilename": "",
+			"pemSha": ""
+		},
+		"sslPassthrough": false,
+		"endpoints": [{
+			"address": "172.17.0.8",
+			"port": "8080",
+			"maxFails": 0,
+			"failTimeout": 0,
+			"target": {
+				"kind": "Pod",
+				"namespace": "kube-system",
+				"name": "kubernetes-dashboard-m3qc0",
+				"uid": "b9511631-5176-11e7-b3db-080027494b5d",
+				"resourceVersion": "3700964"
+			}			
+		}],
+		"SessionAffinity": {
+			"name": "",
+			"CookieSessionAffinity": {
+				"name": ""
+			}
+		}
+	}, {
+		"name": "deis-deis-controller-8000",
+		"service": {
+			"metadata": {
+				"name": "deis-controller",
+				"namespace": "deis",
+				"selfLink": "/api/v1/namespaces/deis/services/deis-controller",
+				"uid": "1cba01a8-50b0-11e7-a384-0800270f5693",
+				"resourceVersion": "532",
+				"creationTimestamp": "2017-06-14T03:18:18Z",
+				"labels": {
+					"heritage": "deis"
+				}
+			},
+			"spec": {
+				"ports": [{
+					"name": "http",
+					"protocol": "TCP",
+					"port": 8000,
+					"targetPort": 8000,
+					"nodePort": 30171
+				}],
+				"selector": {
+					"app": "deis-controller"
+				},
+				"clusterIP": "10.0.0.198",
+				"type": "NodePort",
+				"sessionAffinity": "None"
+			},
+			"status": {
+				"loadBalancer": {}
+			}
+		},
+		"port": 8000,
+		"secure": false,
+		"secureCert": {
+			"secret": "",
+			"caFilename": "",
+			"pemSha": ""
+		},
+		"sslPassthrough": false,
+		"endpoints": [{
+			"address": "172.17.0.7",
+			"port": "8000",
+			"maxFails": 0,
+			"failTimeout": 0
+		}],
+		"SessionAffinity": {
+			"name": "",
+			"CookieSessionAffinity": {
+				"name": ""
+			}
+		}
+	}],
+	"servers": [{
+		"hostname": "_",
+		"sslPassthrough": false,
+		"sslCertificate": "/ingress-controller/ssl/default-fake-certificate.pem",
+		"sslExpireTime": "0001-01-01T00:00:00Z",
+		"sslPemChecksum": "123b44425920a2e4825ae779fba0e6e07fbac03d",
+		"locations": [{
+			"path": "/",
+			"isDefBackend": true,
+			"backend": "upstream-default-backend",
+			"service": null,
+			"port": 0,
+			"basicDigestAuth": {
+				"type": "",
+				"realm": "",
+				"file": "",
+				"secured": false
+			},
+			"Denied": null,
+			"externalAuth": {
+				"url": "",
+				"host": "",
+				"signinUrl": "",
+				"method": "",
+				"sendBody": false,
+				"responseHeaders": null
+			},
+			"rateLimit": {
+				"connections": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rps": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				}
+			},
+			"redirect": {
+				"target": "",
+				"sslRedirect": false,
+				"forceSSLRedirect": false,
+				"appRoot": ""
+			},
+			"whitelist": {
+				"cidr": null
+			},
+			"proxy": {
+				"bodySize": "1g",
+				"conectTimeout": 5,
+				"sendTimeout": 60,
+				"readTimeout": 60,
+				"bufferSize": "4k",
+				"cookieDomain": "off",
+				"cookiePath": "off"
+			},
+			"certificateAuth": {
+				"AuthSSLCert": {
+					"secret": "",
+					"caFilename": "",
+					"pemSha": ""
+				},
+				"validationDepth": 0
+			},
+			"use-port-in-redirects": false,
+			"configuration-snippet": ""
+		}]
+	}, {
+		"hostname": "deis.minikube",
+		"sslPassthrough": false,
+		"sslCertificate": "",
+		"sslExpireTime": "0001-01-01T00:00:00Z",
+		"sslPemChecksum": "",
+		"locations": [{
+			"path": "/",
+			"isDefBackend": false,
+			"backend": "deis-deis-controller-8000",
+			"service": {
+				"metadata": {
+					"name": "deis-controller",
+					"namespace": "deis",
+					"selfLink": "/api/v1/namespaces/deis/services/deis-controller",
+					"uid": "1cba01a8-50b0-11e7-a384-0800270f5693",
+					"resourceVersion": "532",
+					"creationTimestamp": "2017-06-14T03:18:18Z",
+					"labels": {
+						"heritage": "deis"
+					}
+				},
+				"spec": {
+					"ports": [{
+						"name": "http",
+						"protocol": "TCP",
+						"port": 8000,
+						"targetPort": 8000,
+						"nodePort": 30171
+					}],
+					"selector": {
+						"app": "deis-controller"
+					},
+					"clusterIP": "10.0.0.198",
+					"type": "NodePort",
+					"sessionAffinity": "None"
+				},
+				"status": {
+					"loadBalancer": {}
+				}
+			},
+			"port": 8000,
+			"basicDigestAuth": {
+				"type": "",
+				"realm": "",
+				"file": "",
+				"secured": false
+			},
+			"Denied": null,
+			"externalAuth": {
+				"url": "",
+				"host": "",
+				"signinUrl": "",
+				"method": "",
+				"sendBody": false,
+				"responseHeaders": null
+			},
+			"rateLimit": {
+				"connections": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rps": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				}
+			},
+			"redirect": {
+				"target": "",
+				"sslRedirect": true,
+				"forceSSLRedirect": false,
+				"appRoot": ""
+			},
+			"whitelist": {
+				"cidr": null
+			},
+			"proxy": {
+				"bodySize": "1g",
+				"conectTimeout": 5,
+				"sendTimeout": 60,
+				"readTimeout": 60,
+				"bufferSize": "4k",
+				"cookieDomain": "off",
+				"cookiePath": "off"
+			},
+			"certificateAuth": {
+				"AuthSSLCert": {
+					"secret": "",
+					"caFilename": "",
+					"pemSha": ""
+				},
+				"validationDepth": 0
+			},
+			"use-port-in-redirects": false,
+			"configuration-snippet": ""
+		}]
+	}]
+}

@@ -1,0 +1,39 @@
+builds:
+  - main: cmd/process-exporter/main.go
+    binary: process-exporter
+    flags: -tags netgo
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - 386
+      - arm
+      - arm64
+      - ppc64
+      - ppc64le
+archive:
+  name_template: "process-exporter-{{ .Version }}.{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  wrap_in_directory: true
+nfpm:
+  homepage: https://github.com/ncabatoff/process-exporter
+  maintainer: nick.cabatoff+procexp@gmail.com
+  description: Prometheus exporter to report on processes running
+  license: MIT
+  formats:
+    - deb
+    - rpm
+  bindir: /usr/bin
+  files:
+    "packaging/process-exporter.service": "/lib/systemd/system/process-exporter.service"
+  config_files:
+    "packaging/conf/all.yaml": "/etc/process-exporter/all.yaml"
+  scripts:
+    postinstall: "packaging/scripts/postinstall.sh"
+    postremove: "packaging/scripts/postremove.sh"
+    preremove: "packaging/scripts/preremove.sh"
+release:
+  github:
+    owner: ncabatoff
+    name: process-exporter
+  draft: false
+  prerelease: true

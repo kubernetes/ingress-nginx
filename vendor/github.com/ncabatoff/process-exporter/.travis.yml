@@ -1,0 +1,29 @@
+services:
+  - docker
+
+language: go
+
+env:
+  - IMAGE_TAG=`echo $TRAVIS_TAG|sed s/v//`
+
+go:
+  - 1.10.x
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y rpm
+
+go_import_path: github.com/ncabatoff/process-exporter
+
+script:
+  - make style vet test build smoke docker
+  - if [ -n "$IMAGE_TAG" ]; then make docker DOCKER_IMAGE_TAG=$IMAGE_TAG; fi
+
+after_success:
+  - docker login -u $DOCKER_USER -p "$DOCKER_PASSWORD"
+  - >
+    test -n "$TRAVIS_TAG" && 
+    docker tag ncabatoff/process-exporter:$IMAGE_TAG ncabatoff/process-exporter:latest && 
+    docker push ncabatoff/process-exporter:$IMAGE_TAG && 
+    docker push ncabatoff/process-exporter:latest && 
+    curl -sL http://git.io/goreleaser | bash
