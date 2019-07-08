@@ -18,10 +18,19 @@ steps:
     BUSTED_ARGS: -v --pattern=_test
 
 - label: Go unit test
-  timeout: 50m
+  timeout: 15m
   run:
   - mkdir -p $GOPATH/src/$PKG
   - cp -r /app/* $GOPATH/src/$PKG/
   - cd $GOPATH/src/$PKG && build/cover.sh
+  env:
+    PKG: k8s.io/ingress-nginx
+
+- label: E2e test
+  timeout: 45m
+  run:
+  - mkdir -p $GOPATH/src/$PKG
+  - cp -r /app/* $GOPATH/src/$PKG/
+  - cd $GOPATH/src/$PKG && build/run-e2e-suite.sh
   env:
     PKG: k8s.io/ingress-nginx
