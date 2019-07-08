@@ -83,7 +83,7 @@ func TestGetEndpoints(t *testing.T) {
 			&corev1.Service{
 				Spec: corev1.ServiceSpec{
 					Type:         corev1.ServiceTypeExternalName,
-					ExternalName: "10.0.0.1.xip.io",
+					ExternalName: "www.10.0.0.1.xip.io",
 					Ports: []corev1.ServicePort{
 						{
 							Name:       "default",
@@ -102,7 +102,7 @@ func TestGetEndpoints(t *testing.T) {
 			},
 			[]ingress.Endpoint{
 				{
-					Address: "10.0.0.1.xip.io",
+					Address: "www.10.0.0.1.xip.io",
 					Port:    "80",
 				},
 			},

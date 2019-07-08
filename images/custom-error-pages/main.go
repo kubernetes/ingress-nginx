@@ -106,6 +106,7 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		cext, err := mime.ExtensionsByType(format)
 		if err != nil {
 			log.Printf("unexpected error reading media type extension: %v. Using %v", err, ext)
+			format = "text/html"
 		} else if len(cext) == 0 {
 			log.Printf("couldn't get media type extension. Using %v", ext)
 		} else {

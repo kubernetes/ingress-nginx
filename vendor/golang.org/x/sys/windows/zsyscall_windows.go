@@ -77,7 +77,6 @@ var (
 	procCreateFileW                        = modkernel32.NewProc("CreateFileW")
 	procReadFile                           = modkernel32.NewProc("ReadFile")
 	procWriteFile                          = modkernel32.NewProc("WriteFile")
-	procGetOverlappedResult                = modkernel32.NewProc("GetOverlappedResult")
 	procSetFilePointer                     = modkernel32.NewProc("SetFilePointer")
 	procCloseHandle                        = modkernel32.NewProc("CloseHandle")
 	procGetStdHandle                       = modkernel32.NewProc("GetStdHandle")
@@ -247,7 +246,6 @@ var (
 	procGetLengthSid                       = modadvapi32.NewProc("GetLengthSid")
 	procCopySid                            = modadvapi32.NewProc("CopySid")
 	procAllocateAndInitializeSid           = modadvapi32.NewProc("AllocateAndInitializeSid")
-	procCreateWellKnownSid                 = modadvapi32.NewProc("CreateWellKnownSid")
 	procFreeSid                            = modadvapi32.NewProc("FreeSid")
 	procEqualSid                           = modadvapi32.NewProc("EqualSid")
 	procCheckTokenMembership               = modadvapi32.NewProc("CheckTokenMembership")
@@ -645,24 +643,6 @@ func WriteFile(handle Handle, buf []byte, done *uint32, overlapped *Overlapped) 
 		_p0 = &buf[0]
 	}
 	r1, _, e1 := syscall.Syscall6(procWriteFile.Addr(), 5, uintptr(handle), uintptr(unsafe.Pointer(_p0)), uintptr(len(buf)), uintptr(unsafe.Pointer(done)), uintptr(unsafe.Pointer(overlapped)), 0)
-	if r1 == 0 {
-		if e1 != 0 {
-			err = errnoErr(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
-	return
-}
-
-func GetOverlappedResult(handle Handle, overlapped *Overlapped, done *uint32, wait bool) (err error) {
-	var _p0 uint32
-	if wait {
-		_p0 = 1
-	} else {
-		_p0 = 0
-	}
-	r1, _, e1 := syscall.Syscall6(procGetOverlappedResult.Addr(), 4, uintptr(handle), uintptr(unsafe.Pointer(overlapped)), uintptr(unsafe.Pointer(done)), uintptr(_p0), 0, 0)
 	if r1 == 0 {
 		if e1 != 0 {
 			err = errnoErr(e1)
@@ -2664,18 +2644,6 @@ func CopySid(destSidLen uint32, destSid *SID, srcSid *SID) (err error) {
 
 func AllocateAndInitializeSid(identAuth *SidIdentifierAuthority, subAuth byte, subAuth0 uint32, subAuth1 uint32, subAuth2 uint32, subAuth3 uint32, subAuth4 uint32, subAuth5 uint32, subAuth6 uint32, subAuth7 uint32, sid **SID) (err error) {
 	r1, _, e1 := syscall.Syscall12(procAllocateAndInitializeSid.Addr(), 11, uintptr(unsafe.Pointer(identAuth)), uintptr(subAuth), uintptr(subAuth0), uintptr(subAuth1), uintptr(subAuth2), uintptr(subAuth3), uintptr(subAuth4), uintptr(subAuth5), uintptr(subAuth6), uintptr(subAuth7), uintptr(unsafe.Pointer(sid)), 0)
-	if r1 == 0 {
-		if e1 != 0 {
-			err = errnoErr(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
-	return
-}
-
-func createWellKnownSid(sidType WELL_KNOWN_SID_TYPE, domainSid *SID, sid *SID, sizeSid *uint32) (err error) {
-	r1, _, e1 := syscall.Syscall6(procCreateWellKnownSid.Addr(), 4, uintptr(sidType), uintptr(unsafe.Pointer(domainSid)), uintptr(unsafe.Pointer(sid)), uintptr(unsafe.Pointer(sizeSid)), 0, 0)
 	if r1 == 0 {
 		if e1 != 0 {
 			err = errnoErr(e1)

@@ -20,16 +20,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/imdario/mergo"
 	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/k8s"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 )
 
@@ -103,7 +101,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
 		}
 
-		if !s.isDynamicCertificatesEnabled || len(ca) > 0 {
+		if !ngx_config.EnableDynamicCertificates || len(ca) > 0 {
 			err = ssl.StoreSSLCertOnDisk(s.filesystem, nsSecName, sslCert)
 			if err != nil {
 				return nil, fmt.Errorf("error while storing certificate and key: %v", err)
@@ -152,63 +150,12 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 	return sslCert, nil
 }
 
-func (s *k8sStore) checkSSLChainIssues() {
-	for _, item := range s.ListLocalSSLCerts() {
-		secrKey := k8s.MetaNamespaceKey(item)
-		secret, err := s.GetLocalSSLCert(secrKey)
-		if err != nil {
-			continue
-		}
-
-		if secret.FullChainPemFileName != "" {
-			// chain already checked
-			continue
-		}
-
-		data, err := ssl.FullChainCert(secret.PemFileName, s.filesystem)
-		if err != nil {
-			klog.Errorf("Error generating CA certificate chain for Secret %q: %v", secrKey, err)
-			continue
-		}
-
-		fullChainPemFileName := fmt.Sprintf("%v/%v-%v-full-chain.pem", file.DefaultSSLDirectory, secret.Namespace, secret.Name)
-
-		file, err := s.filesystem.Create(fullChainPemFileName)
-		if err != nil {
-			klog.Errorf("Error creating SSL certificate file for Secret %q: %v", secrKey, err)
-			continue
-		}
-
-		_, err = file.Write(data)
-		if err != nil {
-			klog.Errorf("Error creating SSL certificate for Secret %q: %v", secrKey, err)
-			continue
-		}
-
-		dst := &ingress.SSLCert{}
-
-		err = mergo.MergeWithOverwrite(dst, secret)
-		if err != nil {
-			klog.Errorf("Error creating SSL certificate for Secret %q: %v", secrKey, err)
-			continue
-		}
-
-		dst.FullChainPemFileName = fullChainPemFileName
-
-		klog.Infof("Updating local copy of SSL certificate %q with missing intermediate CA certs", secrKey)
-		s.sslStore.Update(secrKey, dst)
-		// this update must trigger an update
-		// (like an update event from a change in Ingress)
-		s.sendDummyEvent()
-	}
-}
-
 // sendDummyEvent sends a dummy event to trigger an update
 // This is used in when a secret change
 func (s *k8sStore) sendDummyEvent() {
 	s.updateCh.In() <- Event{
 		Type: UpdateEvent,
-		Obj: &extensions.Ingress{
+		Obj: &networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
 				Namespace: "dummy",

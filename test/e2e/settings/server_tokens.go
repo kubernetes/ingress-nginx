@@ -21,7 +21,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 
-	"k8s.io/api/extensions/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -53,22 +53,22 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 	It("should exists Server header in the response when is enabled", func() {
 		f.UpdateNginxConfigMapData(serverTokens, "true")
 
-		f.EnsureIngress(&v1beta1.Ingress{
+		f.EnsureIngress(&extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        serverTokens,
 				Namespace:   f.Namespace,
 				Annotations: map[string]string{},
 			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
+			Spec: extensions.IngressSpec{
+				Rules: []extensions.IngressRule{
 					{
 						Host: serverTokens,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
+						IngressRuleValue: extensions.IngressRuleValue{
+							HTTP: &extensions.HTTPIngressRuleValue{
+								Paths: []extensions.HTTPIngressPath{
 									{
 										Path: "/",
-										Backend: v1beta1.IngressBackend{
+										Backend: extensions.IngressBackend{
 											ServiceName: "http-svc",
 											ServicePort: intstr.FromInt(80),
 										},

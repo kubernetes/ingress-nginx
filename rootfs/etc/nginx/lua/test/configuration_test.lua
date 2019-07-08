@@ -208,7 +208,7 @@ describe("Configuration", function()
 
         it("should log an err and set status to Internal Server Error when a certificate cannot be set", function()
             ngx.var.request_method = "POST"
-            ngx.shared.certificate_data.safe_set = function(self, data) return false, "error" end
+            ngx.shared.certificate_data.set = function(self, data) return false, "error", nil end
             local mock_servers = cjson.encode({
                 {
                     hostname = "hostname",
@@ -232,9 +232,14 @@ describe("Configuration", function()
             assert.same(ngx.status, ngx.HTTP_INTERNAL_SERVER_ERROR)
         end)
 
-        it("should log an err, set status to Internal Server Error, and short circuit when shared dictionary is full", function()
+        it("logs a warning when entry is forcibly stored", function()
+            local stored_entries = {}
+
             ngx.var.request_method = "POST"
-            ngx.shared.certificate_data.safe_set = function(self, data) return false, "no memory" end
+            ngx.shared.certificate_data.set = function(self, key, value)
+              stored_entries[key] = value
+              return true, nil, true
+            end
             local mock_servers = cjson.encode({
                 {
                     hostname = "hostname",
@@ -252,11 +257,11 @@ describe("Configuration", function()
             ngx.req.get_body_data = function() return mock_servers end
 
             local s1 = spy.on(ngx, "log")
-            local s2 = spy.on(ngx.shared.certificate_data, "safe_set")
             assert.has_no.errors(configuration.handle_servers)
-            assert.spy(s1).was_called_with(ngx.ERR, "no memory in certificate_data dictionary")
-            assert.spy(s2).was_not_called_with("hostname2", "pemCertKey2")
-            assert.same(ngx.status, ngx.HTTP_INTERNAL_SERVER_ERROR)
+            assert.spy(s1).was_called_with(ngx.WARN, "certificate_data dictionary is full, LRU entry has been removed to store hostname")
+            assert.equal("pemCertKey", stored_entries["hostname"])
+            assert.equal("pemCertKey2", stored_entries["hostname2"])
+            assert.same(ngx.HTTP_CREATED, ngx.status)
         end)
     end)
 end)

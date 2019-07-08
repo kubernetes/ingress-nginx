@@ -16,21 +16,25 @@
 
 ## Prerequisite Generic Deployment Command
 
-The following **Mandatory Command** is required for all deployments.
-
 !!! attention
-    The default configuration watches Ingress object from all the namespaces.
+    The default configuration watches Ingress object from *all the namespaces*.
     To change this behavior use the flag `--watch-namespace` to limit the scope to a particular namespace.
 
 !!! warning
     If multiple Ingresses define different paths for the same host, the ingress controller will merge the definitions.
-    
+
 !!! attention
-    If you're using GKE you need to initialize your user as a cluster-admin with the following command: 
-    ```kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)```
+    If you're using GKE you need to initialize your user as a cluster-admin with the following command:
+    ```console
+    kubectl create clusterrolebinding cluster-admin-binding \
+      --clusterrole cluster-admin \
+      --user $(gcloud config get-value account)
+    ```
+
+The following **Mandatory Command** is required for all deployments.
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
 ```
 
 ### Provider Specific Steps
@@ -46,7 +50,7 @@ Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://doc
 Create a service
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
 ```
 
 #### minikube
@@ -62,14 +66,14 @@ For development:
 1. Disable the ingress addon:
 
 ```console
-$ minikube addons disable ingress
+minikube addons disable ingress
 ```
 
 2. Execute `make dev-env`
 3. Confirm the `nginx-ingress-controller` deployment exists:
 
 ```console
-$ kubectl get pods -n ingress-nginx 
+$ kubectl get pods -n ingress-nginx
 NAME                                       READY     STATUS    RESTARTS   AGE
 default-http-backend-66b447d9cf-rrlf9      1/1       Running   0          12s
 nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
@@ -95,8 +99,8 @@ Check that no change is necessary with regards to the ELB idle timeout. In some 
 Then execute:
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l4.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/service-l4.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/patch-configmap-l4.yaml
 ```
 
 For L7:
@@ -108,8 +112,8 @@ Check that no change is necessary with regards to the ELB idle timeout. In some 
 Then execute:
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l7.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l7.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/service-l7.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/patch-configmap-l7.yaml
 ```
 
 This example creates an ELB with just two listeners, one in port 80 and another in port 443
@@ -130,31 +134,29 @@ More information with regards to idle timeouts for your Load Balancer can be fou
 This type of load balancer is supported since v1.10.0 as an ALPHA feature.
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/service-nlb.yaml
 ```
 
 #### GCE-GKE
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
 ```
 
 **Important Note:** proxy protocol is not supported in GCE/GKE
 
 #### Azure
 
-
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
 ```
-
 
 #### Bare-metal
 
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
 ```
 
 !!! tip
@@ -178,12 +180,13 @@ To detect which version of the ingress controller is running, exec into the pod 
 ```console
 POD_NAMESPACE=ingress-nginx
 POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
+
 kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
 ```
 
 ## Using Helm
 
-NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart [stable/nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress) from the official charts repository. 
+NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart [stable/nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress) from the official charts repository.
 To install the chart with the release name `my-nginx`:
 
 ```console
@@ -202,4 +205,3 @@ Detect installed version:
 POD_NAME=$(kubectl get pods -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -it $POD_NAME -- /nginx-ingress-controller --version
 ```
-

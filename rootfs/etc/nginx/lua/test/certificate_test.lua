@@ -66,6 +66,20 @@ describe("Certificate", function()
       assert_certificate_is_set(EXAMPLE_CERT)
     end)
 
+    it("sets certificate and key for domain with trailing dot", function()
+      ssl.server_name = function() return "hostname.", nil end
+      ngx.shared.certificate_data:set("hostname", EXAMPLE_CERT)
+
+      assert_certificate_is_set(EXAMPLE_CERT)
+    end)
+
+    it("fallbacks to default certificate and key for domain with many trailing dots", function()
+      ssl.server_name = function() return "hostname..", nil end
+      ngx.shared.certificate_data:set("hostname", EXAMPLE_CERT)
+
+      assert_certificate_is_set(DEFAULT_CERT)
+    end)
+
     it("sets certificate and key for nested wildcard cert", function()
       ssl.server_name = function() return "sub.nested.hostname", nil end
       ngx.shared.certificate_data:set("*.nested.hostname", EXAMPLE_CERT)

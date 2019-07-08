@@ -59,17 +59,14 @@ local function handle_servers()
   local err_buf = {}
   for _, server in ipairs(servers) do
     if server.hostname and server.sslCert.pemCertKey then
-      local success
-      success, err = certificate_data:safe_set(server.hostname, server.sslCert.pemCertKey)
+      local success, err, forcible = certificate_data:set(server.hostname, server.sslCert.pemCertKey)
       if not success then
-        if err == "no memory" then
-          ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-          ngx.log(ngx.ERR, "no memory in certificate_data dictionary")
-          return
-        end
-
         local err_msg = string.format("error setting certificate for %s: %s\n", server.hostname, tostring(err))
         table.insert(err_buf, err_msg)
+      end
+      if forcible then
+        local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s", server.hostname)
+        ngx.log(ngx.WARN, msg)
       end
     else
       ngx.log(ngx.WARN, "hostname or pemCertKey are not present")

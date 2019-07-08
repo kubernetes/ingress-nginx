@@ -18,11 +18,12 @@ package authreq
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -30,28 +31,28 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -177,4 +178,39 @@ func TestHeaderAnnotations(t *testing.T) {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.headers, u.ResponseHeaders)
 		}
 	}
+}
+
+func TestParseStringToURL(t *testing.T) {
+	validURL := "http://bar.foo.com/external-auth"
+	validParsedURL, _ := url.Parse(validURL)
+
+	tests := []struct {
+		title   string
+		url     string
+		message string
+		parsed  *url.URL
+		expErr  bool
+	}{
+		{"empty", "", "url scheme is empty.", nil, true},
+		{"no scheme", "bar", "url scheme is empty.", nil, true},
+		{"invalid host", "http://", "url host is empty.", nil, true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "invalid url host.", nil, true},
+		{"valid URL", validURL, "", validParsedURL, false},
+	}
+
+	for _, test := range tests {
+
+		i, err := ParseStringToURL(test.url)
+		if test.expErr {
+			if err != test.message {
+				t.Errorf("%v: expected error \"%v\" but \"%v\" was returned", test.title, test.message, err)
+			}
+			continue
+		}
+
+		if i.String() != test.parsed.String() {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.parsed, i)
+		}
+	}
+
 }

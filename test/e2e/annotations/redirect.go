@@ -72,7 +72,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 		Expect(errs).To(BeNil())
 		Expect(resp.StatusCode).Should(BeNumerically("==", http.StatusMovedPermanently))
 		Expect(resp.Header.Get("Location")).Should(Equal(redirectURL))
-		Expect(body).Should(ContainSubstring("nginx/"))
+		Expect(body).Should(ContainSubstring("openresty/"))
 	})
 
 	It("should respond with a custom redirect code", func() {
@@ -108,6 +108,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 		Expect(errs).To(BeNil())
 		Expect(resp.StatusCode).Should(BeNumerically("==", redirectCode))
 		Expect(resp.Header.Get("Location")).Should(Equal(redirectURL))
-		Expect(body).Should(ContainSubstring("nginx/"))
+		Expect(body).Should(ContainSubstring("openresty/"))
 	})
 })

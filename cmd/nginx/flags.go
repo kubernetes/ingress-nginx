@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/pflag"
 
@@ -97,7 +98,7 @@ Takes the form "namespace/name".`)
 Configured inside the NGINX status server. All requests received on the port
 defined by the healthz-port parameter are forwarded internally to this path.`)
 
-		healthCheckTimeout = flags.Duration("health-check-timeout", 10, `Time limit, in seconds, for a probe to health-check-path to succeed.`)
+		defHealthCheckTimeout = flags.Int("health-check-timeout", 10, `Time limit, in seconds, for a probe to health-check-path to succeed.`)
 
 		updateStatus = flags.Bool("update-status", true,
 			`Update the load-balancer status of Ingress objects this controller satisfies.
@@ -130,8 +131,7 @@ Requires the update-status parameter.`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
-A valid certificate chain is required to enable OCSP stapling. Certificates
-uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
+Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
 extension for this to succeed.`)
 
 		syncRateLimit = flags.Float32("sync-rate-limit", 0.3,
@@ -141,9 +141,8 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", true,
-			`Dynamically update SSL certificates instead of reloading NGINX.
-Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
+		enableDynamicCertificates = flags.Bool("enable-dynamic-certificates", true,
+			`Dynamically update SSL certificates instead of reloading NGINX. Feature backed by OpenResty Lua libraries.`)
 
 		enableMetrics = flags.Bool("enable-metrics", true,
 			`Enables the collection of NGINX metrics`)
@@ -159,6 +158,14 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 
 		disableCatchAll = flags.Bool("disable-catch-all", false,
 			`Disable support for catch-all Ingresses`)
+
+		validationWebhook = flags.String("validating-webhook", "",
+			`The address to start an admission controller on to validate incoming ingresses.
+Takes the form "<host>:port". If not provided, no admission controller is started.`)
+		validationWebhookCert = flags.String("validating-webhook-certificate", "",
+			`The path of the validating webhook certificate PEM.`)
+		validationWebhookKey = flags.String("validating-webhook-key", "",
+			`The path of the validating webhook key PEM.`)
 	)
 
 	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
@@ -214,40 +221,40 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		klog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}
 
-	if *enableSSLChainCompletion && *dynamicCertificatesEnabled {
-		return false, nil, fmt.Errorf(`SSL certificate chain completion cannot be enabled when dynamic certificates functionality is enabled. Please check the flags --enable-ssl-chain-completion`)
-	}
-
 	if *publishSvc != "" && *publishStatusAddress != "" {
 		return false, nil, fmt.Errorf("Flags --publish-service and --publish-status-address are mutually exclusive")
 	}
 
 	nginx.HealthPath = *defHealthzURL
 
+	if *defHealthCheckTimeout > 0 {
+		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
+	}
+
+	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
+	ngx_config.EnableDynamicCertificates = *enableDynamicCertificates
+
 	config := &controller.Configuration{
-		APIServerHost:              *apiserverHost,
-		KubeConfigFile:             *kubeConfigFile,
-		UpdateStatus:               *updateStatus,
-		ElectionID:                 *electionID,
-		EnableProfiling:            *profiling,
-		EnableMetrics:              *enableMetrics,
-		MetricsPerHost:             *metricsPerHost,
-		EnableSSLPassthrough:       *enableSSLPassthrough,
-		EnableSSLChainCompletion:   *enableSSLChainCompletion,
-		ResyncPeriod:               *resyncPeriod,
-		DefaultService:             *defaultSvc,
-		Namespace:                  *watchNamespace,
-		ConfigMapName:              *configMap,
-		TCPConfigMapName:           *tcpConfigMapName,
-		UDPConfigMapName:           *udpConfigMapName,
-		DefaultSSLCertificate:      *defSSLCertificate,
-		HealthCheckTimeout:         *healthCheckTimeout,
-		PublishService:             *publishSvc,
-		PublishStatusAddress:       *publishStatusAddress,
-		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
-		UseNodeInternalIP:          *useNodeInternalIP,
-		SyncRateLimit:              *syncRateLimit,
-		DynamicCertificatesEnabled: *dynamicCertificatesEnabled,
+		APIServerHost:          *apiserverHost,
+		KubeConfigFile:         *kubeConfigFile,
+		UpdateStatus:           *updateStatus,
+		ElectionID:             *electionID,
+		EnableProfiling:        *profiling,
+		EnableMetrics:          *enableMetrics,
+		MetricsPerHost:         *metricsPerHost,
+		EnableSSLPassthrough:   *enableSSLPassthrough,
+		ResyncPeriod:           *resyncPeriod,
+		DefaultService:         *defaultSvc,
+		Namespace:              *watchNamespace,
+		ConfigMapName:          *configMap,
+		TCPConfigMapName:       *tcpConfigMapName,
+		UDPConfigMapName:       *udpConfigMapName,
+		DefaultSSLCertificate:  *defSSLCertificate,
+		PublishService:         *publishSvc,
+		PublishStatusAddress:   *publishStatusAddress,
+		UpdateStatusOnShutdown: *updateStatusOnShutdown,
+		UseNodeInternalIP:      *useNodeInternalIP,
+		SyncRateLimit:          *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
@@ -255,7 +262,10 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
 		},
-		DisableCatchAll: *disableCatchAll,
+		DisableCatchAll:           *disableCatchAll,
+		ValidationWebhook:         *validationWebhook,
+		ValidationWebhookCertPath: *validationWebhookCert,
+		ValidationWebhookKeyPath:  *validationWebhookKey,
 	}
 
 	return false, config, nil

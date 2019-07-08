@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -128,12 +128,31 @@ func (f *Framework) AfterEach() {
 		Expect(err).ToNot(HaveOccurred())
 		By("Dumping NGINX logs after a failure running a test")
 		Logf("%v", log)
+
+		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
+		if err != nil {
+			return
+		}
+
+		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf")
+		o, err := f.ExecCommand(pod, cmd)
+		if err != nil {
+			return
+		}
+
+		By("Dumping NGINX configuration after a failure running a test")
+		Logf("%v", o)
 	}
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.
 func IngressNginxDescribe(text string, body func()) bool {
-	return Describe("[nginx-ingress] "+text, body)
+	return Describe("[ingress-nginx] "+text, body)
+}
+
+// MemoryLeakIt is wrapper function for ginkgo It.  Adds "[MemoryLeak]" tag and makes static analysis easier.
+func MemoryLeakIt(text string, body interface{}, timeout ...float64) bool {
+	return It(text+" [MemoryLeak]", body, timeout...)
 }
 
 // GetNginxIP returns the number of TCP port where NGINX is running
@@ -306,8 +325,8 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 }
 
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
-func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1beta1.Deployment) error) error {
-	deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
+func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1.Deployment) error) error {
+	deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -320,13 +339,13 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 
 	if *deployment.Spec.Replicas != int32(replicas) {
 		klog.Infof("updating replica count from %v to %v...", *deployment.Spec.Replicas, replicas)
-		deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
+		deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 
 		deployment.Spec.Replicas = NewInt32(int32(replicas))
-		_, err = kubeClientSet.AppsV1beta1().Deployments(namespace).Update(deployment)
+		_, err = kubeClientSet.AppsV1().Deployments(namespace).Update(deployment)
 		if err != nil {
 			return errors.Wrapf(err, "scaling the number of replicas to %v", replicas)
 		}

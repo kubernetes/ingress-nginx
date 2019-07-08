@@ -1,6 +1,6 @@
-kind: Config
-apiVersion: kind.sigs.k8s.io/v1alpha2
+kind: Cluster
+apiVersion: kind.sigs.k8s.io/v1alpha3
 nodes:
-  - role: control-plane
-  - role: worker
-    replicas: 3
+- role: control-plane
+- role: worker
+- role: worker

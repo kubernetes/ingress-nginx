@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -45,7 +45,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to indicate the backend protocol.
-func (a backendProtocol) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a backendProtocol) Parse(ing *networking.Ingress) (interface{}, error) {
 	if ing.GetAnnotations() == nil {
 		return HTTP, nil
 	}

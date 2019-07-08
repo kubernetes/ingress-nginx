@@ -20,6 +20,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"io/ioutil"
+
 	"k8s.io/klog"
 )
 

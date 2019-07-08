@@ -169,7 +169,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
-			[]string{"ingress", "namespace", "status"},
+			[]string{"ingress", "namespace", "status", "service"},
 		),
 
 		bytesSent: prometheus.NewHistogramVec(
@@ -243,6 +243,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"namespace": stats.Namespace,
 			"ingress":   stats.Ingress,
 			"status":    stats.Status,
+			"service":   stats.Service,
 		}
 
 		latencyLabels := prometheus.Labels{

@@ -8,6 +8,6 @@ require (
 	github.com/openzipkin/zipkin-go v0.1.6
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a
-	google.golang.org/api v0.2.0
+	google.golang.org/api v0.3.1
 	google.golang.org/grpc v1.19.0
 )

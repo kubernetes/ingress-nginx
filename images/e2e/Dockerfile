@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.84
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.90
 
 RUN clean-install \
   g++ \
@@ -21,13 +21,12 @@ RUN clean-install \
   libc6-dev \
   make \
   wget \
-  luarocks \
   python \
   pkg-config
 
-ENV GOLANG_VERSION 1.12.1
+ENV GOLANG_VERSION 1.12.6
 ENV GO_ARCH        linux-amd64
-ENV GOLANG_SHA     2a3fdabf665496a0db5f41ec6af7a9b15a49fbe71a85a50ca38b1f13a103aeec
+ENV GOLANG_SHA     dbcf71a3c1ea53b8d54ef1b48c85a39a6c9a935d01fc8291ff2b92028e59913c
 
 RUN set -eux; \
   url="https://golang.org/dl/go${GOLANG_VERSION}.${GO_ARCH}.tar.gz"; \
@@ -63,5 +62,17 @@ RUN  luarocks install luacheck \
 RUN  go get github.com/onsi/ginkgo/ginkgo \
   && go get golang.org/x/lint/golint
 
-RUN  curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl \
+ARG K8S_RELEASE
+ARG ETCD_VERSION
+
+RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
   && chmod +x /usr/local/bin/kubectl
+
+RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kube-apiserver -O /usr/local/bin/kube-apiserver \
+  && chmod +x /usr/local/bin/kube-apiserver
+
+RUN curl -L https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz \
+  && mkdir -p /tmp/etcd-download \
+  && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 \
+  && cp /tmp/etcd-download/etcd /usr/local/bin \
+  && rm -rf /tmp/etcd-download

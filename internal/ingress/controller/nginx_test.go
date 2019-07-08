@@ -32,10 +32,14 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 func TestIsDynamicConfigurationEnough(t *testing.T) {
+	ngx_config.EnableDynamicCertificates = false
+	defer func() { ngx_config.EnableDynamicCertificates = true }()
+
 	backends := []*ingress.Backend{{
 		Name: "fakenamespace-myapp-80",
 		Endpoints: []ingress.Endpoint{
@@ -73,9 +77,7 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 			Backends: backends,
 			Servers:  servers,
 		},
-		cfg: &Configuration{
-			DynamicCertificatesEnabled: false,
-		},
+		cfg: &Configuration{},
 	}
 
 	newConfig := commonConfig
@@ -95,11 +97,12 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 		Backends: []*ingress.Backend{{Name: "a-backend-8080"}},
 		Servers:  servers,
 	}
+
+	ngx_config.EnableDynamicCertificates = true
+
 	if !n.IsDynamicConfigurationEnough(newConfig) {
 		t.Errorf("Expected to be dynamically configurable when only backends change")
 	}
-
-	n.cfg.DynamicCertificatesEnabled = true
 
 	newServers := []*ingress.Server{{
 		Hostname: "myapp1.fake",
@@ -243,7 +246,10 @@ func TestConfigureDynamically(t *testing.T) {
 		ControllerPodsCount: 2,
 	}
 
-	err = configureDynamically(commonConfig, false)
+	ngx_config.EnableDynamicCertificates = false
+	defer func() { ngx_config.EnableDynamicCertificates = true }()
+
+	err = configureDynamically(commonConfig)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic configuration: %v", err)
 	}

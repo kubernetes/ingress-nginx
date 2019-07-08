@@ -17,11 +17,12 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 	"k8s.io/ingress-nginx/test/e2e/framework"
-	"net/http"
 )
 
 var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func() {

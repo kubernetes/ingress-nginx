@@ -9,6 +9,8 @@ container:
 
 	cp ../e2e/e2e.test .
 	cp ../e2e/wait-for-nginx.sh .
+	cp -r ../../deploy/cloud-generic .
+	cp -r ../../deploy/cluster-wide .
 
 	docker build -t $(IMAGE) .
 

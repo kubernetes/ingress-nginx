@@ -19,7 +19,7 @@ package cors
 import (
 	"regexp"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -96,7 +96,7 @@ func (c1 *Config) Equal(c2 *Config) bool {
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should allows CORS
-func (c cors) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 

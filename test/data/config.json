@@ -3,8 +3,8 @@
 	"isIPV6Enabled": true,
 	"cfg": {
 		"disable-ipv6": false,
-		"bind-address-ipv4": [ "1.1.1.1" , "2.2.2.2"],
-		"bind-address-ipv6": [ "[2001:db8:a0b:12f0::1]" ,"[3731:54:65fe:2::a7]" ,"[33:33:33::33::33]" ],
+		"bind-address-ipv4": ["1.1.1.1", "2.2.2.2"],
+		"bind-address-ipv6": ["[2001:db8:a0b:12f0::1]", "[3731:54:65fe:2::a7]", "[33:33:33::33::33]"],
 		"backend": {
 			"custom-http-errors": [404],
 			"proxy-buffers-number": "4",
@@ -23,7 +23,7 @@
 		"enableDynamicTlsRecords": true,
 		"enableSpdy": false,
 		"errorLogLevel": "notice",
-		"gzipTypes": "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component",
+		"gzipTypes": "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component",
 		"hsts": true,
 		"hstsIncludeSubdomains": true,
 		"hstsMaxAge": "15724800",

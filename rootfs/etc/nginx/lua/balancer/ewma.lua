@@ -9,6 +9,10 @@ local resty_lock = require("resty.lock")
 local util = require("util")
 local split = require("util.split")
 
+local string_format = string.format
+local ngx_log = ngx.log
+local INFO = ngx.INFO
+
 local DECAY_TIME = 10 -- this value is in seconds
 local LOCK_KEY = ":ewma_key"
 local PICK_SET_SIZE = 2
@@ -182,6 +186,8 @@ function _M.sync(self, backend)
     ngx.log(ngx.INFO, "endpoints did not change for backend " .. tostring(backend.name))
     return
   end
+
+  ngx_log(INFO, string_format("[%s] peers have changed for backend %s", self.name, backend.name))
 
   self.traffic_shaping_policy = backend.trafficShapingPolicy
   self.alternative_backends = backend.alternativeBackends

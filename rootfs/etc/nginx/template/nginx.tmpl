@@ -16,7 +16,9 @@ pid {{ .PID }};
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
 
+{{ if (shouldLoadModSecurityModule $cfg $servers) }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
+{{ end }}
 
 {{ if $cfg.EnableOpentracing }}
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
@@ -46,17 +48,18 @@ events {
 }
 
 http {
-    lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;";
-    lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
+    lua_package_path	"/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua;/usr/local/lib/lua/?.lua;;";
+    lua_package_cpath 	"/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;;";
 
     {{ buildLuaSharedDictionaries $servers $all.Cfg.DisableLuaRestyWAF }}
 
     init_by_lua_block {
-        require("resty.core")
         collectgarbage("collect")
 
+        {{ if not $all.Cfg.DisableLuaRestyWAF }}
         local lua_resty_waf = require("resty.waf")
         lua_resty_waf.init()
+        {{ end }}
 
         -- init modules
         local ok, res
@@ -93,7 +96,7 @@ http {
         end
         {{ end }}
 
-        {{ if $all.DynamicCertificatesEnabled }}
+        {{ if $all.EnableDynamicCertificates }}
         ok, res = pcall(require, "certificate")
         if not ok then
           error("require failed: " .. tostring(res))
@@ -135,6 +138,17 @@ http {
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
     set_real_ip_from    {{ $trusted_ip }};
     {{ end }}
+    {{ end }}
+
+    {{ if $all.Cfg.EnableModsecurity }}
+    modsecurity on;
+
+    modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+
+    {{ if $all.Cfg.EnableOWASPCoreRules }}
+    modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+    {{ end }}
+
     {{ end }}
 
     {{ if $cfg.UseGeoIP }}
@@ -408,27 +422,6 @@ http {
         {{ end }}
     }
 
-    {{/* build the maps that will be use to validate the Whitelist */}}
-    {{ range $server := $servers }}
-    {{ $enforceRegex := enforceRegexModifier $server.Locations }}
-    {{ range $location := $server.Locations }}
-    {{ $path := buildLocation $location $enforceRegex }}
-
-    {{ if isLocationAllowed $location }}
-    {{ if gt (len $location.Whitelist.CIDR) 0 }}
-
-    # Deny for {{ print $server.Hostname  $path }}
-    geo $the_real_ip {{ buildDenyVariable (print $server.Hostname "_"  $path) }} {
-        default 1;
-
-        {{ range $ip := $location.Whitelist.CIDR }}
-        {{ $ip }} 0;{{ end }}
-    }
-    {{ end }}
-    {{ end }}
-    {{ end }}
-    {{ end }}
-
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
     geo $the_real_ip $whitelist_{{ $rl.ID }} {
@@ -499,13 +492,8 @@ http {
         # PEM sha: {{ $redirect.SSLCert.PemSHA }}
         ssl_certificate                         {{ $redirect.SSLCert.PemFileName }};
         ssl_certificate_key                     {{ $redirect.SSLCert.PemFileName }};
-        {{ if not (empty $redirect.SSLCert.FullChainPemFileName)}}
-        ssl_trusted_certificate                 {{ $redirect.SSLCert.FullChainPemFileName }};
-        ssl_stapling                            on;
-        ssl_stapling_verify                     on;
-        {{ end }}
 
-        {{ if $all.DynamicCertificatesEnabled}}
+        {{ if $all.EnableDynamicCertificates}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
@@ -638,7 +626,6 @@ stream {
     lua_shared_dict tcp_udp_configuration_data 5M;
 
     init_by_lua_block {
-        require("resty.core")
         collectgarbage("collect")
 
         -- init modules
@@ -849,13 +836,8 @@ stream {
         # PEM sha: {{ $server.SSLCert.PemSHA }}
         ssl_certificate                         {{ $server.SSLCert.PemFileName }};
         ssl_certificate_key                     {{ $server.SSLCert.PemFileName }};
-        {{ if not (empty $server.SSLCert.FullChainPemFileName)}}
-        ssl_trusted_certificate                 {{ $server.SSLCert.FullChainPemFileName }};
-        ssl_stapling                            on;
-        ssl_stapling_verify                     on;
-        {{ end }}
 
-        {{ if $all.DynamicCertificatesEnabled}}
+        {{ if $all.EnableDynamicCertificates}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
@@ -894,7 +876,13 @@ stream {
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location $enforceRegex }}
         {{ $proxySetHeader := proxySetHeader $location }}
-        {{ $authPath := buildAuthLocation $location }}
+        {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
+        {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+
+        {{ $externalAuth := $location.ExternalAuth }}
+        {{ if eq $applyGlobalAuth true }}
+        {{ $externalAuth = $all.Cfg.GlobalExternalAuth }}
+        {{ end }}
 
         {{ if not (empty $location.Rewrite.AppRoot)}}
         if ($uri = /) {
@@ -915,13 +903,13 @@ stream {
             proxy_set_header            Content-Length "";
             proxy_set_header            X-Forwarded-Proto "";
 
-            {{ if $location.ExternalAuth.Method }}
-            proxy_method                {{ $location.ExternalAuth.Method }};
+            {{ if $externalAuth.Method }}
+            proxy_method                {{ $externalAuth.Method }};
             proxy_set_header            X-Original-URI          $request_uri;
             proxy_set_header            X-Scheme                $pass_access_scheme;
             {{ end }}
 
-            proxy_set_header            Host                    {{ $location.ExternalAuth.Host }};
+            proxy_set_header            Host                    {{ $externalAuth.Host }};
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Original-Method       $request_method;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
@@ -932,8 +920,8 @@ stream {
             proxy_set_header            X-Forwarded-For        $the_real_ip;
             {{ end }}
 
-            {{ if $location.ExternalAuth.RequestRedirect }}
-            proxy_set_header            X-Auth-Request-Redirect {{ $location.ExternalAuth.RequestRedirect }};
+            {{ if $externalAuth.RequestRedirect }}
+            proxy_set_header            X-Auth-Request-Redirect {{ $externalAuth.RequestRedirect }};
             {{ else }}
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
@@ -963,14 +951,15 @@ stream {
             proxy_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
             {{ end }}
 
-            {{ if not (empty $location.ExternalAuth.AuthSnippet) }}
-            {{ $location.ExternalAuth.AuthSnippet }}
+            {{ if not (empty $externalAuth.AuthSnippet) }}
+            {{ $externalAuth.AuthSnippet }}
             {{ end }}
 
-            set $target {{ $location.ExternalAuth.URL }};
+            set $target {{ $externalAuth.URL }};
             proxy_pass $target;
         }
         {{ end }}
+
 
         location {{ $path }} {
             {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
@@ -1095,17 +1084,21 @@ stream {
             set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
             set $proxy_host             $proxy_upstream_name;
 
+            set $proxy_alternative_upstream_name "";
+
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
+            {{ if not $all.Cfg.EnableModsecurity }}
             modsecurity on;
+
+            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+            {{ end }}
 
             {{ if $location.ModSecurity.Snippet }}
             modsecurity_rules '
                 {{ $location.ModSecurity.Snippet }}
             ';
-            {{ else if (or $location.ModSecurity.OWASPRules $all.Cfg.EnableOWASPCoreRules) }}
+            {{ else if (and ((not $all.Cfg.EnableOWASPCoreRules) $location.ModSecurity.OWASPRules))}}
             modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
-            {{ else }}
-            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
             {{ end }}
 
             {{ if (not (empty $location.ModSecurity.TransactionID)) }}
@@ -1115,9 +1108,9 @@ stream {
 
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
-            if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
-                return 403;
-            }
+            {{ range $ip := $location.Whitelist.CIDR }}
+            allow {{ $ip }};{{ end }}
+            deny all;
             {{ end }}
 
             {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}
@@ -1126,14 +1119,14 @@ stream {
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthResponseHeaders $location }}
+            {{- range $line := buildAuthResponseHeaders $externalAuth.ResponseHeaders }}
             {{ $line }}
             {{- end }}
             {{ end }}
 
-            {{ if $location.ExternalAuth.SigninURL }}
+            {{ if $externalAuth.SigninURL }}
             set_escape_uri $escaped_request_uri $request_uri;
-            error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
+            error_page 401 = {{ buildAuthSignURL $externalAuth.SigninURL }};
             {{ end }}
 
             {{ if $location.BasicDigestAuth.Secured }}
@@ -1173,10 +1166,12 @@ stream {
             {{ end }}
 
             {{/* By default use vhost as Host to upstream, but allow overrides */}}
+            {{ if not (eq $proxySetHeader "grpc_set_header") }}
             {{ if not (empty $location.UpstreamVhost) }}
             {{ $proxySetHeader }} Host                   "{{ $location.UpstreamVhost }}";
             {{ else }}
             {{ $proxySetHeader }} Host                   $best_http_host;
+            {{ end }}
             {{ end }}
 
             # Pass the extracted client certificate to the backend

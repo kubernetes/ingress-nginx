@@ -23,23 +23,21 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
-
 	"github.com/mitchellh/hashstructure"
-	"k8s.io/klog"
-
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
-
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/klog"
 )
 
 const (
@@ -66,7 +64,6 @@ type Configuration struct {
 	// +optional
 	UDPConfigMapName string
 
-	HealthCheckTimeout    time.Duration
 	DefaultSSLCertificate string
 
 	// +optional
@@ -87,15 +84,17 @@ type Configuration struct {
 	EnableMetrics  bool
 	MetricsPerHost bool
 
-	EnableSSLChainCompletion bool
-
 	FakeCertificate *ingress.SSLCert
 
 	SyncRateLimit float32
 
-	DynamicCertificatesEnabled bool
-
 	DisableCatchAll bool
+
+	ValidationWebhook         string
+	ValidationWebhookCertPath string
+	ValidationWebhookKeyPath  string
+
+	GlobalExternalAuth *ngx_config.GlobalExternalAuth
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -118,54 +117,17 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return nil
 	}
 
-	ings := n.store.ListIngresses()
+	ings := n.store.ListIngresses(nil)
+	hosts, servers, pcfg := n.getConfiguration(ings)
 
-	upstreams, servers := n.getBackendServers(ings)
-	var passUpstreams []*ingress.SSLPassthroughBackend
-
-	hosts := sets.NewString()
-
-	for _, server := range servers {
-		if !hosts.Has(server.Hostname) {
-			hosts.Insert(server.Hostname)
-		}
-		if server.Alias != "" && !hosts.Has(server.Alias) {
-			hosts.Insert(server.Alias)
-		}
-
-		if !server.SSLPassthrough {
-			continue
-		}
-
-		for _, loc := range server.Locations {
-			if loc.Path != rootLocation {
-				klog.Warningf("Ignoring SSL Passthrough for location %q in server %q", loc.Path, server.Hostname)
-				continue
-			}
-			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
-				Backend:  loc.Backend,
-				Hostname: server.Hostname,
-				Service:  loc.Service,
-				Port:     loc.Port,
-			})
-			break
-		}
-	}
-
-	pcfg := &ingress.Configuration{
-		Backends:              upstreams,
-		Servers:               servers,
-		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
-		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
-		PassthroughBackends:   passUpstreams,
-		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
-		ControllerPodsCount:   n.store.GetRunningControllerPodsCount(),
-	}
+	n.metricCollector.SetSSLExpireTime(servers)
 
 	if n.runningConfig.Equal(pcfg) {
 		klog.V(3).Infof("No configuration change detected, skipping backend reload.")
 		return nil
 	}
+
+	n.metricCollector.SetHosts(hosts)
 
 	if !n.IsDynamicConfigurationEnough(pcfg) {
 		klog.Infof("Configuration changes detected, backend reload required.")
@@ -184,16 +146,9 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			return err
 		}
 
-		n.metricCollector.SetHosts(hosts)
-
 		klog.Infof("Backend successfully reloaded.")
 		n.metricCollector.ConfigSuccess(hash, true)
 		n.metricCollector.IncReloadCount()
-
-		if n.isLeader() {
-			klog.V(2).Infof("Updating ssl expiration metrics.")
-			n.metricCollector.SetSSLExpireTime(servers)
-		}
 	}
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
@@ -212,7 +167,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := configureDynamically(pcfg, n.cfg.DynamicCertificatesEnabled)
+		err := configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
@@ -233,6 +188,61 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	n.runningConfig = pcfg
 
 	return nil
+}
+
+// CheckIngress returns an error in case the provided ingress, when added
+// to the current configuration, generates an invalid configuration
+func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
+	//TODO: this is wrong
+	if n == nil {
+		return fmt.Errorf("cannot check ingress on a nil ingress controller")
+	}
+
+	if ing == nil {
+		// no ingress to add, no state change
+		return nil
+	}
+
+	if !class.IsValid(ing) {
+		klog.Infof("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
+		return nil
+	}
+
+	if n.cfg.Namespace != "" && ing.ObjectMeta.Namespace != n.cfg.Namespace {
+		klog.Infof("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
+		return nil
+	}
+
+	filter := func(toCheck *ingress.Ingress) bool {
+		return toCheck.ObjectMeta.Namespace == ing.ObjectMeta.Namespace &&
+			toCheck.ObjectMeta.Name == ing.ObjectMeta.Name
+	}
+
+	ings := n.store.ListIngresses(filter)
+	ings = append(ings, &ingress.Ingress{
+		Ingress:           *ing,
+		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
+	})
+
+	_, _, pcfg := n.getConfiguration(ings)
+
+	cfg := n.store.GetBackendConfiguration()
+	cfg.Resolver = n.resolver
+
+	content, err := n.generateTemplate(cfg, *pcfg)
+	if err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+		return err
+	}
+
+	err = n.testTemplate(content)
+	if err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+	} else {
+		n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
+	}
+
+	return err
 }
 
 func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Protocol) []ingress.L4Service {
@@ -380,6 +390,51 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 	return upstream
 }
 
+// getConfiguration returns the configuration matching the standard kubernetes ingress
+func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.String, []*ingress.Server, *ingress.Configuration) {
+	upstreams, servers := n.getBackendServers(ingresses)
+	var passUpstreams []*ingress.SSLPassthroughBackend
+
+	hosts := sets.NewString()
+
+	for _, server := range servers {
+		if !hosts.Has(server.Hostname) {
+			hosts.Insert(server.Hostname)
+		}
+		if server.Alias != "" && !hosts.Has(server.Alias) {
+			hosts.Insert(server.Alias)
+		}
+
+		if !server.SSLPassthrough {
+			continue
+		}
+
+		for _, loc := range server.Locations {
+			if loc.Path != rootLocation {
+				klog.Warningf("Ignoring SSL Passthrough for location %q in server %q", loc.Path, server.Hostname)
+				continue
+			}
+			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
+				Backend:  loc.Backend,
+				Hostname: server.Hostname,
+				Service:  loc.Service,
+				Port:     loc.Port,
+			})
+			break
+		}
+	}
+
+	return hosts, servers, &ingress.Configuration{
+		Backends:              upstreams,
+		Servers:               servers,
+		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
+		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
+		PassthroughBackends:   passUpstreams,
+		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
+		ControllerPodsCount:   n.store.GetRunningControllerPodsCount(),
+	}
+}
+
 // getBackendServers returns a list of Upstream and Server to be used by the
 // backend.  An upstream can be used in multiple servers if the namespace,
 // service name and port are the same.
@@ -509,6 +564,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					ups.SessionAffinity.CookieSessionAffinity.Expires = anns.SessionAffinity.Cookie.Expires
 					ups.SessionAffinity.CookieSessionAffinity.MaxAge = anns.SessionAffinity.Cookie.MaxAge
 					ups.SessionAffinity.CookieSessionAffinity.Path = cookiePath
+					ups.SessionAffinity.CookieSessionAffinity.ChangeOnFailure = anns.SessionAffinity.Cookie.ChangeOnFailure
 
 					locs := ups.SessionAffinity.CookieSessionAffinity.Locations
 					if _, ok := locs[host]; !ok {
@@ -744,7 +800,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 // getServiceClusterEndpoint returns an Endpoint corresponding to the ClusterIP
 // field of a Service.
-func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *extensions.IngressBackend) (endpoint ingress.Endpoint, err error) {
+func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *networking.IngressBackend) (endpoint ingress.Endpoint, err error) {
 	svc, err := n.store.GetService(svcKey)
 	if err != nil {
 		return endpoint, fmt.Errorf("service %q does not exist", svcKey)
@@ -787,24 +843,9 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	}
 
 	klog.V(3).Infof("Obtaining ports information for Service %q", svcKey)
-	for _, servicePort := range svc.Spec.Ports {
-		// targetPort could be a string, use either the port name or number (int)
-		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
-			servicePort.TargetPort.String() == backendPort ||
-			servicePort.Name == backendPort {
-
-			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
-			if len(endps) == 0 {
-				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
-			}
-
-			upstreams = append(upstreams, endps...)
-			break
-		}
-	}
 
 	// Ingress with an ExternalName Service and no port defined for that Service
-	if len(svc.Spec.Ports) == 0 && svc.Spec.Type == apiv1.ServiceTypeExternalName {
+	if svc.Spec.Type == apiv1.ServiceTypeExternalName {
 		externalPort, err := strconv.Atoi(backendPort)
 		if err != nil {
 			klog.Warningf("Only numeric ports are allowed in ExternalName Services: %q is not a valid port number.", backendPort)
@@ -826,10 +867,26 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 		return upstreams, nil
 	}
 
+	for _, servicePort := range svc.Spec.Ports {
+		// targetPort could be a string, use either the port name or number (int)
+		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
+			servicePort.TargetPort.String() == backendPort ||
+			servicePort.Name == backendPort {
+
+			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
+			if len(endps) == 0 {
+				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
+			}
+
+			upstreams = append(upstreams, endps...)
+			break
+		}
+	}
+
 	return upstreams, nil
 }
 
-// overridePemFileNameAndPemSHA should only be called when DynamicCertificatesEnabled
+// overridePemFileNameAndPemSHA should only be called when EnableDynamicCertificates
 // ideally this function should not exist, the only reason why we use it is that
 // we rely on PemFileName in nginx.tmpl to configure SSL directives
 // and PemSHA to force reload
@@ -879,7 +936,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
 		if err == nil {
 			defaultCertificate = certificate
-			if n.cfg.DynamicCertificatesEnabled {
+			if ngx_config.EnableDynamicCertificates {
 				n.overridePemFileNameAndPemSHA(defaultCertificate)
 			}
 		} else {
@@ -1062,7 +1119,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				}
 			}
 
-			if n.cfg.DynamicCertificatesEnabled {
+			if ngx_config.EnableDynamicCertificates {
 				n.overridePemFileNameAndPemSHA(cert)
 			}
 
@@ -1090,6 +1147,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.ConfigurationSnippet = anns.ConfigurationSnippet
 	loc.CorsConfig = anns.CorsConfig
 	loc.ExternalAuth = anns.ExternalAuth
+	loc.EnableGlobalAuth = anns.EnableGlobalAuth
 	loc.HTTP2PushPreload = anns.HTTP2PushPreload
 	loc.Proxy = anns.Proxy
 	loc.RateLimit = anns.RateLimit

@@ -32,7 +32,7 @@ Rules:
             /tea      tea-svc:80 (<none>)
             /coffee   coffee-svc:80 (<none>)
 Annotations:
-  kubectl.kubernetes.io/last-applied-configuration:  {"apiVersion":"extensions/v1beta1","kind":"Ingress","metadata":{"annotations":{},"name":"cafe-ingress","namespace":"default","selfLink":"/apis/extensions/v1beta1/namespaces/default/ingresses/cafe-ingress"},"spec":{"rules":[{"host":"cafe.com","http":{"paths":[{"backend":{"serviceName":"tea-svc","servicePort":80},"path":"/tea"},{"backend":{"serviceName":"coffee-svc","servicePort":80},"path":"/coffee"}]}}]},"status":{"loadBalancer":{"ingress":[{"ip":"169.48.142.110"}]}}}
+  kubectl.kubernetes.io/last-applied-configuration:  {"apiVersion":"extensions/v1beta1","kind":"Ingress","metadata":{"annotations":{},"name":"cafe-ingress","namespace":"default","selfLink":"/apis/networking/v1beta1/namespaces/default/ingresses/cafe-ingress"},"spec":{"rules":[{"host":"cafe.com","http":{"paths":[{"backend":{"serviceName":"tea-svc","servicePort":80},"path":"/tea"},{"backend":{"serviceName":"coffee-svc","servicePort":80},"path":"/coffee"}]}}]},"status":{"loadBalancer":{"ingress":[{"ip":"169.48.142.110"}]}}}
 
 Events:
   Type    Reason  Age   From                      Message
@@ -218,8 +218,8 @@ $ kubectl exec test-701078429-s5kca -- curl --cacert /var/run/secrets/kubernetes
     "/apis/batch/v2alpha1",
     "/apis/certificates.k8s.io",
     "/apis/certificates.k8s.io/v1alpha1",
-    "/apis/extensions",
-    "/apis/extensions/v1beta1",
+    "/apis/networking",
+    "/apis/networking/v1beta1",
     "/apis/policy",
     "/apis/policy/v1alpha1",
     "/apis/rbac.authorization.k8s.io",

@@ -164,7 +164,7 @@ describe("Sticky", function()
           s = spy.on(cookie_instance, "set")
           return cookie_instance, false
         end
-        local sticky_balancer_instance = sticky:new(get_test_backend())        
+        local sticky_balancer_instance = sticky:new(get_test_backend())
         assert.has_no.errors(function() sticky_balancer_instance:balance() end)
         assert.spy(s).was_not_called()
       end)
@@ -190,6 +190,75 @@ describe("Sticky", function()
         local sticky_balancer_instance = sticky:new(test_backend)
         local peer = sticky_balancer_instance:balance()
         assert.equal(peer, test_backend_endpoint)
+      end)
+    end)
+  end)
+
+  local function get_several_test_backends(change_on_failure)
+    return {
+      name = "access-router-production-web-80",
+      endpoints = {
+        { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+        { address = "10.184.7.41", port = "8080", maxFails = 0, failTimeout = 0 },
+      },
+      sessionAffinityConfig = {
+        name = "cookie",
+        cookieSessionAffinity = { name = "test_name", hash = "sha1", change_on_failure = change_on_failure }
+      },
+    }
+  end
+
+  describe("balance() after error", function()
+    local mocked_cookie_new = cookie.new
+
+    before_each(function()
+      package.loaded["balancer.sticky"] = nil
+      sticky = require("balancer.sticky")
+    end)
+
+    after_each(function()
+      cookie.new = mocked_cookie_new
+    end)
+
+    context("when request to upstream fails", function()
+      it("changes upstream when change_on_failure option is true", function()
+        -- create sticky cookie
+        cookie.new = function(self)
+          local return_obj = {
+            set = function(v) return false, nil end,
+            get = function(k) return "" end,
+          }
+          return return_obj, false
+        end
+
+        local options = {false, true}
+
+        for _, option in ipairs(options) do
+          local sticky_balancer_instance = sticky:new(get_several_test_backends(option))
+
+          local old_upstream = sticky_balancer_instance:balance()
+          for _ = 1, 100 do
+            -- make sure upstream doesn't change on subsequent calls of balance()
+            assert.equal(old_upstream, sticky_balancer_instance:balance())
+          end
+
+          -- simulate request failure
+          sticky_balancer_instance.get_last_failure = function()
+            return "failed"
+          end
+          _G.ngx.var = { upstream_addr = old_upstream }
+
+          for _ = 1, 100 do
+            local new_upstream = sticky_balancer_instance:balance()
+            if option == false then
+              -- upstream should be the same inspite of error, if change_on_failure option is false
+              assert.equal(new_upstream, old_upstream)
+            else
+              -- upstream should change after error, if change_on_failure option is true
+              assert.not_equal(new_upstream, old_upstream)
+            end
+          end
+        end
       end)
     end)
   end)

@@ -15,7 +15,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--default-ssl-certificate string` | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
 | `--disable-catch-all`             | Disable support for catch-all Ingresses. |
 | `--election-id string`            | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
-| `--enable-dynamic-certificates`   | Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off (default behaviour). Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. (enabled by default) |
+| `--enable-dynamic-certificates`   | Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off (default behaviour). Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. Once the backing Lua shared dictionary `certificate_data` is full, the least recently used certificate will be removed to store new ones. (enabled by default) |
 | `--enable-ssl-chain-completion`   | Autocomplete SSL certificate chains with missing intermediate CA certificates. A valid certificate chain is required to enable OCSP stapling. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default true) |
 | `--enable-ssl-passthrough`        | Enable SSL Passthrough. |
 | `--health-check-path string`      | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
@@ -44,3 +44,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--version`                       | Show release information about the NGINX Ingress controller and exit. |
 | `--vmodule moduleSpec`            | comma-separated list of pattern=N settings for file-filtered logging |
 | `--watch-namespace string`        | Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty. |
+| `--disable-catch-all`             | Disable support for catch-all Ingresses. |
+|`--validating-webhook`|The address to start an admission controller on|
+|`--validating-webhook-certificate`|The certificate the webhook is using for its TLS handling|
+|`--validating-webhook-key`|The key the webhook is using for its TLS handling|

@@ -92,10 +92,10 @@ The following table shows a configuration option's name, type, and the default v
 |[use-geoip2](#use-geoip2)|bool|"false"|
 |[enable-brotli](#enable-brotli)|bool|"false"|
 |[brotli-level](#brotli-level)|int|4|
-|[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
+|[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
 |[gzip-level](#gzip-level)|int|5|
-|[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
+|[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
 |[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"10s"|
@@ -124,6 +124,8 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
 |[jaeger-sampler-type](#jaeger-sampler-type)|string|"const"|
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
+|[jaeger-sampler-host](#jaeger-sampler-host)|string|"http://127.0.0.1"|
+|[jaeger-sampler-port](#jaeger-sampler-port)|int|5778|
 |[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
@@ -152,6 +154,12 @@ The following table shows a configuration option's name, type, and the default v
 |[limit-req-status-code](#limit-req-status-code)|int|503|
 |[limit-conn-status-code](#limit-conn-status-code)|int|503|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
+|[global-auth-url](#global-auth-url)|string|""|
+|[global-auth-method](#global-auth-method)|string|""|
+|[global-auth-signin](#global-auth-signin)|string|""|
+|[global-auth-response-headers](#global-auth-response-headers)|string|""|
+|[global-auth-request-redirect](#global-auth-request-redirect)|string|""|
+|[global-auth-snippet](#global-auth-snippet)|string|""|
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
 |[block-cidrs](#block-cidrs)|[]string|""|
 |[block-user-agents](#block-user-agents)|[]string|""|
@@ -251,11 +259,11 @@ _References:_
 
 ## disable-ipv6
 
-Disable listening on IPV6. _**default:**_ is disabled
+Disable listening on IPV6. _**default:**_ `false`; IPv6 listening is enabled
 
 ## disable-ipv6-dns
 
-Disable IPV6 for nginx DNS resolver. _**default:**_ is disabled
+Disable IPV6 for nginx DNS resolver. _**default:**_ `false`; IPv6 resolving enabled.
 
 ## enable-underscores-in-headers
 
@@ -519,8 +527,7 @@ _**default:**_ 5s
 
 ## use-gzip
 
-Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html).
-The default mime type list to compress is: `application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
+Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html). MIME types to compress are controlled by [gzip-types](#gzip-types). _**default:**_ true
 
 ## use-geoip
 
@@ -560,7 +567,8 @@ Sets the gzip Compression Level that will be used. _**default:**_ 5
 
 ## gzip-types
 
-Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type. Responses with the "text/html" type are always compressed if `use-gzip` is enabled.
+Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type. Responses with the "text/html" type are always compressed if `[use-gzip](#use-gzip)` is enabled.
+_**default:**_ `application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
 
 ## worker-processes
 
@@ -729,6 +737,15 @@ Specifies the sampler to be used when sampling traces. The available samplers ar
 Specifies the argument to be passed to the sampler constructor. Must be a number.
 For const this should be 0 to never sample and 1 to always sample. _**default:**_ 1
 
+## jaeger-sampler-host
+
+Specifies the custom remote sampler host to be passed to the sampler constructor. Must be a valid URL.
+Leave blank to use default value (localhost). _**default:**_ http://127.0.0.1
+
+## jaeger-sampler-port
+
+Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. _**default:**_ 5778
+
 ## main-snippet
 
 Adds custom configuration to the main section of the nginx configuration.
@@ -744,6 +761,8 @@ Adds custom configuration to all the servers in the nginx configuration.
 ## location-snippet
 
 Adds custom configuration to all the locations in the nginx configuration.
+
+You can not use this to add new locations that proxy to the Kubernetes pods, as the snippet does not have access to the Go template functions. If you want to add custom locations you will have to [provide your own nginx.tmpl](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/custom-template/).
 
 ## custom-http-errors
 
@@ -863,6 +882,45 @@ Sets the [status code to return in response to rejected connections](http://ngin
 
 A comma-separated list of locations on which http requests will never get redirected to their https counterpart.
 _**default:**_ "/.well-known/acme-challenge"
+
+## global-auth-url
+
+A url to an existing service that provides authentication for all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-url`.
+Locations that should not get authenticated can be listed using `no-auth-locations` See [no-auth-locations](#no-auth-locations). In addition, each service can be excluded from authentication via annotation `enable-global-auth` set to "false".
+_**default:**_ ""
+
+_References:_ [https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#external-authentication](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#external-authentication)
+
+## global-auth-method
+
+A HTTP method to use for an existing service that provides authentication for all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-method`.
+_**default:**_ ""
+
+## global-auth-signin
+
+Sets the location of the error page for an existing service that provides authentication for all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-signin`.
+_**default:**_ ""
+
+## global-auth-response-headers
+
+Sets the headers to pass to backend once authentication request completes. Applied to all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-response-headers`.
+_**default:**_ ""
+
+## global-auth-request-redirect
+
+Sets the X-Auth-Request-Redirect header value. Applied to all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-request-redirect`.
+_**default:**_ ""
+
+## global-auth-snippet
+
+Sets a custom snippet to use with external authentication. Applied to all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-request-redirect`.
+_**default:**_ ""
 
 ## no-auth-locations
 

@@ -21,15 +21,15 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/klog"
-
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/klog"
 )
 
 var (
-	operation    = []string{"controller_namespace", "controller_class", "controller_pod"}
-	sslLabelHost = []string{"namespace", "class", "host"}
+	operation        = []string{"controller_namespace", "controller_class", "controller_pod"}
+	ingressOperation = []string{"controller_namespace", "controller_class", "controller_pod", "namespace", "ingress"}
+	sslLabelHost     = []string{"namespace", "class", "host"}
 )
 
 // Controller defines base metrics about the ingress controller
@@ -40,9 +40,11 @@ type Controller struct {
 	configSuccess     prometheus.Gauge
 	configSuccessTime prometheus.Gauge
 
-	reloadOperation       *prometheus.CounterVec
-	reloadOperationErrors *prometheus.CounterVec
-	sslExpireTime         *prometheus.GaugeVec
+	reloadOperation             *prometheus.CounterVec
+	reloadOperationErrors       *prometheus.CounterVec
+	checkIngressOperation       *prometheus.CounterVec
+	checkIngressOperationErrors *prometheus.CounterVec
+	sslExpireTime               *prometheus.GaugeVec
 
 	constLabels prometheus.Labels
 	labels      prometheus.Labels
@@ -105,6 +107,22 @@ func NewController(pod, namespace, class string) *Controller {
 			},
 			operation,
 		),
+		checkIngressOperationErrors: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: PrometheusNamespace,
+				Name:      "check_errors",
+				Help:      `Cumulative number of Ingress controller errors during syntax check operations`,
+			},
+			ingressOperation,
+		),
+		checkIngressOperation: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: PrometheusNamespace,
+				Name:      "check_success",
+				Help:      `Cumulative number of Ingress controller syntax check operations`,
+			},
+			ingressOperation,
+		),
 		sslExpireTime: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Namespace: PrometheusNamespace,
@@ -148,6 +166,24 @@ func (cm *Controller) OnStoppedLeading(electionID string) {
 	cm.leaderElection.WithLabelValues(electionID).Set(0)
 }
 
+// IncCheckCount increment the check counter
+func (cm *Controller) IncCheckCount(namespace, name string) {
+	labels := prometheus.Labels{
+		"namespace": namespace,
+		"ingress":   name,
+	}
+	cm.checkIngressOperation.MustCurryWith(cm.constLabels).With(labels).Inc()
+}
+
+// IncCheckErrorCount increment the check error counter
+func (cm *Controller) IncCheckErrorCount(namespace, name string) {
+	labels := prometheus.Labels{
+		"namespace": namespace,
+		"ingress":   name,
+	}
+	cm.checkIngressOperationErrors.MustCurryWith(cm.constLabels).With(labels).Inc()
+}
+
 // ConfigSuccess set a boolean flag according to the output of the controller configuration reload
 func (cm *Controller) ConfigSuccess(hash uint64, success bool) {
 	if success {
@@ -170,6 +206,8 @@ func (cm Controller) Describe(ch chan<- *prometheus.Desc) {
 	cm.configSuccessTime.Describe(ch)
 	cm.reloadOperation.Describe(ch)
 	cm.reloadOperationErrors.Describe(ch)
+	cm.checkIngressOperation.Describe(ch)
+	cm.checkIngressOperationErrors.Describe(ch)
 	cm.sslExpireTime.Describe(ch)
 	cm.leaderElection.Describe(ch)
 }
@@ -181,6 +219,8 @@ func (cm Controller) Collect(ch chan<- prometheus.Metric) {
 	cm.configSuccessTime.Collect(ch)
 	cm.reloadOperation.Collect(ch)
 	cm.reloadOperationErrors.Collect(ch)
+	cm.checkIngressOperation.Collect(ch)
+	cm.checkIngressOperationErrors.Collect(ch)
 	cm.sslExpireTime.Collect(ch)
 	cm.leaderElection.Collect(ch)
 }

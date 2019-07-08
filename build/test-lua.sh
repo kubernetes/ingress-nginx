@@ -14,14 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+if [ -n "$DEBUG" ]; then
+	set -x
+fi
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
 resty \
   -I ./rootfs/etc/nginx/lua \
-  -I /usr/local/lib/lua \
-  -I /usr/lib/lua-platform-path/lua/5.1 \
   --shdict "configuration_data 5M" \
   --shdict "certificate_data 16M" \
   --shdict "balancer_ewma 1M" \

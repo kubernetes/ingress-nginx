@@ -16,46 +16,50 @@
 
 set -e
 
+NC='\e[0m'
+BGREEN='\e[32m'
+
 SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD:-50}
 FOCUS=${FOCUS:-.*}
 E2E_NODES=${E2E_NODES:-5}
+E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-""}
 
-if [ ! -f ${HOME}/.kube/config ]; then
-    kubectl config set-cluster dev --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt --embed-certs=true --server="https://kubernetes.default/"
-    kubectl config set-credentials user --token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
-    kubectl config set-context default --cluster=dev --user=user
-    kubectl config use-context default
+if [ ! -f "${HOME}/.kube/config" ]; then
+  kubectl config set-cluster dev --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt --embed-certs=true --server="https://kubernetes.default/"
+  kubectl config set-credentials user --token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+  kubectl config set-context default --cluster=dev --user=user
+  kubectl config use-context default
 fi
 
-echo "Granting permissions to ingress-nginx e2e service account..."
-kubectl create serviceaccount ingress-nginx-e2e || true
-kubectl create clusterrolebinding permissive-binding \
---clusterrole=cluster-admin \
---user=admin \
---user=kubelet \
---serviceaccount=default:ingress-nginx-e2e || true
-
-kubectl apply -f manifests/rbac.yaml
-
 ginkgo_args=(
-    "-randomizeSuites"
-    "-randomizeAllSpecs"
-    "-flakeAttempts=2"
-    "-p"
-    "-trace"
-    "--noColor=true"
-    "-slowSpecThreshold=${SLOW_E2E_THRESHOLD}"
+  "-randomizeSuites"
+  "-randomizeAllSpecs"
+  "-flakeAttempts=2"
+  "-p"
+  "-trace"
+  "-slowSpecThreshold=${SLOW_E2E_THRESHOLD}"
+  "-r"
 )
 
-echo "Running e2e test suite..."
-ginkgo "${ginkgo_args[@]}"                   \
-    -focus=${FOCUS}                          \
-    -skip="\[Serial\]"                       \
-    -nodes=${E2E_NODES}                      \
-    /e2e.test
+echo -e "${BGREEN}Running e2e test suite (FOCUS=${FOCUS})...${NC}"
+ginkgo "${ginkgo_args[@]}"               \
+  -focus="${FOCUS}"                      \
+  -skip="\[Serial\]|\[MemoryLeak\]"      \
+  -nodes="${E2E_NODES}"                  \
+  /e2e.test
 
-echo "Running e2e test suite with tests that require serial execution..."
-ginkgo "${ginkgo_args[@]}"                   \
-    -focus="\[Serial\]"                      \
-    -nodes=1                                 \
+echo -e "${BGREEN}Running e2e test suite with tests that require serial execution...${NC}"
+ginkgo "${ginkgo_args[@]}"               \
+  -focus="\[Serial\]"                    \
+  -skip="\[MemoryLeak\]"                 \
+  -nodes=1                               \
+  /e2e.test
+
+if [[ ${E2E_CHECK_LEAKS} != "" ]]; then
+  echo -e "${BGREEN}Running e2e test suite with tests that check for memory leaks...${NC}"
+  ginkgo "${ginkgo_args[@]}"             \
+    -focus="\[MemoryLeak\]"              \
+    -skip="\[Serial\]"                   \
+    -nodes=1                             \
     /e2e.test
+fi
