@@ -1,4 +1,4 @@
-OpenResty base image using [debian-base](quay.io/kubernetes-ingress-controller/debian-base-amd64)
+OpenResty base image using [debian-base](https://quay.io/kubernetes-ingress-controller/debian-base-amd64)
 
 OpenResty® is a dynamic web platform based on NGINX and LuaJIT.
 
