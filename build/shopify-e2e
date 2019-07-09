@@ -11,4 +11,5 @@ _term() {
 }
 trap _term SIGTERM
 
-sleep 9000
+make e2e-test-image
+make e2e-test
