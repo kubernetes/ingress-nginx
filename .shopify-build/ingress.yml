@@ -1,0 +1,27 @@
+containers:
+  default:
+    docker: quay.io/kubernetes-ingress-controller/e2e:v06262019-ecce3fd7b
+
+steps:
+- label: Static Check
+  timeout: 5m
+  run:
+  - build/static-check.sh
+  env:
+    PKG: Shopify/ingress
+
+- label: Lua unit test
+  timeout: 5m
+  run:
+  - build/test-lua.sh
+  env:
+    BUSTED_ARGS: -v --pattern=_test
+
+- label: Go unit test
+  timeout: 50m
+  run:
+  - mkdir -p $GOPATH/src/$PKG
+  - cp -r /app/* $GOPATH/src/$PKG/
+  - cd $GOPATH/src/$PKG && build/cover.sh
+  env:
+    PKG: k8s.io/ingress-nginx
