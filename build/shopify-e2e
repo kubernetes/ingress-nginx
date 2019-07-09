@@ -15,6 +15,7 @@ echo $PWD
 ls -al
 
 ### build e2e image
+go get github.com/onsi/ginkgo/ginkgo
 ginkgo build ./test/e2e
 
 cd test/e2e-image/
