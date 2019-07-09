@@ -1,6 +1,13 @@
 containers:
   default:
     docker: quay.io/kubernetes-ingress-controller/e2e:v06262019-ecce3fd7b
+  e2e:
+    build:
+      env:
+        PIPA_PIPELINE_TEMPLATE: dockerfile
+        PIPA_DOCKERFILE: test/e2e-image/Dockerfile
+        PIPA_DOCKER_CACHE_FROM_BRANCH: "true"
+        PIPA_TAG_BRANCH: "true"
 
 steps:
 - label: Static Check
@@ -27,13 +34,13 @@ steps:
     PKG: k8s.io/ingress-nginx
 
 - label: E2e test
-  command: build/shopify-e2e
-  timeout_in_minutes: 45
-  agents:
-    queue: k8s-ci
+  timeout: 35m
+  run:
+  - build/shopify-e2e
   env:
     LOGGING_LEVEL: "4"
     KUBERNETES_VERSION: "v1.11-latest"
     PKG: "k8s.io/ingress-nginx"
     E2E_NODES: "10"
     SLOW_E2E_THRESHOLD: "50"
+  container: e2e
