@@ -24,7 +24,6 @@ endif
 
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
-DUMB_ARCH = ${ARCH}
 
 BASEIMAGE?=alpine:3.9
 
