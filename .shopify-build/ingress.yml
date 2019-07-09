@@ -31,6 +31,7 @@ steps:
   run:
   - mkdir -p $GOPATH/src/$PKG
   - cp -r /app/* $GOPATH/src/$PKG/
+  - sleep 9000
   - cd $GOPATH/src/$PKG && build/run-e2e-suite.sh
   env:
     PKG: "k8s.io/ingress-nginx"
