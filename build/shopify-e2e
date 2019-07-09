@@ -11,5 +11,8 @@ _term() {
 }
 trap _term SIGTERM
 
+echo $PWD
+ls -al
+
 make e2e-test-image
 make e2e-test
