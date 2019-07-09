@@ -28,6 +28,8 @@ steps:
 
 - label: E2e test
   timeout: 45m
+  agents:
+    queue: k8s-ci
   run:
   - mkdir -p $GOPATH/src/$PKG
   - cp -r /app/* $GOPATH/src/$PKG/
