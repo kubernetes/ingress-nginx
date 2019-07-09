@@ -14,5 +14,18 @@ trap _term SIGTERM
 echo $PWD
 ls -al
 
-make e2e-test-image
-make e2e-test
+### build e2e image
+ginkgo build ./test/e2e
+
+cd test/e2e-image/
+cp ../e2e/e2e.test .
+cp ../e2e/wait-for-nginx.sh .
+cp -r ../../deploy/cloud-generic .
+cp -r ../../deploy/cluster-wide .
+
+IMAGE=nginx-ingress-controller:e2e
+docker build -t $(IMAGE) .
+### build e2e image end
+
+cd ../..
+build/run-e2e-suite.sh
