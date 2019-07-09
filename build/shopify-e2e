@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+if [[ -n "${DEBUG:+set}" ]]; then
+  set -x
+fi
+
+_term() {
+  echo "Test aborted via SIGTERM - was the CI instance preempted?"
+  exit 1
+}
+trap _term SIGTERM
+
+sleep 9000
