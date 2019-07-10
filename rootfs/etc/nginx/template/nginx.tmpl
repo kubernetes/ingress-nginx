@@ -681,6 +681,8 @@ stream {
     server {
         listen unix:{{ .StreamSocket }};
 
+        access_log off;
+        
         content_by_lua_block {
           tcp_udp_configuration.call()
         }
