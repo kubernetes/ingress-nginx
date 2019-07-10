@@ -135,7 +135,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 		responseLength: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:        "response_size",
-				Help:        "The response length (including request line, header, and request body)",
+				Help:        "The response length (including response line, header, and response body)",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
