@@ -145,7 +145,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 		requestTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:        "request_duration_seconds",
-				Help:        "The request processing time in milliseconds",
+				Help:        "The request processing time in seconds",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
