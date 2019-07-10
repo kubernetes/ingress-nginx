@@ -1234,6 +1234,11 @@
 <td>Legacy version of the previous annotation for compatibility with older browsers, generates an <code class="codehilite">Expires</code> cookie directive by adding the seconds to the current date</td>
 <td>number of seconds</td>
 </tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/session-cookie-change-on-failure</td>
+<td>When set to <code class="codehilite">false</code> nginx ingress will send request to upstream pointed by sticky cookie even if previous attempt failed. When set to <code class="codehilite">true</code> and previous attempt failed, sticky cookie will be changed to point to another upstream.</td>
+<td><code class="codehilite">true</code> or <code class="codehilite">false</code> (defaults to <code class="codehilite">false</code>)</td>
+</tr>
 </tbody>
 </table>
 <p>You can create the <a href="ingress.yaml">example Ingress</a> to test this:</p>

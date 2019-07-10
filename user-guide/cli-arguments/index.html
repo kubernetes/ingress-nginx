@@ -1186,7 +1186,7 @@
 </tr>
 <tr>
 <td><code class="codehilite">--enable-dynamic-certificates</code></td>
-<td>Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off (default behaviour). Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. (enabled by default)</td>
+<td>Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off (default behaviour). Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. Once the backing Lua shared dictionary <code class="codehilite">certificate_data</code> is full, the least recently used certificate will be removed to store new ones. (enabled by default)</td>
 </tr>
 <tr>
 <td><code class="codehilite">--enable-ssl-chain-completion</code></td>

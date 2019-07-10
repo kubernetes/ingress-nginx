@@ -1108,6 +1108,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#notes-on-using-responserequest-streams" title="Notes on using response/request streams" class="md-nav__link">
+    Notes on using response/request streams
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1240,6 +1247,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#notes-on-using-responserequest-streams" title="Notes on using response/request streams" class="md-nav__link">
+    Notes on using response/request streams
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1352,6 +1366,18 @@ can actually talk to the backend.  To do this, we'll use the
 <p>If you are developing public gRPC endpoints, check out
 https://proto.stack.build, a protocol buffer / gRPC build service that can use
 to help make it easier for your users to consume your API.</p>
+<p>See also the specific GRPC settings of NGINX: https://nginx.org/en/docs/http/ngx_http_grpc_module.html</p>
+</blockquote>
+<h3 id="notes-on-using-responserequest-streams">Notes on using response/request streams<a class="headerlink" href="#notes-on-using-responserequest-streams" title="Permanent link">&para;</a></h3>
+<ol>
+<li>If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the <code class="codehilite">grpc_read_timeout</code> to acommodate for this.</li>
+<li>If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the 
+<code class="codehilite">grpc_send_timeout</code> and the <code class="codehilite">client_body_timeout</code>.</li>
+<li>If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: <code class="codehilite">grpc_read_timeout</code>, <code class="codehilite">grpc_send_timeout</code> and <code class="codehilite">client_body_timeout</code>.</li>
+</ol>
+<p>Values for the timeouts must be specified as e.g. <code class="codehilite">&quot;1200s&quot;</code>.</p>
+<blockquote>
+<p>On the most recent versions of nginx-ingress, changing these timeouts requires using the <code class="codehilite">nginx.ingress.kubernetes.io/server-snippet</code> annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout seperately.</p>
 </blockquote>
                 
                   
