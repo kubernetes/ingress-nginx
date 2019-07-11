@@ -150,4 +150,8 @@ type Backend struct {
 	// Enables or disables buffering of responses from the proxied server.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering
 	ProxyBuffering string `json:"proxy-buffering"`
+
+	// Modifies the HTTP version the proxy uses to interact with the backend.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
+	ProxyHTTPVersion string `json:"proxy-http-version"`
 }

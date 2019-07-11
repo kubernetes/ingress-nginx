@@ -81,6 +81,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyNextUpstreamTries:   3,
 		ProxyRequestBuffering:    "on",
 		ProxyBuffering:           "off",
+		ProxyHTTPVersion:         "1.1",
 	}
 }
 
@@ -99,6 +100,7 @@ func TestProxy(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream-tries")] = "3"
 	data[parser.GetAnnotationWithPrefix("proxy-request-buffering")] = "off"
 	data[parser.GetAnnotationWithPrefix("proxy-buffering")] = "on"
+	data[parser.GetAnnotationWithPrefix("proxy-http-version")] = "1.0"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -141,6 +143,9 @@ func TestProxy(t *testing.T) {
 	}
 	if p.ProxyBuffering != "on" {
 		t.Errorf("expected on as proxy-buffering but returned %v", p.ProxyBuffering)
+	}
+	if p.ProxyHTTPVersion != "1.0" {
+		t.Errorf("expected 1.0 as proxy-http-version but returned %v", p.ProxyHTTPVersion)
 	}
 }
 
@@ -187,5 +192,8 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 	if p.RequestBuffering != "on" {
 		t.Errorf("expected on as request-buffering but returned %v", p.RequestBuffering)
+	}
+	if p.ProxyHTTPVersion != "1.1" {
+		t.Errorf("expected 1.1 as proxy-http-version but returned %v", p.ProxyHTTPVersion)
 	}
 }

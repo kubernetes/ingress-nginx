@@ -927,6 +927,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		RequestBuffering:    bdef.ProxyRequestBuffering,
 		ProxyRedirectFrom:   bdef.ProxyRedirectFrom,
 		ProxyBuffering:      bdef.ProxyBuffering,
+		ProxyHTTPVersion:    bdef.ProxyHTTPVersion,
 	}
 
 	defaultCertificate := n.cfg.FakeCertificate
