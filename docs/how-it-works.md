@@ -4,7 +4,7 @@ The objective of this document is to explain how the NGINX Ingress controller wo
 
 ## NGINX configuration
 
-The goal of this Ingress controller is the assembly of a configuration file (nginx.conf). The main implication of this requirement is the need to reload NGINX after any change in the configuration file. _Though it is important to note that we don't reload Nginx on changes that impact only an `upstream` configuration (i.e Endpoints change when you deploy your app)_. We use https://github.com/openresty/lua-nginx-module to achieve this. Check [below](#avoiding-reloads-on-endpoints-changes) to learn more about how it's done.
+The goal of this Ingress controller is the assembly of a configuration file (nginx.conf). The main implication of this requirement is the need to reload NGINX after any change in the configuration file. _Though it is important to note that we don't reload Nginx on changes that impact only an `upstream` configuration (i.e Endpoints change when you deploy your app)_. We use [lua-nginx-module](https://github.com/openresty/lua-nginx-module) to achieve this. Check [below](#avoiding-reloads-on-endpoints-changes) to learn more about how it's done.
 
 ## NGINX model
 
