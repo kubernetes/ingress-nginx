@@ -872,6 +872,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-http-version" title="Proxy HTTP version" class="md-nav__link">
+    Proxy HTTP version
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ssl-ciphers" title="SSL ciphers" class="md-nav__link">
     SSL ciphers
   </a>
@@ -1783,6 +1790,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-http-version" title="Proxy HTTP version" class="md-nav__link">
+    Proxy HTTP version
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ssl-ciphers" title="SSL ciphers" class="md-nav__link">
     SSL ciphers
   </a>
@@ -2096,6 +2110,10 @@ table below.</p>
 <tr>
 <td><a href="#proxy-redirect">nginx.ingress.kubernetes.io/proxy-redirect-to</a></td>
 <td>string</td>
+</tr>
+<tr>
+<td><a href="#proxy-http-version">nginx.ingress.kubernetes.io/proxy-http-version</a></td>
+<td>"1.0" or "1.1"</td>
 </tr>
 <tr>
 <td><a href="#enable-rewrite-log">nginx.ingress.kubernetes.io/enable-rewrite-log</a></td>
@@ -2643,6 +2661,12 @@ By default proxy buffer size is set as "4k"</p>
 <p>To configure this setting globally, set <code class="codehilite">proxy-buffer-size</code> in <a href="../configmap/#proxy-buffer-size">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-buffer-size</span><span class="p">:</span> <span class="s">&quot;8k&quot;</span>
 </pre></div></p>
+<h3 id="proxy-http-version">Proxy HTTP version<a class="headerlink" href="#proxy-http-version" title="Permanent link">&para;</a></h3>
+<p>Using this annotation sets the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version"><code class="codehilite">proxy_http_version</code></a> that the Nginx reverse proxy will use to communicate with the backend.
+By default this is set to "1.1".</p>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-http-version</span><span class="p">:</span> <span class="s">&quot;1.0&quot;</span>
+</pre></div>
+
 <h3 id="ssl-ciphers">SSL ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link">&para;</a></h3>
 <p>Specifies the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers">enabled ciphers</a>.</p>
 <p>Using this annotation will set the <code class="codehilite">ssl_ciphers</code> directive at the server level. This configuration is active for all the paths in the host.</p>
