@@ -4,7 +4,7 @@
 
 - [Prerequisite Generic Deployment Command](#prerequisite-generic-deployment-command)
   - [Provider Specific Steps](#provider-specific-steps)
-    - [Docker for Mac](#docker-for-mac)
+    - [Docker for Mac and Windows 10 Pro/Enterprise](#docker-for-mac-and-windows-10-pro/enterprise)
     - [minikube](#minikube)
     - [AWS](#aws)
     - [GCE - GKE](#gce-gke)
@@ -41,9 +41,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 There are cloud provider specific yaml files.
 
-#### Docker for Mac
+#### Docker for Mac and Windows 10 Pro/Enterprise
 
-Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018))
+Kubernetes is available in Docker for Mac and Windows 10 Pro/Enterprise (from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018))
 
 [enable]: https://docs.docker.com/docker-for-mac/#kubernetes
 
