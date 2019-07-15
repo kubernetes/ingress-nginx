@@ -6,11 +6,12 @@
 package rate
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 // Limit defines the maximum frequency of some events.
@@ -243,12 +244,8 @@ func (lim *Limiter) WaitN(ctx context.Context, n int) (err error) {
 	if !r.ok {
 		return fmt.Errorf("rate: Wait(n=%d) would exceed context deadline", n)
 	}
-	// Wait if necessary
-	delay := r.DelayFrom(now)
-	if delay == 0 {
-		return nil
-	}
-	t := time.NewTimer(delay)
+	// Wait
+	t := time.NewTimer(r.DelayFrom(now))
 	defer t.Stop()
 	select {
 	case <-t.C:
