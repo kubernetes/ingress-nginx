@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/tracing"
 )
 
 const (
@@ -94,16 +93,6 @@ func (f *Future) Done(sender autorest.Sender) (bool, error) {
 
 // DoneWithContext queries the service to see if the operation has completed.
 func (f *Future) DoneWithContext(ctx context.Context, sender autorest.Sender) (done bool, err error) {
-	ctx = tracing.StartSpan(ctx, "github.com/Azure/go-autorest/autorest/azure/async.DoneWithContext")
-	defer func() {
-		sc := -1
-		resp := f.Response()
-		if resp != nil {
-			sc = resp.StatusCode
-		}
-		tracing.EndSpan(ctx, sc, err)
-	}()
-
 	// support for legacy Future implementation
 	if f.req != nil {
 		resp, err := sender.Do(f.req)
@@ -186,15 +175,6 @@ func (f Future) WaitForCompletion(ctx context.Context, client autorest.Client) e
 // If PollingDuration is greater than zero the value will be used as the context's timeout.
 // If PollingDuration is zero then no default deadline will be used.
 func (f *Future) WaitForCompletionRef(ctx context.Context, client autorest.Client) (err error) {
-	ctx = tracing.StartSpan(ctx, "github.com/Azure/go-autorest/autorest/azure/async.WaitForCompletionRef")
-	defer func() {
-		sc := -1
-		resp := f.Response()
-		if resp != nil {
-			sc = resp.StatusCode
-		}
-		tracing.EndSpan(ctx, sc, err)
-	}()
 	cancelCtx := ctx
 	// if the provided context already has a deadline don't override it
 	_, hasDeadline := ctx.Deadline()

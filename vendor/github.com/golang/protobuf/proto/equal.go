@@ -246,8 +246,7 @@ func equalExtMap(base reflect.Type, em1, em2 map[int32]Extension) bool {
 			return false
 		}
 
-		m1 := extensionAsLegacyType(e1.value)
-		m2 := extensionAsLegacyType(e2.value)
+		m1, m2 := e1.value, e2.value
 
 		if m1 == nil && m2 == nil {
 			// Both have only encoded form.
