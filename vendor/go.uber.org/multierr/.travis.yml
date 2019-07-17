@@ -9,7 +9,7 @@ env:
 go:
   - 1.7
   - 1.8
-  - tip
+  - 1.9
 
 cache:
   directories:
