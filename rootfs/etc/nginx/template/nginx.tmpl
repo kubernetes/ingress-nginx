@@ -443,6 +443,9 @@ http {
     {{ $zone }}
     {{ end }}
 
+    # Cache for internal auth checks
+    proxy_cache_path /tmp/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off;
+
     # Global filters
     {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
     {{ end }}
@@ -896,6 +899,23 @@ stream {
         location = {{ $authPath }} {
             internal;
 
+            {{ if $externalAuth.AuthCacheKey }}
+            set $tmp_cache_key '{{ $server.Hostname }}{{ $authPath }}{{ $externalAuth.AuthCacheKey }}';
+            set $cache_key '';
+
+            rewrite_by_lua_block {
+                ngx.var.cache_key = ngx.encode_base64(ngx.sha1_bin(ngx.var.tmp_cache_key))
+            }
+
+            proxy_cache auth_cache;
+
+            {{- range $dur := $externalAuth.AuthCacheDuration }}
+            proxy_cache_valid {{ $dur }};
+            {{- end }}
+
+            proxy_cache_key "$cache_key";
+            {{ end }}
+
             # ngx_auth_request module overrides variables in the parent request,
             # therefore we have to explicitly set this variable again so that when the parent request
             # resumes it has the correct value set for this variable so that Lua can pick backend correctly
@@ -928,7 +948,11 @@ stream {
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
 
+            {{ if $externalAuth.AuthCacheKey }}
+            proxy_buffering                         "on";
+            {{ else }}
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
+            {{ end }}
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
             proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};

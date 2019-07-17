@@ -57,6 +57,8 @@ const (
 	globalAuthResponseHeaders = "global-auth-response-headers"
 	globalAuthRequestRedirect = "global-auth-request-redirect"
 	globalAuthSnippet         = "global-auth-snippet"
+	globalAuthCacheKey        = "global-auth-cache-key"
+	globalAuthCacheDuration   = "global-auth-cache-duration"
 )
 
 var (
@@ -224,6 +226,23 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, globalAuthSnippet)
 
 		to.GlobalExternalAuth.AuthSnippet = val
+	}
+
+	if val, ok := conf[globalAuthCacheKey]; ok {
+		delete(conf, globalAuthCacheKey)
+
+		to.GlobalExternalAuth.AuthCacheKey = val
+	}
+
+	// Verify that the configured global external authorization cache duration is valid
+	if val, ok := conf[globalAuthCacheDuration]; ok {
+		delete(conf, globalAuthCacheDuration)
+
+		cacheDurations, err := authreq.ParseStringToCacheDurations(val)
+		if err != nil {
+			klog.Warningf("Global auth location denied - %s", err)
+		}
+		to.GlobalExternalAuth.AuthCacheDuration = cacheDurations
 	}
 
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value
