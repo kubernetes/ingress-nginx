@@ -56,6 +56,9 @@ echo "[dev-env] building container"
 make -C ${DIR}/../../ build container
 make -C ${DIR}/../../ e2e-test-image
 
+# Remove after https://github.com/kubernetes/ingress-nginx/pull/4271 is merged
+docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
+
 echo "[dev-env] copying docker images to cluster..."
 kind load docker-image --name="${KIND_CLUSTER_NAME}" nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-controller:${TAG}

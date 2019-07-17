@@ -262,14 +262,14 @@ func TestConfigureDynamically(t *testing.T) {
 func TestConfigureCertificates(t *testing.T) {
 	listener, err := net.Listen("unix", nginx.StatusSocket)
 	if err != nil {
-		t.Errorf("crating unix listener: %s", err)
+		t.Fatalf("crating unix listener: %s", err)
 	}
 	defer listener.Close()
 	defer os.Remove(nginx.StatusSocket)
 
 	streamListener, err := net.Listen("unix", nginx.StreamSocket)
 	if err != nil {
-		t.Errorf("crating unix listener: %s", err)
+		t.Fatalf("crating unix listener: %s", err)
 	}
 	defer streamListener.Close()
 	defer os.Remove(nginx.StreamSocket)
