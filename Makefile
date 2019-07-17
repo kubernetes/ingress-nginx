@@ -44,7 +44,7 @@ PKG = k8s.io/ingress-nginx
 
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
-DUMB_ARCH = ${ARCH}
+
 
 GOBUILD_FLAGS := -v
 
@@ -56,13 +56,9 @@ BUSTED_ARGS =-v --pattern=_test
 
 GOOS = linux
 
-IMGNAME = nginx-ingress-controller
-IMAGE = $(REGISTRY)/$(IMGNAME)
-
-MULTI_ARCH_IMG = ${IMAGE}-${ARCH}
+MULTI_ARCH_IMAGE = $(REGISTRY)/nginx-ingress-controller-${ARCH}
 
 export ARCH
-export DUMB_ARCH
 export TAG
 export PKG
 export GOARCH
@@ -116,7 +112,6 @@ container: clean-container .container-$(ARCH)
 	cp -RP ./* $(TEMP_DIR)
 	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
 	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
-	$(SED_I) "s|DUMB_ARCH|$(DUMB_ARCH)|g" $(DOCKERFILE)
 
 ifeq ($(ARCH),amd64)
 	# When building "normally" for amd64, remove the whole line, it has no part in the amd64 image
@@ -127,16 +122,13 @@ else
 	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
 endif
 
-	@$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
+	echo "Building docker image..."
+	$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMAGE):$(TAG) $(TEMP_DIR)/rootfs
 
-ifeq ($(ARCH), amd64)
-	# This is for maintaining backward compatibility
-	@$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
-endif
 
 .PHONY: clean-container
 clean-container:
-	@$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
+	@$(DOCKER) rmi -f $(MULTI_ARCH_IMAGE):$(TAG) || true
 
 .PHONY: register-qemu
 register-qemu:
@@ -148,10 +140,7 @@ push: .push-$(ARCH)
 
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
-	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
-ifeq ($(ARCH), amd64)
-	$(DOCKER) push $(IMAGE):$(TAG)
-endif
+	$(DOCKER) push $(MULTI_ARCH_IMAGE):$(TAG)
 
 .PHONY: build
 build:

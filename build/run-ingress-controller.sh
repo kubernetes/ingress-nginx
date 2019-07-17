@@ -62,6 +62,7 @@ POD_NAMESPACE="invalid-namespace"
 POD_NAME="invalid-namespace"
 
 export TAG=local
+export IMAGE
 
 if [[ "${ARCH}" != "amd64" ]]; then
   echo -e "${BGREEN}Register ${RED}/usr/bin/qemu-ARCH-static${BGREEN} as the handler for binaries in multiple platforms${NC}"
@@ -102,7 +103,7 @@ docker run \
   -v "${SSL_VOLUME}:/etc/ingress-controller/ssl/" \
   -v "${HOME}/.kube:${HOME}/.kube:ro" \
   ${MINIKUBE_VOLUME} \
-  "${IMAGE}-${ARCH}:local" /nginx-ingress-controller \
+  "${IMAGE}:${TAG}" /nginx-ingress-controller \
   --update-status=false \
   --v=2 \
   --apiserver-host=http://0.0.0.0:8001 \
