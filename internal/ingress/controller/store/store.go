@@ -684,6 +684,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1beta1.Ingress) {
 	secretAnnotations := []string{
 		"auth-secret",
 		"auth-tls-secret",
+		"proxy-ssl-secret",
 	}
 	for _, ann := range secretAnnotations {
 		secrKey, err := objectRefAnnotationNsKey(ann, ing)
