@@ -17,6 +17,8 @@ limitations under the License.
 package framework
 
 import (
+	"time"
+
 	. "github.com/onsi/gomega"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -137,4 +139,15 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, int(replicas))
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
+}
+
+// DeleteDeployment deletes a deployment with a particular name and waits for the pods to be deleted
+func (f *Framework) DeleteDeployment(name string) error {
+	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(name, metav1.GetOptions{})
+	Expect(err).NotTo(HaveOccurred(), "failed to get a deployment")
+	err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Delete(name, &metav1.DeleteOptions{})
+	Expect(err).NotTo(HaveOccurred(), "failed to delete a deployment")
+	return WaitForPodsDeleted(f.KubeClientSet, time.Second*60, f.Namespace, metav1.ListOptions{
+		LabelSelector: labelSelectorToString(d.Spec.Selector.MatchLabels),
+	})
 }

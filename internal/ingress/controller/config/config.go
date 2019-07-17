@@ -622,7 +622,7 @@ func NewDefault() Configuration {
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
 	defProxyDeadlineDuration := time.Duration(5) * time.Second
-	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", append(defResponseHeaders, ""), "", ""}
+	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}}
 
 	cfg := Configuration{
 		AllowBackendServerHeader:         false,
@@ -808,10 +808,12 @@ type ListenPorts struct {
 type GlobalExternalAuth struct {
 	URL string `json:"url"`
 	// Host contains the hostname defined in the URL
-	Host            string   `json:"host"`
-	SigninURL       string   `json:"signinUrl"`
-	Method          string   `json:"method"`
-	ResponseHeaders []string `json:"responseHeaders,omitempty"`
-	RequestRedirect string   `json:"requestRedirect"`
-	AuthSnippet     string   `json:"authSnippet"`
+	Host              string   `json:"host"`
+	SigninURL         string   `json:"signinUrl"`
+	Method            string   `json:"method"`
+	ResponseHeaders   []string `json:"responseHeaders,omitempty"`
+	RequestRedirect   string   `json:"requestRedirect"`
+	AuthSnippet       string   `json:"authSnippet"`
+	AuthCacheKey      string   `json:"authCacheKey"`
+	AuthCacheDuration []string `json:"authCacheDuration"`
 }

@@ -288,6 +288,14 @@ func podRunning(c kubernetes.Interface, podName, namespace string) wait.Conditio
 	}
 }
 
+func labelSelectorToString(labels map[string]string) string {
+	var str string
+	for k, v := range labels {
+		str += fmt.Sprintf("%s=%s,", k, v)
+	}
+	return str[:len(str)-1]
+}
+
 // NewInt32 converts int32 to a pointer
 func NewInt32(val int32) *int32 {
 	p := new(int32)
