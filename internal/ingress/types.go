@@ -293,10 +293,18 @@ type Location struct {
 	// DefaultBackendUpstreamName is the upstream-formatted string for the name of
 	// this location's custom default backend
 	DefaultBackendUpstreamName string `json:"defaultBackendUpstreamName,omitempty"`
+	// XForwardedPort allows to add a header X-Forwarded-Port to the request with the
+	// original port.
+	// +optional
+	XForwardedPort string `json:"xForwardedPort,omitempty"`
 	// XForwardedPrefix allows to add a header X-Forwarded-Prefix to the request with the
 	// original location.
 	// +optional
 	XForwardedPrefix string `json:"xForwardedPrefix,omitempty"`
+	// XForwardedProto allows to add a header X-Forwarded-Proto to the request with the
+	// original protocol.
+	// +optional
+	XForwardedProto string `json:"xForwardedProto,omitempty"`
 	// Logs allows to enable or disable the nginx logs
 	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`

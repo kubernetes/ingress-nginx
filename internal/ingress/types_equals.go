@@ -380,7 +380,13 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.UpstreamVhost != l2.UpstreamVhost {
 		return false
 	}
+	if l1.XForwardedPort != l2.XForwardedPort {
+		return false
+	}
 	if l1.XForwardedPrefix != l2.XForwardedPrefix {
+		return false
+	}
+	if l1.XForwardedProto != l2.XForwardedProto {
 		return false
 	}
 	if !(&l1.Connection).Equal(&l2.Connection) {

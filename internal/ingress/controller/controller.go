@@ -1157,7 +1157,9 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.UpstreamVhost = anns.UpstreamVhost
 	loc.Whitelist = anns.Whitelist
 	loc.Denied = anns.Denied
+	loc.XForwardedPort = anns.XForwardedPort
 	loc.XForwardedPrefix = anns.XForwardedPrefix
+	loc.XForwardedProto = anns.XForwardedProto
 	loc.UsePortInRedirects = anns.UsePortInRedirects
 	loc.Connection = anns.Connection
 	loc.Logs = anns.Logs

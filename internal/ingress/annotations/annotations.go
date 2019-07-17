@@ -59,7 +59,9 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamhashby"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamvhost"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/xforwardedport"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/xforwardedprefix"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/xforwardedproto"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -101,7 +103,9 @@ type Ingress struct {
 	LoadBalancing      string
 	UpstreamVhost      string
 	Whitelist          ipwhitelist.SourceRange
+	XForwardedPort     string
 	XForwardedPrefix   string
+	XForwardedProto    string
 	SSLCiphers         string
 	Logs               log.Config
 	LuaRestyWAF        luarestywaf.Config
@@ -146,7 +150,9 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"LoadBalancing":        loadbalancing.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
+			"XForwardedPort":       xforwardedport.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
+			"XForwardedProto":      xforwardedproto.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),
 			"LuaRestyWAF":          luarestywaf.NewParser(cfg),
