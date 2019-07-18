@@ -31,7 +31,7 @@ metadata:
 
 ### Example: OAuth2 Proxy + Kubernetes-Dashboard
 
-This example will show you how to deploy [`oauth2_proxy`](https://github.com/bitly/oauth2_proxy)
+This example will show you how to deploy [`oauth2_proxy`](https://github.com/pusher/oauth2_proxy)
 into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using github as oAuth2 provider
 
 #### Prepare
@@ -55,7 +55,7 @@ kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addon
 
 - OAUTH2_PROXY_CLIENT_ID with the github `<Client ID>`
 - OAUTH2_PROXY_CLIENT_SECRET with the github `<Client Secret>`
-- OAUTH2_PROXY_COOKIE_SECRET with value of `python -c 'import os,base64; print base64.b64encode(os.urandom(16))'`      
+- OAUTH2_PROXY_COOKIE_SECRET with value of `python -c 'import os,base64; print base64.b64encode(os.urandom(16))'`
 
 4. Customize the contents of the file dashboard-ingress.yaml:
 
