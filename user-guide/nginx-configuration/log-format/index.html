@@ -1145,7 +1145,7 @@
 <span class="x">    &#39;</span><span class="cp">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nv">cfg.useProxyProtocol</span> <span class="cp">}}</span><span class="x">$proxy_protocol_addr</span><span class="cp">{{</span> <span class="k">else</span> <span class="cp">}}</span><span class="x">$remote_addr</span><span class="cp">{{</span> <span class="nv">end</span> <span class="cp">}}</span><span class="x"> - &#39;</span>
 <span class="x">    &#39;[$the_real_ip] - $remote_user [$time_local] &quot;$request&quot; &#39;</span>
 <span class="x">    &#39;$status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;</span>
-<span class="x">    &#39;$request_length $request_time [$proxy_upstream_name] $upstream_addr &#39;</span>
+<span class="x">    &#39;$request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr &#39;</span>
 <span class="x">    &#39;$upstream_response_length $upstream_response_time $upstream_status $req_id&#39;;</span>
 </pre></div>
 
@@ -1208,6 +1208,10 @@
 <tr>
 <td><code class="codehilite">$proxy_upstream_name</code></td>
 <td>name of the upstream. The format is <code class="codehilite">upstream-&lt;namespace&gt;-&lt;service name&gt;-&lt;service port&gt;</code></td>
+</tr>
+<tr>
+<td><code class="codehilite">$proxy_alternative_upstream_name</code></td>
+<td>name of the alternative upstream. The format is <code class="codehilite">upstream-&lt;namespace&gt;-&lt;service name&gt;-&lt;service port&gt;</code></td>
 </tr>
 <tr>
 <td><code class="codehilite">$upstream_addr</code></td>

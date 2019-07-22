@@ -1531,6 +1531,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#global-auth-cache-key" title="global-auth-cache-key" class="md-nav__link">
+    global-auth-cache-key
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-auth-cache-duration" title="global-auth-cache-duration" class="md-nav__link">
+    global-auth-cache-duration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#no-auth-locations" title="no-auth-locations" class="md-nav__link">
     no-auth-locations
   </a>
@@ -3028,6 +3042,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#global-auth-cache-key" title="global-auth-cache-key" class="md-nav__link">
+    global-auth-cache-key
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-auth-cache-duration" title="global-auth-cache-duration" class="md-nav__link">
+    global-auth-cache-duration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#no-auth-locations" title="no-auth-locations" class="md-nav__link">
     no-auth-locations
   </a>
@@ -3769,6 +3797,16 @@ Same for numbers, like "100".</p>
 <td align="left">""</td>
 </tr>
 <tr>
+<td align="left"><a href="#global-auth-cache-key">global-auth-cache-key</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
+<td align="left"><a href="#global-auth-cache-duration">global-auth-cache-duration</a></td>
+<td align="left">string</td>
+<td align="left">"200 202 401 5m"</td>
+</tr>
+<tr>
 <td align="left"><a href="#no-auth-locations">no-auth-locations</a></td>
 <td align="left">string</td>
 <td align="left">"/.well-known/acme-challenge"</td>
@@ -3807,7 +3845,7 @@ Same for numbers, like "100".</p>
 <p>Access log path. Goes to <code class="codehilite">/var/log/nginx/access.log</code> by default.</p>
 <p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/access.log</code> is a symlink to <code class="codehilite">/dev/stdout</code></p>
 <h2 id="enable-access-log-for-default-backend">enable-access-log-for-default-backend<a class="headerlink" href="#enable-access-log-for-default-backend" title="Permanent link">&para;</a></h2>
-<p>Enables logging access to default backend. <em><strong>default:</strong></em> is disabled. </p>
+<p>Enables logging access to default backend. <em><strong>default:</strong></em> is disabled.</p>
 <h2 id="error-log-path">error-log-path<a class="headerlink" href="#error-log-path" title="Permanent link">&para;</a></h2>
 <p>Error log path. Goes to <code class="codehilite">/var/log/nginx/error.log</code> by default.</p>
 <p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/error.log</code> is a symlink to <code class="codehilite">/dev/stderr</code></p>
@@ -3986,7 +4024,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <h2 id="ssl-session-ticket-key">ssl-session-ticket-key<a class="headerlink" href="#ssl-session-ticket-key" title="Permanent link">&para;</a></h2>
 <p>Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
 To create a ticket: <code class="codehilite">openssl rand 80 | openssl enc -A -base64</code></p>
-<p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session ticket-key</a>, by default, a randomly generated key is used. </p>
+<p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session ticket-key</a>, by default, a randomly generated key is used.</p>
 <h2 id="ssl-session-timeout">ssl-session-timeout<a class="headerlink" href="#ssl-session-timeout" title="Permanent link">&para;</a></h2>
 <p>Sets the time during which a client may <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout">reuse the session</a> parameters stored in a cache.</p>
 <h2 id="ssl-buffer-size">ssl-buffer-size<a class="headerlink" href="#ssl-buffer-size" title="Permanent link">&para;</a></h2>
@@ -4065,7 +4103,7 @@ The value can either be:</p>
 <h2 id="upstream-keepalive-connections">upstream-keepalive-connections<a class="headerlink" href="#upstream-keepalive-connections" title="Permanent link">&para;</a></h2>
 <p>Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle
 keepalive connections to upstream servers that are preserved in the cache of each worker process. When this number is
-exceeded, the least recently used connections are closed. 
+exceeded, the least recently used connections are closed.
 <em><strong>default:</strong></em> 32</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive">http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive</a></p>
@@ -4232,6 +4270,10 @@ Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.ku
 <p>Sets a custom snippet to use with external authentication. Applied to all the locations.
 Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.kubernetes.io/auth-request-redirect</code>.
 <em><strong>default:</strong></em> ""</p>
+<h2 id="global-auth-cache-key">global-auth-cache-key<a class="headerlink" href="#global-auth-cache-key" title="Permanent link">&para;</a></h2>
+<p>Enables caching for global auth requests. Specify a lookup key for auth responses, e.g. <code class="codehilite">$remote_user$http_authorization</code>.</p>
+<h2 id="global-auth-cache-duration">global-auth-cache-duration<a class="headerlink" href="#global-auth-cache-duration" title="Permanent link">&para;</a></h2>
+<p>Set a caching time for auth responses based on their response codes, e.g. <code class="codehilite">200 202 30m</code>. See <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid">proxy_cache_valid</a> for details. You may specify multiple, comma-separated values: <code class="codehilite">200 202 10m, 401 5m</code>. defaults to <code class="codehilite">200 202 401 5m</code>.</p>
 <h2 id="no-auth-locations">no-auth-locations<a class="headerlink" href="#no-auth-locations" title="Permanent link">&para;</a></h2>
 <p>A comma-separated list of locations that should not get authenticated.
 <em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>
