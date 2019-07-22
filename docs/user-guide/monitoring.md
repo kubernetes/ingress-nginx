@@ -3,7 +3,7 @@
 This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the NGINX Ingress controller.
 
 !!! important
-    This example uses `emptyDir` volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.
+    This example uses by default `emptyDir` volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data. See [below](#PersistentStorage) how you can possibly _kustomize_ your deployment to use some persistent storage.
 
 ## Before You Begin
 
@@ -83,3 +83,55 @@ The username and password is `admin`
 After the login you can import the Grafana dashboard from _https://github.com/kubernetes/ingress-nginx/tree/master/deploy/grafana/dashboards_
 
 ![Dashboard](../images/grafana.png)
+
+## Persistent Storage
+
+If you want your data to persist a pod termination, here is a starting point, using `kustomize` to reconfigure the deployment. This example uses a NFS volume so your pods are relatively more mobile, but it's up to you to decide which kind of storage would better fit.
+
+Create an empty and start with the following `kustomization.yaml` file:
+
+```yaml
+bases:
+- http://github.com/kubernetes/ingress-nginx/deploy/prometheus
+patchesStrategicMerge:
+- storage.yaml
+```
+
+Then, let's create the `storage.yaml` as follows:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-server
+spec:
+  template:
+    spec:
+      containers:
+      - name: prometheus
+        volumeMounts:
+        - name: prometheus-storage-volume
+          mountPath: /prometheus/
+          subPath: prometheus
+      # A init container might not be necessary and setting chmod 777 is certainly unsafe!
+      # Please configure security as you see fit, or simply remove the initContainer
+      initContainers: 
+      - name: prometheus-init
+        image: busybox
+        command: ["sh", "-c", "chmod -R 777 /prometheus"]
+        volumeMounts:
+        - name: prometheus-storage-volume
+          mountPath: /prometheus/
+          subPath: prometheus
+      # Here we can configure any volume that we see fit
+      volumes:
+      - name: prometheus-storage-volume
+        emptyDir: null
+        nfs:
+          server: fs-abcd1234.your-nfs-server.local
+          path: /
+```
+
+Then, to calculate the final configuration, you can run `kustomize build`, or to directly apply, you can issue a `kubectl apply -k .`
+
+A similar configuration can be done for Grafana, just changing the paths accordingly.
