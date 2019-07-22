@@ -3,7 +3,7 @@
 This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the NGINX Ingress controller.
 
 !!! important
-    This example uses by default `emptyDir` volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data. See [below](#PersistentStorage) how you can possibly _kustomize_ your deployment to use some persistent storage.
+    This example uses by default `emptyDir` volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data. See [below](#persistent-storage) how you can possibly _kustomize_ your deployment to use some persistent storage.
 
 ## Before You Begin
 
