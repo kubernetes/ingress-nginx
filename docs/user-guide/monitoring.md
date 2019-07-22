@@ -134,4 +134,37 @@ spec:
 
 Then, to calculate the final configuration, you can run `kustomize build`, or to directly apply, you can issue a `kubectl apply -k .`
 
-A similar configuration can be done for Grafana, just changing the paths accordingly.
+A similar configuration can be done for Grafana, just changing the paths accordingly in the `storage.yaml`:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: ingress-nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: grafana
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+          subPath: grafana
+      # A init container might not be necessary and setting chmod 777 is certainly unsafe!
+      # Please configure security as you see fit, or simply remove the initContainer
+      initContainers:
+      - name: grafana-init
+        image: busybox
+        command: ["sh", "-c", "chmod -R 777 /var/lib/grafana"]
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+          subPath: grafana
+      # Here we can configure any volume that we see fit
+      volumes:
+      - name: data
+        emptyDir: null
+        nfs:
+          server: fs-abcd1234.your-nfs-server.local
+          path: /
+```
