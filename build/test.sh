@@ -28,5 +28,8 @@ if [ -z "${PKG}" ]; then
   exit 1
 fi
 
+# enabled to use host dns resolver
+export CGO_ENABLED=1
+
 go test -v -race -tags "cgo" \
   $(go list "${PKG}/..." | grep -v vendor | grep -v '/test/e2e' | grep -v images | grep -v "docs/examples")
