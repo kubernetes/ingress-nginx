@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Copyright 2018 The Kubernetes Authors.
+# Copyright 2019 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,22 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-if [ -n "$DEBUG" ]; then
-	set -x
-fi
-
 set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${PKG}" ]; then
-  echo "PKG must be set"
-  exit 1
+export KUBE_ROOT=$(dirname "${BASH_SOURCE}")/..
+
+# Install tools we need, but only from vendor/...
+cd ${KUBE_ROOT}
+go install ./vendor/github.com/tallclair/mdtoc
+if ! which mdtoc >/dev/null 2>&1; then
+    echo "Can't find mdtoc - is your GOPATH 'bin' in your PATH?" >&2
+    echo "  GOPATH: ${GOPATH}" >&2
+    echo "  PATH:   ${PATH}" >&2
+    exit 1
 fi
 
-# enabled to use host dns resolver
-export CGO_ENABLED=1
-
-go test -v -race -tags "cgo" \
-  $(go list "${PKG}/..." | grep -v vendor | grep -v '/test/e2e' | grep -v images | grep -v "docs/examples")
+# Update tables of contents if necessary.
+grep --include='*.md' -rl docs/enhancements/* -e '<!-- toc -->' | xargs mdtoc --inplace

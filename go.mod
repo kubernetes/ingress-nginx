@@ -37,6 +37,7 @@ require (
 	github.com/smartystreets/goconvey v0.0.0-20190710185942-9d28bd7c0945 // indirect
 	github.com/spf13/cobra v0.0.4
 	github.com/spf13/pflag v1.0.3
+	github.com/tallclair/mdtoc v0.0.0-20190627191617-4dc3d6f90813
 	github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926
 	github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
 	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980

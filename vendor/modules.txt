@@ -7,6 +7,8 @@ github.com/Azure/go-autorest/autorest/azure
 github.com/Azure/go-autorest/logger
 github.com/Azure/go-autorest/version
 github.com/Azure/go-autorest/autorest/date
+# github.com/BurntSushi/toml v0.3.1
+github.com/BurntSushi/toml
 # github.com/PuerkitoBio/purell v1.1.1
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
@@ -66,6 +68,10 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/gomarkdown/markdown v0.0.0-20190222000725-ee6a7931a1e4
+github.com/gomarkdown/markdown/ast
+github.com/gomarkdown/markdown/html
+github.com/gomarkdown/markdown/parser
 # github.com/google/btree v0.0.0-20160524151835-7d79101e329e
 github.com/google/btree
 # github.com/google/go-cmp v0.3.0
@@ -125,6 +131,10 @@ github.com/mitchellh/go-ps
 github.com/mitchellh/hashstructure
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
+# github.com/mmarkdown/mmark v2.0.40+incompatible
+github.com/mmarkdown/mmark/mparser
+github.com/mmarkdown/mmark/mast
+github.com/mmarkdown/mmark/mast/reference
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
@@ -207,6 +217,8 @@ github.com/spf13/afero/mem
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
+# github.com/tallclair/mdtoc v0.0.0-20190627191617-4dc3d6f90813
+github.com/tallclair/mdtoc
 # github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926
 github.com/tv42/httpunix
 # github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
