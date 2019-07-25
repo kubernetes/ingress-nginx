@@ -205,9 +205,18 @@ http {
     client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }};
     client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
 
+    http2_body_preread_size         {{ $cfg.HTTP2BodyPrereadSize }};
+    http2_chunk_size                {{ $cfg.HTTP2ChunkSize }};
+    http2_idle_timeout              {{ $cfg.HTTP2IdleTimeout }};
+    http2_max_concurrent_pushes     {{ $cfg.HTTP2MaxConcurrentPushes }};
+    http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
     http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
     http2_max_requests              {{ $cfg.HTTP2MaxRequests }};
+    http2_push                      {{ $cfg.HTTP2Push }};
+    http2_push_preload              {{ if $cfg.HTTP2PushPreload }}on{{ else }}off{{ end }};
+    http2_recv_buffer_size          {{ $cfg.HTTP2RecvBufferSize }};
+    http2_recv_timeout              {{ $cfg.HTTP2RecvTimeout }};
 
     types_hash_max_size             2048;
     server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};

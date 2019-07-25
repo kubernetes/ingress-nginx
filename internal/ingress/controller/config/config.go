@@ -183,6 +183,26 @@ type Configuration struct {
 	// Log levels above are listed in the order of increasing severity
 	ErrorLogLevel string `json:"error-log-level,omitempty"`
 
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_body_preread_size
+	// HTTP2BodyPrereadSize Sets the size of the buffer per each request
+	HTTP2BodyPrereadSize string `json:"http2-body-preread-size,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_chunk_size
+	// HTTP2ChunkSize Sets the maximum size of chunks into which the response body is sliced
+	HTTP2ChunkSize string `json:"http2-chunk-size,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_idle_timeout
+	// HTTP2IdleTimeout Sets the timeout of inactivity after which the connection is closed
+	HTTP2IdleTimeout string `json:"http2-idle-timeout,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_pushes
+	// HTTP2MaxConcurrentPushes Limits the maximum number of concurrent push requests in a connection
+	HTTP2MaxConcurrentPushes int `json:"http2-max-concurrent-pushes,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
+	// HTTP2MaxConcurrentStreams Sets the maximum number of concurrent HTTP/2 streams in a connection
+	HTTP2MaxConcurrentStreams int `json:"http2-max-concurrent-streams,omitempty"`
+
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
 	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
 	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
@@ -196,6 +216,25 @@ type Configuration struct {
 	// through one HTTP/2 connection, after which the next client request will lead to connection closing
 	// and the need of establishing a new connection.
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_push
+	// HTTP2Push Pre-emptively sends (pushes) a request to the specified uri along with the response
+	// to the original request
+	HTTP2Push string `json:"http2-push,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_push_preload
+	// HTTP2PushPreload Enables automatic conversion of preload links specified in the “Link” response
+	// header fields into push requests
+	HTTP2PushPreload bool `json:"http2-push-preload,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_recv_buffer_size
+	// HTTP2RecvBufferSize Sets the size of the per worker input buffer
+	HTTP2RecvBufferSize string `json:"http2-recv-buffer-size,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_recv_timeout
+	// HTTP2RecvTimeout Sets the timeout for expecting more data from the client, after which the connection
+	// is closed
+	HTTP2RecvTimeout string `json:"http2-recv-timeout,omitempty"`
 
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
@@ -648,9 +687,18 @@ func NewDefault() Configuration {
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        true,
 		GenerateRequestID:                true,
+		HTTP2BodyPrereadSize:             "64k",
+		HTTP2ChunkSize:                   "8k",
+		HTTP2IdleTimeout:                 "3m",
+		HTTP2MaxConcurrentPushes:         10,
+		HTTP2MaxConcurrentStreams:        128,
 		HTTP2MaxFieldSize:                "4k",
 		HTTP2MaxHeaderSize:               "16k",
 		HTTP2MaxRequests:                 1000,
+		HTTP2Push:                        "off",
+		HTTP2PushPreload:                 false,
+		HTTP2RecvBufferSize:              "256k",
+		HTTP2RecvTimeout:                 "30s",
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,
 		HSTSIncludeSubdomains:            true,

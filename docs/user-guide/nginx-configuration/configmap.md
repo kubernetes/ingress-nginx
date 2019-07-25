@@ -48,9 +48,18 @@ The following table shows a configuration option's name, type, and the default v
 |[ignore-invalid-headers](#ignore-invalid-headers)|bool|true|
 |[retry-non-idempotent](#retry-non-idempotent)|bool|"false"|
 |[error-log-level](#error-log-level)|string|"notice"|
+|[http2-body-preread-size](#http2-body-preread-size)|string|"64k"|
+|[http2-chunk-size](#http2-chunk-size)|string|"8k"|
+|[http2-idle-timeout](#http2-idle-timeout)|string|"3m"|
+|[http2-max-concurrent-pushes](#http2-max-concurrent-pushes)|int|10|
+|[http2-max-concurrent-streams](#http2-max-concurrent-streams)|int|128|
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
 |[http2-max-header-size](#http2-max-header-size)|string|"16k"|
 |[http2-max-requests](#http2-max-requests)|int|1000|
+|[http2-push](#http2-push)|string|"off"|
+|[http2-push-preload](#http2-push-preload)|bool|"false"|
+|[http2-recv-buffer-size](#http2-recv-buffer-size)|string|"256k"|
+|[http2-recv-timeout](#http2-recv-timeout)|string|"30s"|
 |[hsts](#hsts)|bool|"true"|
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"|
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
@@ -287,6 +296,41 @@ Configures the logging level of errors. Log levels above are listed in the order
 _References:_
 [http://nginx.org/en/docs/ngx_core_module.html#error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log)
 
+# http2-body-preread-size
+
+Sets the size of the buffer per each request.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_body_preread_size](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_body_preread_size)
+
+# http2-chunk-size
+
+HTTP2ChunkSize Sets the maximum size of chunks into which the response body is sliced.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_chunk_size](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_chunk_size)
+
+# http2-idle-timeout
+
+Sets the timeout of inactivity after which the connection is closed.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_idle_timeout](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_idle_timeout)
+
+# http2-max-concurrent-pushes
+
+Limits the maximum number of concurrent push requests in a connection.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_pushes](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_pushes)
+
+# http2-max-concurrent-streams
+
+Sets the maximum number of concurrent HTTP/2 streams in a connection.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams)
+
 ## http2-max-field-size
 
 Limits the maximum size of an HPACK-compressed request header field.
@@ -307,6 +351,34 @@ Sets the maximum number of requests (including push requests) that can be served
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests)
+
+# http2-push
+
+Pre-emptively sends (pushes) a request to the specified uri along with the response to the original request.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_push](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_push)
+
+# http2-push-preload
+
+Enables automatic conversion of preload links specified in the “Link” response header fields into push requests.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_push_preload](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_push_preload)
+
+# http2-recv-buffer-size
+
+Sets the size of the per worker input buffer.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_recv_buffer_size](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_recv_buffer_size)
+
+# http2-recv-timeout
+
+Sets the timeout for expecting more data from the client, after which the connection is closed.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_recv_timeout](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_recv_timeout)
 
 ## hsts
 
