@@ -27,6 +27,9 @@ if [ -z "${PKG}" ]; then
   exit 1
 fi
 
+export CGO_ENABLED=1
+export GODEBUG=netdns=go+2
+
 rm -rf coverage.txt
 for d in $(go list "${PKG}/..." | grep -v vendor | grep -v '/test/e2e' | grep -v images); do
   t=$(date +%s);
