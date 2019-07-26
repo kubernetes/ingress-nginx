@@ -86,6 +86,44 @@ describe("Balancer", function()
     end)
   end)
 
+  describe("get_balancer()", function()
+    it("always returns the same balancer for given request context", function()
+      local backend = {
+        name = "my-dummy-app-6", ["load-balance"] = "ewma",
+        alternativeBackends = { "my-dummy-canary-app-6" },
+        endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
+        trafficShapingPolicy = {
+          weight = 0,
+          header = "",
+          headerValue = "",
+          cookie = ""
+        },
+      }
+      local canary_backend = {
+        name = "my-dummy-canary-app-6", ["load-balance"] = "ewma",
+        alternativeBackends = { "my-dummy-canary-app-6" },
+        endpoints = { { address = "11.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
+        trafficShapingPolicy = {
+          weight = 5,
+          header = "",
+          headerValue = "",
+          cookie = ""
+        },
+      }
+
+      balancer.sync_backend(backend)
+      balancer.sync_backend(canary_backend)
+
+      mock_ngx({ var = { proxy_upstream_name = backend.name } })
+
+      local expected = balancer.get_balancer()
+
+      for i = 1,50,1 do
+        assert.are.same(expected, balancer.get_balancer())
+      end
+    end)
+  end)
+
   describe("route_to_alternative_balancer()", function()
     local backend, _balancer
 
