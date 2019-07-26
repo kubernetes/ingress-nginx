@@ -207,7 +207,7 @@ local function get_balancer()
 
     balancer = balancers[alternative_backend_name]
   end
-  
+
   ngx.ctx.balancer = balancer
 
   return balancer
@@ -266,6 +266,7 @@ if _TEST then
   _M.get_implementation = get_implementation
   _M.sync_backend = sync_backend
   _M.route_to_alternative_balancer = route_to_alternative_balancer
+  _M.get_balancer = get_balancer
 end
 
 return _M
