@@ -34,9 +34,12 @@ import (
 	"text/template"
 	"time"
 
+	"k8s.io/api/networking/v1beta1"
+
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -863,8 +866,12 @@ func configureDynamically(pcfg *ingress.Configuration) error {
 
 	for i, backend := range pcfg.Backends {
 		var service *apiv1.Service
+		var v1beta1ingress *v1beta1.Ingress
 		if backend.Service != nil {
-			service = &apiv1.Service{Spec: backend.Service.Spec}
+			service = &apiv1.Service{ObjectMeta: metav1.ObjectMeta{Name: backend.Service.ObjectMeta.Name}, Spec: backend.Service.Spec}
+		}
+		if backend.Ingress != nil {
+			v1beta1ingress = &v1beta1.Ingress{ObjectMeta: metav1.ObjectMeta{Name: backend.Ingress.ObjectMeta.Name}}
 		}
 		luaBackend := &ingress.Backend{
 			Name:                 backend.Name,
@@ -874,6 +881,7 @@ func configureDynamically(pcfg *ingress.Configuration) error {
 			UpstreamHashBy:       backend.UpstreamHashBy,
 			LoadBalancing:        backend.LoadBalancing,
 			Service:              service,
+			Ingress:              v1beta1ingress,
 			NoServer:             backend.NoServer,
 			TrafficShapingPolicy: backend.TrafficShapingPolicy,
 			AlternativeBackends:  backend.AlternativeBackends,
@@ -890,7 +898,6 @@ func configureDynamically(pcfg *ingress.Configuration) error {
 		luaBackend.Endpoints = endpoints
 		backends[i] = luaBackend
 	}
-
 	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/backends", "application/json", backends)
 	if err != nil {
 		return err

@@ -18,7 +18,7 @@ package ingress
 
 import (
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
@@ -80,9 +80,10 @@ type Configuration struct {
 // +k8s:deepcopy-gen=true
 type Backend struct {
 	// Name represents an unique apiv1.Service name formatted as <namespace>-<name>-<port>
-	Name    string             `json:"name"`
-	Service *apiv1.Service     `json:"service,omitempty"`
-	Port    intstr.IntOrString `json:"port"`
+	Name    string                     `json:"name"`
+	Service *apiv1.Service             `json:"service,omitempty"`
+	Ingress *networkingv1beta1.Ingress `json:"ingress,omitempty"`
+	Port    intstr.IntOrString         `json:"port"`
 	// SecureCACert has the filename and SHA1 of the certificate authorities used to validate
 	// a secured connection to the backend
 	SecureCACert resolver.AuthSSLCert `json:"secureCACert"`
@@ -361,7 +362,7 @@ type ProxyProtocol struct {
 
 // Ingress holds the definition of an Ingress plus its annotations
 type Ingress struct {
-	networking.Ingress
+	networkingv1beta1.Ingress
 	ParsedAnnotations *annotations.Ingress
 }
 

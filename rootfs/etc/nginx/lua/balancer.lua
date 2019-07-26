@@ -85,6 +85,13 @@ local function sync_backend(backend)
 
   if not balancer then
     balancers[backend.name] = implementation:new(backend)
+    if backend.ingress then
+      balancers[backend.name]["ingress_name"] = backend.ingress.metadata.name
+    end
+    if backend.service then
+      balancers[backend.name]["backend_name"] = backend.service.metadata.name
+      balancers[backend.name]["backend_port"] = backend.port
+    end
     return
   end
 
@@ -95,6 +102,13 @@ local function sync_backend(backend)
     ngx.log(ngx.INFO,
       string.format("LB algorithm changed from %s to %s, resetting the instance", balancer.name, implementation.name))
     balancers[backend.name] = implementation:new(backend)
+    if backend.ingress then
+      balancers[backend.name]["ingress_name"] = backend.ingress.metadata.name
+    end
+    if backend.service then
+      balancers[backend.name]["backend_name"] = backend.service.metadata.name
+      balancers[backend.name]["backend_port"] = backend.port
+    end
     return
   end
 
@@ -233,6 +247,12 @@ function _M.balance()
   local balancer = get_balancer()
   if not balancer then
     return
+  end
+
+  if balancer["ingress_name"] then ngx.var.ingress_name = balancer["ingress_name"] end
+  if not (ngx.var.proxy_upstream_name == "upstream-default-backend") then
+    if balancer["backend_name"] then ngx.var.service_name = balancer["backend_name"] end
+    if balancer["backend_port"] then ngx.var.service_port = balancer["backend_port"] end
   end
 
   local peer = balancer:balance()

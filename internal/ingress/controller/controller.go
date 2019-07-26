@@ -487,7 +487,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
+				upsName := upstreamName(ing.Namespace, ing.Name, path.Backend.ServiceName, path.Backend.ServicePort)
 
 				ups := upstreams[upsName]
 
@@ -665,16 +665,17 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.Backend) map[string]*ingress.Backend {
 	upstreams := make(map[string]*ingress.Backend)
 	upstreams[defUpstreamName] = du
-
 	for _, ing := range data {
 		anns := ing.ParsedAnnotations
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
-			defBackend = upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
+			defBackend = upstreamName(ing.Namespace, ing.Name, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
 
 			klog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
+
+			upstreams[defBackend].Ingress = &ing.Ingress
 
 			upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
 
@@ -731,7 +732,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				name := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
+				name := upstreamName(ing.Namespace, ing.Name, path.Backend.ServiceName, path.Backend.ServicePort)
 
 				if _, ok := upstreams[name]; ok {
 					continue
@@ -739,6 +740,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 				klog.V(3).Infof("Creating upstream %q", name)
 				upstreams[name] = newUpstream(name)
+				upstreams[name].Ingress = &ing.Ingress
 				upstreams[name].Port = path.Backend.ServicePort
 
 				upstreams[name].SecureCACert = anns.SecureUpstream.CACert
@@ -793,6 +795,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				upstreams[name].Service = s
 			}
 		}
+
 	}
 
 	return upstreams
@@ -977,7 +980,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		}
 
 		if ing.Spec.Backend != nil {
-			defUpstream := upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
+			defUpstream := upstreamName(ing.Namespace, ing.Name, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
 
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
 				// use backend specified in Ingress as the default backend for all its rules
@@ -1213,7 +1216,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 
 	// merge catch-all alternative backends
 	if ing.Spec.Backend != nil {
-		upsName := upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
+		upsName := upstreamName(ing.Namespace, ing.Name, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
 
 		altUps := upstreams[upsName]
 
@@ -1243,7 +1246,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 
 	for _, rule := range ing.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
-			upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
+			upsName := upstreamName(ing.Namespace, ing.Name, path.Backend.ServiceName, path.Backend.ServicePort)
 
 			altUps := upstreams[upsName]
 
