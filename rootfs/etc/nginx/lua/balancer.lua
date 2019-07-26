@@ -190,6 +190,10 @@ local function route_to_alternative_balancer(balancer)
 end
 
 local function get_balancer()
+  if ngx.ctx.balancer then
+    return ngx.ctx.balancer
+  end
+
   local backend_name = ngx.var.proxy_upstream_name
 
   local balancer = balancers[backend_name]
@@ -201,8 +205,10 @@ local function get_balancer()
     local alternative_backend_name = balancer.alternative_backends[1]
     ngx.var.proxy_alternative_upstream_name = alternative_backend_name
 
-    return balancers[alternative_backend_name]
+    balancer = balancers[alternative_backend_name]
   end
+  
+  ngx.ctx.balancer = balancer
 
   return balancer
 end
