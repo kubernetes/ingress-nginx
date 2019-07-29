@@ -87,3 +87,4 @@ nav:
       - Rewrite: "examples/rewrite/README.md"
       - Static IPs: "examples/static-ip/README.md"
       - TLS termination: "examples/tls-termination/README.md"
+      - Pod Security Policy (PSP): "examples/psp/README.md"
