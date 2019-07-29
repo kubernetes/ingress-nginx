@@ -1135,6 +1135,35 @@ func TestBuildInfluxDB(t *testing.T) {
 	}
 }
 
+func TestBuildGlobalOpenTracing(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildOpentracing(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	cfgEmpty := config.Configuration{}
+	actual = buildGlobalOpentracing(cfgEmpty)
+	expected = ""
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	cfgDatadog := config.Configuration{
+		EnableOpentracing:    true,
+		DatadogCollectorHost: "datadog-host.com",
+	}
+	actual = buildGlobalOpentracing(cfgDatadog)
+	expected = "env DD_GLOBAL_ANALYTICS_SAMPLE_RATE;\r\n"
+
+	if !strings.Contains(actual, expected) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
 func TestBuildOpenTracing(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""

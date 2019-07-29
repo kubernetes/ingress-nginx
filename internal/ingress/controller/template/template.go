@@ -168,6 +168,7 @@ var (
 		"isValidByteSize":                    isValidByteSize,
 		"buildForwardedFor":                  buildForwardedFor,
 		"buildAuthSignURL":                   buildAuthSignURL,
+		"buildGlobalOpentracing":             buildGlobalOpentracing,
 		"buildOpentracing":                   buildOpentracing,
 		"proxySetHeader":                     proxySetHeader,
 		"buildInfluxDB":                      buildInfluxDB,
@@ -903,6 +904,36 @@ func randomString() string {
 	}
 
 	return string(b)
+}
+
+func buildGlobalOpentracing(input interface{}) string {
+	cfg, ok := input.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
+		return ""
+	}
+
+	if !cfg.EnableOpentracing {
+		return ""
+	}
+
+	buf := bytes.NewBufferString("")
+
+	if cfg.DatadogCollectorHost != "" {
+		buf.WriteString("# pass through environment variables to tracer http://nginx.org/en/docs/ngx_core_module.html#env;\r\n")
+		for _, passthroughEnvironmentVariable := range []string{
+			"DD_ENV",
+			"DD_GLOBAL_ANALYTICS_SAMPLE_RATE",
+			"DD_PROPAGATION_STYLE_EXTRACT",
+			"DD_PROPAGATION_STYLE_INJECT",
+			"DD_TRACE_ANALYTICS_ENABLED",
+			"DD_TRACE_REPORT_HOSTNAME",
+		} {
+			buf.WriteString("env " + passthroughEnvironmentVariable + ";\r\n")
+		}
+	}
+
+	return buf.String()
 }
 
 func buildOpentracing(input interface{}) string {

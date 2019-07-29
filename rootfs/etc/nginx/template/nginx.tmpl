@@ -22,6 +22,7 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 
 {{ if $cfg.EnableOpentracing }}
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
+{{ buildGlobalOpentracing $cfg }}
 {{ end }}
 
 daemon off;
