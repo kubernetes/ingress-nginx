@@ -25,7 +25,7 @@ endif
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 
-BASEIMAGE?=alpine:3.9
+BASEIMAGE?=alpine:3.10
 
 ALL_ARCH = amd64 arm arm64 ppc64le
 
