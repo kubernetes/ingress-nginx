@@ -29,7 +29,7 @@ export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=cdfaf5bb25ff5f8ec179fd548e6c7c2ade9a6a09
 export MSGPACK_VERSION=3.1.1
-export DATADOG_CPP_VERSION=0.4.3
+export DATADOG_CPP_VERSION=1.0.1
 export MODSECURITY_VERSION=d7101e13685efd7e7c9f808871b202656a969f4b
 export MODSECURITY_LIB_VERSION=3.0.3
 export OWASP_MODSECURITY_CRS_VERSION=3.1.0
@@ -152,7 +152,7 @@ get_src 3183450d897baa9309347c8617edc0c97c5b29ffc32bd2d12f498edf2dcbeffa \
 get_src bda49f996a73d2c6080ff0523e7b535917cd28c8a79c3a5da54fc29332d61d1e \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src 7ef075c5936cfcca37d32c3b83b3b05d86f8a919d61fc94634f97a5c6542cff4 \
+get_src f7fb2ad541f812c36fd78f9a38e4582d87dadb563ab80bee3f7c3a2132a425c5 \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
 get_src f5470132d8756eef293833e30508926894883924a445e3b9a07c869d26d4706d \
