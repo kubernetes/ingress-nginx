@@ -19,6 +19,7 @@ package auth
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -160,6 +161,14 @@ func dumpSecret(filename string, secret *api.Secret) error {
 	if err != nil {
 		return ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "unexpected error creating password file"),
+		}
+	}
+
+	// Ensure the nginx process can read our authentication configuration
+	err = os.Chown(filename, -1, 33)
+	if err != nil {
+		return ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "Unexpected error fixing permissions for password file"),
 		}
 	}
 
