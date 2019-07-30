@@ -1168,6 +1168,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.CustomHTTPErrors = anns.CustomHTTPErrors
 	loc.ModSecurity = anns.ModSecurity
 	loc.Satisfy = anns.Satisfy
+	loc.Mirror = anns.Mirror
 }
 
 // OK to merge canary ingresses iff there exists one or more ingresses to potentially merge into
