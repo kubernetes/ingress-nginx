@@ -874,6 +874,7 @@ func TestOpentracingPropagateContext(t *testing.T) {
 		&ingress.Location{BackendProtocol: "GRPC"}:  "opentracing_grpc_propagate_context",
 		&ingress.Location{BackendProtocol: "GRPCS"}: "opentracing_grpc_propagate_context",
 		&ingress.Location{BackendProtocol: "AJP"}:   "opentracing_propagate_context",
+		&ingress.Location{BackendProtocol: "FCGI"}:  "opentracing_propagate_context",
 		"not a location": "opentracing_propagate_context",
 	}
 

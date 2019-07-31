@@ -1295,6 +1295,16 @@ stream {
             {{ range $errCode := $location.CustomHTTPErrors }}
             error_page {{ $errCode }} = @custom_{{ $location.DefaultBackendUpstreamName }}_{{ $errCode }};{{ end }}
 
+            {{ if (eq $location.BackendProtocol "FCGI") }}
+            include /etc/nginx/fastcgi_params;
+            {{ end }}
+            {{- if $location.FastCGI.Index -}}
+            fastcgi_index "{{ $location.FastCGI.Index }}";
+            {{- end -}}
+            {{ range $k, $v := $location.FastCGI.Params }}
+            fastcgi_param {{ $k }} "{{ $v }}";
+            {{ end }}
+
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
