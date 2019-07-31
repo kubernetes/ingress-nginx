@@ -26,6 +26,9 @@ type Resolver interface {
 	// GetDefaultBackend returns the backend that must be used as default
 	GetDefaultBackend() defaults.Backend
 
+	// GetConfigMap searches for configmap containing the namespace and name usting the character /
+	GetConfigMap(string) (*apiv1.ConfigMap, error)
+
 	// GetSecret searches for secrets containing the namespace and name using a the character /
 	GetSecret(string) (*apiv1.Secret, error)
 

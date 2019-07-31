@@ -38,6 +38,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/customhttperrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/http2pushpreload"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
@@ -82,6 +83,7 @@ type Ingress struct {
 	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
+	FastCGI            fastcgi.Config
 	Denied             *string
 	ExternalAuth       authreq.Config
 	EnableGlobalAuth   bool
@@ -128,6 +130,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"CorsConfig":           cors.NewParser(cfg),
 			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
+			"FastCGI":              fastcgi.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
 			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
 			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
