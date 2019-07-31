@@ -32,7 +32,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 	AfterEach(func() {
 	})
 
-	It("should set backend protocol to https://", func() {
+	It("should set backend protocol to https:// and use proxy_pass", func() {
 		host := "backendprotocol.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "HTTPS",
@@ -47,7 +47,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 			})
 	})
 
-	It("should set backend protocol to grpc://", func() {
+	It("should set backend protocol to grpc:// and use grpc_pass", func() {
 		host := "backendprotocol.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
@@ -62,7 +62,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 			})
 	})
 
-	It("should set backend protocol to grpcs://", func() {
+	It("should set backend protocol to grpcs:// and use grpc_pass", func() {
 		host := "backendprotocol.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPCS",
@@ -77,7 +77,22 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 			})
 	})
 
-	It("should set backend protocol to ''", func() {
+	It("should set backend protocol to '' and use fastcgi_pass", func() {
+		host := "backendprotocol.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/backend-protocol": "FCGI",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring("fastcgi_pass upstream_balancer;"))
+			})
+	})
+
+	It("should set backend protocol to '' and use ajp_pass", func() {
 		host := "backendprotocol.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "AJP",

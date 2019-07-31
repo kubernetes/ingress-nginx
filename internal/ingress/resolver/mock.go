@@ -31,6 +31,11 @@ func (m Mock) GetDefaultBackend() defaults.Backend {
 	return defaults.Backend{}
 }
 
+// GetConfigMap searches for configmap containing the namespace and name usting the character /
+func (m Mock) GetConfigMap(string) (*apiv1.ConfigMap, error) {
+	return nil, nil
+}
+
 // GetSecret searches for secrets contenating the namespace and name using a the character /
 func (m Mock) GetSecret(string) (*apiv1.Secret, error) {
 	return nil, nil
