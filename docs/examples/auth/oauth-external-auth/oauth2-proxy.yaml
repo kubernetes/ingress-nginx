@@ -31,7 +31,7 @@ spec:
         # docker run -ti --rm python:3-alpine python -c 'import secrets,base64; print(base64.b64encode(base64.b64encode(secrets.token_bytes(16))));'
         - name: OAUTH2_PROXY_COOKIE_SECRET
           value: SECRET
-        image: docker.io/colemickens/oauth2_proxy:latest
+        image: quay.io/pusher/oauth2_proxy:latest
         imagePullPolicy: Always
         name: oauth2-proxy
         ports:
