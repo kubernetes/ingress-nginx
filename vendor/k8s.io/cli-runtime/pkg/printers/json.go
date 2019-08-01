@@ -22,9 +22,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"sync/atomic"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"sigs.k8s.io/yaml"
@@ -43,20 +41,6 @@ func (p *JSONPrinter) PrintObj(obj runtime.Object, w io.Writer) error {
 	}
 
 	switch obj := obj.(type) {
-	case *metav1.WatchEvent:
-		if InternalObjectPreventer.IsForbidden(reflect.Indirect(reflect.ValueOf(obj.Object.Object)).Type().PkgPath()) {
-			return fmt.Errorf(InternalObjectPrinterErr)
-		}
-		data, err := json.Marshal(obj)
-		if err != nil {
-			return err
-		}
-		_, err = w.Write(data)
-		if err != nil {
-			return err
-		}
-		_, err = w.Write([]byte{'\n'})
-		return err
 	case *runtime.Unknown:
 		var buf bytes.Buffer
 		err := json.Indent(&buf, obj.Raw, "", "    ")
@@ -84,10 +68,7 @@ func (p *JSONPrinter) PrintObj(obj runtime.Object, w io.Writer) error {
 // YAMLPrinter is an implementation of ResourcePrinter which outputs an object as YAML.
 // The input object is assumed to be in the internal version of an API and is converted
 // to the given version first.
-// If PrintObj() is called multiple times, objects are separated with a '---' separator.
-type YAMLPrinter struct {
-	printCount int64
-}
+type YAMLPrinter struct{}
 
 // PrintObj prints the data as YAML.
 func (p *YAMLPrinter) PrintObj(obj runtime.Object, w io.Writer) error {
@@ -98,28 +79,7 @@ func (p *YAMLPrinter) PrintObj(obj runtime.Object, w io.Writer) error {
 		return fmt.Errorf(InternalObjectPrinterErr)
 	}
 
-	count := atomic.AddInt64(&p.printCount, 1)
-	if count > 1 {
-		if _, err := w.Write([]byte("---\n")); err != nil {
-			return err
-		}
-	}
-
 	switch obj := obj.(type) {
-	case *metav1.WatchEvent:
-		if InternalObjectPreventer.IsForbidden(reflect.Indirect(reflect.ValueOf(obj.Object.Object)).Type().PkgPath()) {
-			return fmt.Errorf(InternalObjectPrinterErr)
-		}
-		data, err := json.Marshal(obj)
-		if err != nil {
-			return err
-		}
-		data, err = yaml.JSONToYAML(data)
-		if err != nil {
-			return err
-		}
-		_, err = w.Write(data)
-		return err
 	case *runtime.Unknown:
 		data, err := yaml.JSONToYAML(obj.Raw)
 		if err != nil {

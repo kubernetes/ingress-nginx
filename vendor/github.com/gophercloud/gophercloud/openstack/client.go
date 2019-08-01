@@ -135,7 +135,7 @@ func v2auth(client *gophercloud.ProviderClient, endpoint string, options gopherc
 
 	result := tokens2.Create(v2Client, v2Opts)
 
-	err = client.SetTokenAndAuthResult(result)
+	token, err := result.ExtractToken()
 	if err != nil {
 		return err
 	}
@@ -150,9 +150,9 @@ func v2auth(client *gophercloud.ProviderClient, endpoint string, options gopherc
 		// with the token and reauth func zeroed out. combined with setting `AllowReauth` to `false`,
 		// this should retry authentication only once
 		tac := *client
-		tac.SetThrowaway(true)
+		tac.IsThrowaway = true
 		tac.ReauthFunc = nil
-		tac.SetTokenAndAuthResult(nil)
+		tac.TokenID = ""
 		tao := options
 		tao.AllowReauth = false
 		client.ReauthFunc = func() error {
@@ -160,10 +160,11 @@ func v2auth(client *gophercloud.ProviderClient, endpoint string, options gopherc
 			if err != nil {
 				return err
 			}
-			client.CopyTokenFrom(&tac)
+			client.TokenID = tac.TokenID
 			return nil
 		}
 	}
+	client.TokenID = token.ID
 	client.EndpointLocator = func(opts gophercloud.EndpointOpts) (string, error) {
 		return V2EndpointURL(catalog, opts)
 	}
@@ -189,7 +190,7 @@ func v3auth(client *gophercloud.ProviderClient, endpoint string, opts tokens3.Au
 
 	result := tokens3.Create(v3Client, opts)
 
-	err = client.SetTokenAndAuthResult(result)
+	token, err := result.ExtractToken()
 	if err != nil {
 		return err
 	}
@@ -199,14 +200,16 @@ func v3auth(client *gophercloud.ProviderClient, endpoint string, opts tokens3.Au
 		return err
 	}
 
+	client.TokenID = token.ID
+
 	if opts.CanReauth() {
 		// here we're creating a throw-away client (tac). it's a copy of the user's provider client, but
 		// with the token and reauth func zeroed out. combined with setting `AllowReauth` to `false`,
 		// this should retry authentication only once
 		tac := *client
-		tac.SetThrowaway(true)
+		tac.IsThrowaway = true
 		tac.ReauthFunc = nil
-		tac.SetTokenAndAuthResult(nil)
+		tac.TokenID = ""
 		var tao tokens3.AuthOptionsBuilder
 		switch ot := opts.(type) {
 		case *gophercloud.AuthOptions:
@@ -225,7 +228,7 @@ func v3auth(client *gophercloud.ProviderClient, endpoint string, opts tokens3.Au
 			if err != nil {
 				return err
 			}
-			client.CopyTokenFrom(&tac)
+			client.TokenID = tac.TokenID
 			return nil
 		}
 	}
@@ -302,18 +305,6 @@ func initClientOpts(client *gophercloud.ProviderClient, eo gophercloud.EndpointO
 	sc.Endpoint = url
 	sc.Type = clientType
 	return sc, nil
-}
-
-// NewBareMetalV1 creates a ServiceClient that may be used with the v1
-// bare metal package.
-func NewBareMetalV1(client *gophercloud.ProviderClient, eo gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error) {
-	return initClientOpts(client, eo, "baremetal")
-}
-
-// NewBareMetalIntrospectionV1 creates a ServiceClient that may be used with the v1
-// bare metal introspection package.
-func NewBareMetalIntrospectionV1(client *gophercloud.ProviderClient, eo gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error) {
-	return initClientOpts(client, eo, "baremetal-inspector")
 }
 
 // NewObjectStorageV1 creates a ServiceClient that may be used with the v1

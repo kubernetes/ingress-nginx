@@ -101,7 +101,7 @@ func safeOpenSubPath(mounter mount.Interface, subpath Subpath) (int, error) {
 func prepareSubpathTarget(mounter mount.Interface, subpath Subpath) (bool, string, error) {
 	// Early check for already bind-mounted subpath.
 	bindPathTarget := getSubpathBindTarget(subpath)
-	notMount, err := mounter.IsNotMountPoint(bindPathTarget)
+	notMount, err := mount.IsNotMountPoint(mounter, bindPathTarget)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return false, "", fmt.Errorf("error checking path %s for mount: %s", bindPathTarget, err)
@@ -398,7 +398,7 @@ func doSafeMakeDir(pathname string, base string, perm os.FileMode) error {
 			return fmt.Errorf("cannot create directory %s: %s", currentPath, err)
 		}
 		// Dive into the created directory
-		childFD, err := syscall.Openat(parentFD, dir, nofollowFlags, 0)
+		childFD, err = syscall.Openat(parentFD, dir, nofollowFlags, 0)
 		if err != nil {
 			return fmt.Errorf("cannot open %s: %s", currentPath, err)
 		}
