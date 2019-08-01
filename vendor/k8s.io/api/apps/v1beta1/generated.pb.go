@@ -57,7 +57,7 @@ import k8s_io_apimachinery_pkg_apis_meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v
 
 import k8s_io_apimachinery_pkg_util_intstr "k8s.io/apimachinery/pkg/util/intstr"
 
-import sortkeys "github.com/gogo/protobuf/sortkeys"
+import github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
 
 import strings "strings"
 import reflect "reflect"
@@ -417,7 +417,7 @@ func (m *DeploymentRollback) MarshalTo(dAtA []byte) (int, error) {
 		for k := range m.UpdatedAnnotations {
 			keysForUpdatedAnnotations = append(keysForUpdatedAnnotations, string(k))
 		}
-		sortkeys.Strings(keysForUpdatedAnnotations)
+		github_com_gogo_protobuf_sortkeys.Strings(keysForUpdatedAnnotations)
 		for _, k := range keysForUpdatedAnnotations {
 			dAtA[i] = 0x12
 			i++
@@ -778,7 +778,7 @@ func (m *ScaleStatus) MarshalTo(dAtA []byte) (int, error) {
 		for k := range m.Selector {
 			keysForSelector = append(keysForSelector, string(k))
 		}
-		sortkeys.Strings(keysForSelector)
+		github_com_gogo_protobuf_sortkeys.Strings(keysForSelector)
 		for _, k := range keysForSelector {
 			dAtA[i] = 0x12
 			i++
@@ -1506,7 +1506,7 @@ func (this *DeploymentRollback) String() string {
 	for k := range this.UpdatedAnnotations {
 		keysForUpdatedAnnotations = append(keysForUpdatedAnnotations, k)
 	}
-	sortkeys.Strings(keysForUpdatedAnnotations)
+	github_com_gogo_protobuf_sortkeys.Strings(keysForUpdatedAnnotations)
 	mapStringForUpdatedAnnotations := "map[string]string{"
 	for _, k := range keysForUpdatedAnnotations {
 		mapStringForUpdatedAnnotations += fmt.Sprintf("%v: %v,", k, this.UpdatedAnnotations[k])
@@ -1627,7 +1627,7 @@ func (this *ScaleStatus) String() string {
 	for k := range this.Selector {
 		keysForSelector = append(keysForSelector, k)
 	}
-	sortkeys.Strings(keysForSelector)
+	github_com_gogo_protobuf_sortkeys.Strings(keysForSelector)
 	mapStringForSelector := "map[string]string{"
 	for _, k := range keysForSelector {
 		mapStringForSelector += fmt.Sprintf("%v: %v,", k, this.Selector[k])
