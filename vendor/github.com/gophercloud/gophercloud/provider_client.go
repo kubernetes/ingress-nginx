@@ -2,7 +2,6 @@ package gophercloud
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -73,25 +72,15 @@ type ProviderClient struct {
 	// authentication functions for different Identity service versions.
 	ReauthFunc func() error
 
-	// Throwaway determines whether if this client is a throw-away client. It's a copy of user's provider client
+	// IsThrowaway determines whether if this client is a throw-away client. It's a copy of user's provider client
 	// with the token and reauth func zeroed. Such client can be used to perform reauthorization.
-	Throwaway bool
+	IsThrowaway bool
 
-	// Context is the context passed to the HTTP request.
-	Context context.Context
-
-	// mut is a mutex for the client. It protects read and write access to client attributes such as getting
-	// and setting the TokenID.
 	mut *sync.RWMutex
 
-	// reauthmut is a mutex for reauthentication it attempts to ensure that only one reauthentication
-	// attempt happens at one time.
 	reauthmut *reauthlock
-
-	authResult AuthResult
 }
 
-// reauthlock represents a set of attributes used to help in the reauthentication process.
 type reauthlock struct {
 	sync.RWMutex
 	reauthing    bool
@@ -102,7 +91,7 @@ type reauthlock struct {
 // AuthenticatedHeaders returns a map of HTTP headers that are common for all
 // authenticated service requests. Blocks if Reauthenticate is in progress.
 func (client *ProviderClient) AuthenticatedHeaders() (m map[string]string) {
-	if client.IsThrowaway() {
+	if client.IsThrowaway {
 		return
 	}
 	if client.reauthmut != nil {
@@ -126,20 +115,6 @@ func (client *ProviderClient) UseTokenLock() {
 	client.reauthmut = new(reauthlock)
 }
 
-// GetAuthResult returns the result from the request that was used to obtain a
-// provider client's Keystone token.
-//
-// The result is nil when authentication has not yet taken place, when the token
-// was set manually with SetToken(), or when a ReauthFunc was used that does not
-// record the AuthResult.
-func (client *ProviderClient) GetAuthResult() AuthResult {
-	if client.mut != nil {
-		client.mut.RLock()
-		defer client.mut.RUnlock()
-	}
-	return client.authResult
-}
-
 // Token safely reads the value of the auth token from the ProviderClient. Applications should
 // call this method to access the token instead of the TokenID field
 func (client *ProviderClient) Token() string {
@@ -151,71 +126,13 @@ func (client *ProviderClient) Token() string {
 }
 
 // SetToken safely sets the value of the auth token in the ProviderClient. Applications may
-// use this method in a custom ReauthFunc.
-//
-// WARNING: This function is deprecated. Use SetTokenAndAuthResult() instead.
+// use this method in a custom ReauthFunc
 func (client *ProviderClient) SetToken(t string) {
 	if client.mut != nil {
 		client.mut.Lock()
 		defer client.mut.Unlock()
 	}
 	client.TokenID = t
-	client.authResult = nil
-}
-
-// SetTokenAndAuthResult safely sets the value of the auth token in the
-// ProviderClient and also records the AuthResult that was returned from the
-// token creation request. Applications may call this in a custom ReauthFunc.
-func (client *ProviderClient) SetTokenAndAuthResult(r AuthResult) error {
-	tokenID := ""
-	var err error
-	if r != nil {
-		tokenID, err = r.ExtractTokenID()
-		if err != nil {
-			return err
-		}
-	}
-
-	if client.mut != nil {
-		client.mut.Lock()
-		defer client.mut.Unlock()
-	}
-	client.TokenID = tokenID
-	client.authResult = r
-	return nil
-}
-
-// CopyTokenFrom safely copies the token from another ProviderClient into the
-// this one.
-func (client *ProviderClient) CopyTokenFrom(other *ProviderClient) {
-	if client.mut != nil {
-		client.mut.Lock()
-		defer client.mut.Unlock()
-	}
-	if other.mut != nil && other.mut != client.mut {
-		other.mut.RLock()
-		defer other.mut.RUnlock()
-	}
-	client.TokenID = other.TokenID
-	client.authResult = other.authResult
-}
-
-// IsThrowaway safely reads the value of the client Throwaway field.
-func (client *ProviderClient) IsThrowaway() bool {
-	if client.reauthmut != nil {
-		client.reauthmut.RLock()
-		defer client.reauthmut.RUnlock()
-	}
-	return client.Throwaway
-}
-
-// SetThrowaway safely sets the value of the client Throwaway field.
-func (client *ProviderClient) SetThrowaway(v bool) {
-	if client.reauthmut != nil {
-		client.reauthmut.Lock()
-		defer client.reauthmut.Unlock()
-	}
-	client.Throwaway = v
 }
 
 // Reauthenticate calls client.ReauthFunc in a thread-safe way. If this is
@@ -228,7 +145,7 @@ func (client *ProviderClient) Reauthenticate(previousToken string) (err error) {
 		return nil
 	}
 
-	if client.reauthmut == nil {
+	if client.mut == nil {
 		return client.ReauthFunc()
 	}
 
@@ -242,6 +159,9 @@ func (client *ProviderClient) Reauthenticate(previousToken string) (err error) {
 		return err
 	}
 	client.reauthmut.Unlock()
+
+	client.mut.Lock()
+	defer client.mut.Unlock()
 
 	client.reauthmut.Lock()
 	client.reauthmut.reauthing = true
@@ -318,9 +238,6 @@ func (client *ProviderClient) Request(method, url string, options *RequestOpts) 
 	if err != nil {
 		return nil, err
 	}
-	if client.Context != nil {
-		req = req.WithContext(client.Context)
-	}
 
 	// Populate the request headers. Apply options.MoreHeaders last, to give the caller the chance to
 	// modify or omit any header.
@@ -359,14 +276,13 @@ func (client *ProviderClient) Request(method, url string, options *RequestOpts) 
 	}
 
 	// Allow default OkCodes if none explicitly set
-	okc := options.OkCodes
-	if okc == nil {
-		okc = defaultOkCodes(method)
+	if options.OkCodes == nil {
+		options.OkCodes = defaultOkCodes(method)
 	}
 
 	// Validate the HTTP response status.
 	var ok bool
-	for _, code := range okc {
+	for _, code := range options.OkCodes {
 		if resp.StatusCode == code {
 			ok = true
 			break
@@ -442,11 +358,6 @@ func (client *ProviderClient) Request(method, url string, options *RequestOpts) 
 			err = ErrDefault408{respErr}
 			if error408er, ok := errType.(Err408er); ok {
 				err = error408er.Error408(respErr)
-			}
-		case http.StatusConflict:
-			err = ErrDefault409{respErr}
-			if error409er, ok := errType.(Err409er); ok {
-				err = error409er.Error409(respErr)
 			}
 		case 429:
 			err = ErrDefault429{respErr}
