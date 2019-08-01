@@ -36,7 +36,7 @@
     
     
       
-        <title>Custom errors - NGINX Ingress Controller</title>
+        <title>Exposing FCGI services - NGINX Ingress Controller</title>
       
     
     
@@ -112,7 +112,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#custom-errors" tabindex="1" class="md-skip">
+      <a href="#exposing-fastcgi-servers" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -138,7 +138,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Custom errors
+                Exposing FCGI services
               
             </span>
           
@@ -614,20 +614,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-    <a href="./" title="Custom errors" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../custom-errors/" title="Custom errors" class="md-nav__link">
       Custom errors
     </a>
-    
   </li>
 
         
@@ -659,11 +650,83 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="../fcgi-services/" title="Exposing FCGI services" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Exposing FCGI services
+      </label>
+    
+    <a href="./" title="Exposing FCGI services" class="md-nav__link md-nav__link--active">
       Exposing FCGI services
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-objects-to-expose-a-fastcgi-pod" title="Example Objects to Expose a FastCGI Pod" class="md-nav__link">
+    Example Objects to Expose a FastCGI Pod
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-fastcgi-ingress-annotations" title="The FastCGI Ingress Annotations" class="md-nav__link">
+    The FastCGI Ingress Annotations
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-nginxingresskubernetesiobackend-protocol-annotation" title="The nginx.ingress.kubernetes.io/backend-protocol Annotation" class="md-nav__link">
+    The nginx.ingress.kubernetes.io/backend-protocol Annotation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-nginxingresskubernetesiofastcgi-index-annotation" title="The nginx.ingress.kubernetes.io/fastcgi-index Annotation" class="md-nav__link">
+    The nginx.ingress.kubernetes.io/fastcgi-index Annotation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-nginxingresskubernetesiofastcgi-params-configmap-annotation" title="The nginx.ingress.kubernetes.io/fastcgi-params-configmap Annotation" class="md-nav__link">
+    The nginx.ingress.kubernetes.io/fastcgi-params-configmap Annotation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -1133,6 +1196,56 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-objects-to-expose-a-fastcgi-pod" title="Example Objects to Expose a FastCGI Pod" class="md-nav__link">
+    Example Objects to Expose a FastCGI Pod
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-fastcgi-ingress-annotations" title="The FastCGI Ingress Annotations" class="md-nav__link">
+    The FastCGI Ingress Annotations
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-nginxingresskubernetesiobackend-protocol-annotation" title="The nginx.ingress.kubernetes.io/backend-protocol Annotation" class="md-nav__link">
+    The nginx.ingress.kubernetes.io/backend-protocol Annotation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-nginxingresskubernetesiofastcgi-index-annotation" title="The nginx.ingress.kubernetes.io/fastcgi-index Annotation" class="md-nav__link">
+    The nginx.ingress.kubernetes.io/fastcgi-index Annotation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-nginxingresskubernetesiofastcgi-params-configmap-annotation" title="The nginx.ingress.kubernetes.io/fastcgi-params-configmap Annotation" class="md-nav__link">
+    The nginx.ingress.kubernetes.io/fastcgi-params-configmap Annotation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1143,64 +1256,108 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/custom-errors.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/fcgi-services.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="custom-errors">Custom errors<a class="headerlink" href="#custom-errors" title="Permanent link">&para;</a></h1>
-<p>When the <a href="../nginx-configuration/configmap/#custom-http-errors"><code class="codehilite">custom-http-errors</code></a> option is enabled, the Ingress controller configures NGINX so
-that it passes several HTTP headers down to its <code class="codehilite">default-backend</code> in case of error:</p>
-<table>
-<thead>
-<tr>
-<th>Header</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code class="codehilite">X-Code</code></td>
-<td>HTTP status code retuned by the request</td>
-</tr>
-<tr>
-<td><code class="codehilite">X-Format</code></td>
-<td>Value of the <code class="codehilite">Accept</code> header sent by the client</td>
-</tr>
-<tr>
-<td><code class="codehilite">X-Original-URI</code></td>
-<td>URI that caused the error</td>
-</tr>
-<tr>
-<td><code class="codehilite">X-Namespace</code></td>
-<td>Namespace where the backend Service is located</td>
-</tr>
-<tr>
-<td><code class="codehilite">X-Ingress-Name</code></td>
-<td>Name of the Ingress where the backend is defined</td>
-</tr>
-<tr>
-<td><code class="codehilite">X-Service-Name</code></td>
-<td>Name of the Service backing the backend</td>
-</tr>
-<tr>
-<td><code class="codehilite">X-Service-Port</code></td>
-<td>Port number of the Service backing the backend</td>
-</tr>
-<tr>
-<td><code class="codehilite">X-Request-ID</code></td>
-<td>Unique ID that identifies the request - same as for backend service</td>
-</tr>
-</tbody>
-</table>
-<p>A custom error backend can use this information to return the best possible representation of an error page. For
-example, if the value of the <code class="codehilite">Accept</code> header send by the client was <code class="codehilite">application/json</code>, a carefully crafted backend
-could decide to return the error payload as a JSON document instead of HTML.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>The custom backend is expected to return the correct HTTP status code instead of <code class="codehilite">200</code>.
-NGINX does not change the response from the custom default backend.</p>
-</div>
-<p>An example of such custom backend is available inside the source repository at <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages">images/custom-error-pages</a>.</p>
-<p>See also the <a href="../examples/customization/custom-errors">Custom errors</a> example.</p>
+                <h1 id="exposing-fastcgi-servers">Exposing FastCGI Servers<a class="headerlink" href="#exposing-fastcgi-servers" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>FastCGI</strong> is a <a href="https://en.wikipedia.org/wiki/Binary_protocol" title="Binary protocol">binary protocol</a> for interfacing interactive programs with a <a href="https://en.wikipedia.org/wiki/Web_server" title="Web server">web server</a>. [...] (It's) aim is to reduce the overhead related to interfacing between web server and CGI programs, allowing a server to handle more web page requests per unit of time.</p>
+<p>&mdash; Wikipedia</p>
+</blockquote>
+<p>The <em>ingress-nginx</em> ingress controller can be used to directly expose <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> servers.  Enabling FastCGI in your Ingress only requires setting the <em>backend-protocol</em> annotation to <code class="codehilite">FCGI</code>, and with a couple more annotations you can customize the way <em>ingress-nginx</em> handles the communication with your FastCGI <em>server</em>.</p>
+<h2 id="example-objects-to-expose-a-fastcgi-pod">Example Objects to Expose a FastCGI Pod<a class="headerlink" href="#example-objects-to-expose-a-fastcgi-pod" title="Permanent link">&para;</a></h2>
+<p>The <em>Pod</em> example object below exposes port <code class="codehilite">9000</code>, which is the conventional FastCGI port.</p>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Pod</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-app</span>
+<span class="nt">labels</span><span class="p">:</span>
+  <span class="nt">app</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-app</span>
+<span class="nt">spec</span><span class="p">:</span>
+  <span class="nt">containers</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-app</span>
+    <span class="nt">image</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-app:1.0</span>
+    <span class="nt">ports</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">containerPort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">9000</span>
+      <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">fastcgi</span>
+</pre></div>
+
+<p>The <em>Service</em> object example below matches port <code class="codehilite">9000</code> from the <em>Pod</em> object above.</p>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Service</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-service</span>
+<span class="nt">spec</span><span class="p">:</span>
+  <span class="nt">selector</span><span class="p">:</span>
+    <span class="nt">app</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-app</span>
+  <span class="nt">ports</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">9000</span>
+    <span class="nt">targetPort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">9000</span>
+    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">fastcgi</span>
+</pre></div>
+
+<p>And the <em>Ingress</em> and <em>ConfigMap</em> objects below demonstrates the supported <em>FastCGI</em> specific annotations (NGINX actually has 50 FastCGI directives, all of which have not been exposed in the ingress yet), and matches the service <code class="codehilite">example-service</code>, and the port named <code class="codehilite">fastcgi</code> from above. The <em>ConfigMap</em> <strong>must</strong> be created first for the <em>Ingress Controller</em> to be able to find it when the <em>Ingress</em> object is created, otherwise you will need to restart the <em>Ingress Controller</em> pods.</p>
+<div class="codehilite"><pre><span></span><span class="c1"># The ConfigMap MUST be created first for the ingress controller to be able to</span>
+<span class="c1"># find it when the Ingress object is created.</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-cm</span>
+<span class="nt">data</span><span class="p">:</span>
+  <span class="nt">SCRIPT_FILENAME</span><span class="p">:</span> <span class="s">&quot;/example/index.php&quot;</span>
+
+<span class="nn">---</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">annotations</span><span class="p">:</span>
+    <span class="nt">kubernetes.io/ingress.class</span><span class="p">:</span> <span class="s">&quot;nginx&quot;</span>
+    <span class="nt">nginx.ingress.kubernetes.io/backend-protocol</span><span class="p">:</span> <span class="s">&quot;FCGI&quot;</span>
+    <span class="nt">nginx.ingress.kubernetes.io/fastcgi-index</span><span class="p">:</span> <span class="s">&quot;index.php&quot;</span>
+    <span class="nt">nginx.ingress.kubernetes.io/fastcgi-params-configmap</span><span class="p">:</span> <span class="s">&quot;example-cm&quot;</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-app</span>
+<span class="nt">spec</span><span class="p">:</span>
+  <span class="nt">rules</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">host</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">app.example.com</span>
+    <span class="nt">http</span><span class="p">:</span>
+      <span class="nt">paths</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="nt">backend</span><span class="p">:</span>
+          <span class="nt">serviceName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-service</span>
+          <span class="nt">servicePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">fastcgi</span>
+</pre></div>
+
+<h2 id="the-fastcgi-ingress-annotations">The FastCGI Ingress Annotations<a class="headerlink" href="#the-fastcgi-ingress-annotations" title="Permanent link">&para;</a></h2>
+<h3 id="the-nginxingresskubernetesiobackend-protocol-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiobackend-protocol-annotation" title="Permanent link">&para;</a></h3>
+<p>To enable FastCGI, the <code class="codehilite">backend-protocol</code> annotation needs to be set to <code class="codehilite">FCGI</code>, which overrides the default <code class="codehilite">HTTP</code> value.</p>
+<blockquote>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;FCGI&quot;</code></p>
+</blockquote>
+<p>This enables the <em>FastCGI</em> mode for the whole <em>Ingress</em> object.</p>
+<h3 id="the-nginxingresskubernetesiofastcgi-index-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-index</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiofastcgi-index-annotation" title="Permanent link">&para;</a></h3>
+<p>To specify an index file, the <code class="codehilite">fastcgi-index</code> annotation value can optionally be set.  In the example below, the value is set to <code class="codehilite">index.php</code>.  This annotation corresponds to <a href="http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_index">the <em>NGINX</em> <code class="codehilite">fastcgi_index</code> directive</a>.</p>
+<blockquote>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-index: &quot;index.php&quot;</code></p>
+</blockquote>
+<h3 id="the-nginxingresskubernetesiofastcgi-params-configmap-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params-configmap</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiofastcgi-params-configmap-annotation" title="Permanent link">&para;</a></h3>
+<p>To specify <a href="http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_param"><em>NGINX</em> <code class="codehilite">fastcgi_param</code> directives</a>, the <code class="codehilite">fastcgi-params-configmap</code> annotation is used, which in turn must lead to a <em>ConfigMap</em> object containing the <em>NGINX</em> <code class="codehilite">fastcgi_param</code> directives as key/values.</p>
+<blockquote>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params: &quot;example-configmap&quot;</code></p>
+</blockquote>
+<p>And the <em>ConfigMap</em> object to specify the <code class="codehilite">SCRIPT_FILENAME</code> and <code class="codehilite">HTTP_PROXY</code>  <em>NGINX's</em> <code class="codehilite">fastcgi_param</code> directives will look like the following:</p>
+<p><div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">example-configmap</span>
+<span class="nt">data</span><span class="p">:</span>
+  <span class="nt">SCRIPT_FILENAME</span><span class="p">:</span> <span class="s">&quot;/example/index.php&quot;</span>
+  <span class="nt">HTTP_PROXY</span><span class="p">:</span> <span class="s">&quot;&quot;</span>
+</pre></div>
+Using the <em>namespace/</em> prefix is also supported, for example:</p>
+<blockquote>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params: &quot;example-namespace/example-configmap&quot;</code></p>
+</blockquote>
                 
                   
                 
@@ -1221,7 +1378,7 @@ NGINX does not change the response from the custom default backend.</p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../cli-arguments/" title="Command line arguments" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1230,19 +1387,19 @@ NGINX does not change the response from the custom default backend.</p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Command line arguments
+                Exposing TCP and UDP services
               </span>
             </div>
           </a>
         
         
-          <a href="../default-backend/" title="Default backend" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../ingress-path-matching/" title="Regular expressions in paths" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Default backend
+                Regular expressions in paths
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">

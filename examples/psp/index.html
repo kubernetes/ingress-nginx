@@ -31,18 +31,18 @@
       
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
-      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.0">
     
     
       
-        <title>Introduction - NGINX Ingress Controller</title>
+        <title>Pod Security Policy (PSP) - NGINX Ingress Controller</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.0284f74d.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.0284f74d.css">
       
-        <link rel="stylesheet" href="../assets/stylesheets/application-palette.01803549.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.01803549.css">
       
       
         
@@ -51,7 +51,7 @@
       
     
     
-      <script src="../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
     
     
       
@@ -60,10 +60,10 @@
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
-    <link rel="stylesheet" href="../assets/fonts/material-icons.css">
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
-      <link rel="stylesheet" href="../extra.css">
+      <link rel="stylesheet" href="../../extra.css">
     
     
       
@@ -112,7 +112,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#ingress-examples" tabindex="1" class="md-skip">
+      <a href="#pod-security-policy-psp" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -121,7 +121,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href=".." title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="../.." title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -138,7 +138,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Introduction
+                Pod Security Policy (PSP)
               
             </span>
           
@@ -217,7 +217,7 @@
   
     <li class="md-tabs__item">
       
-        <a href=".." title="Welcome" class="md-tabs__link">
+        <a href="../.." title="Welcome" class="md-tabs__link">
           Welcome
         </a>
       
@@ -230,7 +230,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../deploy/" title="Deployment" class="md-tabs__link">
+        <a href="../../deploy/" title="Deployment" class="md-tabs__link">
           Deployment
         </a>
       
@@ -247,7 +247,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../user-guide/nginx-configuration/" title="User guide" class="md-tabs__link">
+        <a href="../../user-guide/nginx-configuration/" title="User guide" class="md-tabs__link">
           User guide
         </a>
       
@@ -262,7 +262,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="./" title="Examples" class="md-tabs__link md-tabs__link--active">
+        <a href="../" title="Examples" class="md-tabs__link md-tabs__link--active">
           Examples
         </a>
       
@@ -283,7 +283,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href=".." title="NGINX Ingress Controller" class="md-nav__button md-logo">
+    <a href="../.." title="NGINX Ingress Controller" class="md-nav__button md-logo">
       
         <i class="md-icon">public</i>
       
@@ -338,7 +338,7 @@
 
 
   <li class="md-nav__item">
-    <a href=".." title="Welcome" class="md-nav__link">
+    <a href="../.." title="Welcome" class="md-nav__link">
       Welcome
     </a>
   </li>
@@ -350,7 +350,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../how-it-works/" title="How it works" class="md-nav__link">
+    <a href="../../how-it-works/" title="How it works" class="md-nav__link">
       How it works
     </a>
   </li>
@@ -362,7 +362,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../troubleshooting/" title="Troubleshooting" class="md-nav__link">
+    <a href="../../troubleshooting/" title="Troubleshooting" class="md-nav__link">
       Troubleshooting
     </a>
   </li>
@@ -374,7 +374,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../kubectl-plugin/" title="kubectl plugin" class="md-nav__link">
+    <a href="../../kubectl-plugin/" title="kubectl plugin" class="md-nav__link">
       kubectl plugin
     </a>
   </li>
@@ -386,7 +386,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../development/" title="Development" class="md-nav__link">
+    <a href="../../development/" title="Development" class="md-nav__link">
       Development
     </a>
   </li>
@@ -422,7 +422,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../deploy/" title="Installation Guide" class="md-nav__link">
+    <a href="../../deploy/" title="Installation Guide" class="md-nav__link">
       Installation Guide
     </a>
   </li>
@@ -434,7 +434,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+    <a href="../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
       Bare-metal considerations
     </a>
   </li>
@@ -446,7 +446,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
+    <a href="../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
   </li>
@@ -458,7 +458,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../deploy/validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
+    <a href="../../deploy/validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
       Validating Webhook (admission controller)
     </a>
   </li>
@@ -470,7 +470,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../deploy/upgrade/" title="Upgrade" class="md-nav__link">
+    <a href="../../deploy/upgrade/" title="Upgrade" class="md-nav__link">
       Upgrade
     </a>
   </li>
@@ -525,7 +525,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/nginx-configuration/" title="Introduction" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/" title="Introduction" class="md-nav__link">
       Introduction
     </a>
   </li>
@@ -537,7 +537,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/basic-usage/" title="Basic usage" class="md-nav__link">
+    <a href="../../user-guide/basic-usage/" title="Basic usage" class="md-nav__link">
       Basic usage
     </a>
   </li>
@@ -549,7 +549,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/nginx-configuration/annotations/" title="Annotations" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/annotations/" title="Annotations" class="md-nav__link">
       Annotations
     </a>
   </li>
@@ -561,7 +561,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/nginx-configuration/configmap/" title="ConfigMap" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/configmap/" title="ConfigMap" class="md-nav__link">
       ConfigMap
     </a>
   </li>
@@ -573,7 +573,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/nginx-configuration/custom-template/" title="Custom NGINX template" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/custom-template/" title="Custom NGINX template" class="md-nav__link">
       Custom NGINX template
     </a>
   </li>
@@ -585,7 +585,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/nginx-configuration/log-format/" title="Log format" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/log-format/" title="Log format" class="md-nav__link">
       Log format
     </a>
   </li>
@@ -602,7 +602,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/cli-arguments/" title="Command line arguments" class="md-nav__link">
+    <a href="../../user-guide/cli-arguments/" title="Command line arguments" class="md-nav__link">
       Command line arguments
     </a>
   </li>
@@ -614,7 +614,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/custom-errors/" title="Custom errors" class="md-nav__link">
+    <a href="../../user-guide/custom-errors/" title="Custom errors" class="md-nav__link">
       Custom errors
     </a>
   </li>
@@ -626,7 +626,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/default-backend/" title="Default backend" class="md-nav__link">
+    <a href="../../user-guide/default-backend/" title="Default backend" class="md-nav__link">
       Default backend
     </a>
   </li>
@@ -638,7 +638,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
+    <a href="../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
       Exposing TCP and UDP services
     </a>
   </li>
@@ -650,7 +650,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/fcgi-services/" title="Exposing FCGI services" class="md-nav__link">
+    <a href="../../user-guide/fcgi-services/" title="Exposing FCGI services" class="md-nav__link">
       Exposing FCGI services
     </a>
   </li>
@@ -662,7 +662,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+    <a href="../../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
       Regular expressions in paths
     </a>
   </li>
@@ -674,7 +674,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/external-articles/" title="External Articles" class="md-nav__link">
+    <a href="../../user-guide/external-articles/" title="External Articles" class="md-nav__link">
       External Articles
     </a>
   </li>
@@ -686,7 +686,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/miscellaneous/" title="Miscellaneous" class="md-nav__link">
+    <a href="../../user-guide/miscellaneous/" title="Miscellaneous" class="md-nav__link">
       Miscellaneous
     </a>
   </li>
@@ -698,7 +698,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/monitoring/" title="Prometheus and Grafana installation" class="md-nav__link">
+    <a href="../../user-guide/monitoring/" title="Prometheus and Grafana installation" class="md-nav__link">
       Prometheus and Grafana installation
     </a>
   </li>
@@ -710,7 +710,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/multiple-ingress/" title="Multiple Ingress controllers" class="md-nav__link">
+    <a href="../../user-guide/multiple-ingress/" title="Multiple Ingress controllers" class="md-nav__link">
       Multiple Ingress controllers
     </a>
   </li>
@@ -722,7 +722,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/tls/" title="TLS/HTTPS" class="md-nav__link">
+    <a href="../../user-guide/tls/" title="TLS/HTTPS" class="md-nav__link">
       TLS/HTTPS
     </a>
   </li>
@@ -753,7 +753,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/third-party-addons/modsecurity/" title="ModSecurity Web Application Firewall" class="md-nav__link">
+    <a href="../../user-guide/third-party-addons/modsecurity/" title="ModSecurity Web Application Firewall" class="md-nav__link">
       ModSecurity Web Application Firewall
     </a>
   </li>
@@ -765,7 +765,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/third-party-addons/opentracing/" title="OpenTracing" class="md-nav__link">
+    <a href="../../user-guide/third-party-addons/opentracing/" title="OpenTracing" class="md-nav__link">
       OpenTracing
     </a>
   </li>
@@ -806,20 +806,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-    <a href="./" title="Introduction" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../" title="Introduction" class="md-nav__link">
       Introduction
     </a>
-    
   </li>
 
         
@@ -829,7 +820,7 @@
 
 
   <li class="md-nav__item">
-    <a href="PREREQUISITES/" title="Prerequisites" class="md-nav__link">
+    <a href="../PREREQUISITES/" title="Prerequisites" class="md-nav__link">
       Prerequisites
     </a>
   </li>
@@ -841,7 +832,7 @@
 
 
   <li class="md-nav__item">
-    <a href="affinity/cookie/" title="Sticky Sessions" class="md-nav__link">
+    <a href="../affinity/cookie/" title="Sticky Sessions" class="md-nav__link">
       Sticky Sessions
     </a>
   </li>
@@ -872,7 +863,7 @@
 
 
   <li class="md-nav__item">
-    <a href="auth/basic/" title="Basic Authentication" class="md-nav__link">
+    <a href="../auth/basic/" title="Basic Authentication" class="md-nav__link">
       Basic Authentication
     </a>
   </li>
@@ -884,7 +875,7 @@
 
 
   <li class="md-nav__item">
-    <a href="auth/client-certs/" title="Client Certificate Authentication" class="md-nav__link">
+    <a href="../auth/client-certs/" title="Client Certificate Authentication" class="md-nav__link">
       Client Certificate Authentication
     </a>
   </li>
@@ -896,7 +887,7 @@
 
 
   <li class="md-nav__item">
-    <a href="auth/external-auth/" title="External Basic Authentication" class="md-nav__link">
+    <a href="../auth/external-auth/" title="External Basic Authentication" class="md-nav__link">
       External Basic Authentication
     </a>
   </li>
@@ -908,7 +899,7 @@
 
 
   <li class="md-nav__item">
-    <a href="auth/oauth-external-auth/" title="External OAUTH Authentication" class="md-nav__link">
+    <a href="../auth/oauth-external-auth/" title="External OAUTH Authentication" class="md-nav__link">
       External OAUTH Authentication
     </a>
   </li>
@@ -944,7 +935,7 @@
 
 
   <li class="md-nav__item">
-    <a href="customization/configuration-snippets/" title="Configuration Snippets" class="md-nav__link">
+    <a href="../customization/configuration-snippets/" title="Configuration Snippets" class="md-nav__link">
       Configuration Snippets
     </a>
   </li>
@@ -956,7 +947,7 @@
 
 
   <li class="md-nav__item">
-    <a href="customization/custom-configuration/" title="Custom Configuration" class="md-nav__link">
+    <a href="../customization/custom-configuration/" title="Custom Configuration" class="md-nav__link">
       Custom Configuration
     </a>
   </li>
@@ -968,7 +959,7 @@
 
 
   <li class="md-nav__item">
-    <a href="customization/custom-errors/" title="Custom Errors" class="md-nav__link">
+    <a href="../customization/custom-errors/" title="Custom Errors" class="md-nav__link">
       Custom Errors
     </a>
   </li>
@@ -980,7 +971,7 @@
 
 
   <li class="md-nav__item">
-    <a href="customization/custom-headers/" title="Custom Headers" class="md-nav__link">
+    <a href="../customization/custom-headers/" title="Custom Headers" class="md-nav__link">
       Custom Headers
     </a>
   </li>
@@ -992,7 +983,7 @@
 
 
   <li class="md-nav__item">
-    <a href="customization/external-auth-headers/" title="External authentication" class="md-nav__link">
+    <a href="../customization/external-auth-headers/" title="External authentication" class="md-nav__link">
       External authentication
     </a>
   </li>
@@ -1004,7 +995,7 @@
 
 
   <li class="md-nav__item">
-    <a href="customization/ssl-dh-param/" title="Custom DH parameters for perfect forward secrecy" class="md-nav__link">
+    <a href="../customization/ssl-dh-param/" title="Custom DH parameters for perfect forward secrecy" class="md-nav__link">
       Custom DH parameters for perfect forward secrecy
     </a>
   </li>
@@ -1016,7 +1007,7 @@
 
 
   <li class="md-nav__item">
-    <a href="customization/sysctl/" title="Sysctl tuning" class="md-nav__link">
+    <a href="../customization/sysctl/" title="Sysctl tuning" class="md-nav__link">
       Sysctl tuning
     </a>
   </li>
@@ -1033,7 +1024,7 @@
 
 
   <li class="md-nav__item">
-    <a href="docker-registry/" title="Docker registry" class="md-nav__link">
+    <a href="../docker-registry/" title="Docker registry" class="md-nav__link">
       Docker registry
     </a>
   </li>
@@ -1045,7 +1036,7 @@
 
 
   <li class="md-nav__item">
-    <a href="grpc/" title="gRPC" class="md-nav__link">
+    <a href="../grpc/" title="gRPC" class="md-nav__link">
       gRPC
     </a>
   </li>
@@ -1057,7 +1048,7 @@
 
 
   <li class="md-nav__item">
-    <a href="multi-tls/" title="Multi TLS certificate termination" class="md-nav__link">
+    <a href="../multi-tls/" title="Multi TLS certificate termination" class="md-nav__link">
       Multi TLS certificate termination
     </a>
   </li>
@@ -1069,7 +1060,7 @@
 
 
   <li class="md-nav__item">
-    <a href="rewrite/" title="Rewrite" class="md-nav__link">
+    <a href="../rewrite/" title="Rewrite" class="md-nav__link">
       Rewrite
     </a>
   </li>
@@ -1081,7 +1072,7 @@
 
 
   <li class="md-nav__item">
-    <a href="static-ip/" title="Static IPs" class="md-nav__link">
+    <a href="../static-ip/" title="Static IPs" class="md-nav__link">
       Static IPs
     </a>
   </li>
@@ -1093,7 +1084,7 @@
 
 
   <li class="md-nav__item">
-    <a href="tls-termination/" title="TLS termination" class="md-nav__link">
+    <a href="../tls-termination/" title="TLS termination" class="md-nav__link">
       TLS termination
     </a>
   </li>
@@ -1103,11 +1094,20 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="psp/" title="Pod Security Policy (PSP)" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+    <a href="./" title="Pod Security Policy (PSP)" class="md-nav__link md-nav__link--active">
       Pod Security Policy (PSP)
     </a>
+    
   </li>
 
         
@@ -1143,126 +1143,26 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/psp/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="ingress-examples">Ingress examples<a class="headerlink" href="#ingress-examples" title="Permanent link">&para;</a></h1>
-<p>This directory contains a catalog of examples on how to run, configure and scale Ingress.<br />
-Please review the <a href="PREREQUISITES/">prerequisites</a> before trying them.</p>
-<table>
-<thead>
-<tr>
-<th>Category</th>
-<th>Name</th>
-<th>Description</th>
-<th>Complexity Level</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Apps</td>
-<td><a href="docker-registry/">Docker Registry</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-<tr>
-<td>Auth</td>
-<td><a href="auth/basic/">Basic authentication</a></td>
-<td>password protect your website</td>
-<td>Intermediate</td>
-</tr>
-<tr>
-<td>Auth</td>
-<td><a href="auth/client-certs/">Client certificate authentication</a></td>
-<td>secure your website with client certificate authentication</td>
-<td>Intermediate</td>
-</tr>
-<tr>
-<td>Auth</td>
-<td><a href="auth/external-auth/">External authentication plugin</a></td>
-<td>defer to an external authentication service</td>
-<td>Intermediate</td>
-</tr>
-<tr>
-<td>Auth</td>
-<td><a href="auth/oauth-external-auth/">OAuth external auth</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-<tr>
-<td>Customization</td>
-<td><a href="customization/configuration-snippets/">Configuration snippets</a></td>
-<td>customize nginx location configuration using annotations</td>
-<td>Advanced</td>
-</tr>
-<tr>
-<td>Customization</td>
-<td><a href="customization/custom-configuration/">Custom configuration</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-<tr>
-<td>Customization</td>
-<td><a href="customization/ssl-dh-param/">Custom DH parameters for perfect forward secrecy</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-<tr>
-<td>Customization</td>
-<td><a href="customization/custom-errors/">Custom errors</a></td>
-<td>serve custom error pages from the default backend</td>
-<td>Intermediate</td>
-</tr>
-<tr>
-<td>Customization</td>
-<td><a href="customization/custom-headers/">Custom headers</a></td>
-<td>set custom headers before sending traffic to backends</td>
-<td>Advanced</td>
-</tr>
-<tr>
-<td>Customization</td>
-<td><a href="customization/external-auth-headers/">External authentication with response header propagation</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-<tr>
-<td>Customization</td>
-<td><a href="customization/sysctl/">Sysctl tuning</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-<tr>
-<td>Features</td>
-<td><a href="rewrite/">Rewrite</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-<tr>
-<td>Features</td>
-<td><a href="affinity/cookie/">Session stickiness</a></td>
-<td>route requests consistently to the same endpoint</td>
-<td>Advanced</td>
-</tr>
-<tr>
-<td>Scaling</td>
-<td><a href="static-ip/">Static IP</a></td>
-<td>a single ingress gets a single static IP</td>
-<td>Intermediate</td>
-</tr>
-<tr>
-<td>TLS</td>
-<td><a href="multi-tls/">Multi TLS certificate termination</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-<tr>
-<td>TLS</td>
-<td><a href="tls-termination/">TLS termination</a></td>
-<td>TODO</td>
-<td>TODO</td>
-</tr>
-</tbody>
-</table>
+                <h1 id="pod-security-policy-psp">Pod Security Policy (PSP)<a class="headerlink" href="#pod-security-policy-psp" title="Permanent link">&para;</a></h1>
+<p>In most clusters today, by default, all resources (e.g. Deployments and ReplicatSets)
+have permissions to create pods.
+Kubernetes however provides a more fine-grained authorization policy called 
+<a href="https://kubernetes.io/docs/concepts/policy/pod-security-policy/">Pod Security Policy (PSP)</a>.</p>
+<p>PSP allows the cluster owner to define the permission of each object, for example creating a pod.
+If you have PSP enabled on the cluster, and you deploy ingress-nginx,
+you will need to provide the Deployment with the permissions to create pods.</p>
+<p>Before applying any objects, first apply the PSP permissions by running:
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/psp/psp.yaml</span>
+</pre></div></p>
+<p>Now that the pod security policy is applied, we can continue as usual by applying the
+<a href="https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml">mandatory.yaml</a>
+according to the <a href="../../deploy/">Installation Guide</a>. </p>
+<p>Note: PSP permissions must be granted before to the creation of the Deployment and the ReplicaSet.
+If the Deployment or ReplicaSet already exist, they will receive the PSP permissions
+only after deleting them and reapplying mandatory.yaml.</p>
                 
                   
                 
@@ -1283,7 +1183,7 @@ Please review the <a href="PREREQUISITES/">prerequisites</a> before trying them.
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../user-guide/third-party-addons/opentracing/" title="OpenTracing" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../tls-termination/" title="TLS termination" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1292,25 +1192,11 @@ Please review the <a href="PREREQUISITES/">prerequisites</a> before trying them.
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                OpenTracing
+                TLS termination
               </span>
             </div>
           </a>
         
-        
-          <a href="PREREQUISITES/" title="Prerequisites" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Prerequisites
-              </span>
-            </div>
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
-            </div>
-          </a>
         
       </nav>
     </div>
@@ -1332,9 +1218,9 @@ Please review the <a href="PREREQUISITES/">prerequisites</a> before trying them.
       
     </div>
     
-      <script src="../assets/javascripts/application.245445c6.js"></script>
+      <script src="../../assets/javascripts/application.245445c6.js"></script>
       
-      <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
       
     
   </body>
