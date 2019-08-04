@@ -764,6 +764,7 @@ stream {
             proxy_set_header       X-Request-ID       $req_id;
             proxy_set_header       Host               $best_http_host;
 
+            proxy_method GET;
             set $proxy_upstream_name {{ $upstreamName }};
 
             rewrite                (.*) / break;
