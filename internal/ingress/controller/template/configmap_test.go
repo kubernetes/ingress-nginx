@@ -76,6 +76,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"disable-ipv6-dns":              "true",
 		"lua-shared-dicts":              "configuration_data:5,certificate_data:5",
 	}
+
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
 	def.DisableAccessLog = true
