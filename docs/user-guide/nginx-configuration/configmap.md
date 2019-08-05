@@ -361,6 +361,7 @@ Sets the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.ht
 Example for json output:
 
 ```console
+
 log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr",
     "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$req_id", "remote_user":
     "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":
