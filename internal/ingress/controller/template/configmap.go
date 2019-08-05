@@ -57,6 +57,7 @@ const (
 	globalAuthResponseHeaders = "global-auth-response-headers"
 	globalAuthRequestRedirect = "global-auth-request-redirect"
 	globalAuthSnippet         = "global-auth-snippet"
+	luaSharedDicts            = "lua-shared-dicts"
 	globalAuthCacheKey        = "global-auth-cache-key"
 	globalAuthCacheDuration   = "global-auth-cache-duration"
 )
@@ -87,6 +88,22 @@ func ReadConfig(src map[string]string) config.Configuration {
 	blockUserAgentList := make([]string, 0)
 	blockRefererList := make([]string, 0)
 	responseHeaders := make([]string, 0)
+	luaSharedDict := make(map[string]int)
+
+	//parse lua shared dict values
+	if val, ok := conf[luaSharedDicts]; ok {
+		delete(conf, luaSharedDicts)
+		lsd := strings.Split(val, ",")
+		for _, v := range lsd {
+			v = strings.Replace(v, " ", "", -1)
+			results := strings.SplitN(v, ":", 2)
+			val, err := strconv.Atoi(results[1])
+			if err != nil {
+				klog.Warningf("%v is not a valid lua entry: %v", v, err)
+			}
+			luaSharedDict[results[0]] = val
+		}
+	}
 
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
@@ -305,6 +322,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.HideHeaders = hideHeadersList
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
+	to.LuaSharedDicts = luaSharedDict
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,
