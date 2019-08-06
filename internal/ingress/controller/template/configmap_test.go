@@ -74,6 +74,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"nginx-status-ipv6-whitelist":   "::1,2001::/16",
 		"proxy-add-original-uri-header": "false",
 		"disable-ipv6-dns":              "true",
+		"lua-shared-dicts":              "configuration_data:5,certificate_data:5",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -95,7 +96,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
 	def.ProxyAddOriginalURIHeader = false
-
+	def.LuaSharedDicts = map[string]int{"configuration_data": 5, "certificate_data": 5}
 	def.DisableIpv6DNS = true
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
@@ -300,6 +301,54 @@ func TestGlobalExternalAuthCacheDurationParsing(t *testing.T) {
 
 		if !reflect.DeepEqual(cfg.GlobalExternalAuth.AuthCacheDuration, tc.expect) {
 			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.AuthCacheDuration)
+		}
+	}
+}
+
+func TestLuaSharedDict(t *testing.T) {
+
+	testsCases := []struct {
+		name   string
+		entry  map[string]string
+		expect map[string]int
+	}{
+		{
+			name:   "lua valid entry",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:5,certificate_data:5"},
+			expect: map[string]int{"configuration_data": 5, "certificate_data": 5},
+		},
+
+		{
+			name:   "lua invalid entry",
+			entry:  map[string]string{"lua-shared-dict": "configuration_data:5,certificate_data:5"},
+			expect: map[string]int{},
+		},
+		{
+			name:   "lua mixed entry",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:10,certificate_data:5"},
+			expect: map[string]int{"configuration_data": 10, "certificate_data": 5},
+		},
+		{
+			name:   "lua valid entry - configuration_data only",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:5"},
+			expect: map[string]int{"configuration_data": 5},
+		},
+		{
+			name:   "lua valid entry certificate_data only",
+			entry:  map[string]string{"lua-shared-dicts": "certificate_data:5"},
+			expect: map[string]int{"certificate_data": 5},
+		},
+		{
+			name:   "lua valid entry certificate_data only",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:10, my_random_dict:15,another_example:2"},
+			expect: map[string]int{"configuration_data": 10, "my_random_dict": 15, "another_example": 2},
+		},
+	}
+
+	for n, tc := range testsCases {
+		cfg := ReadConfig(tc.entry)
+		if !reflect.DeepEqual(cfg.LuaSharedDicts, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.LuaSharedDicts)
 		}
 	}
 }
