@@ -216,18 +216,33 @@ func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
 	return false
 }
 
-func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
+func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF bool) string {
+
+	var out []string
+	// Load config
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return ""
+	}
 	servers, ok := s.([]*ingress.Server)
 	if !ok {
 		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
 		return ""
 	}
-
-	out := []string{
-		"lua_shared_dict configuration_data 15M",
-		"lua_shared_dict certificate_data 16M",
+	// check if config contains lua "lua_configuration_data" value otherwise, use default
+	cfgData, ok := cfg.LuaSharedDicts["configuration_data"]
+	if !ok {
+		cfgData = 15
 	}
+	out = append(out, fmt.Sprintf("lua_shared_dict configuration_data %dM", cfgData))
 
+	// check if config contains "lua_certificate_data" value otherwise, use default
+	certData, ok := cfg.LuaSharedDicts["certificate_data"]
+	if !ok {
+		certData = 16
+	}
+	out = append(out, fmt.Sprintf("lua_shared_dict certificate_data %dM", certData))
 	if !disableLuaRestyWAF {
 		luaRestyWAFEnabled := func() bool {
 			for _, server := range servers {
@@ -243,7 +258,6 @@ func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 			out = append(out, "lua_shared_dict waf_storage 64M")
 		}
 	}
-
 	return strings.Join(out, ";\n\r") + ";"
 }
 
