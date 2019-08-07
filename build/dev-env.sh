@@ -32,7 +32,7 @@ export TAG=dev
 export ARCH=amd64
 export REGISTRY=${REGISTRY:-ingress-controller}
 
-DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
+DEV_IMAGE=${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG}
 
 if [ -z "${SKIP_MINIKUBE_START}" ]; then
     test "$(minikube status | grep -c Running) -ge 2 && $(minikube status | grep -q 'Correctly Configured')" || minikube start \
