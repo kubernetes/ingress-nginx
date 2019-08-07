@@ -778,6 +778,11 @@ func (s *k8sStore) ListIngresses(filter IngressFilterFunc) []*ingress.Ingress {
 	sort.SliceStable(ingresses, func(i, j int) bool {
 		ir := ingresses[i].CreationTimestamp
 		jr := ingresses[j].CreationTimestamp
+		if ir.Equal(&jr) {
+			in := fmt.Sprintf("%v-%v", ingresses[i].Namespace, ingresses[i].Name)
+			jn := fmt.Sprintf("%v-%v", ingresses[j].Namespace, ingresses[i].Name)
+			return in > jn
+		}
 		return ir.Before(&jr)
 	})
 
