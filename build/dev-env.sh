@@ -35,7 +35,7 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
 if [ -z "${SKIP_MINIKUBE_START}" ]; then
-    test "$(minikube status | grep -c Running) -ge 2 && $(minikube status | grep -q 'Correctly Configured')" || minikube start \
+    test $(minikube status | grep -c Running) -ge 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
         --extra-config=kubelet.sync-frequency=1s \
         --extra-config=apiserver.authorization-mode=RBAC
 
@@ -71,8 +71,8 @@ if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
   echo "[dev-env] deploying NGINX Ingress controller in namespace $NAMESPACE"
   kustomize build $ROOT | kubectl apply -f -
 else
-  sed -i "\\|^namespace:|c \\namespace: ${NAMESPACE}" "${ROOT}/kustomization.yaml"
-  sed -i "\\|^- name: quay.io|c \\- name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller=${DEV_IMAGE}" "${ROOT}/kustomization.yaml"
+  sed -i -e "s|^namespace: .*|namespace: ${NAMESPACE}|g" "${ROOT}/kustomization.yaml"
+  sed -i -e "s|^- name: .*|- name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller=${DEV_IMAGE}|g" "${ROOT}/kustomization.yaml"
 
   echo "[dev-env] deploying NGINX Ingress controller in namespace $NAMESPACE"
   kubectl apply -k "${ROOT}"
