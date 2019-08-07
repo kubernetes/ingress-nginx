@@ -488,6 +488,14 @@ Sets the [SSL protocols](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#
 
 Please check the result of the configuration using `https://ssllabs.com/ssltest/analyze.html` or `https://testssl.sh`.
 
+## ssl-early-data
+
+Enables or disables TLS 1.3 [early data](https://tools.ietf.org/html/rfc8446#section-2.3)
+
+This requires `ssl-protocols` to have `TLSv1.3` enabled.
+
+[ssl_early_data](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data). The default is: `false`.
+
 ## ssl-session-cache
 
 Enables or disables the use of shared [SSL cache](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache) among worker processes.
