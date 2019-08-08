@@ -20,7 +20,6 @@
 			"whitelist-source-range": null
 		},
 		"bodySize": "1m",
-		"enableDynamicTlsRecords": true,
 		"enableSpdy": false,
 		"errorLogLevel": "notice",
 		"gzipTypes": "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component",

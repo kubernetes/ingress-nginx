@@ -124,11 +124,6 @@ type Configuration struct {
 	// By default error logs go to /var/log/nginx/error.log
 	ErrorLogPath string `json:"error-log-path,omitempty"`
 
-	// EnableDynamicTLSRecords enables dynamic TLS record sizes
-	// https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency
-	// By default this is enabled
-	EnableDynamicTLSRecords bool `json:"enable-dynamic-tls-records"`
-
 	// EnableModsecurity enables the modsecurity module for NGINX
 	// By default this is disabled
 	EnableModsecurity bool `json:"enable-modsecurity"`
@@ -643,7 +638,6 @@ func NewDefault() Configuration {
 		ClientHeaderTimeout:              60,
 		ClientBodyBufferSize:             "8k",
 		ClientBodyTimeout:                60,
-		EnableDynamicTLSRecords:          true,
 		EnableUnderscoresInHeaders:       false,
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,
