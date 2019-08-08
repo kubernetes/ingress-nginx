@@ -34,7 +34,6 @@ The following table shows a configuration option's name, type, and the default v
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
 |[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"|
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
-|[enable-dynamic-tls-records](#enable-dynamic-tls-records)|bool|"true"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
 |[enable-owasp-modsecurity-crs](#enable-owasp-modsecurity-crs)|bool|"false"|
 |[client-header-buffer-size](#client-header-buffer-size)|string|"1k"|
@@ -208,13 +207,6 @@ __Note:__ the file `/var/log/nginx/error.log` is a symlink to `/dev/stderr`
 
 _References:_
 [http://nginx.org/en/docs/ngx_core_module.html#error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log)
-
-## enable-dynamic-tls-records
-
-Enables dynamically sized TLS records to improve time-to-first-byte. _**default:**_ is enabled
-
-_References:_
-[https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency)
 
 ## enable-modsecurity
 

@@ -64,7 +64,6 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"access-log-path":               "/var/log/test/access.log",
 		"error-log-path":                "/var/log/test/error.log",
 		"use-gzip":                      "true",
-		"enable-dynamic-tls-records":    "false",
 		"gzip-level":                    "9",
 		"gzip-types":                    "text/html",
 		"proxy-real-ip-cidr":            "1.1.1.1/8,2.2.2.2/24",
@@ -85,7 +84,6 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
 	def.ProxyReadTimeout = 1
 	def.ProxySendTimeout = 2
-	def.EnableDynamicTLSRecords = false
 	def.UseProxyProtocol = true
 	def.GzipLevel = 9
 	def.GzipTypes = "text/html"
