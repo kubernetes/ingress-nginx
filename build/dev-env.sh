@@ -22,7 +22,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-SKIP_MINIKUBE_START=${SKIP_MINIKUBE_START:-}
 NAMESPACE="${NAMESPACE:-ingress-nginx}"
 echo "NAMESPACE is set to ${NAMESPACE}"
 
@@ -34,18 +33,15 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
-if [ -z "${SKIP_MINIKUBE_START}" ]; then
-    test $(minikube status | grep -c Running) -ge 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
-        --extra-config=kubelet.sync-frequency=1s \
-        --extra-config=apiserver.authorization-mode=RBAC
+test $(minikube status | grep -c Running) -ge 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
+    --extra-config=kubelet.sync-frequency=1s \
+    --extra-config=apiserver.authorization-mode=RBAC
 
-    eval $(minikube docker-env --shell bash)
-fi
+eval $(minikube docker-env --shell bash)
 
 echo "[dev-env] building container"
 make build container
-
-docker save "${DEV_IMAGE}" | (eval $(minikube docker-env --shell bash) && docker load) || true
+docker tag "${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG}" ${DEV_IMAGE}
 
 # kubectl >= 1.14 includes Kustomize via "apply -k". Makes it easier to use on Linux as well, assuming kubectl installed
 KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
@@ -72,7 +68,6 @@ if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
   kustomize build $ROOT | kubectl apply -f -
 else
   sed -i -e "s|^namespace: .*|namespace: ${NAMESPACE}|g" "${ROOT}/kustomization.yaml"
-  sed -i -e "s|^- name: .*|- name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller=${DEV_IMAGE}|g" "${ROOT}/kustomization.yaml"
 
   echo "[dev-env] deploying NGINX Ingress controller in namespace $NAMESPACE"
   kubectl apply -k "${ROOT}"
