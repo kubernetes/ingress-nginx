@@ -380,10 +380,6 @@ http {
     ssl_dhparam {{ $cfg.SSLDHParam }};
     {{ end }}
 
-    {{ if not $cfg.EnableDynamicTLSRecords }}
-    ssl_dyn_rec_size_lo 0;
-    {{ end }}
-
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
 
     {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
@@ -685,7 +681,7 @@ stream {
         listen unix:{{ .StreamSocket }};
 
         access_log off;
-        
+
         content_by_lua_block {
           tcp_udp_configuration.call()
         }
