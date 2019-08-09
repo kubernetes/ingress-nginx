@@ -35,7 +35,7 @@ do
 end
 
 _G.helpers = require("test.helpers")
-
+_G._TEST = true
 
 local ffi = require("ffi")
 local lua_ingress = require("lua_ingress")

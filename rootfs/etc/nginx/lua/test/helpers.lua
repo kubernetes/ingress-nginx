@@ -34,10 +34,13 @@ function _M.mock_resty_dns_new(func)
   resty_dns_resolver.new = func
 end
 
-function _M.mock_resty_dns_query(response, err)
+function _M.mock_resty_dns_query(mocked_host, response, err)
   resty_dns_resolver.new = function(self, options)
     local r = original_resty_dns_resolver_new(self, options)
-    r.query = function(self, name, options, tries)
+    r.query = function(self, host, options, tries)
+      if mocked_host and mocked_host ~= host then
+        return error(tostring(host) .. " is not mocked")
+      end
       return response, err
     end
     return r

@@ -315,7 +315,7 @@ describe("Balancer", function()
         }
       }
 
-      helpers.mock_resty_dns_query({
+      helpers.mock_resty_dns_query(nil, {
         {
           name = "example.com",
           address = "192.168.1.1",
