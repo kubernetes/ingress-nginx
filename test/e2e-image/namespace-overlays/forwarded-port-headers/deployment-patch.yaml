@@ -1,0 +1,12 @@
+- op: replace
+  path: /spec/template/spec/containers/0/ports/0/containerPort
+  value: 1080
+- op: replace
+  path: /spec/template/spec/containers/0/ports/1/containerPort
+  value: 1443
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --http-port=1080
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --https-port=1443
