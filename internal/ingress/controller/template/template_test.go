@@ -231,6 +231,21 @@ func TestFormatIP(t *testing.T) {
 	}
 }
 
+func TestQuote(t *testing.T) {
+	cases := map[interface{}]string{
+		"foo":      `"foo"`,
+		"\"foo\"":  `"\"foo\""`,
+		"foo\nbar": `"foo\nbar"`,
+		10:         `"10"`,
+	}
+	for input, output := range cases {
+		actual := quote(input)
+		if actual != output {
+			t.Errorf("quote('%s'): expected '%v' but returned '%v'", input, output, actual)
+		}
+	}
+}
+
 func TestBuildLocation(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := "/"

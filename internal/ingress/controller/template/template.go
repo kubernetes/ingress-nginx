@@ -160,6 +160,7 @@ var (
 		"toUpper":                    strings.ToUpper,
 		"toLower":                    strings.ToLower,
 		"formatIP":                   formatIP,
+		"quote":                      quote,
 		"buildNextUpstream":          buildNextUpstream,
 		"getIngressInformation":      getIngressInformation,
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
@@ -206,6 +207,21 @@ func formatIP(input string) string {
 		return input
 	}
 	return fmt.Sprintf("[%s]", input)
+}
+
+func quote(input interface{}) string {
+	var inputStr string
+	switch input := input.(type) {
+	case string:
+		inputStr = input
+		break
+	case fmt.Stringer:
+		inputStr = input.String()
+		break
+	default:
+		inputStr = fmt.Sprintf("%v", input)
+	}
+	return fmt.Sprintf("%q", inputStr)
 }
 
 func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
