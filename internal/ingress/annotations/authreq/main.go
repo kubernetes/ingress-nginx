@@ -86,12 +86,7 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		return false
 	}
 
-	match = sets.StringElementsMatch(e1.AuthCacheDuration, e2.AuthCacheDuration)
-	if !match {
-		return false
-	}
-
-	return true
+	return sets.StringElementsMatch(e1.AuthCacheDuration, e2.AuthCacheDuration)
 }
 
 var (
