@@ -168,7 +168,7 @@ func TestHeaderAnnotations(t *testing.T) {
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
 			if err == nil {
-				t.Errorf("%v: expected error but retuned nil", err.Error())
+				t.Error("expected error but retuned nil")
 			}
 			continue
 		}
@@ -216,7 +216,7 @@ func TestCacheDurationAnnotations(t *testing.T) {
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
 			if err == nil {
-				t.Errorf("%v: expected error but retuned nil", err.Error())
+				t.Errorf("expected error but retuned nil")
 			}
 			continue
 		}
