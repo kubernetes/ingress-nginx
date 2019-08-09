@@ -227,7 +227,7 @@ type Location struct {
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
-	Service *apiv1.Service `json:"service,omitempty"`
+	Service *apiv1.Service `json:"service,omitempty" hash:"ignore"`
 	// Port describes to which port from the service
 	Port intstr.IntOrString `json:"port"`
 	// Overwrite the Host header passed into the backend. Defaults to
@@ -290,7 +290,7 @@ type Location struct {
 	ClientBodyBufferSize string `json:"clientBodyBufferSize,omitempty"`
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
-	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty"`
+	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty" hash:"ignore"`
 	// DefaultBackendUpstreamName is the upstream-formatted string for the name of
 	// this location's custom default backend
 	DefaultBackendUpstreamName string `json:"defaultBackendUpstreamName,omitempty"`
@@ -327,7 +327,7 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *apiv1.Service     `json:"service,omitempty"`
+	Service *apiv1.Service     `json:"service,omitempty" hash:"ignore"`
 	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
@@ -344,7 +344,7 @@ type L4Service struct {
 	// Endpoints active endpoints of the service
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// k8s Service
-	Service *apiv1.Service `json:"service,omitempty"`
+	Service *apiv1.Service `json:"service,omitempty" hash:"ignore"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
@@ -365,8 +365,8 @@ type ProxyProtocol struct {
 
 // Ingress holds the definition of an Ingress plus its annotations
 type Ingress struct {
-	networking.Ingress
-	ParsedAnnotations *annotations.Ingress
+	networking.Ingress `hash:"ignore"`
+	ParsedAnnotations  *annotations.Ingress `json:"parsedAnnotations"`
 }
 
 // GeneralConfig holds the definition of lua general configuration data
