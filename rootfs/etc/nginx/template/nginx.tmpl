@@ -253,7 +253,7 @@ http {
 
     # Custom headers for response
     {{ range $k, $v := $addHeaders }}
-    add_header {{ $k }}            "{{ $v }}";
+    add_header {{ $k }}            {{ $v | quote }};
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
@@ -911,7 +911,7 @@ stream {
             # ngx_auth_request module overrides variables in the parent request,
             # therefore we have to explicitly set this variable again so that when the parent request
             # resumes it has the correct value set for this variable so that Lua can pick backend correctly
-            set $proxy_upstream_name "{{ buildUpstreamName $location }}";
+            set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
 
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
@@ -981,11 +981,11 @@ stream {
 
         location {{ $path }} {
             {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
-            set $namespace      "{{ $ing.Namespace }}";
-            set $ingress_name   "{{ $ing.Rule }}";
-            set $service_name   "{{ $ing.Service }}";
-            set $service_port   "{{ $location.Port }}";
-            set $location_path  "{{ $location.Path | escapeLiteralDollar }}";
+            set $namespace      {{ $ing.Namespace | quote}};
+            set $ingress_name   {{ $ing.Rule | quote }};
+            set $service_name   {{ $ing.Service | quote }};
+            set $service_port   {{ $location.Port | quote }};
+            set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
 
             {{ if $all.Cfg.EnableOpentracing }}
             {{ opentracingPropagateContext $location }};
@@ -1006,7 +1006,7 @@ stream {
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 
-                waf:set_option("mode", "{{ $location.LuaRestyWAF.Mode }}")
+                waf:set_option("mode", {{ $location.LuaRestyWAF.Mode | quote }})
                 waf:set_option("storage_zone", "waf_storage")
 
                 {{ if $location.LuaRestyWAF.AllowUnknownContentTypes }}
@@ -1035,7 +1035,7 @@ stream {
                 {{ end }}
 
                 {{ range $ruleset := $location.LuaRestyWAF.IgnoredRuleSets }}
-                waf:set_option("ignore_ruleset", "{{ $ruleset }}")
+                waf:set_option("ignore_ruleset", {{ $ruleset | quote }})
                 {{ end }}
 
                 {{ if gt (len $location.LuaRestyWAF.ExtraRulesetString) 0 }}
@@ -1099,7 +1099,7 @@ stream {
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             set $balancer_ewma_score -1;
-            set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
+            set $proxy_upstream_name    {{ buildUpstreamName $location | quote }};
             set $proxy_host             $proxy_upstream_name;
             set $pass_access_scheme $scheme;
             set $pass_server_port $server_port;
@@ -1124,7 +1124,7 @@ stream {
             {{ end }}
 
             {{ if (not (empty $location.ModSecurity.TransactionID)) }}
-            modsecurity_transaction_id "{{ $location.ModSecurity.TransactionID }}";
+            modsecurity_transaction_id {{ $location.ModSecurity.TransactionID | quote }};
             {{ end }}
             {{ end }}
 
@@ -1153,10 +1153,10 @@ stream {
 
             {{ if $location.BasicDigestAuth.Secured }}
             {{ if eq $location.BasicDigestAuth.Type "basic" }}
-            auth_basic "{{ $location.BasicDigestAuth.Realm }}";
+            auth_basic {{ $location.BasicDigestAuth.Realm | quote }};
             auth_basic_user_file {{ $location.BasicDigestAuth.File }};
             {{ else }}
-            auth_digest "{{ $location.BasicDigestAuth.Realm }}";
+            auth_digest {{ $location.BasicDigestAuth.Realm | quote }};
             auth_digest_user_file {{ $location.BasicDigestAuth.File }};
             {{ end }}
             proxy_set_header Authorization "";
@@ -1190,7 +1190,7 @@ stream {
             {{/* By default use vhost as Host to upstream, but allow overrides */}}
             {{ if not (eq $proxySetHeader "grpc_set_header") }}
             {{ if not (empty $location.UpstreamVhost) }}
-            {{ $proxySetHeader }} Host                   "{{ $location.UpstreamVhost }}";
+            {{ $proxySetHeader }} Host                   {{ $location.UpstreamVhost | quote }};
             {{ else }}
             {{ $proxySetHeader }} Host                   $best_http_host;
             {{ end }}
@@ -1238,7 +1238,7 @@ stream {
 
             # Custom headers to proxied server
             {{ range $k, $v := $all.ProxySetHeaders }}
-            {{ $proxySetHeader }} {{ $k }}                    "{{ $v }}";
+            {{ $proxySetHeader }} {{ $k }}                    {{ $v | quote }};
             {{ end }}
 
             proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
@@ -1295,10 +1295,10 @@ stream {
             include /etc/nginx/fastcgi_params;
             {{ end }}
             {{- if $location.FastCGI.Index -}}
-            fastcgi_index "{{ $location.FastCGI.Index }}";
+            fastcgi_index {{ $location.FastCGI.Index | quote }};
             {{- end -}}
             {{ range $k, $v := $location.FastCGI.Params }}
-            fastcgi_param {{ $k }} "{{ $v }}";
+            fastcgi_param {{ $k }} {{ $v | quote }};
             {{ end }}
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
@@ -1308,7 +1308,7 @@ stream {
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }} {{ $location.Proxy.ProxyRedirectTo }};
             {{ end }}
             {{ else }}
-            # Location denied. Reason: {{ $location.Denied | printf "%q" }}
+            # Location denied. Reason: {{ $location.Denied | quote }}
             return 503;
             {{ end }}
         }
