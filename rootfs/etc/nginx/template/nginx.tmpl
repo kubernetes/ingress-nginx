@@ -172,6 +172,7 @@ http {
         $geoip2_dma_code source=$the_real_ip location metro_code;
         $geoip2_latitude source=$the_real_ip location latitude;
         $geoip2_longitude source=$the_real_ip location longitude;
+        $geoip2_time_zone source=$the_real_ip location time_zone;
         $geoip2_region_code source=$the_real_ip subdivisions 0 iso_code;
         $geoip2_region_name source=$the_real_ip subdivisions 0 names en;
     }
