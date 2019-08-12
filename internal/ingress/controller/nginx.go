@@ -530,21 +530,24 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	setHeaders := map[string]string{}
 	if cfg.ProxySetHeaders != "" {
 		cmap, err := n.store.GetConfigMap(cfg.ProxySetHeaders)
-		if err != nil {
+		if err != nil || cmap == nil {
 			glog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.ProxySetHeaders, err)
+		} else {
+			setHeaders = cmap.Data
 		}
 
-		setHeaders = cmap.Data
+		
 	}
 
 	addHeaders := map[string]string{}
 	if cfg.AddHeaders != "" {
 		cmap, err := n.store.GetConfigMap(cfg.AddHeaders)
-		if err != nil {
+		if err != nil || cmap == nil {
 			glog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.AddHeaders, err)
+		} else {
+			addHeaders = cmap.Data
 		}
-
-		addHeaders = cmap.Data
+		
 	}
 
 	sslDHParam := ""
