@@ -728,6 +728,7 @@ func NewDefault() Configuration {
 			LimitRateAfter:           0,
 			ProxyBuffering:           "off",
 			ProxyHTTPVersion:         "1.1",
+			ProxyMaxTempFileSize:     "1024m",
 		},
 		UpstreamKeepaliveConnections: 32,
 		UpstreamKeepaliveTimeout:     60,
