@@ -37,13 +37,14 @@ import (
 	"github.com/pkg/errors"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/klog"
+
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
-	"k8s.io/klog"
 )
 
 const (
@@ -178,6 +179,8 @@ var (
 		"opentracingPropagateContext":        opentracingPropagateContext,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
+		"buildHTTPListener":                  buildHTTPListener,
+		"buildHTTPSListener":                 buildHTTPSListener,
 	}
 )
 
@@ -233,7 +236,6 @@ func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
 }
 
 func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF bool) string {
-
 	var out []string
 	// Load config
 	cfg, ok := c.(config.Configuration)
@@ -344,7 +346,7 @@ func locationConfigForLua(l interface{}, s interface{}, a interface{}) string {
 		return "{}"
 	}
 
-	forceSSLRedirect := location.Rewrite.ForceSSLRedirect || (len(server.SSLCert.PemFileName) > 0 && location.Rewrite.SSLRedirect)
+	forceSSLRedirect := location.Rewrite.ForceSSLRedirect || len(server.SSLCert.PemFileName) > 0 && location.Rewrite.SSLRedirect
 	forceSSLRedirect = forceSSLRedirect && !isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations)
 
 	return fmt.Sprintf(`{
@@ -1120,4 +1122,164 @@ func shouldLoadModSecurityModule(c interface{}, s interface{}) bool {
 
 	// Not enabled globally nor via annotation on a location, no need to load the module.
 	return false
+}
+
+func buildHTTPListener(t interface{}, s interface{}) string {
+	var out []string
+
+	tc, ok := t.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was returned", t)
+		return ""
+	}
+
+	hostname, ok := s.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", s)
+		return ""
+	}
+
+	addrV4 := []string{""}
+	if len(tc.Cfg.BindAddressIpv4) > 0 {
+		addrV4 = tc.Cfg.BindAddressIpv4
+	}
+
+	co := commonListenOptions(tc, hostname)
+
+	out = append(out, httpListener(addrV4, co, tc)...)
+
+	if !tc.IsIPV6Enabled {
+		return strings.Join(out, "\n")
+	}
+
+	addrV6 := []string{"[::]"}
+	if len(tc.Cfg.BindAddressIpv6) > 0 {
+		addrV6 = tc.Cfg.BindAddressIpv6
+	}
+
+	out = append(out, httpListener(addrV6, co, tc)...)
+
+	return strings.Join(out, "\n")
+}
+
+func buildHTTPSListener(t interface{}, s interface{}) string {
+	var out []string
+
+	tc, ok := t.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was returned", t)
+		return ""
+	}
+
+	hostname, ok := s.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", s)
+		return ""
+	}
+
+	co := commonListenOptions(tc, hostname)
+
+	addrV4 := []string{""}
+	if len(tc.Cfg.BindAddressIpv4) > 0 {
+		addrV4 = tc.Cfg.BindAddressIpv4
+	}
+
+	out = append(out, httpsListener(addrV4, co, tc)...)
+
+	if !tc.IsIPV6Enabled {
+		return strings.Join(out, "\n")
+	}
+
+	addrV6 := []string{"[::]"}
+	if len(tc.Cfg.BindAddressIpv6) > 0 {
+		addrV6 = tc.Cfg.BindAddressIpv6
+	}
+
+	out = append(out, httpsListener(addrV6, co, tc)...)
+
+	return strings.Join(out, "\n")
+}
+
+func commonListenOptions(template config.TemplateConfig, hostname string) string {
+	var out []string
+
+	if template.Cfg.UseProxyProtocol {
+		out = append(out, "proxy_protocol")
+	}
+
+	if hostname != "_" {
+		return strings.Join(out, " ")
+	}
+
+	// setup options that are valid only once per port
+
+	out = append(out, "default_server")
+
+	if template.Cfg.ReusePort {
+		out = append(out, "reuseport")
+	}
+
+	out = append(out, fmt.Sprintf("backlog=%v", template.BacklogSize))
+
+	return strings.Join(out, " ")
+}
+
+func httpListener(addresses []string, co string, tc config.TemplateConfig) []string {
+	out := make([]string, 0)
+	for _, address := range addresses {
+		l := make([]string, 0)
+		l = append(l, "listen")
+
+		if address == "" {
+			l = append(l, fmt.Sprintf("%v", tc.ListenPorts.HTTP))
+		} else {
+			l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTP))
+		}
+
+		l = append(l, co)
+		l = append(l, ";")
+		out = append(out, strings.Join(l, " "))
+	}
+
+	return out
+}
+
+func httpsListener(addresses []string, co string, tc config.TemplateConfig) []string {
+	out := make([]string, 0)
+	for _, address := range addresses {
+		l := make([]string, 0)
+		l = append(l, "listen")
+
+		if tc.IsSSLPassthroughEnabled {
+			if address == "" {
+				l = append(l, fmt.Sprintf("%v", tc.ListenPorts.SSLProxy))
+			} else {
+				l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.SSLProxy))
+			}
+
+			l = append(l, "proxy_protocol")
+		} else {
+			if address == "" {
+				l = append(l, fmt.Sprintf("%v", tc.ListenPorts.HTTPS))
+			} else {
+				l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTPS))
+			}
+
+			if tc.Cfg.UseProxyProtocol {
+				l = append(l, "proxy_protocol")
+			}
+		}
+
+		l = append(l, co)
+		l = append(l, "ssl")
+
+		if tc.Cfg.UseHTTP2 {
+			l = append(l, "http2")
+		}
+
+		l = append(l, ";")
+		out = append(out, strings.Join(l, " "))
+	}
+
+	return out
 }
