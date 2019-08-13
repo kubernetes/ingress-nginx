@@ -23,10 +23,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/tv42/httpunix"
+	"k8s.io/klog"
 )
 
 // PID defines the location of the pid file used by NGINX
@@ -147,4 +149,22 @@ func buildUnixSocketClient(timeout time.Duration) *http.Client {
 	return &http.Client{
 		Transport: u,
 	}
+}
+
+// Version return details about NGINX
+func Version() string {
+	flag := "-v"
+
+	if klog.V(2) {
+		flag = "-V"
+	}
+
+	cmd := exec.Command("nginx", flag)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		klog.Errorf("unexpected error obtaining NGINX version: %v", err)
+		return "N/A"
+	}
+
+	return string(out)
 }
