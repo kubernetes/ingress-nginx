@@ -77,7 +77,6 @@ http {
           error("require failed: " .. tostring(res))
         else
           configuration = res
-          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "balancer")
@@ -623,7 +622,6 @@ stream {
           error("require failed: " .. tostring(res))
         else
           configuration = res
-          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "tcp_udp_configuration")
