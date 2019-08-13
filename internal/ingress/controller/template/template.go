@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/url"
@@ -39,7 +40,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 
-	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
@@ -67,8 +67,8 @@ type Template struct {
 
 //NewTemplate returns a new Template instance or an
 //error if the specified template file contains errors
-func NewTemplate(file string, fs file.Filesystem) (*Template, error) {
-	data, err := fs.ReadFile(file)
+func NewTemplate(file string) (*Template, error) {
+	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unexpected error reading template %v", file)
 	}
@@ -346,7 +346,7 @@ func locationConfigForLua(l interface{}, s interface{}, a interface{}) string {
 		return "{}"
 	}
 
-	forceSSLRedirect := location.Rewrite.ForceSSLRedirect || len(server.SSLCert.PemFileName) > 0 && location.Rewrite.SSLRedirect
+	forceSSLRedirect := location.Rewrite.ForceSSLRedirect || (server.SSLCert != nil && location.Rewrite.SSLRedirect)
 	forceSSLRedirect = forceSSLRedirect && !isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations)
 
 	return fmt.Sprintf(`{
@@ -1176,6 +1176,12 @@ func buildHTTPSListener(t interface{}, s interface{}) string {
 		klog.Errorf("expected a 'string' type but %T was returned", s)
 		return ""
 	}
+
+	/*
+		if server.SSLCert == nil && server.Hostname != "_" {
+			return ""
+		}
+	*/
 
 	co := commonListenOptions(tc, hostname)
 

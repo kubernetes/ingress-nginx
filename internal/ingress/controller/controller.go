@@ -886,19 +886,18 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	return upstreams, nil
 }
 
-// overridePemFileNameAndPemSHA should only be called when EnableDynamicCertificates
-// ideally this function should not exist, the only reason why we use it is that
-// we rely on PemFileName in nginx.tmpl to configure SSL directives
-// and PemSHA to force reload
-func (n *NGINXController) overridePemFileNameAndPemSHA(cert *ingress.SSLCert) {
-	// TODO(elvinefendi): It is not great but we currently use PemFileName to decide whether SSL needs to be configured
-	// in nginx configuration or not. The whole thing needs to be refactored, we should rely on a proper
-	// signal to configure SSL, not PemFileName.
-	cert.PemFileName = n.cfg.FakeCertificate.PemFileName
+func (n *NGINXController) getDefaultSSLCertificate() *ingress.SSLCert {
+	// read custom default SSL certificate, fall back to generated default certificate
+	if n.cfg.DefaultSSLCertificate != "" {
+		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
+		if err == nil {
+			return certificate
+		}
 
-	// TODO(elvinefendi): This is again another hacky way of avoiding Nginx reload when certificate
-	// changes in dynamic SSL mode since FakeCertificate never changes.
-	cert.PemSHA = n.cfg.FakeCertificate.PemSHA
+		klog.Warningf("Error loading custom default certificate, falling back to generated default:\n%v", err)
+	}
+
+	return n.cfg.FakeCertificate
 }
 
 // createServers builds a map of host name to Server structs from a map of
@@ -930,25 +929,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		ProxyHTTPVersion:    bdef.ProxyHTTPVersion,
 	}
 
-	defaultCertificate := n.cfg.FakeCertificate
-
-	// read custom default SSL certificate, fall back to generated default certificate
-	if n.cfg.DefaultSSLCertificate != "" {
-		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
-		if err == nil {
-			defaultCertificate = certificate
-			if ngx_config.EnableDynamicCertificates {
-				n.overridePemFileNameAndPemSHA(defaultCertificate)
-			}
-		} else {
-			klog.Warningf("Error loading custom default certificate, falling back to generated default:\n%v", err)
-		}
-	}
-
 	// initialize default server and root location
 	servers[defServerName] = &ingress.Server{
 		Hostname: defServerName,
-		SSLCert:  *defaultCertificate,
+		SSLCert:  n.getDefaultSSLCertificate(),
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
@@ -1012,6 +996,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			if host == "" {
 				host = defServerName
 			}
+
 			if _, ok := servers[host]; ok {
 				// server already configured
 				continue
@@ -1079,7 +1064,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			}
 
 			// only add a certificate if the server does not have one previously configured
-			if servers[host].SSLCert.PemFileName != "" {
+			if servers[host].SSLCert != nil {
 				continue
 			}
 
@@ -1089,10 +1074,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			}
 
 			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
-
 			if tlsSecretName == "" {
 				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
-				servers[host].SSLCert = *defaultCertificate
 				continue
 			}
 
@@ -1100,7 +1083,6 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
 				klog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
-				servers[host].SSLCert = *defaultCertificate
 				continue
 			}
 
@@ -1115,16 +1097,11 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					klog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
 						secrKey, host, err)
 					klog.Warningf("Using default certificate")
-					servers[host].SSLCert = *defaultCertificate
 					continue
 				}
 			}
 
-			if ngx_config.EnableDynamicCertificates {
-				n.overridePemFileNameAndPemSHA(cert)
-			}
-
-			servers[host].SSLCert = *cert
+			servers[host].SSLCert = cert
 
 			if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
 				klog.Warningf("SSL certificate for server %q is about to expire (%v)", host, cert.ExpireTime)

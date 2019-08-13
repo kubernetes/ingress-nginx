@@ -17,20 +17,20 @@ limitations under the License.
 package template
 
 import (
+	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"encoding/base64"
-	"fmt"
-
 	jsoniter "github.com/json-iterator/go"
 	networking "k8s.io/api/networking/v1beta1"
-	"k8s.io/ingress-nginx/internal/file"
+
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
@@ -39,7 +39,17 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
+
+func init() {
+	// the default value of nginx.TemplatePath assumes the template exists in
+	// the root filesystem and not in the rootfs directory
+	path, err := filepath.Abs(filepath.Join("../../../../rootfs/", nginx.TemplatePath))
+	if err == nil {
+		nginx.TemplatePath = path
+	}
+}
 
 var (
 	// TODO: add tests for SSLPassthrough
@@ -435,15 +445,12 @@ func TestTemplateWithData(t *testing.T) {
 		dat.ListenPorts = &config.ListenPorts{}
 	}
 
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	ngxTpl, err := NewTemplate("/etc/nginx/template/nginx.tmpl", fs)
+	ngxTpl, err := NewTemplate(nginx.TemplatePath)
 	if err != nil {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
+
+	dat.Cfg.DefaultSSLCertificate = &ingress.SSLCert{}
 
 	rt, err := ngxTpl.Write(dat)
 	if err != nil {
@@ -479,12 +486,7 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		b.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		b.Fatalf("unexpected error: %v", err)
-	}
-
-	ngxTpl, err := NewTemplate("/etc/nginx/template/nginx.tmpl", fs)
+	ngxTpl, err := NewTemplate(nginx.TemplatePath)
 	if err != nil {
 		b.Errorf("invalid NGINX template: %v", err)
 	}

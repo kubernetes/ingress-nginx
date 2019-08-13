@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -63,7 +64,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	if err != nil {
 		return errors.Wrap(err, "unexpected error reading /proc directory")
 	}
-	f, err := n.fileSystem.ReadFile(nginx.PID)
+	f, err := ioutil.ReadFile(nginx.PID)
 	if err != nil {
 		return errors.Wrapf(err, "unexpected error reading %v", nginx.PID)
 	}

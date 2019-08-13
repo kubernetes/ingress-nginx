@@ -141,7 +141,7 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		enableDynamicCertificates = flags.Bool("enable-dynamic-certificates", true,
+		_ = flags.Bool("enable-dynamic-certificates", true,
 			`Dynamically update SSL certificates instead of reloading NGINX. Feature backed by OpenResty Lua libraries.`)
 
 		enableMetrics = flags.Bool("enable-metrics", true,
@@ -170,6 +170,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
 	flags.MarkDeprecated("force-namespace-isolation", `This flag doesn't do anything.`)
+
+	flags.MarkDeprecated("enable-dynamic-certificates", `Only dynamic mode is supported`)
 
 	flag.Set("logtostderr", "true")
 
@@ -232,7 +234,6 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 	}
 
 	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
-	ngx_config.EnableDynamicCertificates = *enableDynamicCertificates
 
 	config := &controller.Configuration{
 		APIServerHost:          *apiserverHost,

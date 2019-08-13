@@ -120,7 +120,7 @@ $ kubectl ingress-nginx backends -n ingress-nginx
     "secureCACert": {
       "secret": "",
       "caFilename": "",
-      "pemSha": ""
+      "caSha": ""
     },
     "sslPassthrough": false,
     "endpoints": [

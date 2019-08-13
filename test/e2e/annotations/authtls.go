@@ -168,17 +168,13 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 })
 
 func assertSslClientCertificateConfig(f *framework.Framework, host string, verifyClient string, verifyDepth string) {
-	sslCertDirective := "ssl_certificate /etc/ingress-controller/ssl/default-fake-certificate.pem;"
-	sslKeyDirective := "ssl_certificate_key /etc/ingress-controller/ssl/default-fake-certificate.pem;"
 	sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, host)
 	sslVerify := fmt.Sprintf("ssl_verify_client %s;", verifyClient)
 	sslVerifyDepth := fmt.Sprintf("ssl_verify_depth %s;", verifyDepth)
 
 	f.WaitForNginxServer(host,
 		func(server string) bool {
-			return strings.Contains(server, sslCertDirective) &&
-				strings.Contains(server, sslKeyDirective) &&
-				strings.Contains(server, sslClientCertDirective) &&
+			return strings.Contains(server, sslClientCertDirective) &&
 				strings.Contains(server, sslVerify) &&
 				strings.Contains(server, sslVerifyDepth)
 		})

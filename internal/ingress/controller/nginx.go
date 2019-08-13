@@ -44,7 +44,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/klog"
-	"k8s.io/kubernetes/pkg/util/filesystem"
 
 	adm_controler "k8s.io/ingress-nginx/internal/admission/controller"
 	"k8s.io/ingress-nginx/internal/file"
@@ -69,12 +68,8 @@ const (
 	tempNginxPattern = "nginx-cfg"
 )
 
-var (
-	tmplPath = "/etc/nginx/template/nginx.tmpl"
-)
-
 // NewNGINXController creates a new NGINX Ingress controller.
-func NewNGINXController(config *Configuration, mc metric.Collector, fs file.Filesystem) *NGINXController {
+func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXController {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
@@ -101,8 +96,6 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		updateCh: channels.NewRingChannel(1024),
 
 		stopLock: &sync.Mutex{},
-
-		fileSystem: fs,
 
 		runningConfig: new(ingress.Configuration),
 
@@ -135,7 +128,6 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.DefaultSSLCertificate,
 		config.ResyncPeriod,
 		config.Client,
-		fs,
 		n.updateCh,
 		pod,
 		config.DisableCatchAll)
@@ -156,7 +148,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 	}
 
 	onTemplateChange := func() {
-		template, err := ngx_template.NewTemplate(tmplPath, fs)
+		template, err := ngx_template.NewTemplate(nginx.TemplatePath)
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
 			klog.Errorf(`
@@ -172,21 +164,16 @@ Error loading new template: %v
 		n.syncQueue.EnqueueTask(task.GetDummyObject("template-change"))
 	}
 
-	ngxTpl, err := ngx_template.NewTemplate(tmplPath, fs)
+	ngxTpl, err := ngx_template.NewTemplate(nginx.TemplatePath)
 	if err != nil {
 		klog.Fatalf("Invalid NGINX configuration template: %v", err)
 	}
 
 	n.t = ngxTpl
 
-	if _, ok := fs.(filesystem.DefaultFs); !ok {
-		// do not setup watchers on tests
-		return n
-	}
-
-	_, err = watch.NewFileWatcher(tmplPath, onTemplateChange)
+	_, err = watch.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
 	if err != nil {
-		klog.Fatalf("Error creating file watcher for %v: %v", tmplPath, err)
+		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
 	}
 
 	filesToWatch := []string{}
@@ -259,8 +246,6 @@ type NGINXController struct {
 	Proxy *TCPProxy
 
 	store store.Storer
-
-	fileSystem filesystem.Filesystem
 
 	metricCollector metric.Collector
 
@@ -582,7 +567,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 			nsSecName := strings.Replace(secretName, "/", "-", -1)
 			dh, ok := secret.Data["dhparam.pem"]
 			if ok {
-				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh, n.fileSystem)
+				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
 				if err != nil {
 					klog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
 				} else {
@@ -594,25 +579,26 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 
 	cfg.SSLDHParam = sslDHParam
 
+	cfg.DefaultSSLCertificate = n.getDefaultSSLCertificate()
+
 	tc := ngx_config.TemplateConfig{
-		ProxySetHeaders:           setHeaders,
-		AddHeaders:                addHeaders,
-		BacklogSize:               sysctlSomaxconn(),
-		Backends:                  ingressCfg.Backends,
-		PassthroughBackends:       ingressCfg.PassthroughBackends,
-		Servers:                   ingressCfg.Servers,
-		TCPBackends:               ingressCfg.TCPEndpoints,
-		UDPBackends:               ingressCfg.UDPEndpoints,
-		Cfg:                       cfg,
-		IsIPV6Enabled:             n.isIPV6Enabled && !cfg.DisableIpv6,
-		NginxStatusIpv4Whitelist:  cfg.NginxStatusIpv4Whitelist,
-		NginxStatusIpv6Whitelist:  cfg.NginxStatusIpv6Whitelist,
-		RedirectServers:           buildRedirects(ingressCfg.Servers),
-		IsSSLPassthroughEnabled:   n.cfg.EnableSSLPassthrough,
-		ListenPorts:               n.cfg.ListenPorts,
-		PublishService:            n.GetPublishService(),
-		EnableDynamicCertificates: ngx_config.EnableDynamicCertificates,
-		EnableMetrics:             n.cfg.EnableMetrics,
+		ProxySetHeaders:          setHeaders,
+		AddHeaders:               addHeaders,
+		BacklogSize:              sysctlSomaxconn(),
+		Backends:                 ingressCfg.Backends,
+		PassthroughBackends:      ingressCfg.PassthroughBackends,
+		Servers:                  ingressCfg.Servers,
+		TCPBackends:              ingressCfg.TCPEndpoints,
+		UDPBackends:              ingressCfg.UDPEndpoints,
+		Cfg:                      cfg,
+		IsIPV6Enabled:            n.isIPV6Enabled && !cfg.DisableIpv6,
+		NginxStatusIpv4Whitelist: cfg.NginxStatusIpv4Whitelist,
+		NginxStatusIpv6Whitelist: cfg.NginxStatusIpv6Whitelist,
+		RedirectServers:          buildRedirects(ingressCfg.Servers),
+		IsSSLPassthroughEnabled:  n.cfg.EnableSSLPassthrough,
+		ListenPorts:              n.cfg.ListenPorts,
+		PublishService:           n.GetPublishService(),
+		EnableMetrics:            n.cfg.EnableMetrics,
 
 		HealthzURI:   nginx.HealthPath,
 		PID:          nginx.PID,
@@ -805,7 +791,9 @@ func clearCertificates(config *ingress.Configuration) {
 	var clearedServers []*ingress.Server
 	for _, server := range config.Servers {
 		copyOfServer := *server
-		copyOfServer.SSLCert = ingress.SSLCert{PemFileName: copyOfServer.SSLCert.PemFileName}
+		if copyOfServer.SSLCert != nil {
+			copyOfServer.SSLCert = &ingress.SSLCert{PemFileName: copyOfServer.SSLCert.PemFileName}
+		}
 		clearedServers = append(clearedServers, &copyOfServer)
 	}
 	config.Servers = clearedServers
@@ -853,10 +841,8 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 	copyOfRunningConfig.ControllerPodsCount = 0
 	copyOfPcfg.ControllerPodsCount = 0
 
-	if ngx_config.EnableDynamicCertificates {
-		clearCertificates(&copyOfRunningConfig)
-		clearCertificates(&copyOfPcfg)
-	}
+	clearCertificates(&copyOfRunningConfig)
+	clearCertificates(&copyOfPcfg)
 
 	return copyOfRunningConfig.Equal(&copyOfPcfg)
 }
@@ -951,11 +937,9 @@ func configureDynamically(pcfg *ingress.Configuration) error {
 		return fmt.Errorf("unexpected error code: %d", statusCode)
 	}
 
-	if ngx_config.EnableDynamicCertificates {
-		err = configureCertificates(pcfg)
-		if err != nil {
-			return err
-		}
+	err = configureCertificates(pcfg)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -988,16 +972,16 @@ func updateStreamConfiguration(streams []ingress.Backend) error {
 // configureCertificates JSON encodes certificates and POSTs it to an internal HTTP endpoint
 // that is handled by Lua
 func configureCertificates(pcfg *ingress.Configuration) error {
-	var servers []*ingress.Server
+	servers := make([]*ingress.Server, 0)
 
 	for _, server := range pcfg.Servers {
-		if server.SSLCert.PemCertKey == "" {
+		if server.SSLCert == nil {
 			continue
 		}
 
 		servers = append(servers, &ingress.Server{
 			Hostname: server.Hostname,
-			SSLCert: ingress.SSLCert{
+			SSLCert: &ingress.SSLCert{
 				PemCertKey: server.SSLCert.PemCertKey,
 			},
 		})
@@ -1005,7 +989,7 @@ func configureCertificates(pcfg *ingress.Configuration) error {
 		if server.Alias != "" && ssl.IsValidHostname(server.Alias, server.SSLCert.CN) {
 			servers = append(servers, &ingress.Server{
 				Hostname: server.Alias,
-				SSLCert: ingress.SSLCert{
+				SSLCert: &ingress.SSLCert{
 					PemCertKey: server.SSLCert.PemCertKey,
 				},
 			})
@@ -1014,13 +998,13 @@ func configureCertificates(pcfg *ingress.Configuration) error {
 
 	redirects := buildRedirects(pcfg.Servers)
 	for _, redirect := range redirects {
-		if redirect.SSLCert.PemCertKey == "" {
+		if redirect.SSLCert == nil {
 			continue
 		}
 
 		servers = append(servers, &ingress.Server{
 			Hostname: redirect.From,
-			SSLCert: ingress.SSLCert{
+			SSLCert: &ingress.SSLCert{
 				PemCertKey: redirect.SSLCert.PemCertKey,
 			},
 		})
@@ -1131,7 +1115,7 @@ func cleanTempNginxCfg() error {
 type redirect struct {
 	From    string
 	To      string
-	SSLCert ingress.SSLCert
+	SSLCert *ingress.SSLCert
 }
 
 func buildRedirects(servers []*ingress.Server) []*redirect {
@@ -1175,7 +1159,7 @@ func buildRedirects(servers []*ingress.Server) []*redirect {
 			To:   to,
 		}
 
-		if srv.SSLCert.PemSHA != "" {
+		if srv.SSLCert != nil {
 			if ssl.IsValidHostname(from, srv.SSLCert.CN) {
 				r.SSLCert = srv.SSLCert
 			} else {
