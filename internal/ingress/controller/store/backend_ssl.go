@@ -17,17 +17,20 @@ limitations under the License.
 package store
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"k8s.io/klog"
 
+	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 )
 
@@ -39,7 +42,6 @@ func (s *k8sStore) syncSecret(key string) {
 
 	klog.V(3).Infof("Syncing Secret %q", key)
 
-	// TODO: getPemCertificate should not write to disk to avoid unnecessary overhead
 	cert, err := s.getPemCertificate(key)
 	if err != nil {
 		if !isErrSecretForAuth(err) {
@@ -92,6 +94,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		if cert == nil {
 			return nil, fmt.Errorf("key 'tls.crt' missing from Secret %q", secretName)
 		}
+
 		if key == nil {
 			return nil, fmt.Errorf("key 'tls.key' missing from Secret %q", secretName)
 		}
@@ -101,15 +104,16 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
 		}
 
-		if !ngx_config.EnableDynamicCertificates || len(ca) > 0 {
-			err = ssl.StoreSSLCertOnDisk(s.filesystem, nsSecName, sslCert)
+		if len(ca) > 0 {
+			path, err := ssl.StoreSSLCertOnDisk(nsSecName, sslCert)
 			if err != nil {
 				return nil, fmt.Errorf("error while storing certificate and key: %v", err)
 			}
-		}
 
-		if len(ca) > 0 {
-			err = ssl.ConfigureCACertWithCertAndKey(s.filesystem, nsSecName, ca, sslCert)
+			sslCert.CAFileName = path
+			sslCert.CASHA = file.SHA1(path)
+
+			err = ssl.ConfigureCACertWithCertAndKey(nsSecName, ca, sslCert)
 			if err != nil {
 				return nil, fmt.Errorf("error configuring CA certificate: %v", err)
 			}
@@ -120,14 +124,13 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			msg += " and authentication"
 		}
 		klog.V(3).Info(msg)
-
 	} else if len(ca) > 0 {
 		sslCert, err = ssl.CreateCACert(ca)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
 		}
 
-		err = ssl.ConfigureCACert(s.filesystem, nsSecName, ca, sslCert)
+		err = ssl.ConfigureCACert(nsSecName, ca, sslCert)
 		if err != nil {
 			return nil, fmt.Errorf("error configuring CA certificate: %v", err)
 		}
@@ -135,7 +138,6 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		// makes this secret in 'syncSecret' to be used for Certificate Authentication
 		// this does not enable Certificate Authentication
 		klog.V(3).Infof("Configuring Secret %q for TLS authentication", secretName)
-
 	} else {
 		if auth != nil {
 			return nil, ErrSecretForAuth
@@ -146,6 +148,21 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 
 	sslCert.Name = secret.Name
 	sslCert.Namespace = secret.Namespace
+
+	hasher := sha1.New()
+	hasher.Write(sslCert.Certificate.Raw)
+
+	sslCert.PemSHA = hex.EncodeToString(hasher.Sum(nil))
+
+	// the default SSL certificate needs to be present on disk
+	if secretName == s.defaultSSLCertificate {
+		path, err := ssl.StoreSSLCertOnDisk(nsSecName, sslCert)
+		if err != nil {
+			return nil, errors.Wrap(err, "storing default SSL Certificate")
+		}
+
+		sslCert.PemFileName = path
+	}
 
 	return sslCert, nil
 }

@@ -228,7 +228,7 @@ func (cm Controller) Collect(ch chan<- prometheus.Metric) {
 // SetSSLExpireTime sets the expiration time of SSL Certificates
 func (cm *Controller) SetSSLExpireTime(servers []*ingress.Server) {
 	for _, s := range servers {
-		if s.Hostname != "" && s.SSLCert.ExpireTime.Unix() > 0 {
+		if s.Hostname != "" && s.SSLCert != nil && s.SSLCert.ExpireTime.Unix() > 0 {
 			labels := make(prometheus.Labels, len(cm.labels)+1)
 			for k, v := range cm.labels {
 				labels[k] = v

@@ -96,14 +96,12 @@ http {
         end
         {{ end }}
 
-        {{ if $all.EnableDynamicCertificates }}
         ok, res = pcall(require, "certificate")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           certificate = res
         end
-        {{ end }}
 
         ok, res = pcall(require, "plugins")
         if not ok then
@@ -383,6 +381,10 @@ http {
 
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
 
+    # PEM sha: {{ $cfg.DefaultSSLCertificate.PemSHA }}
+    ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
+    ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
+
     {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
     proxy_intercept_errors on;
     {{ end }}
@@ -474,18 +476,9 @@ http {
         {{ buildHTTPListener  $all $redirect.From }}
         {{ buildHTTPSListener $all $redirect.From }}
 
-        {{ if not (empty $redirect.SSLCert.PemFileName) }}
-        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
-        # PEM sha: {{ $redirect.SSLCert.PemSHA }}
-        ssl_certificate                         {{ $redirect.SSLCert.PemFileName }};
-        ssl_certificate_key                     {{ $redirect.SSLCert.PemFileName }};
-
-        {{ if $all.EnableDynamicCertificates}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
-        {{ end }}
-        {{ end }}
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
@@ -748,7 +741,7 @@ stream {
             proxy_set_header       X-Request-ID       $req_id;
             proxy_set_header       Host               $best_http_host;
 
-            set $proxy_upstream_name {{ $upstreamName }};
+            set $proxy_upstream_name {{ $upstreamName | quote }};
 
             rewrite                (.*) / break;
 
@@ -794,18 +787,9 @@ stream {
 
         set $proxy_upstream_name "-";
 
-        {{ if not (empty $server.SSLCert.PemFileName) }}
-        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
-        # PEM sha: {{ $server.SSLCert.PemSHA }}
-        ssl_certificate                         {{ $server.SSLCert.PemFileName }};
-        ssl_certificate_key                     {{ $server.SSLCert.PemFileName }};
-
-        {{ if $all.EnableDynamicCertificates}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
-        {{ end }}
-        {{ end }}
 
         {{ if not (empty $server.AuthTLSError) }}
         # {{ $server.AuthTLSError }}
@@ -813,7 +797,7 @@ stream {
         {{ else }}
 
         {{ if not (empty $server.CertificateAuth.CAFileName) }}
-        # PEM sha: {{ $server.CertificateAuth.PemSHA }}
+        # PEM sha: {{ $server.CertificateAuth.CASHA }}
         ssl_client_certificate                  {{ $server.CertificateAuth.CAFileName }};
         ssl_verify_client                       {{ $server.CertificateAuth.VerifyClient }};
         ssl_verify_depth                        {{ $server.CertificateAuth.ValidationDepth }};
@@ -1043,7 +1027,7 @@ stream {
                 plugins.run()
             }
 
-            {{ if (and (not (empty $server.SSLCert.PemFileName)) $all.Cfg.HSTS) }}
+            {{ if (and $server.SSLCert $all.Cfg.HSTS) }}
             if ($scheme = https) {
             more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";
             }
@@ -1065,12 +1049,12 @@ stream {
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             set $balancer_ewma_score -1;
-            set $proxy_upstream_name    {{ buildUpstreamName $location | quote }};
-            set $proxy_host             $proxy_upstream_name;
-            set $pass_access_scheme $scheme;
-            set $pass_server_port $server_port;
-            set $best_http_host $http_host;
-            set $pass_port $pass_server_port;
+            set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
+            set $proxy_host          $proxy_upstream_name;
+            set $pass_access_scheme  $scheme;
+            set $pass_server_port    $server_port;
+            set $best_http_host      $http_host;
+            set $pass_port           $pass_server_port;
 
             set $proxy_alternative_upstream_name "";
 

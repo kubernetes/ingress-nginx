@@ -32,14 +32,10 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress"
-	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 func TestIsDynamicConfigurationEnough(t *testing.T) {
-	ngx_config.EnableDynamicCertificates = false
-	defer func() { ngx_config.EnableDynamicCertificates = true }()
-
 	backends := []*ingress.Backend{{
 		Name: "fakenamespace-myapp-80",
 		Endpoints: []ingress.Endpoint{
@@ -62,7 +58,7 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 				Backend: "fakenamespace-myapp-80",
 			},
 		},
-		SSLCert: ingress.SSLCert{
+		SSLCert: &ingress.SSLCert{
 			PemCertKey: "fake-certificate",
 		},
 	}}
@@ -98,8 +94,6 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 		Servers:  servers,
 	}
 
-	ngx_config.EnableDynamicCertificates = true
-
 	if !n.IsDynamicConfigurationEnough(newConfig) {
 		t.Errorf("Expected to be dynamically configurable when only backends change")
 	}
@@ -112,7 +106,7 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 				Backend: "fakenamespace-myapp-80",
 			},
 		},
-		SSLCert: ingress.SSLCert{
+		SSLCert: &ingress.SSLCert{
 			PemCertKey: "fake-certificate",
 		},
 	}}
@@ -201,6 +195,12 @@ func TestConfigureDynamically(t *testing.T) {
 							t.Errorf("controllerPodsCount should be present in JSON content: %v", body)
 						}
 					}
+				case "/configuration/servers":
+					{
+						if !strings.Contains(body, "[]") {
+							t.Errorf("controllerPodsCount should be present in JSON content: %v", body)
+						}
+					}
 				default:
 					t.Errorf("unknown request to %s", r.URL.Path)
 				}
@@ -246,9 +246,6 @@ func TestConfigureDynamically(t *testing.T) {
 		ControllerPodsCount: 2,
 	}
 
-	ngx_config.EnableDynamicCertificates = false
-	defer func() { ngx_config.EnableDynamicCertificates = true }()
-
 	err = configureDynamically(commonConfig)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic configuration: %v", err)
@@ -276,7 +273,7 @@ func TestConfigureCertificates(t *testing.T) {
 
 	servers := []*ingress.Server{{
 		Hostname: "myapp.fake",
-		SSLCert: ingress.SSLCert{
+		SSLCert: &ingress.SSLCert{
 			PemCertKey: "fake-cert",
 		},
 	}}
