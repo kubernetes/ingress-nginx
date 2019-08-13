@@ -1,7 +1,6 @@
 local resolver = require("resty.dns.resolver")
 local lrucache = require("resty.lrucache")
-local configuration = require("configuration")
-local util = require("util")
+local resolv_conf = require("util.resolv_conf")
 
 local _M = {}
 local CACHE_SIZE = 10000
@@ -59,7 +58,7 @@ function _M.resolve(host)
 
   local r
   r, err = resolver:new{
-    nameservers = util.deepcopy(configuration.nameservers),
+    nameservers = resolv_conf.nameservers,
     retrans = 5,
     timeout = 2000,  -- 2 sec
   }

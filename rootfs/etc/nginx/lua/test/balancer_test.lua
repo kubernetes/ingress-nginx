@@ -315,8 +315,7 @@ describe("Balancer", function()
         }
       }
 
-      local dns_helper = require("test/dns_helper")
-      dns_helper.mock_dns_query({
+      helpers.mock_resty_dns_query({
         {
           name = "example.com",
           address = "192.168.1.1",
