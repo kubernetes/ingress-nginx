@@ -115,15 +115,20 @@ describe("Configuration", function()
                 end)
 
                 it("returns a status of 400", function()
+                    local original_io_open = _G.io.open
                     _G.io.open = function(filename, extension) return false end
                     assert.has_no.errors(configuration.call)
                     assert.equal(ngx.status, ngx.HTTP_BAD_REQUEST)
+                    _G.io.open = original_io_open
                 end)
 
                 it("logs 'dynamic-configuration: unable to read valid request body to stderr'", function()
+                    local original_io_open = _G.io.open
+                    _G.io.open = function(filename, extension) return false end
                     local s = spy.on(ngx, "log")
                     assert.has_no.errors(configuration.call)
                     assert.spy(s).was_called_with(ngx.ERR, "dynamic-configuration: unable to read valid request body")
+                    _G.io.open = original_io_open
                 end)
             end)
 

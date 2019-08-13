@@ -56,6 +56,8 @@ if ! kubectl get namespace "${NAMESPACE}"; then
   kubectl create namespace "${NAMESPACE}"
 fi
 
+kubectl get deploy nginx-ingress-controller -n ${NAMESPACE} && kubectl delete deploy nginx-ingress-controller -n ${NAMESPACE}
+
 ROOT=./deploy/minikube
 
 if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
