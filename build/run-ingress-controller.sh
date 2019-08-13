@@ -30,6 +30,7 @@ declare -a mandatory
 mandatory=(
   IMAGE
   ARCH
+  TAG
 )
 
 missing=false
@@ -56,12 +57,12 @@ trap cleanup EXIT
 
 KUBE_ROOT=$(dirname "${BASH_SOURCE}")/..
 
-# the ingress controller needs this two variables. To avoid the 
+# the ingress controller needs this two variables. To avoid the
 # creation of any object in the cluster we use invalid names.
 POD_NAMESPACE="invalid-namespace"
 POD_NAME="invalid-namespace"
 
-export TAG=local
+export TAG
 export IMAGE
 
 if [[ "${ARCH}" != "amd64" ]]; then
@@ -69,8 +70,14 @@ if [[ "${ARCH}" != "amd64" ]]; then
   make -C "${KUBE_ROOT}" register-qemu
 fi
 
-echo -e "${BGREEN}Building ingress controller image${NC}"
-make -C "${KUBE_ROOT}" build "sub-container-${ARCH}"
+USE_EXISTING_IMAGE=${USE_EXISTING_IMAGE:-false}
+if [[ "${USE_EXISTING_IMAGE}" == "true" ]]; then
+  echo -e "${BGREEN}Downloading ingress controller image${NC}"
+  docker pull "${IMAGE}-${ARCH}:${TAG}"
+else
+  echo -e "${BGREEN}Building ingress controller image${NC}"
+  make -C "${KUBE_ROOT}" build "sub-container-${ARCH}"
+fi
 
 CONTEXT=$(kubectl config current-context)
 
@@ -103,7 +110,7 @@ docker run \
   -v "${SSL_VOLUME}:/etc/ingress-controller/ssl/" \
   -v "${HOME}/.kube:${HOME}/.kube:ro" \
   ${MINIKUBE_VOLUME} \
-  "${IMAGE}:${TAG}" /nginx-ingress-controller \
+  "${IMAGE}-${ARCH}:${TAG}" /nginx-ingress-controller \
   --update-status=false \
   --v=2 \
   --apiserver-host=http://0.0.0.0:8001 \
