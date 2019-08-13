@@ -144,7 +144,6 @@ var (
 		"filterRateLimits":           filterRateLimits,
 		"buildRateLimitZones":        buildRateLimitZones,
 		"buildRateLimit":             buildRateLimit,
-		"buildResolversForLua":       buildResolversForLua,
 		"configForLua":               configForLua,
 		"locationConfigForLua":       locationConfigForLua,
 		"buildResolvers":             buildResolvers,
@@ -277,37 +276,6 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF
 		}
 	}
 	return strings.Join(out, ";\n\r") + ";"
-}
-
-func buildResolversForLua(res interface{}, disableIpv6 interface{}) string {
-	nss, ok := res.([]net.IP)
-	if !ok {
-		klog.Errorf("expected a '[]net.IP' type but %T was returned", res)
-		return ""
-	}
-	no6, ok := disableIpv6.(bool)
-	if !ok {
-		klog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
-		return ""
-	}
-
-	if len(nss) == 0 {
-		return ""
-	}
-
-	r := []string{}
-	for _, ns := range nss {
-		if ing_net.IsIPV6(ns) {
-			if no6 {
-				continue
-			}
-			r = append(r, fmt.Sprintf("\"[%v]\"", ns))
-		} else {
-			r = append(r, fmt.Sprintf("\"%v\"", ns))
-		}
-	}
-
-	return strings.Join(r, ", ")
 }
 
 // configForLua returns some general configuration as Lua table represented as string

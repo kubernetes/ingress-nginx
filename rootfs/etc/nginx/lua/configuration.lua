@@ -4,9 +4,7 @@ local cjson = require("cjson.safe")
 local configuration_data = ngx.shared.configuration_data
 local certificate_data = ngx.shared.certificate_data
 
-local _M = {
-  nameservers = {}
-}
+local _M = {}
 
 function _M.get_backends_data()
   return configuration_data:get("backends")

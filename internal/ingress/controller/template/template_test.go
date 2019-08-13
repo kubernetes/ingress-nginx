@@ -577,43 +577,6 @@ func TestBuildForwardedFor(t *testing.T) {
 	}
 }
 
-func TestBuildResolversForLua(t *testing.T) {
-
-	ipOne := net.ParseIP("192.0.0.1")
-	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
-	ipList := []net.IP{ipOne, ipTwo}
-
-	invalidType := &ingress.Ingress{}
-	expected := ""
-	actual := buildResolversForLua(invalidType, false)
-
-	// Invalid Type for []net.IP
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	actual = buildResolversForLua(ipList, invalidType)
-
-	// Invalid Type for bool
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	expected = "\"192.0.0.1\", \"[2001:db8:1234::]\""
-	actual = buildResolversForLua(ipList, false)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	expected = "\"192.0.0.1\""
-	actual = buildResolversForLua(ipList, true)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-}
-
 func TestBuildResolvers(t *testing.T) {
 	ipOne := net.ParseIP("192.0.0.1")
 	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
