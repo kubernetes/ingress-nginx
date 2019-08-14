@@ -41,6 +41,40 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 	AfterEach(func() {
 	})
 
+	It("works with external name set to incomplete fdqn", func() {
+		f.NewEchoDeployment()
+
+		host := "echo"
+
+		svc := &core.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "httpbin",
+				Namespace: f.Namespace,
+			},
+			Spec: corev1.ServiceSpec{
+				ExternalName: "http-svc",
+				Type:         corev1.ServiceTypeExternalName,
+			},
+		}
+
+		f.EnsureService(svc)
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "httpbin", 80, nil)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.GetURL(framework.HTTP)+"/get").
+			Set("Host", host).
+			End()
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(200))
+	})
+
 	It("should return 200 for service type=ExternalName without a port defined", func() {
 		host := "echo"
 
