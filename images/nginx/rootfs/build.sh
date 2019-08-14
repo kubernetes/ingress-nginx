@@ -21,7 +21,7 @@ set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-export OPENRESTY_VERSION=1.15.8.1
+export OPENRESTY_VERSION=1.15.8.2
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.8.0
@@ -375,12 +375,6 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTE
 
 # build nginx
 cd "$BUILD_PATH/openresty-$OPENRESTY_VERSION"
-
-echo "Patching NGINX for CVE-2018-16843, CVE-2018-16844, CVE-2019-9511, CVE-2019-9513, and CVE-2019-9516"
-# Upstream change https://github.com/openresty/openresty/pull/515
-# TODO: remove after openresty release
-cat /patches/patch.2019.h2.txt | patch -d bundle/nginx-1.15.8/ -p0
-rm -rf /patches
 
 WITH_FLAGS="--with-debug \
   --with-compat \
