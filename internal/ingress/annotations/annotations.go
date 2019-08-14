@@ -45,6 +45,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/portinredirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -109,6 +110,7 @@ type Ingress struct {
 	LuaRestyWAF        luarestywaf.Config
 	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
+	Mirror             mirror.Config
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -156,6 +158,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"InfluxDB":             influxdb.NewParser(cfg),
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
 			"ModSecurity":          modsecurity.NewParser(cfg),
+			"Mirror":               mirror.NewParser(cfg),
 		},
 	}
 }
