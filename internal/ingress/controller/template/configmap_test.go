@@ -303,50 +303,48 @@ func TestGlobalExternalAuthCacheDurationParsing(t *testing.T) {
 	}
 }
 
-func TestLuaSharedDict(t *testing.T) {
-
+func TestLuaSharedDictsParsing(t *testing.T) {
 	testsCases := []struct {
 		name   string
 		entry  map[string]string
 		expect map[string]int
 	}{
 		{
-			name:   "lua valid entry",
-			entry:  map[string]string{"lua-shared-dicts": "configuration_data:5,certificate_data:5"},
-			expect: map[string]int{"configuration_data": 5, "certificate_data": 5},
-		},
-
-		{
-			name:   "lua invalid entry",
-			entry:  map[string]string{"lua-shared-dict": "configuration_data:5,certificate_data:5"},
-			expect: map[string]int{},
+			name:   "default dicts configured when lua-shared-dicts is not set",
+			entry:  make(map[string]string),
+			expect: defaultLuaSharedDicts,
 		},
 		{
-			name:   "lua mixed entry",
-			entry:  map[string]string{"lua-shared-dicts": "configuration_data:10,certificate_data:5"},
-			expect: map[string]int{"configuration_data": 10, "certificate_data": 5},
-		},
-		{
-			name:   "lua valid entry - configuration_data only",
+			name:   "configuration_data only",
 			entry:  map[string]string{"lua-shared-dicts": "configuration_data:5"},
-			expect: map[string]int{"configuration_data": 5},
+			expect: map[string]int{"configuration_data": 5, "certificate_data": 20},
 		},
 		{
-			name:   "lua valid entry certificate_data only",
-			entry:  map[string]string{"lua-shared-dicts": "certificate_data:5"},
-			expect: map[string]int{"certificate_data": 5},
+			name:   "certificate_data only",
+			entry:  map[string]string{"lua-shared-dicts": "certificate_data: 4"},
+			expect: map[string]int{"configuration_data": 20, "certificate_data": 4},
 		},
 		{
-			name:   "lua valid entry certificate_data only",
-			entry:  map[string]string{"lua-shared-dicts": "configuration_data:10, my_random_dict:15,another_example:2"},
-			expect: map[string]int{"configuration_data": 10, "my_random_dict": 15, "another_example": 2},
+			name:   "custom dicts",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:   10, my_random_dict:15 ,   another_example:2"},
+			expect: map[string]int{"configuration_data": 10, "certificate_data": 20, "my_random_dict": 15, "another_example": 2},
+		},
+		{
+			name:   "invalid size value should be ignored",
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 1a"},
+			expect: map[string]int{"configuration_data": 20, "certificate_data": 20, "mydict": 10},
+		},
+		{
+			name:   "dictionary size can not be larger than 200",
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 201"},
+			expect: map[string]int{"configuration_data": 20, "certificate_data": 20, "mydict": 10},
 		},
 	}
 
-	for n, tc := range testsCases {
+	for _, tc := range testsCases {
 		cfg := ReadConfig(tc.entry)
 		if !reflect.DeepEqual(cfg.LuaSharedDicts, tc.expect) {
-			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.LuaSharedDicts)
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, cfg.LuaSharedDicts)
 		}
 	}
 }
