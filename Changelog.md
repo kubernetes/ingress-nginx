@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.25.1
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.25.1`
+
+_Changes:_
+
+- [X] [#4440](https://github.com/kubernetes/ingress-nginx/pull/4440) Fixes for CVE-2018-16843, CVE-2018-16844, CVE-2019-9511, CVE-2019-9513, and CVE-2019-9516
+
 ### 0.25.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.25.0`
@@ -25,7 +33,7 @@ _Non-functional improvements:_
 
 _Changes:_
 
-- [X] [#3506](https://github.com/kubernetes/ingress-nginx/pull/3506) Improve the external authorization concept from opt-in to secure-by-default 
+- [X] [#3506](https://github.com/kubernetes/ingress-nginx/pull/3506) Improve the external authorization concept from opt-in to secure-by-default
 - [X] [#3802](https://github.com/kubernetes/ingress-nginx/pull/3802) Add a validating webhook for ingress sanity check
 - [X] [#3803](https://github.com/kubernetes/ingress-nginx/pull/3803) use nkeys for counting lua table elements
 - [X] [#3852](https://github.com/kubernetes/ingress-nginx/pull/3852) Enable arm again
@@ -414,7 +422,7 @@ _Changes:_
 - [X] [#3655](https://github.com/kubernetes/ingress-nginx/pull/3655) Remove flag sort-backends
 - [X] [#3656](https://github.com/kubernetes/ingress-nginx/pull/3656) Change default value of  flag for ssl chain completion
 - [X] [#3660](https://github.com/kubernetes/ingress-nginx/pull/3660) Revert max-worker-connections default value
-- [X] [#3664](https://github.com/kubernetes/ingress-nginx/pull/3664) Fix invalid validation creating prometheus valid host values 
+- [X] [#3664](https://github.com/kubernetes/ingress-nginx/pull/3664) Fix invalid validation creating prometheus valid host values
 
 _Documentation:_
 
