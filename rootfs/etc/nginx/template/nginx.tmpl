@@ -955,6 +955,11 @@ stream {
             {{ opentracingPropagateContext $location }};
             {{ end }}
 
+            {{ if $location.Mirror.URI }}
+            mirror {{ $location.Mirror.URI }};
+            mirror_request_body {{ $location.Mirror.RequestBody }};
+            {{ end }}
+
             rewrite_by_lua_block {
                 lua_ingress.rewrite({{ locationConfigForLua $location $server $all }})
                 balancer.rewrite()
@@ -1046,7 +1051,6 @@ stream {
             more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";
             }
             {{ end }}
-
 
             {{ if not $location.Logs.Access }}
             access_log off;

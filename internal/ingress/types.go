@@ -32,6 +32,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
@@ -320,6 +321,9 @@ type Location struct {
 	ModSecurity modsecurity.Config `json:"modsecurity"`
 	// Satisfy dictates allow access if any or all is set
 	Satisfy string `json:"satisfy"`
+	// Mirror allows you to mirror traffic to a "test" backend
+	// +optional
+	Mirror mirror.Config `json:"mirror,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
