@@ -162,6 +162,13 @@ func TestConfigureDynamically(t *testing.T) {
 	defer streamListener.Close()
 	defer os.Remove(nginx.StreamSocket)
 
+	endpointStats := map[string]int{"/configuration/backends": 0, "/configuration/general": 0, "/configuration/servers": 0}
+	resetEndpointStats := func() {
+		for k := range endpointStats {
+			endpointStats[k] = 0
+		}
+	}
+
 	server := &httptest.Server{
 		Listener: listener,
 		Config: &http.Server{
@@ -177,6 +184,8 @@ func TestConfigureDynamically(t *testing.T) {
 					t.Fatal(err)
 				}
 				body := string(b)
+
+				endpointStats[r.URL.Path] += 1
 
 				switch r.URL.Path {
 				case "/configuration/backends":
@@ -246,13 +255,66 @@ func TestConfigureDynamically(t *testing.T) {
 		ControllerPodsCount: 2,
 	}
 
-	err = configureDynamically(commonConfig)
+	n := &NGINXController{
+		runningConfig: &ingress.Configuration{},
+		cfg:           &Configuration{},
+	}
+
+	err = n.configureDynamically(commonConfig)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic configuration: %v", err)
 	}
-
 	if commonConfig.Backends[0].Endpoints[0].Target != target {
 		t.Errorf("unexpected change in the configuration object after configureDynamically invocation")
+	}
+	for endpoint, count := range endpointStats {
+		if count != 1 {
+			t.Errorf("Expected %v to receive %d requests but received %d.", endpoint, 1, count)
+		}
+	}
+
+	resetEndpointStats()
+	n.runningConfig.Backends = backends
+	err = n.configureDynamically(commonConfig)
+	if err != nil {
+		t.Errorf("unexpected error posting dynamic configuration: %v", err)
+	}
+	for endpoint, count := range endpointStats {
+		if endpoint == "/configuration/backends" {
+			if count != 0 {
+				t.Errorf("Expected %v to receive %d requests but received %d.", endpoint, 0, count)
+			}
+		} else if count != 1 {
+			t.Errorf("Expected %v to receive %d requests but received %d.", endpoint, 1, count)
+		}
+	}
+
+	resetEndpointStats()
+	n.runningConfig.Servers = servers
+	err = n.configureDynamically(commonConfig)
+	if err != nil {
+		t.Errorf("unexpected error posting dynamic configuration: %v", err)
+	}
+	if count, _ := endpointStats["/configuration/backends"]; count != 0 {
+		t.Errorf("Expected %v to receive %d requests but received %d.", "/configuration/backends", 0, count)
+	}
+	if count, _ := endpointStats["/configuration/servers"]; count != 0 {
+		t.Errorf("Expected %v to receive %d requests but received %d.", "/configuration/servers", 0, count)
+	}
+	if count, _ := endpointStats["/configuration/general"]; count != 1 {
+		t.Errorf("Expected %v to receive %d requests but received %d.", "/configuration/general", 0, count)
+	}
+
+	resetEndpointStats()
+	n.runningConfig.ControllerPodsCount = commonConfig.ControllerPodsCount
+	err = n.configureDynamically(commonConfig)
+	if err != nil {
+		t.Errorf("unexpected error posting dynamic configuration: %v", err)
+	}
+	for endpoint, count := range endpointStats {
+		if count != 0 {
+			t.Errorf("Expected %v to receive %d requests but received %d.", endpoint, 0, count)
+		}
 	}
 }
 
@@ -313,11 +375,7 @@ func TestConfigureCertificates(t *testing.T) {
 	defer server.Close()
 	server.Start()
 
-	commonConfig := &ingress.Configuration{
-		Servers: servers,
-	}
-
-	err = configureCertificates(commonConfig)
+	err = configureCertificates(servers)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic certificate configuration: %v", err)
 	}
