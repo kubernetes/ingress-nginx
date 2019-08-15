@@ -14,14 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 set -o errexit
 set -o nounset
 set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-export OPENRESTY_VERSION=1.15.8.2
+export OPENRESTY_VERSION=1.15.8.1
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.8.0
@@ -33,7 +32,7 @@ export DATADOG_CPP_VERSION=1.0.1
 export MODSECURITY_VERSION=d7101e13685efd7e7c9f808871b202656a969f4b
 export MODSECURITY_LIB_VERSION=3.0.3
 export OWASP_MODSECURITY_CRS_VERSION=3.1.0
-export LUA_BRIDGE_TRACER_VERSION=da8889d872dbea9864f45ed8c04680a01a9dd2e6
+export LUA_BRIDGE_TRACER_VERSION=0.1.1
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
@@ -155,8 +154,8 @@ get_src bda49f996a73d2c6080ff0523e7b535917cd28c8a79c3a5da54fc29332d61d1e \
 get_src f7fb2ad541f812c36fd78f9a38e4582d87dadb563ab80bee3f7c3a2132a425c5 \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
-get_src f5470132d8756eef293833e30508926894883924a445e3b9a07c869d26d4706d \
-        "https://github.com/opentracing/lua-bridge-tracer/archive/$LUA_BRIDGE_TRACER_VERSION.tar.gz"
+get_src 6faab57557bd9cc9fc38208f6bc304c1c13cf048640779f98812cf1f9567e202 \
+        "https://github.com/opentracing/lua-bridge-tracer/archive/v$LUA_BRIDGE_TRACER_VERSION.tar.gz"
 
 get_src 1af5a5632dc8b00ae103d51b7bf225de3a7f0df82f5c6a401996c080106e600e \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
@@ -330,6 +329,12 @@ mkdir -p /etc/nginx/modsecurity
 cp modsecurity.conf-recommended /etc/nginx/modsecurity/modsecurity.conf
 cp unicode.mapping /etc/nginx/modsecurity/unicode.mapping
 
+# Replace serial logging with concurrent
+sed -i 's|SecAuditLogType Serial|SecAuditLogType Concurrent|g' /etc/nginx/modsecurity/modsecurity.conf
+
+# Use stdout for modsecurity logs
+sed -i 's|SecAuditLog /var/log/modsec_audit.log|SecAuditLog /dev/stdout|g' /etc/nginx/modsecurity/modsecurity.conf
+
 # Download owasp modsecurity crs
 cd /etc/nginx/
 
@@ -490,6 +495,16 @@ cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"
 mkdir .build
 cd .build
 cmake ..
+make
+make install
+
+# mimalloc
+cd "$BUILD_PATH"
+git clone https://github.com/microsoft/mimalloc
+cd mimalloc
+mkdir -p out/release
+cd out/release
+cmake ../..
 make
 make install
 
