@@ -65,8 +65,11 @@ const (
 var (
 	validRedirectCodes    = sets.NewInt([]int{301, 302, 307, 308}...)
 	defaultLuaSharedDicts = map[string]int{
-		"configuration_data": 20,
-		"certificate_data":   20,
+		"configuration_data":            20,
+		"certificate_data":              20,
+		"balancer_ewma":                 10,
+		"balancer_ewma_last_touched_at": 10,
+		"balancer_ewma_locks":           1,
 	}
 )
 
