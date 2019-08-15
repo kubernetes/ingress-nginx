@@ -835,9 +835,9 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *netw
 
 // serviceEndpoints returns the upstream servers (Endpoints) associated with a Service.
 func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingress.Endpoint, error) {
-	svc, err := n.store.GetService(svcKey)
-
 	var upstreams []ingress.Endpoint
+
+	svc, err := n.store.GetService(svcKey)
 	if err != nil {
 		return upstreams, err
 	}
@@ -848,14 +848,26 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	if svc.Spec.Type == apiv1.ServiceTypeExternalName {
 		externalPort, err := strconv.Atoi(backendPort)
 		if err != nil {
-			klog.Warningf("Only numeric ports are allowed in ExternalName Services: %q is not a valid port number.", backendPort)
-			return upstreams, nil
+			// check if the service ports have one with backendPort as name
+			found := false
+			for _, port := range svc.Spec.Ports {
+				if port.Name == backendPort {
+					externalPort = int(port.Port)
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				klog.Errorf("service %v/%v does not have a port with name %v", svc.Namespace, svc.Namespace, backendPort)
+				return upstreams, nil
+			}
 		}
 
 		servicePort := apiv1.ServicePort{
 			Protocol:   "TCP",
 			Port:       int32(externalPort),
-			TargetPort: intstr.FromString(backendPort),
+			TargetPort: intstr.FromInt(externalPort),
 		}
 		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 		if len(endps) == 0 {

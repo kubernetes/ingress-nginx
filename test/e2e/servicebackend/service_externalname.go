@@ -177,4 +177,45 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(503))
 	})
+
+	It("should return 200 for service type=ExternalName using a port name", func() {
+		host := "echo"
+
+		svc := &core.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "httpbin",
+				Namespace: f.Namespace,
+			},
+			Spec: corev1.ServiceSpec{
+				ExternalName: "httpbin.org",
+				Type:         corev1.ServiceTypeExternalName,
+				Ports: []corev1.ServicePort{
+					{
+						Name:       host,
+						Port:       80,
+						TargetPort: intstr.FromInt(80),
+						Protocol:   "TCP",
+					},
+				},
+			},
+		}
+		f.EnsureService(svc)
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "httpbin", 80, nil)
+		ing.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort = intstr.FromString(host)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.GetURL(framework.HTTP)+"/get").
+			Set("Host", host).
+			End()
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(200))
+	})
+
 })
