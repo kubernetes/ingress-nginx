@@ -73,6 +73,10 @@ const (
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
 	sslProtocols = "TLSv1.2"
 
+	// Disable TLS 1.3 early data
+	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data
+	sslEarlyData = false
+
 	// Time during which a client may reuse the session parameters stored in a cache.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout
 	sslSessionTimeout = "10m"
@@ -309,6 +313,10 @@ type Configuration struct {
 	// SSL enabled protocols to use
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
 	SSLProtocols string `json:"ssl-protocols,omitempty"`
+
+	// Enables or disable TLS 1.3 early data.
+	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data
+	SSLEarlyData bool `json:"ssl-early-data,omitempty"`
 
 	// Enables or disables the use of shared SSL cache among worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
@@ -682,6 +690,7 @@ func NewDefault() Configuration {
 		SSLCiphers:                       sslCiphers,
 		SSLECDHCurve:                     "auto",
 		SSLProtocols:                     sslProtocols,
+		SSLEarlyData:                     sslEarlyData,
 		SSLSessionCache:                  true,
 		SSLSessionCacheSize:              sslSessionCacheSize,
 		SSLSessionTickets:                true,
