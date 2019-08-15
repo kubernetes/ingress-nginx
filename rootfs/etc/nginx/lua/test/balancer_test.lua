@@ -33,7 +33,7 @@ local function reset_backends()
   backends = {
     {
       name = "access-router-production-web-80", port = "80", secure = false,
-      secureCACert = { secret = "", caFilename = "", pemSha = "" },
+      secureCACert = { secret = "", caFilename = "", caSha = "" },
       sslPassthrough = false,
       endpoints = {
         { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
@@ -49,7 +49,7 @@ local function reset_backends()
       },
     },
     { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
-    { 
+    {
       name = "my-dummy-app-2", ["load-balance"] = "chash",
       upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri", },
     },

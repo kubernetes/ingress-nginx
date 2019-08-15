@@ -266,7 +266,7 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.SSLPassthrough != s2.SSLPassthrough {
 		return false
 	}
-	if !(&s1.SSLCert).Equal(&s2.SSLCert) {
+	if !(s1.SSLCert).Equal(s2.SSLCert) {
 		return false
 	}
 	if s1.Alias != s2.Alias {
@@ -516,7 +516,7 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if s1 == nil || s2 == nil {
 		return false
 	}
-	if s1.PemFileName != s2.PemFileName {
+	if s1.CASHA != s2.CASHA {
 		return false
 	}
 	if s1.PemSHA != s2.PemSHA {

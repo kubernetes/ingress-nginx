@@ -20,25 +20,36 @@ import (
 	"crypto/x509"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // SSLCert describes a SSL certificate to be used in a server
 type SSLCert struct {
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Certificate       *x509.Certificate `json:"certificate,omitempty"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	Certificate *x509.Certificate `json:"-"`
+
 	// CAFileName contains the path to the file with the root certificate
 	CAFileName string `json:"caFileName"`
+
+	// CASHA contains the sha1 of the ca file.
+	// This is used to detect changes in the secret that contains certificates
+	CASHA string `json:"caSha"`
+
 	// PemFileName contains the path to the file with the certificate and key concatenated
 	PemFileName string `json:"pemFileName"`
+
 	// PemSHA contains the sha1 of the pem file.
-	// This is used to detect changes in the secret that contains the certificates
+	// This is used to detect changes in the secret that contains certificates
 	PemSHA string `json:"pemSha"`
+
 	// CN contains all the common names defined in the SSL certificate
 	CN []string `json:"cn"`
+
 	// ExpiresTime contains the expiration of this SSL certificate in timestamp format
 	ExpireTime time.Time `json:"expires"`
+
 	// Pem encoded certificate and key concatenated
 	PemCertKey string `json:"pemCertKey,omitempty"`
 }
@@ -50,5 +61,5 @@ func (s SSLCert) GetObjectKind() schema.ObjectKind {
 
 // HashInclude defines if a field should be used or not to calculate the hash
 func (s SSLCert) HashInclude(field string, v interface{}) (bool, error) {
-	return (field != "PemSHA" && field != "ExpireTime"), nil
+	return (field != "PemSHA" && field != "CASHA" && field != "ExpireTime"), nil
 }

@@ -65,7 +65,7 @@ var _ = framework.IngressNginxDescribe("default-ssl-certificate", func() {
 		f.EnsureIngress(ing)
 
 		By("making sure new ingress is deployed")
-		expectedConfig := fmt.Sprintf("set $proxy_upstream_name \"%v-%v-%v\";", f.Namespace, service, port)
+		expectedConfig := fmt.Sprintf(`set $proxy_upstream_name "%v-%v-%v";`, f.Namespace, service, port)
 		f.WaitForNginxServer("_", func(cfg string) bool {
 			return strings.Contains(cfg, expectedConfig)
 		})
@@ -87,7 +87,7 @@ var _ = framework.IngressNginxDescribe("default-ssl-certificate", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("making sure new ingress is deployed")
-		expectedConfig := fmt.Sprintf("set $proxy_upstream_name \"%v-%v-%v\";", f.Namespace, service, port)
+		expectedConfig := fmt.Sprintf(`set $proxy_upstream_name "%v-%v-%v";`, f.Namespace, service, port)
 		f.WaitForNginxServer(host, func(cfg string) bool {
 			return strings.Contains(cfg, expectedConfig)
 		})

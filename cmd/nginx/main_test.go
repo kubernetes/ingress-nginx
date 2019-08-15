@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"syscall"
 	"testing"
 	"time"
@@ -28,14 +29,23 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 func TestCreateApiserverClient(t *testing.T) {
 	_, err := createApiserverClient("", "")
 	if err == nil {
 		t.Fatal("Expected an error creating REST client without an API server URL or kubeconfig file.")
+	}
+}
+
+func init() {
+	// the default value of nginx.TemplatePath assumes the template exists in
+	// the root filesystem and not in the rootfs directory
+	path, err := filepath.Abs(filepath.Join("../../rootfs/", nginx.TemplatePath))
+	if err == nil {
+		nginx.TemplatePath = path
 	}
 }
 
@@ -77,12 +87,7 @@ func TestHandleSigterm(t *testing.T) {
 	}
 	conf.Client = clientSet
 
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
-
-	ngx := controller.NewNGINXController(conf, nil, fs)
+	ngx := controller.NewNGINXController(conf, nil)
 
 	go handleSigterm(ngx, func(code int) {
 		if code != 1 {

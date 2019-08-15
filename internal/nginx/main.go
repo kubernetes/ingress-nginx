@@ -31,6 +31,9 @@ import (
 	"k8s.io/klog"
 )
 
+// TemplatePath path of the NGINX template
+var TemplatePath = "/etc/nginx/template/nginx.tmpl"
+
 // PID defines the location of the pid file used by NGINX
 var PID = "/tmp/nginx.pid"
 
