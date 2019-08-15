@@ -180,7 +180,7 @@ type Server struct {
 	// the server or in the remote endpoint
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// SSLCert describes the certificate that will be used on the server
-	SSLCert SSLCert `json:"sslCert"`
+	SSLCert *SSLCert `json:"sslCert"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
 	// Alias return the alias of the server name
@@ -228,7 +228,7 @@ type Location struct {
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
-	Service *apiv1.Service `json:"service,omitempty" hash:"ignore"`
+	Service *apiv1.Service `json:"-"`
 	// Port describes to which port from the service
 	Port intstr.IntOrString `json:"port"`
 	// Overwrite the Host header passed into the backend. Defaults to
@@ -291,7 +291,7 @@ type Location struct {
 	ClientBodyBufferSize string `json:"clientBodyBufferSize,omitempty"`
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
-	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty" hash:"ignore"`
+	DefaultBackend *apiv1.Service `json:"-"`
 	// DefaultBackendUpstreamName is the upstream-formatted string for the name of
 	// this location's custom default backend
 	DefaultBackendUpstreamName string `json:"defaultBackendUpstreamName,omitempty"`
@@ -331,7 +331,7 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *apiv1.Service     `json:"service,omitempty" hash:"ignore"`
+	Service *apiv1.Service     `json:"-"`
 	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
@@ -348,7 +348,7 @@ type L4Service struct {
 	// Endpoints active endpoints of the service
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// k8s Service
-	Service *apiv1.Service `json:"service,omitempty" hash:"ignore"`
+	Service *apiv1.Service `json:"-"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
@@ -369,7 +369,7 @@ type ProxyProtocol struct {
 
 // Ingress holds the definition of an Ingress plus its annotations
 type Ingress struct {
-	networking.Ingress `hash:"ignore"`
+	networking.Ingress `json:"-"`
 	ParsedAnnotations  *annotations.Ingress `json:"parsedAnnotations"`
 }
 

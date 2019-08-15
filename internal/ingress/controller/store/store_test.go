@@ -38,10 +38,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
-	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -87,7 +85,6 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		fs := newFS(t)
 		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
@@ -96,7 +93,6 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
-			fs,
 			updateCh,
 			pod,
 			false)
@@ -167,7 +163,6 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		fs := newFS(t)
 		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
@@ -176,7 +171,6 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
-			fs,
 			updateCh,
 			pod,
 			false)
@@ -317,7 +311,6 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		fs := newFS(t)
 		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
@@ -326,7 +319,6 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
-			fs,
 			updateCh,
 			pod,
 			false)
@@ -423,7 +415,6 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		fs := newFS(t)
 		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
@@ -432,7 +423,6 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
-			fs,
 			updateCh,
 			pod,
 			false)
@@ -512,7 +502,6 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		fs := newFS(t)
 		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
@@ -521,7 +510,6 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
-			fs,
 			updateCh,
 			pod,
 			false)
@@ -623,7 +611,6 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		fs := newFS(t)
 		storer := New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
@@ -632,7 +619,6 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
-			fs,
 			updateCh,
 			pod,
 			false)
@@ -701,39 +687,6 @@ func TestStore(t *testing.T) {
 		if err != nil {
 			t.Errorf("error creating secret: %v", err)
 		}
-
-		t.Run("should exists a secret in the local store and filesystem", func(t *testing.T) {
-			ngx_config.EnableDynamicCertificates = false
-			defer func() { ngx_config.EnableDynamicCertificates = true }()
-
-			err := framework.WaitForSecretInNamespace(clientSet, ns, name)
-			if err != nil {
-				t.Errorf("error waiting for secret: %v", err)
-			}
-
-			time.Sleep(5 * time.Second)
-
-			pemFile := fmt.Sprintf("%v/%v-%v.pem", file.DefaultSSLDirectory, ns, name)
-			err = framework.WaitForFileInFS(pemFile, fs)
-			if err != nil {
-				t.Errorf("error waiting for file to exist on the file system: %v", err)
-			}
-
-			secretName := fmt.Sprintf("%v/%v", ns, name)
-			sslCert, err := storer.GetLocalSSLCert(secretName)
-			if err != nil {
-				t.Errorf("error reading local secret %v: %v", secretName, err)
-			}
-
-			if sslCert == nil {
-				t.Errorf("expected a secret but none returned")
-			}
-
-			pemSHA := file.SHA1(pemFile)
-			if sslCert.PemSHA != pemSHA {
-				t.Errorf("SHA of secret on disk differs from local secret store (%v != %v)", pemSHA, sslCert.PemSHA)
-			}
-		})
 	})
 
 	// test add ingress with secret it doesn't exists and then add secret
@@ -821,22 +774,9 @@ func deleteIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, 
 	t.Logf("Ingress %+v deleted", ingress)
 }
 
-func newFS(t *testing.T) file.Filesystem {
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		t.Fatalf("error creating filesystem: %v", err)
-	}
-	return fs
-}
-
 // newStore creates a new mock object store for tests which do not require the
 // use of Informers.
 func newStore(t *testing.T) *k8sStore {
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		t.Fatalf("error: %v", err)
-	}
-
 	pod := &k8s.PodInfo{
 		Name:      "ingress-1",
 		Namespace: v1.NamespaceDefault,
@@ -853,7 +793,6 @@ func newStore(t *testing.T) *k8sStore {
 			Pod:                   PodLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
 		},
 		sslStore:         NewSSLCertTracker(),
-		filesystem:       fs,
 		updateCh:         channels.NewRingChannel(10),
 		syncSecretMu:     new(sync.Mutex),
 		backendConfigMu:  new(sync.RWMutex),

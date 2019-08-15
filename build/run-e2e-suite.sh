@@ -63,7 +63,8 @@ kubectl create clusterrolebinding permissive-binding \
   --user=kubelet \
   --serviceaccount=default:ingress-nginx-e2e || true
 
-until kubectl get secret | grep -q ^ingress-nginx-e2e-token; do \
+echo -e "${BGREEN}Waiting service account...${NC}"; \
+until kubectl get secret | grep -q -e ^ingress-nginx-e2e-token; do \
   echo -e "waiting for api token"; \
   sleep 3; \
 done

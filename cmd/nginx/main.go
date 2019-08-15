@@ -39,7 +39,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 
-	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -59,13 +58,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err != nil {
-		klog.Fatal(err)
-	}
-
-	nginxVersion()
-
-	fs, err := file.NewLocalFS()
 	if err != nil {
 		klog.Fatal(err)
 	}
@@ -98,8 +90,8 @@ func main() {
 		}
 	}
 
-	conf.FakeCertificate = ssl.GetFakeSSLCert(fs)
-	klog.Infof("Created fake certificate with PemFileName: %v", conf.FakeCertificate.PemFileName)
+	conf.FakeCertificate = ssl.GetFakeSSLCert()
+	klog.Infof("SSL fake certificate created %v", conf.FakeCertificate.PemFileName)
 
 	k8s.IsNetworkingIngressAvailable = k8s.NetworkingIngressAvailable(kubeClient)
 	if !k8s.IsNetworkingIngressAvailable {
@@ -125,7 +117,7 @@ func main() {
 	}
 	mc.Start()
 
-	ngx := controller.NewNGINXController(conf, mc, fs)
+	ngx := controller.NewNGINXController(conf, mc)
 	go handleSigterm(ngx, func(code int) {
 		os.Exit(code)
 	})

@@ -77,7 +77,7 @@ func (m mockSecret) GetAuthCertificate(name string) (*resolver.AuthSSLCert, erro
 	return &resolver.AuthSSLCert{
 		Secret:     "default/demo-secret",
 		CAFileName: "/ssl/ca.crt",
-		PemSHA:     "abc",
+		CASHA:      "abc",
 	}, nil
 
 }
@@ -202,12 +202,12 @@ func TestEquals(t *testing.T) {
 	sslCert1 := resolver.AuthSSLCert{
 		Secret:     "default/demo-secret",
 		CAFileName: "/ssl/ca.crt",
-		PemSHA:     "abc",
+		CASHA:      "abc",
 	}
 	sslCert2 := resolver.AuthSSLCert{
 		Secret:     "default/other-demo-secret",
 		CAFileName: "/ssl/ca.crt",
-		PemSHA:     "abc",
+		CASHA:      "abc",
 	}
 	cfg1.AuthSSLCert = sslCert1
 	cfg2.AuthSSLCert = sslCert2

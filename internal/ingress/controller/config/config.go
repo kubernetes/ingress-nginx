@@ -33,8 +33,6 @@ import (
 var (
 	// EnableSSLChainCompletion Autocomplete SSL certificate chains with missing intermediate CA certificates.
 	EnableSSLChainCompletion = false
-	// EnableDynamicCertificates Dynamically update SSL certificates instead of reloading NGINX
-	EnableDynamicCertificates = true
 )
 
 const (
@@ -605,6 +603,10 @@ type Configuration struct {
 
 	// Lua shared dict configuration data / certificate data
 	LuaSharedDicts map[string]int `json:"lua-shared-dicts"`
+
+	// DefaultSSLCertificate holds the default SSL certificate to use in the configuration
+	// It can be the fake certificate or the one behind the flag --default-ssl-certificate
+	DefaultSSLCertificate *ingress.SSLCert `json:"-"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -764,25 +766,24 @@ func (cfg Configuration) BuildLogFormatUpstream() string {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
-	ProxySetHeaders           map[string]string
-	AddHeaders                map[string]string
-	BacklogSize               int
-	Backends                  []*ingress.Backend
-	PassthroughBackends       []*ingress.SSLPassthroughBackend
-	Servers                   []*ingress.Server
-	TCPBackends               []ingress.L4Service
-	UDPBackends               []ingress.L4Service
-	HealthzURI                string
-	Cfg                       Configuration
-	IsIPV6Enabled             bool
-	IsSSLPassthroughEnabled   bool
-	NginxStatusIpv4Whitelist  []string
-	NginxStatusIpv6Whitelist  []string
-	RedirectServers           interface{}
-	ListenPorts               *ListenPorts
-	PublishService            *apiv1.Service
-	EnableDynamicCertificates bool
-	EnableMetrics             bool
+	ProxySetHeaders          map[string]string
+	AddHeaders               map[string]string
+	BacklogSize              int
+	Backends                 []*ingress.Backend
+	PassthroughBackends      []*ingress.SSLPassthroughBackend
+	Servers                  []*ingress.Server
+	TCPBackends              []ingress.L4Service
+	UDPBackends              []ingress.L4Service
+	HealthzURI               string
+	Cfg                      Configuration
+	IsIPV6Enabled            bool
+	IsSSLPassthroughEnabled  bool
+	NginxStatusIpv4Whitelist []string
+	NginxStatusIpv6Whitelist []string
+	RedirectServers          interface{}
+	ListenPorts              *ListenPorts
+	PublishService           *apiv1.Service
+	EnableMetrics            bool
 
 	PID          string
 	StatusSocket string
