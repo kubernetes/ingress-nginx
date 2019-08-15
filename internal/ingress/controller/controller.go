@@ -167,7 +167,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := configureDynamically(pcfg)
+		err := n.configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
