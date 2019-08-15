@@ -148,6 +148,7 @@ The following table shows a configuration option's name, type, and the default v
 |[skip-access-log-urls](#skip-access-log-urls)|[]string|[]string{}|
 |[limit-rate](#limit-rate)|int|0|
 |[limit-rate-after](#limit-rate-after)|int|0|
+|[lua-shared-dicts](#lua-shared-dicts)|string|""|
 |[http-redirect-code](#http-redirect-code)|int|308|
 |[proxy-buffering](#proxy-buffering)|string|"off"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
@@ -846,6 +847,21 @@ _References:_
 ## limit-rate-after
 
 Sets the initial amount after which the further transmission of a response to a client will be rate limited.
+
+## lua-shared-dicts
+
+Customize default Lua shared dictionaries or define more. You can use the following syntax to do so:
+
+```
+lua-shared-dicts: "<my dict name>: <my dict size>, [<my dict name>: <my dict size>], ..."
+```
+
+For example following will set default `certificate_data` dictionary to `100M` and will introduce a new dictionary called
+`my_custom_plugin`:
+
+```
+lua-shared-dicts: "certificate_data: 100, my_custom_plugin: 5"
+```
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)

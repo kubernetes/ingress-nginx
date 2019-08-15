@@ -203,8 +203,11 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	}
 	// returns value from config
 	configuration := buildLuaSharedDictionaries(cfg, servers, false)
-	if !strings.Contains(configuration, "lua_shared_dict configuration_data 10M;\n\rlua_shared_dict certificate_data 20M;") {
+	if !strings.Contains(configuration, "lua_shared_dict configuration_data 10M;\n") {
 		t.Errorf("expected to include 'configuration_data' but got %s", configuration)
+	}
+	if !strings.Contains(configuration, "lua_shared_dict certificate_data 20M;\n") {
+		t.Errorf("expected to include 'certificate_data' but got %s", configuration)
 	}
 	if strings.Contains(configuration, "waf_storage") {
 		t.Errorf("expected to not include 'waf_storage' but got %s", configuration)
@@ -219,6 +222,19 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	configuration = buildLuaSharedDictionaries(invalidType, servers, false)
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v' ", expected, actual)
+	}
+}
+
+func TestLuaConfigurationRequestBodySize(t *testing.T) {
+	cfg := config.Configuration{
+		LuaSharedDicts: map[string]int{
+			"configuration_data": 10, "certificate_data": 20,
+		},
+	}
+
+	size := luaConfigurationRequestBodySize(cfg)
+	if "21" != size {
+		t.Errorf("expected the size to be 20 but got: %v", size)
 	}
 }
 
