@@ -30,6 +30,7 @@ fi
 
 # enabled to use host dns resolver
 export CGO_ENABLED=1
+export GODEBUG=netdns=go+2
 
-go test -v -race -tags "cgo" \
+go test -v -race \
   $(go list "${PKG}/..." | grep -v vendor | grep -v '/test/e2e' | grep -v images | grep -v "docs/examples")
