@@ -351,6 +351,8 @@ http {
 
     ssl_protocols {{ $cfg.SSLProtocols }};
 
+    ssl_early_data {{ if $cfg.SSLEarlyData }}on{{ else }}off{{ end }};
+
     # turn on session caching to drastically improve performance
     {{ if $cfg.SSLSessionCache }}
     ssl_session_cache builtin:1000 shared:SSL:{{ $cfg.SSLSessionCacheSize }};
