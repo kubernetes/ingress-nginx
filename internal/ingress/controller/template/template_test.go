@@ -225,6 +225,19 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	}
 }
 
+func TestLuaConfigurationRequestBodySize(t *testing.T) {
+	cfg := config.Configuration{
+		LuaSharedDicts: map[string]int{
+			"configuration_data": 10, "certificate_data": 20,
+		},
+	}
+
+	size := luaConfigurationRequestBodySize(cfg)
+	if "21" != size {
+		t.Errorf("expected the size to be 20 but got: %v", size)
+	}
+}
+
 func TestFormatIP(t *testing.T) {
 	cases := map[string]struct {
 		Input, Output string
