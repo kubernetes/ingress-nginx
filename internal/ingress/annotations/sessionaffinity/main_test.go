@@ -85,7 +85,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	}
 
 	if nginxAffinity.Cookie.Name != "INGRESSCOOKIE" {
-		t.Errorf("expected route as session-cookie-name but returned %v", nginxAffinity.Cookie.Name)
+		t.Errorf("expected INGRESSCOOKIE as session-cookie-name but returned %v", nginxAffinity.Cookie.Name)
 	}
 
 	if nginxAffinity.Cookie.Expires != "4500" {
