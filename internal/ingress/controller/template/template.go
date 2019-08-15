@@ -133,36 +133,37 @@ var (
 			}
 			return true
 		},
-		"escapeLiteralDollar":        escapeLiteralDollar,
-		"shouldConfigureLuaRestyWAF": shouldConfigureLuaRestyWAF,
-		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
-		"buildLocation":              buildLocation,
-		"buildAuthLocation":          buildAuthLocation,
-		"shouldApplyGlobalAuth":      shouldApplyGlobalAuth,
-		"buildAuthResponseHeaders":   buildAuthResponseHeaders,
-		"buildProxyPass":             buildProxyPass,
-		"filterRateLimits":           filterRateLimits,
-		"buildRateLimitZones":        buildRateLimitZones,
-		"buildRateLimit":             buildRateLimit,
-		"configForLua":               configForLua,
-		"locationConfigForLua":       locationConfigForLua,
-		"buildResolvers":             buildResolvers,
-		"buildUpstreamName":          buildUpstreamName,
-		"isLocationInLocationList":   isLocationInLocationList,
-		"isLocationAllowed":          isLocationAllowed,
-		"buildLogFormatUpstream":     buildLogFormatUpstream,
-		"buildDenyVariable":          buildDenyVariable,
-		"getenv":                     os.Getenv,
-		"contains":                   strings.Contains,
-		"hasPrefix":                  strings.HasPrefix,
-		"hasSuffix":                  strings.HasSuffix,
-		"trimSpace":                  strings.TrimSpace,
-		"toUpper":                    strings.ToUpper,
-		"toLower":                    strings.ToLower,
-		"formatIP":                   formatIP,
-		"quote":                      quote,
-		"buildNextUpstream":          buildNextUpstream,
-		"getIngressInformation":      getIngressInformation,
+		"escapeLiteralDollar":             escapeLiteralDollar,
+		"shouldConfigureLuaRestyWAF":      shouldConfigureLuaRestyWAF,
+		"buildLuaSharedDictionaries":      buildLuaSharedDictionaries,
+		"luaConfigurationRequestBodySize": luaConfigurationRequestBodySize,
+		"buildLocation":                   buildLocation,
+		"buildAuthLocation":               buildAuthLocation,
+		"shouldApplyGlobalAuth":           shouldApplyGlobalAuth,
+		"buildAuthResponseHeaders":        buildAuthResponseHeaders,
+		"buildProxyPass":                  buildProxyPass,
+		"filterRateLimits":                filterRateLimits,
+		"buildRateLimitZones":             buildRateLimitZones,
+		"buildRateLimit":                  buildRateLimit,
+		"configForLua":                    configForLua,
+		"locationConfigForLua":            locationConfigForLua,
+		"buildResolvers":                  buildResolvers,
+		"buildUpstreamName":               buildUpstreamName,
+		"isLocationInLocationList":        isLocationInLocationList,
+		"isLocationAllowed":               isLocationAllowed,
+		"buildLogFormatUpstream":          buildLogFormatUpstream,
+		"buildDenyVariable":               buildDenyVariable,
+		"getenv":                          os.Getenv,
+		"contains":                        strings.Contains,
+		"hasPrefix":                       strings.HasPrefix,
+		"hasSuffix":                       strings.HasSuffix,
+		"trimSpace":                       strings.TrimSpace,
+		"toUpper":                         strings.ToUpper,
+		"toLower":                         strings.ToLower,
+		"formatIP":                        formatIP,
+		"quote":                           quote,
+		"buildNextUpstream":               buildNextUpstream,
+		"getIngressInformation":           getIngressInformation,
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
@@ -236,7 +237,7 @@ func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
 
 func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF bool) string {
 	var out []string
-	// Load config
+
 	cfg, ok := c.(config.Configuration)
 	if !ok {
 		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
@@ -247,20 +248,13 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF
 		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
 		return ""
 	}
-	// check if config contains lua "lua_configuration_data" value otherwise, use default
-	cfgData, ok := cfg.LuaSharedDicts["configuration_data"]
-	if !ok {
-		cfgData = 15
-	}
-	out = append(out, fmt.Sprintf("lua_shared_dict configuration_data %dM", cfgData))
 
-	// check if config contains "lua_certificate_data" value otherwise, use default
-	certData, ok := cfg.LuaSharedDicts["certificate_data"]
-	if !ok {
-		certData = 16
+	for name, size := range cfg.LuaSharedDicts {
+		out = append(out, fmt.Sprintf("lua_shared_dict %s %dM", name, size))
 	}
-	out = append(out, fmt.Sprintf("lua_shared_dict certificate_data %dM", certData))
-	if !disableLuaRestyWAF {
+
+	// TODO: there must be a better place for this
+	if _, ok := cfg.LuaSharedDicts["waf_storage"]; !ok && !disableLuaRestyWAF {
 		luaRestyWAFEnabled := func() bool {
 			for _, server := range servers {
 				for _, location := range server.Locations {
@@ -275,7 +269,24 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF
 			out = append(out, "lua_shared_dict waf_storage 64M")
 		}
 	}
-	return strings.Join(out, ";\n\r") + ";"
+
+	return strings.Join(out, ";\n") + ";\n"
+}
+
+func luaConfigurationRequestBodySize(c interface{}) string {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return "100" // just a default number
+	}
+
+	size := cfg.LuaSharedDicts["configuration_data"]
+	if size < cfg.LuaSharedDicts["certificate_data"] {
+		size = cfg.LuaSharedDicts["certificate_data"]
+	}
+	size = size + 1
+
+	return fmt.Sprintf("%d", size)
 }
 
 // configForLua returns some general configuration as Lua table represented as string
