@@ -124,6 +124,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
+	def.LuaSharedDicts = map[string]int{"configuration_data": 20, "certificate_data": 20}
 	def.DisableIpv6DNS = true
 
 	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
@@ -142,6 +143,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
+	def.LuaSharedDicts = map[string]int{"configuration_data": 20, "certificate_data": 20}
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
 	def.DisableIpv6DNS = true
 
