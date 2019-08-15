@@ -73,7 +73,6 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"nginx-status-ipv6-whitelist":   "::1,2001::/16",
 		"proxy-add-original-uri-header": "false",
 		"disable-ipv6-dns":              "true",
-		"lua-shared-dicts":              "configuration_data:5,certificate_data:5",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -94,7 +93,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
 	def.ProxyAddOriginalURIHeader = false
-	def.LuaSharedDicts = map[string]int{"configuration_data": 5, "certificate_data": 5}
+	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.DisableIpv6DNS = true
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
@@ -124,7 +123,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
-	def.LuaSharedDicts = map[string]int{"configuration_data": 20, "certificate_data": 20}
+	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.DisableIpv6DNS = true
 
 	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
@@ -143,7 +142,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
-	def.LuaSharedDicts = map[string]int{"configuration_data": 20, "certificate_data": 20}
+	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
 	def.DisableIpv6DNS = true
 
@@ -319,31 +318,38 @@ func TestLuaSharedDictsParsing(t *testing.T) {
 		{
 			name:   "configuration_data only",
 			entry:  map[string]string{"lua-shared-dicts": "configuration_data:5"},
-			expect: map[string]int{"configuration_data": 5, "certificate_data": 20},
+			expect: map[string]int{"configuration_data": 5},
 		},
 		{
 			name:   "certificate_data only",
 			entry:  map[string]string{"lua-shared-dicts": "certificate_data: 4"},
-			expect: map[string]int{"configuration_data": 20, "certificate_data": 4},
+			expect: map[string]int{"certificate_data": 4},
 		},
 		{
 			name:   "custom dicts",
 			entry:  map[string]string{"lua-shared-dicts": "configuration_data:   10, my_random_dict:15 ,   another_example:2"},
-			expect: map[string]int{"configuration_data": 10, "certificate_data": 20, "my_random_dict": 15, "another_example": 2},
+			expect: map[string]int{"configuration_data": 10, "my_random_dict": 15, "another_example": 2},
 		},
 		{
 			name:   "invalid size value should be ignored",
 			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 1a"},
-			expect: map[string]int{"configuration_data": 20, "certificate_data": 20, "mydict": 10},
+			expect: map[string]int{"mydict": 10},
 		},
 		{
 			name:   "dictionary size can not be larger than 200",
 			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 201"},
-			expect: map[string]int{"configuration_data": 20, "certificate_data": 20, "mydict": 10},
+			expect: map[string]int{"mydict": 10},
 		},
 	}
 
 	for _, tc := range testsCases {
+		// dynamically insert default dicts in the expected output
+		for dictName, dictSize := range defaultLuaSharedDicts {
+			if _, ok := tc.expect[dictName]; !ok {
+				tc.expect[dictName] = dictSize
+			}
+		}
+
 		cfg := ReadConfig(tc.entry)
 		if !reflect.DeepEqual(cfg.LuaSharedDicts, tc.expect) {
 			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, cfg.LuaSharedDicts)
