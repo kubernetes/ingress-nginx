@@ -27,10 +27,12 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
@@ -179,7 +181,7 @@ type Server struct {
 	// the server or in the remote endpoint
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// SSLCert describes the certificate that will be used on the server
-	SSLCert SSLCert `json:"sslCert"`
+	SSLCert *SSLCert `json:"sslCert"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
 	// Alias return the alias of the server name
@@ -230,7 +232,7 @@ type Location struct {
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
-	Service *apiv1.Service `json:"service,omitempty"`
+	Service *apiv1.Service `json:"-"`
 	// Port describes to which port from the service
 	Port intstr.IntOrString `json:"port"`
 	// Overwrite the Host header passed into the backend. Defaults to
@@ -297,7 +299,7 @@ type Location struct {
 	ClientBodyBufferSize string `json:"clientBodyBufferSize,omitempty"`
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
-	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty"`
+	DefaultBackend *apiv1.Service `json:"-"`
 	// DefaultBackendUpstreamName is the upstream-formatted string for the name of
 	// this location's custom default backend
 	DefaultBackendUpstreamName string `json:"defaultBackendUpstreamName,omitempty"`
@@ -316,6 +318,9 @@ type Location struct {
 	// BackendProtocol indicates which protocol should be used to communicate with the service
 	// By default this is HTTP
 	BackendProtocol string `json:"backend-protocol"`
+	// FastCGI allows the ingress to act as a FastCGI client for a given location.
+	// +optional
+	FastCGI fastcgi.Config `json:"fastcgi,omitempty"`
 	// CustomHTTPErrors specifies the error codes that should be intercepted.
 	// +optional
 	CustomHTTPErrors []int `json:"custom-http-errors"`
@@ -324,6 +329,9 @@ type Location struct {
 	ModSecurity modsecurity.Config `json:"modsecurity"`
 	// Satisfy dictates allow access if any or all is set
 	Satisfy string `json:"satisfy"`
+	// Mirror allows you to mirror traffic to a "test" backend
+	// +optional
+	Mirror mirror.Config `json:"mirror,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
@@ -331,7 +339,7 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *apiv1.Service     `json:"service,omitempty"`
+	Service *apiv1.Service     `json:"-"`
 	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
@@ -348,7 +356,7 @@ type L4Service struct {
 	// Endpoints active endpoints of the service
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// k8s Service
-	Service *apiv1.Service `json:"service,omitempty"`
+	Service *apiv1.Service `json:"-"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
@@ -369,8 +377,8 @@ type ProxyProtocol struct {
 
 // Ingress holds the definition of an Ingress plus its annotations
 type Ingress struct {
-	networking.Ingress
-	ParsedAnnotations *annotations.Ingress
+	networking.Ingress `json:"-"`
+	ParsedAnnotations  *annotations.Ingress `json:"parsedAnnotations"`
 }
 
 // GeneralConfig holds the definition of lua general configuration data

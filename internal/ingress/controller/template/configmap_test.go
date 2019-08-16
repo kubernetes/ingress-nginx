@@ -64,7 +64,6 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"access-log-path":               "/var/log/test/access.log",
 		"error-log-path":                "/var/log/test/error.log",
 		"use-gzip":                      "true",
-		"enable-dynamic-tls-records":    "false",
 		"gzip-level":                    "9",
 		"gzip-types":                    "text/html",
 		"proxy-real-ip-cidr":            "1.1.1.1/8,2.2.2.2/24",
@@ -84,7 +83,6 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
 	def.ProxyReadTimeout = 1
 	def.ProxySendTimeout = 2
-	def.EnableDynamicTLSRecords = false
 	def.UseProxyProtocol = true
 	def.GzipLevel = 9
 	def.GzipTypes = "text/html"
@@ -95,7 +93,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
 	def.ProxyAddOriginalURIHeader = false
-
+	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.DisableIpv6DNS = true
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
@@ -125,6 +123,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
+	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.DisableIpv6DNS = true
 
 	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
@@ -143,6 +142,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
+	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
 	def.DisableIpv6DNS = true
 
@@ -300,6 +300,59 @@ func TestGlobalExternalAuthCacheDurationParsing(t *testing.T) {
 
 		if !reflect.DeepEqual(cfg.GlobalExternalAuth.AuthCacheDuration, tc.expect) {
 			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.AuthCacheDuration)
+		}
+	}
+}
+
+func TestLuaSharedDictsParsing(t *testing.T) {
+	testsCases := []struct {
+		name   string
+		entry  map[string]string
+		expect map[string]int
+	}{
+		{
+			name:   "default dicts configured when lua-shared-dicts is not set",
+			entry:  make(map[string]string),
+			expect: defaultLuaSharedDicts,
+		},
+		{
+			name:   "configuration_data only",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:5"},
+			expect: map[string]int{"configuration_data": 5},
+		},
+		{
+			name:   "certificate_data only",
+			entry:  map[string]string{"lua-shared-dicts": "certificate_data: 4"},
+			expect: map[string]int{"certificate_data": 4},
+		},
+		{
+			name:   "custom dicts",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:   10, my_random_dict:15 ,   another_example:2"},
+			expect: map[string]int{"configuration_data": 10, "my_random_dict": 15, "another_example": 2},
+		},
+		{
+			name:   "invalid size value should be ignored",
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 1a"},
+			expect: map[string]int{"mydict": 10},
+		},
+		{
+			name:   "dictionary size can not be larger than 200",
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 201"},
+			expect: map[string]int{"mydict": 10},
+		},
+	}
+
+	for _, tc := range testsCases {
+		// dynamically insert default dicts in the expected output
+		for dictName, dictSize := range defaultLuaSharedDicts {
+			if _, ok := tc.expect[dictName]; !ok {
+				tc.expect[dictName] = dictSize
+			}
+		}
+
+		cfg := ReadConfig(tc.entry)
+		if !reflect.DeepEqual(cfg.LuaSharedDicts, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, cfg.LuaSharedDicts)
 		}
 	}
 }

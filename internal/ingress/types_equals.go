@@ -266,7 +266,7 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.SSLPassthrough != s2.SSLPassthrough {
 		return false
 	}
-	if !(&s1.SSLCert).Equal(&s2.SSLCert) {
+	if !(s1.SSLCert).Equal(s2.SSLCert) {
 		return false
 	}
 	if s1.Alias != s2.Alias {
@@ -401,6 +401,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if !(&l1.FastCGI).Equal(&l2.FastCGI) {
+		return false
+	}
+
 	match := compareInts(l1.CustomHTTPErrors, l2.CustomHTTPErrors)
 	if !match {
 		return false
@@ -415,6 +419,14 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	}
 
 	if l1.DefaultBackendUpstreamName != l2.DefaultBackendUpstreamName {
+		return false
+	}
+
+	if l1.Mirror.URI != l2.Mirror.URI {
+		return false
+	}
+
+	if l1.Mirror.RequestBody != l2.Mirror.RequestBody {
 		return false
 	}
 
@@ -504,7 +516,7 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if s1 == nil || s2 == nil {
 		return false
 	}
-	if s1.PemFileName != s2.PemFileName {
+	if s1.CASHA != s2.CASHA {
 		return false
 	}
 	if s1.PemSHA != s2.PemSHA {

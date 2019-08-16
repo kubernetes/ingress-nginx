@@ -30,6 +30,7 @@ In addition to the built-in functions provided by the Go package the following f
 - hasSuffix: [strings.HasSuffix](https://golang.org/pkg/strings/#HasSuffix)
 - toUpper: [strings.ToUpper](https://golang.org/pkg/strings/#ToUpper)
 - toLower: [strings.ToLower](https://golang.org/pkg/strings/#ToLower)
+- quote: wraps a string in double quotes
 - buildLocation: helps to build the NGINX Location section in each server
 - buildProxyPass: builds the reverse proxy configuration
 - buildRateLimit: helps to build a limit zone inside a location if contains a rate limit annotation

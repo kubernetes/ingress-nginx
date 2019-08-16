@@ -16,7 +16,7 @@
 all: all-container
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.25.0
+TAG ?= 0.25.1
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 DOCKER ?= docker
 SED_I ?= sed -i
@@ -73,7 +73,7 @@ export E2E_CHECK_LEAKS
 export SLOW_E2E_THRESHOLD
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.90
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.91
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm

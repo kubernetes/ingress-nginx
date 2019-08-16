@@ -154,4 +154,8 @@ type Backend struct {
 	// Modifies the HTTP version the proxy uses to interact with the backend.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
 	ProxyHTTPVersion string `json:"proxy-http-version"`
+
+	// Sets the maximum temp file size when proxy-buffers capacity is exceeded.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_max_temp_file_size
+	ProxyMaxTempFileSize string `json:"proxy-max-temp-file-size"`
 }

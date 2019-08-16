@@ -37,7 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
@@ -1109,11 +1108,6 @@ func newNGINXController(t *testing.T) *NGINXController {
 		t.Fatalf("error creating the configuration map: %v", err)
 	}
 
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		t.Fatalf("error: %v", err)
-	}
-
 	storer := store.New(
 		ns,
 		fmt.Sprintf("%v/config", ns),
@@ -1122,12 +1116,11 @@ func newNGINXController(t *testing.T) *NGINXController {
 		"",
 		10*time.Minute,
 		clientSet,
-		fs,
 		channels.NewRingChannel(10),
 		pod,
 		false)
 
-	sslCert := ssl.GetFakeSSLCert(fs)
+	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{
 		FakeCertificate: sslCert,
 		ListenPorts: &ngx_config.ListenPorts{
@@ -1136,10 +1129,9 @@ func newNGINXController(t *testing.T) *NGINXController {
 	}
 
 	return &NGINXController{
-		store:      storer,
-		cfg:        config,
-		command:    NewNginxCommand(),
-		fileSystem: fs,
+		store:   storer,
+		cfg:     config,
+		command: NewNginxCommand(),
 	}
 }
 

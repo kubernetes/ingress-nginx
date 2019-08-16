@@ -68,7 +68,7 @@ func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) 
 		return &resolver.AuthSSLCert{
 			Secret:     name,
 			CAFileName: "/opt/ca.pem",
-			PemSHA:     "123",
+			CASHA:      "123",
 		}, nil
 	}
 	return nil, nil

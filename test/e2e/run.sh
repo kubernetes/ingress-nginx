@@ -55,6 +55,7 @@ kubectl config set-context kubernetes-admin@${KIND_CLUSTER_NAME}
 echo "[dev-env] building container"
 make -C ${DIR}/../../ build container
 make -C ${DIR}/../../ e2e-test-image
+make -C ${DIR}/../../images/fastcgi-helloserver/ build container
 
 # Remove after https://github.com/kubernetes/ingress-nginx/pull/4271 is merged
 docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
@@ -62,6 +63,7 @@ docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx
 echo "[dev-env] copying docker images to cluster..."
 kind load docker-image --name="${KIND_CLUSTER_NAME}" nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-controller:${TAG}
+kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/fastcgi-helloserver:${TAG}
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test

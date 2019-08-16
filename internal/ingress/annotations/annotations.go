@@ -39,12 +39,14 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/customhttperrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/http2pushpreload"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/portinredirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -83,6 +85,7 @@ type Ingress struct {
 	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
+	FastCGI            fastcgi.Config
 	Denied             *string
 	ExternalAuth       authreq.Config
 	EnableGlobalAuth   bool
@@ -109,6 +112,7 @@ type Ingress struct {
 	LuaRestyWAF        luarestywaf.Config
 	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
+	Mirror             mirror.Config
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -130,6 +134,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"CorsConfig":           cors.NewParser(cfg),
 			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
+			"FastCGI":              fastcgi.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
 			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
 			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
@@ -156,6 +161,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"InfluxDB":             influxdb.NewParser(cfg),
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
 			"ModSecurity":          modsecurity.NewParser(cfg),
+			"Mirror":               mirror.NewParser(cfg),
 		},
 	}
 }

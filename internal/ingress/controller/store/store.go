@@ -152,9 +152,9 @@ func (e NotExistsError) Error() string {
 
 // Run initiates the synchronization of the informers against the API server.
 func (i *Informer) Run(stopCh chan struct{}) {
+	go i.Secret.Run(stopCh)
 	go i.Endpoint.Run(stopCh)
 	go i.Service.Run(stopCh)
-	go i.Secret.Run(stopCh)
 	go i.ConfigMap.Run(stopCh)
 	go i.Pod.Run(stopCh)
 
@@ -165,6 +165,7 @@ func (i *Informer) Run(stopCh chan struct{}) {
 		i.Service.HasSynced,
 		i.Secret.HasSynced,
 		i.ConfigMap.HasSynced,
+		i.Pod.HasSynced,
 	) {
 		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
@@ -208,8 +209,6 @@ type k8sStore struct {
 	// secret in the annotations.
 	secretIngressMap ObjectRefMap
 
-	filesystem file.Filesystem
-
 	// updateCh
 	updateCh *channels.RingChannel
 
@@ -229,7 +228,6 @@ func New(
 	namespace, configmap, tcp, udp, defaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
-	fs file.Filesystem,
 	updateCh *channels.RingChannel,
 	pod *k8s.PodInfo,
 	disableCatchAll bool) Storer {
@@ -238,7 +236,6 @@ func New(
 		informers:             &Informer{},
 		listers:               &Lister{},
 		sslStore:              NewSSLCertTracker(),
-		filesystem:            fs,
 		updateCh:              updateCh,
 		backendConfig:         ngx_config.NewDefault(),
 		syncSecretMu:          &sync.Mutex{},
@@ -494,6 +491,7 @@ func New(
 					}
 					store.syncIngress(ing)
 				}
+
 				updateCh.In() <- Event{
 					Type: DeleteEvent,
 					Obj:  obj,
@@ -814,7 +812,7 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 	return &resolver.AuthSSLCert{
 		Secret:     name,
 		CAFileName: cert.CAFileName,
-		PemSHA:     cert.PemSHA,
+		CASHA:      cert.CASHA,
 	}, nil
 }
 

@@ -112,6 +112,8 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
 |[nginx.ingress.kubernetes.io/modsecurity-transaction-id](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
+|[nginx.ingress.kubernetes.io/mirror-uri](#mirror)|string|
+|[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
 
 ### Canary
 
@@ -817,3 +819,34 @@ By default, a request would need to satisfy all authentication requirements in o
 ```yaml
 nginx.ingress.kubernetes.io/satisfy: "any"
 ```
+
+### Mirror
+
+Enables a request to be mirrored to a mirror backend. Responses by mirror backends are ignored. This feature is useful, to see how requests will react in "test" backends.
+
+You can mirror a request to the `/mirror` path on your ingress, by applying the below:
+
+```yaml
+nginx.ingress.kubernetes.io/mirror-uri: "/mirror"
+```
+
+The mirror path can be defined as a separate ingress resource:
+
+```
+location = /mirror {
+    internal;
+    proxy_pass http://test_backend;
+}
+```
+
+By default the request-body is sent to the mirror backend, but can be turned off by applying:
+
+```yaml
+nginx.ingress.kubernetes.io/mirror-request-body: "off"
+```
+
+**Note:** The mirror directive will be applied to all paths within the ingress resource.
+
+The request sent to the mirror is linked to the orignial request. If you have a slow mirror backend, then the orignial request will throttle.
+
+For more information on the mirror module see https://nginx.org/en/docs/http/ngx_http_mirror_module.html

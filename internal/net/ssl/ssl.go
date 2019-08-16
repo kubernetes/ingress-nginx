@@ -27,8 +27,10 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/big"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -50,6 +52,22 @@ var (
 const (
 	fakeCertificateName = "default-fake-certificate"
 )
+
+func init() {
+	_, err := os.Stat(file.DefaultSSLDirectory)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(file.DefaultSSLDirectory, file.ReadWriteByUser)
+			if err != nil {
+				klog.Fatalf("Unexpected error checking for default SSL directory: %v", err)
+			}
+
+			return
+		}
+
+		klog.Fatalf("Unexpected error checking for default SSL directory: %v", err)
+	}
+}
 
 // getPemFileName returns absolute file path and file name of pem cert related to given fullSecretName
 func getPemFileName(fullSecretName string) (string, string) {
@@ -164,88 +182,58 @@ func CreateCACert(ca []byte) (*ingress.SSLCert, error) {
 
 // StoreSSLCertOnDisk creates a .pem file with content PemCertKey from the given sslCert
 // and sets relevant remaining fields of sslCert object
-func StoreSSLCertOnDisk(fs file.Filesystem, name string, sslCert *ingress.SSLCert) error {
+func StoreSSLCertOnDisk(name string, sslCert *ingress.SSLCert) (string, error) {
 	pemFileName, _ := getPemFileName(name)
 
-	pemFile, err := fs.Create(pemFileName)
+	err := ioutil.WriteFile(pemFileName, []byte(sslCert.PemCertKey), file.ReadWriteByUser)
 	if err != nil {
-		return fmt.Errorf("could not create PEM certificate file %v: %v", pemFileName, err)
-	}
-	defer pemFile.Close()
-
-	_, err = pemFile.Write([]byte(sslCert.PemCertKey))
-	if err != nil {
-		return fmt.Errorf("could not write data to PEM file %v: %v", pemFileName, err)
+		return "", fmt.Errorf("could not create PEM certificate file %v: %v", pemFileName, err)
 	}
 
-	sslCert.PemFileName = pemFileName
-	sslCert.PemSHA = file.SHA1(pemFileName)
-
-	return nil
+	return pemFileName, nil
 }
 
 // ConfigureCACertWithCertAndKey appends ca into existing PEM file consisting of cert and key
 // and sets relevant fields in sslCert object
-func ConfigureCACertWithCertAndKey(fs file.Filesystem, name string, ca []byte, sslCert *ingress.SSLCert) error {
+func ConfigureCACertWithCertAndKey(name string, ca []byte, sslCert *ingress.SSLCert) error {
 	err := verifyPemCertAgainstRootCA(sslCert.Certificate, ca)
 	if err != nil {
 		oe := fmt.Sprintf("failed to verify certificate chain: \n\t%s\n", err)
 		return errors.New(oe)
 	}
 
-	certAndKey, err := fs.ReadFile(sslCert.PemFileName)
-	if err != nil {
-		return fmt.Errorf("could not read file %v for writing additional CA chains: %v", sslCert.PemFileName, err)
-	}
+	var buffer bytes.Buffer
 
-	f, err := fs.Create(sslCert.PemFileName)
-	if err != nil {
-		return fmt.Errorf("could not create PEM file %v: %v", sslCert.PemFileName, err)
-	}
-	defer f.Close()
-
-	_, err = f.Write(certAndKey)
-	if err != nil {
-		return fmt.Errorf("could not write cert and key bundle to cert file %v: %v", sslCert.PemFileName, err)
-	}
-
-	_, err = f.Write([]byte("\n"))
+	_, err = buffer.Write([]byte(sslCert.PemCertKey))
 	if err != nil {
 		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.PemFileName, err)
 	}
 
-	_, err = f.Write(ca)
+	_, err = buffer.Write([]byte("\n"))
+	if err != nil {
+		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.PemFileName, err)
+	}
+
+	_, err = buffer.Write(ca)
 	if err != nil {
 		return fmt.Errorf("could not write ca data to cert file %v: %v", sslCert.PemFileName, err)
 	}
 
-	sslCert.CAFileName = sslCert.PemFileName
-	// since we updated sslCert.PemFileName we need to recalculate the checksum
-	sslCert.PemSHA = file.SHA1(sslCert.PemFileName)
-
-	return nil
+	return ioutil.WriteFile(sslCert.CAFileName, buffer.Bytes(), 0644)
 }
 
 // ConfigureCACert is similar to ConfigureCACertWithCertAndKey but it creates a separate file
 // for CA cert and writes only ca into it and then sets relevant fields in sslCert
-func ConfigureCACert(fs file.Filesystem, name string, ca []byte, sslCert *ingress.SSLCert) error {
+func ConfigureCACert(name string, ca []byte, sslCert *ingress.SSLCert) error {
 	caName := fmt.Sprintf("ca-%v.pem", name)
 	fileName := fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, caName)
 
-	f, err := fs.Create(fileName)
-	if err != nil {
-		return fmt.Errorf("could not write CA file %v: %v", fileName, err)
-	}
-	defer f.Close()
-
-	_, err = f.Write(ca)
+	err := ioutil.WriteFile(fileName, ca, 0644)
 	if err != nil {
 		return fmt.Errorf("could not write CA file %v: %v", fileName, err)
 	}
 
-	sslCert.PemFileName = fileName
 	sslCert.CAFileName = fileName
-	sslCert.PemSHA = file.SHA1(fileName)
 
 	klog.V(3).Infof("Created CA Certificate for Authentication: %v", fileName)
 
@@ -319,10 +307,10 @@ func parseSANExtension(value []byte) (dnsNames, emailAddresses []string, ipAddre
 }
 
 // AddOrUpdateDHParam creates a dh parameters file with the specified name
-func AddOrUpdateDHParam(name string, dh []byte, fs file.Filesystem) (string, error) {
+func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
 	pemFileName, pemName := getPemFileName(name)
 
-	tempPemFile, err := fs.TempFile(file.DefaultSSLDirectory, pemName)
+	tempPemFile, err := ioutil.TempFile(file.DefaultSSLDirectory, pemName)
 
 	klog.V(3).Infof("Creating temp file %v for DH param: %v", tempPemFile.Name(), pemName)
 	if err != nil {
@@ -339,9 +327,9 @@ func AddOrUpdateDHParam(name string, dh []byte, fs file.Filesystem) (string, err
 		return "", fmt.Errorf("could not close temp pem file %v: %v", tempPemFile.Name(), err)
 	}
 
-	defer fs.RemoveAll(tempPemFile.Name())
+	defer os.Remove(tempPemFile.Name())
 
-	pemCerts, err := fs.ReadFile(tempPemFile.Name())
+	pemCerts, err := ioutil.ReadFile(tempPemFile.Name())
 	if err != nil {
 		return "", err
 	}
@@ -356,7 +344,7 @@ func AddOrUpdateDHParam(name string, dh []byte, fs file.Filesystem) (string, err
 		return "", fmt.Errorf("certificate %v contains invalid data", name)
 	}
 
-	err = fs.Rename(tempPemFile.Name(), pemFileName)
+	err = os.Rename(tempPemFile.Name(), pemFileName)
 	if err != nil {
 		return "", fmt.Errorf("could not move temp pem file %v to destination %v: %v", tempPemFile.Name(), pemFileName, err)
 	}
@@ -366,7 +354,7 @@ func AddOrUpdateDHParam(name string, dh []byte, fs file.Filesystem) (string, err
 
 // GetFakeSSLCert creates a Self Signed Certificate
 // Based in the code https://golang.org/src/crypto/tls/generate_cert.go
-func GetFakeSSLCert(fs file.Filesystem) *ingress.SSLCert {
+func GetFakeSSLCert() *ingress.SSLCert {
 	cert, key := getFakeHostSSLCert("ingress.local")
 
 	sslCert, err := CreateSSLCert(cert, key)
@@ -374,10 +362,13 @@ func GetFakeSSLCert(fs file.Filesystem) *ingress.SSLCert {
 		klog.Fatalf("unexpected error creating fake SSL Cert: %v", err)
 	}
 
-	err = StoreSSLCertOnDisk(fs, fakeCertificateName, sslCert)
+	path, err := StoreSSLCertOnDisk(fakeCertificateName, sslCert)
 	if err != nil {
 		klog.Fatalf("unexpected error storing fake SSL Cert: %v", err)
 	}
+
+	sslCert.PemFileName = path
+	sslCert.PemSHA = file.SHA1(path)
 
 	return sslCert
 }
@@ -478,7 +469,6 @@ func IsValidHostname(hostname string, commonNames []string) bool {
 type TLSListener struct {
 	certificatePath string
 	keyPath         string
-	fs              file.Filesystem
 	certificate     *tls.Certificate
 	err             error
 	lock            sync.Mutex
@@ -487,14 +477,9 @@ type TLSListener struct {
 // NewTLSListener watches changes to th certificate and key paths
 // and reloads it whenever it changes
 func NewTLSListener(certificate, key string) *TLSListener {
-	fs, err := file.NewLocalFS()
-	if err != nil {
-		panic(fmt.Sprintf("failed to instanciate certificate: %v", err))
-	}
 	l := TLSListener{
 		certificatePath: certificate,
 		keyPath:         key,
-		fs:              fs,
 		lock:            sync.Mutex{},
 	}
 	l.load()
@@ -519,12 +504,12 @@ func (tl *TLSListener) TLSConfig() *tls.Config {
 
 func (tl *TLSListener) load() {
 	klog.Infof("loading tls certificate from certificate path %s and key path %s", tl.certificatePath, tl.keyPath)
-	certBytes, err := tl.fs.ReadFile(tl.certificatePath)
+	certBytes, err := ioutil.ReadFile(tl.certificatePath)
 	if err != nil {
 		tl.certificate = nil
 		tl.err = err
 	}
-	keyBytes, err := tl.fs.ReadFile(tl.keyPath)
+	keyBytes, err := ioutil.ReadFile(tl.keyPath)
 	if err != nil {
 		tl.certificate = nil
 		tl.err = err

@@ -103,7 +103,7 @@ func (f *Framework) BeforeEach() {
 	f.Namespace = ingressNamespace
 
 	By("Starting new ingress controller")
-	err = f.NewIngressController(f.Namespace)
+	err = f.NewIngressController(f.Namespace, f.BaseName)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
@@ -163,6 +163,23 @@ func (f *Framework) GetNginxIP() string {
 		Get("ingress-nginx", metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX IP address")
 	return s.Spec.ClusterIP
+}
+
+// GetNginxPodIP returns the IP addres/es of the running pods
+func (f *Framework) GetNginxPodIP() []string {
+	e, err := f.KubeClientSet.
+		CoreV1().
+		Endpoints(f.Namespace).
+		Get("ingress-nginx", metav1.GetOptions{})
+	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX IP address")
+	eips := make([]string, 0)
+	for _, s := range e.Subsets {
+		for _, a := range s.Addresses {
+			eips = append(eips, a.IP)
+		}
+	}
+
+	return eips
 }
 
 // GetURL returns the URL should be used to make a request to NGINX

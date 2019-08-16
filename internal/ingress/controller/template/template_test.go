@@ -17,20 +17,20 @@ limitations under the License.
 package template
 
 import (
+	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"encoding/base64"
-	"fmt"
-
 	jsoniter "github.com/json-iterator/go"
 	networking "k8s.io/api/networking/v1beta1"
-	"k8s.io/ingress-nginx/internal/file"
+
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
@@ -39,7 +39,17 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
+
+func init() {
+	// the default value of nginx.TemplatePath assumes the template exists in
+	// the root filesystem and not in the rootfs directory
+	path, err := filepath.Abs(filepath.Join("../../../../rootfs/", nginx.TemplatePath))
+	if err == nil {
+		nginx.TemplatePath = path
+	}
+}
 
 var (
 	// TODO: add tests for SSLPassthrough
@@ -168,7 +178,14 @@ proxy_pass http://upstream_balancer;`,
 func TestBuildLuaSharedDictionaries(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	actual := buildLuaSharedDictionaries(invalidType, true)
+
+	// config lua dict
+	cfg := config.Configuration{
+		LuaSharedDicts: map[string]int{
+			"configuration_data": 10, "certificate_data": 20,
+		},
+	}
+	actual := buildLuaSharedDictionaries(cfg, invalidType, true)
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -184,19 +201,40 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 			Locations: []*ingress.Location{{Path: "/", LuaRestyWAF: luarestywaf.Config{}}},
 		},
 	}
-
-	configuration := buildLuaSharedDictionaries(servers, false)
-	if !strings.Contains(configuration, "lua_shared_dict configuration_data") {
+	// returns value from config
+	configuration := buildLuaSharedDictionaries(cfg, servers, false)
+	if !strings.Contains(configuration, "lua_shared_dict configuration_data 10M;\n") {
 		t.Errorf("expected to include 'configuration_data' but got %s", configuration)
+	}
+	if !strings.Contains(configuration, "lua_shared_dict certificate_data 20M;\n") {
+		t.Errorf("expected to include 'certificate_data' but got %s", configuration)
 	}
 	if strings.Contains(configuration, "waf_storage") {
 		t.Errorf("expected to not include 'waf_storage' but got %s", configuration)
 	}
 
 	servers[1].Locations[0].LuaRestyWAF = luarestywaf.Config{Mode: "ACTIVE"}
-	configuration = buildLuaSharedDictionaries(servers, false)
+	configuration = buildLuaSharedDictionaries(cfg, servers, false)
 	if !strings.Contains(configuration, "lua_shared_dict waf_storage") {
 		t.Errorf("expected to configure 'waf_storage', but got %s", configuration)
+	}
+	// test invalid config
+	configuration = buildLuaSharedDictionaries(invalidType, servers, false)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v' ", expected, actual)
+	}
+}
+
+func TestLuaConfigurationRequestBodySize(t *testing.T) {
+	cfg := config.Configuration{
+		LuaSharedDicts: map[string]int{
+			"configuration_data": 10, "certificate_data": 20,
+		},
+	}
+
+	size := luaConfigurationRequestBodySize(cfg)
+	if "21" != size {
+		t.Errorf("expected the size to be 20 but got: %v", size)
 	}
 }
 
@@ -215,6 +253,21 @@ func TestFormatIP(t *testing.T) {
 		res := formatIP(tc.Input)
 		if res != tc.Output {
 			t.Errorf("%s: called formatIp('%s'); expected '%v' but returned '%v'", k, tc.Input, tc.Output, res)
+		}
+	}
+}
+
+func TestQuote(t *testing.T) {
+	cases := map[interface{}]string{
+		"foo":      `"foo"`,
+		"\"foo\"":  `"\"foo\""`,
+		"foo\nbar": `"foo\nbar"`,
+		10:         `"10"`,
+	}
+	for input, output := range cases {
+		actual := quote(input)
+		if actual != output {
+			t.Errorf("quote('%s'): expected '%v' but returned '%v'", input, output, actual)
 		}
 	}
 }
@@ -408,15 +461,12 @@ func TestTemplateWithData(t *testing.T) {
 		dat.ListenPorts = &config.ListenPorts{}
 	}
 
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	ngxTpl, err := NewTemplate("/etc/nginx/template/nginx.tmpl", fs)
+	ngxTpl, err := NewTemplate(nginx.TemplatePath)
 	if err != nil {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
+
+	dat.Cfg.DefaultSSLCertificate = &ingress.SSLCert{}
 
 	rt, err := ngxTpl.Write(dat)
 	if err != nil {
@@ -452,12 +502,7 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		b.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		b.Fatalf("unexpected error: %v", err)
-	}
-
-	ngxTpl, err := NewTemplate("/etc/nginx/template/nginx.tmpl", fs)
+	ngxTpl, err := NewTemplate(nginx.TemplatePath)
 	if err != nil {
 		b.Errorf("invalid NGINX template: %v", err)
 	}
@@ -544,43 +589,6 @@ func TestBuildForwardedFor(t *testing.T) {
 	inputStr := "X-Forwarded-For"
 	expected = "$http_x_forwarded_for"
 	actual = buildForwardedFor(inputStr)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-}
-
-func TestBuildResolversForLua(t *testing.T) {
-
-	ipOne := net.ParseIP("192.0.0.1")
-	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
-	ipList := []net.IP{ipOne, ipTwo}
-
-	invalidType := &ingress.Ingress{}
-	expected := ""
-	actual := buildResolversForLua(invalidType, false)
-
-	// Invalid Type for []net.IP
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	actual = buildResolversForLua(ipList, invalidType)
-
-	// Invalid Type for bool
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	expected = "\"192.0.0.1\", \"[2001:db8:1234::]\""
-	actual = buildResolversForLua(ipList, false)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	expected = "\"192.0.0.1\""
-	actual = buildResolversForLua(ipList, true)
 
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -874,6 +882,7 @@ func TestOpentracingPropagateContext(t *testing.T) {
 		&ingress.Location{BackendProtocol: "GRPC"}:  "opentracing_grpc_propagate_context",
 		&ingress.Location{BackendProtocol: "GRPCS"}: "opentracing_grpc_propagate_context",
 		&ingress.Location{BackendProtocol: "AJP"}:   "opentracing_propagate_context",
+		&ingress.Location{BackendProtocol: "FCGI"}:  "opentracing_propagate_context",
 		"not a location": "opentracing_propagate_context",
 	}
 

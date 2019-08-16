@@ -18,6 +18,7 @@ COPY e2e.sh             /e2e.sh
 COPY cloud-generic      /cloud-generic
 COPY cluster-wide       /cluster-wide
 COPY overlay            /overlay
+COPY namespace-overlays /namespace-overlays
 RUN sed -E -i 's|^- .*deploy/cloud-generic$|- ../cloud-generic|' /overlay/kustomization.yaml
 COPY wait-for-nginx.sh  /
 COPY e2e.test           /

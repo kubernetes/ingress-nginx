@@ -20,7 +20,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -60,13 +59,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		host := "foo.com"
 		f.WaitForNginxServer(host, func(server string) bool {
 			return strings.Contains(server, "balancer.rewrite()") && strings.Contains(server, "balancer.log()")
-		})
-	})
-
-	It("sets nameservers for Lua", func() {
-		f.WaitForNginxConfiguration(func(cfg string) bool {
-			r := regexp.MustCompile(`configuration.nameservers = { [".,0-9a-zA-Z]+ }`)
-			return r.MatchString(cfg)
 		})
 	})
 

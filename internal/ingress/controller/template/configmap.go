@@ -59,10 +59,23 @@ const (
 	globalAuthSnippet         = "global-auth-snippet"
 	globalAuthCacheKey        = "global-auth-cache-key"
 	globalAuthCacheDuration   = "global-auth-cache-duration"
+	luaSharedDictsKey         = "lua-shared-dicts"
 )
 
 var (
-	validRedirectCodes = sets.NewInt([]int{301, 302, 307, 308}...)
+	validRedirectCodes    = sets.NewInt([]int{301, 302, 307, 308}...)
+	defaultLuaSharedDicts = map[string]int{
+		"configuration_data":            20,
+		"certificate_data":              20,
+		"balancer_ewma":                 10,
+		"balancer_ewma_last_touched_at": 10,
+		"balancer_ewma_locks":           1,
+	}
+)
+
+const (
+	maxAllowedLuaDictSize = 200
+	maxNumberOfLuaDicts   = 100
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
@@ -87,7 +100,40 @@ func ReadConfig(src map[string]string) config.Configuration {
 	blockUserAgentList := make([]string, 0)
 	blockRefererList := make([]string, 0)
 	responseHeaders := make([]string, 0)
+	luaSharedDicts := make(map[string]int)
 
+	//parse lua shared dict values
+	if val, ok := conf[luaSharedDictsKey]; ok {
+		delete(conf, luaSharedDictsKey)
+		lsd := strings.Split(val, ",")
+		for _, v := range lsd {
+			v = strings.Replace(v, " ", "", -1)
+			results := strings.SplitN(v, ":", 2)
+			dictName := results[0]
+			size, err := strconv.Atoi(results[1])
+			if err != nil {
+				klog.Errorf("Ignoring non integer value %v for Lua dictionary %v: %v.", results[1], dictName, err)
+				continue
+			}
+			if size > maxAllowedLuaDictSize {
+				klog.Errorf("Ignoring %v for Lua dictionary %v: maximum size is %v.", size, dictName, maxAllowedLuaDictSize)
+				continue
+			}
+			if len(luaSharedDicts)+1 > maxNumberOfLuaDicts {
+				klog.Errorf("Ignoring %v for Lua dictionary %v: can not configure more than %v dictionaries.",
+					size, dictName, maxNumberOfLuaDicts)
+				continue
+			}
+
+			luaSharedDicts[dictName] = size
+		}
+	}
+	// set default Lua shared dicts
+	for k, v := range defaultLuaSharedDicts {
+		if _, ok := luaSharedDicts[k]; !ok {
+			luaSharedDicts[k] = v
+		}
+	}
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
 		for _, i := range strings.Split(val, ",") {
@@ -305,6 +351,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.HideHeaders = hideHeadersList
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
+	to.LuaSharedDicts = luaSharedDicts
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,

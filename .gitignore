@@ -25,15 +25,6 @@
 Session.vim
 .netrwhist
 
-# coverage artifacts
-.coverprofile
-/gover.coverprofile
-
-e2e-tests
-
-coverage.txt
-test/e2e/e2e\.test
-
 # mkdocs
 site
 
@@ -41,11 +32,18 @@ site
 gh-pages
 
 # Docker-based builds
-/test/binaries
-/.env
-/.gocache/
-/bin/
+test/binaries
 
-test/e2e-image/wait-for-nginx\.sh
+# coverage artifacts
+.coverprofile
+gover.coverprofile
 
+e2e-tests
+coverage.txt
+test/e2e/e2e\.test
+.env
+.gocache/
+bin
+test/e2e-image/wait-for-nginx.sh
 .cache
+cover.out

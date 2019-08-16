@@ -23,11 +23,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/tv42/httpunix"
+	"k8s.io/klog"
 )
+
+// TemplatePath path of the NGINX template
+var TemplatePath = "/etc/nginx/template/nginx.tmpl"
 
 // PID defines the location of the pid file used by NGINX
 var PID = "/tmp/nginx.pid"
@@ -50,11 +55,17 @@ var StreamSocket = "/tmp/ingress-stream.sock"
 
 var statusLocation = "nginx-status"
 
+var httpClient *http.Client
+
+func init() {
+	httpClient = buildUnixSocketClient(HealthCheckTimeout)
+}
+
 // NewGetStatusRequest creates a new GET request to the internal NGINX status server
 func NewGetStatusRequest(path string) (int, []byte, error) {
-	url := fmt.Sprintf("http+unix://%v%v", statusLocation, path)
+	url := fmt.Sprintf("%v://%v%v", httpunix.Scheme, statusLocation, path)
 
-	res, err := buildUnixSocketClient(HealthCheckTimeout).Get(url)
+	res, err := httpClient.Get(url)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -70,14 +81,14 @@ func NewGetStatusRequest(path string) (int, []byte, error) {
 
 // NewPostStatusRequest creates a new POST request to the internal NGINX status server
 func NewPostStatusRequest(path, contentType string, data interface{}) (int, []byte, error) {
-	url := fmt.Sprintf("http+unix://%v%v", statusLocation, path)
+	url := fmt.Sprintf("%v://%v%v", httpunix.Scheme, statusLocation, path)
 
 	buf, err := json.Marshal(data)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	res, err := buildUnixSocketClient(HealthCheckTimeout).Post(url, contentType, bytes.NewReader(buf))
+	res, err := httpClient.Post(url, contentType, bytes.NewReader(buf))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -112,11 +123,11 @@ func GetServerBlock(conf string, host string) (string, error) {
 
 // ReadNginxConf reads the nginx configuration file into a string
 func ReadNginxConf() (string, error) {
-	return ReadFileToString("/etc/nginx/nginx.conf")
+	return readFileToString("/etc/nginx/nginx.conf")
 }
 
-// ReadFileToString reads any file into a string
-func ReadFileToString(path string) (string, error) {
+// readFileToString reads any file into a string
+func readFileToString(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return "", err
@@ -141,4 +152,22 @@ func buildUnixSocketClient(timeout time.Duration) *http.Client {
 	return &http.Client{
 		Transport: u,
 	}
+}
+
+// Version return details about NGINX
+func Version() string {
+	flag := "-v"
+
+	if klog.V(2) {
+		flag = "-V"
+	}
+
+	cmd := exec.Command("nginx", flag)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		klog.Errorf("unexpected error obtaining NGINX version: %v", err)
+		return "N/A"
+	}
+
+	return string(out)
 }
