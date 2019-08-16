@@ -167,7 +167,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := configureDynamically(pcfg)
+		err := n.configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
@@ -846,9 +846,9 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *netw
 
 // serviceEndpoints returns the upstream servers (Endpoints) associated with a Service.
 func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingress.Endpoint, error) {
-	svc, err := n.store.GetService(svcKey)
-
 	var upstreams []ingress.Endpoint
+
+	svc, err := n.store.GetService(svcKey)
 	if err != nil {
 		return upstreams, err
 	}
@@ -859,14 +859,26 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	if svc.Spec.Type == apiv1.ServiceTypeExternalName {
 		externalPort, err := strconv.Atoi(backendPort)
 		if err != nil {
-			klog.Warningf("Only numeric ports are allowed in ExternalName Services: %q is not a valid port number.", backendPort)
-			return upstreams, nil
+			// check if the service ports have one with backendPort as name
+			found := false
+			for _, port := range svc.Spec.Ports {
+				if port.Name == backendPort {
+					externalPort = int(port.Port)
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				klog.Errorf("service %v/%v does not have a port with name %v", svc.Namespace, svc.Namespace, backendPort)
+				return upstreams, nil
+			}
 		}
 
 		servicePort := apiv1.ServicePort{
 			Protocol:   "TCP",
 			Port:       int32(externalPort),
-			TargetPort: intstr.FromString(backendPort),
+			TargetPort: intstr.FromInt(externalPort),
 		}
 		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 		if len(endps) == 0 {
@@ -897,19 +909,18 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	return upstreams, nil
 }
 
-// overridePemFileNameAndPemSHA should only be called when EnableDynamicCertificates
-// ideally this function should not exist, the only reason why we use it is that
-// we rely on PemFileName in nginx.tmpl to configure SSL directives
-// and PemSHA to force reload
-func (n *NGINXController) overridePemFileNameAndPemSHA(cert *ingress.SSLCert) {
-	// TODO(elvinefendi): It is not great but we currently use PemFileName to decide whether SSL needs to be configured
-	// in nginx configuration or not. The whole thing needs to be refactored, we should rely on a proper
-	// signal to configure SSL, not PemFileName.
-	cert.PemFileName = n.cfg.FakeCertificate.PemFileName
+func (n *NGINXController) getDefaultSSLCertificate() *ingress.SSLCert {
+	// read custom default SSL certificate, fall back to generated default certificate
+	if n.cfg.DefaultSSLCertificate != "" {
+		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
+		if err == nil {
+			return certificate
+		}
 
-	// TODO(elvinefendi): This is again another hacky way of avoiding Nginx reload when certificate
-	// changes in dynamic SSL mode since FakeCertificate never changes.
-	cert.PemSHA = n.cfg.FakeCertificate.PemSHA
+		klog.Warningf("Error loading custom default certificate, falling back to generated default:\n%v", err)
+	}
+
+	return n.cfg.FakeCertificate
 }
 
 // createServers builds a map of host name to Server structs from a map of
@@ -924,42 +935,28 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 	bdef := n.store.GetDefaultBackend()
 	ngxProxy := proxy.Config{
-		BodySize:            bdef.ProxyBodySize,
-		ConnectTimeout:      bdef.ProxyConnectTimeout,
-		SendTimeout:         bdef.ProxySendTimeout,
-		ReadTimeout:         bdef.ProxyReadTimeout,
-		BuffersNumber:       bdef.ProxyBuffersNumber,
-		BufferSize:          bdef.ProxyBufferSize,
-		CookieDomain:        bdef.ProxyCookieDomain,
-		CookiePath:          bdef.ProxyCookiePath,
-		NextUpstream:        bdef.ProxyNextUpstream,
-		NextUpstreamTimeout: bdef.ProxyNextUpstreamTimeout,
-		NextUpstreamTries:   bdef.ProxyNextUpstreamTries,
-		RequestBuffering:    bdef.ProxyRequestBuffering,
-		ProxyRedirectFrom:   bdef.ProxyRedirectFrom,
-		ProxyBuffering:      bdef.ProxyBuffering,
-		ProxyHTTPVersion:    bdef.ProxyHTTPVersion,
-	}
-
-	defaultCertificate := n.cfg.FakeCertificate
-
-	// read custom default SSL certificate, fall back to generated default certificate
-	if n.cfg.DefaultSSLCertificate != "" {
-		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
-		if err == nil {
-			defaultCertificate = certificate
-			if ngx_config.EnableDynamicCertificates {
-				n.overridePemFileNameAndPemSHA(defaultCertificate)
-			}
-		} else {
-			klog.Warningf("Error loading custom default certificate, falling back to generated default:\n%v", err)
-		}
+		BodySize:             bdef.ProxyBodySize,
+		ConnectTimeout:       bdef.ProxyConnectTimeout,
+		SendTimeout:          bdef.ProxySendTimeout,
+		ReadTimeout:          bdef.ProxyReadTimeout,
+		BuffersNumber:        bdef.ProxyBuffersNumber,
+		BufferSize:           bdef.ProxyBufferSize,
+		CookieDomain:         bdef.ProxyCookieDomain,
+		CookiePath:           bdef.ProxyCookiePath,
+		NextUpstream:         bdef.ProxyNextUpstream,
+		NextUpstreamTimeout:  bdef.ProxyNextUpstreamTimeout,
+		NextUpstreamTries:    bdef.ProxyNextUpstreamTries,
+		RequestBuffering:     bdef.ProxyRequestBuffering,
+		ProxyRedirectFrom:    bdef.ProxyRedirectFrom,
+		ProxyBuffering:       bdef.ProxyBuffering,
+		ProxyHTTPVersion:     bdef.ProxyHTTPVersion,
+		ProxyMaxTempFileSize: bdef.ProxyMaxTempFileSize,
 	}
 
 	// initialize default server and root location
 	servers[defServerName] = &ingress.Server{
 		Hostname: defServerName,
-		SSLCert:  *defaultCertificate,
+		SSLCert:  n.getDefaultSSLCertificate(),
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
@@ -1023,6 +1020,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			if host == "" {
 				host = defServerName
 			}
+
 			if _, ok := servers[host]; ok {
 				// server already configured
 				continue
@@ -1090,7 +1088,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			}
 
 			// only add a certificate if the server does not have one previously configured
-			if servers[host].SSLCert.PemFileName != "" {
+			if servers[host].SSLCert != nil {
 				continue
 			}
 
@@ -1100,10 +1098,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			}
 
 			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
-
 			if tlsSecretName == "" {
 				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
-				servers[host].SSLCert = *defaultCertificate
 				continue
 			}
 
@@ -1111,7 +1107,6 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
 				klog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
-				servers[host].SSLCert = *defaultCertificate
 				continue
 			}
 
@@ -1126,16 +1121,11 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					klog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
 						secrKey, host, err)
 					klog.Warningf("Using default certificate")
-					servers[host].SSLCert = *defaultCertificate
 					continue
 				}
 			}
 
-			if ngx_config.EnableDynamicCertificates {
-				n.overridePemFileNameAndPemSHA(cert)
-			}
-
-			servers[host].SSLCert = *cert
+			servers[host].SSLCert = cert
 
 			if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
 				klog.Warningf("SSL certificate for server %q is about to expire (%v)", host, cert.ExpireTime)
@@ -1176,9 +1166,11 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.InfluxDB = anns.InfluxDB
 	loc.DefaultBackend = anns.DefaultBackend
 	loc.BackendProtocol = anns.BackendProtocol
+	loc.FastCGI = anns.FastCGI
 	loc.CustomHTTPErrors = anns.CustomHTTPErrors
 	loc.ModSecurity = anns.ModSecurity
 	loc.Satisfy = anns.Satisfy
+	loc.Mirror = anns.Mirror
 }
 
 // OK to merge canary ingresses iff there exists one or more ingresses to potentially merge into

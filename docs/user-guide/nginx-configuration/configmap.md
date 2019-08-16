@@ -34,7 +34,6 @@ The following table shows a configuration option's name, type, and the default v
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
 |[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"|
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
-|[enable-dynamic-tls-records](#enable-dynamic-tls-records)|bool|"true"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
 |[enable-owasp-modsecurity-crs](#enable-owasp-modsecurity-crs)|bool|"false"|
 |[client-header-buffer-size](#client-header-buffer-size)|string|"1k"|
@@ -149,6 +148,7 @@ The following table shows a configuration option's name, type, and the default v
 |[skip-access-log-urls](#skip-access-log-urls)|[]string|[]string{}|
 |[limit-rate](#limit-rate)|int|0|
 |[limit-rate-after](#limit-rate-after)|int|0|
+|[lua-shared-dicts](#lua-shared-dicts)|string|""|
 |[http-redirect-code](#http-redirect-code)|int|308|
 |[proxy-buffering](#proxy-buffering)|string|"off"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
@@ -208,13 +208,6 @@ __Note:__ the file `/var/log/nginx/error.log` is a symlink to `/dev/stderr`
 
 _References:_
 [http://nginx.org/en/docs/ngx_core_module.html#error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log)
-
-## enable-dynamic-tls-records
-
-Enables dynamically sized TLS records to improve time-to-first-byte. _**default:**_ is enabled
-
-_References:_
-[https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency)
 
 ## enable-modsecurity
 
@@ -487,6 +480,14 @@ _References:_
 Sets the [SSL protocols](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols) to use. The default is: `TLSv1.2`.
 
 Please check the result of the configuration using `https://ssllabs.com/ssltest/analyze.html` or `https://testssl.sh`.
+
+## ssl-early-data
+
+Enables or disables TLS 1.3 [early data](https://tools.ietf.org/html/rfc8446#section-2.3)
+
+This requires `ssl-protocols` to have `TLSv1.3` enabled.
+
+[ssl_early_data](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data). The default is: `false`.
 
 ## ssl-session-cache
 
@@ -854,6 +855,21 @@ _References:_
 ## limit-rate-after
 
 Sets the initial amount after which the further transmission of a response to a client will be rate limited.
+
+## lua-shared-dicts
+
+Customize default Lua shared dictionaries or define more. You can use the following syntax to do so:
+
+```
+lua-shared-dicts: "<my dict name>: <my dict size>, [<my dict name>: <my dict size>], ..."
+```
+
+For example following will set default `certificate_data` dictionary to `100M` and will introduce a new dictionary called
+`my_custom_plugin`:
+
+```
+lua-shared-dicts: "certificate_data: 100, my_custom_plugin: 5"
+```
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)

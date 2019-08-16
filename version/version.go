@@ -16,7 +16,11 @@ limitations under the License.
 
 package version
 
-import "fmt"
+import (
+	"fmt"
+
+	"k8s.io/ingress-nginx/internal/nginx"
+)
 
 var (
 	// RELEASE returns the release version
@@ -31,9 +35,10 @@ var (
 func String() string {
 	return fmt.Sprintf(`-------------------------------------------------------------------------------
 NGINX Ingress controller
-  Release:    %v
-  Build:      %v
-  Repository: %v
+  Release:       %v
+  Build:         %v
+  Repository:    %v
+  %v
 -------------------------------------------------------------------------------
-`, RELEASE, COMMIT, REPO)
+`, RELEASE, COMMIT, REPO, nginx.Version())
 }

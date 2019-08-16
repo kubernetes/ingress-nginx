@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"k8s.io/apiserver/pkg/server/healthz"
-	"k8s.io/kubernetes/pkg/util/filesystem"
 
 	"k8s.io/ingress-nginx/internal/file"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -55,14 +54,10 @@ func TestNginxCheck(t *testing.T) {
 	defer server.Close()
 	server.Start()
 
-	// mock filesystem
-	fs := filesystem.DefaultFs{}
-
 	n := &NGINXController{
 		cfg: &Configuration{
 			ListenPorts: &ngx_config.ListenPorts{},
 		},
-		fileSystem: fs,
 	}
 
 	t.Run("no pid or process", func(t *testing.T) {
@@ -72,8 +67,8 @@ func TestNginxCheck(t *testing.T) {
 	})
 
 	// create pid file
-	fs.MkdirAll("/tmp", file.ReadWriteByUser)
-	pidFile, err := fs.Create(nginx.PID)
+	os.MkdirAll("/tmp", file.ReadWriteByUser)
+	pidFile, err := os.Create(nginx.PID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

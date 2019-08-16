@@ -29,4 +29,5 @@ resty \
   --shdict "certificate_data 16M" \
   --shdict "balancer_ewma 1M" \
   --shdict "balancer_ewma_last_touched_at 1M" \
+  --shdict "balancer_ewma_locks 512k" \
   ./rootfs/etc/nginx/lua/test/run.lua ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test/

@@ -24,7 +24,8 @@ RUN clean-install \
 
 COPY --chown=www-data:www-data . /
 
-RUN cp /usr/local/openresty/nginx/conf/mime.types /etc/nginx/mime.types
+RUN cp /usr/local/openresty/nginx/conf/mime.types /etc/nginx/mime.types \
+ && cp /usr/local/openresty/nginx/conf/fastcgi_params /etc/nginx/fastcgi_params
 RUN ln -s /usr/local/openresty/nginx/modules /etc/nginx/modules
 
 # Add LuaRocks paths

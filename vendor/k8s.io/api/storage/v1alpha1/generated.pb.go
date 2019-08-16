@@ -39,7 +39,7 @@ import math "math"
 
 import k8s_io_api_core_v1 "k8s.io/api/core/v1"
 
-import sortkeys "github.com/gogo/protobuf/sortkeys"
+import github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
 
 import strings "strings"
 import reflect "reflect"
@@ -265,7 +265,7 @@ func (m *VolumeAttachmentStatus) MarshalTo(dAtA []byte) (int, error) {
 		for k := range m.AttachmentMetadata {
 			keysForAttachmentMetadata = append(keysForAttachmentMetadata, string(k))
 		}
-		sortkeys.Strings(keysForAttachmentMetadata)
+		github_com_gogo_protobuf_sortkeys.Strings(keysForAttachmentMetadata)
 		for _, k := range keysForAttachmentMetadata {
 			dAtA[i] = 0x12
 			i++
@@ -496,7 +496,7 @@ func (this *VolumeAttachmentStatus) String() string {
 	for k := range this.AttachmentMetadata {
 		keysForAttachmentMetadata = append(keysForAttachmentMetadata, k)
 	}
-	sortkeys.Strings(keysForAttachmentMetadata)
+	github_com_gogo_protobuf_sortkeys.Strings(keysForAttachmentMetadata)
 	mapStringForAttachmentMetadata := "map[string]string{"
 	for _, k := range keysForAttachmentMetadata {
 		mapStringForAttachmentMetadata += fmt.Sprintf("%v: %v,", k, this.AttachmentMetadata[k])

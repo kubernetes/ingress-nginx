@@ -33,7 +33,7 @@ local function reset_backends()
   backends = {
     {
       name = "access-router-production-web-80", port = "80", secure = false,
-      secureCACert = { secret = "", caFilename = "", pemSha = "" },
+      secureCACert = { secret = "", caFilename = "", caSha = "" },
       sslPassthrough = false,
       endpoints = {
         { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
@@ -49,7 +49,7 @@ local function reset_backends()
       },
     },
     { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
-    { 
+    {
       name = "my-dummy-app-2", ["load-balance"] = "chash",
       upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri", },
     },
@@ -82,6 +82,44 @@ describe("Balancer", function()
         local expected_implementation = expected_implementations[backend.name]
         local implementation = balancer.get_implementation(backend)
         assert.equal(expected_implementation, balancer.get_implementation(backend))
+      end
+    end)
+  end)
+
+  describe("get_balancer()", function()
+    it("always returns the same balancer for given request context", function()
+      local backend = {
+        name = "my-dummy-app-6", ["load-balance"] = "ewma",
+        alternativeBackends = { "my-dummy-canary-app-6" },
+        endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
+        trafficShapingPolicy = {
+          weight = 0,
+          header = "",
+          headerValue = "",
+          cookie = ""
+        },
+      }
+      local canary_backend = {
+        name = "my-dummy-canary-app-6", ["load-balance"] = "ewma",
+        alternativeBackends = { "my-dummy-canary-app-6" },
+        endpoints = { { address = "11.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
+        trafficShapingPolicy = {
+          weight = 5,
+          header = "",
+          headerValue = "",
+          cookie = ""
+        },
+      }
+
+      balancer.sync_backend(backend)
+      balancer.sync_backend(canary_backend)
+
+      mock_ngx({ var = { proxy_upstream_name = backend.name } })
+
+      local expected = balancer.get_balancer()
+
+      for i = 1,50,1 do
+        assert.are.same(expected, balancer.get_balancer())
       end
     end)
   end)
@@ -277,8 +315,7 @@ describe("Balancer", function()
         }
       }
 
-      local dns_helper = require("test/dns_helper")
-      dns_helper.mock_dns_query({
+      helpers.mock_resty_dns_query(nil, {
         {
           name = "example.com",
           address = "192.168.1.1",

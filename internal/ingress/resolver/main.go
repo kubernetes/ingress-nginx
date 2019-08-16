@@ -26,6 +26,9 @@ type Resolver interface {
 	// GetDefaultBackend returns the backend that must be used as default
 	GetDefaultBackend() defaults.Backend
 
+	// GetConfigMap searches for configmap containing the namespace and name usting the character /
+	GetConfigMap(string) (*apiv1.ConfigMap, error)
+
 	// GetSecret searches for secrets containing the namespace and name using a the character /
 	GetSecret(string) (*apiv1.Secret, error)
 
@@ -48,8 +51,8 @@ type AuthSSLCert struct {
 	Secret string `json:"secret"`
 	// CAFileName contains the path to the secrets 'ca.crt'
 	CAFileName string `json:"caFilename"`
-	// PemSHA contains the SHA1 hash of the 'ca.crt' or combinations of (tls.crt, tls.key, tls.crt) depending on certs in secret
-	PemSHA string `json:"pemSha"`
+	// CASHA contains the SHA1 hash of the 'ca.crt' or combinations of (tls.crt, tls.key, tls.crt) depending on certs in secret
+	CASHA string `json:"caSha"`
 }
 
 // Equal tests for equality between two AuthSSLCert types
@@ -67,7 +70,7 @@ func (asslc1 *AuthSSLCert) Equal(assl2 *AuthSSLCert) bool {
 	if asslc1.CAFileName != assl2.CAFileName {
 		return false
 	}
-	if asslc1.PemSHA != assl2.PemSHA {
+	if asslc1.CASHA != assl2.CASHA {
 		return false
 	}
 

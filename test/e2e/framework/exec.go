@@ -88,9 +88,9 @@ func (f *Framework) ExecCommand(pod *corev1.Pod, command string) (string, error)
 }
 
 // NewIngressController deploys a new NGINX Ingress controller in a namespace
-func (f *Framework) NewIngressController(namespace string) error {
+func (f *Framework) NewIngressController(namespace string, namespaceOverlay string) error {
 	// Creates an nginx deployment
-	cmd := exec.Command("./wait-for-nginx.sh", namespace)
+	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))

@@ -51,7 +51,7 @@ http {
     lua_package_path	"/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua;/usr/local/lib/lua/?.lua;;";
     lua_package_cpath 	"/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;;";
 
-    {{ buildLuaSharedDictionaries $servers $all.Cfg.DisableLuaRestyWAF }}
+    {{ buildLuaSharedDictionaries $cfg $servers $all.Cfg.DisableLuaRestyWAF }}
 
     init_by_lua_block {
         collectgarbage("collect")
@@ -77,7 +77,6 @@ http {
           error("require failed: " .. tostring(res))
         else
           configuration = res
-          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "balancer")
@@ -96,14 +95,12 @@ http {
         end
         {{ end }}
 
-        {{ if $all.EnableDynamicCertificates }}
         ok, res = pcall(require, "certificate")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           certificate = res
         end
-        {{ end }}
 
         ok, res = pcall(require, "plugins")
         if not ok then
@@ -172,6 +169,7 @@ http {
         $geoip2_dma_code source=$the_real_ip location metro_code;
         $geoip2_latitude source=$the_real_ip location latitude;
         $geoip2_longitude source=$the_real_ip location longitude;
+        $geoip2_time_zone source=$the_real_ip location time_zone;
         $geoip2_region_code source=$the_real_ip subdivisions 0 iso_code;
         $geoip2_region_name source=$the_real_ip subdivisions 0 names en;
     }
@@ -253,7 +251,7 @@ http {
 
     # Custom headers for response
     {{ range $k, $v := $addHeaders }}
-    add_header {{ $k }}            "{{ $v }}";
+    add_header {{ $k }}            {{ $v | quote }};
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
@@ -353,6 +351,8 @@ http {
 
     ssl_protocols {{ $cfg.SSLProtocols }};
 
+    ssl_early_data {{ if $cfg.SSLEarlyData }}on{{ else }}off{{ end }};
+
     # turn on session caching to drastically improve performance
     {{ if $cfg.SSLSessionCache }}
     ssl_session_cache builtin:1000 shared:SSL:{{ $cfg.SSLSessionCacheSize }};
@@ -380,11 +380,11 @@ http {
     ssl_dhparam {{ $cfg.SSLDHParam }};
     {{ end }}
 
-    {{ if not $cfg.EnableDynamicTLSRecords }}
-    ssl_dyn_rec_size_lo 0;
-    {{ end }}
-
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
+
+    # PEM sha: {{ $cfg.DefaultSSLCertificate.PemSHA }}
+    ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
+    ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
 
     {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
     proxy_intercept_errors on;
@@ -472,36 +472,14 @@ http {
     {{ range $redirect := .RedirectServers }}
     ## start server {{ $redirect.From }}
     server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
-        {{ else }}
-        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
-        {{ else }}
-        listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
-        {{ end }}
-        {{ end }}
         server_name {{ $redirect.From }};
 
-        {{ if not (empty $redirect.SSLCert.PemFileName) }}
-        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
-        # PEM sha: {{ $redirect.SSLCert.PemSHA }}
-        ssl_certificate                         {{ $redirect.SSLCert.PemFileName }};
-        ssl_certificate_key                     {{ $redirect.SSLCert.PemFileName }};
+        {{ buildHTTPListener  $all $redirect.From }}
+        {{ buildHTTPSListener $all $redirect.From }}
 
-        {{ if $all.EnableDynamicCertificates}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
-        {{ end }}
-        {{ end }}
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
@@ -604,9 +582,8 @@ http {
         }
 
         location /configuration {
-            # this should be equals to configuration_data dict
-            client_max_body_size                    10m;
-            client_body_buffer_size                 10m;
+            client_max_body_size                    {{ luaConfigurationRequestBodySize $cfg }}m;
+            client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }}m;
             proxy_buffering                         off;
 
             content_by_lua_block {
@@ -639,7 +616,6 @@ stream {
           error("require failed: " .. tostring(res))
         else
           configuration = res
-          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "tcp_udp_configuration")
@@ -685,7 +661,7 @@ stream {
         listen unix:{{ .StreamSocket }};
 
         access_log off;
-        
+
         content_by_lua_block {
           tcp_udp_configuration.call()
         }
@@ -764,7 +740,7 @@ stream {
             proxy_set_header       X-Request-ID       $req_id;
             proxy_set_header       Host               $best_http_host;
 
-            set $proxy_upstream_name {{ $upstreamName }};
+            set $proxy_upstream_name {{ $upstreamName | quote }};
 
             rewrite                (.*) / break;
 
@@ -804,50 +780,15 @@ stream {
 {{ define "SERVER" }}
         {{ $all := .First }}
         {{ $server := .Second }}
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}};
-        {{ else }}
-        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}};
-        {{ end }}
-        {{ if $all.IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{ end }};
-        {{ else }}
-        listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{ end }};
-        {{ end }}
-        {{ end }}
+
+        {{ buildHTTPListener  $all $server.Hostname }}
+        {{ buildHTTPSListener $all $server.Hostname }}
+
         set $proxy_upstream_name "-";
-        set $pass_access_scheme $scheme;
-        set $pass_server_port $server_port;
-        set $best_http_host $http_host;
-        set $pass_port $pass_server_port;
 
-        {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
-        {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
-        {{ if not (empty $server.SSLCert.PemFileName) }}
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ else }}
-        listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ end }}
-        {{ if $all.IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        {{ if not (empty $server.SSLCert.PemFileName) }}listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ else }}
-        {{ if not (empty $server.SSLCert.PemFileName) }}listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ end }}
-        {{ end }}
-        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
-        # PEM sha: {{ $server.SSLCert.PemSHA }}
-        ssl_certificate                         {{ $server.SSLCert.PemFileName }};
-        ssl_certificate_key                     {{ $server.SSLCert.PemFileName }};
-
-        {{ if $all.EnableDynamicCertificates}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
-        {{ end }}
-        {{ end }}
 
         {{ if not (empty $server.AuthTLSError) }}
         # {{ $server.AuthTLSError }}
@@ -855,7 +796,7 @@ stream {
         {{ else }}
 
         {{ if not (empty $server.CertificateAuth.CAFileName) }}
-        # PEM sha: {{ $server.CertificateAuth.PemSHA }}
+        # PEM sha: {{ $server.CertificateAuth.CASHA }}
         ssl_client_certificate                  {{ $server.CertificateAuth.CAFileName }};
         ssl_verify_client                       {{ $server.CertificateAuth.VerifyClient }};
         ssl_verify_depth                        {{ $server.CertificateAuth.ValidationDepth }};
@@ -930,7 +871,7 @@ stream {
             # ngx_auth_request module overrides variables in the parent request,
             # therefore we have to explicitly set this variable again so that when the parent request
             # resumes it has the correct value set for this variable so that Lua can pick backend correctly
-            set $proxy_upstream_name "{{ buildUpstreamName $location }}";
+            set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
 
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
@@ -1000,14 +941,19 @@ stream {
 
         location {{ $path }} {
             {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
-            set $namespace      "{{ $ing.Namespace }}";
-            set $ingress_name   "{{ $ing.Rule }}";
-            set $service_name   "{{ $ing.Service }}";
-            set $service_port   "{{ $location.Port }}";
-            set $location_path  "{{ $location.Path | escapeLiteralDollar }}";
+            set $namespace      {{ $ing.Namespace | quote}};
+            set $ingress_name   {{ $ing.Rule | quote }};
+            set $service_name   {{ $ing.Service | quote }};
+            set $service_port   {{ $location.Port | quote }};
+            set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
 
             {{ if $all.Cfg.EnableOpentracing }}
             {{ opentracingPropagateContext $location }};
+            {{ end }}
+
+            {{ if $location.Mirror.URI }}
+            mirror {{ $location.Mirror.URI }};
+            mirror_request_body {{ $location.Mirror.RequestBody }};
             {{ end }}
 
             rewrite_by_lua_block {
@@ -1025,7 +971,7 @@ stream {
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 
-                waf:set_option("mode", "{{ $location.LuaRestyWAF.Mode }}")
+                waf:set_option("mode", {{ $location.LuaRestyWAF.Mode | quote }})
                 waf:set_option("storage_zone", "waf_storage")
 
                 {{ if $location.LuaRestyWAF.AllowUnknownContentTypes }}
@@ -1054,7 +1000,7 @@ stream {
                 {{ end }}
 
                 {{ range $ruleset := $location.LuaRestyWAF.IgnoredRuleSets }}
-                waf:set_option("ignore_ruleset", "{{ $ruleset }}")
+                waf:set_option("ignore_ruleset", {{ $ruleset | quote }})
                 {{ end }}
 
                 {{ if gt (len $location.LuaRestyWAF.ExtraRulesetString) 0 }}
@@ -1096,12 +1042,11 @@ stream {
                 plugins.run()
             }
 
-            {{ if (and (not (empty $server.SSLCert.PemFileName)) $all.Cfg.HSTS) }}
+            {{ if (and $server.SSLCert $all.Cfg.HSTS) }}
             if ($scheme = https) {
             more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";
             }
             {{ end }}
-
 
             {{ if not $location.Logs.Access }}
             access_log off;
@@ -1118,8 +1063,12 @@ stream {
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             set $balancer_ewma_score -1;
-            set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
-            set $proxy_host             $proxy_upstream_name;
+            set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
+            set $proxy_host          $proxy_upstream_name;
+            set $pass_access_scheme  $scheme;
+            set $pass_server_port    $server_port;
+            set $best_http_host      $http_host;
+            set $pass_port           $pass_server_port;
 
             set $proxy_alternative_upstream_name "";
 
@@ -1139,7 +1088,7 @@ stream {
             {{ end }}
 
             {{ if (not (empty $location.ModSecurity.TransactionID)) }}
-            modsecurity_transaction_id "{{ $location.ModSecurity.TransactionID }}";
+            modsecurity_transaction_id {{ $location.ModSecurity.TransactionID | quote }};
             {{ end }}
             {{ end }}
 
@@ -1168,10 +1117,10 @@ stream {
 
             {{ if $location.BasicDigestAuth.Secured }}
             {{ if eq $location.BasicDigestAuth.Type "basic" }}
-            auth_basic "{{ $location.BasicDigestAuth.Realm }}";
+            auth_basic {{ $location.BasicDigestAuth.Realm | quote }};
             auth_basic_user_file {{ $location.BasicDigestAuth.File }};
             {{ else }}
-            auth_digest "{{ $location.BasicDigestAuth.Realm }}";
+            auth_digest {{ $location.BasicDigestAuth.Realm | quote }};
             auth_digest_user_file {{ $location.BasicDigestAuth.File }};
             {{ end }}
             proxy_set_header Authorization "";
@@ -1205,7 +1154,7 @@ stream {
             {{/* By default use vhost as Host to upstream, but allow overrides */}}
             {{ if not (eq $proxySetHeader "grpc_set_header") }}
             {{ if not (empty $location.UpstreamVhost) }}
-            {{ $proxySetHeader }} Host                   "{{ $location.UpstreamVhost }}";
+            {{ $proxySetHeader }} Host                   {{ $location.UpstreamVhost | quote }};
             {{ else }}
             {{ $proxySetHeader }} Host                   $best_http_host;
             {{ end }}
@@ -1253,7 +1202,7 @@ stream {
 
             # Custom headers to proxied server
             {{ range $k, $v := $all.ProxySetHeaders }}
-            {{ $proxySetHeader }} {{ $k }}                    "{{ $v }}";
+            {{ $proxySetHeader }} {{ $k }}                    {{ $v | quote }};
             {{ end }}
 
             proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
@@ -1263,6 +1212,9 @@ stream {
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
             proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
+            {{ if isValidByteSize $location.Proxy.ProxyMaxTempFileSize true }}
+            proxy_max_temp_file_size                {{ $location.Proxy.ProxyMaxTempFileSize }};
+            {{ end }}
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
             proxy_http_version                      {{ $location.Proxy.ProxyHTTPVersion }};
 
@@ -1306,6 +1258,16 @@ stream {
             {{ range $errCode := $location.CustomHTTPErrors }}
             error_page {{ $errCode }} = @custom_{{ $location.DefaultBackendUpstreamName }}_{{ $errCode }};{{ end }}
 
+            {{ if (eq $location.BackendProtocol "FCGI") }}
+            include /etc/nginx/fastcgi_params;
+            {{ end }}
+            {{- if $location.FastCGI.Index -}}
+            fastcgi_index {{ $location.FastCGI.Index | quote }};
+            {{- end -}}
+            {{ range $k, $v := $location.FastCGI.Params }}
+            fastcgi_param {{ $k }} {{ $v | quote }};
+            {{ end }}
+
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
@@ -1313,7 +1275,7 @@ stream {
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }} {{ $location.Proxy.ProxyRedirectTo }};
             {{ end }}
             {{ else }}
-            # Location denied. Reason: {{ $location.Denied | printf "%q" }}
+            # Location denied. Reason: {{ $location.Denied | quote }}
             return 503;
             {{ end }}
         }
