@@ -62,4 +62,45 @@ var _ = framework.IngressNginxDescribe("Annotations - Log", func() {
 				return Expect(server).Should(ContainSubstring(`rewrite_log on;`))
 			})
 	})
+
+	It("enable syslog", func() {
+		host := "log.foo.com"
+		annotations := map[string]string{}
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.SetNginxConfigMapData(map[string]string{
+			"enable-syslog": "true",
+			"syslog-host":   "localhost",
+		})
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				accessLog := `access_log syslog:server=localhost:514 upstreaminfo if=$loggable;`
+				errorLog := `error_log syslog:server=localhost:514 notice;`
+				return Expect(server).Should(ContainSubstring(accessLog)) &&
+					Expect(server).Should(ContainSubstring(errorLog))
+			})
+	})
+
+	It("enable syslog with tag", func() {
+		host := "log.foo.com"
+		annotations := map[string]string{}
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.SetNginxConfigMapData(map[string]string{
+			"enable-syslog": "true",
+			"syslog-host":   "localhost",
+			"syslog-tag":    "mytag",
+		})
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				accessLog := `access_log syslog:server=localhost:514,tag=mytag upstreaminfo if=$loggable;`
+				errorLog := `error_log syslog:server=localhost:514,tag=mytag notice;`
+				return Expect(server).Should(ContainSubstring(accessLog)) &&
+					Expect(server).Should(ContainSubstring(errorLog))
+			})
+	})
 })

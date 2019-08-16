@@ -277,18 +277,23 @@ http {
         default 1;
     }
 
+    {{ $syslogOptions := "" }}
+    {{ if not (empty $cfg.SyslogTag) }}
+    {{ $syslogOptions = printf ",tag=%s" $cfg.SyslogTag }}
+    {{ end }}
+
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
     {{ if $cfg.EnableSyslog }}
-    access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
+    access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }}{{ $syslogOptions }} upstreaminfo if=$loggable;
     {{ else }}
     access_log {{ $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
     {{ end }}
     {{ end }}
 
     {{ if $cfg.EnableSyslog }}
-    error_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} {{ $cfg.ErrorLogLevel }};
+    error_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }}{{ $syslogOptions }} {{ $cfg.ErrorLogLevel }};
     {{ else }}
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
     {{ end }}
