@@ -39,6 +39,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -58,6 +59,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	if err != nil {
+		klog.Fatal(err)
+	}
+
+	err = file.CreateRequiredDirectories()
 	if err != nil {
 		klog.Fatal(err)
 	}
