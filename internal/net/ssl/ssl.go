@@ -53,22 +53,6 @@ const (
 	fakeCertificateName = "default-fake-certificate"
 )
 
-func init() {
-	_, err := os.Stat(file.DefaultSSLDirectory)
-	if err != nil {
-		if os.IsNotExist(err) {
-			err = os.MkdirAll(file.DefaultSSLDirectory, file.ReadWriteByUser)
-			if err != nil {
-				klog.Fatalf("Unexpected error checking for default SSL directory: %v", err)
-			}
-
-			return
-		}
-
-		klog.Fatalf("Unexpected error checking for default SSL directory: %v", err)
-	}
-}
-
 // getPemFileName returns absolute file path and file name of pem cert related to given fullSecretName
 func getPemFileName(fullSecretName string) (string, string) {
 	pemName := fmt.Sprintf("%v.pem", fullSecretName)
