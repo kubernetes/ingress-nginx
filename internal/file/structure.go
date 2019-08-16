@@ -16,6 +16,12 @@ limitations under the License.
 
 package file
 
+import (
+	"os"
+
+	"github.com/pkg/errors"
+)
+
 const (
 	// AuthDirectory default directory used to store files
 	// to authenticate request
@@ -34,3 +40,25 @@ var (
 		AuthDirectory,
 	}
 )
+
+// CreateRequiredDirectories verifies if the required directories to
+// start the ingress controller exist and creates the missing ones.
+func CreateRequiredDirectories() error {
+	for _, directory := range directories {
+		_, err := os.Stat(directory)
+		if err != nil {
+			if os.IsNotExist(err) {
+				err = os.MkdirAll(directory, ReadWriteByUser)
+				if err != nil {
+					return errors.Wrapf(err, "creating directory '%v'", directory)
+				}
+
+				continue
+			}
+
+			return errors.Wrapf(err, "checking directory %v", directory)
+		}
+	}
+
+	return nil
+}

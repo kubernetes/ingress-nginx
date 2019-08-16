@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
@@ -153,6 +154,11 @@ func TestCheckIngress(t *testing.T) {
 			return nil
 		})
 	}()
+
+	err := file.CreateRequiredDirectories()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Ensure no panic with wrong arguments
 	var nginx *NGINXController
