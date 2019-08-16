@@ -37,7 +37,7 @@ func TestNginxCheck(t *testing.T) {
 
 	listener, err := net.Listen("unix", nginx.StatusSocket)
 	if err != nil {
-		t.Errorf("crating unix listener: %s", err)
+		t.Fatalf("crating unix listener: %s", err)
 	}
 	defer listener.Close()
 	defer os.Remove(nginx.StatusSocket)
