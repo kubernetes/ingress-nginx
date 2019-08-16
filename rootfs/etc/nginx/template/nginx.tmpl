@@ -806,7 +806,7 @@ stream {
         {{ end }}
 
         {{ if not (empty $server.ProxySSL.CAFileName) }}
-        # PEM sha: {{ $server.ProxySSL.PemSHA }}
+        # PEM sha: {{ $server.ProxySSL.CASHA }}
         proxy_ssl_certificate                   {{ $server.ProxySSL.CAFileName }};
         proxy_ssl_certificate_key               {{ $server.ProxySSL.CAFileName }};
         proxy_ssl_trusted_certificate           {{ $server.ProxySSL.CAFileName }};
