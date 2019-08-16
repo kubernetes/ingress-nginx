@@ -208,7 +208,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 				return strings.Contains(server, `location ~* "^/foo/bar/(.+)" {`)
 			})
 
-		By("check that '/foo/bar/bar' redirects to cusotm rewrite")
+		By("check that '/foo/bar/bar' redirects to custom rewrite")
 		resp, body, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/foo/bar/bar").
 			Set("Host", host).
