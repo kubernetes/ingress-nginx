@@ -79,7 +79,7 @@ func TestStoreSSLCertOnDisk(t *testing.T) {
 	c := encodeCertPEM(cert.Cert)
 	k := encodePrivateKeyPEM(cert.Key)
 
-	sslCert, err := CreateSSLCert(c, k)
+	sslCert, err := CreateSSLCert(c, k, FakeSSLCertificateUID)
 	if err != nil {
 		t.Fatalf("unexpected error creating SSL certificate: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestCACert(t *testing.T) {
 	k := encodePrivateKeyPEM(cert.Key)
 	ca := encodeCertPEM(CA.Cert)
 
-	sslCert, err := CreateSSLCert(c, k)
+	sslCert, err := CreateSSLCert(c, k, FakeSSLCertificateUID)
 	if err != nil {
 		t.Fatalf("unexpected error creating SSL certificate: %v", err)
 	}
@@ -197,7 +197,7 @@ func TestCreateSSLCert(t *testing.T) {
 	c := encodeCertPEM(cert.Cert)
 	k := encodePrivateKeyPEM(cert.Key)
 
-	sslCert, err := CreateSSLCert(c, k)
+	sslCert, err := CreateSSLCert(c, k, FakeSSLCertificateUID)
 	if err != nil {
 		t.Fatalf("unexpected error checking SSL certificate: %v", err)
 	}

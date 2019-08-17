@@ -185,7 +185,7 @@ func TestConfigureDynamically(t *testing.T) {
 				}
 				body := string(b)
 
-				endpointStats[r.URL.Path] += 1
+				endpointStats[r.URL.Path]++
 
 				switch r.URL.Path {
 				case "/configuration/backends":
@@ -206,7 +206,7 @@ func TestConfigureDynamically(t *testing.T) {
 					}
 				case "/configuration/servers":
 					{
-						if !strings.Contains(body, "[]") {
+						if !strings.Contains(body, `{"certificates":{},"servers":{}}`) {
 							t.Errorf("controllerPodsCount should be present in JSON content: %v", body)
 						}
 					}
@@ -337,6 +337,7 @@ func TestConfigureCertificates(t *testing.T) {
 		Hostname: "myapp.fake",
 		SSLCert: &ingress.SSLCert{
 			PemCertKey: "fake-cert",
+			UID:        "c89a5111-b2e9-4af8-be19-c2a4a924c256",
 		},
 	}}
 
@@ -354,18 +355,18 @@ func TestConfigureCertificates(t *testing.T) {
 				if err != nil && err != io.EOF {
 					t.Fatal(err)
 				}
-				var postedServers []ingress.Server
-				err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, &postedServers)
+				var conf sslConfiguration
+				err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, &conf)
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				if len(servers) != len(postedServers) {
+				if len(servers) != len(conf.Servers) {
 					t.Errorf("Expected servers to be the same length as the posted servers")
 				}
 
-				for i, server := range servers {
-					if !server.Equal(&postedServers[i]) {
+				for _, server := range servers {
+					if server.SSLCert.UID != conf.Servers[server.Hostname] {
 						t.Errorf("Expected servers and posted servers to be equal")
 					}
 				}

@@ -401,8 +401,11 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 		if !hosts.Has(server.Hostname) {
 			hosts.Insert(server.Hostname)
 		}
-		if server.Alias != "" && !hosts.Has(server.Alias) {
-			hosts.Insert(server.Alias)
+
+		for _, alias := range server.Aliases {
+			if !hosts.Has(alias) {
+				hosts.Insert(alias)
+			}
 		}
 
 		if !server.SSLPassthrough {
@@ -931,7 +934,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	du *ingress.Backend) map[string]*ingress.Server {
 
 	servers := make(map[string]*ingress.Server, len(data))
-	aliases := make(map[string]string, len(data))
+	allAliases := make(map[string][]string, len(data))
 
 	bdef := n.store.GetDefaultBackend()
 	ngxProxy := proxy.Config{
@@ -1061,16 +1064,13 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				host = defServerName
 			}
 
-			if anns.Alias != "" {
-				if servers[host].Alias == "" {
-					servers[host].Alias = anns.Alias
-					if _, ok := aliases["Alias"]; !ok {
-						aliases["Alias"] = host
-					}
-				} else {
-					klog.Warningf("Aliases already configured for server %q, skipping (Ingress %q)",
-						host, ingKey)
+			if len(servers[host].Aliases) == 0 {
+				servers[host].Aliases = anns.Aliases
+				if _, ok := allAliases[host]; !ok {
+					allAliases[host] = anns.Aliases
 				}
+			} else {
+				klog.Warningf("Aliases already configured for server %q, skipping (Ingress %q)", host, ingKey)
 			}
 
 			if anns.ServerSnippet != "" {
@@ -1133,10 +1133,12 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		}
 	}
 
-	for alias, host := range aliases {
-		if _, ok := servers[alias]; ok {
-			klog.Warningf("Conflicting hostname (%v) and alias (%v). Removing alias to avoid conflicts.", host, alias)
-			servers[host].Alias = ""
+	for host, hostAliases := range allAliases {
+		for index, alias := range hostAliases {
+			if _, ok := servers[alias]; ok {
+				klog.Warningf("Conflicting hostname (%v) and alias (%v). Removing alias to avoid conflicts.", host, alias)
+				servers[host].Aliases = append(servers[host].Aliases[:index], servers[host].Aliases[index+1:]...)
+			}
 		}
 	}
 

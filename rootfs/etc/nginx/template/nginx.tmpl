@@ -506,7 +506,7 @@ http {
 
     ## start server {{ $server.Hostname }}
     server {
-        server_name {{ $server.Hostname }} {{ $server.Alias }};
+        server_name {{ $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {

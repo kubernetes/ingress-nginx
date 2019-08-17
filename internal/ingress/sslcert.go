@@ -52,6 +52,9 @@ type SSLCert struct {
 
 	// Pem encoded certificate and key concatenated
 	PemCertKey string `json:"pemCertKey,omitempty"`
+
+	// UID unique identifier of the Kubernetes Secret
+	UID string `json:"uid"`
 }
 
 // GetObjectKind implements the ObjectKind interface as a noop

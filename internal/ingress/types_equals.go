@@ -269,9 +269,24 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if !(s1.SSLCert).Equal(s2.SSLCert) {
 		return false
 	}
-	if s1.Alias != s2.Alias {
+
+	if len(s1.Aliases) != len(s2.Aliases) {
 		return false
 	}
+
+	for _, a1 := range s1.Aliases {
+		found := false
+		for _, a2 := range s2.Aliases {
+			if a1 == a2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
 	if s1.RedirectFromToWWW != s2.RedirectFromToWWW {
 		return false
 	}
@@ -526,6 +541,9 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 		return false
 	}
 	if s1.PemCertKey != s2.PemCertKey {
+		return false
+	}
+	if s1.UID != s2.UID {
 		return false
 	}
 
