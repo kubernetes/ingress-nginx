@@ -161,7 +161,7 @@ func (f *Framework) GetNginxIP() string {
 		CoreV1().
 		Services(f.Namespace).
 		Get("ingress-nginx", metav1.GetOptions{})
-	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX IP address")
+	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaining NGINX IP address")
 	return s.Spec.ClusterIP
 }
 
@@ -171,7 +171,7 @@ func (f *Framework) GetNginxPodIP() []string {
 		CoreV1().
 		Endpoints(f.Namespace).
 		Get("ingress-nginx", metav1.GetOptions{})
-	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX IP address")
+	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaining NGINX IP address")
 	eips := make([]string, 0)
 	for _, s := range e.Subsets {
 		for _, a := range s.Addresses {
