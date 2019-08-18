@@ -35,6 +35,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
@@ -190,6 +191,9 @@ type Server struct {
 	// CertificateAuth indicates the this server requires mutual authentication
 	// +optional
 	CertificateAuth authtls.Config `json:"certificateAuth"`
+	// ProxySSL indicates the this server uses client certificate to access backends
+	// +optional
+	ProxySSL proxyssl.Config `json:"proxySSL"`
 	// ServerSnippet returns the snippet of server
 	// +optional
 	ServerSnippet string `json:"serverSnippet"`
@@ -275,6 +279,10 @@ type Location struct {
 	// to be used in connections against endpoints
 	// +optional
 	Proxy proxy.Config `json:"proxy,omitempty"`
+	// ProxySSL contains information about SSL configuration parameters
+	// to be used in connections against endpoints
+	// +optional
+	ProxySSL proxyssl.Config `json:"proxySSL,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"usePortInRedirects"`
