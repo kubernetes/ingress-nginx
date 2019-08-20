@@ -57,7 +57,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 				// flags --publish-service and --publish-status-address are mutually exclusive
 				var index int
 				for k, v := range args {
-					if strings.Index(v, "--publish-service") != -1 {
+					if strings.Contains(v, "--publish-service") {
 						index = k
 						break
 					}

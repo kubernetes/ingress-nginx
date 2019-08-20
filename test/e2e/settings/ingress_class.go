@@ -142,7 +142,7 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			delete(ing.Annotations, "kubernetes.io/ingress.class")
-			ing = f.EnsureIngress(ing)
+			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return !strings.Contains(cfg, "server_name foo")

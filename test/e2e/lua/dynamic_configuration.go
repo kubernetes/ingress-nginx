@@ -277,12 +277,3 @@ func ensureHTTPSRequest(url string, host string, expectedDNSName string) {
 	Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
 	Expect(resp.TLS.PeerCertificates[0].DNSNames[0]).Should(Equal(expectedDNSName))
 }
-
-func getCookie(name string, cookies []*http.Cookie) (*http.Cookie, error) {
-	for _, cookie := range cookies {
-		if cookie.Name == name {
-			return cookie, nil
-		}
-	}
-	return &http.Cookie{}, fmt.Errorf("Cookie does not exist")
-}

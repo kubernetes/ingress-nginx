@@ -79,7 +79,7 @@ func TestParseEmptyFastCGIAnnotations(t *testing.T) {
 		t.Errorf("Index should be an empty string")
 	}
 
-	if 0 != len(config.Params) {
+	if len(config.Params) != 0 {
 		t.Errorf("Params should be an empty slice")
 	}
 }
@@ -125,7 +125,7 @@ func TestParseEmptyFastCGIParamsConfigMapAnnotation(t *testing.T) {
 		t.Errorf("Parse do not return a Config object")
 	}
 
-	if 0 != len(config.Params) {
+	if len(config.Params) != 0 {
 		t.Errorf("Params should be an empty slice")
 	}
 }
@@ -150,7 +150,7 @@ func TestParseFastCGIInvalidParamsConfigMapAnnotation(t *testing.T) {
 			t.Errorf("Parse do not return a Config object")
 		}
 
-		if 0 != len(config.Params) {
+		if len(config.Params) != 0 {
 			t.Errorf("Params should be an empty slice")
 		}
 	}
@@ -173,11 +173,11 @@ func TestParseFastCGIParamsConfigMapAnnotationWithoutNS(t *testing.T) {
 		t.Errorf("Parse do not return a Config object")
 	}
 
-	if 2 != len(config.Params) {
+	if len(config.Params) != 2 {
 		t.Errorf("Params should have a length of 2")
 	}
 
-	if "200" != config.Params["REDIRECT_STATUS"] || "$server_name" != config.Params["SERVER_NAME"] {
+	if config.Params["REDIRECT_STATUS"] != "200" || config.Params["SERVER_NAME"] != "$server_name" {
 		t.Errorf("Params value is not the one expected")
 	}
 }
@@ -199,11 +199,11 @@ func TestParseFastCGIParamsConfigMapAnnotationWithNS(t *testing.T) {
 		t.Errorf("Parse do not return a Config object")
 	}
 
-	if 2 != len(config.Params) {
+	if len(config.Params) != 2 {
 		t.Errorf("Params should have a length of 2")
 	}
 
-	if "200" != config.Params["REDIRECT_STATUS"] || "$server_name" != config.Params["SERVER_NAME"] {
+	if config.Params["REDIRECT_STATUS"] != "200" || config.Params["SERVER_NAME"] != "$server_name" {
 		t.Errorf("Params value is not the one expected")
 	}
 }

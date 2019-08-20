@@ -295,13 +295,13 @@ func TestConfigureDynamically(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic configuration: %v", err)
 	}
-	if count, _ := endpointStats["/configuration/backends"]; count != 0 {
+	if count := endpointStats["/configuration/backends"]; count != 0 {
 		t.Errorf("Expected %v to receive %d requests but received %d.", "/configuration/backends", 0, count)
 	}
-	if count, _ := endpointStats["/configuration/servers"]; count != 0 {
+	if count := endpointStats["/configuration/servers"]; count != 0 {
 		t.Errorf("Expected %v to receive %d requests but received %d.", "/configuration/servers", 0, count)
 	}
-	if count, _ := endpointStats["/configuration/general"]; count != 1 {
+	if count := endpointStats["/configuration/general"]; count != 1 {
 		t.Errorf("Expected %v to receive %d requests but received %d.", "/configuration/general", 0, count)
 	}
 

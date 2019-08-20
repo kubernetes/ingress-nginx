@@ -49,7 +49,7 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 
 		f.UpdateNginxConfigMapData(wlKey, wlValue)
 
-		checksumRegex := regexp.MustCompile("Configuration checksum:\\s+(\\d+)")
+		checksumRegex := regexp.MustCompile(`Configuration checksum:\s+(\d+)`)
 		checksum := ""
 
 		f.WaitForNginxConfiguration(

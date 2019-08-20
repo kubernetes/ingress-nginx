@@ -182,7 +182,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf(f.GetURL(framework.HTTP))).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			RedirectPolicy(noRedirectPolicyFunc).
 			Set("Host", host).
@@ -206,7 +206,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf(f.GetURL(framework.HTTP))).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			RedirectPolicy(noRedirectPolicyFunc).
 			Set("Host", host).
