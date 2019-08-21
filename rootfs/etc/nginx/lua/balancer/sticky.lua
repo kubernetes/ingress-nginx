@@ -105,6 +105,16 @@ end
 local function should_set_cookie(self)
   if self.cookie_session_affinity.locations then
     local locs = self.cookie_session_affinity.locations[ngx.var.host]
+    if locs == nil then
+      -- Based off of wildcard hostname in ../certificate.lua
+      local wildcardHostname, _, err = ngx.re.sub(ngx.var.host, "^[^\\.]+\\.", "*.", "jo")
+      if err then
+        ngx.log(ngx.ERR, "error: ", err);
+      elseif wildcardHostname then
+        locs = self.cookie_session_affinity.locations[wildcardHostname]
+      end
+    end
+
     if locs ~= nil then
       for _, path in pairs(locs) do
         if ngx.var.location_path == path then
