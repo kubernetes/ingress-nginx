@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.1">
     
     
       
@@ -40,9 +40,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.0284f74d.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/application.30686662.css">
       
-        <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.01803549.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.a8b3c06d.css">
       
       
         
@@ -649,6 +649,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#backend-certificate-authentication" title="Backend Certificate Authentication" class="md-nav__link">
+    Backend Certificate Authentication
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration-snippet" title="Configuration snippet" class="md-nav__link">
     Configuration snippet
   </a>
@@ -936,6 +943,13 @@
         <li class="md-nav__item">
   <a href="#satisfy" title="Satisfy" class="md-nav__link">
     Satisfy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mirror" title="Mirror" class="md-nav__link">
+    Mirror
   </a>
   
 </li>
@@ -1591,6 +1605,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#backend-certificate-authentication" title="Backend Certificate Authentication" class="md-nav__link">
+    Backend Certificate Authentication
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration-snippet" title="Configuration snippet" class="md-nav__link">
     Configuration snippet
   </a>
@@ -1882,6 +1903,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#mirror" title="Mirror" class="md-nav__link">
+    Mirror
+  </a>
+  
+</li>
+      
       
       
       
@@ -2133,6 +2161,26 @@ table below.</p>
 <td>"1.0" or "1.1"</td>
 </tr>
 <tr>
+<td><a href="#backend-certificate-authentication">nginx.ingress.kubernetes.io/proxy-ssl-secret</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#backend-certificate-authentication">nginx.ingress.kubernetes.io/proxy-ssl-ciphers</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#backend-certificate-authentication">nginx.ingress.kubernetes.io/proxy-ssl-protocols</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#backend-certificate-authentication">nginx.ingress.kubernetes.io/proxy-ssl-verify</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#backend-certificate-authentication">nginx.ingress.kubernetes.io/proxy-ssl-verify-depth</a></td>
+<td>number</td>
+</tr>
+<tr>
 <td><a href="#enable-rewrite-log">nginx.ingress.kubernetes.io/enable-rewrite-log</a></td>
 <td>"true" or "false"</td>
 </tr>
@@ -2292,6 +2340,14 @@ table below.</p>
 <td><a href="#modsecurity">nginx.ingress.kubernetes.io/modsecurity-snippet</a></td>
 <td>string</td>
 </tr>
+<tr>
+<td><a href="#mirror">nginx.ingress.kubernetes.io/mirror-uri</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#mirror">nginx.ingress.kubernetes.io/mirror-request-body</a></td>
+<td>string</td>
+</tr>
 </tbody>
 </table>
 <h3 id="canary">Canary<a class="headerlink" href="#canary" title="Permanent link">&para;</a></h3>
@@ -2395,6 +2451,21 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <p>Cloudflare only allows Authenticated Origin Pulls and is required to use their own certificate: <a href="https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/">https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/</a></p>
 <p>Only Authenticated Origin Pulls are allowed and can be configured by following their tutorial: <a href="https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls">https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls</a></p>
 </div>
+<h3 id="backend-certificate-authentication">Backend Certificate Authentication<a class="headerlink" href="#backend-certificate-authentication" title="Permanent link">&para;</a></h3>
+<p>It is possible to authenticate to a proxied HTTPS backend with certificate using additional annotations in Ingress Rule.</p>
+<ul>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/proxy-ssl-secret: secretName</code>:
+  Specifies a Secret with the certificate <code class="codehilite">tls.crt</code>, key <code class="codehilite">tls.key</code> in PEM format used for authentication to a proxied HTTPS server. It should also contain trusted CA certificates <code class="codehilite">ca.crt</code> in PEM format used to verify the certificate of the proxied HTTPS server.
+  This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/proxy-ssl-verify</code>:
+  Enables or disables verification of the proxied HTTPS server certificate. (default: off)</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/proxy-ssl-verify-depth</code>:
+  Sets the verification depth in the proxied HTTPS server certificates chain. (default: 1)</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/proxy-ssl-ciphers</code>:
+  Specifies the enabled <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_ciphers">ciphers</a> for requests to a proxied HTTPS server. The ciphers are specified in the format understood by the OpenSSL library.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/proxy-ssl-protocols</code>:
+  Enables the specified <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_protocols">protocols</a> for requests to a proxied HTTPS server.</li>
+</ul>
 <h3 id="configuration-snippet">Configuration snippet<a class="headerlink" href="#configuration-snippet" title="Permanent link">&para;</a></h3>
 <p>Using this annotation you can add additional configuration to the NGINX location. For example:</p>
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/configuration-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
@@ -2561,19 +2632,18 @@ applied to each location provided in the ingress rule.</p>
    indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to <code class="codehilite">&quot;true&quot;</code>.</p>
 <p>!!! note For more information please see <a href="../configmap/#global-auth-url">global-auth-url</a>.</p>
 <h3 id="rate-limiting">Rate limiting<a class="headerlink" href="#rate-limiting" title="Permanent link">&para;</a></h3>
-<p>These annotations define a limit on the connections that can be opened by a single client IP address.
-This can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus">DDoS Attacks</a>.</p>
+<p>These annotations define limits on connections and transmission rates.  These can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus">DDoS Attacks</a>.</p>
 <ul>
-<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-connections</code>: number of concurrent connections allowed from a single IP address.</li>
-<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-rps</code>: number of connections that may be accepted from a given IP each second.</li>
-<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-rpm</code>: number of connections that may be accepted from a given IP each minute.</li>
-<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-rate-after</code>: sets the initial amount after which the further transmission of a response to a client will be rate limited.</li>
-<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-rate</code>: rate of request that accepted from a client each second.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-connections</code>: number of concurrent connections allowed from a single IP address. A 503 error is returned when exceeding this limit.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-rps</code>: number of requests accepted from a given IP each second. The burst limit is set to 5 times the limit. When clients exceed this limit,  <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#limit-req-status-code">limit-req-status-code</a> <strong><em>default:</em></strong> 503 is returned.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-rpm</code>: number of requests accepted from a given IP each minute. The burst limit is set to 5 times the limit. When clients exceed this limit,  <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#limit-req-status-code">limit-req-status-code</a> <strong><em>default:</em></strong> 503 is returned.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-rate-after</code>: initial number of kilobytes after which the further transmission of a response to a given connection will be rate limited.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-rate</code>: number of kilobytes per second allowed to send to a given connection.  The zero value disables rate limiting.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/limit-whitelist</code>: client IP source ranges to be excluded from rate-limiting. The value is a comma separated list of CIDRs.</li>
 </ul>
-<p>You can specify the client IP source ranges to be excluded from rate-limiting through the <code class="codehilite">nginx.ingress.kubernetes.io/limit-whitelist</code> annotation. The value is a comma separated list of CIDRs.</p>
-<p>If you specify multiple annotations in a single Ingress rule, <code class="codehilite">limit-rpm</code>, and then <code class="codehilite">limit-rps</code> takes precedence.</p>
-<p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/limit-rate</code>, <code class="codehilite">nginx.ingress.kubernetes.io/limit-rate-after</code> define a limit the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">limit-rate-after</code> and <code class="codehilite">limit-rate</code> value may be set in the <a href="../configmap/#limit-rate">NGINX ConfigMap</a>. if you set the value in ingress annotation will cover global setting.</p>
+<p>If you specify multiple annotations in a single Ingress rule, limits are applied in the order <code class="codehilite">limit-connections</code>, <code class="codehilite">limit-rpm</code>, <code class="codehilite">limit-rps</code>.</p>
+<p>To configure settings globally for all Ingress rules, the <code class="codehilite">limit-rate-after</code> and <code class="codehilite">limit-rate</code> values may be set in the <a href="../configmap/#limit-rate">NGINX ConfigMap</a>.  The value set in an Ingress annotation will override the global setting.</p>
+<p>The client IP address will be set based on the use of <a href="./configmap/#use-proxy-protocol">PROXY protocol</a> or from the <code class="codehilite">X-Forwarded-For</code> header value when <a href="configmap/#use-forwarded-headers">use-forwarded-headers</a> is enabled.</p>
 <h3 id="permanent-redirect">Permanent Redirect<a class="headerlink" href="#permanent-redirect" title="Permanent link">&para;</a></h3>
 <p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
 <h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link">&para;</a></h3>
@@ -2829,6 +2899,27 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
 <p>By default, a request would need to satisfy all authentication requirements in order to be allowed. By using this annotation, requests that satisfy either any or all authentication requirements are allowed, based on the configuration value.</p>
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/satisfy</span><span class="p">:</span> <span class="s">&quot;any&quot;</span>
 </pre></div>
+
+<h3 id="mirror">Mirror<a class="headerlink" href="#mirror" title="Permanent link">&para;</a></h3>
+<p>Enables a request to be mirrored to a mirror backend. Responses by mirror backends are ignored. This feature is useful, to see how requests will react in "test" backends.</p>
+<p>You can mirror a request to the <code class="codehilite">/mirror</code> path on your ingress, by applying the below:</p>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/mirror-uri</span><span class="p">:</span> <span class="s">&quot;/mirror&quot;</span>
+</pre></div>
+
+<p>The mirror path can be defined as a separate ingress resource:</p>
+<div class="codehilite"><pre><span></span><span class="nt">location</span> <span class="o">=</span> <span class="o">/</span><span class="nt">mirror</span> <span class="p">{</span>
+    <span class="err">internal</span><span class="p">;</span>
+    <span class="err">proxy_pass</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">test_backend</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>By default the request-body is sent to the mirror backend, but can be turned off by applying:</p>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/mirror-request-body</span><span class="p">:</span> <span class="s">&quot;off&quot;</span>
+</pre></div>
+
+<p><strong>Note:</strong> The mirror directive will be applied to all paths within the ingress resource.</p>
+<p>The request sent to the mirror is linked to the orignial request. If you have a slow mirror backend, then the orignial request will throttle.</p>
+<p>For more information on the mirror module see https://nginx.org/en/docs/http/ngx_http_mirror_module.html</p>
                 
                   
                 
@@ -2898,7 +2989,7 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
       
     </div>
     
-      <script src="../../../assets/javascripts/application.245445c6.js"></script>
+      <script src="../../../assets/javascripts/application.c648116f.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
       

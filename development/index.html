@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.1">
     
     
       
@@ -40,9 +40,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.0284f74d.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application.30686662.css">
       
-        <link rel="stylesheet" href="../assets/stylesheets/application-palette.01803549.css">
+        <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
       
       
         
@@ -462,6 +462,13 @@
   
     <nav class="md-nav">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#building-the-e2e-test-image" title="Building the e2e test image" class="md-nav__link">
+    Building the e2e test image
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#nginx-controller" title="Nginx Controller" class="md-nav__link">
@@ -1290,6 +1297,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#building-the-e2e-test-image" title="Building the e2e test image" class="md-nav__link">
+    Building the e2e test image
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#nginx-controller" title="Nginx Controller" class="md-nav__link">
     Nginx Controller
   </a>
@@ -1411,6 +1425,15 @@ or push an image to a remote repository.</p>
 </pre></div>
 
 <p>To find the registry simply run: <code class="codehilite">docker system info | grep Registry</code></p>
+<h3 id="building-the-e2e-test-image">Building the e2e test image<a class="headerlink" href="#building-the-e2e-test-image" title="Permanent link">&para;</a></h3>
+<p>The e2e test image can also be built through the Makefile.</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> make e2e-test-image
+</pre></div>
+
+<p>You can then make this image available on your minikube host by exporting the image and loading it with the minikube docker context:</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> docker save nginx-ingress-controller:e2e <span class="p">|</span>  <span class="o">(</span><span class="nb">eval</span> <span class="k">$(</span>minikube docker-env<span class="k">)</span> <span class="o">&amp;&amp;</span> docker load<span class="o">)</span>
+</pre></div>
+
 <h3 id="nginx-controller">Nginx Controller<a class="headerlink" href="#nginx-controller" title="Permanent link">&para;</a></h3>
 <p>Build a raw server binary
 <div class="codehilite"><pre><span></span><span class="gp">$</span> make build
@@ -1438,6 +1461,7 @@ Please check the <a href="./deploy">deployment guide</a></p>
 <span class="gp">$</span> make e2e-test
 </pre></div>
 
+<p>NOTE: if your e2e pod keeps hanging in an ImagePullBackoff, make sure you've made your e2e nginx-ingress-controller image available to minikube as explained in <a href="./Building the e2e test image">Building the e2e test image</a></p>
 <p>To run unit-tests for lua code locally, run:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
 <span class="gp">$</span> ./rootfs/etc/nginx/lua/test/up.sh
@@ -1535,7 +1559,7 @@ Typically, a release branch should have stable code.</li>
       
     </div>
     
-      <script src="../assets/javascripts/application.245445c6.js"></script>
+      <script src="../assets/javascripts/application.c648116f.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
       
