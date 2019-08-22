@@ -101,6 +101,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		stopCh:   make(chan struct{}),
 		updateCh: channels.NewRingChannel(1024),
 
+		ngxErrCh: make(chan error),
+
 		stopLock: &sync.Mutex{},
 
 		fileSystem: fs,
