@@ -96,6 +96,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		stopCh:   make(chan struct{}),
 		updateCh: channels.NewRingChannel(1024),
 
+		ngxErrCh: make(chan error),
+
 		stopLock: &sync.Mutex{},
 
 		runningConfig: new(ingress.Configuration),
