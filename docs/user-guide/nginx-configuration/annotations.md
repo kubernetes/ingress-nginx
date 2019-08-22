@@ -430,22 +430,20 @@ By default the controller redirects all requests to an existing service that pro
 
 ### Rate limiting
 
-These annotations define a limit on the connections that can be opened by a single client IP address.
-This can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
+These annotations define limits on connections and transmission rates.  These can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
 
-* `nginx.ingress.kubernetes.io/limit-connections`: number of concurrent connections allowed from a single IP address.
-* `nginx.ingress.kubernetes.io/limit-rps`: number of connections that may be accepted from a given IP each second.
-* `nginx.ingress.kubernetes.io/limit-rpm`: number of connections that may be accepted from a given IP each minute.
-* `nginx.ingress.kubernetes.io/limit-rate-after`: sets the initial amount after which the further transmission of a response to a client will be rate limited.
-* `nginx.ingress.kubernetes.io/limit-rate`: rate of request that accepted from a client each second.
+* `nginx.ingress.kubernetes.io/limit-connections`: number of concurrent connections allowed from a single IP address. A 503 error is returned when exceeding this limit.
+* `nginx.ingress.kubernetes.io/limit-rps`: number of requests accepted from a given IP each second. The burst limit is set to 5 times the limit. When clients exceed this limit,  [limit-req-status-code](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#limit-req-status-code) ***default:*** 503 is returned.
+* `nginx.ingress.kubernetes.io/limit-rpm`: number of requests accepted from a given IP each minute. The burst limit is set to 5 times the limit. When clients exceed this limit,  [limit-req-status-code](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#limit-req-status-code) ***default:*** 503 is returned.
+* `nginx.ingress.kubernetes.io/limit-rate-after`: initial number of kilobytes after which the further transmission of a response to a given connection will be rate limited.
+* `nginx.ingress.kubernetes.io/limit-rate`: number of kilobytes per second allowed to send to a given connection.  The zero value disables rate limiting.
+* `nginx.ingress.kubernetes.io/limit-whitelist`: client IP source ranges to be excluded from rate-limiting. The value is a comma separated list of CIDRs.
 
-You can specify the client IP source ranges to be excluded from rate-limiting through the `nginx.ingress.kubernetes.io/limit-whitelist` annotation. The value is a comma separated list of CIDRs.
+If you specify multiple annotations in a single Ingress rule, limits are applied in the order `limit-connections`, `limit-rpm`, `limit-rps`.
 
-If you specify multiple annotations in a single Ingress rule, `limit-rpm`, and then `limit-rps` takes precedence.
+To configure settings globally for all Ingress rules, the `limit-rate-after` and `limit-rate` values may be set in the [NGINX ConfigMap](./configmap.md#limit-rate).  The value set in an Ingress annotation will override the global setting.
 
-The annotation `nginx.ingress.kubernetes.io/limit-rate`, `nginx.ingress.kubernetes.io/limit-rate-after` define a limit the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.
-
-To configure this setting globally for all Ingress rules, the `limit-rate-after` and `limit-rate` value may be set in the [NGINX ConfigMap](./configmap.md#limit-rate). if you set the value in ingress annotation will cover global setting.
+The client IP address will be set based on the use of [PROXY protocol](./configmap/#use-proxy-protocol) or from the `X-Forwarded-For` header value when [use-forwarded-headers](configmap/#use-forwarded-headers) is enabled.
 
 ### Permanent Redirect
 
