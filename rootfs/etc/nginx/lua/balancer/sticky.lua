@@ -1,5 +1,6 @@
 local balancer_resty = require("balancer.resty")
 local resty_chash = require("resty.chash")
+local util_nodemap = require("util.nodemap")
 local util = require("util")
 local ck = require("resty.cookie")
 local math = require("math")
@@ -10,14 +11,8 @@ local string_format = string.format
 local ngx_log = ngx.log
 local INFO = ngx.INFO
 
-local _M = balancer_resty:new({ factory = resty_chash, name = "sticky" })
+local _M = balancer_resty:new({ factory = util_nodemap, name = "sticky" })
 local DEFAULT_COOKIE_NAME = "route"
-
--- Consider the situation of N upstreams one of which is failing.
--- Then the probability to obtain failing upstream after M iterations would be close to (1/N)**M.
--- For the worst case (2 upstreams; 20 iterations) it would be ~10**(-6)
--- which is much better then ~10**(-3) for 10 iterations.
-local MAX_UPSTREAM_CHECKS_COUNT = 20
 
 function _M.cookie_name(self)
   return self.cookie_session_affinity.name or DEFAULT_COOKIE_NAME
@@ -25,9 +20,10 @@ end
 
 function _M.new(self, backend)
   local nodes = util.get_nodes(backend.endpoints)
+  local hash_salt = backend["name"]
 
   local o = {
-    instance = self.factory:new(nodes),
+    instance = self.factory:new(nodes, hash_salt),
     traffic_shaping_policy = backend.trafficShapingPolicy,
     alternative_backends = backend.alternativeBackends,
     cookie_session_affinity = backend["sessionAffinityConfig"]["cookieSessionAffinity"]
@@ -35,6 +31,15 @@ function _M.new(self, backend)
   setmetatable(o, self)
   self.__index = self
   return o
+end
+
+local function get_cookie(self)
+  local cookie, err = ck:new()
+  if not cookie then
+    ngx.log(ngx.ERR, err)
+  end
+
+  return cookie:get(self:cookie_name())
 end
 
 local function set_cookie(self, value)
@@ -71,6 +76,29 @@ local function set_cookie(self, value)
   end
 end
 
+local function get_routing_cookie_key(self)
+  local cookie_value = get_cookie(self)
+
+  if cookie_value then
+    -- format <timestamp>.<workder-pid>.<routing-key>
+    local routing_key = string.match(cookie_value, '.([^\\.]+)$')
+
+    if routing_key == nil then
+      local err = string.format("Failed to extract routing key from cookie '%s'!", cookie_value)
+      return nil, err
+    end
+
+    return routing_key, nil
+  end
+
+  return nil, nil
+end
+
+local function set_routing_cookie_key(self, key)
+  local value = string.format("%s.%s.%s", ngx.now(), ngx.worker.pid(), key)
+  set_cookie(self, value);
+end
+
 function _M.get_last_failure()
   return ngx_balancer.get_last_failure()
 end
@@ -88,18 +116,7 @@ end
 
 local function pick_new_upstream(self)
   local failed_upstreams = get_failed_upstreams()
-
-  for i = 1, MAX_UPSTREAM_CHECKS_COUNT do
-    local key = string.format("%s.%s.%s", ngx.now() + i, ngx.worker.pid(), math.random(999999))
-
-    local new_upstream = self.instance:find(key)
-
-    if not failed_upstreams[new_upstream] then
-      return new_upstream, key
-    end
-  end
-
-  return nil, nil
+  return self.instance:random_except(failed_upstreams)
 end
 
 local function should_set_cookie(self)
@@ -118,15 +135,9 @@ local function should_set_cookie(self)
 end
 
 function _M.balance(self)
-  local cookie, err = ck:new()
-  if not cookie then
-    ngx.log(ngx.ERR, "error while initializing cookie: " .. tostring(err))
-    return
-  end
-
   local upstream_from_cookie
 
-  local key = cookie:get(self:cookie_name())
+  local key = get_routing_cookie_key(self)
   if key then
     upstream_from_cookie = self.instance:find(key)
   end
@@ -142,10 +153,11 @@ function _M.balance(self)
   local new_upstream
 
   new_upstream, key = pick_new_upstream(self)
+
   if not new_upstream then
     ngx.log(ngx.WARN, string.format("failed to get new upstream; using upstream %s", new_upstream))
   elseif should_set_cookie(self) then
-    set_cookie(self, key)
+    set_routing_cookie_key(self, key)
   end
 
   return new_upstream
