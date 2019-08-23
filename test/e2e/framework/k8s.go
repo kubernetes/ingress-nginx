@@ -211,7 +211,7 @@ func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Po
 	}
 
 	if len(l.Items) == 0 {
-		return nil, fmt.Errorf("There is no ingress-nginx pods running in namespace %v", ns)
+		return nil, fmt.Errorf("there is no ingress-nginx pods running in namespace %v", ns)
 	}
 
 	var pod *core.Pod
@@ -226,7 +226,7 @@ func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Po
 	}
 
 	if pod == nil {
-		return nil, fmt.Errorf("There is no ingress-nginx pods running in namespace %v", ns)
+		return nil, fmt.Errorf("there is no ingress-nginx pods running in namespace %v", ns)
 	}
 
 	return pod, nil

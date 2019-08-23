@@ -217,10 +217,8 @@ func quote(input interface{}) string {
 	switch input := input.(type) {
 	case string:
 		inputStr = input
-		break
 	case fmt.Stringer:
 		inputStr = input.String()
-		break
 	default:
 		inputStr = fmt.Sprintf("%v", input)
 	}
