@@ -220,7 +220,11 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	}
 	// test invalid config
 	configuration = buildLuaSharedDictionaries(invalidType, servers, false)
-	if expected != actual {
+	if configuration != "" {
+		t.Errorf("expected an empty string, but got %s", configuration)
+	}
+
+	if actual != expected {
 		t.Errorf("Expected '%v' but returned '%v' ", expected, actual)
 	}
 }
@@ -233,7 +237,7 @@ func TestLuaConfigurationRequestBodySize(t *testing.T) {
 	}
 
 	size := luaConfigurationRequestBodySize(cfg)
-	if "21" != size {
+	if size != "21" {
 		t.Errorf("expected the size to be 20 but got: %v", size)
 	}
 }

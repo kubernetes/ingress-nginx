@@ -93,7 +93,7 @@ func (f *Framework) NewIngressController(namespace string, namespaceOverlay stri
 	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("Unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))
+		return fmt.Errorf("unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))
 	}
 
 	return nil
@@ -117,7 +117,7 @@ func (f *Framework) KubectlProxy(port int) (int, *exec.Cmd, error) {
 	buf := make([]byte, 128)
 	var n int
 	if n, err = stdout.Read(buf); err != nil {
-		return -1, cmd, fmt.Errorf("Failed to read from kubectl proxy stdout: %v", err)
+		return -1, cmd, fmt.Errorf("failed to read from kubectl proxy stdout: %v", err)
 	}
 
 	output := string(buf[:n])
@@ -128,7 +128,7 @@ func (f *Framework) KubectlProxy(port int) (int, *exec.Cmd, error) {
 		}
 	}
 
-	return -1, cmd, fmt.Errorf("Failed to parse port from proxy stdout: %s", output)
+	return -1, cmd, fmt.Errorf("failed to parse port from proxy stdout: %s", output)
 }
 
 func startCmdAndStreamOutput(cmd *exec.Cmd) (stdout, stderr io.ReadCloser, err error) {

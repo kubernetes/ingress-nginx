@@ -192,7 +192,7 @@ func tryAllNamespacesEndpointsCache(flags *genericclioptions.ConfigFlags) {
 }
 
 func tryFilteringEndpointsFromAllNamespacesCache(flags *genericclioptions.ConfigFlags, namespace string) *[]apiv1.Endpoints {
-	allEndpoints, _ := endpointsCache[""]
+	allEndpoints := endpointsCache[""]
 	if allEndpoints != nil {
 		endpoints := make([]apiv1.Endpoints, 0)
 		for _, thisEndpoints := range *allEndpoints {

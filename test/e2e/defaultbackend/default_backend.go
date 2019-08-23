@@ -27,8 +27,6 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-const defaultBackend = "default backend - 404"
-
 var _ = framework.IngressNginxDescribe("Default backend", func() {
 	f := framework.NewDefaultFramework("default-backend")
 

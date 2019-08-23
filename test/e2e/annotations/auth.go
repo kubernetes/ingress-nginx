@@ -432,7 +432,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			err := f.DeleteDeployment("httpbin")
 			Expect(err).NotTo(HaveOccurred())
 
-			resp, _, errs = gorequest.New().
+			_, _, errs = gorequest.New().
 				Get(f.GetURL(framework.HTTP)+fooPath).
 				Retry(10, 1*time.Second, http.StatusNotFound).
 				Set("Host", thisHost).

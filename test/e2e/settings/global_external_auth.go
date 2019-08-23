@@ -181,7 +181,7 @@ var _ = framework.IngressNginxDescribe("Global External Auth", func() {
 			err := f.DeleteDeployment("httpbin")
 			Expect(err).NotTo(HaveOccurred())
 
-			resp, _, errs = gorequest.New().
+			_, _, errs = gorequest.New().
 				Get(f.GetURL(framework.HTTP)).
 				Retry(10, 1*time.Second, http.StatusNotFound).
 				Set("Host", host).
