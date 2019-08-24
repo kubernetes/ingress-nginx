@@ -1,9 +1,7 @@
 local balancer_resty = require("balancer.resty")
-local resty_chash = require("resty.chash")
 local util_nodemap = require("util.nodemap")
 local util = require("util")
 local ck = require("resty.cookie")
-local math = require("math")
 local ngx_balancer = require("ngx.balancer")
 local split = require("util.split")
 

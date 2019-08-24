@@ -41,7 +41,7 @@ local function get_random_node(map)
       count = count + 1
   end
 
-  ngx.log(ngx.ERR, string.format("Failed to find element number %d in a map of size %d! This is a bug, please report!", index, size))
+  ngx.log(ngx.ERR, string.format("Failed to find node %d of %d! This is a bug, please report!", index, size))
 
   return nil, nil
 end
@@ -96,14 +96,14 @@ function _M.random(self)
 end
 
 --- random_except picks a random node from the hashmap, ignoring the nodes in the given table
--- @tparam {string, } ignore_nodes A table of nodes to ignore, the node needs to be the key, the value needs to be set to true
+-- @tparam {string, } ignore_nodes A table of nodes to ignore, the node needs to be the key,
+--                                 the value needs to be set to true
 -- @treturn string,string A random node and its key or both nil.
 function _M.random_except(self, ignore_nodes)
   local valid_nodes = {}
-  local ignore_nodes_size = util.tablelength(ignore_nodes)
 
   -- avoid generating the map if no ignores where provided
-  if ignore_nodes_size == 0 then
+  if ignore_nodes == nil or util.tablelength(ignore_nodes) == 0 then
     return get_random_node(self.map)
   end
 
