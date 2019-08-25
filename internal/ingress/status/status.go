@@ -171,35 +171,12 @@ func NewStatusSyncer(podInfo *k8s.PodInfo, config Config) Syncer {
 // runningAddresses returns a list of IP addresses and/or FQDN where the
 // ingress controller is currently running
 func (s *statusSync) runningAddresses() ([]string, error) {
-	addrs := []string{}
-
-	if s.PublishService != "" {
-		ns, name, _ := k8s.ParseNameNS(s.PublishService)
-		svc, err := s.Client.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
-
-		if svc.Spec.Type == apiv1.ServiceTypeExternalName {
-			addrs = append(addrs, svc.Spec.ExternalName)
-			return addrs, nil
-		}
-
-		for _, ip := range svc.Status.LoadBalancer.Ingress {
-			if ip.IP == "" {
-				addrs = append(addrs, ip.Hostname)
-			} else {
-				addrs = append(addrs, ip.IP)
-			}
-		}
-
-		addrs = append(addrs, svc.Spec.ExternalIPs...)
-		return addrs, nil
+	if s.PublishStatusAddress != "" {
+		return []string{s.PublishStatusAddress}, nil
 	}
 
-	if s.PublishStatusAddress != "" {
-		addrs = append(addrs, s.PublishStatusAddress)
-		return addrs, nil
+	if s.PublishService != "" {
+		return statusAddressFromService(s.PublishService, s.Client)
 	}
 
 	// get information about all the pods running the ingress controller
@@ -210,6 +187,7 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		return nil, err
 	}
 
+	addrs := make([]string, 0)
 	for _, pod := range pods.Items {
 		// only Running pods are valid
 		if pod.Status.Phase != apiv1.PodRunning {
@@ -345,4 +323,36 @@ func ingressSliceEqual(lhs, rhs []apiv1.LoadBalancerIngress) bool {
 	}
 
 	return true
+}
+
+func statusAddressFromService(service string, kubeClient clientset.Interface) ([]string, error) {
+	ns, name, _ := k8s.ParseNameNS(service)
+	svc, err := kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	switch svc.Spec.Type {
+	case apiv1.ServiceTypeExternalName:
+		return []string{svc.Spec.ExternalName}, nil
+	case apiv1.ServiceTypeClusterIP:
+		return []string{svc.Spec.ClusterIP}, nil
+	case apiv1.ServiceTypeNodePort:
+		return []string{svc.Spec.ClusterIP}, nil
+	case apiv1.ServiceTypeLoadBalancer:
+		addresses := []string{}
+		for _, ip := range svc.Status.LoadBalancer.Ingress {
+			if ip.IP == "" {
+				addresses = append(addresses, ip.Hostname)
+			} else {
+				addresses = append(addresses, ip.IP)
+			}
+		}
+
+		addresses = append(addresses, svc.Spec.ExternalIPs...)
+
+		return addresses, nil
+	}
+
+	return nil, fmt.Errorf("unable to extract IP address/es from service %v", service)
 }

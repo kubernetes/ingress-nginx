@@ -18,6 +18,7 @@ package status
 
 import (
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -373,15 +374,154 @@ func TestKeyfunc(t *testing.T) {
 }
 
 func TestRunningAddresessWithPublishService(t *testing.T) {
-	fk := buildStatusSync()
-
-	r, _ := fk.runningAddresses()
-	if r == nil {
-		t.Fatalf("returned nil but expected valid []string")
+	testCases := map[string]struct {
+		fakeClient  *testclient.Clientset
+		expected    []string
+		errExpected bool
+	}{
+		"service type ClusterIP": {
+			testclient.NewSimpleClientset(
+				&apiv1.PodList{Items: []apiv1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+						},
+						Spec: apiv1.PodSpec{
+							NodeName: "foo_node",
+						},
+						Status: apiv1.PodStatus{
+							Phase: apiv1.PodRunning,
+						},
+					},
+				},
+				},
+				&apiv1.ServiceList{Items: []apiv1.Service{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+						},
+						Spec: apiv1.ServiceSpec{
+							Type:      apiv1.ServiceTypeClusterIP,
+							ClusterIP: "1.1.1.1",
+						},
+					},
+				},
+				},
+			),
+			[]string{"1.1.1.1"},
+			false,
+		},
+		"service type NodePort": {
+			testclient.NewSimpleClientset(
+				&apiv1.ServiceList{Items: []apiv1.Service{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+						},
+						Spec: apiv1.ServiceSpec{
+							Type:      apiv1.ServiceTypeNodePort,
+							ClusterIP: "1.1.1.1",
+						},
+					},
+				},
+				},
+			),
+			[]string{"1.1.1.1"},
+			false,
+		},
+		"service type ExternalName": {
+			testclient.NewSimpleClientset(
+				&apiv1.ServiceList{Items: []apiv1.Service{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+						},
+						Spec: apiv1.ServiceSpec{
+							Type:         apiv1.ServiceTypeExternalName,
+							ExternalName: "foo.bar",
+						},
+					},
+				},
+				},
+			),
+			[]string{"foo.bar"},
+			false,
+		},
+		"service type LoadBalancer": {
+			testclient.NewSimpleClientset(
+				&apiv1.ServiceList{Items: []apiv1.Service{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+						},
+						Spec: apiv1.ServiceSpec{
+							Type: apiv1.ServiceTypeLoadBalancer,
+						},
+						Status: apiv1.ServiceStatus{
+							LoadBalancer: apiv1.LoadBalancerStatus{
+								Ingress: []apiv1.LoadBalancerIngress{
+									{
+										IP: "10.0.0.1",
+									},
+									{
+										IP:       "",
+										Hostname: "foo",
+									},
+								},
+							},
+						},
+					},
+				},
+				},
+			),
+			[]string{"10.0.0.1", "foo"},
+			false,
+		},
+		"invalid service type": {
+			testclient.NewSimpleClientset(
+				&apiv1.ServiceList{Items: []apiv1.Service{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+						},
+					},
+				},
+				},
+			),
+			nil,
+			true,
+		},
 	}
-	rl := len(r)
-	if len(r) != 4 {
-		t.Errorf("returned %v but expected %v", rl, 4)
+
+	for title, tc := range testCases {
+		t.Run(title, func(t *testing.T) {
+
+			fk := buildStatusSync()
+			fk.Config.Client = tc.fakeClient
+
+			ra, err := fk.runningAddresses()
+			if err != nil {
+				if tc.errExpected {
+					return
+				}
+
+				t.Fatalf("%v: unexpected error obtaining running address/es: %v", title, err)
+			}
+
+			if ra == nil {
+				t.Fatalf("returned nil but expected valid []string")
+			}
+
+			if !reflect.DeepEqual(tc.expected, ra) {
+				t.Errorf("returned %v but expected %v", ra, tc.expected)
+			}
+		})
 	}
 }
 
@@ -405,49 +545,21 @@ func TestRunningAddresessWithPods(t *testing.T) {
 
 func TestRunningAddresessWithPublishStatusAddress(t *testing.T) {
 	fk := buildStatusSync()
-	fk.PublishService = ""
 	fk.PublishStatusAddress = "127.0.0.1"
 
-	r, _ := fk.runningAddresses()
-	if r == nil {
+	ra, _ := fk.runningAddresses()
+	if ra == nil {
 		t.Fatalf("returned nil but expected valid []string")
 	}
-	rl := len(r)
-	if len(r) != 1 {
+	rl := len(ra)
+	if len(ra) != 1 {
 		t.Errorf("returned %v but expected %v", rl, 1)
 	}
-	rv := r[0]
+	rv := ra[0]
 	if rv != "127.0.0.1" {
 		t.Errorf("returned %v but expected %v", rv, "127.0.0.1")
 	}
 }
-
-/*
-TODO: this test requires a refactoring
-func TestUpdateStatus(t *testing.T) {
-	fk := buildStatusSync()
-	newIPs := buildLoadBalancerIngressByIP()
-	fk.updateStatus(newIPs)
-
-	fooIngress1, err1 := fk.Client.Extensions().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
-	if err1 != nil {
-		t.Fatalf("unexpected error")
-	}
-	fooIngress1CurIPs := fooIngress1.Status.LoadBalancer.Ingress
-	if !ingressSliceEqual(fooIngress1CurIPs, newIPs) {
-		t.Fatalf("returned %v but expected %v", fooIngress1CurIPs, newIPs)
-	}
-
-	fooIngress2, err2 := fk.Client.Extensions().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_2", metav1.GetOptions{})
-	if err2 != nil {
-		t.Fatalf("unexpected error")
-	}
-	fooIngress2CurIPs := fooIngress2.Status.LoadBalancer.Ingress
-	if !ingressSliceEqual(fooIngress2CurIPs, []apiv1.LoadBalancerIngress{}) {
-		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, []apiv1.LoadBalancerIngress{})
-	}
-}
-*/
 func TestSliceToStatus(t *testing.T) {
 	fkEndpoints := []string{
 		"10.0.0.1",
