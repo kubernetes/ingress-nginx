@@ -251,7 +251,7 @@ http {
 
     # Custom headers for response
     {{ range $k, $v := $addHeaders }}
-    add_header {{ $k }}            {{ $v | quote }};
+    more_set_headers {{ printf "%s: %s" $k $v | quote }};
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
