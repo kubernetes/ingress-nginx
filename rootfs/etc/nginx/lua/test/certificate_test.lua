@@ -34,6 +34,17 @@ local function refute_certificate_is_set()
   assert.spy(ssl.set_der_priv_key).was_not_called()
 end
 
+local function set_certificate(hostname, certificate, uuid)
+  local success, err = ngx.shared.certificate_servers:set(hostname, uuid)
+  if not success then
+    error(err)
+  end
+  success, err = ngx.shared.certificate_data:set(uuid, certificate)
+  if not success then
+    error(err)
+  end
+end
+
 local unmocked_ngx = _G.ngx
 
 describe("Certificate", function()
@@ -47,8 +58,7 @@ describe("Certificate", function()
       ngx.exit = function(status) end
 
 
-      ngx.shared.certificate_servers:set(DEFAULT_CERT_HOSTNAME, DEFAULT_UUID)
-      ngx.shared.certificate_data:set(DEFAULT_UUID, DEFAULT_CERT)
+      set_certificate(DEFAULT_CERT_HOSTNAME, DEFAULT_CERT, DEFAULT_UUID)
     end)
 
     after_each(function()
@@ -58,46 +68,40 @@ describe("Certificate", function()
     end)
 
     it("sets certificate and key when hostname is found in dictionary", function()
-      ngx.shared.certificate_servers:set("hostname", UUID)
-      ngx.shared.certificate_data:set(UUID, EXAMPLE_CERT)
-
+      set_certificate("hostname", EXAMPLE_CERT, UUID)
       assert_certificate_is_set(EXAMPLE_CERT)
     end)
 
     it("sets certificate and key for wildcard cert", function()
       ssl.server_name = function() return "sub.hostname", nil end
-      ngx.shared.certificate_servers:set("*.hostname", UUID)
-      ngx.shared.certificate_data:set(UUID, EXAMPLE_CERT)
+      set_certificate("*.hostname", EXAMPLE_CERT, UUID)
 
       assert_certificate_is_set(EXAMPLE_CERT)
     end)
 
     it("sets certificate and key for domain with trailing dot", function()
       ssl.server_name = function() return "hostname.", nil end
-      ngx.shared.certificate_servers:set("hostname", UUID)
-      ngx.shared.certificate_data:set(UUID, EXAMPLE_CERT)
+      set_certificate("hostname", EXAMPLE_CERT, UUID)
 
       assert_certificate_is_set(EXAMPLE_CERT)
     end)
 
     it("fallbacks to default certificate and key for domain with many trailing dots", function()
       ssl.server_name = function() return "hostname..", nil end
-      ngx.shared.certificate_servers:set("hostname", UUID)
-      ngx.shared.certificate_data:set(UUID, EXAMPLE_CERT)
+      set_certificate("hostname", EXAMPLE_CERT, UUID)
 
       assert_certificate_is_set(DEFAULT_CERT)
     end)
 
     it("sets certificate and key for nested wildcard cert", function()
       ssl.server_name = function() return "sub.nested.hostname", nil end
-      ngx.shared.certificate_servers:set("*.nested.hostname", UUID)
-      ngx.shared.certificate_data:set(UUID, EXAMPLE_CERT)
+      set_certificate("*.nested.hostname", EXAMPLE_CERT, UUID)
 
       assert_certificate_is_set(EXAMPLE_CERT)
     end)
 
     it("logs error message when certificate in dictionary is invalid", function()
-      ngx.shared.certificate_servers:set("hostname", "something invalid")
+      set_certificate("hostname", "something invalid", UUID)
 
       spy.on(ngx, "log")
 
@@ -117,8 +121,7 @@ describe("Certificate", function()
     end)
 
     it("fails when hostname does not have certificate and default cert is invalid", function()
-      ngx.shared.certificate_servers:set(DEFAULT_CERT_HOSTNAME, UID)
-      ngx.shared.certificate_data:set(UID, "invalid")
+      set_certificate(DEFAULT_CERT_HOSTNAME, "invalid", UUID)
 
       spy.on(ngx, "log")
 
