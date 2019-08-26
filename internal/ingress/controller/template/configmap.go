@@ -70,6 +70,7 @@ var (
 		"balancer_ewma":                 10,
 		"balancer_ewma_last_touched_at": 10,
 		"balancer_ewma_locks":           1,
+		"certificate_servers":           5,
 	}
 )
 

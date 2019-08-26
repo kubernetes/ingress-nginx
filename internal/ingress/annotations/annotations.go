@@ -74,7 +74,7 @@ const DeniedKeyName = "Denied"
 type Ingress struct {
 	metav1.ObjectMeta
 	BackendProtocol      string
-	Alias                string
+	Aliases              []string
 	BasicDigestAuth      auth.Config
 	Canary               canary.Config
 	CertificateAuth      authtls.Config
@@ -124,7 +124,7 @@ type Extractor struct {
 func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 	return Extractor{
 		map[string]parser.IngressAnnotation{
-			"Alias":                alias.NewParser(cfg),
+			"Aliases":              alias.NewParser(cfg),
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
 			"Canary":               canary.NewParser(cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),

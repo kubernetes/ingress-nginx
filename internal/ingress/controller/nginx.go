@@ -991,30 +991,38 @@ func configureBackends(rawBackends []*ingress.Backend) error {
 	return nil
 }
 
+type sslConfiguration struct {
+	Certificates map[string]string `json:"certificates"`
+	Servers      map[string]string `json:"servers"`
+}
+
 // configureCertificates JSON encodes certificates and POSTs it to an internal HTTP endpoint
 // that is handled by Lua
 func configureCertificates(rawServers []*ingress.Server) error {
-	servers := make([]*ingress.Server, 0)
+	configuration := &sslConfiguration{
+		Certificates: map[string]string{},
+		Servers:      map[string]string{},
+	}
 
-	for _, server := range rawServers {
-		if server.SSLCert == nil {
+	for _, rawServer := range rawServers {
+		if rawServer.SSLCert == nil {
 			continue
 		}
 
-		servers = append(servers, &ingress.Server{
-			Hostname: server.Hostname,
-			SSLCert: &ingress.SSLCert{
-				PemCertKey: server.SSLCert.PemCertKey,
-			},
-		})
+		uid := rawServer.SSLCert.UID
 
-		if server.Alias != "" && ssl.IsValidHostname(server.Alias, server.SSLCert.CN) {
-			servers = append(servers, &ingress.Server{
-				Hostname: server.Alias,
-				SSLCert: &ingress.SSLCert{
-					PemCertKey: server.SSLCert.PemCertKey,
-				},
-			})
+		if _, ok := configuration.Certificates[uid]; !ok {
+			configuration.Certificates[uid] = rawServer.SSLCert.PemCertKey
+		}
+
+		configuration.Servers[rawServer.Hostname] = uid
+
+		for _, alias := range rawServer.Aliases {
+			if !ssl.IsValidHostname(alias, rawServer.SSLCert.CN) {
+				continue
+			}
+
+			configuration.Servers[alias] = uid
 		}
 	}
 
@@ -1024,15 +1032,14 @@ func configureCertificates(rawServers []*ingress.Server) error {
 			continue
 		}
 
-		servers = append(servers, &ingress.Server{
-			Hostname: redirect.From,
-			SSLCert: &ingress.SSLCert{
-				PemCertKey: redirect.SSLCert.PemCertKey,
-			},
-		})
+		configuration.Servers[redirect.From] = redirect.SSLCert.UID
+
+		if _, ok := configuration.Certificates[redirect.SSLCert.UID]; !ok {
+			configuration.Certificates[redirect.SSLCert.UID] = redirect.SSLCert.PemCertKey
+		}
 	}
 
-	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/servers", "application/json", servers)
+	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/servers", "application/json", configuration)
 	if err != nil {
 		return err
 	}

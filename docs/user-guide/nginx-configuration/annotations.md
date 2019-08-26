@@ -331,13 +331,13 @@ Enables automatic conversion of preload links specified in the “Link” respon
 
 ### Server Alias
 
-To add Server Aliases to an Ingress rule add the annotation `nginx.ingress.kubernetes.io/server-alias: "<alias>"`.
-This will create a server with the same configuration, but a different `server_name` as the provided host.
+Allows the definition of one or more aliases in the server definition of the NGINX configuration using the annotation `nginx.ingress.kubernetes.io/server-alias: "<alias 1>,<alias 2>"`.
+This will create a server with the same configuration, but adding new values to the `server_name` directive.
 
 !!! Note
-	A server-alias name cannot conflict with the hostname of an existing server. If it does the server-alias annotation will be ignored.
-    If a server-alias is created and later a new server with the same hostname is created,
-    the new server configuration will take place over the alias configuration.
+	  A server-alias name cannot conflict with the hostname of an existing server. If it does, the server-alias annotation will be ignored.
+    If a server-alias is created and later a new server with the same hostname is created, the new server configuration will take
+    place over the alias configuration.
 
 For more information please see [the `server_name` documentation](http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name).
 
