@@ -3,6 +3,7 @@ local cjson = require("cjson.safe")
 -- this is the Lua representation of Configuration struct in internal/ingress/types.go
 local configuration_data = ngx.shared.configuration_data
 local certificate_data = ngx.shared.certificate_data
+local certificate_servers = ngx.shared.certificate_servers
 
 local _M = {}
 
@@ -35,7 +36,12 @@ local function fetch_request_body()
 end
 
 function _M.get_pem_cert_key(hostname)
-  return certificate_data:get(hostname)
+  local uid = certificate_servers:get(hostname)
+  if not uid then
+    return nil
+  end
+
+  return certificate_data:get(uid)
 end
 
 local function handle_servers()
@@ -45,30 +51,39 @@ local function handle_servers()
     return
   end
 
-  local raw_servers = fetch_request_body()
+  local raw_configuration = fetch_request_body()
 
-  local servers, err = cjson.decode(raw_servers)
-  if not servers then
-    ngx.log(ngx.ERR, "could not parse servers: ", err)
+  local configuration, err = cjson.decode(raw_configuration)
+  if not configuration then
+    ngx.log(ngx.ERR, "could not parse configuration: ", err)
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
 
   local err_buf = {}
-  for _, server in ipairs(servers) do
-    if server.hostname and server.sslCert.pemCertKey then
-      local success, set_err, forcible = certificate_data:set(server.hostname, server.sslCert.pemCertKey)
-      if not success then
-        local err_msg = string.format("error setting certificate for %s: %s\n", server.hostname, tostring(set_err))
-        table.insert(err_buf, err_msg)
-      end
-      if forcible then
-        local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s",
-          server.hostname)
-        ngx.log(ngx.WARN, msg)
-      end
-    else
-      ngx.log(ngx.WARN, "hostname or pemCertKey are not present")
+
+  for server, uid in pairs(configuration.servers) do
+    local success, set_err, forcible = certificate_servers:set(server, uid)
+    if not success then
+      local err_msg = string.format("error setting certificate for %s: %s\n", server, tostring(set_err))
+      table.insert(err_buf, err_msg)
+    end
+    if forcible then
+      local msg = string.format("certificate_servers dictionary is full, LRU entry has been removed to store %s",
+        server)
+      ngx.log(ngx.WARN, msg)
+    end
+  end
+
+  for uid, cert in pairs(configuration.certificates) do
+    local success, set_err, forcible = certificate_data:set(uid, cert)
+    if not success then
+      local err_msg = string.format("error setting certificate for %s: %s\n", uid, tostring(set_err))
+      table.insert(err_buf, err_msg)
+    end
+    if forcible then
+      local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s", uid)
+      ngx.log(ngx.WARN, msg)
     end
   end
 

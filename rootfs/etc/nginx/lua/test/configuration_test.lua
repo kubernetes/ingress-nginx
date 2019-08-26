@@ -166,7 +166,7 @@ describe("Configuration", function()
     describe("handle_servers()", function()
         it("should not accept non POST methods", function()
             ngx.var.request_method = "GET"
-            
+
             local s = spy.on(ngx, "print")
             assert.has_no.errors(configuration.handle_servers)
             assert.spy(s).was_called_with("Only POST requests are allowed!")
@@ -232,7 +232,7 @@ describe("Configuration", function()
 
             local s = spy.on(ngx, "log")
             assert.has_no.errors(configuration.handle_servers)
-            assert.spy(s).was_called_with(ngx.ERR, 
+            assert.spy(s).was_called_with(ngx.ERR,
                 "error setting certificate for hostname: error\nerror setting certificate for hostname2: error\n")
             assert.same(ngx.status, ngx.HTTP_INTERNAL_SERVER_ERROR)
         end)

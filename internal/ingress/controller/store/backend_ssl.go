@@ -99,7 +99,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			return nil, fmt.Errorf("key 'tls.key' missing from Secret %q", secretName)
 		}
 
-		sslCert, err = ssl.CreateSSLCert(cert, key)
+		sslCert, err = ssl.CreateSSLCert(cert, key, string(secret.UID))
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
 		}

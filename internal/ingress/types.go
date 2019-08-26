@@ -184,8 +184,8 @@ type Server struct {
 	SSLCert *SSLCert `json:"sslCert"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
-	// Alias return the alias of the server name
-	Alias string `json:"alias,omitempty"`
+	// Aliases return the alias of the server name
+	Aliases []string `json:"aliases,omitempty"`
 	// RedirectFromToWWW returns if a redirect to/from prefix www is required
 	RedirectFromToWWW bool `json:"redirectFromToWWW,omitempty"`
 	// CertificateAuth indicates the this server requires mutual authentication
