@@ -408,6 +408,17 @@ http {
     {{ end }}
 
     upstream upstream_balancer {
+        ### Attention!!!
+        #
+        # We no longer create "upstream" section for every backend.
+        # Backends are handled dynamically using Lua. If you would like to debug
+        # and see what backends ingress-nginx has in its memory you can
+        # install our kubectl plugin https://kubernetes.github.io/ingress-nginx/kubectl-plugin.
+        # Once you have the plugin you can use "kubectl ingress-nginx backends" command to
+        # inspect current backends.
+        #
+        ###
+
         server 0.0.0.1; # placeholder
 
         balancer_by_lua_block {
