@@ -103,8 +103,18 @@ local function pick_new_upstream(self)
 end
 
 local function should_set_cookie(self)
-  if self.cookie_session_affinity.locations then
+  if self.cookie_session_affinity.locations and ngx.var.host then
     local locs = self.cookie_session_affinity.locations[ngx.var.host]
+    if locs == nil then
+      -- Based off of wildcard hostname in ../certificate.lua
+      local wildcard_host, _, err = ngx.re.sub(ngx.var.host, "^[^\\.]+\\.", "*.", "jo")
+      if err then
+        ngx.log(ngx.ERR, "error: ", err);
+      elseif wildcard_host then
+        locs = self.cookie_session_affinity.locations[wildcard_host]
+      end
+    end
+
     if locs ~= nil then
       for _, path in pairs(locs) do
         if ngx.var.location_path == path then
