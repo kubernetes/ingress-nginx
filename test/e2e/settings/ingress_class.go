@@ -45,11 +45,11 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			annotations := map[string]string{
 				"kubernetes.io/ingress.class": "testclass",
 			}
-			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			validHost := "bar"
-			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, "http-svc", 80, nil)
+			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
@@ -89,14 +89,14 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 		It("should ignore Ingress with no class", func() {
 			invalidHost := "bar"
 
-			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, "http-svc", 80, nil)
+			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
 
 			validHost := "foo"
 			annotations := map[string]string{
 				"kubernetes.io/ingress.class": "testclass",
 			}
-			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, "http-svc", 80, &annotations)
+			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(validHost, func(cfg string) bool {
@@ -127,7 +127,7 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			annotations := map[string]string{
 				"kubernetes.io/ingress.class": "testclass",
 			}
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			ing = f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host, func(cfg string) bool {

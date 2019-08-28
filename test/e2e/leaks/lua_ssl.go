@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("DynamicCertificates", func() {
 })
 
 func privisionIngress(hostname string, f *framework.Framework) {
-	ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(hostname, "/", hostname, []string{hostname}, f.Namespace, "http-svc", 80, nil))
+	ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(hostname, "/", hostname, []string{hostname}, f.Namespace, framework.EchoService, 80, nil))
 	_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 		ing.Spec.TLS[0].Hosts,
 		ing.Spec.TLS[0].SecretName,

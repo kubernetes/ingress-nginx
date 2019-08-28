@@ -38,7 +38,7 @@ var _ = framework.IngressNginxDescribe("Graceful Shutdown - Slow Requests", func
 	It("should let slow requests finish before shutting down", func() {
 		host := "graceful-shutdown"
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "slowecho", 8080, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.SlowEchoService, 80, nil))
 		f.WaitForNginxConfiguration(
 			func(conf string) bool {
 				return strings.Contains(conf, "worker_shutdown_timeout")

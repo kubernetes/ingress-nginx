@@ -39,7 +39,7 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 	It("should reload after an update in the configuration", func() {
 		host := "configmap-change"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		wlKey := "whitelist-source-range"

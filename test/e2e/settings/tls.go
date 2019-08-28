@@ -54,7 +54,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		// https://www.openssl.org/docs/man1.1.0/apps/ciphers.html - "CIPHER SUITE NAMES"
 		testCiphers := "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA"
 
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
@@ -107,7 +107,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		hstsIncludeSubdomains := "hsts-include-subdomains"
 		hstsPreload := "hsts-preload"
 
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
@@ -172,7 +172,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 	})
 
 	It("should not use ports during the HTTP to HTTPS redirection", func() {
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
@@ -196,7 +196,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 	It("should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection", func() {
 		f.UpdateNginxConfigMapData("use-forwarded-headers", "true")
 
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,

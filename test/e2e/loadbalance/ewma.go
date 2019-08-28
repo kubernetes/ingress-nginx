@@ -17,6 +17,7 @@ limitations under the License.
 package loadbalance
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -41,18 +42,18 @@ var _ = framework.IngressNginxDescribe("Load Balance - EWMA", func() {
 	It("does not fail requests", func() {
 		host := "load-balance.com"
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "server_name load-balance.com")
 			})
 		time.Sleep(waitForLuaSync)
 
-		algorithm, err := f.GetLbAlgorithm("http-svc", 80)
+		algorithm, err := f.GetLbAlgorithm(framework.EchoService, 80)
 		Expect(err).Should(BeNil())
 		Expect(algorithm).Should(Equal("ewma"))
 
-		re, _ := regexp.Compile(`http-svc.*`)
+		re, _ := regexp.Compile(fmt.Sprintf(`%v.*`, framework.EchoService))
 		replicaRequestCount := map[string]int{}
 
 		for i := 0; i < 30; i++ {

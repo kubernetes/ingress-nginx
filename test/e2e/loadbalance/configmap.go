@@ -45,14 +45,14 @@ var _ = framework.IngressNginxDescribe("Load Balance - Configmap value", func() 
 
 		f.UpdateNginxConfigMapData("load-balance", "ewma")
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "server_name load-balance.com")
 			})
 		time.Sleep(waitForLuaSync)
 
-		algorithm, err := f.GetLbAlgorithm("http-svc", 80)
+		algorithm, err := f.GetLbAlgorithm(framework.EchoService, 80)
 		Expect(err).Should(BeNil())
 		Expect(algorithm).Should(Equal("ewma"))
 	})

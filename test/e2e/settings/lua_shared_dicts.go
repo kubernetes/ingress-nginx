@@ -35,7 +35,7 @@ var _ = framework.IngressNginxDescribe("LuaSharedDict", func() {
 	})
 
 	It("configures lua shared dicts", func() {
-		ingress := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+		ingress := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ingress)
 
 		f.UpdateNginxConfigMapData("lua-shared-dicts", "configuration_data:60,certificate_data:300, my_dict: 15 , invalid: 1a")

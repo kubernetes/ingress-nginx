@@ -43,7 +43,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 			"nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		resp, _, errs := gorequest.New().

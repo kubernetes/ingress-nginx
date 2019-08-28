@@ -110,9 +110,6 @@ func (f *Framework) BeforeEach() {
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	Expect(err).NotTo(HaveOccurred())
-
-	// we wait for any change in the informers and SSL certificate generation
-	time.Sleep(5 * time.Second)
 }
 
 // AfterEach deletes the namespace, after reading its events.

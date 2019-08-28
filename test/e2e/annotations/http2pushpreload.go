@@ -38,7 +38,7 @@ var _ = framework.IngressNginxDescribe("Annotations - HTTP2 Push Preload", func(
 			"nginx.ingress.kubernetes.io/http2-push-preload": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

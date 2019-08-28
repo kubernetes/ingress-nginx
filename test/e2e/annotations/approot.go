@@ -43,7 +43,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Approot", func() {
 			"nginx.ingress.kubernetes.io/app-root": "/foo",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

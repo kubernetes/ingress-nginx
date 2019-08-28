@@ -62,7 +62,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 			config.Data = map[string]string{}
 		}
 
-		config.Data["8080"] = fmt.Sprintf("%v/http-svc:80", f.Namespace)
+		config.Data["8080"] = fmt.Sprintf("%v/%v:80", f.Namespace, framework.EchoService)
 
 		_, err = f.KubeClientSet.
 			CoreV1().
@@ -78,7 +78,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		Expect(svc).NotTo(BeNil(), "expected a service but none returned")
 
 		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
-			Name:       "http-svc",
+			Name:       framework.EchoService,
 			Port:       8080,
 			TargetPort: intstr.FromInt(8080),
 		})
@@ -90,7 +90,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-http-svc-80"`, f.Namespace))
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-%v-80"`, f.Namespace, framework.EchoService))
 			})
 
 		ip := f.GetNginxIP()

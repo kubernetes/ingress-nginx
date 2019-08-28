@@ -61,7 +61,7 @@ var _ = framework.IngressNginxDescribe("Geoip2", func() {
 			"nginx.ingress.kubernetes.io/configuration-snippet": configSnippet,
 		}
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations))
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
