@@ -797,6 +797,7 @@ type ingressInformation struct {
 	Namespace   string
 	Rule        string
 	Service     string
+	ServicePort string
 	Annotations map[string]string
 }
 
@@ -808,6 +809,9 @@ func (info *ingressInformation) Equal(other *ingressInformation) bool {
 		return false
 	}
 	if info.Service != other.Service {
+		return false
+	}
+	if info.ServicePort != other.ServicePort {
 		return false
 	}
 	if !reflect.DeepEqual(info.Annotations, other.Annotations) {
@@ -848,6 +852,9 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 
 	if ing.Spec.Backend != nil {
 		info.Service = ing.Spec.Backend.ServiceName
+		if ing.Spec.Backend.ServicePort.String() != "0" {
+			info.ServicePort = ing.Spec.Backend.ServicePort.String()
+		}
 	}
 
 	for _, rule := range ing.Spec.Rules {
@@ -862,6 +869,10 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 		for _, rPath := range rule.HTTP.Paths {
 			if path == rPath.Path {
 				info.Service = rPath.Backend.ServiceName
+				if rPath.Backend.ServicePort.String() != "0" {
+					info.ServicePort = rPath.Backend.ServicePort.String()
+				}
+
 				return info
 			}
 		}
