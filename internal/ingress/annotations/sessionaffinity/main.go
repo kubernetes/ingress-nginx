@@ -28,6 +28,7 @@ import (
 
 const (
 	annotationAffinityType = "affinity"
+	annotationAffinityMode = "affinity-mode"
 	// If a cookie with this name exists,
 	// its value is used as an index into the list of available backends.
 	annotationAffinityCookieName = "session-cookie-name"
@@ -57,6 +58,8 @@ var (
 type Config struct {
 	// The type of affinity that will be used
 	Type string `json:"type"`
+	// The affinity mode, i.e. how sticky a session is
+	Mode string `json:"mode"`
 	Cookie
 }
 
@@ -136,6 +139,12 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 		at = ""
 	}
 
+	// Check the afinity mode that will be used
+	am, err := parser.GetStringAnnotation(annotationAffinityMode, ing)
+	if err != nil {
+		am = ""
+	}
+
 	switch at {
 	case "cookie":
 		cookie = a.cookieAffinityParse(ing)
@@ -146,6 +155,7 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	return &Config{
 		Type:   at,
+		Mode:   am,
 		Cookie: *cookie,
 	}, nil
 }

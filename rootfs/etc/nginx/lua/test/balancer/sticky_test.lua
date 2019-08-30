@@ -15,11 +15,16 @@ local function reset_ngx()
 end
 
 function get_mocked_cookie_new()
+  local o = { value = nil }
+  local mock = {
+    get = function(self, n) return self.value end,
+    set = function(self, c) self.value = c.value ; return true, nil end
+  }
+  setmetatable(o, mock)
+  mock.__index = mock
+
   return function(self)
-    return {
-      get = function(self, n) return nil, "error" end,
-      set = function(self, n) return true, "" end
-    }
+    return o;
   end
 end
 
@@ -229,7 +234,7 @@ describe("Sticky", function()
     end)
   end)
 
-  local function get_several_test_backends(change_on_failure)
+  local function get_several_test_backends(option)
     return {
       name = "access-router-production-web-80",
       endpoints = {
@@ -238,7 +243,13 @@ describe("Sticky", function()
       },
       sessionAffinityConfig = {
         name = "cookie",
-        cookieSessionAffinity = { name = "test_name", hash = "sha1", change_on_failure = change_on_failure }
+        mode = option["mode"],
+        cookieSessionAffinity = {
+          name = "test_name",
+          hash = "sha1",
+          change_on_failure = option["change_on_failure"],
+          locations = { ['test.com'] = {'/'} }
+        }
       },
     }
   end
@@ -257,21 +268,20 @@ describe("Sticky", function()
 
     context("when request to upstream fails", function()
       it("changes upstream when change_on_failure option is true", function()
-        -- create sticky cookie
-        cookie.new = function(self)
-          local return_obj = {
-            set = function(v) return false, nil end,
-            get = function(k) return "" end,
-          }
-          return return_obj, false
-        end
-
-        local options = {false, true}
+        local options = {
+          {["change_on_failure"] = false, ["mode"] = nil},
+          {["change_on_failure"] = false, ["mode"] = 'balanced'},
+          {["change_on_failure"] = false, ["mode"] = 'persistent'},
+          {["change_on_failure"] = true, ["mode"] = nil},
+          {["change_on_failure"] = true, ["mode"] = 'balanced'},
+          {["change_on_failure"] = true, ["mode"] = 'persistent'}
+        }
 
         for _, option in ipairs(options) do
           local sticky_balancer_instance = sticky:new(get_several_test_backends(option))
 
           local old_upstream = sticky_balancer_instance:balance()
+          assert.is.Not.Nil(old_upstream)
           for _ = 1, 100 do
             -- make sure upstream doesn't change on subsequent calls of balance()
             assert.equal(old_upstream, sticky_balancer_instance:balance())
@@ -281,11 +291,11 @@ describe("Sticky", function()
           sticky_balancer_instance.get_last_failure = function()
             return "failed"
           end
-          _G.ngx.var = { upstream_addr = old_upstream }
+          _G.ngx.var.upstream_addr = old_upstream
 
           for _ = 1, 100 do
             local new_upstream = sticky_balancer_instance:balance()
-            if option == false then
+            if option["change_on_failure"] == false then
               -- upstream should be the same inspite of error, if change_on_failure option is false
               assert.equal(new_upstream, old_upstream)
             else
