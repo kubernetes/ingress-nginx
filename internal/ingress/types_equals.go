@@ -152,6 +152,9 @@ func (sac1 *SessionAffinityConfig) Equal(sac2 *SessionAffinityConfig) bool {
 	if sac1.AffinityType != sac2.AffinityType {
 		return false
 	}
+	if sac1.AffinityMode != sac2.AffinityMode {
+		return false
+	}
 	if !(&sac1.CookieSessionAffinity).Equal(&sac2.CookieSessionAffinity) {
 		return false
 	}
