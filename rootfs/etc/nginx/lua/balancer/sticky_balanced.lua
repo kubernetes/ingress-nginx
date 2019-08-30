@@ -1,7 +1,7 @@
 -- An affinity mode which makes sure connections are rebalanced when a deployment is scaled.
 -- The advantage of this mode is that the load on the pods will be redistributed.
--- The drawback of this mode is that, when scaling up a deployment, roughly (n-c)/n users 
--- will lose their session, where c is the current number of pods and n is the new number of 
+-- The drawback of this mode is that, when scaling up a deployment, roughly (n-c)/n users
+-- will lose their session, where c is the current number of pods and n is the new number of
 -- pods.
 --
 local balancer_sticky = require("balancer.sticky")
@@ -27,7 +27,7 @@ function _M.new(self, backend)
 
   setmetatable(o, self)
   self.__index = self
-  
+
   balancer_sticky.sync(o, backend)
 
   return o
