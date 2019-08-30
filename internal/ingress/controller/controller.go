@@ -568,6 +568,10 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					ups.SessionAffinity.AffinityType = anns.SessionAffinity.Type
 				}
 
+				if ups.SessionAffinity.AffinityMode == "" {
+					ups.SessionAffinity.AffinityMode = anns.SessionAffinity.Mode
+				}
+
 				if anns.SessionAffinity.Type == "cookie" {
 					cookiePath := anns.SessionAffinity.Cookie.Path
 					if anns.Rewrite.UseRegex && cookiePath == "" {

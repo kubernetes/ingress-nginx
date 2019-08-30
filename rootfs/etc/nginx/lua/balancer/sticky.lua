@@ -1,8 +1,8 @@
+local affinity_balanced = require("affinity.balanced")
+local affinity_persistent = require("affinity.persistent")
 local balancer_resty = require("balancer.resty")
-local resty_chash = require("resty.chash")
 local util = require("util")
 local ck = require("resty.cookie")
-local math = require("math")
 local ngx_balancer = require("ngx.balancer")
 local split = require("util.split")
 
@@ -10,34 +10,60 @@ local string_format = string.format
 local ngx_log = ngx.log
 local INFO = ngx.INFO
 
-local _M = balancer_resty:new({ factory = resty_chash, name = "sticky" })
+local _M = balancer_resty:new({ name = "sticky" })
 local DEFAULT_COOKIE_NAME = "route"
 
--- Consider the situation of N upstreams one of which is failing.
--- Then the probability to obtain failing upstream after M iterations would be close to (1/N)**M.
--- For the worst case (2 upstreams; 20 iterations) it would be ~10**(-6)
--- which is much better then ~10**(-3) for 10 iterations.
-local MAX_UPSTREAM_CHECKS_COUNT = 20
 
 function _M.cookie_name(self)
   return self.cookie_session_affinity.name or DEFAULT_COOKIE_NAME
 end
 
-function _M.new(self, backend)
-  local nodes = util.get_nodes(backend.endpoints)
+local function init_affinity_mode(self, backend)
+  local mode = backend["sessionAffinityConfig"]["mode"] or 'balanced'
 
+  -- set default mode to 'balanced' for backwards compatibility
+  if mode == nil or mode == '' then
+    mode = 'balanced'
+  end
+
+  self.affinity_mode = mode
+
+  if mode == 'persistent' then
+    return affinity_persistent:new(self, backend)
+  end
+
+  -- default is 'balanced' for backwards compatibility
+  if mode ~= 'balanced' then
+    ngx.log(ngx.WARN, string.format("Invalid affinity mode '%s'! Using 'balanced' as a default.", mode))
+  end
+
+  return affinity_balanced:new(self, backend)
+end
+
+function _M.new(self, backend)
   local o = {
-    instance = self.factory:new(nodes),
+    instance = nil,
+    affinity_mode = nil,
     traffic_shaping_policy = backend.trafficShapingPolicy,
     alternative_backends = backend.alternativeBackends,
     cookie_session_affinity = backend["sessionAffinityConfig"]["cookieSessionAffinity"]
   }
   setmetatable(o, self)
   self.__index = self
-  return o
+  
+  return init_affinity_mode(o, backend)
 end
 
-local function set_cookie(self, value)
+function _M.get_cookie(self)
+  local cookie, err = ck:new()
+  if not cookie then
+    ngx.log(ngx.ERR, err)
+  end
+
+  return cookie:get(self:cookie_name())
+end
+
+function _M.set_cookie(self, value)
   local cookie, err = ck:new()
   if not cookie then
     ngx.log(ngx.ERR, err)
@@ -86,19 +112,30 @@ local function get_failed_upstreams()
   return indexed_upstream_addrs
 end
 
-local function pick_new_upstream(self)
-  local failed_upstreams = get_failed_upstreams()
+--- get_routing_key gets the current routing key from the cookie
+-- @treturn string, string The routing key and an error message if an error occured.
+function _M.get_routing_key(self)
+  -- interface method to get the routing key from the cookie
+  -- has to be overridden by an affinity mode
+  ngx.log(ngx.ERR, "[BUG] Failed to get routing key as no implementation has been provided!")
+  return nil, nil
+end
 
-  for i = 1, MAX_UPSTREAM_CHECKS_COUNT do
-    local key = string.format("%s.%s.%s", ngx.now() + i, ngx.worker.pid(), math.random(999999))
+--- set_routing_key sets the current routing key on the cookie
+-- @tparam string key The routing key to set on the cookie.
+function _M.set_routing_key(self, key)
+  -- interface method to set the routing key on the cookie
+  -- has to be overridden by an affinity mode
+  ngx.log(ngx.ERR, "[BUG] Failed to set routing key as no implementation has been provided!")
+end
 
-    local new_upstream = self.instance:find(key)
-
-    if not failed_upstreams[new_upstream] then
-      return new_upstream, key
-    end
-  end
-
+--- pick_new_upstream picks a new upstream while ignoring the given failed upstreams.
+-- @tparam {[string]=boolean} A table of upstreams to ignore where the key is the endpoint and the value a boolean.
+-- @treturn string, string The endpoint and its key.
+function _M.pick_new_upstream(self, failed_upstreams)
+  -- interface method to get a new upstream
+  -- has to be overridden by an affinity mode
+  ngx.log(ngx.ERR, "[BUG] Failed to pick new upstream as no implementation has been provided!")
   return nil, nil
 end
 
@@ -128,15 +165,9 @@ local function should_set_cookie(self)
 end
 
 function _M.balance(self)
-  local cookie, err = ck:new()
-  if not cookie then
-    ngx.log(ngx.ERR, "error while initializing cookie: " .. tostring(err))
-    return
-  end
-
   local upstream_from_cookie
 
-  local key = cookie:get(self:cookie_name())
+  local key = self:get_routing_key()
   if key then
     upstream_from_cookie = self.instance:find(key)
   end
@@ -151,24 +182,34 @@ function _M.balance(self)
 
   local new_upstream
 
-  new_upstream, key = pick_new_upstream(self)
+  new_upstream, key = self:pick_new_upstream(get_failed_upstreams())
   if not new_upstream then
     ngx.log(ngx.WARN, string.format("failed to get new upstream; using upstream %s", new_upstream))
   elseif should_set_cookie(self) then
-    set_cookie(self, key)
+    self:set_routing_key(key)
   end
 
   return new_upstream
 end
 
 function _M.sync(self, backend)
+  local changed = false
+
+  -- check and reinit affinity mode before syncing the balancer which will reinit the nodes
+  if self.affinity_mode ~= backend.sessionAffinityConfig.mode then
+    changed = true
+    init_affinity_mode(self, backend)
+  end
+
+  -- reload balancer nodes
   balancer_resty.sync(self, backend)
 
   -- Reload the balancer if any of the annotations have changed.
-  local changed = not util.deep_compare(
+  changed = changed or not util.deep_compare(
     self.cookie_session_affinity,
     backend.sessionAffinityConfig.cookieSessionAffinity
   )
+
   if not changed then
     return
   end
