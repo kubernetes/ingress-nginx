@@ -3,12 +3,30 @@
 -- The drawback of this mode is that when scaling up a deployment, sessions will not
 -- be rebalanced.
 --
+local balancer_sticky = require("balancer.sticky")
 local util = require("util")
 local util_nodemap = require("util.nodemap")
 
-local _M = {}
+local _M = balancer_sticky:new()
 
-local function get_routing_key(self)
+function _M.new(self, backend)
+  local nodes = util.get_nodes(backend.endpoints)
+  local hash_salt = backend["name"]
+
+  local o = {
+    name = "sticky_persistent",
+    instance = util_nodemap:new(nodes, hash_salt)
+  }
+
+  setmetatable(o, self)
+  self.__index = self
+  
+  balancer_sticky.sync(o, backend)
+
+  return o
+end
+
+function _M.get_routing_key(self)
   local cookie_value = self:get_cookie()
 
   if cookie_value then
@@ -26,28 +44,13 @@ local function get_routing_key(self)
   return nil, nil
 end
 
-local function set_routing_key(self, key)
+function _M.set_routing_key(self, key)
   local value = string.format("%s.%s.%s", ngx.now(), ngx.worker.pid(), key)
   self:set_cookie(value);
 end
 
-local function pick_new_upstream(self, failed_upstreams)
+function _M.pick_new_upstream(self, failed_upstreams)
   return self.instance:random_except(failed_upstreams)
-end
-
-function _M.new(self, sticky_balancer, backend)
-  local o = sticky_balancer or {}
-  
-  local nodes = util.get_nodes(backend.endpoints)
-  local hash_salt = backend["name"]
-
-  -- override sticky.balancer methods
-  o.instance = util_nodemap:new(nodes, hash_salt)
-  o.get_routing_key = get_routing_key
-  o.set_routing_key = set_routing_key
-  o.pick_new_upstream = pick_new_upstream
-
-  return sticky_balancer
 end
 
 return _M

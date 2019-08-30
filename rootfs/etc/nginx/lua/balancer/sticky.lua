@@ -1,5 +1,3 @@
-local affinity_balanced = require("affinity.balanced")
-local affinity_persistent = require("affinity.persistent")
 local balancer_resty = require("balancer.resty")
 local util = require("util")
 local ck = require("resty.cookie")
@@ -10,48 +8,24 @@ local string_format = string.format
 local ngx_log = ngx.log
 local INFO = ngx.INFO
 
-local _M = balancer_resty:new({ name = "sticky" })
+local _M = balancer_resty:new()
 local DEFAULT_COOKIE_NAME = "route"
-
 
 function _M.cookie_name(self)
   return self.cookie_session_affinity.name or DEFAULT_COOKIE_NAME
 end
 
-local function init_affinity_mode(self, backend)
-  local mode = backend["sessionAffinityConfig"]["mode"] or 'balanced'
-
-  -- set default mode to 'balanced' for backwards compatibility
-  if mode == nil or mode == '' then
-    mode = 'balanced'
-  end
-
-  self.affinity_mode = mode
-
-  if mode == 'persistent' then
-    return affinity_persistent:new(self, backend)
-  end
-
-  -- default is 'balanced' for backwards compatibility
-  if mode ~= 'balanced' then
-    ngx.log(ngx.WARN, string.format("Invalid affinity mode '%s'! Using 'balanced' as a default.", mode))
-  end
-
-  return affinity_balanced:new(self, backend)
-end
-
-function _M.new(self, backend)
+function _M.new(self)
   local o = {
-    instance = nil,
-    affinity_mode = nil,
-    traffic_shaping_policy = backend.trafficShapingPolicy,
-    alternative_backends = backend.alternativeBackends,
-    cookie_session_affinity = backend["sessionAffinityConfig"]["cookieSessionAffinity"]
+    alternative_backends = nil,
+    cookie_session_affinity = nil,
+    traffic_shaping_policy = nil
   }
+
   setmetatable(o, self)
   self.__index = self
-  
-  return init_affinity_mode(o, backend)
+
+  return o
 end
 
 function _M.get_cookie(self)
@@ -112,34 +86,8 @@ local function get_failed_upstreams()
   return indexed_upstream_addrs
 end
 
---- get_routing_key gets the current routing key from the cookie
--- @treturn string, string The routing key and an error message if an error occured.
-function _M.get_routing_key(self)
-  -- interface method to get the routing key from the cookie
-  -- has to be overridden by an affinity mode
-  ngx.log(ngx.ERR, "[BUG] Failed to get routing key as no implementation has been provided!")
-  return nil, nil
-end
-
---- set_routing_key sets the current routing key on the cookie
--- @tparam string key The routing key to set on the cookie.
-function _M.set_routing_key(self, key)
-  -- interface method to set the routing key on the cookie
-  -- has to be overridden by an affinity mode
-  ngx.log(ngx.ERR, "[BUG] Failed to set routing key as no implementation has been provided!")
-end
-
---- pick_new_upstream picks a new upstream while ignoring the given failed upstreams.
--- @tparam {[string]=boolean} A table of upstreams to ignore where the key is the endpoint and the value a boolean.
--- @treturn string, string The endpoint and its key.
-function _M.pick_new_upstream(self, failed_upstreams)
-  -- interface method to get a new upstream
-  -- has to be overridden by an affinity mode
-  ngx.log(ngx.ERR, "[BUG] Failed to pick new upstream as no implementation has been provided!")
-  return nil, nil
-end
-
 local function should_set_cookie(self)
+
   if self.cookie_session_affinity.locations and ngx.var.host then
     local locs = self.cookie_session_affinity.locations[ngx.var.host]
     if locs == nil then
@@ -193,19 +141,11 @@ function _M.balance(self)
 end
 
 function _M.sync(self, backend)
-  local changed = false
-
-  -- check and reinit affinity mode before syncing the balancer which will reinit the nodes
-  if self.affinity_mode ~= backend.sessionAffinityConfig.mode then
-    changed = true
-    init_affinity_mode(self, backend)
-  end
-
   -- reload balancer nodes
   balancer_resty.sync(self, backend)
 
   -- Reload the balancer if any of the annotations have changed.
-  changed = changed or not util.deep_compare(
+  local changed = not util.deep_compare(
     self.cookie_session_affinity,
     backend.sessionAffinityConfig.cookieSessionAffinity
   )
@@ -216,6 +156,8 @@ function _M.sync(self, backend)
 
   ngx_log(INFO, string_format("[%s] nodes have changed for backend %s", self.name, backend.name))
 
+  self.traffic_shaping_policy = backend.trafficShapingPolicy
+  self.alternative_backends = backend.alternativeBackends
   self.cookie_session_affinity = backend.sessionAffinityConfig.cookieSessionAffinity
 end
 
