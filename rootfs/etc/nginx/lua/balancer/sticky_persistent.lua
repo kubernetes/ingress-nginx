@@ -20,7 +20,7 @@ function _M.new(self, backend)
 
   setmetatable(o, self)
   self.__index = self
-  
+
   balancer_sticky.sync(o, backend)
 
   return o
