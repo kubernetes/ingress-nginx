@@ -955,7 +955,7 @@ stream {
             set $namespace      {{ $ing.Namespace | quote}};
             set $ingress_name   {{ $ing.Rule | quote }};
             set $service_name   {{ $ing.Service | quote }};
-            set $service_port   {{ $location.Port | quote }};
+            set $service_port   {{ $ing.ServicePort | quote }};
             set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
 
             {{ if $all.Cfg.EnableOpentracing }}
