@@ -414,7 +414,7 @@ func (n *NGINXController) Stop() error {
 	// wait for the NGINX process to terminate
 	timer := time.NewTicker(time.Second * 1)
 	for range timer.C {
-		if !process.IsNginxRunning() {
+		if !nginx.IsRunning() {
 			klog.Info("NGINX process has stopped")
 			timer.Stop()
 			break
