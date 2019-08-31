@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	ps "github.com/mitchellh/go-ps"
 	"github.com/tv42/httpunix"
 	"k8s.io/klog"
 )
@@ -170,4 +171,16 @@ func Version() string {
 	}
 
 	return string(out)
+}
+
+// IsRunning returns true if a process with the name 'nginx' is found
+func IsRunning() bool {
+	processes, _ := ps.Processes()
+	for _, p := range processes {
+		if p.Executable() == "nginx" {
+			return true
+		}
+	}
+
+	return false
 }
