@@ -347,7 +347,7 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		}
 	}
 
-	if l1.Port.StrVal != l2.Port.StrVal {
+	if l1.Port.String() != l2.Port.String() {
 		return false
 	}
 	if !(&l1.BasicDigestAuth).Equal(&l2.BasicDigestAuth) {

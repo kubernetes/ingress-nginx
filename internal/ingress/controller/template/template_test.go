@@ -29,7 +29,11 @@ import (
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
+
+	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -899,104 +903,108 @@ func TestOpentracingPropagateContext(t *testing.T) {
 }
 
 func TestGetIngressInformation(t *testing.T) {
-	validIngress := &ingress.Ingress{}
-	invalidIngress := "wrongtype"
-	host := "host1"
-	validPath := "/ok"
-	invalidPath := 10
 
-	info := getIngressInformation(invalidIngress, host, validPath)
-	expected := &ingressInformation{}
-	if !info.Equal(expected) {
-		t.Errorf("Expected %v, but got %v", expected, info)
-	}
-
-	info = getIngressInformation(validIngress, host, invalidPath)
-	if !info.Equal(expected) {
-		t.Errorf("Expected %v, but got %v", expected, info)
-	}
-
-	// Setup Ingress Resource
-	validIngress.Namespace = "default"
-	validIngress.Name = "validIng"
-	validIngress.Annotations = map[string]string{
-		"ingress.annotation": "ok",
-	}
-	validIngress.Spec.Backend = &networking.IngressBackend{
-		ServiceName: "a-svc",
-	}
-
-	info = getIngressInformation(validIngress, host, validPath)
-	expected = &ingressInformation{
-		Namespace: "default",
-		Rule:      "validIng",
-		Annotations: map[string]string{
-			"ingress.annotation": "ok",
+	testcases := map[string]struct {
+		Ingress  interface{}
+		Host     string
+		Path     interface{}
+		Expected *ingressInformation
+	}{
+		"wrong ingress type": {
+			"wrongtype",
+			"host1",
+			"/ok",
+			&ingressInformation{},
 		},
-		Service: "a-svc",
-	}
-	if !info.Equal(expected) {
-		t.Errorf("Expected %v, but got %v", expected, info)
-	}
-
-	validIngress.Spec.Backend = nil
-	validIngress.Spec.Rules = []networking.IngressRule{
-		{
-			Host: host,
-			IngressRuleValue: networking.IngressRuleValue{
-				HTTP: &networking.HTTPIngressRuleValue{
-					Paths: []networking.HTTPIngressPath{
-						{
-							Path: "/ok",
-							Backend: networking.IngressBackend{
-								ServiceName: "b-svc",
+		"wrong path type": {
+			&ingress.Ingress{},
+			"host1",
+			10,
+			&ingressInformation{},
+		},
+		"valid ingress definition with name validIng in namespace default": {
+			&ingress.Ingress{
+				networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "validIng",
+						Namespace: apiv1.NamespaceDefault,
+						Annotations: map[string]string{
+							"ingress.annotation": "ok",
+						},
+					},
+					Spec: networking.IngressSpec{
+						Backend: &networking.IngressBackend{
+							ServiceName: "a-svc",
+						},
+					},
+				},
+				nil,
+			},
+			"host1",
+			"",
+			&ingressInformation{
+				Namespace: "default",
+				Rule:      "validIng",
+				Annotations: map[string]string{
+					"ingress.annotation": "ok",
+				},
+				Service: "a-svc",
+			},
+		},
+		"valid ingress definition with name demo in namespace something and path /ok using a service with name b-svc port 80": {
+			&ingress.Ingress{
+				networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "demo",
+						Namespace: "something",
+						Annotations: map[string]string{
+							"ingress.annotation": "ok",
+						},
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "foo.bar",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path: "/ok",
+												Backend: networking.IngressBackend{
+													ServiceName: "b-svc",
+													ServicePort: intstr.FromInt(80),
+												},
+											},
+										},
+									},
+								},
 							},
+							{},
 						},
 					},
 				},
+				nil,
 			},
-		},
-		{},
-	}
-
-	info = getIngressInformation(validIngress, host, validPath)
-	expected = &ingressInformation{
-		Namespace: "default",
-		Rule:      "validIng",
-		Annotations: map[string]string{
-			"ingress.annotation": "ok",
-		},
-		Service: "b-svc",
-	}
-	if !info.Equal(expected) {
-		t.Errorf("Expected %v, but got %v", expected, info)
-	}
-
-	validIngress.Spec.Rules = append(validIngress.Spec.Rules, networking.IngressRule{
-		Host: "host2",
-		IngressRuleValue: networking.IngressRuleValue{
-			HTTP: &networking.HTTPIngressRuleValue{
-				Paths: []networking.HTTPIngressPath{
-					{
-						Path: "/ok",
-						Backend: networking.IngressBackend{
-							ServiceName: "c-svc",
-						},
-					},
+			"foo.bar",
+			"/ok",
+			&ingressInformation{
+				Namespace: "something",
+				Rule:      "demo",
+				Annotations: map[string]string{
+					"ingress.annotation": "ok",
 				},
+				Service:     "b-svc",
+				ServicePort: "80",
 			},
 		},
-	})
-
-	info = getIngressInformation(validIngress, host, validPath)
-	if !info.Equal(expected) {
-		t.Errorf("Expected %v, but got %v", expected, info)
 	}
 
-	info = getIngressInformation(validIngress, "host2", validPath)
-	expected.Service = "c-svc"
-	if !info.Equal(expected) {
-		t.Errorf("Expected %v, but got %v", expected, info)
+	for title, testCase := range testcases {
+		info := getIngressInformation(testCase.Ingress, testCase.Host, testCase.Path)
+
+		if !info.Equal(testCase.Expected) {
+			t.Fatalf("%s: expected '%v' but returned %v", title, testCase.Expected, info)
+		}
 	}
 }
 
