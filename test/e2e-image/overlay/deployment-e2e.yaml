@@ -22,5 +22,14 @@ spec:
         - name: nginx-ingress-controller
           livenessProbe:
             timeoutSeconds: 1
+            initialDelaySeconds: 1
+            periodSeconds: 2
           readinessProbe:
             timeoutSeconds: 1
+            initialDelaySeconds: 1
+            periodSeconds: 2
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /wait-shutdown

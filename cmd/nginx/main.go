@@ -131,7 +131,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	if conf.EnableProfiling {
-		registerProfiler(mux)
+		go registerProfiler()
 	}
 
 	registerHealthz(ngx, mux)
@@ -265,7 +265,9 @@ func registerMetrics(reg *prometheus.Registry, mux *http.ServeMux) {
 
 }
 
-func registerProfiler(mux *http.ServeMux) {
+func registerProfiler() {
+	mux := http.NewServeMux()
+
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/heap", pprof.Index)
 	mux.HandleFunc("/debug/pprof/mutex", pprof.Index)
@@ -276,6 +278,12 @@ func registerProfiler(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":10255"),
+		Handler: mux,
+	}
+	klog.Fatal(server.ListenAndServe())
 }
 
 func startHTTPServer(port int, mux *http.ServeMux) {

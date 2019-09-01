@@ -60,3 +60,12 @@ go build \
     -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
     -X ${PKG}/version.REPO=${REPO_INFO}" \
   -o "bin/${ARCH}/dbg" "${PKG}/cmd/dbg"
+
+
+go build \
+  "${GOBUILD_FLAGS}" \
+  -ldflags "-s -w \
+    -X ${PKG}/version.RELEASE=${TAG} \
+    -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
+    -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -o "bin/${ARCH}/wait-shutdown" "${PKG}/cmd/waitshutdown"

@@ -35,12 +35,11 @@ import (
 func TestNginxCheck(t *testing.T) {
 	mux := http.NewServeMux()
 
-	listener, err := net.Listen("unix", nginx.StatusSocket)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 	if err != nil {
-		t.Fatalf("crating unix listener: %s", err)
+		t.Fatalf("crating tcp listener: %s", err)
 	}
 	defer listener.Close()
-	defer os.Remove(nginx.StatusSocket)
 
 	server := &httptest.Server{
 		Listener: listener,
