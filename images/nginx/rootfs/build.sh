@@ -14,16 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-export OPENRESTY_VERSION=1.15.8.1
+export OPENRESTY_VERSION=1.15.8.2
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.8.0
+export NGINX_OPENTRACING_VERSION=0.9.0
 export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=cdfaf5bb25ff5f8ec179fd548e6c7c2ade9a6a09
@@ -36,7 +37,7 @@ export LUA_BRIDGE_TRACER_VERSION=0.1.1
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export RESTY_LUAROCKS_VERSION=3.1.3
+export RESTY_LUAROCKS_VERSION=3.2.0
 export LUA_RESTY_BALANCER_VERSION=0.03
 
 export BUILD_PATH=/tmp/build
@@ -88,7 +89,6 @@ clean-install \
   python \
   libmaxminddb-dev \
   dumb-init \
-  gdb \
   bc \
   unzip \
   nano \
@@ -124,8 +124,8 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 89a1238ca177692d6903c0adbea5bdf2a0b82c383662a73c03ebf5ef9f570842 \
-        "https://openresty.org/download/openresty-$OPENRESTY_VERSION.tar.gz"
+get_src bf92af41d3ad22880047a8b283fc213d59c7c1b83f8dae82e50d14b64d73ac38 \
+        "https://github.com/openresty/openresty/releases/download/v${OPENRESTY_VERSION}/openresty-${OPENRESTY_VERSION}.tar.gz"
 
 get_src fe683831f832aae4737de1e1026a4454017c2d5f98cb88b08c5411dc380062f8 \
         "https://github.com/atomx/nginx-http-auth-digest/archive/$NGINX_DIGEST_AUTH.tar.gz"
@@ -133,7 +133,7 @@ get_src fe683831f832aae4737de1e1026a4454017c2d5f98cb88b08c5411dc380062f8 \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src b2159297814d5df153cf45f355bcd8ffdb71f2468e8149ad549d4f9c0cdc81ad \
+get_src 4fc410d7aef0c8a6371afa9f249d2c6cec50ea88785d05052f8f457c35b69c18 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
@@ -166,7 +166,7 @@ get_src 15bd1005228cf2c869a6f09e8c41a6aaa6846e4936c473106786ae8ac860fab7 \
 get_src 5f629a50ba22347c441421091da70fdc2ac14586619934534e5a0f8a1390a950 \
         "https://github.com/yaoweibin/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
-get_src c573435f495aac159e34eaa0a3847172a2298eb6295fcdc35d565f9f9b990513 \
+get_src 66c1848a25924917ddc1901e865add8f19f2585360c44a001a03a8c234d3e796 \
         "https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz"
 
 get_src 82209d5a5d9545c6dde3db7857f84345db22162fdea9743d5e2b2094d8d407f8 \
@@ -519,7 +519,6 @@ apt-mark unmarkauto \
   libpcre3 \
   zlib1g \
   libaio1 \
-  gdb \
   geoip-bin \
   libyajl2 liblmdb0 libxml2 libpcre++ \
   gzip \
@@ -540,9 +539,14 @@ apt-get remove -y --purge \
   python \
   xz-utils \
   bc \
+  sensible-utils \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y
+
+# Remove configuration files left after the package removal.
+# To see such packages run: apt list | grep residual
+dpkg -l | grep '^rc' | awk '{print $2}' | xargs apt-get purge --yes
 
 rm -rf "$BUILD_PATH"
 rm -Rf /usr/share/man /usr/share/doc
