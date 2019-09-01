@@ -39,7 +39,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", fun
 				more_set_headers "Request-Id: $req_id";`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

@@ -124,14 +124,14 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 								{
 									Path: "/",
 									Backend: extensions.IngressBackend{
-										ServiceName: "http-svc",
+										ServiceName: framework.EchoService,
 										ServicePort: intstr.FromInt(80),
 									},
 								},
 								{
 									Path: pathName,
 									Backend: extensions.IngressBackend{
-										ServiceName: "http-svc",
+										ServiceName: framework.EchoService,
 										ServicePort: intstr.FromInt(80),
 									},
 								},

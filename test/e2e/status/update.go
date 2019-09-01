@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 
 		f.NewEchoDeploymentWithReplicas(1)
 
-		ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
+		ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {

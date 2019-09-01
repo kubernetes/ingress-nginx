@@ -55,7 +55,7 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 			},
 		})
 
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
@@ -92,7 +92,7 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 			},
 		})
 
-		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {

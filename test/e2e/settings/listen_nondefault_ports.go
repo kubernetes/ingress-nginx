@@ -48,7 +48,7 @@ var _ = framework.IngressNginxDescribe("Listen on nondefault ports", func() {
 	Context("with a plain HTTP ingress", func() {
 		It("should set X-Forwarded-Port headers accordingly when listening on a non-default HTTP port", func() {
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -71,7 +71,7 @@ var _ = framework.IngressNginxDescribe("Listen on nondefault ports", func() {
 
 		It("should set X-Forwarded-Port header to 443", func() {
 
-			ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil)
+			ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
 
 			tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
@@ -105,10 +105,10 @@ var _ = framework.IngressNginxDescribe("Listen on nondefault ports", func() {
 
 				var httpbinIP string
 
-				err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.Namespace, 1)
+				err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
 				Expect(err).NotTo(HaveOccurred())
 
-				e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get("httpbin", metav1.GetOptions{})
+				e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
 				Expect(err).NotTo(HaveOccurred())
 
 				httpbinIP = e.Subsets[0].Addresses[0].IP
@@ -118,7 +118,7 @@ var _ = framework.IngressNginxDescribe("Listen on nondefault ports", func() {
 					"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 				}
 
-				ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, &annotations)
+				ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, &annotations)
 
 				f.EnsureIngress(ing)
 				tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,

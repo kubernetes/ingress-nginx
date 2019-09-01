@@ -34,7 +34,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 	})
 
 	AfterEach(func() {

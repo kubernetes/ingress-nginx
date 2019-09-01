@@ -48,18 +48,18 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "httpbin",
+				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "http-svc",
+				ExternalName: framework.EchoService,
 				Type:         corev1.ServiceTypeExternalName,
 			},
 		}
 
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "httpbin", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -80,7 +80,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "httpbin",
+				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
@@ -91,7 +91,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "httpbin", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -112,7 +112,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "httpbin",
+				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
@@ -130,7 +130,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 		}
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "httpbin", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -151,7 +151,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "httpbin",
+				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
@@ -162,7 +162,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "httpbin", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -183,7 +183,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "httpbin",
+				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
@@ -201,7 +201,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 		}
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "httpbin", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
 		ing.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort = intstr.FromString(host)
 		f.EnsureIngress(ing)
 

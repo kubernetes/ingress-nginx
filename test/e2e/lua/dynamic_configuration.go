@@ -48,7 +48,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
-		ensureIngress(f, "foo.com", "http-svc")
+		ensureIngress(f, "foo.com", framework.EchoService)
 	})
 
 	It("configures balancer Lua middleware correctly", func() {
@@ -71,7 +71,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			})
 
 			replicas := 2
-			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "http-svc", replicas, nil)
+			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, framework.EchoService, replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(waitForLuaSync)
 
@@ -93,7 +93,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			})
 
 			replicas := 2
-			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "http-svc", replicas, nil)
+			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, framework.EchoService, replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(waitForLuaSync * 2)
 
@@ -106,7 +106,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			})
 			Expect(nginxConfig).Should(Equal(newNginxConfig))
 
-			err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "http-svc", 0, nil)
+			err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, framework.EchoService, 0, nil)
 
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(waitForLuaSync * 2)

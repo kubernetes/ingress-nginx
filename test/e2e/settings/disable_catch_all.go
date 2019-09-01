@@ -54,10 +54,10 @@ var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
 	It("should ignore catch all Ingress", func() {
 		host := "foo"
 
-		ing := framework.NewSingleCatchAllIngress("catch-all", f.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleCatchAllIngress("catch-all", f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(cfg string) bool {
@@ -73,7 +73,7 @@ var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
 	It("should delete Ingress updated to catch-all", func() {
 		host := "foo"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -91,7 +91,7 @@ var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
 		err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *extensions.Ingress) error {
 			ingress.Spec.Rules = nil
 			ingress.Spec.Backend = &extensions.IngressBackend{
-				ServiceName: "http-svc",
+				ServiceName: framework.EchoService,
 				ServicePort: intstr.FromInt(80),
 			}
 			return nil
@@ -113,7 +113,7 @@ var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
 	It("should allow Ingress with both a default backend and rules", func() {
 		host := "foo"
 
-		ing := framework.NewSingleIngressWithBackendAndRules("not-catch-all", "/rulepath", host, f.Namespace, "http-svc", 80, "http-svc", 80, nil)
+		ing := framework.NewSingleIngressWithBackendAndRules("not-catch-all", "/rulepath", host, f.Namespace, framework.EchoService, 80, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(cfg string) bool {

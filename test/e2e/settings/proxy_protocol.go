@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
