@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 	})
 
 	It("picks up the certificate when we add TLS spec to existing ingress", func() {
-		ensureIngress(f, host, "http-svc")
+		ensureIngress(f, host, framework.EchoService)
 
 		ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 		Expect(err).ToNot(HaveOccurred())
@@ -65,7 +65,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 	})
 
 	It("picks up the previously missing secret for a given ingress without reloading", func() {
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		time.Sleep(waitForLuaSync)
@@ -109,7 +109,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 
 	Context("given an ingress with TLS correctly configured", func() {
 		BeforeEach(func() {
-			ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
+			ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 
 			time.Sleep(waitForLuaSync)
 

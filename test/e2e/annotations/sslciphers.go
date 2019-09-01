@@ -39,7 +39,7 @@ var _ = framework.IngressNginxDescribe("Annotations - SSL CIPHERS", func() {
 			"nginx.ingress.kubernetes.io/ssl-ciphers": "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP",
 		}
 
-		ing := framework.NewSingleIngress(host, "/something", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/something", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

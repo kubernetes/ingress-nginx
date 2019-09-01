@@ -39,7 +39,7 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 		It("should use a custom default backend as upstream", func() {
 			host := "default-backend"
 			annotations := map[string]string{
-				"nginx.ingress.kubernetes.io/default-backend": "http-svc",
+				"nginx.ingress.kubernetes.io/default-backend": framework.EchoService,
 			}
 
 			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "invalid", 80, &annotations)

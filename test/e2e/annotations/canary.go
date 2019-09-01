@@ -30,6 +30,8 @@ import (
 
 const (
 	waitForLuaSync = 5 * time.Second
+
+	canaryService = "echo-canary"
 )
 
 var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
@@ -40,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 		f.NewEchoDeployment()
 
 		// Deployment for canary backend
-		f.NewDeployment("http-svc-canary", "gcr.io/kubernetes-e2e-test-images/echoserver:2.2", 8080, 1)
+		f.NewEchoDeploymentWithNameAndReplicas(canaryService, 1)
 	})
 
 	Context("when canary is created", func() {
@@ -48,7 +50,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -63,8 +65,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
-				80, &canaryAnnotations)
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -76,8 +77,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 		})
 
 		It("should return 404 status for requests to the canary if no matching ingress is found", func() {
@@ -90,7 +91,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 
 			f.EnsureIngress(canaryIng)
@@ -115,7 +116,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				host := "foo"
 				annotations := map[string]string{}
 
-				ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+				ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 				f.EnsureIngress(ing)
 
 				f.WaitForNginxServer(host,
@@ -130,7 +131,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 				canaryIngName := fmt.Sprintf("%v-canary", host)
 
-				canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+				canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 					80, &canaryAnnotations)
 				f.EnsureIngress(canaryIng)
 
@@ -152,7 +153,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				By("returning a 200 status when the canary deployment has 0 replicas and a request is sent to the mainline ingress")
 
 				f.NewEchoDeploymentWithReplicas(1)
-				f.NewDeployment("http-svc-canary", "gcr.io/kubernetes-e2e-test-images/echoserver:2.2", 8080, 0)
+				f.NewDeployment(canaryService, "gcr.io/kubernetes-e2e-test-images/echoserver:2.2", 8080, 0)
 
 				resp, _, errs = gorequest.New().
 					Get(f.GetURL(framework.HTTP)).
@@ -169,7 +170,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -184,7 +185,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -199,8 +200,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("routing requests destined for the canary ingress to the canary upstream")
 
@@ -212,7 +213,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 		})
 
 		It("should route requests to the correct upstream if mainline ingress is created after the canary ingress", func() {
@@ -225,7 +226,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -233,7 +234,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -250,8 +251,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("routing requests destined for the canary ingress to the canary upstream")
 
@@ -263,14 +264,14 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 		})
 
 		It("should route requests to the correct upstream if the mainline ingress is modified", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -285,7 +286,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -295,7 +296,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"foo": "bar",
 			}
 
-			modIng := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &modAnnotations)
+			modIng := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &modAnnotations)
 
 			f.EnsureIngress(modIng)
 
@@ -314,8 +315,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("routing requests destined for the canary ingress to the canary upstream")
 
@@ -327,14 +328,14 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 		})
 
 		It("should route requests to the correct upstream if the canary ingress is modified", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -349,7 +350,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -360,7 +361,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader2",
 			}
 
-			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary", 80, &modCanaryAnnotations)
+			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, &modCanaryAnnotations)
 			f.EnsureIngress(modCanaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -375,8 +376,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("routing requests destined for the canary ingress to the canary upstream")
 
@@ -388,7 +389,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 		})
 	})
 
@@ -397,7 +398,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -412,7 +413,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -428,7 +429,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 
 			By("routing requests to the mainline upstream when header is set to 'never'")
 
@@ -440,8 +441,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("routing requests to the mainline upstream when header is set to anything else")
 
@@ -453,8 +454,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 		})
 	})
 
@@ -463,7 +464,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -479,7 +480,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -495,7 +496,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 
 			By("routing requests to the mainline upstream when header is set to 'always'")
 
@@ -507,8 +508,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("routing requests to the mainline upstream when header is set to 'never'")
 
@@ -520,8 +521,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("routing requests to the mainline upstream when header is set to anything else")
 
@@ -533,8 +534,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 		})
 	})
 
@@ -543,7 +544,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -560,7 +561,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -576,7 +577,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 		})
 	})
 
@@ -585,7 +586,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -600,7 +601,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -615,7 +616,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 
 			By("routing requests to the mainline upstream when cookie is set to 'never'")
 
@@ -627,8 +628,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("routing requests to the mainline upstream when cookie is set to anything else")
 
@@ -640,8 +641,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 		})
 	})
 
@@ -651,7 +652,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -666,7 +667,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary",
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, &canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
@@ -681,8 +682,8 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc"))
-			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
 
 			By("returning requests from the canary only when weight is equal to 100")
 
@@ -691,7 +692,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"nginx.ingress.kubernetes.io/canary-weight": "100",
 			}
 
-			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary", 80, &modCanaryAnnotations)
+			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, &modCanaryAnnotations)
 
 			f.EnsureIngress(modCanaryIng)
 
@@ -704,7 +705,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring("http-svc-canary"))
+			Expect(body).Should(ContainSubstring(canaryService))
 
 		})
 	})
@@ -718,16 +719,16 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
 			}
 
-			ing := framework.NewSingleCatchAllIngress(canaryIngName, f.Namespace, "http-svc-canary", 80, &annotations)
+			ing := framework.NewSingleCatchAllIngress(canaryIngName, f.Namespace, canaryService, 80, &annotations)
 			f.EnsureIngress(ing)
 
-			ing = framework.NewSingleCatchAllIngress(host, f.Namespace, "http-svc", 80, nil)
+			ing = framework.NewSingleCatchAllIngress(host, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer("_",
 				func(server string) bool {
-					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, "http-svc", "80")
-					canaryUpstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, "http-svc-canary", "80")
+					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, framework.EchoService, "80")
+					canaryUpstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, canaryService, "80")
 					return Expect(server).Should(ContainSubstring(`set $ingress_name "`+host+`";`)) &&
 						Expect(server).ShouldNot(ContainSubstring(`set $proxy_upstream_name "upstream-default-backend";`)) &&
 						Expect(server).ShouldNot(ContainSubstring(canaryUpstreamName)) &&
@@ -743,11 +744,11 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
 			}
 
-			ing := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, "http-svc-canary", 80, &annotations)
+			ing := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			otherHost := "bar"
-			ing = framework.NewSingleIngress(otherHost, "/", otherHost, f.Namespace, "http-svc", 80, nil)
+			ing = framework.NewSingleIngress(otherHost, "/", otherHost, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
 
 			time.Sleep(waitForLuaSync)
@@ -771,7 +772,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 		ing := framework.NewSingleIngressWithMultiplePaths(canaryIngName, paths, host, f.Namespace, "httpy-svc-canary", 80, &annotations)
 		f.EnsureIngress(ing)
 
-		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

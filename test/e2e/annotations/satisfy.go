@@ -58,7 +58,7 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			annotationKey: "all",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &initAnnotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &initAnnotations)
 		f.EnsureIngress(ing)
 
 		for key, result := range results {
@@ -91,10 +91,10 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 		// setup external auth
 		f.NewHttpbinDeployment()
 
-		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.Namespace, 1)
+		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
 		Expect(err).NotTo(HaveOccurred())
 
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get("httpbin", metav1.GetOptions{})
+		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
 		httpbinIP := e.Subsets[0].Addresses[0].IP
@@ -116,7 +116,7 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			"nginx.ingress.kubernetes.io/satisfy": "any",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(server string) bool {

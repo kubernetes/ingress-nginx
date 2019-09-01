@@ -50,7 +50,7 @@ var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func(
 			"nginx.ingress.kubernetes.io/custom-http-errors": strings.Join(errorCodes, ","),
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		var serverConfig string
@@ -91,7 +91,7 @@ var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func(
 
 		By("ignoring duplicate values (503 in this case) per server")
 		annotations["nginx.ingress.kubernetes.io/custom-http-errors"] = "404, 503"
-		ing = framework.NewSingleIngress(fmt.Sprintf("%s-else", host), "/else", host, f.Namespace, "http-svc", 80, &annotations)
+		ing = framework.NewSingleIngress(fmt.Sprintf("%s-else", host), "/else", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 		f.WaitForNginxServer(host, func(sc string) bool {
 			serverConfig = sc

@@ -33,7 +33,7 @@ var _ = framework.IngressNginxDescribe("Global External Auth", func() {
 
 	host := "global-external-auth"
 
-	echoServiceName := "http-svc"
+	echoServiceName := framework.EchoService
 
 	globalExternalAuthURLSetting := "global-auth-url"
 
@@ -56,7 +56,7 @@ var _ = framework.IngressNginxDescribe("Global External Auth", func() {
 	Context("when global external authentication is configured", func() {
 
 		BeforeEach(func() {
-			globalExternalAuthURL := fmt.Sprintf("http://httpbin.%s.svc.cluster.local:80/status/401", f.Namespace)
+			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/401", framework.HTTPBinService, f.Namespace)
 
 			By("Adding an ingress rule for /foo")
 			fooIng := framework.NewSingleIngress("foo-ingress", fooPath, host, f.Namespace, echoServiceName, 80, nil)
@@ -153,7 +153,7 @@ var _ = framework.IngressNginxDescribe("Global External Auth", func() {
 			globalExternalAuthCacheKey := "foo"
 			globalExternalAuthCacheDurationSetting := "global-auth-cache-duration"
 			globalExternalAuthCacheDuration := "200 201 401 30m"
-			globalExternalAuthURL := fmt.Sprintf("http://httpbin.%s.svc.cluster.local:80/status/200", f.Namespace)
+			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/200", framework.HTTPBinService, f.Namespace)
 
 			By("Adding a global-auth-cache-key to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthCacheKeySetting, globalExternalAuthCacheKey)
@@ -178,7 +178,7 @@ var _ = framework.IngressNginxDescribe("Global External Auth", func() {
 			}
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			err := f.DeleteDeployment("httpbin")
+			err := f.DeleteDeployment(framework.HTTPBinService)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, _, errs = gorequest.New().

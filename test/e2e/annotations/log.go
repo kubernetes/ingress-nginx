@@ -39,7 +39,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Log", func() {
 			"nginx.ingress.kubernetes.io/enable-access-log": "false",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -54,7 +54,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Log", func() {
 			"nginx.ingress.kubernetes.io/enable-rewrite-log": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

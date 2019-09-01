@@ -33,7 +33,7 @@ var _ = framework.IngressNginxDescribe("default-ssl-certificate", func() {
 	f := framework.NewDefaultFramework("default-ssl-certificate")
 	var tlsConfig *tls.Config
 	secretName := "my-custom-cert"
-	service := "http-svc"
+	service := framework.EchoService
 	port := 80
 
 	BeforeEach(func() {

@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -93,7 +93,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 
 		f.UpdateNginxConfigMapData(setting, "false")
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {

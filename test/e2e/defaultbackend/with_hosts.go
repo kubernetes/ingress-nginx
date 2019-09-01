@@ -54,8 +54,8 @@ var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
 			},
 			Spec: extensions.IngressSpec{
 				Backend: &extensions.IngressBackend{
-					ServiceName: "http-svc",
-					ServicePort: intstr.FromInt(8080),
+					ServiceName: framework.EchoService,
+					ServicePort: intstr.FromInt(80),
 				},
 				Rules: []extensions.IngressRule{
 					{

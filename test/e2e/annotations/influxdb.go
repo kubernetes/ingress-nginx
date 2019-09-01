@@ -53,8 +53,8 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 			createInfluxDBIngress(
 				f,
 				host,
-				"http-svc",
-				8080,
+				framework.EchoService,
+				80,
 				map[string]string{
 					"nginx.ingress.kubernetes.io/enable-influxdb":      "true",
 					"nginx.ingress.kubernetes.io/influxdb-host":        ifs.Spec.ClusterIP,

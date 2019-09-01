@@ -33,7 +33,7 @@ import (
 func startIngress(f *framework.Framework, annotations *map[string]string) map[string]bool {
 	host := "upstream-hash-by.foo.com"
 
-	ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, annotations)
+	ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 	f.EnsureIngress(ing)
 	f.WaitForNginxServer(host,
 		func(server string) bool {
@@ -52,7 +52,7 @@ func startIngress(f *framework.Framework, annotations *map[string]string) map[st
 	})
 	Expect(err).Should(BeNil())
 
-	re, _ := regexp.Compile(`Hostname: http-svc.*`)
+	re, _ := regexp.Compile(fmt.Sprintf(`Hostname: %v.*`, framework.EchoService))
 	podMap := map[string]bool{}
 
 	for i := 0; i < 100; i++ {
