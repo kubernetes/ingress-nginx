@@ -558,7 +558,7 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        listen unix:{{ .StatusSocket }};
+        listen 127.0.0.1:{{ .StatusPort }};
         set $proxy_upstream_name "internal";
 
         keepalive_timeout 0;

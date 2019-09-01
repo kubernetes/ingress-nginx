@@ -605,8 +605,8 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 
 		HealthzURI:   nginx.HealthPath,
 		PID:          nginx.PID,
-		StatusSocket: nginx.StatusSocket,
 		StatusPath:   nginx.StatusPath,
+		StatusPort:   nginx.StatusPort,
 		StreamSocket: nginx.StreamSocket,
 	}
 

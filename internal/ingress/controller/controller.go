@@ -37,6 +37,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/klog"
 )
 
@@ -268,6 +269,8 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		n.cfg.ListenPorts.SSLProxy,
 		n.cfg.ListenPorts.Health,
 		n.cfg.ListenPorts.Default,
+		10255, // profiling port
+		nginx.StatusPort,
 	}
 	reserverdPorts := sets.NewInt(rp...)
 	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
