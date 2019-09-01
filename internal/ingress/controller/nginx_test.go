@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -148,16 +149,15 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 }
 
 func TestConfigureDynamically(t *testing.T) {
-	listener, err := net.Listen("unix", nginx.StatusSocket)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 	if err != nil {
-		t.Errorf("crating unix listener: %s", err)
+		t.Fatalf("crating unix listener: %s", err)
 	}
 	defer listener.Close()
-	defer os.Remove(nginx.StatusSocket)
 
 	streamListener, err := net.Listen("unix", nginx.StreamSocket)
 	if err != nil {
-		t.Errorf("crating unix listener: %s", err)
+		t.Fatalf("crating unix listener: %s", err)
 	}
 	defer streamListener.Close()
 	defer os.Remove(nginx.StreamSocket)
@@ -319,12 +319,11 @@ func TestConfigureDynamically(t *testing.T) {
 }
 
 func TestConfigureCertificates(t *testing.T) {
-	listener, err := net.Listen("unix", nginx.StatusSocket)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 	if err != nil {
 		t.Fatalf("crating unix listener: %s", err)
 	}
 	defer listener.Close()
-	defer os.Remove(nginx.StatusSocket)
 
 	streamListener, err := net.Listen("unix", nginx.StreamSocket)
 	if err != nil {

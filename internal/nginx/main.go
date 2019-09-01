@@ -28,7 +28,6 @@ import (
 	"time"
 
 	ps "github.com/mitchellh/go-ps"
-	"github.com/tv42/httpunix"
 	"k8s.io/klog"
 )
 
@@ -38,8 +37,8 @@ var TemplatePath = "/etc/nginx/template/nginx.tmpl"
 // PID defines the location of the pid file used by NGINX
 var PID = "/tmp/nginx.pid"
 
-// StatusSocket defines the location of the unix socket used by NGINX for the status server
-var StatusSocket = "/tmp/nginx-status-server.sock"
+// StatusPort port used by NGINX for the status server
+var StatusPort = 10256
 
 // HealthPath defines the path used to define the health check location in NGINX
 var HealthPath = "/healthz"
@@ -56,17 +55,12 @@ var StreamSocket = "/tmp/ingress-stream.sock"
 
 var statusLocation = "nginx-status"
 
-var httpClient *http.Client
-
-func init() {
-	httpClient = buildUnixSocketClient(HealthCheckTimeout)
-}
-
 // NewGetStatusRequest creates a new GET request to the internal NGINX status server
 func NewGetStatusRequest(path string) (int, []byte, error) {
-	url := fmt.Sprintf("%v://%v%v", httpunix.Scheme, statusLocation, path)
+	url := fmt.Sprintf("http://127.0.0.1:%v%v", StatusPort, path)
 
-	res, err := httpClient.Get(url)
+	client := http.Client{}
+	res, err := client.Get(url)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -82,14 +76,15 @@ func NewGetStatusRequest(path string) (int, []byte, error) {
 
 // NewPostStatusRequest creates a new POST request to the internal NGINX status server
 func NewPostStatusRequest(path, contentType string, data interface{}) (int, []byte, error) {
-	url := fmt.Sprintf("%v://%v%v", httpunix.Scheme, statusLocation, path)
+	url := fmt.Sprintf("http://127.0.0.1:%v%v", StatusPort, path)
 
 	buf, err := json.Marshal(data)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	res, err := httpClient.Post(url, contentType, bytes.NewReader(buf))
+	client := http.Client{}
+	res, err := client.Post(url, contentType, bytes.NewReader(buf))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -140,19 +135,6 @@ func readFileToString(path string) (string, error) {
 		return "", err
 	}
 	return string(contents), nil
-}
-
-func buildUnixSocketClient(timeout time.Duration) *http.Client {
-	u := &httpunix.Transport{
-		DialTimeout:           1 * time.Second,
-		RequestTimeout:        timeout,
-		ResponseHeaderTimeout: timeout,
-	}
-	u.RegisterLocation(statusLocation, StatusSocket)
-
-	return &http.Client{
-		Transport: u,
-	}
 }
 
 // Version return details about NGINX

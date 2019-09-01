@@ -796,8 +796,8 @@ type TemplateConfig struct {
 	EnableMetrics            bool
 
 	PID          string
-	StatusSocket string
 	StatusPath   string
+	StatusPort   int
 	StreamSocket string
 }
 

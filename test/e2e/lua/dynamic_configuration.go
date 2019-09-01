@@ -199,7 +199,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 	It("sets controllerPodsCount in Lua general configuration", func() {
 		// https://github.com/curl/curl/issues/936
-		curlCmd := fmt.Sprintf("curl --fail --silent --unix-socket %v http://localhost/configuration/general", nginx.StatusSocket)
+		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/general", nginx.StatusPort)
 
 		output, err := f.ExecIngressPod(curlCmd)
 		Expect(err).ToNot(HaveOccurred())
