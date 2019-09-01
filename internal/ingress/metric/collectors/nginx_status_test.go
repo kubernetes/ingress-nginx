@@ -21,7 +21,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
@@ -97,7 +96,7 @@ func TestStatusCollector(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			listener, err := net.Listen("unix", nginx.StatusSocket)
+			listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 			if err != nil {
 				t.Fatalf("crating unix listener: %s", err)
 			}
@@ -145,7 +144,6 @@ func TestStatusCollector(t *testing.T) {
 			cm.Stop()
 
 			listener.Close()
-			os.Remove(nginx.StatusSocket)
 		})
 	}
 }
