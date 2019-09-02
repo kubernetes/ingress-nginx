@@ -197,8 +197,11 @@ const (
 	FILE_MAP_READ    = 0x04
 	FILE_MAP_EXECUTE = 0x20
 
-	CTRL_C_EVENT     = 0
-	CTRL_BREAK_EVENT = 1
+	CTRL_C_EVENT        = 0
+	CTRL_BREAK_EVENT    = 1
+	CTRL_CLOSE_EVENT    = 2
+	CTRL_LOGOFF_EVENT   = 5
+	CTRL_SHUTDOWN_EVENT = 6
 
 	// Windows reserves errors >= 1<<29 for application use.
 	APPLICATION_ERROR = 1 << 29
@@ -1187,6 +1190,28 @@ const (
 	REG_QWORD = REG_QWORD_LITTLE_ENDIAN
 )
 
+const (
+	EVENT_MODIFY_STATE = 0x0002
+	EVENT_ALL_ACCESS   = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3
+
+	MUTANT_QUERY_STATE = 0x0001
+	MUTANT_ALL_ACCESS  = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | MUTANT_QUERY_STATE
+
+	SEMAPHORE_MODIFY_STATE = 0x0002
+	SEMAPHORE_ALL_ACCESS   = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3
+
+	TIMER_QUERY_STATE  = 0x0001
+	TIMER_MODIFY_STATE = 0x0002
+	TIMER_ALL_ACCESS   = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | TIMER_QUERY_STATE | TIMER_MODIFY_STATE
+
+	MUTEX_MODIFY_STATE = MUTANT_QUERY_STATE
+	MUTEX_ALL_ACCESS   = MUTANT_ALL_ACCESS
+
+	CREATE_EVENT_MANUAL_RESET  = 0x1
+	CREATE_EVENT_INITIAL_SET   = 0x2
+	CREATE_MUTEX_INITIAL_OWNER = 0x1
+)
+
 type AddrinfoW struct {
 	Flags     int32
 	Family    int32
@@ -1649,3 +1674,17 @@ const (
 	KF_FLAG_SIMPLE_IDLIST                    = 0x00000100
 	KF_FLAG_ALIAS_ONLY                       = 0x80000000
 )
+
+type OsVersionInfoEx struct {
+	osVersionInfoSize uint32
+	MajorVersion      uint32
+	MinorVersion      uint32
+	BuildNumber       uint32
+	PlatformId        uint32
+	CsdVersion        [128]uint16
+	ServicePackMajor  uint16
+	ServicePackMinor  uint16
+	SuiteMask         uint16
+	ProductType       byte
+	_                 byte
+}

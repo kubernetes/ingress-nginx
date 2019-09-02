@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -27,19 +28,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/testing_frameworks/integration"
 
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/internal/log"
 )
 
-var log = logf.KBLog.WithName("test-env")
+var log = logf.RuntimeLog.WithName("test-env")
 
 // Default binary path for test framework
 const (
+	envUseExistingCluster  = "USE_EXISTING_CLUSTER"
 	envKubeAPIServerBin    = "TEST_ASSET_KUBE_APISERVER"
 	envEtcdBin             = "TEST_ASSET_ETCD"
 	envKubectlBin          = "TEST_ASSET_KUBECTL"
 	envKubebuilderPath     = "KUBEBUILDER_ASSETS"
 	envStartTimeout        = "KUBEBUILDER_CONTROLPLANE_START_TIMEOUT"
 	envStopTimeout         = "KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT"
+	envAttachOutput        = "KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT"
 	defaultKubebuilderPath = "/usr/local/kubebuilder/bin"
 	StartTimeout           = 60
 	StopTimeout            = 60
@@ -73,7 +76,9 @@ type Environment struct {
 	// ControlPlane is the ControlPlane including the apiserver and etcd
 	ControlPlane integration.ControlPlane
 
-	// Config can be used to talk to the apiserver
+	// Config can be used to talk to the apiserver.  It's automatically
+	// populated if not set using the standard controller-runtime config
+	// loading.
 	Config *rest.Config
 
 	// CRDs is a list of CRDs to install
@@ -85,7 +90,7 @@ type Environment struct {
 	// UseExisting indicates that this environments should use an
 	// existing kubeconfig, instead of trying to stand up a new control plane.
 	// This is useful in cases that need aggregated API servers and the like.
-	UseExistingCluster bool
+	UseExistingCluster *bool
 
 	// ControlPlaneStartTimeout is the maximum duration each controlplane component
 	// may take to start. It defaults to the KUBEBUILDER_CONTROLPLANE_START_TIMEOUT
@@ -99,11 +104,16 @@ type Environment struct {
 
 	// KubeAPIServerFlags is the set of flags passed while starting the api server.
 	KubeAPIServerFlags []string
+
+	// AttachControlPlaneOutput indicates if control plane output will be attached to os.Stdout and os.Stderr.
+	// Enable this to get more visibility of the testing control plane.
+	// It respect KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT environment variable.
+	AttachControlPlaneOutput bool
 }
 
 // Stop stops a running server
 func (te *Environment) Stop() error {
-	if te.UseExistingCluster {
+	if te.useExistingCluster() {
 		return nil
 	}
 	return te.ControlPlane.Stop()
@@ -120,7 +130,7 @@ func (te Environment) getAPIServerFlags() []string {
 
 // Start starts a local Kubernetes server and updates te.ApiserverPort with the port it is listening on
 func (te *Environment) Start() (*rest.Config, error) {
-	if te.UseExistingCluster {
+	if te.useExistingCluster() {
 		log.V(1).Info("using existing cluster")
 		if te.Config == nil {
 			// we want to allow people to pass in their own config, so
@@ -134,9 +144,28 @@ func (te *Environment) Start() (*rest.Config, error) {
 			}
 		}
 	} else {
-		te.ControlPlane = integration.ControlPlane{}
-		te.ControlPlane.APIServer = &integration.APIServer{Args: te.getAPIServerFlags()}
-		te.ControlPlane.Etcd = &integration.Etcd{}
+		if te.ControlPlane.APIServer == nil {
+			te.ControlPlane.APIServer = &integration.APIServer{Args: te.getAPIServerFlags()}
+		}
+		if te.ControlPlane.Etcd == nil {
+			te.ControlPlane.Etcd = &integration.Etcd{}
+		}
+
+		if os.Getenv(envAttachOutput) == "true" {
+			te.AttachControlPlaneOutput = true
+		}
+		if te.ControlPlane.APIServer.Out == nil && te.AttachControlPlaneOutput {
+			te.ControlPlane.APIServer.Out = os.Stdout
+		}
+		if te.ControlPlane.APIServer.Err == nil && te.AttachControlPlaneOutput {
+			te.ControlPlane.APIServer.Err = os.Stderr
+		}
+		if te.ControlPlane.Etcd.Out == nil && te.AttachControlPlaneOutput {
+			te.ControlPlane.Etcd.Out = os.Stdout
+		}
+		if te.ControlPlane.Etcd.Err == nil && te.AttachControlPlaneOutput {
+			te.ControlPlane.Etcd.Err = os.Stderr
+		}
 
 		if os.Getenv(envKubeAPIServerBin) == "" {
 			te.ControlPlane.APIServer.Path = defaultAssetPath("kube-apiserver")
@@ -167,6 +196,9 @@ func (te *Environment) Start() (*rest.Config, error) {
 		// Create the *rest.Config for creating new clients
 		te.Config = &rest.Config{
 			Host: te.ControlPlane.APIURL().Host,
+			// gotta go fast during tests -- we don't really care about overwhelming our test API server
+			QPS:   1000.0,
+			Burst: 2000.0,
 		}
 	}
 
@@ -219,4 +251,11 @@ func (te *Environment) defaultTimeouts() error {
 		}
 	}
 	return nil
+}
+
+func (te *Environment) useExistingCluster() bool {
+	if te.UseExistingCluster == nil {
+		return strings.ToLower(os.Getenv(envUseExistingCluster)) == "true"
+	}
+	return *te.UseExistingCluster
 }

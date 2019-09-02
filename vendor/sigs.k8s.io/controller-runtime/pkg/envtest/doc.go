@@ -15,4 +15,12 @@ limitations under the License.
 */
 
 // Package envtest provides libraries for integration testing by starting a local control plane
+//
+// Control plane binaries (etcd and kube-apiserver) are loaded by default from
+// /usr/local/kubebuilder/bin.  This can be overridden by setting the
+// KUBEBUILDER_ASSETS environment variable, or by directly creating a
+// ControlPlane for the Environment to use.
+//
+// Environment can also be configured to work with an existing cluster, and
+// simply load CRDs and provide client configuration.
 package envtest
