@@ -39,6 +39,7 @@ import (
 	"time"
 
 	certutil "k8s.io/client-go/util/cert"
+	"k8s.io/ingress-nginx/internal/file"
 )
 
 // generateRSACerts generates a self signed certificate using a self generated ca
@@ -183,11 +184,60 @@ func TestConfigureCACert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error creating SSL certificate: %v", err)
 	}
-	if sslCert.CAFileName == "" {
+
+	caFilename := fmt.Sprintf("%v/ca-%v.pem", file.DefaultSSLDirectory, cn)
+
+	if sslCert.CAFileName != caFilename {
 		t.Fatalf("expected a valid CA file name")
 	}
 }
 
+func TestConfigureCRL(t *testing.T) {
+	// Demo CRL from https://csrc.nist.gov/projects/pki-testing/sample-certificates-and-crls
+	// Converted to PEM to be tested
+	// SHA: ef21f9c97ec2ef84ba3b2ab007c858a6f760d813
+	var crl = []byte(`-----BEGIN X509 CRL-----
+MIIBYDCBygIBATANBgkqhkiG9w0BAQUFADBDMRMwEQYKCZImiZPyLGQBGRYDY29t
+MRcwFQYKCZImiZPyLGQBGRYHZXhhbXBsZTETMBEGA1UEAxMKRXhhbXBsZSBDQRcN
+MDUwMjA1MTIwMDAwWhcNMDUwMjA2MTIwMDAwWjAiMCACARIXDTA0MTExOTE1NTcw
+M1owDDAKBgNVHRUEAwoBAaAvMC0wHwYDVR0jBBgwFoAUCGivhTPIOUp6+IKTjnBq
+SiCELDIwCgYDVR0UBAMCAQwwDQYJKoZIhvcNAQEFBQADgYEAItwYffcIzsx10NBq
+m60Q9HYjtIFutW2+DvsVFGzIF20f7pAXom9g5L2qjFXejoRvkvifEBInr0rUL4Xi
+NkR9qqNMJTgV/wD9Pn7uPSYS69jnK2LiK8NGgO94gtEVxtCccmrLznrtZ5mLbnCB
+fUNCdMGmr8FVF6IzTNYGmCuk/C4=
+-----END X509 CRL-----`)
+
+	cn := "demo-crl"
+	_, ca, err := generateRSACerts(cn)
+	if err != nil {
+		t.Fatalf("unexpected error creating SSL certificate: %v", err)
+	}
+	c := encodeCertPEM(ca.Cert)
+
+	sslCert, err := CreateCACert(c)
+	if err != nil {
+		t.Fatalf("unexpected error creating SSL certificate: %v", err)
+	}
+	if sslCert.CRLFileName != "" {
+		t.Fatalf("expected CRLFileName to be empty")
+	}
+	if sslCert.Certificate == nil {
+		t.Fatalf("expected Certificate to be set")
+	}
+
+	err = ConfigureCRL(cn, crl, sslCert)
+	if err != nil {
+		t.Fatalf("unexpected error creating CRL file: %v", err)
+	}
+
+	crlFilename := fmt.Sprintf("%v/crl-%v.pem", file.DefaultSSLDirectory, cn)
+	if sslCert.CRLFileName != crlFilename {
+		t.Fatalf("expected a valid CRL file name")
+	}
+	if sslCert.CRLSHA != "ef21f9c97ec2ef84ba3b2ab007c858a6f760d813" {
+		t.Fatalf("the expected CRL SHA wasn't found")
+	}
+}
 func TestCreateSSLCert(t *testing.T) {
 	cert, _, err := generateRSACerts("echoheaders")
 	if err != nil {
