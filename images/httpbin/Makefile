@@ -24,7 +24,7 @@ BASEIMAGE?=quay.io/kubernetes-ingress-controller/debian-base-$(ARCH):0.1
 
 ALL_ARCH = amd64 arm arm64
 
-QEMUVERSION=v4.0.0
+QEMUVERSION=v4.1.0-1
 
 IMGNAME = httpbin
 IMAGE = $(REGISTRY)/$(IMGNAME)
@@ -35,9 +35,6 @@ ifeq ($(ARCH),arm)
 endif
 ifeq ($(ARCH),arm64)
 	QEMUARCH=aarch64
-endif
-ifeq ($(ARCH),ppc64le)
-	QEMUARCH=ppc64le
 endif
 
 TEMP_DIR := $(shell mktemp -d)
