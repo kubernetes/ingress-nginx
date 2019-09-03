@@ -3,19 +3,16 @@ module k8s.io/ingress-nginx
 go 1.12
 
 require (
-	cloud.google.com/go v0.38.0 // indirect
-	github.com/PuerkitoBio/purell v1.1.1 // indirect
+	cloud.google.com/go v0.44.3 // indirect
 	github.com/Sirupsen/logrus v0.0.0-00010101000000-000000000000 // indirect
 	github.com/armon/go-proxyproto v0.0.0-20190211145416-68259f75880e
 	github.com/eapache/channels v1.1.0
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
 	github.com/go-logr/zapr v0.1.1 // indirect
-	github.com/go-openapi/swag v0.19.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/imdario/mergo v0.3.7
-	github.com/json-iterator/go v1.1.6
+	github.com/json-iterator/go v1.1.7
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/mitchellh/hashstructure v1.0.0
@@ -25,8 +22,8 @@ require (
 	github.com/ncabatoff/go-seq v0.0.0-20180805175032-b08ef85ed833 // indirect
 	github.com/ncabatoff/process-exporter v0.0.0-20180915144445-bdf24ef23850
 	github.com/ncabatoff/procfs v0.0.0-20180903163354-e1a38cb53622 // indirect
-	github.com/onsi/ginkgo v1.8.0
-	github.com/onsi/gomega v1.5.0
+	github.com/onsi/ginkgo v1.10.1
+	github.com/onsi/gomega v1.7.0
 	github.com/opencontainers/runc v0.1.1
 	github.com/parnurzeal/gorequest v0.2.15
 	github.com/paultag/sniff v0.0.0-20170624152000-87325c3dddf4
@@ -38,10 +35,9 @@ require (
 	github.com/spf13/cobra v0.0.4
 	github.com/spf13/pflag v1.0.3
 	github.com/tallclair/mdtoc v0.0.0-20190627191617-4dc3d6f90813
-	github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926
 	github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
-	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
-	google.golang.org/grpc v1.19.1
+	golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc
+	google.golang.org/grpc v1.23.0
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
@@ -55,8 +51,7 @@ require (
 	k8s.io/code-generator v0.0.0
 	k8s.io/component-base v0.0.0
 	k8s.io/klog v0.4.0
-	k8s.io/kubernetes v1.15.1
-	k8s.io/utils v0.0.0-20190607212802-c55fbcfc754a // indirect
+	k8s.io/kubernetes v1.15.3
 	sigs.k8s.io/controller-runtime v0.1.10
 	sigs.k8s.io/testing_frameworks v0.1.1 // indirect
 )
@@ -71,9 +66,9 @@ replace (
 	k8s.io/client-go => k8s.io/client-go v0.0.0-20190718183610-8e956561bbf5
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.0.0-20190620090041-1a7e1f6630cd
 	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.0.0-20190620090010-a60497bb9ffa
-	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20190612205613-18da4a14b22b
-	k8s.io/component-base => k8s.io/component-base v0.0.0-20190620085131-4cd66be69262
-	k8s.io/cri-api => k8s.io/cri-api v0.0.0-20190531030430-6117653b35f1
+	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20190831074504-732c9ca86353
+	k8s.io/component-base => k8s.io/component-base v0.0.0-20190831075413-37a093468564
+	k8s.io/cri-api => k8s.io/cri-api v0.0.0-20190828121515-24ae4d4e8b03
 	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.0.0-20190620090114-816aa063c73d
 	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.0.0-20190620085316-c835efc41000
 	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.0.0-20190620085943-52018c8ce3c1
@@ -81,7 +76,7 @@ replace (
 	k8s.io/kube-proxy => k8s.io/kube-proxy v0.0.0-20190620085811-cc0b23ba60a9
 	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.0.0-20190620085909-5dfb14b3a101
 	k8s.io/kubelet => k8s.io/kubelet v0.0.0-20190620085837-98477dc0c87c
-	k8s.io/kubernetes => k8s.io/kubernetes v1.15.1
+	k8s.io/kubernetes => k8s.io/kubernetes v1.15.3
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.0.0-20190620090159-a9e4f3cb5bf3
 	k8s.io/metrics => k8s.io/metrics v0.0.0-20190620085627-5b02f62e9559
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.0.0-20190620085357-8191e314a1f7
