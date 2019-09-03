@@ -106,7 +106,7 @@ func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
 	if unsafe.Sizeof(*basep) == 8 {
 		return
 	}
-	if off>>4 != 0 {
+	if off>>32 != 0 {
 		// We can't stuff the offset back into a uintptr, so any
 		// future calls would be suspect. Generate an error.
 		// EIO was allowed by getdirentries.

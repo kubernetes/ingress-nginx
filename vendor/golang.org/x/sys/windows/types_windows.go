@@ -1649,3 +1649,17 @@ const (
 	KF_FLAG_SIMPLE_IDLIST                    = 0x00000100
 	KF_FLAG_ALIAS_ONLY                       = 0x80000000
 )
+
+type OsVersionInfoEx struct {
+	osVersionInfoSize uint32
+	MajorVersion      uint32
+	MinorVersion      uint32
+	BuildNumber       uint32
+	PlatformId        uint32
+	CsdVersion        [128]uint16
+	ServicePackMajor  uint16
+	ServicePackMinor  uint16
+	SuiteMask         uint16
+	ProductType       byte
+	_                 byte
+}
