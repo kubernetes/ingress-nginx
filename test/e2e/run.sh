@@ -31,7 +31,7 @@ export TAG=dev
 export ARCH=amd64
 export REGISTRY=ingress-controller
 
-export K8S_VERSION=${K8S_VERSION:-v1.14.1}
+export K8S_VERSION=${K8S_VERSION:-v1.15.3}
 
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
@@ -43,7 +43,7 @@ kind create cluster \
   --loglevel=${KIND_LOG_LEVEL} \
   --name ${KIND_CLUSTER_NAME} \
   --config ${DIR}/kind.yaml \
-  --image "aledbf/kind-node:${K8S_VERSION}"
+  --image "kindest/node:${K8S_VERSION}"
 
 export KUBECONFIG="$(kind get kubeconfig-path --name="${KIND_CLUSTER_NAME}")"
 
