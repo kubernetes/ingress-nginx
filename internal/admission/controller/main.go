@@ -19,6 +19,7 @@ package controller
 import (
 	"github.com/google/uuid"
 	"k8s.io/api/admission/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	networking "k8s.io/api/networking/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -54,7 +55,9 @@ func (ia *IngressAdmission) HandleAdmission(ar *v1beta1.AdmissionReview) error {
 
 	ingressResource := v1.GroupVersionResource{Group: networking.SchemeGroupVersion.Group, Version: networking.SchemeGroupVersion.Version, Resource: "ingresses"}
 
-	if ar.Request.Resource == ingressResource {
+	oldIngressResource := v1.GroupVersionResource{Group: extensions.SchemeGroupVersion.Group, Version: extensions.SchemeGroupVersion.Version, Resource: "ingresses"}
+
+	if ar.Request.Resource == ingressResource || ar.Request.Resource == oldIngressResource {
 		ar.Response = &v1beta1.AdmissionResponse{
 			UID:     types.UID(uuid.New().String()),
 			Allowed: false,
