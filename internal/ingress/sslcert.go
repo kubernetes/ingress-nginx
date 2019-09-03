@@ -37,6 +37,11 @@ type SSLCert struct {
 	// This is used to detect changes in the secret that contains certificates
 	CASHA string `json:"caSha"`
 
+	// CRLFileName contains the path to the file with the Certificate Revocation List
+	CRLFileName string `json:"crlFileName"`
+	// CRLSHA contains the sha1 of the pem file.
+	CRLSHA string `json:"crlSha"`
+
 	// PemFileName contains the path to the file with the certificate and key concatenated
 	PemFileName string `json:"pemFileName"`
 

@@ -32,12 +32,11 @@ type Resolver interface {
 	// GetSecret searches for secrets containing the namespace and name using a the character /
 	GetSecret(string) (*apiv1.Secret, error)
 
-	// GetAuthCertificate resolves a given secret name into an SSL certificate.
-	// The secret must contain 3 keys named:
+	// GetAuthCertificate resolves a given secret name into an SSL certificate and CRL.
+	// The secret must contain 2 keys named:
 
 	//   ca.crt: contains the certificate chain used for authentication
-	//   tls.crt: contains the server certificate
-	//   tls.key: contains the server key
+	//   ca.crl: contains the revocation list used for authentication
 	GetAuthCertificate(string) (*AuthSSLCert, error)
 
 	// GetService searches for services containing the namespace and name using a the character /
@@ -53,6 +52,10 @@ type AuthSSLCert struct {
 	CAFileName string `json:"caFilename"`
 	// CASHA contains the SHA1 hash of the 'ca.crt' or combinations of (tls.crt, tls.key, tls.crt) depending on certs in secret
 	CASHA string `json:"caSha"`
+	// CRLFileName contains the path to the secrets 'ca.crl'
+	CRLFileName string `json:"crlFileName"`
+	// CRLSHA contains the SHA1 hash of the 'ca.crl' file
+	CRLSHA string `json:"crlSha"`
 }
 
 // Equal tests for equality between two AuthSSLCert types
@@ -71,6 +74,13 @@ func (asslc1 *AuthSSLCert) Equal(assl2 *AuthSSLCert) bool {
 		return false
 	}
 	if asslc1.CASHA != assl2.CASHA {
+		return false
+	}
+
+	if asslc1.CRLFileName != assl2.CRLFileName {
+		return false
+	}
+	if asslc1.CRLSHA != assl2.CRLSHA {
 		return false
 	}
 
