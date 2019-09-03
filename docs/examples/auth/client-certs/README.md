@@ -44,6 +44,12 @@ Authentication to work properly.
     kubectl create secret generic ca-secret --from-file=tls.crt=server.crt --from-file=tls.key=server.key --from-file=ca.crt=ca.crt
     ```
 
+3. If you want to also enable Certificate Revocation List verification you can 
+   create the secret also containing the CRL file in PEM format:
+   ```bash
+   kubectl create secret generic ca-secret --from-file=ca.crt=ca.crt --from-file=ca.crl=ca.crl
+   ```
+
 Note: The CA Certificate must contain the trusted certificate authority chain to verify client certificates.
 
 ## Setup Instructions

@@ -211,6 +211,38 @@ func ConfigureCACertWithCertAndKey(name string, ca []byte, sslCert *ingress.SSLC
 	return ioutil.WriteFile(sslCert.CAFileName, buffer.Bytes(), 0644)
 }
 
+// ConfigureCRL creates a CRL file and append it into the SSLCert
+func ConfigureCRL(name string, crl []byte, sslCert *ingress.SSLCert) error {
+
+	crlName := fmt.Sprintf("crl-%v.pem", name)
+	crlFileName := fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, crlName)
+
+	pemCRLBlock, _ := pem.Decode(crl)
+	if pemCRLBlock == nil {
+		return fmt.Errorf("no valid PEM formatted block found in CRL %v", name)
+	}
+	// If the first certificate does not start with 'X509 CRL' it's invalid and must not be used.
+	if pemCRLBlock.Type != "X509 CRL" {
+		return fmt.Errorf("CRL file %v contains invalid data, and must be created only with PEM formatted certificates", name)
+	}
+
+	_, err := x509.ParseCRL(pemCRLBlock.Bytes)
+	if err != nil {
+		return fmt.Errorf(err.Error())
+	}
+
+	err = ioutil.WriteFile(crlFileName, crl, 0644)
+	if err != nil {
+		return fmt.Errorf("could not write CRL file %v: %v", crlFileName, err)
+	}
+
+	sslCert.CRLFileName = crlFileName
+	sslCert.CRLSHA = file.SHA1(crlFileName)
+
+	return nil
+
+}
+
 // ConfigureCACert is similar to ConfigureCACertWithCertAndKey but it creates a separate file
 // for CA cert and writes only ca into it and then sets relevant fields in sslCert
 func ConfigureCACert(name string, ca []byte, sslCert *ingress.SSLCert) error {

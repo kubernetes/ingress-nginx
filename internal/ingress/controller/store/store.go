@@ -816,9 +816,11 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 	}
 
 	return &resolver.AuthSSLCert{
-		Secret:     name,
-		CAFileName: cert.CAFileName,
-		CASHA:      cert.CASHA,
+		Secret:      name,
+		CAFileName:  cert.CAFileName,
+		CASHA:       cert.CASHA,
+		CRLFileName: cert.CRLFileName,
+		CRLSHA:      cert.CRLSHA,
 	}, nil
 }
 

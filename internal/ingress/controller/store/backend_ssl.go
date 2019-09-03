@@ -84,6 +84,8 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 	key, okkey := secret.Data[apiv1.TLSPrivateKeyKey]
 	ca := secret.Data["ca.crt"]
 
+	crl := secret.Data["ca.crl"]
+
 	auth := secret.Data["auth"]
 
 	// namespace/secretName -> namespace-secretName
@@ -117,12 +119,25 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			if err != nil {
 				return nil, fmt.Errorf("error configuring CA certificate: %v", err)
 			}
+
+			if len(crl) > 0 {
+				err = ssl.ConfigureCRL(nsSecName, crl, sslCert)
+				if err != nil {
+					return nil, fmt.Errorf("error configuring CRL certificate: %v", err)
+				}
+
+			}
 		}
 
 		msg := fmt.Sprintf("Configuring Secret %q for TLS encryption (CN: %v)", secretName, sslCert.CN)
 		if ca != nil {
 			msg += " and authentication"
 		}
+
+		if crl != nil {
+			msg += " and CRL"
+		}
+
 		klog.V(3).Info(msg)
 	} else if len(ca) > 0 {
 		sslCert, err = ssl.CreateCACert(ca)
@@ -135,6 +150,12 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			return nil, fmt.Errorf("error configuring CA certificate: %v", err)
 		}
 
+		if len(crl) > 0 {
+			err = ssl.ConfigureCRL(nsSecName, crl, sslCert)
+			if err != nil {
+				return nil, err
+			}
+		}
 		// makes this secret in 'syncSecret' to be used for Certificate Authentication
 		// this does not enable Certificate Authentication
 		klog.V(3).Infof("Configuring Secret %q for TLS authentication", secretName)
