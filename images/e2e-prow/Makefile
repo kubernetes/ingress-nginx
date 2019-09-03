@@ -9,8 +9,9 @@ all: docker-build docker-push
 docker-build:
 	$(DOCKER) build \
 		--pull \
-		--build-arg K8S_RELEASE=v1.15.0 \
-		--build-arg ETCD_VERSION=v3.3.12 \
+		--build-arg K8S_RELEASE=v1.15.3 \
+		--build-arg ETCD_VERSION=v3.3.15 \
+		--build-arg KIND_VERSION=v0.5.1 \
 		-t $(IMAGE):$(TAG) .
 
 docker-push:

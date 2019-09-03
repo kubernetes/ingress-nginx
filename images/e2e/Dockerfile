@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.90
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.91
 
 RUN clean-install \
   g++ \
@@ -24,9 +24,9 @@ RUN clean-install \
   python \
   pkg-config
 
-ENV GOLANG_VERSION 1.12.6
+ENV GOLANG_VERSION 1.13
 ENV GO_ARCH        linux-amd64
-ENV GOLANG_SHA     dbcf71a3c1ea53b8d54ef1b48c85a39a6c9a935d01fc8291ff2b92028e59913c
+ENV GOLANG_SHA     68a2297eb099d1a76097905a2ce334e3155004ec08cdea85f24527be3c48e856
 
 RUN set -eux; \
   url="https://golang.org/dl/go${GOLANG_VERSION}.${GO_ARCH}.tar.gz"; \
@@ -44,8 +44,8 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 WORKDIR $GOPATH
 
-ENV RESTY_CLI_VERSION 0.23
-ENV RESTY_CLI_SHA     8715b9a6e33140fd468779cd561c0c622f7444a902dc578b1137941ff3fc1ed8
+ENV RESTY_CLI_VERSION 0.25rc2
+ENV RESTY_CLI_SHA     a38d850441384fa037a5922ca012dcce8708d0e4abe34ad2fe4164a01b28bdfb
 
 RUN set -eux; \
   url="https://github.com/openresty/resty-cli/archive/v${RESTY_CLI_VERSION}.tar.gz"; \
