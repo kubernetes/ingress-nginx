@@ -443,7 +443,7 @@ If you specify multiple annotations in a single Ingress rule, limits are applied
 
 To configure settings globally for all Ingress rules, the `limit-rate-after` and `limit-rate` values may be set in the [NGINX ConfigMap](./configmap.md#limit-rate).  The value set in an Ingress annotation will override the global setting.
 
-The client IP address will be set based on the use of [PROXY protocol](./configmap/#use-proxy-protocol) or from the `X-Forwarded-For` header value when [use-forwarded-headers](configmap/#use-forwarded-headers) is enabled.
+The client IP address will be set based on the use of [PROXY protocol](./configmap.md#use-proxy-protocol) or from the `X-Forwarded-For` header value when [use-forwarded-headers](./configmap.md#use-forwarded-headers) is enabled.
 
 ### Permanent Redirect
 
