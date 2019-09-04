@@ -21,11 +21,11 @@ REPO_INFO=$(shell git config --get remote.origin.url)
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 
-BASEIMAGE?=alpine:3.9
+BASEIMAGE?=alpine:3.10
 
-ALL_ARCH = amd64 arm arm64 ppc64le
+ALL_ARCH = amd64 arm arm64
 
-QEMUVERSION=v3.0.0
+QEMUVERSION=v4.1.0-1
 
 IMGNAME = fastcgi-helloserver
 IMAGE = $(REGISTRY)/$(IMGNAME)
@@ -36,11 +36,7 @@ ifeq ($(ARCH),arm)
 	GOARCH=arm
 endif
 ifeq ($(ARCH),arm64)
-        QEMUARCH=aarch64
-endif
-ifeq ($(ARCH),ppc64le)
-	QEMUARCH=ppc64le
-	GOARCH=ppc64le
+	QEMUARCH=aarch64
 endif
 
 TEMP_DIR := $(shell mktemp -d)
