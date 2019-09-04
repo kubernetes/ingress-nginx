@@ -50,7 +50,7 @@ GOBUILD_FLAGS := -v
 
 ALL_ARCH = amd64 arm arm64
 
-QEMUVERSION = v4.0.0
+QEMUVERSION = v4.1.0-1
 
 BUSTED_ARGS =-v --pattern=_test
 
@@ -212,12 +212,12 @@ dev-env:
 
 .PHONY: live-docs
 live-docs:
-	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker build --pull -t ingress-nginx/mkdocs images/mkdocs
 	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
 
 .PHONY: build-docs
 build-docs:
-	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker build --pull -t ingress-nginx/mkdocs images/mkdocs
 	@docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
 
 .PHONY: misspell

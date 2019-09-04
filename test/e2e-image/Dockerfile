@@ -1,4 +1,4 @@
-FROM quay.io/kubernetes-ingress-controller/e2e:v06262019-ecce3fd7b AS BASE
+FROM quay.io/kubernetes-ingress-controller/e2e:v09032019-b807fb5d2 AS BASE
 
 FROM quay.io/kubernetes-ingress-controller/debian-base-amd64:0.1
 
