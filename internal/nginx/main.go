@@ -50,10 +50,8 @@ var HealthCheckTimeout = 10 * time.Second
 // http://nginx.org/en/docs/http/ngx_http_stub_status_module.html
 var StatusPath = "/nginx_status"
 
-// StreamSocket defines the location of the unix socket used by NGINX for the NGINX stream configuration socket
-var StreamSocket = "/tmp/ingress-stream.sock"
-
-var statusLocation = "nginx-status"
+// StreamPort defines the port used by NGINX for the NGINX stream configuration socket
+var StreamPort = 10257
 
 // NewGetStatusRequest creates a new GET request to the internal NGINX status server
 func NewGetStatusRequest(path string) (int, []byte, error) {

@@ -151,16 +151,15 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 func TestConfigureDynamically(t *testing.T) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 	if err != nil {
-		t.Fatalf("crating unix listener: %s", err)
+		t.Fatalf("crating tcp listener: %s", err)
 	}
 	defer listener.Close()
 
-	streamListener, err := net.Listen("unix", nginx.StreamSocket)
+	streamListener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StreamPort))
 	if err != nil {
-		t.Fatalf("crating unix listener: %s", err)
+		t.Fatalf("crating tcp listener: %s", err)
 	}
 	defer streamListener.Close()
-	defer os.Remove(nginx.StreamSocket)
 
 	endpointStats := map[string]int{"/configuration/backends": 0, "/configuration/general": 0, "/configuration/servers": 0}
 	resetEndpointStats := func() {
@@ -321,16 +320,15 @@ func TestConfigureDynamically(t *testing.T) {
 func TestConfigureCertificates(t *testing.T) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 	if err != nil {
-		t.Fatalf("crating unix listener: %s", err)
+		t.Fatalf("crating tcp listener: %s", err)
 	}
 	defer listener.Close()
 
-	streamListener, err := net.Listen("unix", nginx.StreamSocket)
+	streamListener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StreamPort))
 	if err != nil {
-		t.Fatalf("crating unix listener: %s", err)
+		t.Fatalf("crating tcp listener: %s", err)
 	}
 	defer streamListener.Close()
-	defer os.Remove(nginx.StreamSocket)
 
 	servers := []*ingress.Server{{
 		Hostname: "myapp.fake",
