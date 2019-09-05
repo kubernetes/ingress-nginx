@@ -22,6 +22,7 @@ RUN clean-install \
   make \
   wget \
   python \
+  parallel \
   pkg-config
 
 ENV GOLANG_VERSION 1.13
