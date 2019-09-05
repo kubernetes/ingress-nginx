@@ -372,9 +372,9 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(nginx_ingress_controller_success{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\"})",
+          "expr": "avg(irate(nginx_ingress_controller_success{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\"}[1m])) * 60",
           "format": "time_series",
-          "instant": true,
+          "instant": false,
           "intervalFactor": 1,
           "refId": "A",
           "step": 4
@@ -392,7 +392,7 @@
           "value": "null"
         }
       ],
-      "valueName": "avg"
+      "valueName": "total"
     },
     {
       "cacheTimeout": null,
