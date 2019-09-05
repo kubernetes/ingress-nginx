@@ -25,6 +25,16 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+if ! command -v parallel &> /dev/null; then
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    echo "Parallel is not installed. Use the package manager to install it"
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Parallel is not installed. Install it running brew install parallel"
+  fi
+
+  exit 1
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export TAG=dev
@@ -53,25 +63,27 @@ kubectl get nodes -o wide
 kubectl config set-context kubernetes-admin@${KIND_CLUSTER_NAME}
 
 echo "[dev-env] building container"
+echo "
 make -C ${DIR}/../../ build container
 make -C ${DIR}/../../ e2e-test-image
 make -C ${DIR}/../../images/fastcgi-helloserver/ build container
-
 make -C ${DIR}/../../images/httpbin/ container
+" | parallel --progress {}
 
 # Remove after https://github.com/kubernetes/ingress-nginx/pull/4271 is merged
 docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
 
-echo "[dev-env] copying docker images to cluster..."
-kind load docker-image --name="${KIND_CLUSTER_NAME}" nginx-ingress-controller:e2e
-kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-controller:${TAG}
-kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/fastcgi-helloserver:${TAG}
-
 # Preload images used in e2e tests
 docker pull openresty/openresty:1.15.8.2-alpine
 
+echo "[dev-env] copying docker images to cluster..."
+echo "
+kind load docker-image --name="${KIND_CLUSTER_NAME}" nginx-ingress-controller:e2e
+kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-controller:${TAG}
+kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/fastcgi-helloserver:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" openresty/openresty:1.15.8.2-alpine
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
+" | parallel --progress
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
