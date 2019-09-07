@@ -187,14 +187,14 @@ func (f *Framework) GetURL(scheme RequestScheme) string {
 
 // WaitForNginxServer waits until the nginx configuration contains a particular server section
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
+	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
 	time.Sleep(5 * time.Second)
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
+	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
 	time.Sleep(5 * time.Second)
 }
@@ -328,7 +328,7 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(pod.GetName(), metav1.NewDeleteOptions(grace))
 	Expect(err).NotTo(HaveOccurred(), "unexpected error deleting ingress nginx pod")
 
-	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
+	err = wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
 		pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
 		if err != nil || pod == nil {
 			return false, nil

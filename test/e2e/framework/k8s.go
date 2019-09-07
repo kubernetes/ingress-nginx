@@ -122,7 +122,7 @@ func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) (*appsv1.Dep
 
 // WaitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
 func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration, expectedReplicas int, namespace string, opts metav1.ListOptions) error {
-	return wait.Poll(Poll, timeout, func() (bool, error) {
+	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(opts)
 		if err != nil {
 			return false, nil
@@ -145,7 +145,7 @@ func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 
 // WaitForPodsDeleted waits for a given amount of time until a group of Pods are deleted in the given namespace.
 func WaitForPodsDeleted(kubeClientSet kubernetes.Interface, timeout time.Duration, namespace string, opts metav1.ListOptions) error {
-	return wait.Poll(Poll, timeout, func() (bool, error) {
+	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(opts)
 		if err != nil {
 			return false, nil
@@ -164,7 +164,7 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 		return nil
 	}
 
-	return wait.Poll(Poll, timeout, func() (bool, error) {
+	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
 		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(name, metav1.GetOptions{})
 		if k8sErrors.IsNotFound(err) {
 			return false, nil
