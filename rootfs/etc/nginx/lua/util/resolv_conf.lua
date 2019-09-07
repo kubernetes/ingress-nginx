@@ -51,6 +51,9 @@ local function parse_line(line)
   local keyword, value = parts[1], parts[2]
 
   if keyword == "nameserver" then
+    if not value:match("^%d+.%d+.%d+.%d+$") then
+      value = string.format("[%s]", value)
+    end
     nameservers[#nameservers + 1] = value
   elseif keyword == "search" then
     set_search(parts)
