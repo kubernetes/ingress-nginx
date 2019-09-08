@@ -669,7 +669,7 @@ stream {
     }
 
     server {
-        listen unix:{{ .StreamSocket }};
+        listen 127.0.0.1:{{ .StreamPort }};
 
         access_log off;
 
