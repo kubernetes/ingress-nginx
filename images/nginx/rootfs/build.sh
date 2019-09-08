@@ -475,7 +475,12 @@ cd /usr/local/openresty
 export LUA_LIB_DIR=/usr/local/openresty/lualib
 export LUA_INCLUDE_DIR=/tmp/build/openresty-$OPENRESTY_VERSION/build/luajit-root/usr/local/openresty/luajit/include/luajit-2.1
 
-luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
+ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
+
+if [[ ${ARCH} != "armv7l" ]]; then
+  luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
+fi
+
 luarocks install lua-resty-iputils 0.3.0-1
 luarocks install lua-resty-cookie 0.1.0-1
 
@@ -483,8 +488,6 @@ cd "$BUILD_PATH/lua-resty-balancer-$LUA_RESTY_BALANCER_VERSION"
 
 make
 make install
-
-ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
 
 if [[ ${ARCH} != "armv7l" ]]; then
   /install_lua_resty_waf.sh
