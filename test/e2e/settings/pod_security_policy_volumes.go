@@ -71,6 +71,11 @@ var _ = framework.IngressNginxDescribe("Pod Security Policies with volumes", fun
 							EmptyDir: &corev1.EmptyDirVolumeSource{},
 						},
 					},
+					{
+						Name: "tmp", VolumeSource: corev1.VolumeSource{
+							EmptyDir: &corev1.EmptyDirVolumeSource{},
+						},
+					},
 				}
 
 				fsGroup := int64(33)
@@ -81,6 +86,9 @@ var _ = framework.IngressNginxDescribe("Pod Security Policies with volumes", fun
 				deployment.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
 					{
 						Name: "ssl", MountPath: "/etc/ingress-controller",
+					},
+					{
+						Name: "tmp", MountPath: "/tmp",
 					},
 				}
 
