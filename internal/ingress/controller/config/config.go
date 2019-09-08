@@ -795,10 +795,10 @@ type TemplateConfig struct {
 	PublishService           *apiv1.Service
 	EnableMetrics            bool
 
-	PID          string
-	StatusPath   string
-	StatusPort   int
-	StreamSocket string
+	PID        string
+	StatusPath string
+	StatusPort int
+	StreamPort int
 }
 
 // ListenPorts describe the ports required to run the

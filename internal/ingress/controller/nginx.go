@@ -603,11 +603,11 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		PublishService:           n.GetPublishService(),
 		EnableMetrics:            n.cfg.EnableMetrics,
 
-		HealthzURI:   nginx.HealthPath,
-		PID:          nginx.PID,
-		StatusPath:   nginx.StatusPath,
-		StatusPort:   nginx.StatusPort,
-		StreamSocket: nginx.StreamSocket,
+		HealthzURI: nginx.HealthPath,
+		PID:        nginx.PID,
+		StatusPath: nginx.StatusPath,
+		StatusPort: nginx.StatusPort,
+		StreamPort: nginx.StreamPort,
 	}
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
@@ -923,16 +923,16 @@ func updateStreamConfiguration(TCPEndpoints []ingress.L4Service, UDPEndpoints []
 		})
 	}
 
-	conn, err := net.Dial("unix", nginx.StreamSocket)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
 	buf, err := json.Marshal(streams)
 	if err != nil {
 		return err
 	}
+
+	conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%v", nginx.StreamPort))
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
 
 	_, err = conn.Write(buf)
 	if err != nil {
