@@ -1,0 +1,6 @@
+.terraform
+.terraform*
+terraform*
+*.tfstate
+*.tfstate.backup
+id_rsa*
