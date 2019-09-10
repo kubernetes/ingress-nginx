@@ -1,4 +1,5 @@
 local ngx_re_split = require("ngx.re").split
+local string_format = string.format
 
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
@@ -52,7 +53,7 @@ local function parse_line(line)
 
   if keyword == "nameserver" then
     if not value:match("^%d+.%d+.%d+.%d+$") then
-      value = string.format("[%s]", value)
+      value = string_format("[%s]", value)
     end
     nameservers[#nameservers + 1] = value
   elseif keyword == "search" then
