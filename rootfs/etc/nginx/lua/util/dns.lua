@@ -15,7 +15,7 @@ local _M = {}
 local CACHE_SIZE = 10000
 local MAXIMUM_TTL_VALUE = 2147483647 -- maximum value according to https://tools.ietf.org/html/rfc2181
 -- for every host we will try two queries for the following types with the order set here
-local QTYPES_TO_CHECK = { resolver.TYPE_A, resolver.TYPE_AAAA }
+local QTYPES_TO_CHECK = { resolver.TYPE_AAAA, resolver.TYPE_A }
 
 local cache
 do
