@@ -30,6 +30,7 @@ describe("resolv_conf", function()
 # This is a comment
 nameserver 10.96.0.10
 nameserver 10.96.0.99
+nameserver 2001:4860:4860::8888
 search ingress-nginx.svc.cluster.local svc.cluster.local cluster.local
 options ndots:5
     ]===]
@@ -37,7 +38,7 @@ options ndots:5
     helpers.with_resolv_conf(conf, function()
       local resolv_conf = require("util.resolv_conf")
       assert.are.same({
-        nameservers = { "10.96.0.10", "10.96.0.99" },
+        nameservers = { "10.96.0.10", "10.96.0.99", "[2001:4860:4860::8888]" },
         search = { "ingress-nginx.svc.cluster.local", "svc.cluster.local", "cluster.local" },
         ndots = 5,
       }, resolv_conf)
