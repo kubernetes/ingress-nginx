@@ -18,18 +18,37 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+catch() {
+  if [ "$1" == "0" ]; then
+    exit 0
+  fi
+
+  echo "Error $1 occurred on $2"
+
+  echo "Removing temporal resources..."
+  terraform destroy -auto-approve \
+    -var-file /root/aws.tfvars \
+    -var-file /root/env.tfvars \
+    -var valid_until="${EC2_VALID_UNTIL}"
+}
+trap 'catch $? $LINENO' ERR
+
 terraform init
 
+# destroy spot instance after two hours
+EC2_VALID_UNTIL=$(date -d "+2 hours" +%Y-%m-%dT%H:%M:%SZ)
+
 terraform plan \
-  -var access_key="${AWS_ACCESS_KEY}" \
-  -var secret_key="${AWS_SECRET_KEY}" \
-  .
+  -var-file /root/aws.tfvars \
+  -var-file /root/env.tfvars \
+  -var valid_until="${EC2_VALID_UNTIL}"
 
 terraform apply -auto-approve \
-  -var access_key="${AWS_ACCESS_KEY}" \
-  -var secret_key="${AWS_SECRET_KEY}" \
-  .
+  -var-file /root/aws.tfvars \
+  -var-file /root/env.tfvars \
+  -var valid_until="${EC2_VALID_UNTIL}"
 
 terraform destroy -auto-approve \
-  -var access_key="${AWS_ACCESS_KEY}" \
-  -var secret_key="${AWS_SECRET_KEY}" \
+  -var-file /root/aws.tfvars \
+  -var-file /root/env.tfvars \
+  -var valid_until="${EC2_VALID_UNTIL}"
