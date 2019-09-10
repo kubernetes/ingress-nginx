@@ -81,16 +81,6 @@ export TAG=$(git rev-parse HEAD)
 
 echo "Building NGINX image in parallel:"
 echo "
-make sub-container-amd64
-make sub-container-arm
-make sub-container-arm64
-" | parallel {}
-
-echo "Docker images:"
-docker images
-
-echo "Publishing docker images..."
-echo "
 make sub-push-amd64
 make sub-push-arm
 make sub-push-arm64
