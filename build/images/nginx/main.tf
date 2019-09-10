@@ -133,9 +133,12 @@ resource "aws_spot_instance_request" "build_worker" {
   subnet_id              = aws_subnet.subnet_public.id
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
 
+  valid_until = var.valid_until
+
   key_name = aws_key_pair.ssh_key.key_name
 
   spot_price = "2"
+  spot_type = "one-time"
 
   ebs_optimized = true
 
@@ -146,6 +149,7 @@ resource "aws_spot_instance_request" "build_worker" {
   }
 
   wait_for_fulfillment = true
+  instance_initiated_shutdown_behavior = "terminate"
 
   associate_public_ip_address = true
 
@@ -165,10 +169,14 @@ resource "aws_spot_instance_request" "build_worker" {
     destination = "/tmp/build-nginx.sh"
   }
 
+  provisioner "file" {
+    source      = "/root/env.tfvars"
+    destination = "/tmp/env"
+  }
+
   provisioner "remote-exec" {
     inline = [
       "echo Building nginx images...",
-      "ls /tmp",
       "chmod +x /tmp/build-nginx.sh",
       "sudo /tmp/build-nginx.sh",
     ]

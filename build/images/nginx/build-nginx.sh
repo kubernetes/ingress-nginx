@@ -18,24 +18,39 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+function source_tfvars() {
+  eval "$(
+    awk 'BEGIN {FS=OFS="="}
+    !/^(#| *$)/ && /^.+=.+$/ {
+      gsub(/^[ \t]+|[ \t]+$/, "", $1);
+      gsub(/\./, "_", $1);
+      gsub(/^[ \t]+|[ \t]+$/, "", $2);
+      if ($1 && $2) print $0
+    }' "$@"
+  )"
+}
+
+source_tfvars /tmp/env
+
 export DEBIAN_FRONTEND=noninteractive
 export AR_FLAGS=cr
 
-apt update
+apt -q=3 update
 
-apt dist-upgrade --yes
+apt -q=3 dist-upgrade --yes
 
 add-apt-repository universe   --yes
 add-apt-repository multiverse --yes
 
-apt update
+apt -q=3 update
 
-apt install \
+apt -q=3 install \
   apt-transport-https \
   ca-certificates \
   curl \
   make \
   htop \
+  parallel \
   software-properties-common --yes
 
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -45,15 +60,16 @@ add-apt-repository \
   $(lsb_release -cs) \
   stable" --yes
 
-apt update
+apt -q=3 update
 
-apt install docker-ce --yes
+apt -q=3 install docker-ce --yes
+
+echo ${docker_password} | docker login -u ${docker_username} --password-stdin quay.io
 
 curl -sL -o /usr/local/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 chmod +x /usr/local/bin/gimme
 
 eval "$(gimme 1.13)"
-gimme 1.13
 
 git clone https://github.com/kubernetes/ingress-nginx
 
@@ -61,34 +77,21 @@ cd ingress-nginx/images/nginx
 
 make register-qemu
 
-PARALLELISM=${PARALLELISM:-3}
-
 export TAG=$(git rev-parse HEAD)
 
-# Borrowed from https://github.com/kubernetes-sigs/kind/blob/master/hack/release/build/cross.sh#L27
-echo "Building in parallel for:"
-# What we do here:
-# - use xargs to build in parallel (-P) while collecting a combined exit code
-# - use cat to supply the individual args to xargs (one line each)
-# - use env -S to split the line into environment variables and execute
-# - ... the build
-# shellcheck disable=SC2016
-if xargs -0 -n1 -P "${PARALLELISM}" bash -c 'eval $0; TAG=${TAG} make sub-container-${ARCH} > build-${ARCH}.log'; then
-  echo "Docker build finished without issues" 1>&2
-else
-  echo "Docker build failed!" 1>&2
-  cat build-amd64.log
-  cat build-arm.log
-  cat build-arm64.log
-  exit 1
-fi < <(cat <<EOF | tr '\n' '\0'
-ARCH=amd64
-ARCH=arm
-ARCH=arm64
-EOF
-)
+echo "Building NGINX image in parallel:"
+echo "
+make sub-container-amd64
+make sub-container-arm
+make sub-container-arm64
+" | parallel {}
 
+echo "Docker images:"
 docker images
 
-echo $QUAY_PASSWORD | sudo docker login -u $QUAY_USERNAME --password-stdin quay.io
-make all-push
+echo "Publishing docker images..."
+echo "
+make sub-push-amd64
+make sub-push-arm
+make sub-push-arm64
+" | parallel {}

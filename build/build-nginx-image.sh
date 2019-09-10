@@ -22,25 +22,20 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-declare -a mandatory
-mandatory=(
-  AWS_ACCESS_KEY
-  AWS_SECRET_KEY
-)
+DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 
-missing=false
-for var in "${mandatory[@]}"; do
-  if [[ -z "${!var:-}" ]]; then
-    echo "Environment variable $var must be set"
-    missing=true
-  fi
-done
+AWS_FILE="${DIR}/images/nginx/aws.tfvars"
+ENV_FILE="${DIR}/images/nginx/env.tfvars"
 
-if [ "$missing" = true ]; then
+if [ ! -f "${AWS_FILE}" ]; then
+  echo "File $AWS_FILE does not exist. Please create this file with keys access_key an secret_key"
   exit 1
 fi
 
-DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
+if [ ! -f "${ENV_FILE}" ]; then
+  echo "File $ENV_FILE does not exist. Please create this file with keys docker_username and docker_password"
+  exit 1
+fi
 
 # build local terraform image to build nginx
 docker build -t build-nginx-terraform $DIR/images/nginx
@@ -50,9 +45,6 @@ docker build -t build-nginx-terraform $DIR/images/nginx
 docker run --rm -it \
   --volume $DIR/images/nginx:/tf \
   -w /tf \
-  --env AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
-  --env AWS_SECRET_KEY=${AWS_SECRET_KEY} \
-  --env AWS_SECRET_KEY=${AWS_SECRET_KEY} \
-  --env QUAY_USERNAME=${QUAY_USERNAME} \
-  --env QUAY_PASSWORD="${QUAY_PASSWORD}" \
+  -v ${AWS_FILE}:/root/aws.tfvars:ro \
+  -v ${ENV_FILE}:/root/env.tfvars:ro \
   build-nginx-terraform
