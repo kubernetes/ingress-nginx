@@ -4,6 +4,15 @@ variable "access_key" {
 variable "secret_key" {
 }
 
+variable "valid_until" {
+}
+
+variable "docker_username" {
+}
+
+variable "docker_password" {
+}
+
 variable "region" {
   default = "us-west-2"
 }
@@ -20,7 +29,7 @@ variable "cidr_subnet" {
 
 variable "availability_zone" {
   description = "availability zone to create subnet"
-  default     = "us-west-2a"
+  default     = "us-west-2b"
 }
 
 variable "ssh_key_path" {
@@ -35,7 +44,7 @@ variable "ssh_public_key_path" {
 
 variable "instance_type" {
   description = "EC2 instance"
-  default     = "m5.16xlarge"
+  default     = "c5.18xlarge"
 }
 
 variable "project_tag" {
