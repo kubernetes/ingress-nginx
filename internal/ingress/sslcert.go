@@ -30,6 +30,8 @@ type SSLCert struct {
 
 	Certificate *x509.Certificate `json:"-"`
 
+	CACertificate []*x509.Certificate `json:"-"`
+
 	// CAFileName contains the path to the file with the root certificate
 	CAFileName string `json:"caFileName"`
 
