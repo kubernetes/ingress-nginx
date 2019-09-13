@@ -176,7 +176,7 @@ func TestConfigureCACert(t *testing.T) {
 	if sslCert.CAFileName != "" {
 		t.Fatalf("expected CAFileName to be empty")
 	}
-	if sslCert.Certificate == nil {
+	if sslCert.CACertificate == nil {
 		t.Fatalf("expected Certificate to be set")
 	}
 
@@ -221,7 +221,7 @@ fUNCdMGmr8FVF6IzTNYGmCuk/C4=
 	if sslCert.CRLFileName != "" {
 		t.Fatalf("expected CRLFileName to be empty")
 	}
-	if sslCert.Certificate == nil {
+	if sslCert.CACertificate == nil {
 		t.Fatalf("expected Certificate to be set")
 	}
 

@@ -17,8 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -107,11 +105,17 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		}
 
 		if len(ca) > 0 {
+			caCert, err := ssl.CheckCACert(ca)
+			if err != nil {
+				return nil, fmt.Errorf("parsing CA certificate: %v", err)
+			}
+
 			path, err := ssl.StoreSSLCertOnDisk(nsSecName, sslCert)
 			if err != nil {
 				return nil, fmt.Errorf("error while storing certificate and key: %v", err)
 			}
 
+			sslCert.CACertificate = caCert
 			sslCert.CAFileName = path
 			sslCert.CASHA = file.SHA1(path)
 
@@ -125,7 +129,6 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 				if err != nil {
 					return nil, fmt.Errorf("error configuring CRL certificate: %v", err)
 				}
-
 			}
 		}
 
@@ -169,11 +172,6 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 
 	sslCert.Name = secret.Name
 	sslCert.Namespace = secret.Namespace
-
-	hasher := sha1.New()
-	hasher.Write(sslCert.Certificate.Raw)
-
-	sslCert.PemSHA = hex.EncodeToString(hasher.Sum(nil))
 
 	// the default SSL certificate needs to be present on disk
 	if secretName == s.defaultSSLCertificate {

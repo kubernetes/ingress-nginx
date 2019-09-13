@@ -20,10 +20,12 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -61,21 +63,6 @@ const (
 func getPemFileName(fullSecretName string) (string, string) {
 	pemName := fmt.Sprintf("%v.pem", fullSecretName)
 	return fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, pemName), pemName
-}
-
-func verifyPemCertAgainstRootCA(pemCert *x509.Certificate, ca []byte) error {
-	bundle := x509.NewCertPool()
-	bundle.AppendCertsFromPEM(ca)
-	opts := x509.VerifyOptions{
-		Roots: bundle,
-	}
-
-	_, err := pemCert.Verify(opts)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // CreateSSLCert validates cert and key, extracts common names and returns corresponding SSLCert object
@@ -138,8 +125,12 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 		}
 	}
 
+	hasher := sha1.New()
+	hasher.Write(pemCert.Raw)
+
 	return &ingress.SSLCert{
 		Certificate: pemCert,
+		PemSHA:      hex.EncodeToString(hasher.Sum(nil)),
 		CN:          cn.List(),
 		ExpireTime:  pemCert.NotAfter,
 		PemCertKey:  pemCertBuffer.String(),
@@ -150,23 +141,39 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 // CreateCACert is similar to CreateSSLCert but it creates instance of SSLCert only based on given ca after
 // parsing and validating it
 func CreateCACert(ca []byte) (*ingress.SSLCert, error) {
-	pemCABlock, _ := pem.Decode(ca)
-	if pemCABlock == nil {
-		return nil, fmt.Errorf("no valid PEM formatted block found")
-	}
-	// If the first certificate does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
-	if pemCABlock.Type != "CERTIFICATE" {
-		return nil, fmt.Errorf("no certificate PEM data found, make sure certificate content starts with 'BEGIN CERTIFICATE'")
-	}
-
-	pemCert, err := x509.ParseCertificate(pemCABlock.Bytes)
+	caCert, err := CheckCACert(ca)
 	if err != nil {
 		return nil, err
 	}
 
 	return &ingress.SSLCert{
-		Certificate: pemCert,
+		CACertificate: caCert,
 	}, nil
+}
+
+// CheckCACert validates a byte array containing one or more CA certificate/s
+func CheckCACert(caBytes []byte) ([]*x509.Certificate, error) {
+	certs := []*x509.Certificate{}
+
+	var block *pem.Block
+	for {
+		block, caBytes = pem.Decode(caBytes)
+		if block == nil {
+			break
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		certs = append(certs, cert)
+	}
+
+	if len(certs) == 0 {
+		return nil, fmt.Errorf("error decoding CA certificate/s")
+	}
+
+	return certs, nil
 }
 
 // StoreSSLCertOnDisk creates a .pem file with content PemCertKey from the given sslCert
@@ -185,27 +192,21 @@ func StoreSSLCertOnDisk(name string, sslCert *ingress.SSLCert) (string, error) {
 // ConfigureCACertWithCertAndKey appends ca into existing PEM file consisting of cert and key
 // and sets relevant fields in sslCert object
 func ConfigureCACertWithCertAndKey(name string, ca []byte, sslCert *ingress.SSLCert) error {
-	err := verifyPemCertAgainstRootCA(sslCert.Certificate, ca)
-	if err != nil {
-		oe := fmt.Sprintf("failed to verify certificate chain: \n\t%s\n", err)
-		return errors.New(oe)
-	}
-
 	var buffer bytes.Buffer
 
-	_, err = buffer.Write([]byte(sslCert.PemCertKey))
+	_, err := buffer.Write([]byte(sslCert.PemCertKey))
 	if err != nil {
-		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.PemFileName, err)
+		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.CAFileName, err)
 	}
 
 	_, err = buffer.Write([]byte("\n"))
 	if err != nil {
-		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.PemFileName, err)
+		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.CAFileName, err)
 	}
 
 	_, err = buffer.Write(ca)
 	if err != nil {
-		return fmt.Errorf("could not write ca data to cert file %v: %v", sslCert.PemFileName, err)
+		return fmt.Errorf("could not write ca data to cert file %v: %v", sslCert.CAFileName, err)
 	}
 
 	return ioutil.WriteFile(sslCert.CAFileName, buffer.Bytes(), 0644)
