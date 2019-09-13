@@ -19,6 +19,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-secret-type](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
 |[nginx.ingress.kubernetes.io/auth-tls-secret](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#client-certificate-authentication)|number|
@@ -166,7 +167,7 @@ The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines t
 
 ### Authentication
 
-Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the key `auth`.
+Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.
 
 The annotations are:
 ```
@@ -181,6 +182,15 @@ nginx.ingress.kubernetes.io/auth-secret: secretName
 
 The name of the Secret that contains the usernames and passwords which are granted access to the `path`s defined in the Ingress rules.
 This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.
+
+```
+nginx.ingress.kubernetes.io/auth-secret-type: [auth-file|auth-map]
+```
+
+The `auth-secret` can have two forms:
+
+- `auth-file` - default, an htpasswd file in the key `auth` within the secret
+- `auth-map` - the keys of the secret are the usernames, and the values are the hashed passwords
 
 ```
 nginx.ingress.kubernetes.io/auth-realm: "realm string"
