@@ -17,7 +17,6 @@ limitations under the License.
 package config
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -28,8 +27,6 @@ func TestBuildLogFormatUpstream(t *testing.T) {
 		curLogFormat     string
 		expected         string
 	}{
-		{true, logFormatUpstream, fmt.Sprintf(logFormatUpstream, "$the_real_ip")},
-		{false, logFormatUpstream, fmt.Sprintf(logFormatUpstream, "$the_real_ip")},
 		{true, "my-log-format", "my-log-format"},
 		{false, "john-log-format", "john-log-format"},
 	}
