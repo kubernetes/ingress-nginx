@@ -46,7 +46,7 @@
 		"useHttp2": true,
 		"proxyStreamTimeout": "600s",
 		"workerProcesses": 1,
-		"limitConnZoneVariable": "$the_real_ip"
+		"limitConnZoneVariable": "$remote_addr"
 	},
 	"customErrors": true,
 	"defResolver": "",

@@ -4,8 +4,7 @@ The default configuration uses a custom logging format to add additional informa
 
 ```
 log_format upstreaminfo
-    '{{ if $cfg.useProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
-    '[$the_real_ip] - $remote_user [$time_local] "$request" '
+    '$remote_addr - $remote_user [$time_local] "$request" '
     '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
     '$request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr '
     '$upstream_response_length $upstream_response_time $upstream_status $req_id';
@@ -14,8 +13,7 @@ log_format upstreaminfo
 | Placeholder | Description |
 |-------------|-------------|
 | `$proxy_protocol_addr` | remote address if proxy protocol is enabled |
-| `$remote_addr` | remote address if proxy protocol is disabled (default) |
-| `$the_real_ip` | the source IP address of the client |
+| `$remote_addr` | the source IP address of the client |
 | `$remote_user` | user name supplied with the Basic authentication |
 | `$time_local` | local time in the Common Log Format |
 | `$request` | full original request line |
