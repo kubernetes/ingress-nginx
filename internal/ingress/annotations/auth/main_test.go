@@ -182,6 +182,25 @@ func TestIngressAuthWithoutSecret(t *testing.T) {
 	}
 }
 
+func TestIngressAuthInvalidSecretKey(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	data[parser.GetAnnotationWithPrefix("auth-secret")] = "demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-secret-type")] = "invalid-type"
+	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	_, err := NewParser(dir, mockSecret{}).Parse(ing)
+	if err == nil {
+		t.Errorf("expected an error with invalid secret name")
+	}
+}
+
 func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%v", time.Now().Unix()))
 	if err != nil {
@@ -197,20 +216,30 @@ func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
 	return tmpfile.Name(), dir, s
 }
 
-func TestDumpSecret(t *testing.T) {
+func TestDumpSecretAuthFile(t *testing.T) {
 	tmpfile, dir, s := dummySecretContent(t)
 	defer os.RemoveAll(dir)
 
 	sd := s.Data
 	s.Data = nil
 
-	err := dumpSecret(tmpfile, s)
+	err := dumpSecretAuthFile(tmpfile, s)
 	if err == nil {
 		t.Errorf("Expected error with secret without auth")
 	}
 
 	s.Data = sd
-	err = dumpSecret(tmpfile, s)
+	err = dumpSecretAuthFile(tmpfile, s)
+	if err != nil {
+		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
+	}
+}
+
+func TestDumpSecretAuthMap(t *testing.T) {
+	tmpfile, dir, s := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	err := dumpSecretAuthMap(tmpfile, s)
 	if err != nil {
 		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
 	}
