@@ -515,6 +515,22 @@ type Configuration struct {
 	// Default: 5778
 	JaegerSamplerPort int `json:"jaeger-sampler-port"`
 
+	// JaegerTraceContextHeaderName specifies the header name used for passing trace context
+	// Default: uber-trace-id
+	JaegerTraceContextHeaderName string `json:"jaeger-trace-context-header-name"`
+
+	// JaegerDebugHeader specifies the header name used for force sampling
+	// Default: jaeger-debug-id
+	JaegerDebugHeader string `json:"jaeger-debug-header"`
+
+	// JaegerBaggageHeader specifies the header name used to submit baggage if there is no root span
+	// Default: jaeger-baggage
+	JaegerBaggageHeader string `json:"jaeger-baggage-header"`
+
+	// TraceBaggageHeaderPrefix specifies the header prefix used to propagate baggage
+	// Default: uberctx-
+	JaegerTraceBaggageHeaderPrefix string `json:"jaeger-tracer-baggage-header-prefix"`
+
 	// DatadogCollectorHost specifies the datadog agent host to use when uploading traces
 	DatadogCollectorHost string `json:"datadog-collector-host"`
 

@@ -59,6 +59,18 @@ jaeger-sampler-host
 # Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. Default: 5778
 jaeger-sampler-port
 
+# Specifies the header name used for passing trace context. Must be a string. Default: uber-trace-id
+jaeger-trace-context-header-name
+
+# Specifies the header name used for force sampling. Must be a string. Default: jaeger-debug-id
+jaeger-debug-header
+
+# Specifies the header name used to submit baggage if there is no root span. Must be a string. Default: jaeger-baggage
+jaeger-baggage-header
+
+# Specifies the header prefix used to propagate baggage. Must be a string. Default: uberctx-
+jaeger-tracer-baggage-header-prefix
+
 # specifies the port to use when uploading traces, Default 8126
 datadog-collector-port
 
