@@ -780,7 +780,7 @@ func (s *k8sStore) ListIngresses(filter IngressFilterFunc) []*ingress.Ingress {
 		if ir.Equal(&jr) {
 			in := fmt.Sprintf("%v/%v", ingresses[i].Namespace, ingresses[i].Name)
 			jn := fmt.Sprintf("%v/%v", ingresses[j].Namespace, ingresses[j].Name)
-			klog.Warningf("Ingress %v and %v have identical CreationTimestamp", in, jn)
+			klog.V(3).Infof("Ingress %v and %v have identical CreationTimestamp", in, jn)
 			return in > jn
 		}
 		return ir.Before(&jr)
