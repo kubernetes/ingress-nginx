@@ -125,6 +125,10 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
 |[jaeger-sampler-host](#jaeger-sampler-host)|string|"http://127.0.0.1"|
 |[jaeger-sampler-port](#jaeger-sampler-port)|int|5778|
+|[jaeger-trace-context-header-name](#jaeger-trace-context-header-name)|string|uber-trace-id|
+|[jaeger-debug-header](#jaeger-debug-header)|string|uber-debug-id|
+|[jaeger-baggage-header](#jaeger-baggage-header)|string|jaeger-baggage|
+|[jaeger-trace-baggage-header-prefix](#jaeger-trace-baggage-header-prefix)|string|uberctx-|
 |[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
@@ -746,6 +750,22 @@ Leave blank to use default value (localhost). _**default:**_ http://127.0.0.1
 ## jaeger-sampler-port
 
 Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. _**default:**_ 5778
+
+## jaeger-trace-context-header-name
+
+Specifies the header name used for passing trace context. _**default:**_ uber-trace-id
+
+## jaeger-debug-header
+
+Specifies the header name used for force sampling. _**default:**_ jaeger-debug-id
+
+## jaeger-baggage-header
+
+Specifies the header name used to submit baggage if there is no root span. _**default:**_ jaeger-baggage
+
+## jaeger-tracer-baggage-header-prefix
+
+Specifies the header prefix used to propagate baggage. _**default:**_ uberctx-
 
 ## main-snippet
 
