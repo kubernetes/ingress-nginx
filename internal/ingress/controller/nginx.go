@@ -1067,7 +1067,13 @@ const jaegerTmpl = `{
   },
   "reporter": {
 	"localAgentHostPort": "{{ .JaegerCollectorHost }}:{{ .JaegerCollectorPort }}"
-  }
+  },
+  "headers": {
+	"TraceContextHeaderName": "{{ .JaegerTraceContextHeaderName }}",
+	"jaegerDebugHeader": "{{ .JaegerDebugHeader }}",
+	"jaegerBaggageHeader": "{{ .JaegerBaggageHeader }}",
+	"traceBaggageHeaderPrefix": "{{ .JaegerTraceBaggageHeaderPrefix }}"
+  },
 }`
 
 const datadogTmpl = `{
