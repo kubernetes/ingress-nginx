@@ -151,7 +151,6 @@ var (
 		"buildUpstreamName":               buildUpstreamName,
 		"isLocationInLocationList":        isLocationInLocationList,
 		"isLocationAllowed":               isLocationAllowed,
-		"buildLogFormatUpstream":          buildLogFormatUpstream,
 		"buildDenyVariable":               buildDenyVariable,
 		"getenv":                          os.Getenv,
 		"contains":                        strings.Contains,
@@ -460,16 +459,6 @@ func buildAuthResponseHeaders(headers []string) []string {
 		res = append(res, fmt.Sprintf("proxy_set_header '%v' $authHeader%v;", h, i))
 	}
 	return res
-}
-
-func buildLogFormatUpstream(input interface{}) string {
-	cfg, ok := input.(config.Configuration)
-	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
-		return ""
-	}
-
-	return cfg.BuildLogFormatUpstream()
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects

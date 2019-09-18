@@ -2,7 +2,7 @@
 
 The NGINX template is located in the file `/etc/nginx/template/nginx.tmpl`.
 
-Using a [Volume](https://kubernetes.io/docs/concepts/storage/volumes/) it is possible to use a custom template. 
+Using a [Volume](https://kubernetes.io/docs/concepts/storage/volumes/) it is possible to use a custom template.
 This includes using a [Configmap](https://kubernetes.io/docs/concepts/storage/volumes/#example-pod-with-a-secret-a-downward-api-and-a-configmap) as source of the template
 
 ```yaml
@@ -40,7 +40,6 @@ TODO:
 - buildAuthLocation:
 - buildAuthResponseHeaders:
 - buildResolvers:
-- buildLogFormatUpstream:
 - buildDenyVariable:
 - buildUpstreamName:
 - buildForwardedFor:
