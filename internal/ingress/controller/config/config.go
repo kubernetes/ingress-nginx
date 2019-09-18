@@ -17,7 +17,6 @@ limitations under the License.
 package config
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -777,17 +776,6 @@ func NewDefault() Configuration {
 	}
 
 	return cfg
-}
-
-// BuildLogFormatUpstream format the log_format upstream using
-// proxy_protocol_addr as remote client address if UseProxyProtocol
-// is enabled.
-func (cfg Configuration) BuildLogFormatUpstream() string {
-	if cfg.LogFormatUpstream == logFormatUpstream {
-		return fmt.Sprintf(cfg.LogFormatUpstream, "$remote_addr")
-	}
-
-	return cfg.LogFormatUpstream
 }
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
