@@ -11,6 +11,7 @@ type ThrottlingData struct {
 	ThrottledTime uint64 `json:"throttled_time,omitempty"`
 }
 
+// CpuUsage denotes the usage of a CPU.
 // All CPU stats are aggregate since container inception.
 type CpuUsage struct {
 	// Total CPU time consumed.
@@ -50,6 +51,8 @@ type MemoryStats struct {
 	KernelUsage MemoryData `json:"kernel_usage,omitempty"`
 	// usage of kernel TCP memory
 	KernelTCPUsage MemoryData `json:"kernel_tcp_usage,omitempty"`
+	// if true, memory usage is accounted for throughout a hierarchy of cgroups.
+	UseHierarchy bool `json:"use_hierarchy"`
 
 	Stats map[string]uint64 `json:"stats,omitempty"`
 }

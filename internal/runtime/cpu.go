@@ -34,7 +34,7 @@ import (
 func NumCPU() int {
 	cpus := runtime.NumCPU()
 
-	cgroupPath, err := libcontainercgroups.FindCgroupMountpoint("cpu")
+	cgroupPath, err := libcontainercgroups.FindCgroupMountpoint("", "cpu")
 	if err != nil {
 		return cpus
 	}
