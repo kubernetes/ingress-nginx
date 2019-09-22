@@ -9,9 +9,5 @@ Basically a default backend exposes two URLs:
 - `/` that returns 404
 
 !!! example
-    The sub-directory [`/images/404-server`](https://github.com/kubernetes/ingress-nginx/tree/master/images/404-server)
-    provides a service which satisfies the requirements for a default backend.
-
-!!! example
     The sub-directory [`/images/custom-error-pages`](https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages)
     provides an additional service for the purpose of customizing the error pages served via the default backend.
