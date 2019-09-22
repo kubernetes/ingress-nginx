@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.1">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
     
     
       
@@ -217,7 +217,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../.." title="Welcome" class="md-tabs__link">
+        <a href="../../.." class="md-tabs__link">
           Welcome
         </a>
       
@@ -230,7 +230,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../deploy/" title="Deployment" class="md-tabs__link">
+        <a href="../../../deploy/" class="md-tabs__link">
           Deployment
         </a>
       
@@ -247,7 +247,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../user-guide/nginx-configuration/" title="User guide" class="md-tabs__link">
+        <a href="../../../user-guide/nginx-configuration/" class="md-tabs__link">
           User guide
         </a>
       
@@ -262,7 +262,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../" title="Examples" class="md-tabs__link md-tabs__link--active">
+        <a href="../../" class="md-tabs__link md-tabs__link--active">
           Examples
         </a>
       
@@ -274,7 +274,7 @@
   </div>
 </nav>
       
-      <main class="md-main">
+      <main class="md-main" role="main">
         <div class="md-main__inner md-grid" data-md-component="container">
           
             
@@ -904,14 +904,14 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#creating-certificate-secrets" title="Creating Certificate Secrets" class="md-nav__link">
+  <a href="#creating-certificate-secrets" class="md-nav__link">
     Creating Certificate Secrets
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#setup-instructions" title="Setup Instructions" class="md-nav__link">
+  <a href="#setup-instructions" class="md-nav__link">
     Setup Instructions
   </a>
   
@@ -1175,14 +1175,14 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#creating-certificate-secrets" title="Creating Certificate Secrets" class="md-nav__link">
+  <a href="#creating-certificate-secrets" class="md-nav__link">
     Creating Certificate Secrets
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#setup-instructions" title="Setup Instructions" class="md-nav__link">
+  <a href="#setup-instructions" class="md-nav__link">
     Setup Instructions
   </a>
   
@@ -1244,6 +1244,12 @@ kubectl create secret generic tls-secret --from-file<span class="o">=</span>tls.
 <div class="codehilite"><pre><span></span>kubectl create secret generic ca-secret --from-file<span class="o">=</span>tls.crt<span class="o">=</span>server.crt --from-file<span class="o">=</span>tls.key<span class="o">=</span>server.key --from-file<span class="o">=</span>ca.crt<span class="o">=</span>ca.crt
 </pre></div>
 
+</li>
+<li>
+<p>If you want to also enable Certificate Revocation List verification you can 
+   create the secret also containing the CRL file in PEM format:
+   <div class="codehilite"><pre><span></span>kubectl create secret generic ca-secret --from-file<span class="o">=</span>ca.crt<span class="o">=</span>ca.crt --from-file<span class="o">=</span>ca.crl<span class="o">=</span>ca.crl
+</pre></div></p>
 </li>
 </ol>
 <p>Note: The CA Certificate must contain the trusted certificate authority chain to verify client certificates.</p>

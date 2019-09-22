@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.1">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
     
     
       
@@ -217,7 +217,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../.." title="Welcome" class="md-tabs__link">
+        <a href="../../.." class="md-tabs__link">
           Welcome
         </a>
       
@@ -230,7 +230,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../deploy/" title="Deployment" class="md-tabs__link">
+        <a href="../../../deploy/" class="md-tabs__link">
           Deployment
         </a>
       
@@ -247,7 +247,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../" title="User guide" class="md-tabs__link md-tabs__link--active">
+        <a href="../" class="md-tabs__link md-tabs__link--active">
           User guide
         </a>
       
@@ -262,7 +262,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../examples/" title="Examples" class="md-tabs__link">
+        <a href="../../../examples/" class="md-tabs__link">
           Examples
         </a>
       
@@ -274,7 +274,7 @@
   </div>
 </nav>
       
-      <main class="md-main">
+      <main class="md-main" role="main">
         <div class="md-main__inner md-grid" data-md-component="container">
           
             
@@ -592,973 +592,1001 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#configuration-options" title="Configuration options" class="md-nav__link">
+  <a href="#configuration-options" class="md-nav__link">
     Configuration options
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#add-headers" title="add-headers" class="md-nav__link">
+  <a href="#add-headers" class="md-nav__link">
     add-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#allow-backend-server-header" title="allow-backend-server-header" class="md-nav__link">
+  <a href="#allow-backend-server-header" class="md-nav__link">
     allow-backend-server-header
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hide-headers" title="hide-headers" class="md-nav__link">
+  <a href="#hide-headers" class="md-nav__link">
     hide-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#access-log-params" title="access-log-params" class="md-nav__link">
+  <a href="#access-log-params" class="md-nav__link">
     access-log-params
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#access-log-path" title="access-log-path" class="md-nav__link">
+  <a href="#access-log-path" class="md-nav__link">
     access-log-path
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-access-log-for-default-backend" title="enable-access-log-for-default-backend" class="md-nav__link">
+  <a href="#enable-access-log-for-default-backend" class="md-nav__link">
     enable-access-log-for-default-backend
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#error-log-path" title="error-log-path" class="md-nav__link">
+  <a href="#error-log-path" class="md-nav__link">
     error-log-path
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-modsecurity" title="enable-modsecurity" class="md-nav__link">
+  <a href="#enable-modsecurity" class="md-nav__link">
     enable-modsecurity
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-owasp-modsecurity-crs" title="enable-owasp-modsecurity-crs" class="md-nav__link">
+  <a href="#enable-owasp-modsecurity-crs" class="md-nav__link">
     enable-owasp-modsecurity-crs
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-header-buffer-size" title="client-header-buffer-size" class="md-nav__link">
+  <a href="#client-header-buffer-size" class="md-nav__link">
     client-header-buffer-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-header-timeout" title="client-header-timeout" class="md-nav__link">
+  <a href="#client-header-timeout" class="md-nav__link">
     client-header-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-body-buffer-size" title="client-body-buffer-size" class="md-nav__link">
+  <a href="#client-body-buffer-size" class="md-nav__link">
     client-body-buffer-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-body-timeout" title="client-body-timeout" class="md-nav__link">
+  <a href="#client-body-timeout" class="md-nav__link">
     client-body-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#disable-access-log" title="disable-access-log" class="md-nav__link">
+  <a href="#disable-access-log" class="md-nav__link">
     disable-access-log
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#disable-ipv6" title="disable-ipv6" class="md-nav__link">
+  <a href="#disable-ipv6" class="md-nav__link">
     disable-ipv6
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#disable-ipv6-dns" title="disable-ipv6-dns" class="md-nav__link">
+  <a href="#disable-ipv6-dns" class="md-nav__link">
     disable-ipv6-dns
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-underscores-in-headers" title="enable-underscores-in-headers" class="md-nav__link">
+  <a href="#enable-underscores-in-headers" class="md-nav__link">
     enable-underscores-in-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ignore-invalid-headers" title="ignore-invalid-headers" class="md-nav__link">
+  <a href="#ignore-invalid-headers" class="md-nav__link">
     ignore-invalid-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#retry-non-idempotent" title="retry-non-idempotent" class="md-nav__link">
+  <a href="#retry-non-idempotent" class="md-nav__link">
     retry-non-idempotent
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#error-log-level" title="error-log-level" class="md-nav__link">
+  <a href="#error-log-level" class="md-nav__link">
     error-log-level
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http2-max-field-size" title="http2-max-field-size" class="md-nav__link">
+  <a href="#http2-max-field-size" class="md-nav__link">
     http2-max-field-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http2-max-header-size" title="http2-max-header-size" class="md-nav__link">
+  <a href="#http2-max-header-size" class="md-nav__link">
     http2-max-header-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http2-max-requests" title="http2-max-requests" class="md-nav__link">
+  <a href="#http2-max-requests" class="md-nav__link">
     http2-max-requests
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hsts" title="hsts" class="md-nav__link">
+  <a href="#hsts" class="md-nav__link">
     hsts
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hsts-include-subdomains" title="hsts-include-subdomains" class="md-nav__link">
+  <a href="#hsts-include-subdomains" class="md-nav__link">
     hsts-include-subdomains
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hsts-max-age" title="hsts-max-age" class="md-nav__link">
+  <a href="#hsts-max-age" class="md-nav__link">
     hsts-max-age
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hsts-preload" title="hsts-preload" class="md-nav__link">
+  <a href="#hsts-preload" class="md-nav__link">
     hsts-preload
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#keep-alive" title="keep-alive" class="md-nav__link">
+  <a href="#keep-alive" class="md-nav__link">
     keep-alive
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#keep-alive-requests" title="keep-alive-requests" class="md-nav__link">
+  <a href="#keep-alive-requests" class="md-nav__link">
     keep-alive-requests
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#large-client-header-buffers" title="large-client-header-buffers" class="md-nav__link">
+  <a href="#large-client-header-buffers" class="md-nav__link">
     large-client-header-buffers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#log-format-escape-json" title="log-format-escape-json" class="md-nav__link">
+  <a href="#log-format-escape-json" class="md-nav__link">
     log-format-escape-json
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#log-format-upstream" title="log-format-upstream" class="md-nav__link">
+  <a href="#log-format-upstream" class="md-nav__link">
     log-format-upstream
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#log-format-stream" title="log-format-stream" class="md-nav__link">
+  <a href="#log-format-stream" class="md-nav__link">
     log-format-stream
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-multi-accept" title="enable-multi-accept" class="md-nav__link">
+  <a href="#enable-multi-accept" class="md-nav__link">
     enable-multi-accept
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#max-worker-connections" title="max-worker-connections" class="md-nav__link">
+  <a href="#max-worker-connections" class="md-nav__link">
     max-worker-connections
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#max-worker-open-files" title="max-worker-open-files" class="md-nav__link">
+  <a href="#max-worker-open-files" class="md-nav__link">
     max-worker-open-files
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#map-hash-bucket-size" title="map-hash-bucket-size" class="md-nav__link">
+  <a href="#map-hash-bucket-size" class="md-nav__link">
     map-hash-bucket-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-real-ip-cidr" title="proxy-real-ip-cidr" class="md-nav__link">
+  <a href="#proxy-real-ip-cidr" class="md-nav__link">
     proxy-real-ip-cidr
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-set-headers" title="proxy-set-headers" class="md-nav__link">
+  <a href="#proxy-set-headers" class="md-nav__link">
     proxy-set-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-name-hash-max-size" title="server-name-hash-max-size" class="md-nav__link">
+  <a href="#server-name-hash-max-size" class="md-nav__link">
     server-name-hash-max-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-name-hash-bucket-size" title="server-name-hash-bucket-size" class="md-nav__link">
+  <a href="#server-name-hash-bucket-size" class="md-nav__link">
     server-name-hash-bucket-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-headers-hash-max-size" title="proxy-headers-hash-max-size" class="md-nav__link">
+  <a href="#proxy-headers-hash-max-size" class="md-nav__link">
     proxy-headers-hash-max-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#reuse-port" title="reuse-port" class="md-nav__link">
+  <a href="#reuse-port" class="md-nav__link">
     reuse-port
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-headers-hash-bucket-size" title="proxy-headers-hash-bucket-size" class="md-nav__link">
+  <a href="#proxy-headers-hash-bucket-size" class="md-nav__link">
     proxy-headers-hash-bucket-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-tokens" title="server-tokens" class="md-nav__link">
+  <a href="#server-tokens" class="md-nav__link">
     server-tokens
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-ciphers" title="ssl-ciphers" class="md-nav__link">
+  <a href="#ssl-ciphers" class="md-nav__link">
     ssl-ciphers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-ecdh-curve" title="ssl-ecdh-curve" class="md-nav__link">
+  <a href="#ssl-ecdh-curve" class="md-nav__link">
     ssl-ecdh-curve
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-dh-param" title="ssl-dh-param" class="md-nav__link">
+  <a href="#ssl-dh-param" class="md-nav__link">
     ssl-dh-param
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-protocols" title="ssl-protocols" class="md-nav__link">
+  <a href="#ssl-protocols" class="md-nav__link">
     ssl-protocols
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-early-data" title="ssl-early-data" class="md-nav__link">
+  <a href="#ssl-early-data" class="md-nav__link">
     ssl-early-data
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-cache" title="ssl-session-cache" class="md-nav__link">
+  <a href="#ssl-session-cache" class="md-nav__link">
     ssl-session-cache
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-cache-size" title="ssl-session-cache-size" class="md-nav__link">
+  <a href="#ssl-session-cache-size" class="md-nav__link">
     ssl-session-cache-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-tickets" title="ssl-session-tickets" class="md-nav__link">
+  <a href="#ssl-session-tickets" class="md-nav__link">
     ssl-session-tickets
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-ticket-key" title="ssl-session-ticket-key" class="md-nav__link">
+  <a href="#ssl-session-ticket-key" class="md-nav__link">
     ssl-session-ticket-key
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-timeout" title="ssl-session-timeout" class="md-nav__link">
+  <a href="#ssl-session-timeout" class="md-nav__link">
     ssl-session-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-buffer-size" title="ssl-buffer-size" class="md-nav__link">
+  <a href="#ssl-buffer-size" class="md-nav__link">
     ssl-buffer-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-proxy-protocol" title="use-proxy-protocol" class="md-nav__link">
+  <a href="#use-proxy-protocol" class="md-nav__link">
     use-proxy-protocol
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-protocol-header-timeout" title="proxy-protocol-header-timeout" class="md-nav__link">
+  <a href="#proxy-protocol-header-timeout" class="md-nav__link">
     proxy-protocol-header-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-gzip" title="use-gzip" class="md-nav__link">
+  <a href="#use-gzip" class="md-nav__link">
     use-gzip
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-geoip" title="use-geoip" class="md-nav__link">
+  <a href="#use-geoip" class="md-nav__link">
     use-geoip
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-geoip2" title="use-geoip2" class="md-nav__link">
+  <a href="#use-geoip2" class="md-nav__link">
     use-geoip2
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-brotli" title="enable-brotli" class="md-nav__link">
+  <a href="#enable-brotli" class="md-nav__link">
     enable-brotli
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#brotli-level" title="brotli-level" class="md-nav__link">
+  <a href="#brotli-level" class="md-nav__link">
     brotli-level
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#brotli-types" title="brotli-types" class="md-nav__link">
+  <a href="#brotli-types" class="md-nav__link">
     brotli-types
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-http2" title="use-http2" class="md-nav__link">
+  <a href="#use-http2" class="md-nav__link">
     use-http2
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#gzip-level" title="gzip-level" class="md-nav__link">
+  <a href="#gzip-level" class="md-nav__link">
     gzip-level
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#gzip-types" title="gzip-types" class="md-nav__link">
+  <a href="#gzip-types" class="md-nav__link">
     gzip-types
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#worker-processes" title="worker-processes" class="md-nav__link">
+  <a href="#worker-processes" class="md-nav__link">
     worker-processes
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#worker-cpu-affinity" title="worker-cpu-affinity" class="md-nav__link">
+  <a href="#worker-cpu-affinity" class="md-nav__link">
     worker-cpu-affinity
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#worker-shutdown-timeout" title="worker-shutdown-timeout" class="md-nav__link">
+  <a href="#worker-shutdown-timeout" class="md-nav__link">
     worker-shutdown-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#load-balance" title="load-balance" class="md-nav__link">
+  <a href="#load-balance" class="md-nav__link">
     load-balance
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#variables-hash-bucket-size" title="variables-hash-bucket-size" class="md-nav__link">
+  <a href="#variables-hash-bucket-size" class="md-nav__link">
     variables-hash-bucket-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#variables-hash-max-size" title="variables-hash-max-size" class="md-nav__link">
+  <a href="#variables-hash-max-size" class="md-nav__link">
     variables-hash-max-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#upstream-keepalive-connections" title="upstream-keepalive-connections" class="md-nav__link">
+  <a href="#upstream-keepalive-connections" class="md-nav__link">
     upstream-keepalive-connections
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#upstream-keepalive-timeout" title="upstream-keepalive-timeout" class="md-nav__link">
+  <a href="#upstream-keepalive-timeout" class="md-nav__link">
     upstream-keepalive-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#upstream-keepalive-requests" title="upstream-keepalive-requests" class="md-nav__link">
+  <a href="#upstream-keepalive-requests" class="md-nav__link">
     upstream-keepalive-requests
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-conn-zone-variable" title="limit-conn-zone-variable" class="md-nav__link">
+  <a href="#limit-conn-zone-variable" class="md-nav__link">
     limit-conn-zone-variable
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-stream-timeout" title="proxy-stream-timeout" class="md-nav__link">
+  <a href="#proxy-stream-timeout" class="md-nav__link">
     proxy-stream-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-stream-responses" title="proxy-stream-responses" class="md-nav__link">
+  <a href="#proxy-stream-responses" class="md-nav__link">
     proxy-stream-responses
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#bind-address" title="bind-address" class="md-nav__link">
+  <a href="#bind-address" class="md-nav__link">
     bind-address
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-forwarded-headers" title="use-forwarded-headers" class="md-nav__link">
+  <a href="#use-forwarded-headers" class="md-nav__link">
     use-forwarded-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#forwarded-for-header" title="forwarded-for-header" class="md-nav__link">
+  <a href="#forwarded-for-header" class="md-nav__link">
     forwarded-for-header
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#compute-full-forwarded-for" title="compute-full-forwarded-for" class="md-nav__link">
+  <a href="#compute-full-forwarded-for" class="md-nav__link">
     compute-full-forwarded-for
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-add-original-uri-header" title="proxy-add-original-uri-header" class="md-nav__link">
+  <a href="#proxy-add-original-uri-header" class="md-nav__link">
     proxy-add-original-uri-header
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#generate-request-id" title="generate-request-id" class="md-nav__link">
+  <a href="#generate-request-id" class="md-nav__link">
     generate-request-id
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-opentracing" title="enable-opentracing" class="md-nav__link">
+  <a href="#enable-opentracing" class="md-nav__link">
     enable-opentracing
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#zipkin-collector-host" title="zipkin-collector-host" class="md-nav__link">
+  <a href="#zipkin-collector-host" class="md-nav__link">
     zipkin-collector-host
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#zipkin-collector-port" title="zipkin-collector-port" class="md-nav__link">
+  <a href="#zipkin-collector-port" class="md-nav__link">
     zipkin-collector-port
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#zipkin-service-name" title="zipkin-service-name" class="md-nav__link">
+  <a href="#zipkin-service-name" class="md-nav__link">
     zipkin-service-name
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#zipkin-sample-rate" title="zipkin-sample-rate" class="md-nav__link">
+  <a href="#zipkin-sample-rate" class="md-nav__link">
     zipkin-sample-rate
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-collector-host" title="jaeger-collector-host" class="md-nav__link">
+  <a href="#jaeger-collector-host" class="md-nav__link">
     jaeger-collector-host
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-collector-port" title="jaeger-collector-port" class="md-nav__link">
+  <a href="#jaeger-collector-port" class="md-nav__link">
     jaeger-collector-port
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-service-name" title="jaeger-service-name" class="md-nav__link">
+  <a href="#jaeger-service-name" class="md-nav__link">
     jaeger-service-name
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-sampler-type" title="jaeger-sampler-type" class="md-nav__link">
+  <a href="#jaeger-sampler-type" class="md-nav__link">
     jaeger-sampler-type
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-sampler-param" title="jaeger-sampler-param" class="md-nav__link">
+  <a href="#jaeger-sampler-param" class="md-nav__link">
     jaeger-sampler-param
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-sampler-host" title="jaeger-sampler-host" class="md-nav__link">
+  <a href="#jaeger-sampler-host" class="md-nav__link">
     jaeger-sampler-host
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-sampler-port" title="jaeger-sampler-port" class="md-nav__link">
+  <a href="#jaeger-sampler-port" class="md-nav__link">
     jaeger-sampler-port
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#main-snippet" title="main-snippet" class="md-nav__link">
+  <a href="#jaeger-trace-context-header-name" class="md-nav__link">
+    jaeger-trace-context-header-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jaeger-debug-header" class="md-nav__link">
+    jaeger-debug-header
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jaeger-baggage-header" class="md-nav__link">
+    jaeger-baggage-header
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jaeger-tracer-baggage-header-prefix" class="md-nav__link">
+    jaeger-tracer-baggage-header-prefix
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-snippet" class="md-nav__link">
     main-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http-snippet" title="http-snippet" class="md-nav__link">
+  <a href="#http-snippet" class="md-nav__link">
     http-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-snippet" title="server-snippet" class="md-nav__link">
+  <a href="#server-snippet" class="md-nav__link">
     server-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#location-snippet" title="location-snippet" class="md-nav__link">
+  <a href="#location-snippet" class="md-nav__link">
     location-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#custom-http-errors" title="custom-http-errors" class="md-nav__link">
+  <a href="#custom-http-errors" class="md-nav__link">
     custom-http-errors
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-body-size" title="proxy-body-size" class="md-nav__link">
+  <a href="#proxy-body-size" class="md-nav__link">
     proxy-body-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-connect-timeout" title="proxy-connect-timeout" class="md-nav__link">
+  <a href="#proxy-connect-timeout" class="md-nav__link">
     proxy-connect-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-read-timeout" title="proxy-read-timeout" class="md-nav__link">
+  <a href="#proxy-read-timeout" class="md-nav__link">
     proxy-read-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-send-timeout" title="proxy-send-timeout" class="md-nav__link">
+  <a href="#proxy-send-timeout" class="md-nav__link">
     proxy-send-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-buffers-number" title="proxy-buffers-number" class="md-nav__link">
+  <a href="#proxy-buffers-number" class="md-nav__link">
     proxy-buffers-number
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-buffer-size" title="proxy-buffer-size" class="md-nav__link">
+  <a href="#proxy-buffer-size" class="md-nav__link">
     proxy-buffer-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-cookie-path" title="proxy-cookie-path" class="md-nav__link">
+  <a href="#proxy-cookie-path" class="md-nav__link">
     proxy-cookie-path
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-cookie-domain" title="proxy-cookie-domain" class="md-nav__link">
+  <a href="#proxy-cookie-domain" class="md-nav__link">
     proxy-cookie-domain
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-next-upstream" title="proxy-next-upstream" class="md-nav__link">
+  <a href="#proxy-next-upstream" class="md-nav__link">
     proxy-next-upstream
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-next-upstream-timeout" title="proxy-next-upstream-timeout" class="md-nav__link">
+  <a href="#proxy-next-upstream-timeout" class="md-nav__link">
     proxy-next-upstream-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-next-upstream-tries" title="proxy-next-upstream-tries" class="md-nav__link">
+  <a href="#proxy-next-upstream-tries" class="md-nav__link">
     proxy-next-upstream-tries
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-redirect-from" title="proxy-redirect-from" class="md-nav__link">
+  <a href="#proxy-redirect-from" class="md-nav__link">
     proxy-redirect-from
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-request-buffering" title="proxy-request-buffering" class="md-nav__link">
+  <a href="#proxy-request-buffering" class="md-nav__link">
     proxy-request-buffering
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-redirect" title="ssl-redirect" class="md-nav__link">
+  <a href="#ssl-redirect" class="md-nav__link">
     ssl-redirect
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#whitelist-source-range" title="whitelist-source-range" class="md-nav__link">
+  <a href="#whitelist-source-range" class="md-nav__link">
     whitelist-source-range
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#skip-access-log-urls" title="skip-access-log-urls" class="md-nav__link">
+  <a href="#skip-access-log-urls" class="md-nav__link">
     skip-access-log-urls
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-rate" title="limit-rate" class="md-nav__link">
+  <a href="#limit-rate" class="md-nav__link">
     limit-rate
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-rate-after" title="limit-rate-after" class="md-nav__link">
+  <a href="#limit-rate-after" class="md-nav__link">
     limit-rate-after
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#lua-shared-dicts" title="lua-shared-dicts" class="md-nav__link">
+  <a href="#lua-shared-dicts" class="md-nav__link">
     lua-shared-dicts
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http-redirect-code" title="http-redirect-code" class="md-nav__link">
+  <a href="#http-redirect-code" class="md-nav__link">
     http-redirect-code
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-buffering" title="proxy-buffering" class="md-nav__link">
+  <a href="#proxy-buffering" class="md-nav__link">
     proxy-buffering
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-req-status-code" title="limit-req-status-code" class="md-nav__link">
+  <a href="#limit-req-status-code" class="md-nav__link">
     limit-req-status-code
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-conn-status-code" title="limit-conn-status-code" class="md-nav__link">
+  <a href="#limit-conn-status-code" class="md-nav__link">
     limit-conn-status-code
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#no-tls-redirect-locations" title="no-tls-redirect-locations" class="md-nav__link">
+  <a href="#no-tls-redirect-locations" class="md-nav__link">
     no-tls-redirect-locations
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-url" title="global-auth-url" class="md-nav__link">
+  <a href="#global-auth-url" class="md-nav__link">
     global-auth-url
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-method" title="global-auth-method" class="md-nav__link">
+  <a href="#global-auth-method" class="md-nav__link">
     global-auth-method
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-signin" title="global-auth-signin" class="md-nav__link">
+  <a href="#global-auth-signin" class="md-nav__link">
     global-auth-signin
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-response-headers" title="global-auth-response-headers" class="md-nav__link">
+  <a href="#global-auth-response-headers" class="md-nav__link">
     global-auth-response-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-request-redirect" title="global-auth-request-redirect" class="md-nav__link">
+  <a href="#global-auth-request-redirect" class="md-nav__link">
     global-auth-request-redirect
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-snippet" title="global-auth-snippet" class="md-nav__link">
+  <a href="#global-auth-snippet" class="md-nav__link">
     global-auth-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-cache-key" title="global-auth-cache-key" class="md-nav__link">
+  <a href="#global-auth-cache-key" class="md-nav__link">
     global-auth-cache-key
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-cache-duration" title="global-auth-cache-duration" class="md-nav__link">
+  <a href="#global-auth-cache-duration" class="md-nav__link">
     global-auth-cache-duration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#no-auth-locations" title="no-auth-locations" class="md-nav__link">
+  <a href="#no-auth-locations" class="md-nav__link">
     no-auth-locations
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#block-cidrs" title="block-cidrs" class="md-nav__link">
+  <a href="#block-cidrs" class="md-nav__link">
     block-cidrs
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#block-user-agents" title="block-user-agents" class="md-nav__link">
+  <a href="#block-user-agents" class="md-nav__link">
     block-user-agents
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#block-referers" title="block-referers" class="md-nav__link">
+  <a href="#block-referers" class="md-nav__link">
     block-referers
   </a>
   
@@ -2134,973 +2162,1001 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#configuration-options" title="Configuration options" class="md-nav__link">
+  <a href="#configuration-options" class="md-nav__link">
     Configuration options
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#add-headers" title="add-headers" class="md-nav__link">
+  <a href="#add-headers" class="md-nav__link">
     add-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#allow-backend-server-header" title="allow-backend-server-header" class="md-nav__link">
+  <a href="#allow-backend-server-header" class="md-nav__link">
     allow-backend-server-header
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hide-headers" title="hide-headers" class="md-nav__link">
+  <a href="#hide-headers" class="md-nav__link">
     hide-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#access-log-params" title="access-log-params" class="md-nav__link">
+  <a href="#access-log-params" class="md-nav__link">
     access-log-params
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#access-log-path" title="access-log-path" class="md-nav__link">
+  <a href="#access-log-path" class="md-nav__link">
     access-log-path
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-access-log-for-default-backend" title="enable-access-log-for-default-backend" class="md-nav__link">
+  <a href="#enable-access-log-for-default-backend" class="md-nav__link">
     enable-access-log-for-default-backend
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#error-log-path" title="error-log-path" class="md-nav__link">
+  <a href="#error-log-path" class="md-nav__link">
     error-log-path
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-modsecurity" title="enable-modsecurity" class="md-nav__link">
+  <a href="#enable-modsecurity" class="md-nav__link">
     enable-modsecurity
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-owasp-modsecurity-crs" title="enable-owasp-modsecurity-crs" class="md-nav__link">
+  <a href="#enable-owasp-modsecurity-crs" class="md-nav__link">
     enable-owasp-modsecurity-crs
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-header-buffer-size" title="client-header-buffer-size" class="md-nav__link">
+  <a href="#client-header-buffer-size" class="md-nav__link">
     client-header-buffer-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-header-timeout" title="client-header-timeout" class="md-nav__link">
+  <a href="#client-header-timeout" class="md-nav__link">
     client-header-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-body-buffer-size" title="client-body-buffer-size" class="md-nav__link">
+  <a href="#client-body-buffer-size" class="md-nav__link">
     client-body-buffer-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-body-timeout" title="client-body-timeout" class="md-nav__link">
+  <a href="#client-body-timeout" class="md-nav__link">
     client-body-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#disable-access-log" title="disable-access-log" class="md-nav__link">
+  <a href="#disable-access-log" class="md-nav__link">
     disable-access-log
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#disable-ipv6" title="disable-ipv6" class="md-nav__link">
+  <a href="#disable-ipv6" class="md-nav__link">
     disable-ipv6
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#disable-ipv6-dns" title="disable-ipv6-dns" class="md-nav__link">
+  <a href="#disable-ipv6-dns" class="md-nav__link">
     disable-ipv6-dns
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-underscores-in-headers" title="enable-underscores-in-headers" class="md-nav__link">
+  <a href="#enable-underscores-in-headers" class="md-nav__link">
     enable-underscores-in-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ignore-invalid-headers" title="ignore-invalid-headers" class="md-nav__link">
+  <a href="#ignore-invalid-headers" class="md-nav__link">
     ignore-invalid-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#retry-non-idempotent" title="retry-non-idempotent" class="md-nav__link">
+  <a href="#retry-non-idempotent" class="md-nav__link">
     retry-non-idempotent
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#error-log-level" title="error-log-level" class="md-nav__link">
+  <a href="#error-log-level" class="md-nav__link">
     error-log-level
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http2-max-field-size" title="http2-max-field-size" class="md-nav__link">
+  <a href="#http2-max-field-size" class="md-nav__link">
     http2-max-field-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http2-max-header-size" title="http2-max-header-size" class="md-nav__link">
+  <a href="#http2-max-header-size" class="md-nav__link">
     http2-max-header-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http2-max-requests" title="http2-max-requests" class="md-nav__link">
+  <a href="#http2-max-requests" class="md-nav__link">
     http2-max-requests
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hsts" title="hsts" class="md-nav__link">
+  <a href="#hsts" class="md-nav__link">
     hsts
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hsts-include-subdomains" title="hsts-include-subdomains" class="md-nav__link">
+  <a href="#hsts-include-subdomains" class="md-nav__link">
     hsts-include-subdomains
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hsts-max-age" title="hsts-max-age" class="md-nav__link">
+  <a href="#hsts-max-age" class="md-nav__link">
     hsts-max-age
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#hsts-preload" title="hsts-preload" class="md-nav__link">
+  <a href="#hsts-preload" class="md-nav__link">
     hsts-preload
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#keep-alive" title="keep-alive" class="md-nav__link">
+  <a href="#keep-alive" class="md-nav__link">
     keep-alive
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#keep-alive-requests" title="keep-alive-requests" class="md-nav__link">
+  <a href="#keep-alive-requests" class="md-nav__link">
     keep-alive-requests
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#large-client-header-buffers" title="large-client-header-buffers" class="md-nav__link">
+  <a href="#large-client-header-buffers" class="md-nav__link">
     large-client-header-buffers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#log-format-escape-json" title="log-format-escape-json" class="md-nav__link">
+  <a href="#log-format-escape-json" class="md-nav__link">
     log-format-escape-json
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#log-format-upstream" title="log-format-upstream" class="md-nav__link">
+  <a href="#log-format-upstream" class="md-nav__link">
     log-format-upstream
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#log-format-stream" title="log-format-stream" class="md-nav__link">
+  <a href="#log-format-stream" class="md-nav__link">
     log-format-stream
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-multi-accept" title="enable-multi-accept" class="md-nav__link">
+  <a href="#enable-multi-accept" class="md-nav__link">
     enable-multi-accept
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#max-worker-connections" title="max-worker-connections" class="md-nav__link">
+  <a href="#max-worker-connections" class="md-nav__link">
     max-worker-connections
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#max-worker-open-files" title="max-worker-open-files" class="md-nav__link">
+  <a href="#max-worker-open-files" class="md-nav__link">
     max-worker-open-files
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#map-hash-bucket-size" title="map-hash-bucket-size" class="md-nav__link">
+  <a href="#map-hash-bucket-size" class="md-nav__link">
     map-hash-bucket-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-real-ip-cidr" title="proxy-real-ip-cidr" class="md-nav__link">
+  <a href="#proxy-real-ip-cidr" class="md-nav__link">
     proxy-real-ip-cidr
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-set-headers" title="proxy-set-headers" class="md-nav__link">
+  <a href="#proxy-set-headers" class="md-nav__link">
     proxy-set-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-name-hash-max-size" title="server-name-hash-max-size" class="md-nav__link">
+  <a href="#server-name-hash-max-size" class="md-nav__link">
     server-name-hash-max-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-name-hash-bucket-size" title="server-name-hash-bucket-size" class="md-nav__link">
+  <a href="#server-name-hash-bucket-size" class="md-nav__link">
     server-name-hash-bucket-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-headers-hash-max-size" title="proxy-headers-hash-max-size" class="md-nav__link">
+  <a href="#proxy-headers-hash-max-size" class="md-nav__link">
     proxy-headers-hash-max-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#reuse-port" title="reuse-port" class="md-nav__link">
+  <a href="#reuse-port" class="md-nav__link">
     reuse-port
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-headers-hash-bucket-size" title="proxy-headers-hash-bucket-size" class="md-nav__link">
+  <a href="#proxy-headers-hash-bucket-size" class="md-nav__link">
     proxy-headers-hash-bucket-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-tokens" title="server-tokens" class="md-nav__link">
+  <a href="#server-tokens" class="md-nav__link">
     server-tokens
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-ciphers" title="ssl-ciphers" class="md-nav__link">
+  <a href="#ssl-ciphers" class="md-nav__link">
     ssl-ciphers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-ecdh-curve" title="ssl-ecdh-curve" class="md-nav__link">
+  <a href="#ssl-ecdh-curve" class="md-nav__link">
     ssl-ecdh-curve
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-dh-param" title="ssl-dh-param" class="md-nav__link">
+  <a href="#ssl-dh-param" class="md-nav__link">
     ssl-dh-param
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-protocols" title="ssl-protocols" class="md-nav__link">
+  <a href="#ssl-protocols" class="md-nav__link">
     ssl-protocols
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-early-data" title="ssl-early-data" class="md-nav__link">
+  <a href="#ssl-early-data" class="md-nav__link">
     ssl-early-data
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-cache" title="ssl-session-cache" class="md-nav__link">
+  <a href="#ssl-session-cache" class="md-nav__link">
     ssl-session-cache
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-cache-size" title="ssl-session-cache-size" class="md-nav__link">
+  <a href="#ssl-session-cache-size" class="md-nav__link">
     ssl-session-cache-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-tickets" title="ssl-session-tickets" class="md-nav__link">
+  <a href="#ssl-session-tickets" class="md-nav__link">
     ssl-session-tickets
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-ticket-key" title="ssl-session-ticket-key" class="md-nav__link">
+  <a href="#ssl-session-ticket-key" class="md-nav__link">
     ssl-session-ticket-key
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-session-timeout" title="ssl-session-timeout" class="md-nav__link">
+  <a href="#ssl-session-timeout" class="md-nav__link">
     ssl-session-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-buffer-size" title="ssl-buffer-size" class="md-nav__link">
+  <a href="#ssl-buffer-size" class="md-nav__link">
     ssl-buffer-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-proxy-protocol" title="use-proxy-protocol" class="md-nav__link">
+  <a href="#use-proxy-protocol" class="md-nav__link">
     use-proxy-protocol
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-protocol-header-timeout" title="proxy-protocol-header-timeout" class="md-nav__link">
+  <a href="#proxy-protocol-header-timeout" class="md-nav__link">
     proxy-protocol-header-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-gzip" title="use-gzip" class="md-nav__link">
+  <a href="#use-gzip" class="md-nav__link">
     use-gzip
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-geoip" title="use-geoip" class="md-nav__link">
+  <a href="#use-geoip" class="md-nav__link">
     use-geoip
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-geoip2" title="use-geoip2" class="md-nav__link">
+  <a href="#use-geoip2" class="md-nav__link">
     use-geoip2
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-brotli" title="enable-brotli" class="md-nav__link">
+  <a href="#enable-brotli" class="md-nav__link">
     enable-brotli
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#brotli-level" title="brotli-level" class="md-nav__link">
+  <a href="#brotli-level" class="md-nav__link">
     brotli-level
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#brotli-types" title="brotli-types" class="md-nav__link">
+  <a href="#brotli-types" class="md-nav__link">
     brotli-types
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-http2" title="use-http2" class="md-nav__link">
+  <a href="#use-http2" class="md-nav__link">
     use-http2
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#gzip-level" title="gzip-level" class="md-nav__link">
+  <a href="#gzip-level" class="md-nav__link">
     gzip-level
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#gzip-types" title="gzip-types" class="md-nav__link">
+  <a href="#gzip-types" class="md-nav__link">
     gzip-types
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#worker-processes" title="worker-processes" class="md-nav__link">
+  <a href="#worker-processes" class="md-nav__link">
     worker-processes
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#worker-cpu-affinity" title="worker-cpu-affinity" class="md-nav__link">
+  <a href="#worker-cpu-affinity" class="md-nav__link">
     worker-cpu-affinity
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#worker-shutdown-timeout" title="worker-shutdown-timeout" class="md-nav__link">
+  <a href="#worker-shutdown-timeout" class="md-nav__link">
     worker-shutdown-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#load-balance" title="load-balance" class="md-nav__link">
+  <a href="#load-balance" class="md-nav__link">
     load-balance
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#variables-hash-bucket-size" title="variables-hash-bucket-size" class="md-nav__link">
+  <a href="#variables-hash-bucket-size" class="md-nav__link">
     variables-hash-bucket-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#variables-hash-max-size" title="variables-hash-max-size" class="md-nav__link">
+  <a href="#variables-hash-max-size" class="md-nav__link">
     variables-hash-max-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#upstream-keepalive-connections" title="upstream-keepalive-connections" class="md-nav__link">
+  <a href="#upstream-keepalive-connections" class="md-nav__link">
     upstream-keepalive-connections
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#upstream-keepalive-timeout" title="upstream-keepalive-timeout" class="md-nav__link">
+  <a href="#upstream-keepalive-timeout" class="md-nav__link">
     upstream-keepalive-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#upstream-keepalive-requests" title="upstream-keepalive-requests" class="md-nav__link">
+  <a href="#upstream-keepalive-requests" class="md-nav__link">
     upstream-keepalive-requests
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-conn-zone-variable" title="limit-conn-zone-variable" class="md-nav__link">
+  <a href="#limit-conn-zone-variable" class="md-nav__link">
     limit-conn-zone-variable
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-stream-timeout" title="proxy-stream-timeout" class="md-nav__link">
+  <a href="#proxy-stream-timeout" class="md-nav__link">
     proxy-stream-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-stream-responses" title="proxy-stream-responses" class="md-nav__link">
+  <a href="#proxy-stream-responses" class="md-nav__link">
     proxy-stream-responses
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#bind-address" title="bind-address" class="md-nav__link">
+  <a href="#bind-address" class="md-nav__link">
     bind-address
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-forwarded-headers" title="use-forwarded-headers" class="md-nav__link">
+  <a href="#use-forwarded-headers" class="md-nav__link">
     use-forwarded-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#forwarded-for-header" title="forwarded-for-header" class="md-nav__link">
+  <a href="#forwarded-for-header" class="md-nav__link">
     forwarded-for-header
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#compute-full-forwarded-for" title="compute-full-forwarded-for" class="md-nav__link">
+  <a href="#compute-full-forwarded-for" class="md-nav__link">
     compute-full-forwarded-for
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-add-original-uri-header" title="proxy-add-original-uri-header" class="md-nav__link">
+  <a href="#proxy-add-original-uri-header" class="md-nav__link">
     proxy-add-original-uri-header
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#generate-request-id" title="generate-request-id" class="md-nav__link">
+  <a href="#generate-request-id" class="md-nav__link">
     generate-request-id
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-opentracing" title="enable-opentracing" class="md-nav__link">
+  <a href="#enable-opentracing" class="md-nav__link">
     enable-opentracing
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#zipkin-collector-host" title="zipkin-collector-host" class="md-nav__link">
+  <a href="#zipkin-collector-host" class="md-nav__link">
     zipkin-collector-host
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#zipkin-collector-port" title="zipkin-collector-port" class="md-nav__link">
+  <a href="#zipkin-collector-port" class="md-nav__link">
     zipkin-collector-port
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#zipkin-service-name" title="zipkin-service-name" class="md-nav__link">
+  <a href="#zipkin-service-name" class="md-nav__link">
     zipkin-service-name
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#zipkin-sample-rate" title="zipkin-sample-rate" class="md-nav__link">
+  <a href="#zipkin-sample-rate" class="md-nav__link">
     zipkin-sample-rate
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-collector-host" title="jaeger-collector-host" class="md-nav__link">
+  <a href="#jaeger-collector-host" class="md-nav__link">
     jaeger-collector-host
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-collector-port" title="jaeger-collector-port" class="md-nav__link">
+  <a href="#jaeger-collector-port" class="md-nav__link">
     jaeger-collector-port
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-service-name" title="jaeger-service-name" class="md-nav__link">
+  <a href="#jaeger-service-name" class="md-nav__link">
     jaeger-service-name
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-sampler-type" title="jaeger-sampler-type" class="md-nav__link">
+  <a href="#jaeger-sampler-type" class="md-nav__link">
     jaeger-sampler-type
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-sampler-param" title="jaeger-sampler-param" class="md-nav__link">
+  <a href="#jaeger-sampler-param" class="md-nav__link">
     jaeger-sampler-param
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-sampler-host" title="jaeger-sampler-host" class="md-nav__link">
+  <a href="#jaeger-sampler-host" class="md-nav__link">
     jaeger-sampler-host
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jaeger-sampler-port" title="jaeger-sampler-port" class="md-nav__link">
+  <a href="#jaeger-sampler-port" class="md-nav__link">
     jaeger-sampler-port
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#main-snippet" title="main-snippet" class="md-nav__link">
+  <a href="#jaeger-trace-context-header-name" class="md-nav__link">
+    jaeger-trace-context-header-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jaeger-debug-header" class="md-nav__link">
+    jaeger-debug-header
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jaeger-baggage-header" class="md-nav__link">
+    jaeger-baggage-header
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jaeger-tracer-baggage-header-prefix" class="md-nav__link">
+    jaeger-tracer-baggage-header-prefix
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-snippet" class="md-nav__link">
     main-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http-snippet" title="http-snippet" class="md-nav__link">
+  <a href="#http-snippet" class="md-nav__link">
     http-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-snippet" title="server-snippet" class="md-nav__link">
+  <a href="#server-snippet" class="md-nav__link">
     server-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#location-snippet" title="location-snippet" class="md-nav__link">
+  <a href="#location-snippet" class="md-nav__link">
     location-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#custom-http-errors" title="custom-http-errors" class="md-nav__link">
+  <a href="#custom-http-errors" class="md-nav__link">
     custom-http-errors
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-body-size" title="proxy-body-size" class="md-nav__link">
+  <a href="#proxy-body-size" class="md-nav__link">
     proxy-body-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-connect-timeout" title="proxy-connect-timeout" class="md-nav__link">
+  <a href="#proxy-connect-timeout" class="md-nav__link">
     proxy-connect-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-read-timeout" title="proxy-read-timeout" class="md-nav__link">
+  <a href="#proxy-read-timeout" class="md-nav__link">
     proxy-read-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-send-timeout" title="proxy-send-timeout" class="md-nav__link">
+  <a href="#proxy-send-timeout" class="md-nav__link">
     proxy-send-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-buffers-number" title="proxy-buffers-number" class="md-nav__link">
+  <a href="#proxy-buffers-number" class="md-nav__link">
     proxy-buffers-number
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-buffer-size" title="proxy-buffer-size" class="md-nav__link">
+  <a href="#proxy-buffer-size" class="md-nav__link">
     proxy-buffer-size
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-cookie-path" title="proxy-cookie-path" class="md-nav__link">
+  <a href="#proxy-cookie-path" class="md-nav__link">
     proxy-cookie-path
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-cookie-domain" title="proxy-cookie-domain" class="md-nav__link">
+  <a href="#proxy-cookie-domain" class="md-nav__link">
     proxy-cookie-domain
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-next-upstream" title="proxy-next-upstream" class="md-nav__link">
+  <a href="#proxy-next-upstream" class="md-nav__link">
     proxy-next-upstream
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-next-upstream-timeout" title="proxy-next-upstream-timeout" class="md-nav__link">
+  <a href="#proxy-next-upstream-timeout" class="md-nav__link">
     proxy-next-upstream-timeout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-next-upstream-tries" title="proxy-next-upstream-tries" class="md-nav__link">
+  <a href="#proxy-next-upstream-tries" class="md-nav__link">
     proxy-next-upstream-tries
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-redirect-from" title="proxy-redirect-from" class="md-nav__link">
+  <a href="#proxy-redirect-from" class="md-nav__link">
     proxy-redirect-from
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-request-buffering" title="proxy-request-buffering" class="md-nav__link">
+  <a href="#proxy-request-buffering" class="md-nav__link">
     proxy-request-buffering
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ssl-redirect" title="ssl-redirect" class="md-nav__link">
+  <a href="#ssl-redirect" class="md-nav__link">
     ssl-redirect
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#whitelist-source-range" title="whitelist-source-range" class="md-nav__link">
+  <a href="#whitelist-source-range" class="md-nav__link">
     whitelist-source-range
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#skip-access-log-urls" title="skip-access-log-urls" class="md-nav__link">
+  <a href="#skip-access-log-urls" class="md-nav__link">
     skip-access-log-urls
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-rate" title="limit-rate" class="md-nav__link">
+  <a href="#limit-rate" class="md-nav__link">
     limit-rate
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-rate-after" title="limit-rate-after" class="md-nav__link">
+  <a href="#limit-rate-after" class="md-nav__link">
     limit-rate-after
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#lua-shared-dicts" title="lua-shared-dicts" class="md-nav__link">
+  <a href="#lua-shared-dicts" class="md-nav__link">
     lua-shared-dicts
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#http-redirect-code" title="http-redirect-code" class="md-nav__link">
+  <a href="#http-redirect-code" class="md-nav__link">
     http-redirect-code
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#proxy-buffering" title="proxy-buffering" class="md-nav__link">
+  <a href="#proxy-buffering" class="md-nav__link">
     proxy-buffering
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-req-status-code" title="limit-req-status-code" class="md-nav__link">
+  <a href="#limit-req-status-code" class="md-nav__link">
     limit-req-status-code
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limit-conn-status-code" title="limit-conn-status-code" class="md-nav__link">
+  <a href="#limit-conn-status-code" class="md-nav__link">
     limit-conn-status-code
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#no-tls-redirect-locations" title="no-tls-redirect-locations" class="md-nav__link">
+  <a href="#no-tls-redirect-locations" class="md-nav__link">
     no-tls-redirect-locations
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-url" title="global-auth-url" class="md-nav__link">
+  <a href="#global-auth-url" class="md-nav__link">
     global-auth-url
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-method" title="global-auth-method" class="md-nav__link">
+  <a href="#global-auth-method" class="md-nav__link">
     global-auth-method
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-signin" title="global-auth-signin" class="md-nav__link">
+  <a href="#global-auth-signin" class="md-nav__link">
     global-auth-signin
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-response-headers" title="global-auth-response-headers" class="md-nav__link">
+  <a href="#global-auth-response-headers" class="md-nav__link">
     global-auth-response-headers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-request-redirect" title="global-auth-request-redirect" class="md-nav__link">
+  <a href="#global-auth-request-redirect" class="md-nav__link">
     global-auth-request-redirect
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-snippet" title="global-auth-snippet" class="md-nav__link">
+  <a href="#global-auth-snippet" class="md-nav__link">
     global-auth-snippet
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-cache-key" title="global-auth-cache-key" class="md-nav__link">
+  <a href="#global-auth-cache-key" class="md-nav__link">
     global-auth-cache-key
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#global-auth-cache-duration" title="global-auth-cache-duration" class="md-nav__link">
+  <a href="#global-auth-cache-duration" class="md-nav__link">
     global-auth-cache-duration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#no-auth-locations" title="no-auth-locations" class="md-nav__link">
+  <a href="#no-auth-locations" class="md-nav__link">
     no-auth-locations
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#block-cidrs" title="block-cidrs" class="md-nav__link">
+  <a href="#block-cidrs" class="md-nav__link">
     block-cidrs
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#block-user-agents" title="block-user-agents" class="md-nav__link">
+  <a href="#block-user-agents" class="md-nav__link">
     block-user-agents
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#block-referers" title="block-referers" class="md-nav__link">
+  <a href="#block-referers" class="md-nav__link">
     block-referers
   </a>
   
@@ -3312,7 +3368,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#log-format-upstream">log-format-upstream</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite"><span class="nf">%v</span> <span class="o">-</span> <span class="p">[</span><span class="n">$the_real_ip</span><span class="p">]</span> <span class="o">-</span> <span class="n">$remote_user</span> <span class="p">[</span><span class="n">$time_local</span><span class="p">]</span> <span class="s">&quot;$request&quot;</span> <span class="n">$status</span> <span class="n">$body_bytes_sent</span> <span class="s">&quot;$http_referer&quot;</span> <span class="s">&quot;$http_user_agent&quot;</span> <span class="n">$request_length</span> <span class="n">$request_time</span> <span class="p">[</span><span class="n">$proxy_upstream_name</span><span class="p">]</span> <span class="n">$upstream_addr</span> <span class="n">$upstream_response_length</span> <span class="n">$upstream_response_time</span> <span class="n">$upstream_status</span> <span class="n">$req_id</span></code></td>
+<td align="left"><code class="codehilite">$remote_addr - $remote_user [$time_local] &quot;$request&quot; $status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id</code></td>
 </tr>
 <tr>
 <td align="left"><a href="#log-format-stream">log-format-stream</a></td>
@@ -3643,6 +3699,26 @@ Same for numbers, like "100".</p>
 <td align="left"><a href="#jaeger-sampler-port">jaeger-sampler-port</a></td>
 <td align="left">int</td>
 <td align="left">5778</td>
+</tr>
+<tr>
+<td align="left"><a href="#jaeger-trace-context-header-name">jaeger-trace-context-header-name</a></td>
+<td align="left">string</td>
+<td align="left">uber-trace-id</td>
+</tr>
+<tr>
+<td align="left"><a href="#jaeger-debug-header">jaeger-debug-header</a></td>
+<td align="left">string</td>
+<td align="left">uber-debug-id</td>
+</tr>
+<tr>
+<td align="left"><a href="#jaeger-baggage-header">jaeger-baggage-header</a></td>
+<td align="left">string</td>
+<td align="left">jaeger-baggage</td>
+</tr>
+<tr>
+<td align="left"><a href="#jaeger-trace-baggage-header-prefix">jaeger-trace-baggage-header-prefix</a></td>
+<td align="left">string</td>
+<td align="left">uberctx-</td>
 </tr>
 <tr>
 <td align="left"><a href="#main-snippet">main-snippet</a></td>
@@ -4197,6 +4273,14 @@ For const this should be 0 to never sample and 1 to always sample. <em><strong>d
 Leave blank to use default value (localhost). <em><strong>default:</strong></em> http://127.0.0.1</p>
 <h2 id="jaeger-sampler-port">jaeger-sampler-port<a class="headerlink" href="#jaeger-sampler-port" title="Permanent link">&para;</a></h2>
 <p>Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. <em><strong>default:</strong></em> 5778</p>
+<h2 id="jaeger-trace-context-header-name">jaeger-trace-context-header-name<a class="headerlink" href="#jaeger-trace-context-header-name" title="Permanent link">&para;</a></h2>
+<p>Specifies the header name used for passing trace context. <em><strong>default:</strong></em> uber-trace-id</p>
+<h2 id="jaeger-debug-header">jaeger-debug-header<a class="headerlink" href="#jaeger-debug-header" title="Permanent link">&para;</a></h2>
+<p>Specifies the header name used for force sampling. <em><strong>default:</strong></em> jaeger-debug-id</p>
+<h2 id="jaeger-baggage-header">jaeger-baggage-header<a class="headerlink" href="#jaeger-baggage-header" title="Permanent link">&para;</a></h2>
+<p>Specifies the header name used to submit baggage if there is no root span. <em><strong>default:</strong></em> jaeger-baggage</p>
+<h2 id="jaeger-tracer-baggage-header-prefix">jaeger-tracer-baggage-header-prefix<a class="headerlink" href="#jaeger-tracer-baggage-header-prefix" title="Permanent link">&para;</a></h2>
+<p>Specifies the header prefix used to propagate baggage. <em><strong>default:</strong></em> uberctx-</p>
 <h2 id="main-snippet">main-snippet<a class="headerlink" href="#main-snippet" title="Permanent link">&para;</a></h2>
 <p>Adds custom configuration to the main section of the nginx configuration.</p>
 <h2 id="http-snippet">http-snippet<a class="headerlink" href="#http-snippet" title="Permanent link">&para;</a></h2>

@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.1">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
     
     
       
@@ -217,7 +217,7 @@
   
     <li class="md-tabs__item">
       
-        <a href=".." title="Welcome" class="md-tabs__link md-tabs__link--active">
+        <a href=".." class="md-tabs__link md-tabs__link--active">
           Welcome
         </a>
       
@@ -230,7 +230,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../deploy/" title="Deployment" class="md-tabs__link">
+        <a href="../deploy/" class="md-tabs__link">
           Deployment
         </a>
       
@@ -247,7 +247,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../user-guide/nginx-configuration/" title="User guide" class="md-tabs__link">
+        <a href="../user-guide/nginx-configuration/" class="md-tabs__link">
           User guide
         </a>
       
@@ -262,7 +262,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../examples/" title="Examples" class="md-tabs__link">
+        <a href="../examples/" class="md-tabs__link">
           Examples
         </a>
       
@@ -274,7 +274,7 @@
   </div>
 </nav>
       
-      <main class="md-main">
+      <main class="md-main" role="main">
         <div class="md-main__inner md-grid" data-md-component="container">
           
             
@@ -379,35 +379,35 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#nginx-configuration" title="NGINX configuration" class="md-nav__link">
+  <a href="#nginx-configuration" class="md-nav__link">
     NGINX configuration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#nginx-model" title="NGINX model" class="md-nav__link">
+  <a href="#nginx-model" class="md-nav__link">
     NGINX model
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#building-the-nginx-model" title="Building the NGINX model" class="md-nav__link">
+  <a href="#building-the-nginx-model" class="md-nav__link">
     Building the NGINX model
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#when-a-reload-is-required" title="When a reload is required" class="md-nav__link">
+  <a href="#when-a-reload-is-required" class="md-nav__link">
     When a reload is required
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#avoiding-reloads" title="Avoiding reloads" class="md-nav__link">
+  <a href="#avoiding-reloads" class="md-nav__link">
     Avoiding reloads
   </a>
   
@@ -415,14 +415,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#avoiding-reloads-on-endpoints-changes" title="Avoiding reloads on Endpoints changes" class="md-nav__link">
+  <a href="#avoiding-reloads-on-endpoints-changes" class="md-nav__link">
     Avoiding reloads on Endpoints changes
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#avoiding-outage-from-wrong-configuration" title="Avoiding outage from wrong configuration" class="md-nav__link">
+  <a href="#avoiding-outage-from-wrong-configuration" class="md-nav__link">
     Avoiding outage from wrong configuration
   </a>
   
@@ -1214,35 +1214,35 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#nginx-configuration" title="NGINX configuration" class="md-nav__link">
+  <a href="#nginx-configuration" class="md-nav__link">
     NGINX configuration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#nginx-model" title="NGINX model" class="md-nav__link">
+  <a href="#nginx-model" class="md-nav__link">
     NGINX model
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#building-the-nginx-model" title="Building the NGINX model" class="md-nav__link">
+  <a href="#building-the-nginx-model" class="md-nav__link">
     Building the NGINX model
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#when-a-reload-is-required" title="When a reload is required" class="md-nav__link">
+  <a href="#when-a-reload-is-required" class="md-nav__link">
     When a reload is required
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#avoiding-reloads" title="Avoiding reloads" class="md-nav__link">
+  <a href="#avoiding-reloads" class="md-nav__link">
     Avoiding reloads
   </a>
   
@@ -1250,14 +1250,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#avoiding-reloads-on-endpoints-changes" title="Avoiding reloads on Endpoints changes" class="md-nav__link">
+  <a href="#avoiding-reloads-on-endpoints-changes" class="md-nav__link">
     Avoiding reloads on Endpoints changes
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#avoiding-outage-from-wrong-configuration" title="Avoiding outage from wrong configuration" class="md-nav__link">
+  <a href="#avoiding-outage-from-wrong-configuration" class="md-nav__link">
     Avoiding outage from wrong configuration
   </a>
   
@@ -1336,7 +1336,7 @@
 <p>In a relatively big clusters with frequently deploying apps this feature saves significant number of Nginx reloads which can otherwise affect response latency, load balancing quality (after every reload Nginx resets the state of load balancing) and so on.</p>
 <h3 id="avoiding-outage-from-wrong-configuration">Avoiding outage from wrong configuration<a class="headerlink" href="#avoiding-outage-from-wrong-configuration" title="Permanent link">&para;</a></h3>
 <p>Because the ingress controller works using the <a href="https://coreos.com/kubernetes/docs/latest/replication-controller.html#the-reconciliation-loop-in-detail">synchronization loop pattern</a>, it is applying the configuration for all matching objects. In case some Ingress objects have a broken configuration, for example a syntax error in the <code class="codehilite">nginx.ingress.kubernetes.io/configuration-snippet</code> annotation, the generated configuration becomes invalid, does not reload and hence no more ingresses will be taken into account.</p>
-<p>To prevent this situation to happen, the nginx ingress controller exposes optionnally a <a href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook">validating admission webhook server</a> to ensure the validity of incoming ingress objects.
+<p>To prevent this situation to happen, the nginx ingress controller optionally exposes a <a href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook">validating admission webhook server</a> to ensure the validity of incoming ingress objects.
 This webhook appends the incoming ingress objects to the list of ingresses, generates the configuration and calls nginx to ensure the configuration has no syntax errors.</p>
                 
                   

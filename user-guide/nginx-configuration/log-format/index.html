@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.1">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
     
     
       
@@ -217,7 +217,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../.." title="Welcome" class="md-tabs__link">
+        <a href="../../.." class="md-tabs__link">
           Welcome
         </a>
       
@@ -230,7 +230,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../deploy/" title="Deployment" class="md-tabs__link">
+        <a href="../../../deploy/" class="md-tabs__link">
           Deployment
         </a>
       
@@ -247,7 +247,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../" title="User guide" class="md-tabs__link md-tabs__link--active">
+        <a href="../" class="md-tabs__link md-tabs__link--active">
           User guide
         </a>
       
@@ -262,7 +262,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../examples/" title="Examples" class="md-tabs__link">
+        <a href="../../../examples/" class="md-tabs__link">
           Examples
         </a>
       
@@ -274,7 +274,7 @@
   </div>
 </nav>
       
-      <main class="md-main">
+      <main class="md-main" role="main">
         <div class="md-main__inner md-grid" data-md-component="container">
           
             
@@ -1150,12 +1150,11 @@
                 
                 <h1 id="log-format">Log format<a class="headerlink" href="#log-format" title="Permanent link">&para;</a></h1>
 <p>The default configuration uses a custom logging format to add additional information about upstreams, response time and status.</p>
-<div class="codehilite"><pre><span></span><span class="x">log_format upstreaminfo</span>
-<span class="x">    &#39;</span><span class="cp">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nv">cfg.useProxyProtocol</span> <span class="cp">}}</span><span class="x">$proxy_protocol_addr</span><span class="cp">{{</span> <span class="k">else</span> <span class="cp">}}</span><span class="x">$remote_addr</span><span class="cp">{{</span> <span class="nv">end</span> <span class="cp">}}</span><span class="x"> - &#39;</span>
-<span class="x">    &#39;[$the_real_ip] - $remote_user [$time_local] &quot;$request&quot; &#39;</span>
-<span class="x">    &#39;$status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;</span>
-<span class="x">    &#39;$request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr &#39;</span>
-<span class="x">    &#39;$upstream_response_length $upstream_response_time $upstream_status $req_id&#39;;</span>
+<div class="codehilite"><pre><span></span>log_format upstreaminfo
+    &#39;$remote_addr - $remote_user [$time_local] &quot;$request&quot; &#39;
+    &#39;$status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;
+    &#39;$request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr &#39;
+    &#39;$upstream_response_length $upstream_response_time $upstream_status $req_id&#39;;
 </pre></div>
 
 <table>
@@ -1172,10 +1171,6 @@
 </tr>
 <tr>
 <td><code class="codehilite">$remote_addr</code></td>
-<td>remote address if proxy protocol is disabled (default)</td>
-</tr>
-<tr>
-<td><code class="codehilite">$the_real_ip</code></td>
 <td>the source IP address of the client</td>
 </tr>
 <tr>
