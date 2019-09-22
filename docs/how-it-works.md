@@ -60,7 +60,7 @@ In a relatively big clusters with frequently deploying apps this feature saves s
 
 Because the ingress controller works using the [synchronization loop pattern](https://coreos.com/kubernetes/docs/latest/replication-controller.html#the-reconciliation-loop-in-detail), it is applying the configuration for all matching objects. In case some Ingress objects have a broken configuration, for example a syntax error in the `nginx.ingress.kubernetes.io/configuration-snippet` annotation, the generated configuration becomes invalid, does not reload and hence no more ingresses will be taken into account.
 
-To prevent this situation to happen, the nginx ingress controller exposes optionnally a [validating admission webhook server][8] to ensure the validity of incoming ingress objects.
+To prevent this situation to happen, the nginx ingress controller optionally exposes a [validating admission webhook server][8] to ensure the validity of incoming ingress objects.
 This webhook appends the incoming ingress objects to the list of ingresses, generates the configuration and calls nginx to ensure the configuration has no syntax errors.
 
 [0]: https://github.com/openresty/lua-nginx-module/pull/1259
