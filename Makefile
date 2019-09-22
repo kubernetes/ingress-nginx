@@ -58,11 +58,15 @@ GOOS = linux
 
 MULTI_ARCH_IMAGE = $(REGISTRY)/nginx-ingress-controller-${ARCH}
 
+# use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
+GO111MODULE=off
+
 export ARCH
 export TAG
 export PKG
 export GOARCH
 export GOOS
+export GO111MODULE
 export GIT_COMMIT
 export GOBUILD_FLAGS
 export REPO_INFO
@@ -202,9 +206,9 @@ check_dead_links:
 
 .PHONY: dep-ensure
 dep-ensure:
-	GO111MODULE=on go mod tidy -v
+	go mod tidy -v
 	find vendor -name '*_test.go' -delete
-	GO111MODULE=on go mod vendor
+	go mod vendor
 
 .PHONY: dev-env
 dev-env:

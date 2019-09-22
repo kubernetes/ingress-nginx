@@ -44,6 +44,8 @@ if [ "$missing" = true ]; then
 fi
 
 export CGO_ENABLED=0
+# use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
+export GO111MODULE=off
 
 release=cmd/plugin/release
 
