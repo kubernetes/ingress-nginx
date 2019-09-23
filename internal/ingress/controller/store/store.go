@@ -525,48 +525,69 @@ func New(
 		},
 	}
 
+	// TODO: add e2e test to verify that changes to one or more configmap trigger an update
+	changeTriggerUpdate := func(name string) bool {
+		return name == configmap || name == tcp || name == udp
+	}
+
 	cmEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			cm := obj.(*corev1.ConfigMap)
 			key := k8s.MetaNamespaceKey(cm)
 			// updates to configuration configmaps can trigger an update
-			if key == configmap || key == tcp || key == udp {
+			if changeTriggerUpdate(key) {
 				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
+
 				if key == configmap {
 					store.setConfig(cm)
 				}
-				updateCh.In() <- Event{
-					Type: ConfigurationEvent,
-					Obj:  obj,
-				}
+			}
+
+			updateCh.In() <- Event{
+				Type: ConfigurationEvent,
+				Obj:  obj,
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
-			if !reflect.DeepEqual(old, cur) {
-				cm := cur.(*corev1.ConfigMap)
-				key := k8s.MetaNamespaceKey(cm)
-				// updates to configuration configmaps can trigger an update
-				if key == configmap || key == tcp || key == udp {
+			if reflect.DeepEqual(old, cur) {
+				return
+			}
+
+			// used to limit the number of events
+			triggerUpdate := false
+
+			cm := cur.(*corev1.ConfigMap)
+			key := k8s.MetaNamespaceKey(cm)
+			// updates to configuration configmaps can trigger an update
+			if changeTriggerUpdate(key) {
+				recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
+				triggerUpdate = true
+			}
+
+			if key == configmap {
+				store.setConfig(cm)
+			}
+
+			ings := store.listers.IngressWithAnnotation.List()
+			for _, ingKey := range ings {
+				key := k8s.MetaNamespaceKey(ingKey)
+				ing, err := store.getIngress(key)
+				if err != nil {
+					klog.Errorf("could not find Ingress %v in local store: %v", key, err)
+					continue
+				}
+
+				if parser.AnnotationsReferencesConfigmap(ing) {
 					recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
-					if key == configmap {
-						store.setConfig(cm)
-					}
+					store.syncIngress(ing)
+					triggerUpdate = true
+				}
+			}
 
-					ings := store.listers.IngressWithAnnotation.List()
-					for _, ingKey := range ings {
-						key := k8s.MetaNamespaceKey(ingKey)
-						ing, err := store.getIngress(key)
-						if err != nil {
-							klog.Errorf("could not find Ingress %v in local store: %v", key, err)
-							continue
-						}
-						store.syncIngress(ing)
-					}
-
-					updateCh.In() <- Event{
-						Type: ConfigurationEvent,
-						Obj:  cur,
-					}
+			if triggerUpdate {
+				updateCh.In() <- Event{
+					Type: ConfigurationEvent,
+					Obj:  cur,
 				}
 			}
 		},
@@ -683,6 +704,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1beta1.Ingress) {
 		"auth-secret",
 		"auth-tls-secret",
 		"proxy-ssl-secret",
+		"secure-verify-ca-secret",
 	}
 	for _, ann := range secretAnnotations {
 		secrKey, err := objectRefAnnotationNsKey(ann, ing)
