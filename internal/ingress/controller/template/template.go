@@ -267,6 +267,8 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF
 		}
 	}
 
+	sort.Strings(out)
+
 	return strings.Join(out, ";\n") + ";\n"
 }
 
