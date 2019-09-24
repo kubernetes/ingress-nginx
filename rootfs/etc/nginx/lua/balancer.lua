@@ -6,7 +6,8 @@ local configuration = require("configuration")
 local round_robin = require("balancer.round_robin")
 local chash = require("balancer.chash")
 local chashsubset = require("balancer.chashsubset")
-local sticky = require("balancer.sticky")
+local sticky_balanced = require("balancer.sticky_balanced")
+local sticky_persistent = require("balancer.sticky_persistent")
 local ewma = require("balancer.ewma")
 
 -- measured in seconds
@@ -19,7 +20,8 @@ local IMPLEMENTATIONS = {
   round_robin = round_robin,
   chash = chash,
   chashsubset = chashsubset,
-  sticky = sticky,
+  sticky_balanced = sticky_balanced,
+  sticky_persistent = sticky_persistent,
   ewma = ewma,
 }
 
@@ -30,7 +32,11 @@ local function get_implementation(backend)
   local name = backend["load-balance"] or DEFAULT_LB_ALG
 
   if backend["sessionAffinityConfig"] and backend["sessionAffinityConfig"]["name"] == "cookie" then
-    name = "sticky"
+    if backend["sessionAffinityConfig"]["mode"] == 'persistent' then
+      name = "sticky_persistent"
+    else
+      name = "sticky_balanced"
+    end
   elseif backend["upstreamHashByConfig"] and backend["upstreamHashByConfig"]["upstream-hash-by"] then
     if backend["upstreamHashByConfig"]["upstream-hash-by-subset"] then
       name = "chashsubset"

@@ -141,6 +141,7 @@ func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
 // +k8s:deepcopy-gen=true
 type SessionAffinityConfig struct {
 	AffinityType          string                `json:"name"`
+	AffinityMode          string                `json:"mode"`
 	CookieSessionAffinity CookieSessionAffinity `json:"cookieSessionAffinity"`
 }
 

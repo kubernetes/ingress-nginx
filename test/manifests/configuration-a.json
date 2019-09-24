@@ -54,6 +54,7 @@
 		}],
 		"sessionAffinityConfig": {
 			"name": "",
+			"mode": "",
 			"cookieSessionAffinity": {
 				"name": ""
 			}
@@ -126,6 +127,7 @@
 		}],
 		"sessionAffinityConfig": {
 			"name": "",
+			"mode": "",
 			"cookieSessionAffinity": {
 				"name": ""
 			}
@@ -191,6 +193,7 @@
 		}],
 		"sessionAffinityConfig": {
 			"name": "",
+			"mode": "",
 			"cookieSessionAffinity": {
 				"name": ""
 			}

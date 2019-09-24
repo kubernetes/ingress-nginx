@@ -23,9 +23,9 @@ local function reset_expected_implementations()
     ["access-router-production-web-80"] = package.loaded["balancer.round_robin"],
     ["my-dummy-app-1"] = package.loaded["balancer.round_robin"],
     ["my-dummy-app-2"] = package.loaded["balancer.chash"],
-    ["my-dummy-app-3"] = package.loaded["balancer.sticky"],
+    ["my-dummy-app-3"] = package.loaded["balancer.sticky_persistent"],
     ["my-dummy-app-4"] = package.loaded["balancer.ewma"],
-    ["my-dummy-app-5"] = package.loaded["balancer.sticky"],
+    ["my-dummy-app-5"] = package.loaded["balancer.sticky_balanced"]
   }
 end
 
@@ -55,7 +55,7 @@ local function reset_backends()
     },
     {
       name = "my-dummy-app-3", ["load-balance"] = "ewma",
-      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route" } }
+      sessionAffinityConfig = { name = "cookie", mode = 'persistent', cookieSessionAffinity = { name = "route" } }
     },
     { name = "my-dummy-app-4", ["load-balance"] = "ewma", },
     {
