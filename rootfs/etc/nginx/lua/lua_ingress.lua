@@ -142,6 +142,17 @@ function _M.rewrite(location_config)
 
     ngx_redirect(uri, config.http_redirect_code)
   end
+
+  if config.hsts and ngx.var.scheme == "https" and certificate_configured_for_server(ngx.var.host) then
+    local value = "max-age=" .. config.hsts_max_age
+    if config.hsts_include_subdomains then
+      value = value .. "; includeSubDomains"
+    end
+    if config.hsts_preload then
+      value = value .. "; preload"
+    end
+    ngx.header["Strict-Transport-Security"] = value
+  end
 end
 
 return _M

@@ -1051,12 +1051,6 @@ stream {
                 plugins.run()
             }
 
-            {{ if (and $server.SSLCert $all.Cfg.HSTS) }}
-            if ($scheme = https) {
-            more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";
-            }
-            {{ end }}
-
             {{ if not $location.Logs.Access }}
             access_log off;
             {{ end }}

@@ -302,7 +302,23 @@ func configForLua(input interface{}) string {
 		is_ssl_passthrough_enabled = %t,
 		http_redirect_code = %v,
 		listen_ports = { ssl_proxy = "%v", https = "%v" },
-	}`, all.Cfg.UseForwardedHeaders, all.IsSSLPassthroughEnabled, all.Cfg.HTTPRedirectCode, all.ListenPorts.SSLProxy, all.ListenPorts.HTTPS)
+
+		hsts = %t,
+		hsts_max_age = %v,
+		hsts_include_subdomains = %t,
+		hsts_preload = %t,
+	}`,
+		all.Cfg.UseForwardedHeaders,
+		all.IsSSLPassthroughEnabled,
+		all.Cfg.HTTPRedirectCode,
+		all.ListenPorts.SSLProxy,
+		all.ListenPorts.HTTPS,
+
+		all.Cfg.HSTS,
+		all.Cfg.HSTSMaxAge,
+		all.Cfg.HSTSIncludeSubdomains,
+		all.Cfg.HSTSPreload,
+	)
 }
 
 // locationConfigForLua formats some location specific configuration into Lua table represented as string
