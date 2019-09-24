@@ -36,14 +36,15 @@ import (
 type Config struct {
 	URL string `json:"url"`
 	// Host contains the hostname defined in the URL
-	Host              string   `json:"host"`
-	SigninURL         string   `json:"signinUrl"`
-	Method            string   `json:"method"`
-	ResponseHeaders   []string `json:"responseHeaders,omitempty"`
-	RequestRedirect   string   `json:"requestRedirect"`
-	AuthSnippet       string   `json:"authSnippet"`
-	AuthCacheKey      string   `json:"authCacheKey"`
-	AuthCacheDuration []string `json:"authCacheDuration"`
+	Host              string            `json:"host"`
+	SigninURL         string            `json:"signinUrl"`
+	Method            string            `json:"method"`
+	ResponseHeaders   []string          `json:"responseHeaders,omitempty"`
+	RequestRedirect   string            `json:"requestRedirect"`
+	AuthSnippet       string            `json:"authSnippet"`
+	AuthCacheKey      string            `json:"authCacheKey"`
+	AuthCacheDuration []string          `json:"authCacheDuration"`
+	ProxySetHeaders   map[string]string `json:"proxySetHeaders",omitempty`
 }
 
 // DefaultCacheDuration is the fallback value if no cache duration is provided
@@ -205,6 +206,28 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		}
 	}
 
+	proxySetHeaderMap, err := parser.GetStringAnnotation("auth-proxy-set-headers", ing)
+	if err != nil {
+		klog.V(3).Infof("auth-set-proxy-headers annotation is undefined and will not be set")
+	}
+
+	var proxySetHeaders map[string]string
+
+	if proxySetHeaderMap != "" {
+		proxySetHeadersMapContents, err := a.r.GetConfigMap(proxySetHeaderMap)
+		if err != nil {
+			return nil, ing_errors.NewLocationDenied(fmt.Sprintf("unable to find configMap %q", proxySetHeaderMap))
+		}
+
+		for header, value := range proxySetHeadersMapContents.Data {
+			if !ValidHeader(header) || !ValidHeader(value) {
+				return nil, ing_errors.NewLocationDenied("invalid proxy-set-headers in configmap")
+			}
+		}
+
+		proxySetHeaders = proxySetHeadersMapContents.Data
+	}
+
 	requestRedirect, _ := parser.GetStringAnnotation("auth-request-redirect", ing)
 
 	return &Config{
@@ -217,6 +240,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		AuthSnippet:       authSnippet,
 		AuthCacheKey:      authCacheKey,
 		AuthCacheDuration: authCacheDuration,
+		ProxySetHeaders:   proxySetHeaders,
 	}, nil
 }
 

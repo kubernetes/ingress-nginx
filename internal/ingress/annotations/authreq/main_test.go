@@ -298,5 +298,57 @@ func TestParseStringToCacheDurations(t *testing.T) {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedDurations, dur)
 		}
 	}
+}
 
+func TestProxySetHeaders(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	tests := []struct {
+		title   string
+		url     string
+		headers map[string]string
+		expErr  bool
+	}{
+		{"single header", "http://goog.url", map[string]string{"header": "h1"}, false},
+		{"no header map", "http://goog.url", nil, true},
+		{"header with spaces", "http://goog.url", map[string]string{"header": "bad value"}, true},
+		{"header with other bad symbols", "http://goog.url", map[string]string{"header": "bad+value"}, true},
+	}
+
+	for _, test := range tests {
+		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
+		data[parser.GetAnnotationWithPrefix("auth-proxy-set-headers")] = "proxy-headers-map"
+		data[parser.GetAnnotationWithPrefix("auth-method")] = "GET"
+
+		configMapResolver := &resolver.Mock{
+			ConfigMaps: map[string]*api.ConfigMap{},
+		}
+
+		if test.headers != nil {
+			configMapResolver.ConfigMaps["proxy-headers-map"] = &api.ConfigMap{Data: test.headers}
+		}
+
+		t.Log(configMapResolver)
+		i, err := NewParser(configMapResolver).Parse(ing)
+		if test.expErr {
+			if err == nil {
+				t.Errorf("expected error but retuned nil")
+			}
+			continue
+		}
+
+		t.Log(i)
+		u, ok := i.(*Config)
+		if !ok {
+			t.Errorf("%v: expected an External type", test.title)
+			continue
+		}
+
+		if !reflect.DeepEqual(u.ProxySetHeaders, test.headers) {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.headers, u.ProxySetHeaders)
+		}
+	}
 }
