@@ -33,6 +33,7 @@ var (
 	annotationSecureVerifyCACert   = parser.GetAnnotationWithPrefix("secure-verify-ca-secret")
 	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
 	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
+	annotationAffinityMode         = parser.GetAnnotationWithPrefix("affinity-mode")
 	annotationCorsEnabled          = parser.GetAnnotationWithPrefix("enable-cors")
 	annotationCorsAllowMethods     = parser.GetAnnotationWithPrefix("cors-allow-methods")
 	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
@@ -199,19 +200,24 @@ func TestAffinitySession(t *testing.T) {
 	fooAnns := []struct {
 		annotations  map[string]string
 		affinitytype string
+		affinitymode string
 		name         string
 	}{
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: "route"}, "cookie", "route"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: "route1"}, "cookie", "route1"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: ""}, "cookie", "INGRESSCOOKIE"},
-		{map[string]string{}, "", ""},
-		{nil, "", ""},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: "route"}, "cookie", "balanced", "route"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "persistent", annotationAffinityCookieName: "route1"}, "cookie", "persistent", "route1"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: ""}, "cookie", "balanced", "INGRESSCOOKIE"},
+		{map[string]string{}, "", "", ""},
+		{nil, "", "", ""},
 	}
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
 		r := ec.Extract(ing).SessionAffinity
 		t.Logf("Testing pass %v %v", foo.affinitytype, foo.name)
+
+		if r.Mode != foo.affinitymode {
+			t.Errorf("Returned %v but expected %v for Name", r.Mode, foo.affinitymode)
+		}
 
 		if r.Cookie.Name != foo.name {
 			t.Errorf("Returned %v but expected %v for Name", r.Cookie.Name, foo.name)
