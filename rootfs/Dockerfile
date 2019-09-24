@@ -28,10 +28,6 @@ RUN cp /usr/local/openresty/nginx/conf/mime.types /etc/nginx/mime.types \
  && cp /usr/local/openresty/nginx/conf/fastcgi_params /etc/nginx/fastcgi_params
 RUN ln -s /usr/local/openresty/nginx/modules /etc/nginx/modules
 
-# Add LuaRocks paths
-ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua;/usr/local/lib/lua/?.lua;/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;"
-ENV LUA_CPATH="/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;;"
-
 # Fix permission during the build to avoid issues at runtime
 # with volumes (custom templates)
 RUN bash -eu -c ' \
