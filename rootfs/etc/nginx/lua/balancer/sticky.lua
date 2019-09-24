@@ -3,10 +3,6 @@ local ck = require("resty.cookie")
 local ngx_balancer = require("ngx.balancer")
 local split = require("util.split")
 
-local string_format = string.format
-local ngx_log = ngx.log
-local INFO = ngx.INFO
-
 local _M = balancer_resty:new()
 local DEFAULT_COOKIE_NAME = "route"
 
