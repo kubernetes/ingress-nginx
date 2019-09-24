@@ -48,6 +48,14 @@ local function get_pem_cert_key(raw_hostname)
   return pem_cert_key
 end
 
+function _M.configured_for_server(hostname)
+  if not hostname then
+    return false
+  end
+
+  return get_pem_cert_key(hostname) ~= nil
+end
+
 function _M.call()
   local hostname, hostname_err = ssl.server_name()
   if hostname_err then
