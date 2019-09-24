@@ -1,6 +1,14 @@
-local string_len = string.len
-local string_sub = string.sub
+local string        = string
+local string_len    = string.len
+local string_sub    = string.sub
 local string_format = string.format
+local pairs         = pairs
+local tonumber      = tonumber
+local getmetatable  = getmetatable
+local type          = type
+local next          = next
+local table         = table
+
 
 local _M = {}
 
@@ -28,8 +36,8 @@ function _M.lua_ngx_var(ngx_var)
 end
 
 -- normalize_endpoints takes endpoints as an array of endpoint objects
--- and returns a table where keys are string that's endpoint.address .. ":" .. endpoint.port
--- and values are all true
+-- and returns a table where keys are string that's
+-- endpoint.address .. ":" .. endpoint.port and values are all true
 local function normalize_endpoints(endpoints)
   local normalized_endpoints = {}
 
@@ -48,7 +56,8 @@ end
 -- Both return values are normalized (ip:port).
 function _M.diff_endpoints(old, new)
   local endpoints_added, endpoints_removed = {}, {}
-  local normalized_old, normalized_new = normalize_endpoints(old), normalize_endpoints(new)
+  local normalized_old = normalize_endpoints(old)
+  local normalized_new = normalize_endpoints(new)
 
   for endpoint_string, _ in pairs(normalized_old) do
     if not normalized_new[endpoint_string] then
@@ -120,7 +129,8 @@ local function tablelength(T)
 end
 _M.tablelength = tablelength
 
--- replaces special character value a with value b for all occurences in a string
+-- replaces special character value a with value b for all occurences in a
+-- string
 local function replace_special_char(str, a, b)
   return string.gsub(str, "%" .. a, b)
 end
