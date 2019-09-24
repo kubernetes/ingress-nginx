@@ -5,9 +5,9 @@
 -- pods.
 --
 local balancer_sticky = require("balancer.sticky")
-local math = require("math")
+local math_random = require("math").random
 local resty_chash = require("resty.chash")
-local util = require("util")
+local util_get_nodes = require("util").get_nodes
 
 local _M = balancer_sticky:new()
 
@@ -18,7 +18,7 @@ local _M = balancer_sticky:new()
 local MAX_UPSTREAM_CHECKS_COUNT = 20
 
 function _M.new(self, backend)
-  local nodes = util.get_nodes(backend.endpoints)
+  local nodes = util_get_nodes(backend.endpoints)
 
   local o = {
     name = "sticky_balanced",
@@ -33,17 +33,9 @@ function _M.new(self, backend)
   return o
 end
 
-function _M.get_routing_key(self)
-  return self:get_cookie(), nil
-end
-
-function _M.set_routing_key(self, key)
-	self:set_cookie(key)
-end
-
 function _M.pick_new_upstream(self, failed_upstreams)
   for i = 1, MAX_UPSTREAM_CHECKS_COUNT do
-    local key = string.format("%s.%s.%s", ngx.now() + i, ngx.worker.pid(), math.random(999999))
+    local key = string.format("%s.%s.%s", ngx.now() + i, ngx.worker.pid(), math_random(999999))
     local new_upstream = self.instance:find(key)
 
     if not failed_upstreams[new_upstream] then

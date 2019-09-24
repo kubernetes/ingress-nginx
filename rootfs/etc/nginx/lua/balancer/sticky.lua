@@ -1,5 +1,4 @@
 local balancer_resty = require("balancer.resty")
-local util = require("util")
 local ck = require("resty.cookie")
 local ngx_balancer = require("ngx.balancer")
 local split = require("util.split")
@@ -87,7 +86,6 @@ local function get_failed_upstreams()
 end
 
 local function should_set_cookie(self)
-
   if self.cookie_session_affinity.locations and ngx.var.host then
     local locs = self.cookie_session_affinity.locations[ngx.var.host]
     if locs == nil then
@@ -115,7 +113,7 @@ end
 function _M.balance(self)
   local upstream_from_cookie
 
-  local key = self:get_routing_key()
+  local key = self:get_cookie()
   if key then
     upstream_from_cookie = self.instance:find(key)
   end
@@ -134,7 +132,7 @@ function _M.balance(self)
   if not new_upstream then
     ngx.log(ngx.WARN, string.format("failed to get new upstream; using upstream %s", new_upstream))
   elseif should_set_cookie(self) then
-    self:set_routing_key(key)
+    self:set_cookie(key)
   end
 
   return new_upstream
@@ -143,18 +141,6 @@ end
 function _M.sync(self, backend)
   -- reload balancer nodes
   balancer_resty.sync(self, backend)
-
-  -- Reload the balancer if any of the annotations have changed.
-  local changed = not util.deep_compare(
-    self.cookie_session_affinity,
-    backend.sessionAffinityConfig.cookieSessionAffinity
-  )
-
-  if not changed then
-    return
-  end
-
-  ngx_log(INFO, string_format("[%s] nodes have changed for backend %s", self.name, backend.name))
 
   self.traffic_shaping_policy = backend.trafficShapingPolicy
   self.alternative_backends = backend.alternativeBackends
