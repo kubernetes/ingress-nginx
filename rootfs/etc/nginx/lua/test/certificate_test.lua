@@ -129,4 +129,22 @@ describe("Certificate", function()
       assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to convert certificate chain from PEM to DER: PEM_read_bio_X509_AUX() failed")
     end)
   end)
+
+  describe("configured_for_server", function()
+    before_each(function()
+      set_certificate("hostname", EXAMPLE_CERT, UUID)
+    end)
+
+    it("returns true when certificate exists for given server", function()
+      assert.is_true(certificate.configured_for_server("hostname"))
+    end)
+
+    it("returns false when certificate does not exist for given server", function()
+      assert.is_false(certificate.configured_for_server("hostname.xyz"))
+    end)
+
+    it("returns false when no server given", function()
+      assert.is_false(certificate.configured_for_server())
+    end)
+  end)
 end)
