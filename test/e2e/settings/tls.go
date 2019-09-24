@@ -119,11 +119,6 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		By("setting max-age parameter")
 		f.UpdateNginxConfigMapData(hstsMaxAge, "86400")
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "Strict-Transport-Security: max-age=86400; includeSubDomains\"")
-			})
-
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTPS)).
 			TLSClientConfig(tlsConfig).
@@ -132,16 +127,11 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Strict-Transport-Security")).Should(ContainSubstring("max-age=86400"))
+		Expect(resp.Header.Get("Strict-Transport-Security")).Should(Equal("max-age=86400; includeSubDomains"))
 
 		By("setting includeSubDomains parameter")
 		f.UpdateNginxConfigMapData(hstsIncludeSubdomains, "false")
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "Strict-Transport-Security: max-age=86400\"")
-			})
-
 		resp, _, errs = gorequest.New().
 			Get(f.GetURL(framework.HTTPS)).
 			TLSClientConfig(tlsConfig).
@@ -150,16 +140,11 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Strict-Transport-Security")).ShouldNot(ContainSubstring("includeSubDomains"))
+		Expect(resp.Header.Get("Strict-Transport-Security")).Should(Equal("max-age=86400"))
 
 		By("setting preload parameter")
 		f.UpdateNginxConfigMapData(hstsPreload, "true")
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "Strict-Transport-Security: max-age=86400; preload\"")
-			})
-
 		resp, _, errs = gorequest.New().
 			Get(f.GetURL(framework.HTTPS)).
 			TLSClientConfig(tlsConfig).
@@ -168,7 +153,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Strict-Transport-Security")).Should(ContainSubstring("preload"))
+		Expect(resp.Header.Get("Strict-Transport-Security")).Should(Equal("max-age=86400; preload"))
 	})
 
 	It("should not use ports during the HTTP to HTTPS redirection", func() {
