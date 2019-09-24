@@ -5,6 +5,8 @@ local configuration_data = ngx.shared.configuration_data
 local certificate_data = ngx.shared.certificate_data
 local certificate_servers = ngx.shared.certificate_servers
 
+local EMPTY_UID = "-1"
+
 local _M = {}
 
 function _M.get_backends_data()
@@ -63,15 +65,21 @@ local function handle_servers()
   local err_buf = {}
 
   for server, uid in pairs(configuration.servers) do
-    local success, set_err, forcible = certificate_servers:set(server, uid)
-    if not success then
-      local err_msg = string.format("error setting certificate for %s: %s\n", server, tostring(set_err))
-      table.insert(err_buf, err_msg)
-    end
-    if forcible then
-      local msg = string.format("certificate_servers dictionary is full, LRU entry has been removed to store %s",
-        server)
-      ngx.log(ngx.WARN, msg)
+    if uid == EMPTY_UID then
+      -- notice that we do not delete certificate corresponding to this server
+      -- this is becase a certificate can be used by multiple servers/hostnames
+      certificate_servers:delete(server)
+    else
+      local success, set_err, forcible = certificate_servers:set(server, uid)
+      if not success then
+        local err_msg = string.format("error setting certificate for %s: %s\n", server, tostring(set_err))
+        table.insert(err_buf, err_msg)
+      end
+      if forcible then
+        local msg = string.format("certificate_servers dictionary is full, LRU entry has been removed to store %s",
+          server)
+        ngx.log(ngx.WARN, msg)
+      end
     end
   end
 
