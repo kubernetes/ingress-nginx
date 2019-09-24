@@ -967,7 +967,7 @@ stream {
             {{ end }}
 
             rewrite_by_lua_block {
-                lua_ingress.rewrite({{ locationConfigForLua $location $server $all }})
+                lua_ingress.rewrite({{ locationConfigForLua $location $all }})
                 balancer.rewrite()
                 plugins.run()
             }

@@ -1,5 +1,7 @@
 local ngx_re_split = require("ngx.re").split
 
+local certificate_configured_for_server = require("certificate").configured_for_server
+
 local original_randomseed = math.randomseed
 local string_format = string.format
 local ngx_redirect = ngx.redirect
@@ -54,8 +56,20 @@ local function randomseed()
   math.randomseed(seed)
 end
 
-local function redirect_to_https()
-  return ngx.var.pass_access_scheme == "http" and (ngx.var.scheme == "http" or ngx.var.scheme == "https")
+local function redirect_to_https(location_config)
+  if location_config.force_no_ssl_redirect then
+    return false
+  end
+
+  if ngx.var.pass_access_scheme ~= "http" then
+    return false
+  end
+
+  if location_config.force_ssl_redirect then
+    return true
+  end
+
+  return location_config.ssl_redirect and certificate_configured_for_server(ngx.var.host)
 end
 
 local function redirect_host()
@@ -119,7 +133,7 @@ function _M.rewrite(location_config)
     ngx.var.pass_port = 443
   end
 
-  if location_config.force_ssl_redirect and redirect_to_https() then
+  if redirect_to_https(location_config) then
     local uri = string_format("https://%s%s", redirect_host(), ngx.var.request_uri)
 
     if location_config.use_port_in_redirects then
