@@ -306,16 +306,10 @@ func configForLua(input interface{}) string {
 }
 
 // locationConfigForLua formats some location specific configuration into Lua table represented as string
-func locationConfigForLua(l interface{}, s interface{}, a interface{}) string {
+func locationConfigForLua(l interface{}, a interface{}) string {
 	location, ok := l.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was given", l)
-		return "{}"
-	}
-
-	server, ok := s.(*ingress.Server)
-	if !ok {
-		klog.Errorf("expected an '*ingress.Server' type but %T was given", s)
 		return "{}"
 	}
 
@@ -325,13 +319,17 @@ func locationConfigForLua(l interface{}, s interface{}, a interface{}) string {
 		return "{}"
 	}
 
-	forceSSLRedirect := location.Rewrite.ForceSSLRedirect || (server.SSLCert != nil && location.Rewrite.SSLRedirect)
-	forceSSLRedirect = forceSSLRedirect && !isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations)
-
 	return fmt.Sprintf(`{
 		force_ssl_redirect = %t,
+		ssl_redirect = %t,
+		force_no_ssl_redirect = %t,
 		use_port_in_redirects = %t,
-	}`, forceSSLRedirect, location.UsePortInRedirects)
+	}`,
+		location.Rewrite.ForceSSLRedirect,
+		location.Rewrite.SSLRedirect,
+		isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations),
+		location.UsePortInRedirects,
+	)
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
