@@ -166,6 +166,16 @@ describe("Configuration", function()
 
   describe("handle_servers()", function()
     local UUID = "2ea8adb5-8ebb-4b14-a79b-0cdcd892e884"
+
+    local function mock_ssl_configuration(configuration)
+      local json = cjson.encode(configuration)
+      ngx.req.get_body_data = function() return json end
+    end
+
+    before_each(function()
+      ngx.var.request_method = "POST"
+    end)
+
     it("should not accept non POST methods", function()
       ngx.var.request_method = "GET"
 
@@ -175,32 +185,49 @@ describe("Configuration", function()
       assert.same(ngx.status, ngx.HTTP_BAD_REQUEST)
     end)
 
-    it("should successfully update certificates and keys for each host", function()
-      ngx.var.request_method = "POST"
-      local mock_ssl_configuration = cjson.encode({
+    it("deletes server with empty UID without touching the corresponding certificate", function()
+      mock_ssl_configuration({
         servers = { ["hostname"] = UUID },
         certificates = { [UUID] = "pemCertKey" }
       })
-      ngx.req.get_body_data = function() return mock_ssl_configuration end
+      assert.has_no.errors(configuration.handle_servers)
+      assert.same("pemCertKey", certificate_data:get(UUID))
+      assert.same(UUID, certificate_servers:get("hostname"))
+      assert.same(ngx.HTTP_CREATED, ngx.status)
+
+      local EMPTY_UID = "-1"
+      mock_ssl_configuration({
+        servers = { ["hostname"] = EMPTY_UID },
+        certificates = { [UUID] = "pemCertKey" }
+      })
+      assert.has_no.errors(configuration.handle_servers)
+      assert.same("pemCertKey", certificate_data:get(UUID))
+      assert.same(nil, certificate_servers:get("hostname"))
+      assert.same(ngx.HTTP_CREATED, ngx.status)
+    end)
+
+    it("should successfully update certificates and keys for each host", function()
+      mock_ssl_configuration({
+        servers = { ["hostname"] = UUID },
+        certificates = { [UUID] = "pemCertKey" }
+      })
 
       assert.has_no.errors(configuration.handle_servers)
-      assert.same(certificate_data:get(UUID), "pemCertKey")
-      assert.same(certificate_servers:get("hostname"), UUID)
-      assert.same(ngx.status, ngx.HTTP_CREATED)
+      assert.same("pemCertKey", certificate_data:get(UUID))
+      assert.same(UUID, certificate_servers:get("hostname"))
+      assert.same(ngx.HTTP_CREATED, ngx.status)
     end)
 
     it("should log an err and set status to Internal Server Error when a certificate cannot be set", function()
       local uuid2 = "8ea8adb5-8ebb-4b14-a79b-0cdcd892e999"
-      ngx.var.request_method = "POST"
       ngx.shared.certificate_data.set = function(self, uuid, certificate)
         return false, "error", nil
       end
 
-      local mock_ssl_configuration = cjson.encode({
+      mock_ssl_configuration({
         servers = { ["hostname"] = UUID, ["hostname2"] = uuid2 },
         certificates = { [UUID] = "pemCertKey", [uuid2] = "pemCertKey2" }
       })
-      ngx.req.get_body_data = function() return mock_ssl_configuration end
 
       local s = spy.on(ngx, "log")
       assert.has_no.errors(configuration.handle_servers)
@@ -213,17 +240,14 @@ describe("Configuration", function()
       local uuid2 = "8ea8adb5-8ebb-4b14-a79b-0cdcd892e999"
       local stored_entries = {}
 
-      ngx.var.request_method = "POST"
       ngx.shared.certificate_data.set = function(self, uuid, certificate)
         stored_entries[uuid] = certificate
         return true, nil, true
       end
-      local mock_ssl_configuration = cjson.encode({
+      mock_ssl_configuration({
         servers = { ["hostname"] = UUID, ["hostname2"] = uuid2 },
         certificates = { [UUID] = "pemCertKey", [uuid2] = "pemCertKey2" }
       })
-
-      ngx.req.get_body_data = function() return mock_ssl_configuration end
 
       local s1 = spy.on(ngx, "log")
       assert.has_no.errors(configuration.handle_servers)
