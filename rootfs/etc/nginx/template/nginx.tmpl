@@ -935,6 +935,10 @@ stream {
             proxy_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
             {{ end }}
 
+            {{- range $line := buildAuthProxySetHeaders $externalAuth.ProxySetHeaders}}
+            {{ $line }}
+            {{- end }}
+
             {{ if not (empty $externalAuth.AuthSnippet) }}
             {{ $externalAuth.AuthSnippet }}
             {{ end }}
