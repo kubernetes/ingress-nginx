@@ -67,6 +67,7 @@ import (
 
 const (
 	tempNginxPattern = "nginx-cfg"
+	emptyUID         = "-1"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
@@ -1004,39 +1005,35 @@ func configureCertificates(rawServers []*ingress.Server) error {
 		Servers:      map[string]string{},
 	}
 
+	configure := func(hostname string, sslCert *ingress.SSLCert) {
+		uid := emptyUID
+
+		if sslCert != nil {
+			uid = sslCert.UID
+
+			if _, ok := configuration.Certificates[uid]; !ok {
+				configuration.Certificates[uid] = sslCert.PemCertKey
+			}
+		}
+
+		configuration.Servers[hostname] = uid
+	}
+
 	for _, rawServer := range rawServers {
-		if rawServer.SSLCert == nil {
-			continue
-		}
-
-		uid := rawServer.SSLCert.UID
-
-		if _, ok := configuration.Certificates[uid]; !ok {
-			configuration.Certificates[uid] = rawServer.SSLCert.PemCertKey
-		}
-
-		configuration.Servers[rawServer.Hostname] = uid
+		configure(rawServer.Hostname, rawServer.SSLCert)
 
 		for _, alias := range rawServer.Aliases {
-			if !ssl.IsValidHostname(alias, rawServer.SSLCert.CN) {
-				continue
+			if rawServer.SSLCert != nil && ssl.IsValidHostname(alias, rawServer.SSLCert.CN) {
+				configuration.Servers[alias] = rawServer.SSLCert.UID
+			} else {
+				configuration.Servers[alias] = emptyUID
 			}
-
-			configuration.Servers[alias] = uid
 		}
 	}
 
 	redirects := buildRedirects(rawServers)
 	for _, redirect := range redirects {
-		if redirect.SSLCert == nil {
-			continue
-		}
-
-		configuration.Servers[redirect.From] = redirect.SSLCert.UID
-
-		if _, ok := configuration.Certificates[redirect.SSLCert.UID]; !ok {
-			configuration.Certificates[redirect.SSLCert.UID] = redirect.SSLCert.PemCertKey
-		}
+		configure(redirect.From, redirect.SSLCert)
 	}
 
 	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/servers", "application/json", configuration)
