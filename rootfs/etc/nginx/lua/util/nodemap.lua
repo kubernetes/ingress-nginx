@@ -1,5 +1,5 @@
-local math = require("math")
-local util = require("util")
+local math_random = require("math").random
+local util_tablelength = require("util").tablelength
 
 local _M = {}
 
@@ -24,13 +24,13 @@ end
 -- @tparam {[string], ...} map A key to node hash table.
 -- @treturn string,string The node and its key
 local function get_random_node(map)
-  local size = util.tablelength(map)
+  local size = util_tablelength(map)
 
   if size < 1 then
     return nil, nil
   end
 
-  local index = math.random(1, size)
+  local index = math_random(1, size)
   local count = 1
 
   for key, endpoint in pairs(map) do
@@ -58,7 +58,6 @@ end
 -- @tparam {[string]=number} endpoints A table with the node endpoint as a key and its weight as a value.
 -- @tparam[opt] string hash_salt A optional hash salt that will be used to obfuscate the hash key.
 function _M.new(self, endpoints, hash_salt)
-
   if hash_salt == nil then
     hash_salt = ''
   end
@@ -103,7 +102,7 @@ function _M.random_except(self, ignore_nodes)
   local valid_nodes = {}
 
   -- avoid generating the map if no ignores where provided
-  if ignore_nodes == nil or util.tablelength(ignore_nodes) == 0 then
+  if ignore_nodes == nil or util_tablelength(ignore_nodes) == 0 then
     return get_random_node(self.map)
   end
 
