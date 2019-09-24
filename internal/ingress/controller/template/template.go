@@ -141,6 +141,7 @@ var (
 		"buildAuthLocation":               buildAuthLocation,
 		"shouldApplyGlobalAuth":           shouldApplyGlobalAuth,
 		"buildAuthResponseHeaders":        buildAuthResponseHeaders,
+		"buildAuthProxySetHeaders":        buildAuthProxySetHeaders,
 		"buildProxyPass":                  buildProxyPass,
 		"filterRateLimits":                filterRateLimits,
 		"buildRateLimitZones":             buildRateLimitZones,
@@ -459,6 +460,19 @@ func buildAuthResponseHeaders(headers []string) []string {
 		hvar = strings.NewReplacer("-", "_").Replace(hvar)
 		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
 		res = append(res, fmt.Sprintf("proxy_set_header '%v' $authHeader%v;", h, i))
+	}
+	return res
+}
+
+func buildAuthProxySetHeaders(headers map[string]string) []string {
+	res := []string{}
+
+	if len(headers) == 0 {
+		return res
+	}
+
+	for name, value := range headers {
+		res = append(res, fmt.Sprintf("proxy_set_header '%v' '%v';", name, value))
 	}
 	return res
 }

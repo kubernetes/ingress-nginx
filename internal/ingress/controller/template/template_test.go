@@ -450,6 +450,23 @@ func TestBuildAuthResponseHeaders(t *testing.T) {
 	}
 }
 
+func TestBuildAuthProxySetHeaders(t *testing.T) {
+	proxySetHeaders := map[string]string{
+		"header1": "value1",
+		"header2": "value2",
+	}
+	expected := []string{
+		"proxy_set_header 'header1' 'value1';",
+		"proxy_set_header 'header2' 'value2';",
+	}
+
+	headers := buildAuthProxySetHeaders(proxySetHeaders)
+
+	if !reflect.DeepEqual(expected, headers) {
+		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
+	}
+}
+
 func TestTemplateWithData(t *testing.T) {
 	pwd, _ := os.Getwd()
 	f, err := os.Open(path.Join(pwd, "../../../../test/data/config.json"))
