@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	networking "k8s.io/api/networking/v1beta1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 )
@@ -129,4 +130,25 @@ func normalizeString(input string) string {
 	}
 
 	return strings.Join(trimmedContent, "\n")
+}
+
+var configmapAnnotations = sets.NewString(
+	"auth-proxy-set-header",
+	"fastcgi-params-configmap",
+)
+
+// AnnotationsReferencesConfigmap checks if at least one annotation in the Ingress rule
+// references a configmap.
+func AnnotationsReferencesConfigmap(ing *networking.Ingress) bool {
+	if ing == nil || len(ing.GetAnnotations()) == 0 {
+		return false
+	}
+
+	for name := range ing.GetAnnotations() {
+		if configmapAnnotations.Has(name) {
+			return true
+		}
+	}
+
+	return false
 }
