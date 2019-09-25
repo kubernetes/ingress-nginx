@@ -332,8 +332,8 @@ cp unicode.mapping /etc/nginx/modsecurity/unicode.mapping
 # Replace serial logging with concurrent
 sed -i 's|SecAuditLogType Serial|SecAuditLogType Concurrent|g' /etc/nginx/modsecurity/modsecurity.conf
 
-# Use stdout for modsecurity logs
-sed -i 's|SecAuditLog /var/log/modsec_audit.log|SecAuditLog /dev/stdout|g' /etc/nginx/modsecurity/modsecurity.conf
+# Concurrent logging implies the log is stored in several files
+echo "SecAuditLogStorageDir /var/log/audit/" >> /etc/nginx/modsecurity/modsecurity.conf
 
 # Download owasp modsecurity crs
 cd /etc/nginx/
@@ -576,6 +576,7 @@ writeDirs=( \
   /opt/modsecurity/var/log \
   /opt/modsecurity/var/upload \
   /opt/modsecurity/var/audit \
+  /var/log/audit \
 );
 
 for dir in "${writeDirs[@]}"; do
