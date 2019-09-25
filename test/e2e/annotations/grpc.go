@@ -117,7 +117,6 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 		Expect(err).Should(BeNil())
 
 		metadata := res.GetMetadata()
-		Expect(metadata["x-original-uri"].Values[0]).Should(Equal("/grpcbin.GRPCBin/HeadersUnary"))
 		Expect(metadata["content-type"].Values[0]).Should(Equal("application/grpc"))
 	})
 
@@ -179,7 +178,6 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 		Expect(err).Should(BeNil())
 
 		metadata := res.GetMetadata()
-		Expect(metadata["x-original-uri"].Values[0]).Should(Equal("/grpcbin.GRPCBin/HeadersUnary"))
 		Expect(metadata["content-type"].Values[0]).Should(Equal("application/grpc"))
 	})
 })
