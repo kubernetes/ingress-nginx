@@ -795,9 +795,7 @@ func clearCertificates(config *ingress.Configuration) {
 	var clearedServers []*ingress.Server
 	for _, server := range config.Servers {
 		copyOfServer := *server
-		if copyOfServer.SSLCert != nil {
-			copyOfServer.SSLCert = &ingress.SSLCert{PemFileName: copyOfServer.SSLCert.PemFileName}
-		}
+		copyOfServer.SSLCert = nil
 		clearedServers = append(clearedServers, &copyOfServer)
 	}
 	config.Servers = clearedServers

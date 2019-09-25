@@ -103,8 +103,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 		rc1, err := extractReloadCount(mf)
 		Expect(err).ToNot(HaveOccurred())
 
-		// TODO: This is wrong. We should not require a reload when SSL is configured
-		Expect(rc0).To(BeEquivalentTo(rc1 - 1))
+		Expect(rc0).To(BeEquivalentTo(rc1))
 	})
 
 	Context("given an ingress with TLS correctly configured", func() {
@@ -177,41 +176,37 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 			Expect(restOfLogs).ToNot(ContainSubstring(logBackendReloadSuccess))
 		})
 
-		// TODO: Fix
-		/*
-			It("falls back to using default certificate when secret gets deleted without reloading", func() {
-				ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+		It("falls back to using default certificate when secret gets deleted without reloading", func() {
+			ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 
-				ensureHTTPSRequest(fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.GetURL(framework.HTTPS)), host, host)
+			ensureHTTPSRequest(fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.GetURL(framework.HTTPS)), host, host)
 
-				ip := f.GetNginxPodIP()
-				mf, err := f.GetMetric("nginx_ingress_controller_success", ip[0])
-				Expect(err).ToNot(HaveOccurred())
-				Expect(mf).ToNot(BeNil())
+			ip := f.GetNginxPodIP()
+			mf, err := f.GetMetric("nginx_ingress_controller_success", ip[0])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(mf).ToNot(BeNil())
 
-				rc0, err := extractReloadCount(mf)
-				Expect(err).ToNot(HaveOccurred())
+			rc0, err := extractReloadCount(mf)
+			Expect(err).ToNot(HaveOccurred())
 
-				err = f.KubeClientSet.CoreV1().Secrets(ing.Namespace).Delete(ing.Spec.TLS[0].SecretName, nil)
-				Expect(err).ToNot(HaveOccurred())
+			err = f.KubeClientSet.CoreV1().Secrets(ing.Namespace).Delete(ing.Spec.TLS[0].SecretName, nil)
+			Expect(err).ToNot(HaveOccurred())
 
-				time.Sleep(waitForLuaSync * 2)
+			time.Sleep(waitForLuaSync * 2)
 
-				By("serving the default certificate on HTTPS endpoint")
-				ensureHTTPSRequest(f.GetURL(framework.HTTPS), host, "ingress.local")
+			By("serving the default certificate on HTTPS endpoint")
+			ensureHTTPSRequest(f.GetURL(framework.HTTPS), host, "ingress.local")
 
-				mf, err = f.GetMetric("nginx_ingress_controller_success", ip[0])
-				Expect(err).ToNot(HaveOccurred())
-				Expect(mf).ToNot(BeNil())
+			mf, err = f.GetMetric("nginx_ingress_controller_success", ip[0])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(mf).ToNot(BeNil())
 
-				rc1, err := extractReloadCount(mf)
-				Expect(err).ToNot(HaveOccurred())
+			rc1, err := extractReloadCount(mf)
+			Expect(err).ToNot(HaveOccurred())
 
-				By("skipping Nginx reload")
-				// TODO: This is wrong. We should not require a reload when SSL is configured
-				Expect(rc0).To(BeEquivalentTo(rc1 - 1))
-			})
-		*/
+			By("skipping Nginx reload")
+			Expect(rc0).To(BeEquivalentTo(rc1))
+		})
 
 		It("picks up a non-certificate only change", func() {
 			newHost := "foo2.com"
