@@ -166,37 +166,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		})
 	})
 
-	It("handles a non backend update", func() {
-		var nginxConfig string
-		f.WaitForNginxConfiguration(func(cfg string) bool {
-			nginxConfig = cfg
-			return true
-		})
-
-		ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get("foo.com", metav1.GetOptions{})
-		Expect(err).ToNot(HaveOccurred())
-		ingress.Spec.TLS = []extensions.IngressTLS{
-			{
-				Hosts:      []string{"foo.com"},
-				SecretName: "foo.com",
-			},
-		}
-		_, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
-			ingress.Spec.TLS[0].Hosts,
-			ingress.Spec.TLS[0].SecretName,
-			ingress.Namespace)
-		Expect(err).ToNot(HaveOccurred())
-		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Update(ingress)
-		Expect(err).ToNot(HaveOccurred())
-
-		var newNginxConfig string
-		f.WaitForNginxConfiguration(func(cfg string) bool {
-			newNginxConfig = cfg
-			return true
-		})
-		Expect(nginxConfig).ShouldNot(Equal(newNginxConfig))
-	})
-
 	It("sets controllerPodsCount in Lua general configuration", func() {
 		// https://github.com/curl/curl/issues/936
 		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/general", nginx.StatusPort)
