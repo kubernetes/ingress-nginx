@@ -668,7 +668,7 @@ func NewDefault() Configuration {
 		UseForwardedHeaders:              false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ComputeFullForwardedFor:          false,
-		ProxyAddOriginalURIHeader:        true,
+		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
 		HTTP2MaxFieldSize:                "4k",
 		HTTP2MaxHeaderSize:               "16k",
