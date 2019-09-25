@@ -22,11 +22,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# temporal directory for the fake SSL certificate
-SSL_VOLUME=$(mktemp -d)
+# temporal directory for the /etc/ingress-controller directory
+INGRESS_VOLUME=$(mktemp -d)
 
 function cleanup {
-  rm -rf "${SSL_VOLUME}"
+  rm -rf "${INGRESS_VOLUME}"
 }
 trap cleanup EXIT
 
@@ -58,7 +58,7 @@ docker run                                            \
   -v "${KUBE_ROOT}:/go/src/${PKG}"                    \
   -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" \
   -v "/var/run/docker.sock:/var/run/docker.sock"      \
-  -v "${SSL_VOLUME}:/etc/ingress-controller/ssl/"     \
+  -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
   ${MINIKUBE_VOLUME}                                  \
   -w "/go/src/${PKG}"                                 \
   -u $(id -u ${USER}):$(id -g ${USER})                \
