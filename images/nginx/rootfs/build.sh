@@ -577,6 +577,8 @@ writeDirs=( \
   /opt/modsecurity/var/upload \
   /opt/modsecurity/var/audit \
   /var/log/audit \
+  /etc/ingress-controller \
+  /usr/local/openresty/nginx/logs \
 );
 
 for dir in "${writeDirs[@]}"; do
