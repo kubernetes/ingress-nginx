@@ -130,21 +130,28 @@ describe("Certificate", function()
     end)
   end)
 
-  describe("configured_for_server", function()
+  describe("configured_for_current_request", function()
     before_each(function()
+      local _ngx = { var = { host = "hostname" } }
+      setmetatable(_ngx, {__index = _G.ngx})
+      _G.ngx = _ngx
+      ngx.ctx.configured_for_current_request = nil
+
       set_certificate("hostname", EXAMPLE_CERT, UUID)
     end)
 
     it("returns true when certificate exists for given server", function()
-      assert.is_true(certificate.configured_for_server("hostname"))
+      assert.is_true(certificate.configured_for_current_request())
     end)
 
     it("returns false when certificate does not exist for given server", function()
-      assert.is_false(certificate.configured_for_server("hostname.xyz"))
+      ngx.var.host = "hostname.xyz"
+      assert.is_false(certificate.configured_for_current_request())
     end)
 
-    it("returns false when no server given", function()
-      assert.is_false(certificate.configured_for_server())
+    it("returns cached value from ngx.ctx", function()
+      ngx.ctx.configured_for_current_request = false
+      assert.is_false(certificate.configured_for_current_request())
     end)
   end)
 end)

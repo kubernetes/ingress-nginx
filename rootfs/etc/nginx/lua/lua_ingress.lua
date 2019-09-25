@@ -1,6 +1,6 @@
 local ngx_re_split = require("ngx.re").split
 
-local certificate_configured_for_server = require("certificate").configured_for_server
+local certificate_configured_for_current_request = require("certificate").configured_for_current_request
 
 local original_randomseed = math.randomseed
 local string_format = string.format
@@ -69,7 +69,7 @@ local function redirect_to_https(location_config)
     return true
   end
 
-  return location_config.ssl_redirect and certificate_configured_for_server(ngx.var.host)
+  return location_config.ssl_redirect and certificate_configured_for_current_request()
 end
 
 local function redirect_host()
@@ -143,7 +143,7 @@ function _M.rewrite(location_config)
     ngx_redirect(uri, config.http_redirect_code)
   end
 
-  if config.hsts and ngx.var.scheme == "https" and certificate_configured_for_server(ngx.var.host) then
+  if config.hsts and ngx.var.scheme == "https" and certificate_configured_for_current_request then
     local value = "max-age=" .. config.hsts_max_age
     if config.hsts_include_subdomains then
       value = value .. "; includeSubDomains"
