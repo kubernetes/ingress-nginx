@@ -34,6 +34,9 @@ If this flag is not provided NGINX will use a self-signed certificate.
 For instance, if you have a TLS secret `foo-tls` in the `default` namespace,
 add `--default-ssl-certificate=default/foo-tls` in the `nginx-controller` deployment.
 
+The default certificate will also be used for ingress `tls:` sections that do not
+have a `secretName` option.
+
 ## SSL Passthrough
 
 The [`--enable-ssl-passthrough`](cli-arguments/) flag enables the SSL Passthrough feature, which is disabled by
