@@ -613,42 +613,47 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 	for _, upstream := range upstreams {
 		aUpstreams = append(aUpstreams, upstream)
 
+		if upstream.Name == defUpstreamName {
+			continue
+		}
+
 		isHTTPSfrom := []*ingress.Server{}
 		for _, server := range servers {
 			for _, location := range server.Locations {
-				if shouldCreateUpstreamForLocationDefaultBackend(upstream, location) {
-					sp := location.DefaultBackend.Spec.Ports[0]
-					endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
-					if len(endps) > 0 {
+				// use default backend
+				if !shouldCreateUpstreamForLocationDefaultBackend(upstream, location) {
+					continue
+				}
 
-						name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
-						klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
+				sp := location.DefaultBackend.Spec.Ports[0]
+				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
+				// custom backend is valid only if contains at least one endpoint
+				if len(endps) > 0 {
+					name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
+					klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
 
-						nb := upstream.DeepCopy()
-						nb.Name = name
-						nb.Endpoints = endps
-						aUpstreams = append(aUpstreams, nb)
-						location.DefaultBackendUpstreamName = name
+					nb := upstream.DeepCopy()
+					nb.Name = name
+					nb.Endpoints = endps
+					aUpstreams = append(aUpstreams, nb)
+					location.DefaultBackendUpstreamName = name
 
-						if len(upstream.Endpoints) == 0 {
-							klog.V(3).Infof("Upstream %q has no active Endpoint, so using custom default backend for location %q in server %q (Service \"%v/%v\")",
-								upstream.Name, location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+					if len(upstream.Endpoints) == 0 {
+						klog.V(3).Infof("Upstream %q has no active Endpoint, so using custom default backend for location %q in server %q (Service \"%v/%v\")",
+							upstream.Name, location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
 
-							location.Backend = name
-						}
+						location.Backend = name
 					}
+				}
 
-					if server.SSLPassthrough {
-						if location.Path == rootLocation {
-							if location.Backend == defUpstreamName {
-								klog.Warningf("Server %q has no default backend, ignoring SSL Passthrough.", server.Hostname)
-								continue
-							}
-							isHTTPSfrom = append(isHTTPSfrom, server)
+				if server.SSLPassthrough {
+					if location.Path == rootLocation {
+						if location.Backend == defUpstreamName {
+							klog.Warningf("Server %q has no default backend, ignoring SSL Passthrough.", server.Hostname)
+							continue
 						}
+						isHTTPSfrom = append(isHTTPSfrom, server)
 					}
-				} else {
-					location.DefaultBackendUpstreamName = "upstream-default-backend"
 				}
 			}
 		}
@@ -1180,6 +1185,8 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.ModSecurity = anns.ModSecurity
 	loc.Satisfy = anns.Satisfy
 	loc.Mirror = anns.Mirror
+
+	loc.DefaultBackendUpstreamName = defUpstreamName
 }
 
 // OK to merge canary ingresses iff there exists one or more ingresses to potentially merge into
