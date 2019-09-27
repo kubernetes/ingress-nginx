@@ -715,7 +715,7 @@ func NewDefault() Configuration {
 		UseGeoIP:                         true,
 		UseGeoIP2:                        false,
 		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
-		WorkerShutdownTimeout:            "10s",
+		WorkerShutdownTimeout:            "240s",
 		VariablesHashBucketSize:          128,
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,

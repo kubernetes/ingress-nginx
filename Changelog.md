@@ -1,5 +1,206 @@
 # Changelog
 
+### 0.26.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.26.0`
+
+_New Features:_
+
+- Add support for NGINX [proxy_ssl_* directives](https://github.com/kubernetes/ingress-nginx/pull/4327)
+- Add support for [FastCGI backends](https://github.com/kubernetes/ingress-nginx/pull/4344)
+- [Only support SSL dynamic mode](https://github.com/kubernetes/ingress-nginx/pull/4356)
+- [Add nginx ssl_early_data option support](https://github.com/kubernetes/ingress-nginx/pull/4412)
+- [Add support for multiple alias and remove duplication of SSL certificates](https://github.com/kubernetes/ingress-nginx/pull/4472)
+- [Support configuring basic auth credentials as a map of user/password hashes](https://github.com/kubernetes/ingress-nginx/pull/4560)
+- Caching support for external authentication annotation with new annotations [auth-cache-key and auth-cache-duration](https://github.com/kubernetes/ingress-nginx/pull/4278)
+- Allow Requests to be [Mirrored to different backends](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#mirror) [#4379](https://github.com/kubernetes/ingress-nginx/pull/4379)
+- Improve connection draining when ingress controller pod is deleted using a lifecycle hook:
+
+  With this new hook, we increased the default `terminationGracePeriodSeconds` from 30 seconds to 300, allowing the draining of connections up to five minutes.
+
+  If the active connections end before that, the pod will terminate gracefully at that time.
+
+  To efectively take advantage of this feature, the Configmap feature [worker-shutdown-timeout](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#worker-shutdown-timeout) new value is `240s` instead of `10s`.
+
+  **IMPORTANT:** this value has a side effect during reloads, consuming more memory until the old NGINX workers are replaced.
+
+  ```yaml
+  lifecycle:
+    preStop:
+      exec:
+        command:
+          - /wait-shutdown
+  ```
+
+- [mimalloc](https://github.com/microsoft/mimalloc) as a drop-in replacement for malloc.
+
+  This feature can be enabled using the [LD_PRELOAD](http://man7.org/linux/man-pages/man8/ld.so.8.html) environment variable in the ingress controller deployment
+
+  Example:
+
+  ```yaml
+  env:
+  - name: LD_PRELOAD
+    value: /usr/local/lib/libmimalloc.so
+  ```
+
+  Please check the additional [options](https://github.com/microsoft/mimalloc#environment-options) it provides.
+
+_Breaking Changes:_
+
+- The variable [$the_real_ip variable](https://github.com/kubernetes/ingress-nginx/pull/4557) was removed from template and default `log_format`.
+- The default value of configmap setting [proxy-add-original-uri-header](https://github.com/kubernetes/ingress-nginx/pull/4604) is now `"false"`.
+
+  When the setting `proxy-add-original-uri-header` is `"true"`, the ingress controller adds a new header `X-Original-Uri` with the value of NGINX variable `$request_uri`.
+
+  In most of the cases this is not an issue but with request with long URLs it could lead to unexpected errors in the application defined in the Ingress serviceName,
+  like issue 4593 - [431 Request Header Fields Too Large](https://github.com/kubernetes/ingress-nginx/issues/4593)
+
+_Non-functional improvements:_
+
+- [Removal of internal NGINX unix sockets](https://github.com/kubernetes/ingress-nginx/pull/4531)
+- Automation of NGINX image using [terraform scripts](https://github.com/kubernetes/ingress-nginx/pull/4484)
+- Removal of Go profiling on port `:10254` to use `localhost:10255`
+
+  To profile the ingress controller Go binary, use:
+
+  ```console
+  INGRESS_PODS=($(kubectl get pods -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -o 'jsonpath={..metadata.name}'))
+  kubectl port-forward -n ingress-nginx pod/${INGRESS_PODS[0]} 10255
+  ```
+
+Using the URL http://localhost:10255/debug/pprof/ to reach the profiler.
+
+_Changes:_
+
+- [X] [#3164](https://github.com/kubernetes/ingress-nginx/pull/3164) Initial support for CRL in Ingress Controller
+- [X] [#4086](https://github.com/kubernetes/ingress-nginx/pull/4086) Resolve #4038, move X-Forwarded-Port variable to the location context
+- [X] [#4278](https://github.com/kubernetes/ingress-nginx/pull/4278) feat: auth-req caching
+- [X] [#4286](https://github.com/kubernetes/ingress-nginx/pull/4286) fix lua lints
+- [X] [#4287](https://github.com/kubernetes/ingress-nginx/pull/4287) Add script for luacheck
+- [X] [#4288](https://github.com/kubernetes/ingress-nginx/pull/4288) added proxy-http-version annotation to override the HTTP/1.1 default …
+- [X] [#4289](https://github.com/kubernetes/ingress-nginx/pull/4289) Apply fixes suggested by staticcheck
+- [X] [#4290](https://github.com/kubernetes/ingress-nginx/pull/4290) Make dev-env.sh script work on Linux
+- [X] [#4291](https://github.com/kubernetes/ingress-nginx/pull/4291) hack scripts do not need PKG var
+- [X] [#4298](https://github.com/kubernetes/ingress-nginx/pull/4298) Fix RBAC issues with networking.k8s.io
+- [X] [#4299](https://github.com/kubernetes/ingress-nginx/pull/4299) Fix scripts to be able to run tests in docker
+- [X] [#4302](https://github.com/kubernetes/ingress-nginx/pull/4302) Squash rules regarding ingresses
+- [X] [#4306](https://github.com/kubernetes/ingress-nginx/pull/4306) Remove unnecessary output
+- [X] [#4307](https://github.com/kubernetes/ingress-nginx/pull/4307) Disable access log in stream section for configuration socket
+- [X] [#4313](https://github.com/kubernetes/ingress-nginx/pull/4313) avoid warning during lua unit test
+- [X] [#4322](https://github.com/kubernetes/ingress-nginx/pull/4322) Update go dependencies
+- [X] [#4327](https://github.com/kubernetes/ingress-nginx/pull/4327) Add proxy_ssl_* directives
+- [X] [#4333](https://github.com/kubernetes/ingress-nginx/pull/4333) Add  [$proxy_alternative_upstream_name]
+- [X] [#4334](https://github.com/kubernetes/ingress-nginx/pull/4334) Refactor http client for unix sockets
+- [X] [#4341](https://github.com/kubernetes/ingress-nginx/pull/4341) duplicate argument "--disable-catch-all"
+- [X] [#4344](https://github.com/kubernetes/ingress-nginx/pull/4344) Add FastCGI backend support (#2982)
+- [X] [#4356](https://github.com/kubernetes/ingress-nginx/pull/4356) Only support SSL dynamic mode
+- [X] [#4365](https://github.com/kubernetes/ingress-nginx/pull/4365) memoize balancer for a request
+- [X] [#4369](https://github.com/kubernetes/ingress-nginx/pull/4369) Fix broken test's filenames
+- [X] [#4371](https://github.com/kubernetes/ingress-nginx/pull/4371) Update datadog tracing plugin to v1.0.1
+- [X] [#4379](https://github.com/kubernetes/ingress-nginx/pull/4379) Allow Requests to be Mirrored to different backends
+- [X] [#4383](https://github.com/kubernetes/ingress-nginx/pull/4383) Add support for psp
+- [X] [#4386](https://github.com/kubernetes/ingress-nginx/pull/4386) Update go dependencies
+- [X] [#4405](https://github.com/kubernetes/ingress-nginx/pull/4405) Lua shared cfg
+- [X] [#4409](https://github.com/kubernetes/ingress-nginx/pull/4409) sort ingress by namespace and name when ingress.CreationTimestamp identical
+- [X] [#4410](https://github.com/kubernetes/ingress-nginx/pull/4410) fix dev-env script
+- [X] [#4412](https://github.com/kubernetes/ingress-nginx/pull/4412) Add nginx ssl_early_data option support
+- [X] [#4415](https://github.com/kubernetes/ingress-nginx/pull/4415) more dev-env script improvements
+- [X] [#4416](https://github.com/kubernetes/ingress-nginx/pull/4416) Remove invalid log "Failed to executing diff command: exit status 1"
+- [X] [#4418](https://github.com/kubernetes/ingress-nginx/pull/4418) Remove dynamic TLS records
+- [X] [#4420](https://github.com/kubernetes/ingress-nginx/pull/4420) Cleanup
+- [X] [#4422](https://github.com/kubernetes/ingress-nginx/pull/4422) teach lua about search and ndots settings in resolv.conf
+- [X] [#4423](https://github.com/kubernetes/ingress-nginx/pull/4423) Add quote function in template
+- [X] [#4426](https://github.com/kubernetes/ingress-nginx/pull/4426) Update klog
+- [X] [#4428](https://github.com/kubernetes/ingress-nginx/pull/4428) Add timezone value into $geoip2_time_zone variable
+- [X] [#4435](https://github.com/kubernetes/ingress-nginx/pull/4435) Add option to use existing images
+- [X] [#4437](https://github.com/kubernetes/ingress-nginx/pull/4437) Refactor version helper
+- [X] [#4438](https://github.com/kubernetes/ingress-nginx/pull/4438) Add helper to extract prometheus metrics in e2e tests
+- [X] [#4439](https://github.com/kubernetes/ingress-nginx/pull/4439) Move listen logic to go
+- [X] [#4440](https://github.com/kubernetes/ingress-nginx/pull/4440) Fixes for CVE-2018-16843, CVE-2018-16844, CVE-2019-9511, CVE-2019-9513, and CVE-2019-9516
+- [X] [#4443](https://github.com/kubernetes/ingress-nginx/pull/4443) Lua resolv conf parser
+- [X] [#4445](https://github.com/kubernetes/ingress-nginx/pull/4445) use latest openresty with CVE patches
+- [X] [#4446](https://github.com/kubernetes/ingress-nginx/pull/4446) lua-shared-dicts improvements, fixes and documentation
+- [X] [#4448](https://github.com/kubernetes/ingress-nginx/pull/4448) ewma improvements
+- [X] [#4449](https://github.com/kubernetes/ingress-nginx/pull/4449) Fix service type external name using the name
+- [X] [#4450](https://github.com/kubernetes/ingress-nginx/pull/4450) Add nginx proxy_max_temp_file_size configuration option
+- [X] [#4451](https://github.com/kubernetes/ingress-nginx/pull/4451) post data to Lua only if it changes
+- [X] [#4452](https://github.com/kubernetes/ingress-nginx/pull/4452) Fix test description on error
+- [X] [#4456](https://github.com/kubernetes/ingress-nginx/pull/4456) Fix file permissions to support volumes
+- [X] [#4458](https://github.com/kubernetes/ingress-nginx/pull/4458) implementation proposal for zone aware routing
+- [X] [#4459](https://github.com/kubernetes/ingress-nginx/pull/4459) cleanup logging message typos in rewrite.go
+- [X] [#4460](https://github.com/kubernetes/ingress-nginx/pull/4460) cleanup: fix typos in framework.go
+- [X] [#4463](https://github.com/kubernetes/ingress-nginx/pull/4463) Always set headers with add-headers option
+- [X] [#4466](https://github.com/kubernetes/ingress-nginx/pull/4466) Add rate limit units and error status
+- [X] [#4471](https://github.com/kubernetes/ingress-nginx/pull/4471) Lint code using staticcheck
+- [X] [#4472](https://github.com/kubernetes/ingress-nginx/pull/4472) Add support for multiple alias and remove duplication of SSL certificates
+- [X] [#4476](https://github.com/kubernetes/ingress-nginx/pull/4476) Initialize nginx process error channel
+- [X] [#4478](https://github.com/kubernetes/ingress-nginx/pull/4478) Re-add Support for Wildcard Hosts with Sticky Sessions
+- [X] [#4484](https://github.com/kubernetes/ingress-nginx/pull/4484) Add terraform scripts to build nginx image
+- [X] [#4487](https://github.com/kubernetes/ingress-nginx/pull/4487) Refactor health checks and wait until NGINX process ends
+- [X] [#4489](https://github.com/kubernetes/ingress-nginx/pull/4489) Fix log format markdown
+- [X] [#4490](https://github.com/kubernetes/ingress-nginx/pull/4490) Refactor ingress status IP address
+- [X] [#4492](https://github.com/kubernetes/ingress-nginx/pull/4492) fix lua certificate handling tests
+- [X] [#4495](https://github.com/kubernetes/ingress-nginx/pull/4495) point users to kubectl ingress-nginx plugin
+- [X] [#4500](https://github.com/kubernetes/ingress-nginx/pull/4500) Fix nginx variable service_port (nginx)
+- [X] [#4501](https://github.com/kubernetes/ingress-nginx/pull/4501) Move nginx helper
+- [X] [#4502](https://github.com/kubernetes/ingress-nginx/pull/4502) Remove hard-coded names from e2e test and use local docker dependencies
+- [X] [#4506](https://github.com/kubernetes/ingress-nginx/pull/4506) Fix panic on multiple ingress mess up upstream is primary or not
+- [X] [#4509](https://github.com/kubernetes/ingress-nginx/pull/4509) Update openresty and third party modules
+- [X] [#4520](https://github.com/kubernetes/ingress-nginx/pull/4520) fix typo
+- [X] [#4521](https://github.com/kubernetes/ingress-nginx/pull/4521) backward compatibility for k8s version < 1.14
+- [X] [#4522](https://github.com/kubernetes/ingress-nginx/pull/4522) Fix relative links
+- [X] [#4524](https://github.com/kubernetes/ingress-nginx/pull/4524) Update go dependencies
+- [X] [#4527](https://github.com/kubernetes/ingress-nginx/pull/4527) Switch to official kind images
+- [X] [#4528](https://github.com/kubernetes/ingress-nginx/pull/4528) Cleanup of docker images
+- [X] [#4530](https://github.com/kubernetes/ingress-nginx/pull/4530) Update nginx image to 0.92
+- [X] [#4531](https://github.com/kubernetes/ingress-nginx/pull/4531) Remove nginx unix sockets
+- [X] [#4534](https://github.com/kubernetes/ingress-nginx/pull/4534) Show current reloads count, not total
+- [X] [#4535](https://github.com/kubernetes/ingress-nginx/pull/4535) Improve the time to run e2e tests
+- [X] [#4543](https://github.com/kubernetes/ingress-nginx/pull/4543) Correctly format ipv6 resolver config for lua
+- [X] [#4545](https://github.com/kubernetes/ingress-nginx/pull/4545) Rollback luarocks version to 3.1.3
+- [X] [#4547](https://github.com/kubernetes/ingress-nginx/pull/4547) Fix terraform build of nginx images
+- [X] [#4548](https://github.com/kubernetes/ingress-nginx/pull/4548) regression test for the issue fixed in #4543
+- [X] [#4549](https://github.com/kubernetes/ingress-nginx/pull/4549) Cleanup of docker build
+- [X] [#4556](https://github.com/kubernetes/ingress-nginx/pull/4556) Allow multiple CA Certificates
+- [X] [#4557](https://github.com/kubernetes/ingress-nginx/pull/4557) Remove the_real_ip variable
+- [X] [#4560](https://github.com/kubernetes/ingress-nginx/pull/4560) Support configuring basic auth credentials as a map of user/password hashes
+- [X] [#4569](https://github.com/kubernetes/ingress-nginx/pull/4569) allow to configure jaeger header names
+- [X] [#4570](https://github.com/kubernetes/ingress-nginx/pull/4570) Update nginx image
+- [X] [#4571](https://github.com/kubernetes/ingress-nginx/pull/4571) Increase log level for identical CreationTimestamp warning
+- [X] [#4572](https://github.com/kubernetes/ingress-nginx/pull/4572) Fix log format after #4557
+- [X] [#4575](https://github.com/kubernetes/ingress-nginx/pull/4575) Update go dependencies for kubernetes 1.16.0
+- [X] [#4583](https://github.com/kubernetes/ingress-nginx/pull/4583) Disable go modules
+- [X] [#4584](https://github.com/kubernetes/ingress-nginx/pull/4584) Remove retries to ExternalName
+- [X] [#4586](https://github.com/kubernetes/ingress-nginx/pull/4586) Fix reload when a configmap changes
+- [X] [#4587](https://github.com/kubernetes/ingress-nginx/pull/4587) Avoid unnecessary reloads generating lua_shared_dict directives
+- [X] [#4591](https://github.com/kubernetes/ingress-nginx/pull/4591) optimize: local cache global variable and avoid single lines over 80
+- [X] [#4592](https://github.com/kubernetes/ingress-nginx/pull/4592) refactor force ssl redirect logic
+- [X] [#4594](https://github.com/kubernetes/ingress-nginx/pull/4594) cleanup unused certificates
+- [X] [#4595](https://github.com/kubernetes/ingress-nginx/pull/4595) Rollback change of ModSecurity setting SecAuditLog
+- [X] [#4596](https://github.com/kubernetes/ingress-nginx/pull/4596) sort auth proxy headers from configmap
+- [X] [#4597](https://github.com/kubernetes/ingress-nginx/pull/4597) more meaningful assertion for tls hsts test
+- [X] [#4598](https://github.com/kubernetes/ingress-nginx/pull/4598) delete redundant config
+- [X] [#4600](https://github.com/kubernetes/ingress-nginx/pull/4600) Update nginx image
+- [X] [#4601](https://github.com/kubernetes/ingress-nginx/pull/4601) Hsts refactoring
+- [X] [#4602](https://github.com/kubernetes/ingress-nginx/pull/4602) fix bug with new and running configuration comparison
+- [X] [#4604](https://github.com/kubernetes/ingress-nginx/pull/4604) Change default for proxy-add-original-uri-header
+- [X] [#4606](https://github.com/kubernetes/ingress-nginx/pull/4606) Mount temporal directory volume for ingress controller
+- [X] [#4611](https://github.com/kubernetes/ingress-nginx/pull/4611) Fix custom default backend switch to default
+
+_Documentation:_
+
+- [X] [#4277](https://github.com/kubernetes/ingress-nginx/pull/4277) doc: fix image link.
+- [X] [#4316](https://github.com/kubernetes/ingress-nginx/pull/4316) Update how-it-works.md
+- [X] [#4329](https://github.com/kubernetes/ingress-nginx/pull/4329) Update references to oauth2_proxy
+- [X] [#4348](https://github.com/kubernetes/ingress-nginx/pull/4348) KEP process
+- [X] [#4351](https://github.com/kubernetes/ingress-nginx/pull/4351) KEP: Remove static SSL configuration mode
+- [X] [#4389](https://github.com/kubernetes/ingress-nginx/pull/4389) Fix docs build due to an invalid link
+- [X] [#4455](https://github.com/kubernetes/ingress-nginx/pull/4455) KEP: availability zone aware routing
+- [X] [#4581](https://github.com/kubernetes/ingress-nginx/pull/4581) Fix spelling and remove local reference of 404 docker image
+- [X] [#4582](https://github.com/kubernetes/ingress-nginx/pull/4582) Update kubectl-plugin docs
+- [X] [#4588](https://github.com/kubernetes/ingress-nginx/pull/4588) tls user guide --default-ssl-certificate clarification
+
 ### 0.25.1
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.25.1`
