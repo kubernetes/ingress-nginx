@@ -97,7 +97,7 @@ The following table shows a configuration option's name, type, and the default v
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
-|[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"10s"|
+|[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"240s"|
 |[load-balance](#load-balance)|string|"round_robin"|
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128|
 |[variables-hash-max-size](#variables-hash-max-size)|int|2048|
@@ -591,7 +591,7 @@ By default worker processes are not bound to any specific CPUs. The value can be
 
 ## worker-shutdown-timeout
 
-Sets a timeout for Nginx to [wait for worker to gracefully shutdown](http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout). _**default:**_ "10s"
+Sets a timeout for Nginx to [wait for worker to gracefully shutdown](http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout). _**default:**_ "240s"
 
 ## load-balance
 
