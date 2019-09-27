@@ -48,3 +48,5 @@ docker run --rm -it \
   -v ${AWS_FILE}:/root/aws.tfvars:ro \
   -v ${ENV_FILE}:/root/env.tfvars:ro \
   build-nginx-terraform
+
+docker rmi -f build-nginx-terraform
