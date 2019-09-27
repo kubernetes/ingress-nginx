@@ -70,7 +70,7 @@ daemon off;
 worker_processes 2;
 pid /run/nginx.pid;
 worker_rlimit_nofile 523264;
-worker_shutdown_timeout 10s;
+worker_shutdown_timeout 240s;
 events {
 	multi_accept        on;
 	worker_connections  16384;
