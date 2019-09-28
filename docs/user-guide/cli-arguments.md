@@ -23,6 +23,8 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--healthz-port int`              | Port to use for the healthz endpoint. (default 10254) |
 | `--http-port int`                 | Port to use for servicing HTTP traffic. (default 80) |
 | `--https-port int`                | Port to use for servicing HTTPS traffic. (default 443) |
+| `--status-port int`                | Port to use for the lua HTTP endpoint configuration. (default 10246) |
+| `--stream-port int`                | Port to use for the lua TCP/UDP endpoint configuration. (default 10247) |
 | `--ingress-class string`          | Name of the ingress class this controller satisfies. The class of an Ingress object is set using the annotation "kubernetes.io/ingress.class". All ingress classes are satisfied if this parameter is left empty. |
 | `--kubeconfig string`             | Path to a kubeconfig file containing authorization and API server information. |
 | `--log_backtrace_at traceLocation` | when logging hits line file:N, emit a stack trace (default :0) |
