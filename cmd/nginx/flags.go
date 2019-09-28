@@ -149,9 +149,9 @@ Requires the update-status parameter.`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host`)
 
-		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
-		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
-		_             = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
+		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
+		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
+
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
@@ -166,9 +166,13 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 			`The path of the validating webhook certificate PEM.`)
 		validationWebhookKey = flags.String("validating-webhook-key", "",
 			`The path of the validating webhook key PEM.`)
+
+		statusPort = flags.Int("status-port", 10246, `Port to use for the lua HTTP endpoint configuration.`)
+		streamPort = flags.Int("stream-port", 10247, "Port to use for the lua TCP/UDP endpoint configuration.")
+
+		profilerPort = flags.Int("profiler-port", 10245, "Port to use for expose the ingress controller Go profiler when it is enabled.")
 	)
 
-	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
 	flags.MarkDeprecated("force-namespace-isolation", `This flag doesn't do anything.`)
 
 	flags.MarkDeprecated("enable-dynamic-certificates", `Only dynamic mode is supported`)
@@ -214,6 +218,22 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 	if !ing_net.IsPortAvailable(*defServerPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --default-server-port", *defServerPort)
 	}
+
+	if !ing_net.IsPortAvailable(*statusPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --status-port", *statusPort)
+	}
+
+	if !ing_net.IsPortAvailable(*streamPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --stream-port", *streamPort)
+	}
+
+	if !ing_net.IsPortAvailable(*profilerPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --profiler-port", *profilerPort)
+	}
+
+	nginx.StatusPort = *statusPort
+	nginx.StreamPort = *streamPort
+	nginx.ProfilerPort = *profilerPort
 
 	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)
