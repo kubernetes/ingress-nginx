@@ -261,17 +261,21 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		klog.Errorf("Error getting ConfigMap %q: %v", configmapName, err)
 		return []ingress.L4Service{}
 	}
+
 	var svcs []ingress.L4Service
 	var svcProxyProtocol ingress.ProxyProtocol
+
 	rp := []int{
 		n.cfg.ListenPorts.HTTP,
 		n.cfg.ListenPorts.HTTPS,
 		n.cfg.ListenPorts.SSLProxy,
 		n.cfg.ListenPorts.Health,
 		n.cfg.ListenPorts.Default,
-		10255, // profiling port
+		nginx.ProfilerPort,
 		nginx.StatusPort,
+		nginx.StreamPort,
 	}
+
 	reserverdPorts := sets.NewInt(rp...)
 	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
 	for port, svcRef := range configmap.Data {

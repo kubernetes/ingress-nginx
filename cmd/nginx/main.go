@@ -44,6 +44,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
+	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/version"
 )
 
@@ -280,7 +281,7 @@ func registerProfiler() {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":10255"),
+		Addr:    fmt.Sprintf("127.0.0.1:%v", nginx.ProfilerPort),
 		Handler: mux,
 	}
 	klog.Fatal(server.ListenAndServe())

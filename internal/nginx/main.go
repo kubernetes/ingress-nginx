@@ -31,6 +31,11 @@ import (
 	"k8s.io/klog"
 )
 
+// TODO: Check https://github.com/kubernetes/kubernetes/blob/master/pkg/master/ports/ports.go for ports already being used
+
+// ProfilerPort port used by the ingress controller to expose the Go Profiler when it is enabled.
+var ProfilerPort = 10245
+
 // TemplatePath path of the NGINX template
 var TemplatePath = "/etc/nginx/template/nginx.tmpl"
 
@@ -38,7 +43,7 @@ var TemplatePath = "/etc/nginx/template/nginx.tmpl"
 var PID = "/tmp/nginx.pid"
 
 // StatusPort port used by NGINX for the status server
-var StatusPort = 10256
+var StatusPort = 10246
 
 // HealthPath defines the path used to define the health check location in NGINX
 var HealthPath = "/healthz"
@@ -51,7 +56,7 @@ var HealthCheckTimeout = 10 * time.Second
 var StatusPath = "/nginx_status"
 
 // StreamPort defines the port used by NGINX for the NGINX stream configuration socket
-var StreamPort = 10257
+var StreamPort = 10247
 
 // NewGetStatusRequest creates a new GET request to the internal NGINX status server
 func NewGetStatusRequest(path string) (int, []byte, error) {
