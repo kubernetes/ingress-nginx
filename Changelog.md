@@ -1,5 +1,14 @@
 # Changelog
 
+### 0.26.1
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.26.1`
+
+_Changes:_
+
+- [X] [#4617](https://github.com/kubernetes/ingress-nginx/pull/4617) Fix ports collision when hostNetwork=true
+- [X] [#4619](https://github.com/kubernetes/ingress-nginx/pull/4619) Fix issue #4244
+
 ### 0.26.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.26.0`
@@ -60,16 +69,16 @@ _Non-functional improvements:_
 
 - [Removal of internal NGINX unix sockets](https://github.com/kubernetes/ingress-nginx/pull/4531)
 - Automation of NGINX image using [terraform scripts](https://github.com/kubernetes/ingress-nginx/pull/4484)
-- Removal of Go profiling on port `:10254` to use `localhost:10255`
+- Removal of Go profiling on port `:10254` to use `localhost:10245`
 
   To profile the ingress controller Go binary, use:
 
   ```console
   INGRESS_PODS=($(kubectl get pods -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -o 'jsonpath={..metadata.name}'))
-  kubectl port-forward -n ingress-nginx pod/${INGRESS_PODS[0]} 10255
+  kubectl port-forward -n ingress-nginx pod/${INGRESS_PODS[0]} 10245
   ```
 
-Using the URL http://localhost:10255/debug/pprof/ to reach the profiler.
+Using the URL http://localhost:10245/debug/pprof/ to reach the profiler.
 
 _Changes:_
 
