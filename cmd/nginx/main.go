@@ -135,7 +135,7 @@ func main() {
 		go registerProfiler()
 	}
 
-	registerHealthz(ngx, mux)
+	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
 	registerHandlers(mux)
 
@@ -247,9 +247,10 @@ func registerHandlers(mux *http.ServeMux) {
 	})
 }
 
-func registerHealthz(ic *controller.NGINXController, mux *http.ServeMux) {
+func registerHealthz(healthPath string, ic *controller.NGINXController, mux *http.ServeMux) {
 	// expose health check endpoint (/healthz)
-	healthz.InstallHandler(mux,
+	healthz.InstallPathHandler(mux,
+		healthPath,
 		healthz.PingHealthz,
 		ic,
 	)
