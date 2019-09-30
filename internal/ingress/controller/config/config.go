@@ -133,6 +133,9 @@ type Configuration struct {
 	// By default this is disabled
 	EnableOWASPCoreRules bool `json:"enable-owasp-modsecurity-crs"`
 
+	// ModSecuritySnippet adds custom rules to modsecurity section of nginx configuration
+	ModsecuritySnippet string `json:"modsecurity-snippet"`
+
 	// ClientHeaderBufferSize allows to configure a custom buffer
 	// size for reading client request header
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
