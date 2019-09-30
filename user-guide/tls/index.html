@@ -1325,6 +1325,8 @@ accessing the catch-all server.
 If this flag is not provided NGINX will use a self-signed certificate.</p>
 <p>For instance, if you have a TLS secret <code class="codehilite">foo-tls</code> in the <code class="codehilite">default</code> namespace,
 add <code class="codehilite">--default-ssl-certificate=default/foo-tls</code> in the <code class="codehilite">nginx-controller</code> deployment.</p>
+<p>The default certificate will also be used for ingress <code class="codehilite">tls:</code> sections that do not
+have a <code class="codehilite">secretName</code> option.</p>
 <h2 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h2>
 <p>The <a href="cli-arguments/"><code class="codehilite">--enable-ssl-passthrough</code></a> flag enables the SSL Passthrough feature, which is disabled by
 default. This is required to enable passthrough backends in Ingress objects.</p>

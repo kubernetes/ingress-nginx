@@ -1155,7 +1155,8 @@
 To enable the ModSecurity feature we need to specify <code class="codehilite">enable-modsecurity: &quot;true&quot;</code> in the configuration configmap.</p>
 <blockquote>
 <p><strong>Note:</strong> the default configuration use detection only, because that minimizes the chances of post-installation disruption.
-The file <code class="codehilite">/var/log/modsec_audit.log</code> contains the log of ModSecurity.</p>
+Due to the value of the setting <a href="https://github.com/SpiderLabs/ModSecurity/wiki/Reference-Manual-(v2.x)#secauditlogtype">SecAuditLogType=Concurrent</a> the ModSecurity log is stored in multiple files inside the directory <code class="codehilite">/var/log/audit</code>.
+The default <code class="codehilite">Serial</code> value in SecAuditLogType can impact performance.</p>
 </blockquote>
 <p>The OWASP ModSecurity Core Rule Set (CRS) is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls. The CRS aims to protect web applications from a wide range of attacks, including the OWASP Top Ten, with a minimum of false alerts.
 The directory <code class="codehilite">/etc/nginx/owasp-modsecurity-crs</code> contains the <a href="https://github.com/SpiderLabs/owasp-modsecurity-crs">owasp-modsecurity-crs repository</a>.

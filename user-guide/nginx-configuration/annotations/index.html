@@ -1961,6 +1961,10 @@ table below.</p>
 <td>cookie</td>
 </tr>
 <tr>
+<td><a href="#session-affinity">nginx.ingress.kubernetes.io/affinity-mode</a></td>
+<td>"balanced" or "persistent"</td>
+</tr>
+<tr>
 <td><a href="#authentication">nginx.ingress.kubernetes.io/auth-realm</a></td>
 <td>string</td>
 </tr>
@@ -2006,6 +2010,10 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#external-authentication">nginx.ingress.kubernetes.io/auth-cache-duration</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#external-authentication">nginx.ingress.kubernetes.io/auth-proxy-set-headers</a></td>
 <td>string</td>
 </tr>
 <tr>
@@ -2386,6 +2394,7 @@ Set the annotation <code class="codehilite">nginx.ingress.kubernetes.io/rewrite-
 <h3 id="session-affinity">Session Affinity<a class="headerlink" href="#session-affinity" title="Permanent link">&para;</a></h3>
 <p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/affinity</code> enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is <code class="codehilite">cookie</code>.</p>
+<p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/affinity-mode</code> defines the stickyness of a session. Setting this to <code class="codehilite">balanced</code> (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to <code class="codehilite">persistent</code> will not rebalance sessions to new servers, therefore providing maximum stickyness.</p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>If more than one Ingress is defined for a host and at least one Ingress uses <code class="codehilite">nginx.ingress.kubernetes.io/affinity: cookie</code>, then only paths on the Ingress using <code class="codehilite">nginx.ingress.kubernetes.io/affinity</code> will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server.</p>
@@ -2617,6 +2626,8 @@ applied to each location provided in the ingress rule.</p>
   <code class="codehilite">&lt;SignIn_URL&gt;</code> to specify the location of the error page.</li>
 <li><code class="codehilite">nginx.ingress.kubernetes.io/auth-response-headers</code>:
   <code class="codehilite">&lt;Response_Header_1, ..., Response_Header_n&gt;</code> to specify headers to pass to backend once authentication request completes.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/auth-proxy-set-headers</code>:
+  <code class="codehilite">&lt;ConfigMap&gt;</code> the name of a ConfigMap that specifies headers to pass to the authentication service</li>
 <li><code class="codehilite">nginx.ingress.kubernetes.io/auth-request-redirect</code>:
   <code class="codehilite">&lt;Request_Redirect_URL&gt;</code>  to specify the X-Auth-Request-Redirect header value.</li>
 <li><code class="codehilite">nginx.ingress.kubernetes.io/auth-cache-key</code>:

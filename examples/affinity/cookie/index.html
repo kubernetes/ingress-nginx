@@ -1224,6 +1224,11 @@
 <td>string (NGINX only supports <code class="codehilite">cookie</code>)</td>
 </tr>
 <tr>
+<td>nginx.ingress.kubernetes.io/affinity-mode</td>
+<td>The affinity mode defines how sticky a session is. Use <code class="codehilite">balanced</code> to redistribute some sessions when scaling pods or <code class="codehilite">persistent</code> for maximum stickyness.</td>
+<td><code class="codehilite">balanced</code> (default) or <code class="codehilite">persistent</code></td>
+</tr>
+<tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-name</td>
 <td>Name of the cookie that will be created</td>
 <td>string (defaults to <code class="codehilite">INGRESSCOOKIE</code>)</td>

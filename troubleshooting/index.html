@@ -1336,7 +1336,7 @@ methods to obtain more information.</p>
 <span class="go">worker_processes 2;</span>
 <span class="go">pid /run/nginx.pid;</span>
 <span class="go">worker_rlimit_nofile 523264;</span>
-<span class="go">worker_shutdown_timeout 10s;</span>
+<span class="go">worker_shutdown_timeout 240s;</span>
 <span class="go">events {</span>
 <span class="go">    multi_accept        on;</span>
 <span class="go">    worker_connections  16384;</span>

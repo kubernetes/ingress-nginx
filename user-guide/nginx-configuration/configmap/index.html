@@ -3563,7 +3563,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#worker-shutdown-timeout">worker-shutdown-timeout</a></td>
 <td align="left">string</td>
-<td align="left">"10s"</td>
+<td align="left">"240s"</td>
 </tr>
 <tr>
 <td align="left"><a href="#load-balance">load-balance</a></td>
@@ -3633,7 +3633,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#proxy-add-original-uri-header">proxy-add-original-uri-header</a></td>
 <td align="left">bool</td>
-<td align="left">"true"</td>
+<td align="left">"false"</td>
 </tr>
 <tr>
 <td align="left"><a href="#generate-request-id">generate-request-id</a></td>
@@ -4181,7 +4181,7 @@ By default worker processes are not bound to any specific CPUs. The value can be
 <li>auto: binding worker processes automatically to available CPUs.</li>
 </ul>
 <h2 id="worker-shutdown-timeout">worker-shutdown-timeout<a class="headerlink" href="#worker-shutdown-timeout" title="Permanent link">&para;</a></h2>
-<p>Sets a timeout for Nginx to <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout">wait for worker to gracefully shutdown</a>. <em><strong>default:</strong></em> "10s"</p>
+<p>Sets a timeout for Nginx to <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout">wait for worker to gracefully shutdown</a>. <em><strong>default:</strong></em> "240s"</p>
 <h2 id="load-balance">load-balance<a class="headerlink" href="#load-balance" title="Permanent link">&para;</a></h2>
 <p>Sets the algorithm to use for load balancing.
 The value can either be:</p>
