@@ -35,6 +35,7 @@ The following table shows a configuration option's name, type, and the default v
 |[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"|
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
+|[modsecurity-snippet](#modsecurity-snippet)|string|""|
 |[enable-owasp-modsecurity-crs](#enable-owasp-modsecurity-crs)|bool|"false"|
 |[client-header-buffer-size](#client-header-buffer-size)|string|"1k"|
 |[client-header-timeout](#client-header-timeout)|int|60|
@@ -220,6 +221,10 @@ Enables the modsecurity module for NGINX. _**default:**_ is disabled
 ## enable-owasp-modsecurity-crs
 
 Enables the OWASP ModSecurity Core Rule Set (CRS). _**default:**_ is disabled
+
+## modsecurity-snippet
+
+Adds custom rules to modsecurity section of nginx configration
 
 ## client-header-buffer-size
 
