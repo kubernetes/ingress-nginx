@@ -38,15 +38,15 @@ if [ ! -f "${ENV_FILE}" ]; then
 fi
 
 # build local terraform image to build nginx
-docker build -t build-nginx-terraform $DIR/images/nginx
+docker build -t build-ingress-controller-terraform $DIR/images/ingress-controller
 
 # build nginx and publish docker images to quay.io.
 # this can take up to two hours.
 docker run --rm -it \
-  --volume $DIR/images/nginx:/tf \
+  --volume $DIR/images/ingress-controller:/tf \
   -w /tf \
   -v ${AWS_FILE}:/root/aws.tfvars:ro \
   -v ${ENV_FILE}:/root/env.tfvars:ro \
-  build-nginx-terraform
+  build-ingress-controller-terraform
 
-docker rmi -f build-nginx-terraform
+docker rmi -f build-ingress-controller-terraform
