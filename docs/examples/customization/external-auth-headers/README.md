@@ -28,7 +28,6 @@ ingress "secure-demo-echo-service" created
 
 $ kubectl get po
 NAME                                        READY     STATUS    RESTARTS   AGE
-NAME                                        READY     STATUS    RESTARTS   AGE
 demo-auth-service-2769076528-7g9mh          1/1       Running            0          30s
 demo-echo-service-3636052215-3vw8c          1/1       Running            0          29s
 
