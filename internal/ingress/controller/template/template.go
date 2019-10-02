@@ -1251,6 +1251,11 @@ func httpListener(addresses []string, co string, tc config.TemplateConfig) []str
 		}
 
 		l = append(l, co)
+
+		if tc.Cfg.UseHTTP2 {
+			l = append(l, "http2")
+		}
+
 		l = append(l, ";")
 		out = append(out, strings.Join(l, " "))
 	}
