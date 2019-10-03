@@ -131,9 +131,9 @@ http {
     {{ end }}
 
     {{ if or $cfg.RealIPRecursiveSearch $cfg.UseProxyProtocol }}
-    real_ip_recursive   on;
+    real_ip_recursive on;
     {{ else }}
-    real_ip_recursive   off;
+    real_ip_recursive off;
     {{ end }}
 
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
