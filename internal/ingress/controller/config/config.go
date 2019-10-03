@@ -461,6 +461,16 @@ type Configuration struct {
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
 
+	// If recursive search is disabled, the original client address that matches one
+	// of the trusted addresses is replaced by the last address sent in the request
+	// header field defined by the real_ip_header directive.
+	// If recursive search is enabled, the original client address that matches one of
+	// the trusted addresses is replaced by the last non-trusted address sent in the
+	// request header field.
+	// This is enabled if Proxy-Protocol is enabled.
+	// Default: false
+	RealIPRecursiveSearch bool `json:"real-ip-recursive-search,omitempty"`
+
 	// If the request does not have a request-id, should we generate a random value?
 	// Default: true
 	GenerateRequestID bool `json:"generate-request-id,omitempty"`
@@ -671,6 +681,7 @@ func NewDefault() Configuration {
 		UseForwardedHeaders:              false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ComputeFullForwardedFor:          false,
+		RealIPRecursiveSearch:            false,
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
 		HTTP2MaxFieldSize:                "4k",
