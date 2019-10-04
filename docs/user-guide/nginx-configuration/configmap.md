@@ -112,6 +112,7 @@ The following table shows a configuration option's name, type, and the default v
 |[use-forwarded-headers](#use-forwarded-headers)|bool|"false"|
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
+|[real-ip-recursive-search](#real-ip-recursive-search)|bool|"false"|
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"false"|
 |[generate-request-id](#generate-request-id)|bool|"true"|
 |[enable-opentracing](#enable-opentracing)|bool|"false"|
@@ -694,6 +695,10 @@ Sets the header field for identifying the originating IP address of a client. _*
 ## compute-full-forwarded-for
 
 Append the remote address to the X-Forwarded-For header instead of replacing it. When this option is enabled, the upstream application is responsible for extracting the client IP based on its own list of trusted proxies.
+
+## real-ip-recursive-search
+
+By default, the original client address that matches one of the trusted addresses is replaced by the last address sent in the request header field defined by the real_ip_header directive. If recursive search is enabled, the original client address that matches one of the trusted addresses is replaced by the last non-trusted address instead. `real_ip_recursive` is enabled if Proxy-Protocol is enabled.
 
 ## proxy-add-original-uri-header
 
