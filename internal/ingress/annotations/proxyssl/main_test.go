@@ -94,6 +94,7 @@ func TestAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-session-reuse")] = "off"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-verify")] = "on"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-verify-depth")] = "3"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-name")] = "testname.namespace"
 
 	ing.SetAnnotations(data)
 
@@ -128,6 +129,10 @@ func TestAnnotations(t *testing.T) {
 	if u.VerifyDepth != 3 {
 		t.Errorf("expected %v but got %v", 3, u.VerifyDepth)
 	}
+	if u.ProxySSLName != "testname.namespace" {
+		t.Errorf("expected %v but got %v", "testname.namespace", u.ProxySSLName)
+	}
+
 }
 
 func TestInvalidAnnotations(t *testing.T) {
