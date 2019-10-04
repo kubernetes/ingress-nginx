@@ -824,6 +824,9 @@ stream {
         proxy_ssl_protocols                     {{ $server.ProxySSL.Protocols }};
         proxy_ssl_verify                        {{ $server.ProxySSL.Verify }};
         proxy_ssl_verify_depth                  {{ $server.ProxySSL.VerifyDepth }};
+        {{ if not (empty $server.ProxySSL.ProxySSLName) }}
+        proxy_ssl_name                           {{ $server.ProxySSL.ProxySSLName }};
+        {{ end }}        
         {{ end }}
 
         {{ if not (empty $server.SSLCiphers) }}
