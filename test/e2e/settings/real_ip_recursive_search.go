@@ -100,7 +100,7 @@ var _ = framework.IngressNginxDescribe("Real IP Recursive Search", func() {
 		host := "real-ip-recursive-search"
 		expectedConfig := "real_ip_recursive on;"
 
-		f.UpdateNginxConfigMapData("proxy-protocol", "true")
+		f.UpdateNginxConfigMapData("use-proxy-protocol", "true")
 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
