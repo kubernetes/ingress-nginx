@@ -9,10 +9,19 @@ local chashsubset = require("balancer.chashsubset")
 local sticky_balanced = require("balancer.sticky_balanced")
 local sticky_persistent = require("balancer.sticky_persistent")
 local ewma = require("balancer.ewma")
+local string = string
+local ipairs = ipairs
+local table = table
+local getmetatable = getmetatable
+local tostring = tostring
+local pairs = pairs
+local math = math
+
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
--- it will take <the delay until controller POSTed the backend object to the Nginx endpoint> + BACKENDS_SYNC_INTERVAL
+-- it will take <the delay until controller POSTed the backend object to the
+-- Nginx endpoint> + BACKENDS_SYNC_INTERVAL
 local BACKENDS_SYNC_INTERVAL = 1
 
 local DEFAULT_LB_ALG = "round_robin"
@@ -31,13 +40,16 @@ local balancers = {}
 local function get_implementation(backend)
   local name = backend["load-balance"] or DEFAULT_LB_ALG
 
-  if backend["sessionAffinityConfig"] and backend["sessionAffinityConfig"]["name"] == "cookie" then
+  if backend["sessionAffinityConfig"] and
+     backend["sessionAffinityConfig"]["name"] == "cookie" then
     if backend["sessionAffinityConfig"]["mode"] == 'persistent' then
       name = "sticky_persistent"
     else
       name = "sticky_balanced"
     end
-  elseif backend["upstreamHashByConfig"] and backend["upstreamHashByConfig"]["upstream-hash-by"] then
+
+  elseif backend["upstreamHashByConfig"] and
+         backend["upstreamHashByConfig"]["upstream-hash-by"] then
     if backend["upstreamHashByConfig"]["upstream-hash-by-subset"] then
       name = "chashsubset"
     else
@@ -47,7 +59,8 @@ local function get_implementation(backend)
 
   local implementation = IMPLEMENTATIONS[name]
   if not implementation then
-    ngx.log(ngx.WARN, string.format("%s is not supported, falling back to %s", backend["load-balance"], DEFAULT_LB_ALG))
+    ngx.log(ngx.WARN, backend["load-balance"], "is not supported, ",
+            "falling back to ", DEFAULT_LB_ALG)
     implementation = IMPLEMENTATIONS[DEFAULT_LB_ALG]
   end
 
@@ -81,7 +94,8 @@ end
 
 local function sync_backend(backend)
   if not backend.endpoints or #backend.endpoints == 0 then
-    ngx.log(ngx.INFO, string.format("there is no endpoint for backend %s. Removing...", backend.name))
+    ngx.log(ngx.INFO, "there is no endpoint for backend ", backend.name,
+            ". Removing...")
     balancers[backend.name] = nil
     return
   end
@@ -99,12 +113,14 @@ local function sync_backend(backend)
   -- if it is not then we deduce LB algorithm has changed for the backend
   if getmetatable(balancer) ~= implementation then
     ngx.log(ngx.INFO,
-      string.format("LB algorithm changed from %s to %s, resetting the instance", balancer.name, implementation.name))
+        string.format("LB algorithm changed from %s to %s, resetting the instance",
+                      balancer.name, implementation.name))
     balancers[backend.name] = implementation:new(backend)
     return
   end
 
-  local service_type = backend.service and backend.service.spec and backend.service.spec["type"]
+  local service_type = backend.service and backend.service.spec
+                       and backend.service.spec["type"]
   if service_type == "ExternalName" then
     backend = resolve_external_names(backend)
   end
@@ -154,25 +170,31 @@ local function route_to_alternative_balancer(balancer)
 
   local alternative_balancer = balancers[backend_name]
   if not alternative_balancer then
-    ngx.log(ngx.ERR, "no alternative balancer for backend: " .. tostring(backend_name))
+    ngx.log(ngx.ERR, "no alternative balancer for backend: ",
+            tostring(backend_name))
     return false
   end
 
   local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
   if not traffic_shaping_policy then
-    ngx.log(ngx.ERR, "traffic shaping policy is not set for balanacer of backend: " .. tostring(backend_name))
+    ngx.log(ngx.ERR, "traffic shaping policy is not set for balanacer ",
+            "of backend: ", tostring(backend_name))
     return false
   end
 
-  local target_header = util.replace_special_char(traffic_shaping_policy.header, "-", "_")
+  local target_header = util.replace_special_char(traffic_shaping_policy.header,
+                                                  "-", "_")
   local header = ngx.var["http_" .. target_header]
   if header then
-    if traffic_shaping_policy.headerValue and #traffic_shaping_policy.headerValue > 0 then
+    if traffic_shaping_policy.headerValue
+       and #traffic_shaping_policy.headerValue > 0 then
       if traffic_shaping_policy.headerValue == header then
         return true
       end
+
     elseif header == "always" then
       return true
+
     elseif header == "never" then
       return false
     end
@@ -223,7 +245,8 @@ function _M.init_worker()
   sync_backends() -- when worker starts, sync backends without delay
   local _, err = ngx.timer.every(BACKENDS_SYNC_INTERVAL, sync_backends)
   if err then
-    ngx.log(ngx.ERR, string.format("error when setting up timer.every for sync_backends: %s", tostring(err)))
+    ngx.log(ngx.ERR, "error when setting up timer.every for sync_backends: ",
+            tostring(err))
   end
 end
 
@@ -251,7 +274,8 @@ function _M.balance()
 
   local ok, err = ngx_balancer.set_current_peer(peer)
   if not ok then
-    ngx.log(ngx.ERR, string.format("error while setting current upstream peer %s: %s", peer, err))
+    ngx.log(ngx.ERR, "error while setting current upstream peer ", peer,
+            ": ", err)
   end
 end
 
