@@ -179,6 +179,7 @@ http {
 
     geoip2 /etc/nginx/geoip/GeoLite2-ASN.mmdb {
         $geoip2_asn source=$remote_addr autonomous_system_number;
+        $geoip2_org source=$remote_addr autonomous_system_organization;
     }
     {{ end }}
 
