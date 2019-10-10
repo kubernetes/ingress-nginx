@@ -642,7 +642,7 @@ stream {
 
     lua_add_variable $proxy_upstream_name;
 
-    log_format log_stream {{ $cfg.LogFormatStream }};
+    log_format log_stream '{{ $cfg.LogFormatStream }}';
 
     {{ if $cfg.DisableAccessLog }}
     access_log off;
