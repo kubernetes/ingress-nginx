@@ -146,7 +146,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 		Expect(resp.StatusCode).Should(Equal(200))
 	})
 
-	It("should return status 503 for service type=ExternalName with an invalid host", func() {
+	It("should return status 502 for service type=ExternalName with an invalid host", func() {
 		host := "echo"
 
 		svc := &core.Service{
@@ -175,7 +175,7 @@ var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 			Set("Host", host).
 			End()
 		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(503))
+		Expect(resp.StatusCode).Should(Equal(502))
 	})
 
 	It("should return 200 for service type=ExternalName using a port name", func() {

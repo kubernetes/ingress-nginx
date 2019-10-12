@@ -112,7 +112,7 @@ func TestGetEndpoints(t *testing.T) {
 			&corev1.Service{
 				Spec: corev1.ServiceSpec{
 					Type:         corev1.ServiceTypeExternalName,
-					ExternalName: "foo.bar",
+					ExternalName: "1#invalid.hostname",
 					Ports: []corev1.ServicePort{
 						{
 							Name:       "default",
