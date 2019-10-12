@@ -43,8 +43,8 @@ func newUpstream(name string) *ingress.Backend {
 }
 
 // upstreamName returns a formatted upstream name based on namespace, service, and port
-func upstreamName(namespace string, service string, port intstr.IntOrString) string {
-	return fmt.Sprintf("%v-%v-%v", namespace, service, port.String())
+func upstreamName(host,namespace string, service string, port intstr.IntOrString) string {
+	return fmt.Sprintf("%v-%v-%v-%v", host, namespace, service, port.String())
 }
 
 // sysctlSomaxconn returns the maximum number of connections that can be queued
