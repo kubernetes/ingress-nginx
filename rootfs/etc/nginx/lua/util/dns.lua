@@ -118,7 +118,7 @@ function _M.lookup(host)
       return addresses
     end
 
-    ngx_log(ngx_ERR, "failed to query the DNS server:\n" .. table_concat(dns_errors, "\n"))
+    ngx_log(ngx_ERR, "failed to query the DNS server for ", host, ":\n", table_concat(dns_errors, "\n"))
 
     return { host }
   end
@@ -147,7 +147,7 @@ function _M.lookup(host)
   end
 
   if #dns_errors > 0 then
-    ngx_log(ngx_ERR, "failed to query the DNS server:\n" .. table_concat(dns_errors, "\n"))
+    ngx_log(ngx_ERR, "failed to query the DNS server for ", host, ":\n", table_concat(dns_errors, "\n"))
   end
 
   return { host }
