@@ -37,6 +37,9 @@ The following **Mandatory Command** is required for all deployments.
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
 ```
 
+!!! tip
+    If you are using a Kubernetes version previous to 1.14, you need to change `kubernetes.io/os` to `beta.kubernetes.io/os` at line 217 of [mandatory.yaml](https://github.com/kubernetes/ingress-nginx/blob/master/deploy/static/mandatory.yaml#L217), see [Labels details](https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/).
+
 ### Provider Specific Steps
 
 There are cloud provider specific yaml files.
