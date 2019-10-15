@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
     
     
       
@@ -657,6 +657,13 @@
         <li class="md-nav__item">
   <a href="#enable-owasp-modsecurity-crs" class="md-nav__link">
     enable-owasp-modsecurity-crs
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modsecurity-snippet" class="md-nav__link">
+    modsecurity-snippet
   </a>
   
 </li>
@@ -2232,6 +2239,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#modsecurity-snippet" class="md-nav__link">
+    modsecurity-snippet
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#client-header-buffer-size" class="md-nav__link">
     client-header-buffer-size
   </a>
@@ -3251,6 +3265,11 @@ Same for numbers, like "100".</p>
 <td align="left">"false"</td>
 </tr>
 <tr>
+<td align="left"><a href="#modsecurity-snippet">modsecurity-snippet</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
 <td align="left"><a href="#enable-owasp-modsecurity-crs">enable-owasp-modsecurity-crs</a></td>
 <td align="left">bool</td>
 <td align="left">"false"</td>
@@ -3954,6 +3973,8 @@ Same for numbers, like "100".</p>
 <p>Enables the modsecurity module for NGINX. <em><strong>default:</strong></em> is disabled</p>
 <h2 id="enable-owasp-modsecurity-crs">enable-owasp-modsecurity-crs<a class="headerlink" href="#enable-owasp-modsecurity-crs" title="Permanent link">&para;</a></h2>
 <p>Enables the OWASP ModSecurity Core Rule Set (CRS). <em><strong>default:</strong></em> is disabled</p>
+<h2 id="modsecurity-snippet">modsecurity-snippet<a class="headerlink" href="#modsecurity-snippet" title="Permanent link">&para;</a></h2>
+<p>Adds custom rules to modsecurity section of nginx configration</p>
 <h2 id="client-header-buffer-size">client-header-buffer-size<a class="headerlink" href="#client-header-buffer-size" title="Permanent link">&para;</a></h2>
 <p>Allows to configure a custom buffer size for reading client request header.</p>
 <p><em>References:</em>
@@ -4482,7 +4503,7 @@ It's possible to use here full strings and regular expressions. More details abo
       
     </div>
     
-      <script src="../../../assets/javascripts/application.c648116f.js"></script>
+      <script src="../../../assets/javascripts/application.ac79c3b0.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
       

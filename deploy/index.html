@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
     
     
       
@@ -1462,6 +1462,10 @@ To change this behavior use the flag <code class="codehilite">--watch-namespace<
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml</span>
 </pre></div>
 
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you are using a Kubernetes version previous to 1.14, you need to change <code class="codehilite">kubernetes.io/os</code> to <code class="codehilite">beta.kubernetes.io/os</code> at line 217 of <a href="https://github.com/kubernetes/ingress-nginx/blob/master/deploy/static/mandatory.yaml#L217">mandatory.yaml</a>, see <a href="https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/">Labels details</a>.</p>
+</div>
 <h3 id="provider-specific-steps">Provider Specific Steps<a class="headerlink" href="#provider-specific-steps" title="Permanent link">&para;</a></h3>
 <p>There are cloud provider specific yaml files.</p>
 <h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link">&para;</a></h4>
@@ -1645,7 +1649,7 @@ To install the chart with the release name <code class="codehilite">my-nginx</co
       
     </div>
     
-      <script src="../assets/javascripts/application.c648116f.js"></script>
+      <script src="../assets/javascripts/application.ac79c3b0.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
       
