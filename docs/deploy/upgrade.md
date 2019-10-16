@@ -33,7 +33,7 @@ The easiest way to do this is e.g. (do note you may need to change the name para
 
 ```
 kubectl set image deployment/nginx-ingress-controller \
-  nginx-ingress-controller=nginx:quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.18.0
+  nginx-ingress-controller=quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.18.0
 ```
 
 For interactive editing, use `kubectl edit deployment nginx-ingress-controller`.
