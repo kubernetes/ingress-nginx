@@ -122,13 +122,13 @@ $ make build
 Build a local container image
 
 ```console
-$ TAG=<tag> REGISTRY=$USER/ingress-controller make docker-build
+$ TAG=<tag> REGISTRY=$USER/ingress-controller make container
 ```
 
 Push the container image to a remote repository
 
 ```console
-$ TAG=<tag> REGISTRY=$USER/ingress-controller make docker-push
+$ TAG=<tag> REGISTRY=$USER/ingress-controller make push
 ```
 
 ## Deploying
