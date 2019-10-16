@@ -1440,11 +1440,11 @@ or push an image to a remote repository.</p>
 </pre></div></p>
 <p><a href="https://github.com/kubernetes/ingress-nginx/issues/387">TODO</a>: add more specific instructions needed for raw server binary.</p>
 <p>Build a local container image</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make docker-build
+<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make container
 </pre></div>
 
 <p>Push the container image to a remote repository</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make docker-push
+<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make push
 </pre></div>
 
 <h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link">&para;</a></h2>
