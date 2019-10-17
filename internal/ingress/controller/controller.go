@@ -491,17 +491,6 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					server.Hostname, ingKey)
 			}
 
-			if server.ProxySSL.CAFileName == "" {
-				server.ProxySSL = anns.ProxySSL
-				if server.ProxySSL.Secret != "" && server.ProxySSL.CAFileName == "" {
-					klog.V(3).Infof("Secret %q has no 'ca.crt' key, client cert authentication disabled for Ingress %q",
-						server.ProxySSL.Secret, ingKey)
-				}
-			} else {
-				klog.V(3).Infof("Server %q is already configured for client cert authentication (Ingress %q)",
-					server.Hostname, ingKey)
-			}
-
 			if rule.HTTP == nil {
 				klog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
 				continue
@@ -1170,6 +1159,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.EnableGlobalAuth = anns.EnableGlobalAuth
 	loc.HTTP2PushPreload = anns.HTTP2PushPreload
 	loc.Proxy = anns.Proxy
+	loc.ProxySSL = anns.ProxySSL
 	loc.RateLimit = anns.RateLimit
 	loc.Redirect = anns.Redirect
 	loc.Rewrite = anns.Rewrite
