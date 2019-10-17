@@ -843,6 +843,7 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 		CASHA:       cert.CASHA,
 		CRLFileName: cert.CRLFileName,
 		CRLSHA:      cert.CRLSHA,
+		PemFileName: cert.PemFileName,
 	}, nil
 }
 
