@@ -16,6 +16,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--disable-catch-all`             | Disable support for catch-all Ingresses. |
 | `--election-id string`            | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
 | `--enable-dynamic-certificates`   | Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off (default behaviour). Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. Once the backing Lua shared dictionary `certificate_data` is full, the least recently used certificate will be removed to store new ones. (enabled by default) |
+| `--enable-metrics`                | Enable the collection of metrics for scraping by Prometheus (default true) |
 | `--enable-ssl-chain-completion`   | Autocomplete SSL certificate chains with missing intermediate CA certificates. A valid certificate chain is required to enable OCSP stapling. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default true) |
 | `--enable-ssl-passthrough`        | Enable SSL Passthrough. |
 | `--health-check-path string`      | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
@@ -30,6 +31,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--log_backtrace_at traceLocation` | when logging hits line file:N, emit a stack trace (default :0) |
 | `--log_dir string`                | If non-empty, write log files in this directory |
 | `--logtostderr`                   | log to standard error instead of files (default true) |
+| `--metrics-per-host`              | enable host labels for prometheus metrics. You may want to disable this to reduce the number of time-series created. (default true) |
 | `--profiling`                     | Enable profiling via web interface host:port/debug/pprof/ (default true) |
 | `--publish-service string`        | Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies. |
 | `--publish-status-address string` | Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
