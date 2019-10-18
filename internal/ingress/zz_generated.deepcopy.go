@@ -33,7 +33,6 @@ func (in *Backend) DeepCopyInto(out *Backend) {
 		(*in).DeepCopyInto(*out)
 	}
 	out.Port = in.Port
-	out.SecureCACert = in.SecureCACert
 	if in.Endpoints != nil {
 		in, out := &in.Endpoints, &out.Endpoints
 		*out = make([]Endpoint, len(*in))

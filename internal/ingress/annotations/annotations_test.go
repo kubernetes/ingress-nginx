@@ -110,41 +110,6 @@ func buildIngress() *networking.Ingress {
 	}
 }
 
-func TestSecureVerifyCACert(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{
-		MockSecrets: map[string]*apiv1.Secret{
-			"default/secure-verify-ca": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "secure-verify-ca",
-				},
-			},
-		},
-	})
-
-	anns := []struct {
-		it          int
-		annotations map[string]string
-		exists      bool
-	}{
-		{1, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert: "not"}, false},
-		{2, map[string]string{backendProtocol: "HTTP", annotationSecureVerifyCACert: "secure-verify-ca"}, false},
-		{3, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert: "secure-verify-ca"}, true},
-		{4, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert + "_not": "secure-verify-ca"}, false},
-		{5, map[string]string{backendProtocol: "HTTPS"}, false},
-		{6, map[string]string{}, false},
-		{7, nil, false},
-	}
-
-	for _, ann := range anns {
-		ing := buildIngress()
-		ing.SetAnnotations(ann.annotations)
-		su := ec.Extract(ing).SecureUpstream
-		if (su.CACert.CAFileName != "") != ann.exists {
-			t.Errorf("Expected exists was %v on iteration %v", ann.exists, ann.it)
-		}
-	}
-}
-
 func TestSSLPassthrough(t *testing.T) {
 	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
