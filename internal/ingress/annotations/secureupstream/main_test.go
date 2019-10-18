@@ -104,7 +104,7 @@ func TestAnnotations(t *testing.T) {
 			"default/secure-verify-ca": {},
 		},
 	}).Parse(ing)
-	if err == nil {
+	if err != nil {
 		t.Errorf("Unexpected error on ingress: %v", err)
 	}
 }
