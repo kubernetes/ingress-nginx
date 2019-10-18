@@ -706,8 +706,6 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			klog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
 
-			upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
-
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
@@ -770,8 +768,6 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				klog.V(3).Infof("Creating upstream %q", name)
 				upstreams[name] = newUpstream(name)
 				upstreams[name].Port = path.Backend.ServicePort
-
-				upstreams[name].SecureCACert = anns.SecureUpstream.CACert
 
 				upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset

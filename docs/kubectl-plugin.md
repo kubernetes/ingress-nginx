@@ -121,11 +121,6 @@ $ kubectl ingress-nginx backends -n ingress-nginx
       }
     },
     "port": 0,
-    "secureCACert": {
-      "secret": "",
-      "caFilename": "",
-      "caSha": ""
-    },
     "sslPassthrough": false,
     "endpoints": [
       {
