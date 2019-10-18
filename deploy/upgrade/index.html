@@ -1234,7 +1234,7 @@ in the controller Deployment.</p>
 <p>simply change the <code class="codehilite">0.9.0</code> tag to the version you wish to upgrade to.
 The easiest way to do this is e.g. (do note you may need to change the name parameter according to your installation):</p>
 <div class="codehilite"><pre><span></span>kubectl set image deployment/nginx-ingress-controller \
-  nginx-ingress-controller=nginx:quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.18.0
+  nginx-ingress-controller=quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.18.0
 </pre></div>
 
 <p>For interactive editing, use <code class="codehilite">kubectl edit deployment nginx-ingress-controller</code>.</p>

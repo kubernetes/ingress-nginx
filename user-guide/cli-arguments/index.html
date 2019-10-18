@@ -1198,6 +1198,10 @@
 <td>Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off (default behaviour). Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. Once the backing Lua shared dictionary <code class="codehilite">certificate_data</code> is full, the least recently used certificate will be removed to store new ones. (enabled by default)</td>
 </tr>
 <tr>
+<td><code class="codehilite">--enable-metrics</code></td>
+<td>Enable the collection of metrics for scraping by Prometheus (default true)</td>
+</tr>
+<tr>
 <td><code class="codehilite">--enable-ssl-chain-completion</code></td>
 <td>Autocomplete SSL certificate chains with missing intermediate CA certificates. A valid certificate chain is required to enable OCSP stapling. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default true)</td>
 </tr>
@@ -1252,6 +1256,10 @@
 <tr>
 <td><code class="codehilite">--logtostderr</code></td>
 <td>log to standard error instead of files (default true)</td>
+</tr>
+<tr>
+<td><code class="codehilite">--metrics-per-host</code></td>
+<td>enable host labels for prometheus metrics. You may want to disable this to reduce the number of time-series created. (default true)</td>
 </tr>
 <tr>
 <td><code class="codehilite">--profiling</code></td>
