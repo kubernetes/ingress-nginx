@@ -391,6 +391,178 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 			Expect(body).Should(ContainSubstring(canaryService))
 		})
+
+		It("should route requests to the correct upstream if canary ingress is set to specific path", func() {
+			host := "foo"
+			annotations := map[string]string{}
+
+			paths := []string{"/", "/bar"}
+			ing := framework.NewSingleIngressWithMultiplePaths(host, paths, host, f.Namespace, framework.EchoService, 80, &annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring("server_name foo"))
+				})
+
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":           "true",
+				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+			}
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/bar", host, f.Namespace, canaryService,
+				80, &canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			time.Sleep(waitForLuaSync)
+
+			By("routing requests destined for the mainline ingress to the mainline upstream")
+
+			resp, body, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host).
+				Set("CanaryByHeader", "always").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
+
+			By("routing requests destined for the canary ingress to the canary upstream")
+
+			resp, body, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+"/bar/foo").
+				Set("Host", host).
+				Set("CanaryByHeader", "always").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring(canaryService))
+		})
+
+		It("should route requests to the correct upstream if canary ingress is set to multiple hosts", func() {
+			host := "foo"
+			host2 := "bar"
+			annotations := map[string]string{}
+
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring("server_name foo"))
+				})
+
+			ing2 := framework.NewSingleIngress(host2, "/", host2, f.Namespace, framework.EchoService, 80, &annotations)
+			f.EnsureIngress(ing2)
+
+			f.WaitForNginxServer(host2,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring("server_name bar"))
+				})
+
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":           "true",
+				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+			}
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
+				80, &canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			time.Sleep(waitForLuaSync)
+
+			By("routing requests destined for the mainline ingress to the mainline upstream")
+
+			resp, body, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host2).
+				Set("CanaryByHeader", "always").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring(framework.EchoService))
+			Expect(body).ShouldNot(ContainSubstring(canaryService))
+
+			By("routing requests destined for the canary ingress to the canary upstream")
+
+			resp, body, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host).
+				Set("CanaryByHeader", "always").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring(canaryService))
+		})
+
+		It("should route requests to the correct upstream if multiple canary ingress are set to one backend", func() {
+			host := "foo"
+			annotations := map[string]string{}
+
+			paths := []string{"/", "/bar"}
+			ing := framework.NewSingleIngressWithMultiplePaths(host, paths, host, f.Namespace, framework.EchoService, 80, &annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring("server_name foo"))
+				})
+
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":           "true",
+				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+			}
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
+				80, &canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			time.Sleep(waitForLuaSync)
+
+			canaryAnnotations2 := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":           "true",
+				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader2",
+			}
+
+			canaryIngName2 := fmt.Sprintf("%v-canary-2", host)
+			canaryIng2 := framework.NewSingleIngress(canaryIngName2, "/bar", host, f.Namespace, canaryService,
+				80, &canaryAnnotations2)
+			f.EnsureIngress(canaryIng2)
+
+			time.Sleep(waitForLuaSync)
+
+			By("routing requests destined for the canary ingress to the canary upstream(1)")
+
+			resp, body, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", host).
+				Set("CanaryByHeader", "always").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring(canaryService))
+
+			By("routing requests destined for the canary ingress to the canary upstream(2)")
+
+			resp, body, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+"/bar").
+				Set("Host", host).
+				Set("CanaryByHeader2", "always").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring(canaryService))
+		})
 	})
 
 	Context("when canaried by header with no value", func() {
