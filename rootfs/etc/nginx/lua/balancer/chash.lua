@@ -9,8 +9,6 @@ function _M.new(self, backend)
   local o = {
     instance = self.factory:new(nodes),
     hash_by = backend["upstreamHashByConfig"]["upstream-hash-by"],
-    traffic_shaping_policy = backend.trafficShapingPolicy,
-    alternative_backends = backend.alternativeBackends,
   }
   setmetatable(o, self)
   self.__index = self

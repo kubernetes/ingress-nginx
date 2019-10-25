@@ -12,9 +12,7 @@ end
 
 function _M.new(self)
   local o = {
-    alternative_backends = nil,
     cookie_session_affinity = nil,
-    traffic_shaping_policy = nil
   }
 
   setmetatable(o, self)
@@ -138,8 +136,6 @@ function _M.sync(self, backend)
   -- reload balancer nodes
   balancer_resty.sync(self, backend)
 
-  self.traffic_shaping_policy = backend.trafficShapingPolicy
-  self.alternative_backends = backend.alternativeBackends
   self.cookie_session_affinity = backend.sessionAffinityConfig.cookieSessionAffinity
 end
 

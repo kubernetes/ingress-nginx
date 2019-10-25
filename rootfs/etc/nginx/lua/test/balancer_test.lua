@@ -41,12 +41,6 @@ local function reset_backends()
         { address = "10.184.98.239", port = "8080", maxFails = 0, failTimeout = 0 },
       },
       sessionAffinityConfig = { name = "", cookieSessionAffinity = { name = "" } },
-      trafficShapingPolicy = {
-        weight = 0,
-        header = "",
-        headerValue = "",
-        cookie = ""
-      },
     },
     { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
     {
@@ -90,31 +84,24 @@ describe("Balancer", function()
     it("always returns the same balancer for given request context", function()
       local backend = {
         name = "my-dummy-app-6", ["load-balance"] = "ewma",
-        alternativeBackends = { "my-dummy-canary-app-6" },
         endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
-        trafficShapingPolicy = {
-          weight = 0,
-          header = "",
-          headerValue = "",
-          cookie = ""
-        },
       }
       local canary_backend = {
         name = "my-dummy-canary-app-6", ["load-balance"] = "ewma",
-        alternativeBackends = { "my-dummy-canary-app-6" },
         endpoints = { { address = "11.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
-        trafficShapingPolicy = {
-          weight = 5,
-          header = "",
-          headerValue = "",
-          cookie = ""
-        },
       }
 
       balancer.sync_backend(backend)
       balancer.sync_backend(canary_backend)
 
-      mock_ngx({ var = { proxy_upstream_name = backend.name } })
+      mock_ngx({ var = {
+        proxy_upstream_name = backend.name,
+        alternative_backend_name = canary_backend.name,
+        traffic_shaping_policy_weight = "5",
+        traffic_shaping_policy_header = "",
+        traffic_shaping_policy_header_value = "",
+        traffic_shaping_policy_cookie = "",
+      } })
 
       local expected = balancer.get_balancer()
 
@@ -129,50 +116,73 @@ describe("Balancer", function()
 
     before_each(function()
       backend = backends[1]
-      _balancer = {
-        alternative_backends = {
-          backend.name,
-        }
-      }
-      mock_ngx({ var = { request_uri = "/" } })
+       mock_ngx({ var = { request_uri = "/" } })
     end)
 
     it("returns false when no trafficShapingPolicy is set", function()
+      mock_ngx({ var = {
+        alternative_backend_name = backend.name,
+        traffic_shaping_policy_weight = "0",
+        traffic_shaping_policy_header = "",
+        traffic_shaping_policy_header_value = "",
+        traffic_shaping_policy_cookie = "",
+      } })
       balancer.sync_backend(backend)
-      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+      assert.equal(false, balancer.route_to_alternative_balancer())
     end)
 
     it("returns false when no alternative backends is set", function()
-      backend.trafficShapingPolicy.weight = 100
+      mock_ngx({ var = {
+        alternative_backend_name = "",
+        traffic_shaping_policy_weight = "100",
+        traffic_shaping_policy_header = "",
+        traffic_shaping_policy_header_value = "",
+        traffic_shaping_policy_cookie = "",
+      } })
       balancer.sync_backend(backend)
-      _balancer.alternative_backends = nil
-      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+      assert.equal(false, balancer.route_to_alternative_balancer())
     end)
 
     it("returns false when alternative backends name does not match", function()
-      backend.trafficShapingPolicy.weight = 100
+      mock_ngx({ var = {
+        alternative_backend_name = "nonExistingBackend",
+        traffic_shaping_policy_weight = "100",
+        traffic_shaping_policy_header = "",
+        traffic_shaping_policy_header_value = "",
+        traffic_shaping_policy_cookie = "",
+      } })
       balancer.sync_backend(backend)
-      _balancer.alternative_backends[1] = "nonExistingBackend"
-      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+      assert.equal(false, balancer.route_to_alternative_balancer())
     end)
 
     context("canary by weight", function()
       it("returns true when weight is 100", function()
-        backend.trafficShapingPolicy.weight = 100
+        mock_ngx({ var = {
+          alternative_backend_name = backend.name,
+          traffic_shaping_policy_weight = "100",
+          traffic_shaping_policy_header = "",
+          traffic_shaping_policy_header_value = "",
+          traffic_shaping_policy_cookie = "",
+        } })
         balancer.sync_backend(backend)
-        assert.equal(true, balancer.route_to_alternative_balancer(_balancer))
+        assert.equal(true, balancer.route_to_alternative_balancer())
       end)
 
       it("returns false when weight is 0", function()
-        backend.trafficShapingPolicy.weight = 0
+        mock_ngx({ var = {
+          alternative_backend_name = backend.name,
+          traffic_shaping_policy_weight = "0",
+          traffic_shaping_policy_header = "",
+          traffic_shaping_policy_header_value = "",
+          traffic_shaping_policy_cookie = "",
+        } })
         balancer.sync_backend(backend)
-        assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+        assert.equal(false, balancer.route_to_alternative_balancer())
       end)
     end)
 
     context("canary by cookie", function()
       it("returns correct result for given cookies", function()
-        backend.trafficShapingPolicy.cookie = "canaryCookie"
         balancer.sync_backend(backend)
         local test_patterns = {
           {
@@ -203,10 +213,15 @@ describe("Balancer", function()
         for _, test_pattern in pairs(test_patterns) do
           mock_ngx({ var = {
             ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
-            request_uri = "/"
+            request_uri = "/",
+            alternative_backend_name = backend.name,
+            traffic_shaping_policy_weight = "0",
+            traffic_shaping_policy_cookie = "canaryCookie",
+            traffic_shaping_policy_header_value = "",
+            traffic_shaping_policy_header = "",
           }})
           assert.message("\nTest data pattern: " .. test_pattern.case_title)
-            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer())
           reset_ngx()
         end
       end)
@@ -277,15 +292,18 @@ describe("Balancer", function()
 
         for _, test_pattern in pairs(test_patterns) do
           reset_balancer()
-          backend.trafficShapingPolicy.header = test_pattern.header_name
-          backend.trafficShapingPolicy.headerValue = test_pattern.header_value
           balancer.sync_backend(backend)
           mock_ngx({ var = {
             ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
-            request_uri = "/"
+            request_uri = "/",
+            alternative_backend_name = backend.name,
+            traffic_shaping_policy_weight = "0",
+            traffic_shaping_policy_cookie = "",
+            traffic_shaping_policy_header_value = test_pattern.header_value,
+            traffic_shaping_policy_header = test_pattern.header_name,
           }})
           assert.message("\nTest data pattern: " .. test_pattern.case_title)
-            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer())
           reset_ngx()
         end
       end)

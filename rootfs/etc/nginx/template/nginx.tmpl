@@ -960,6 +960,12 @@ stream {
             set $service_name   {{ $ing.Service | quote }};
             set $service_port   {{ $ing.ServicePort | quote }};
             set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
+            set $alternative_backend_name  {{ $location.AlternativeBackendName | quote }};
+
+            set $traffic_shaping_policy_weight {{ $location.TrafficShapingPolicy.Weight | quote }};
+            set $traffic_shaping_policy_header {{ $location.TrafficShapingPolicy.Header | quote }};
+            set $traffic_shaping_policy_header_value {{ $location.TrafficShapingPolicy.HeaderValue | quote }};
+            set $traffic_shaping_policy_cookie {{ $location.TrafficShapingPolicy.Cookie | quote }};
 
             {{ if $all.Cfg.EnableOpentracing }}
             {{ opentracingPropagateContext $location }};

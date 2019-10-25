@@ -8,8 +8,6 @@ function _M.new(self, backend)
   local nodes = util.get_nodes(backend.endpoints)
   local o = {
     instance = self.factory:new(nodes),
-    traffic_shaping_policy = backend.trafficShapingPolicy,
-    alternative_backends = backend.alternativeBackends,
   }
   setmetatable(o, self)
   self.__index = self
