@@ -103,12 +103,6 @@ type Backend struct {
 	// alternative backend.
 	// This can be used to share multiple upstreams in the sam nginx server block.
 	NoServer bool `json:"noServer"`
-	// Policies to describe the characteristics of an alternative backend.
-	// +optional
-	TrafficShapingPolicy TrafficShapingPolicy `json:"trafficShapingPolicy,omitempty"`
-	// Contains a list of backends without servers that are associated with this backend.
-	// +optional
-	AlternativeBackends []string `json:"alternativeBackends,omitempty"`
 }
 
 // TrafficShapingPolicy describes the policies to put in place when a backend has no server and is used as an
@@ -333,6 +327,12 @@ type Location struct {
 	// Mirror allows you to mirror traffic to a "test" backend
 	// +optional
 	Mirror mirror.Config `json:"mirror,omitempty"`
+	// Policies to describe the characteristics of an alternative backend.
+	// +optional
+	TrafficShapingPolicy TrafficShapingPolicy `json:"trafficShapingPolicy,omitempty"`
+	// Alternative backend name for this location in "Canary" feature
+	// +optional
+	AlternativeBackendName string `json:"alternative-backend-name"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

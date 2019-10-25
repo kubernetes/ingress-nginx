@@ -43,12 +43,6 @@ func (in *Backend) DeepCopyInto(out *Backend) {
 	}
 	in.SessionAffinity.DeepCopyInto(&out.SessionAffinity)
 	out.UpstreamHashBy = in.UpstreamHashBy
-	out.TrafficShapingPolicy = in.TrafficShapingPolicy
-	if in.AlternativeBackends != nil {
-		in, out := &in.AlternativeBackends, &out.AlternativeBackends
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	return
 }
 

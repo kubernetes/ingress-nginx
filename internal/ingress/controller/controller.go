@@ -732,12 +732,6 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			// configure traffic shaping for canary
 			if anns.Canary.Enabled {
 				upstreams[defBackend].NoServer = true
-				upstreams[defBackend].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-					Weight:      anns.Canary.Weight,
-					Header:      anns.Canary.Header,
-					HeaderValue: anns.Canary.HeaderValue,
-					Cookie:      anns.Canary.Cookie,
-				}
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
@@ -797,12 +791,6 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				// configure traffic shaping for canary
 				if anns.Canary.Enabled {
 					upstreams[name].NoServer = true
-					upstreams[name].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-						Weight:      anns.Canary.Weight,
-						Header:      anns.Canary.Header,
-						HeaderValue: anns.Canary.HeaderValue,
-						Cookie:      anns.Canary.Cookie,
-					}
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
@@ -1206,25 +1194,16 @@ func canMergeBackend(primary *ingress.Backend, alternative *ingress.Backend) boo
 	return alternative != nil && primary.Name != alternative.Name && primary.Name != defUpstreamName && !primary.NoServer
 }
 
-// Performs the merge action and checks to ensure that one two alternative backends do not merge into each other
-func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) bool {
-	if priUps.NoServer {
-		klog.Warningf("unable to merge alternative backend %v into primary backend %v because %v is a primary backend",
-			altUps.Name, priUps.Name, priUps.Name)
-		return false
+// Set Canary information (alternative backend & TrafficShapingPolicy) to specific Location
+func setCanaryInfo(ing *ingress.Ingress, loc *ingress.Location, backendName string) {
+	loc.AlternativeBackendName = backendName
+	anns := ing.ParsedAnnotations
+	loc.TrafficShapingPolicy = ingress.TrafficShapingPolicy{
+		Weight:      anns.Canary.Weight,
+		Header:      anns.Canary.Header,
+		HeaderValue: anns.Canary.HeaderValue,
+		Cookie:      anns.Canary.Cookie,
 	}
-
-	for _, ab := range priUps.AlternativeBackends {
-		if ab == altUps.Name {
-			klog.V(2).Infof("skip merge alternative backend %v into %v, it's already present", altUps.Name, priUps.Name)
-			return true
-		}
-	}
-
-	priUps.AlternativeBackends =
-		append(priUps.AlternativeBackends, altUps.Name)
-
-	return true
 }
 
 // Compares an Ingress of a potential alternative backend's rules with each existing server and finds matching host + path pairs.
@@ -1260,7 +1239,8 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
-					merged = mergeAlternativeBackend(priUps, altUps)
+					merged = true
+					setCanaryInfo(ing, loc, altUps.Name)
 				}
 			}
 
@@ -1308,7 +1288,8 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
-					merged = mergeAlternativeBackend(priUps, altUps)
+					merged = true
+					setCanaryInfo(ing, loc, altUps.Name)
 				}
 			}
 

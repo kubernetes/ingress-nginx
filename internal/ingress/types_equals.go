@@ -134,11 +134,7 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		return false
 	}
 
-	if !b1.TrafficShapingPolicy.Equal(b2.TrafficShapingPolicy) {
-		return false
-	}
-
-	return sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
+	return true
 }
 
 // Equal tests for equality between two SessionAffinityConfig types
@@ -445,6 +441,14 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	}
 
 	if l1.Mirror.RequestBody != l2.Mirror.RequestBody {
+		return false
+	}
+
+	if l1.AlternativeBackendName != l2.AlternativeBackendName {
+		return false
+	}
+
+	if !l1.TrafficShapingPolicy.Equal(l2.TrafficShapingPolicy) {
 		return false
 	}
 
