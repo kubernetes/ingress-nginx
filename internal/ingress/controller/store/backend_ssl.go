@@ -104,19 +104,18 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
 		}
 
-		path, err := ssl.StoreSSLCertOnDisk(nsSecName, sslCert)
-		if err != nil {
-			return nil, fmt.Errorf("error while storing certificate and key: %v", err)
-		}
-
-		sslCert.PemFileName = path
-
 		if len(ca) > 0 {
 			caCert, err := ssl.CheckCACert(ca)
 			if err != nil {
 				return nil, fmt.Errorf("parsing CA certificate: %v", err)
 			}
 
+			path, err := ssl.StoreSSLCertOnDisk(nsSecName, sslCert)
+			if err != nil {
+				return nil, fmt.Errorf("error while storing certificate and key: %v", err)
+			}
+
+			sslCert.PemFileName = path
 			sslCert.CACertificate = caCert
 			sslCert.CAFileName = path
 			sslCert.CASHA = file.SHA1(path)

@@ -825,8 +825,8 @@ stream {
         {{ end }}
 
         {{ if not (empty $server.ProxySSL.PemFileName) }}
-        proxy_ssl_certificate                   {{ $server.ProxySSL.CAFileName }};
-        proxy_ssl_certificate_key               {{ $server.ProxySSL.CAFileName }};
+        proxy_ssl_certificate                   {{ $server.ProxySSL.PemFileName }};
+        proxy_ssl_certificate_key               {{ $server.ProxySSL.PemFileName }};
         {{ end }}
 
         {{ if not (empty $server.SSLCiphers) }}
@@ -1299,8 +1299,8 @@ stream {
             {{ end }}
 
             {{ if not (empty $location.ProxySSL.PemFileName) }}
-            proxy_ssl_certificate                   {{ $location.ProxySSL.CAFileName }};
-            proxy_ssl_certificate_key               {{ $location.ProxySSL.CAFileName }};
+            proxy_ssl_certificate                   {{ $location.ProxySSL.PemFileName }};
+            proxy_ssl_certificate_key               {{ $location.ProxySSL.PemFileName }};
             {{ end }}
         }
         {{ end }}
