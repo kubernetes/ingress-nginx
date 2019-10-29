@@ -145,7 +145,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 		requestTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:        "request_duration_seconds",
-				Help:        "The request processing time in milliseconds",
+				Help:        "The total request processing time in milliseconds(Time from first byte read to last byte written)",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
@@ -186,7 +186,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 		upstreamLatency: prometheus.NewSummaryVec(
 			prometheus.SummaryOpts{
 				Name:        "ingress_upstream_latency_seconds",
-				Help:        "Upstream service latency per Ingress",
+				Help:        "Upstream service latency per Ingress(time spent on establishing a connection with the upstream server)",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
