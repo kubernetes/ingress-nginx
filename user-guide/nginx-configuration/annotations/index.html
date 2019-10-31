@@ -864,6 +864,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-max-temp-file-size" class="md-nav__link">
+    Proxy max temp file size
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-http-version" class="md-nav__link">
     Proxy HTTP version
   </a>
@@ -1820,6 +1827,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-max-temp-file-size" class="md-nav__link">
+    Proxy max temp file size
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-http-version" class="md-nav__link">
     Proxy HTTP version
   </a>
@@ -2270,6 +2284,10 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#proxy-buffer-size">nginx.ingress.kubernetes.io/proxy-buffer-size</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#proxy-max-temp-file-size">nginx.ingress.kubernetes.io/proxy-max-temp-file-size</a></td>
 <td>string</td>
 </tr>
 <tr>
@@ -2764,7 +2782,7 @@ To use custom values in an Ingress rule define these annotation:</p>
 </pre></div>
 
 <h3 id="proxy-buffers-number">Proxy buffers Number<a class="headerlink" href="#proxy-buffers-number" title="Permanent link">&para;</a></h3>
-<p>Sets the number of the buffers  in <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers"><code class="codehilite">proxy_buffers</code></a> used for reading the first part of the response received from the proxied server.
+<p>Sets the number of the buffers in <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers"><code class="codehilite">proxy_buffers</code></a> used for reading the first part of the response received from the proxied server.
 By default proxy buffers number is set as 4</p>
 <p>To configure this setting globally, set <code class="codehilite">proxy-buffers-number</code> in <a href="../configmap/#proxy-buffers-number">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-buffers-number</span><span class="p">:</span> <span class="s">&quot;4&quot;</span>
@@ -2774,6 +2792,12 @@ By default proxy buffers number is set as 4</p>
 By default proxy buffer size is set as "4k"</p>
 <p>To configure this setting globally, set <code class="codehilite">proxy-buffer-size</code> in <a href="../configmap/#proxy-buffer-size">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-buffer-size</span><span class="p">:</span> <span class="s">&quot;8k&quot;</span>
+</pre></div></p>
+<h3 id="proxy-max-temp-file-size">Proxy max temp file size<a class="headerlink" href="#proxy-max-temp-file-size" title="Permanent link">&para;</a></h3>
+<p>When <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering"><code class="codehilite">buffering</code></a> of responses from the proxied server is enabled, and the whole response does not fit into the buffers set by the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code class="codehilite">proxy_buffer_size</code></a> and <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers"><code class="codehilite">proxy_buffers</code></a> directives, a part of the response can be saved to a temporary file. This directive sets the maximum <code class="codehilite">size</code> of the temporary file setting the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_max_temp_file_size"><code class="codehilite">proxy_max_temp_file_size</code></a>. The size of data written to the temporary file at a time is set by the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_temp_file_write_size"><code class="codehilite">proxy_temp_file_write_size</code></a> directive.</p>
+<p>The zero value disables buffering of responses to temporary files.</p>
+<p>To use custom values in an Ingress rule, define this annotation:
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-max-temp-file-size</span><span class="p">:</span> <span class="s">&quot;1024m&quot;</span>
 </pre></div></p>
 <h3 id="proxy-http-version">Proxy HTTP version<a class="headerlink" href="#proxy-http-version" title="Permanent link">&para;</a></h3>
 <p>Using this annotation sets the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version"><code class="codehilite">proxy_http_version</code></a> that the Nginx reverse proxy will use to communicate with the backend.
