@@ -51,6 +51,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
 |[http2-max-header-size](#http2-max-header-size)|string|"16k"|
 |[http2-max-requests](#http2-max-requests)|int|1000|
+|[http2-max-concurrent-streams](#http2-max-concurrent-streams)|int|1000|
 |[hsts](#hsts)|bool|"true"|
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"|
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
@@ -309,6 +310,13 @@ Sets the maximum number of requests (including push requests) that can be served
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests)
+
+## http2-max-concurrent-streams
+
+Sets the maximum number of concurrent HTTP/2 streams in a connection.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams)
 
 ## hsts
 
