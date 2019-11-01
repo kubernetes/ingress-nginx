@@ -47,3 +47,7 @@ bin
 test/e2e-image/wait-for-nginx.sh
 .cache
 cover.out
+
+# secret terraform variables
+build/images/nginx/aws.tfvars
+build/images/nginx/env.tfvars
