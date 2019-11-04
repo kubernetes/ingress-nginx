@@ -21,15 +21,15 @@ set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-export OPENRESTY_VERSION=1.15.8.2
+export OPENRESTY_VERSION=7508c1852265bd04fdb2dfd64989d4c490440f1a
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.9.0
 export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
-export JAEGER_VERSION=cdfaf5bb25ff5f8ec179fd548e6c7c2ade9a6a09
-export MSGPACK_VERSION=3.1.1
-export DATADOG_CPP_VERSION=1.0.1
+export JAEGER_VERSION=0.5.0
+export MSGPACK_VERSION=3.2.0
+export DATADOG_CPP_VERSION=1.1.1
 export MODSECURITY_VERSION=d7101e13685efd7e7c9f808871b202656a969f4b
 export MODSECURITY_LIB_VERSION=3.0.3
 export OWASP_MODSECURITY_CRS_VERSION=3.1.0
@@ -93,6 +93,7 @@ clean-install \
   unzip \
   nano \
   ssdeep \
+  dos2unix mercurial \
   || exit 1
 
 # https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1667178.html
@@ -124,8 +125,8 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src bf92af41d3ad22880047a8b283fc213d59c7c1b83f8dae82e50d14b64d73ac38 \
-        "https://github.com/openresty/openresty/releases/download/v${OPENRESTY_VERSION}/openresty-${OPENRESTY_VERSION}.tar.gz"
+get_src 221cfecadd0ed2902738757e7d8fb0bc41882840f07ea87112740b44f173722f \
+        "https://github.com/openresty/openresty/archive/${OPENRESTY_VERSION}.tar.gz"
 
 get_src fe683831f832aae4737de1e1026a4454017c2d5f98cb88b08c5411dc380062f8 \
         "https://github.com/atomx/nginx-http-auth-digest/archive/$NGINX_DIGEST_AUTH.tar.gz"
@@ -145,13 +146,13 @@ get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
 get_src 5c8d25e68fb852f61489b669aebb7bd8ca8c88ebb5e5f969212fcceff3ee2d0b \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
-get_src 3183450d897baa9309347c8617edc0c97c5b29ffc32bd2d12f498edf2dcbeffa \
-        "https://github.com/jaegertracing/jaeger-client-cpp/archive/$JAEGER_VERSION.tar.gz"
+get_src c72609a1df7e61771ab9fac4b6d31a187d023cfe765ed488adec714c3cee7cde \
+        "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
 
-get_src bda49f996a73d2c6080ff0523e7b535917cd28c8a79c3a5da54fc29332d61d1e \
+get_src ff865a36bad5c72b8e7ebc4b7cf5f27a820fce4faff9c571c1791e3728355a39 \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src f7fb2ad541f812c36fd78f9a38e4582d87dadb563ab80bee3f7c3a2132a425c5 \
+get_src 052fd37cd698e24ab73ee18fc3fa55acd1d43153c12a0e65b0fba0447de1117e \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
 get_src 6faab57557bd9cc9fc38208f6bc304c1c13cf048640779f98812cf1f9567e202 \
@@ -441,6 +442,10 @@ WITH_MODULES="--add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH
   --add-module=$BUILD_PATH/nginx_ajp_module-${NGINX_AJP_VERSION} \
   --add-module=$BUILD_PATH/ngx_brotli"
 
+make
+
+cd openresty-1.17.4.1rc0
+
 ./configure \
   ${WITH_FLAGS} \
   --without-mail_pop3_module \
@@ -473,7 +478,7 @@ cd /usr/local/openresty
 
 # build and install lua-resty-waf with dependencies
 export LUA_LIB_DIR=/usr/local/openresty/lualib
-export LUA_INCLUDE_DIR=/tmp/build/openresty-$OPENRESTY_VERSION/build/luajit-root/usr/local/openresty/luajit/include/luajit-2.1
+export LUA_INCLUDE_DIR=/tmp/build/openresty-$OPENRESTY_VERSION/openresty-1.17.4.1rc0/build/luajit-root/usr/local/openresty/luajit/include/luajit-2.1
 
 ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
 
@@ -488,10 +493,6 @@ cd "$BUILD_PATH/lua-resty-balancer-$LUA_RESTY_BALANCER_VERSION"
 
 make
 make install
-
-if [[ ${ARCH} != "armv7l" ]]; then
-  /install_lua_resty_waf.sh
-fi
 
 # build Lua bridge tracer
 cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"
