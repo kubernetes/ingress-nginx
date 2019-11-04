@@ -38,7 +38,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
@@ -189,7 +188,7 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 			"configuration_data": 10, "certificate_data": 20,
 		},
 	}
-	actual := buildLuaSharedDictionaries(cfg, invalidType, true)
+	actual := buildLuaSharedDictionaries(cfg, invalidType)
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -198,32 +197,23 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	servers := []*ingress.Server{
 		{
 			Hostname:  "foo.bar",
-			Locations: []*ingress.Location{{Path: "/", LuaRestyWAF: luarestywaf.Config{}}},
+			Locations: []*ingress.Location{{Path: "/"}},
 		},
 		{
 			Hostname:  "another.host",
-			Locations: []*ingress.Location{{Path: "/", LuaRestyWAF: luarestywaf.Config{}}},
+			Locations: []*ingress.Location{{Path: "/"}},
 		},
 	}
 	// returns value from config
-	configuration := buildLuaSharedDictionaries(cfg, servers, false)
+	configuration := buildLuaSharedDictionaries(cfg, servers)
 	if !strings.Contains(configuration, "lua_shared_dict configuration_data 10M;\n") {
 		t.Errorf("expected to include 'configuration_data' but got %s", configuration)
 	}
 	if !strings.Contains(configuration, "lua_shared_dict certificate_data 20M;\n") {
 		t.Errorf("expected to include 'certificate_data' but got %s", configuration)
 	}
-	if strings.Contains(configuration, "waf_storage") {
-		t.Errorf("expected to not include 'waf_storage' but got %s", configuration)
-	}
-
-	servers[1].Locations[0].LuaRestyWAF = luarestywaf.Config{Mode: "ACTIVE"}
-	configuration = buildLuaSharedDictionaries(cfg, servers, false)
-	if !strings.Contains(configuration, "lua_shared_dict waf_storage") {
-		t.Errorf("expected to configure 'waf_storage', but got %s", configuration)
-	}
 	// test invalid config
-	configuration = buildLuaSharedDictionaries(invalidType, servers, false)
+	configuration = buildLuaSharedDictionaries(invalidType, servers)
 	if configuration != "" {
 		t.Errorf("expected an empty string, but got %s", configuration)
 	}
