@@ -17,9 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"k8s.io/klog"
 )
 
 const (
@@ -64,6 +65,9 @@ const (
 )
 
 func main() {
+	klog.InitFlags(nil)
+	flag.Parse()
+
 	errFilesPath := "/www"
 	if os.Getenv(ErrFilesPathVar) != "" {
 		errFilesPath = os.Getenv(ErrFilesPathVar)
@@ -100,15 +104,15 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		format := r.Header.Get(FormatHeader)
 		if format == "" {
 			format = "text/html"
-			log.Printf("format not specified. Using %v", format)
+			klog.V(3).Infof("format not specified. Using %v", format)
 		}
 
 		cext, err := mime.ExtensionsByType(format)
 		if err != nil {
-			log.Printf("unexpected error reading media type extension: %v. Using %v", err, ext)
+			klog.Errorf("unexpected error reading media type extension: %v. Using %v", err, ext)
 			format = "text/html"
 		} else if len(cext) == 0 {
-			log.Printf("couldn't get media type extension. Using %v", ext)
+			klog.Errorf("couldn't get media type extension. Using %v", ext)
 		} else {
 			ext = cext[0]
 		}
@@ -118,7 +122,7 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		code, err := strconv.Atoi(errCode)
 		if err != nil {
 			code = 404
-			log.Printf("unexpected error reading return code: %v. Using %v", err, code)
+			klog.V(3).Infof("unexpected error reading return code: %v. Using %v", err, code)
 		}
 		w.WriteHeader(code)
 
@@ -128,22 +132,22 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		file := fmt.Sprintf("%v/%v%v", path, code, ext)
 		f, err := os.Open(file)
 		if err != nil {
-			log.Printf("unexpected error opening file: %v", err)
+			klog.Errorf("unexpected error opening file: %v", err)
 			scode := strconv.Itoa(code)
 			file := fmt.Sprintf("%v/%cxx%v", path, scode[0], ext)
 			f, err := os.Open(file)
 			if err != nil {
-				log.Printf("unexpected error opening file: %v", err)
+				klog.Errorf("unexpected error opening file: %v", err)
 				http.NotFound(w, r)
 				return
 			}
 			defer f.Close()
-			log.Printf("serving custom error response for code %v and format %v from file %v", code, format, file)
+			klog.Errorf("serving custom error response for code %v and format %v from file %v", code, format, file)
 			io.Copy(w, f)
 			return
 		}
 		defer f.Close()
-		log.Printf("serving custom error response for code %v and format %v from file %v", code, format, file)
+		klog.Errorf("serving custom error response for code %v and format %v from file %v", code, format, file)
 		io.Copy(w, f)
 
 		duration := time.Now().Sub(start).Seconds()
