@@ -124,7 +124,6 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 			code = 404
 			klog.V(3).Infof("unexpected error reading return code: %v. Using %v", err, code)
 		}
-		w.WriteHeader(code)
 
 		if !strings.HasPrefix(ext, ".") {
 			ext = "." + ext
@@ -148,6 +147,7 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		}
 		defer f.Close()
 		klog.Errorf("serving custom error response for code %v and format %v from file %v", code, format, file)
+		w.WriteHeader(code)
 		io.Copy(w, f)
 
 		duration := time.Now().Sub(start).Seconds()
