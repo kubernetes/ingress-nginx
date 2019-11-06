@@ -66,6 +66,10 @@ const (
 
 func main() {
 	klog.InitFlags(nil)
+
+	// increase log level to get old logging behavior
+	flag.Set("v", "3")
+
 	flag.Parse()
 
 	errFilesPath := "/www"
