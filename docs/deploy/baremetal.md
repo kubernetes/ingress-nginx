@@ -367,7 +367,7 @@ address of all nodes running the NGINX Ingress controller.
 [taints]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 [daemonset]: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
 [dnspolicy]: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
-[cli-args]: ../../user-guide/cli-arguments/
+[cli-args]: ../user-guide/cli-arguments.md
 
 ## Using a self-provisioned edge
 

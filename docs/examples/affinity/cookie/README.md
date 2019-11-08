@@ -30,12 +30,12 @@ You can confirm that the Ingress works:
 $ kubectl describe ing nginx-test
 Name:			nginx-test
 Namespace:		default
-Address:		
+Address:
 Default backend:	default-http-backend:80 (10.180.0.4:8080,10.240.0.2:8080)
 Rules:
   Host	                        Path	Backends
   ----	                        ----	--------
-  stickyingress.example.com     
+  stickyingress.example.com
                                 /   	 nginx-service:80 (<none>)
 Annotations:
   affinity:	cookie
@@ -46,7 +46,7 @@ Events:
   FirstSeen	LastSeen	Count	From				SubObjectPath	Type		Reason	Message
   ---------	--------	-----	----				-------------	--------	------	-------
   7s		7s		1	{nginx-ingress-controller }			Normal		CREATE	default/nginx-test
-  
+
 
 $ curl -I http://stickyingress.example.com
 HTTP/1.1 200 OK
@@ -69,8 +69,8 @@ If the backend pool grows NGINX will keep sending the requests through the same 
 
 When the backend server is removed, the requests are re-routed to another upstream server. This does not require the cookie to be updated because the key's [consistent hash][consistent-hashing] will change.
 
-When you have a Service pointing to more than one Ingress, with only one containing affinity configuration, the first created Ingress will be used. 
+When you have a Service pointing to more than one Ingress, with only one containing affinity configuration, the first created Ingress will be used.
 This means that you can face the situation that you've configured session affinity on one Ingress and it doesn't work because the Service is pointing to another Ingress that doesn't configure this.
 
-[ingress-paths]: ../../../user-guide/ingress-path-matching
+[ingress-paths]: ../../../user-guide/ingress-path-matching.md
 [consistent-hashing]: https://en.wikipedia.org/wiki/Consistent_hashing
