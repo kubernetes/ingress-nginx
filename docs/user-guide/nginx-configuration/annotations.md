@@ -78,7 +78,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[nginx.ingress.kubernetes.io/satisfy](#satisfy)|string|
-|[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|

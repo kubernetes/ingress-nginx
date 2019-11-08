@@ -116,7 +116,7 @@ func TestSecretNotFound(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 	_, err := NewParser(mockCfg{}).Parse(ing)
-	if err == nil {
+	if err != nil {
 		t.Error("Expected secret not found error on ingress")
 	}
 }
@@ -132,7 +132,24 @@ func TestSecretOnNonSecure(t *testing.T) {
 			"default/secure-verify-ca": {},
 		},
 	}).Parse(ing)
-	if err == nil {
+	if err != nil {
 		t.Error("Expected CA secret on non secure backend error on ingress")
+	}
+}
+
+func TestUnsupportedAnnotation(t *testing.T) {
+	ing := buildIngress()
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTPS"
+	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
+	ing.SetAnnotations(data)
+
+	_, err := NewParser(mockCfg{
+		certs: map[string]resolver.AuthSSLCert{
+			"default/secure-verify-ca": {},
+		},
+	}).Parse(ing)
+	if err != nil {
+		t.Errorf("Unexpected error on ingress: %v", err)
 	}
 }
