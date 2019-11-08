@@ -1,7 +1,9 @@
 site_name: NGINX Ingress Controller
 strict: true
 repo_name: "kubernetes/ingress-nginx"
-repo_url: "https://github.com/kubernetes/ingress-nginx"
+repo_url: https://github.com/kubernetes/ingress-nginx
+site_url: https://kubernetes.github.io/ingress-nginx
+
 markdown_extensions:
   - admonition
   - codehilite
@@ -11,6 +13,8 @@ markdown_extensions:
   - pymdownx.superfences
   - toc:
       permalink: true
+  - meta
+
 theme:
   name: material
   feature:
@@ -54,7 +58,7 @@ nav:
       - Custom errors: "user-guide/custom-errors.md"
       - Default backend: "user-guide/default-backend.md"
       - Exposing TCP and UDP services: "user-guide/exposing-tcp-udp-services.md"
-      - Exposing FCGI services: "user-guide/fcgi-services.md" 
+      - Exposing FCGI services: "user-guide/fcgi-services.md"
       - Regular expressions in paths: user-guide/ingress-path-matching.md
       - External Articles: "user-guide/external-articles.md"
       - Miscellaneous: "user-guide/miscellaneous.md"
