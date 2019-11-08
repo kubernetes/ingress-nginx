@@ -113,9 +113,6 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	if b1.Port != b2.Port {
 		return false
 	}
-	if !(&b1.SecureCACert).Equal(&b2.SecureCACert) {
-		return false
-	}
 	if b1.SSLPassthrough != b2.SSLPassthrough {
 		return false
 	}
