@@ -1221,9 +1221,9 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/PREREQUISITES.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h1>
+                <h1 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link"> ¶</a></h1>
 <p>Many of the examples in this directory have common prerequisites.</p>
-<h2 id="tls-certificates">TLS certificates<a class="headerlink" href="#tls-certificates" title="Permanent link">&para;</a></h2>
+<h2 id="tls-certificates">TLS certificates<a class="headerlink" href="#tls-certificates" title="Permanent link"> ¶</a></h2>
 <p>Unless otherwise mentioned, the TLS secret used in examples is a 2048 bit RSA
 key/cert pair with an arbitrarily chosen hostname, created as follows</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> openssl req -x509 -sha256 -nodes -days <span class="m">365</span> -newkey rsa:2048 -keyout tls.key -out tls.crt -subj <span class="s2">&quot;/CN=nginxsvc/O=nginxsvc&quot;</span>
@@ -1238,7 +1238,7 @@ key/cert pair with an arbitrarily chosen hostname, created as follows</p>
 </pre></div>
 
 <p>Note: If using CA Authentication, described below, you will need to sign the server certificate with the CA.</p>
-<h2 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link">&para;</a></h2>
+<h2 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link"> ¶</a></h2>
 <p>CA Authentication also known as Mutual Authentication allows both the server and client to verify each others
 identity via a common CA.</p>
 <p>We have a CA Certificate which we obtain usually from a Certificate Authority and use that to sign
@@ -1260,7 +1260,7 @@ pass the client certificate.</p>
 </pre></div>
 
 <p>Once this is complete you can continue to follow the instructions <a href="../auth/client-certs/#creating-certificate-secrets">here</a></p>
-<h2 id="test-http-service">Test HTTP Service<a class="headerlink" href="#test-http-service" title="Permanent link">&para;</a></h2>
+<h2 id="test-http-service">Test HTTP Service<a class="headerlink" href="#test-http-service" title="Permanent link"> ¶</a></h2>
 <p>All examples that require a test HTTP Service use the standard http-svc pod,
 which you can deploy as follows</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f http-svc.yaml

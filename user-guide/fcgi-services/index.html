@@ -1261,13 +1261,13 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/fcgi-services.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="exposing-fastcgi-servers">Exposing FastCGI Servers<a class="headerlink" href="#exposing-fastcgi-servers" title="Permanent link">&para;</a></h1>
+                <h1 id="exposing-fastcgi-servers">Exposing FastCGI Servers<a class="headerlink" href="#exposing-fastcgi-servers" title="Permanent link"> ¶</a></h1>
 <blockquote>
 <p><strong>FastCGI</strong> is a <a href="https://en.wikipedia.org/wiki/Binary_protocol" title="Binary protocol">binary protocol</a> for interfacing interactive programs with a <a href="https://en.wikipedia.org/wiki/Web_server" title="Web server">web server</a>. [...] (It's) aim is to reduce the overhead related to interfacing between web server and CGI programs, allowing a server to handle more web page requests per unit of time.</p>
 <p>&mdash; Wikipedia</p>
 </blockquote>
 <p>The <em>ingress-nginx</em> ingress controller can be used to directly expose <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> servers.  Enabling FastCGI in your Ingress only requires setting the <em>backend-protocol</em> annotation to <code class="codehilite">FCGI</code>, and with a couple more annotations you can customize the way <em>ingress-nginx</em> handles the communication with your FastCGI <em>server</em>.</p>
-<h2 id="example-objects-to-expose-a-fastcgi-pod">Example Objects to Expose a FastCGI Pod<a class="headerlink" href="#example-objects-to-expose-a-fastcgi-pod" title="Permanent link">&para;</a></h2>
+<h2 id="example-objects-to-expose-a-fastcgi-pod">Example Objects to Expose a FastCGI Pod<a class="headerlink" href="#example-objects-to-expose-a-fastcgi-pod" title="Permanent link"> ¶</a></h2>
 <p>The <em>Pod</em> example object below exposes port <code class="codehilite">9000</code>, which is the conventional FastCGI port.</p>
 <div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Pod</span>
@@ -1330,19 +1330,19 @@
           <span class="nt">servicePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">fastcgi</span>
 </pre></div>
 
-<h2 id="the-fastcgi-ingress-annotations">The FastCGI Ingress Annotations<a class="headerlink" href="#the-fastcgi-ingress-annotations" title="Permanent link">&para;</a></h2>
-<h3 id="the-nginxingresskubernetesiobackend-protocol-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiobackend-protocol-annotation" title="Permanent link">&para;</a></h3>
+<h2 id="the-fastcgi-ingress-annotations">The FastCGI Ingress Annotations<a class="headerlink" href="#the-fastcgi-ingress-annotations" title="Permanent link"> ¶</a></h2>
+<h3 id="the-nginxingresskubernetesiobackend-protocol-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiobackend-protocol-annotation" title="Permanent link"> ¶</a></h3>
 <p>To enable FastCGI, the <code class="codehilite">backend-protocol</code> annotation needs to be set to <code class="codehilite">FCGI</code>, which overrides the default <code class="codehilite">HTTP</code> value.</p>
 <blockquote>
 <p><code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;FCGI&quot;</code></p>
 </blockquote>
 <p>This enables the <em>FastCGI</em> mode for the whole <em>Ingress</em> object.</p>
-<h3 id="the-nginxingresskubernetesiofastcgi-index-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-index</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiofastcgi-index-annotation" title="Permanent link">&para;</a></h3>
+<h3 id="the-nginxingresskubernetesiofastcgi-index-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-index</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiofastcgi-index-annotation" title="Permanent link"> ¶</a></h3>
 <p>To specify an index file, the <code class="codehilite">fastcgi-index</code> annotation value can optionally be set.  In the example below, the value is set to <code class="codehilite">index.php</code>.  This annotation corresponds to <a href="http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_index">the <em>NGINX</em> <code class="codehilite">fastcgi_index</code> directive</a>.</p>
 <blockquote>
 <p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-index: &quot;index.php&quot;</code></p>
 </blockquote>
-<h3 id="the-nginxingresskubernetesiofastcgi-params-configmap-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params-configmap</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiofastcgi-params-configmap-annotation" title="Permanent link">&para;</a></h3>
+<h3 id="the-nginxingresskubernetesiofastcgi-params-configmap-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params-configmap</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiofastcgi-params-configmap-annotation" title="Permanent link"> ¶</a></h3>
 <p>To specify <a href="http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_param"><em>NGINX</em> <code class="codehilite">fastcgi_param</code> directives</a>, the <code class="codehilite">fastcgi-params-configmap</code> annotation is used, which in turn must lead to a <em>ConfigMap</em> object containing the <em>NGINX</em> <code class="codehilite">fastcgi_param</code> directives as key/values.</p>
 <blockquote>
 <p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params: &quot;example-configmap&quot;</code></p>

@@ -1207,13 +1207,13 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/deploy/upgrade.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="upgrading">Upgrading<a class="headerlink" href="#upgrading" title="Permanent link">&para;</a></h1>
+                <h1 id="upgrading">Upgrading<a class="headerlink" href="#upgrading" title="Permanent link"> ¶</a></h1>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>No matter the method you use for upgrading, <em>if you use template overrides,
 make sure your templates are compatible with the new version of ingress-nginx</em>.</p>
 </div>
-<h2 id="without-helm">Without Helm<a class="headerlink" href="#without-helm" title="Permanent link">&para;</a></h2>
+<h2 id="without-helm">Without Helm<a class="headerlink" href="#without-helm" title="Permanent link"> ¶</a></h2>
 <p>To upgrade your ingress-nginx installation, it should be enough to change the version of the image
 in the controller Deployment.</p>
 <p>I.e. if your deployment resource looks like (partial example):</p>
@@ -1240,7 +1240,7 @@ The easiest way to do this is e.g. (do note you may need to change the name para
 </pre></div>
 
 <p>For interactive editing, use <code class="codehilite">kubectl edit deployment nginx-ingress-controller</code>.</p>
-<h2 id="with-helm">With Helm<a class="headerlink" href="#with-helm" title="Permanent link">&para;</a></h2>
+<h2 id="with-helm">With Helm<a class="headerlink" href="#with-helm" title="Permanent link"> ¶</a></h2>
 <p>If you installed ingress-nginx using the Helm command in the deployment docs so its name is <code class="codehilite">ngx-ingress</code>,
 you should be able to upgrade using</p>
 <div class="codehilite"><pre><span></span>helm upgrade --reuse-values ngx-ingress stable/nginx-ingress

@@ -1247,29 +1247,23 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/monitoring.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="prometheus-and-grafana-installation">Prometheus and Grafana installation<a class="headerlink" href="#prometheus-and-grafana-installation" title="Permanent link">&para;</a></h1>
+                <h1 id="prometheus-and-grafana-installation">Prometheus and Grafana installation<a class="headerlink" href="#prometheus-and-grafana-installation" title="Permanent link"> ¶</a></h1>
 <p>This tutorial will show you how to install <a href="https://prometheus.io/">Prometheus</a> and <a href="https://grafana.com/">Grafana</a> for scraping the metrics of the NGINX Ingress controller.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>This example uses <code class="codehilite">emptyDir</code> volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.</p>
 </div>
-<h2 id="before-you-begin">Before You Begin<a class="headerlink" href="#before-you-begin" title="Permanent link">&para;</a></h2>
+<h2 id="before-you-begin">Before You Begin<a class="headerlink" href="#before-you-begin" title="Permanent link"> ¶</a></h2>
 <p>The NGINX Ingress controller should already be deployed according to the deployment instructions <a href="../../deploy/">here</a>.</p>
 <p>Note that the kustomize bases used in this tutorial are stored in the <a href="https://github.com/kubernetes/ingress-nginx/tree/master/deploy">deploy</a> folder of the GitHub repository <a href="https://github.com/kubernetes/ingress-nginx">kubernetes/ingress-nginx</a>.</p>
-<h2 id="deploy-and-configure-prometheus-server">Deploy and configure Prometheus Server<a class="headerlink" href="#deploy-and-configure-prometheus-server" title="Permanent link">&para;</a></h2>
+<h2 id="deploy-and-configure-prometheus-server">Deploy and configure Prometheus Server<a class="headerlink" href="#deploy-and-configure-prometheus-server" title="Permanent link"> ¶</a></h2>
 <p>The Prometheus server must be configured so that it can discover endpoints of services. If a Prometheus server is already running in the cluster and if it is configured in a way that it can find the ingress controller pods, no extra configuration is needed.</p>
 <p>If there is no existing Prometheus server running, the rest of this tutorial will guide you through the steps needed to deploy a properly configured Prometheus server.</p>
 <p>Running the following command deploys prometheus in Kubernetes:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/</span>
-<span class="go">serviceaccount/prometheus-server created</span>
-<span class="go">role.rbac.authorization.k8s.io/prometheus-server created</span>
-<span class="go">rolebinding.rbac.authorization.k8s.io/prometheus-server created</span>
-<span class="go">configmap/prometheus-configuration-bc6bcg7b65 created</span>
-<span class="go">service/prometheus-server created</span>
-<span class="go">deployment.apps/prometheus-server created</span>
 </pre></div>
 
-<h3 id="prometheus-dashboard">Prometheus Dashboard<a class="headerlink" href="#prometheus-dashboard" title="Permanent link">&para;</a></h3>
+<h3 id="prometheus-dashboard">Prometheus Dashboard<a class="headerlink" href="#prometheus-dashboard" title="Permanent link"> ¶</a></h3>
 <p>Open Prometheus dashboard in a web browser:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl get svc -n ingress-nginx</span>
 <span class="go">NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE</span>
@@ -1290,7 +1284,7 @@
 <p>Open your browser and visit the following URL: <em>http://{node IP address}:{prometheus-svc-nodeport}</em> to load the Prometheus Dashboard.</p>
 <p>According to the above example, this URL will be http://10.192.0.3:32630</p>
 <p><img alt="Dashboard" src="../../images/prometheus-dashboard.png" /></p>
-<h3 id="grafana">Grafana<a class="headerlink" href="#grafana" title="Permanent link">&para;</a></h3>
+<h3 id="grafana">Grafana<a class="headerlink" href="#grafana" title="Permanent link"> ¶</a></h3>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/grafana/</span>
 </pre></div>
 

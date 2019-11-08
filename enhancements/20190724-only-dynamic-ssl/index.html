@@ -1219,8 +1219,8 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/enhancements/20190724-only-dynamic-ssl.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="remove-static-ssl-configuration-mode">Remove static SSL configuration mode<a class="headerlink" href="#remove-static-ssl-configuration-mode" title="Permanent link">&para;</a></h1>
-<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+                <h1 id="remove-static-ssl-configuration-mode">Remove static SSL configuration mode<a class="headerlink" href="#remove-static-ssl-configuration-mode" title="Permanent link"> ¶</a></h1>
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link"> ¶</a></h2>
 <!-- toc -->
 
 <ul>
@@ -1234,30 +1234,30 @@
 <li><a href="#alternatives">Alternatives</a>
 <!-- /toc --></li>
 </ul>
-<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link"> ¶</a></h2>
 <p>Since release <a href="https://github.com/kubernetes/ingress-nginx/releases/tag/nginx-0.19.0">0.19.0</a> is possible to configure SSL certificates without the need of NGINX reloads (thanks to lua) and after release <a href="https://github.com/kubernetes/ingress-nginx/releases/tag/nginx-0.19.0">0.24.0</a> the default enabled mode is dynamic.</p>
-<h2 id="motivation">Motivation<a class="headerlink" href="#motivation" title="Permanent link">&para;</a></h2>
+<h2 id="motivation">Motivation<a class="headerlink" href="#motivation" title="Permanent link"> ¶</a></h2>
 <p>The static configuration implies reloads, something that affects the majority of the users.</p>
-<h3 id="goals">Goals<a class="headerlink" href="#goals" title="Permanent link">&para;</a></h3>
+<h3 id="goals">Goals<a class="headerlink" href="#goals" title="Permanent link"> ¶</a></h3>
 <ul>
 <li>Deprecation of the flag <code class="codehilite">--enable-dynamic-certificates</code>.</li>
 <li>Cleanup of the codebase.</li>
 </ul>
-<h3 id="non-goals">Non-Goals<a class="headerlink" href="#non-goals" title="Permanent link">&para;</a></h3>
+<h3 id="non-goals">Non-Goals<a class="headerlink" href="#non-goals" title="Permanent link"> ¶</a></h3>
 <ul>
 <li>Features related to certificate authentication are not changed in any way.</li>
 </ul>
-<h2 id="proposal">Proposal<a class="headerlink" href="#proposal" title="Permanent link">&para;</a></h2>
+<h2 id="proposal">Proposal<a class="headerlink" href="#proposal" title="Permanent link"> ¶</a></h2>
 <ul>
 <li>Remove static SSL configuration</li>
 </ul>
-<h3 id="implementation-detailsnotesconstraints">Implementation Details/Notes/Constraints<a class="headerlink" href="#implementation-detailsnotesconstraints" title="Permanent link">&para;</a></h3>
+<h3 id="implementation-detailsnotesconstraints">Implementation Details/Notes/Constraints<a class="headerlink" href="#implementation-detailsnotesconstraints" title="Permanent link"> ¶</a></h3>
 <ul>
 <li>Deprecate the flag Move the directives <code class="codehilite">ssl_certificate</code> and <code class="codehilite">ssl_certificate_key</code> from each server block to the <code class="codehilite">http</code> section. These settings are required to avoid NGINX errors in the logs.</li>
 <li>Remove any action of the flag <code class="codehilite">--enable-dynamic-certificates</code></li>
 </ul>
-<h2 id="drawbacks">Drawbacks<a class="headerlink" href="#drawbacks" title="Permanent link">&para;</a></h2>
-<h2 id="alternatives">Alternatives<a class="headerlink" href="#alternatives" title="Permanent link">&para;</a></h2>
+<h2 id="drawbacks">Drawbacks<a class="headerlink" href="#drawbacks" title="Permanent link"> ¶</a></h2>
+<h2 id="alternatives">Alternatives<a class="headerlink" href="#alternatives" title="Permanent link"> ¶</a></h2>
 <p>Keep both implementations</p>
                 
                   

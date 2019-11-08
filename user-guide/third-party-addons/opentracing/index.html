@@ -1249,11 +1249,11 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/third-party-addons/opentracing.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="opentracing">OpenTracing<a class="headerlink" href="#opentracing" title="Permanent link">&para;</a></h1>
+                <h1 id="opentracing">OpenTracing<a class="headerlink" href="#opentracing" title="Permanent link"> ¶</a></h1>
 <p>Enables requests served by NGINX for distributed tracing via The OpenTracing Project.</p>
 <p>Using the third party module <a href="https://github.com/opentracing-contrib/nginx-opentracing">opentracing-contrib/nginx-opentracing</a> the NGINX ingress controller can configure NGINX to enable <a href="http://opentracing.io">OpenTracing</a> instrumentation.
 By default this feature is disabled.</p>
-<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link"> ¶</a></h2>
 <p>To enable the instrumentation we must enable OpenTracing in the configuration ConfigMap:
 <div class="codehilite"><pre><span></span><span class="n">data</span><span class="o">:</span>
   <span class="n">enable</span><span class="o">-</span><span class="n">opentracing</span><span class="o">:</span> <span class="s2">&quot;true&quot;</span>
@@ -1321,10 +1321,10 @@ datadog-service-name
 datadog-operation-name-override
 </pre></div></p>
 <p>All these options (including host) allow environment variables, such as <code class="codehilite">$HOSTNAME</code> or <code class="codehilite">$HOST_IP</code>. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like <code class="codehilite">$HOST_IP</code> (which can be 'mounted' with the <code class="codehilite">status.hostIP</code> fieldpath, as described <a href="https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api">here</a>) to make sure traces will be sent to the local agent.</p>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link"> ¶</a></h2>
 <p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed
 using Minikube.</p>
-<h3 id="zipkin">Zipkin<a class="headerlink" href="#zipkin" title="Permanent link">&para;</a></h3>
+<h3 id="zipkin">Zipkin<a class="headerlink" href="#zipkin" title="Permanent link"> ¶</a></h3>
 <p>In the <a href="https://github.com/rnburn/zipkin-date-server">rnburn/zipkin-date-server</a>
 GitHub repository is an example of a dockerized date service. To install the example and Zipkin collector run:</p>
 <div class="codehilite"><pre><span></span>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
@@ -1346,7 +1346,7 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
 
 <p>In the Zipkin interface we can see the details:
 <img alt="zipkin screenshot" src="../../../images/zipkin-demo.png" title="zipkin collector screenshot" /></p>
-<h3 id="jaeger">Jaeger<a class="headerlink" href="#jaeger" title="Permanent link">&para;</a></h3>
+<h3 id="jaeger">Jaeger<a class="headerlink" href="#jaeger" title="Permanent link"> ¶</a></h3>
 <ol>
 <li>
 <p>Enable Ingress addon in Minikube:

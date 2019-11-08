@@ -1247,9 +1247,9 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/docker-registry/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="docker-registry">Docker registry<a class="headerlink" href="#docker-registry" title="Permanent link">&para;</a></h1>
+                <h1 id="docker-registry">Docker registry<a class="headerlink" href="#docker-registry" title="Permanent link"> ¶</a></h1>
 <p>This example demonstrates how to deploy a <a href="https://github.com/docker/distribution">docker registry</a> in the cluster and configure Ingress enable access from Internet</p>
-<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link"> ¶</a></h2>
 <p>First we deploy the docker registry in the cluster:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/deployment.yaml</span>
 </pre></div>
@@ -1260,7 +1260,7 @@
 <p>This deployment uses <code class="codehilite">emptyDir</code> in the <code class="codehilite">volumeMount</code> which means the contents of the registry will be deleted when the pod dies.</p>
 </div>
 <p>The next required step is creation of the ingress rules. To do this we have two options: with and without TLS</p>
-<h3 id="without-tls">Without TLS<a class="headerlink" href="#without-tls" title="Permanent link">&para;</a></h3>
+<h3 id="without-tls">Without TLS<a class="headerlink" href="#without-tls" title="Permanent link"> ¶</a></h3>
 <p>Download and edit the yaml deployment replacing <code class="codehilite">registry.&lt;your domain&gt;</code> with a valid DNS name pointing to the ingress controller:</p>
 <div class="codehilite"><pre><span></span><span class="go">wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-without-tls.yaml</span>
 </pre></div>
@@ -1270,13 +1270,13 @@
 </div>
 <p>Running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.</p>
 <p>Please check <a href="https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry">deploy a plain http registry</a></p>
-<h3 id="with-tls">With TLS<a class="headerlink" href="#with-tls" title="Permanent link">&para;</a></h3>
+<h3 id="with-tls">With TLS<a class="headerlink" href="#with-tls" title="Permanent link"> ¶</a></h3>
 <p>Download and edit the yaml deployment replacing <code class="codehilite">registry.&lt;your domain&gt;</code> with a valid DNS name pointing to the ingress controller:</p>
 <div class="codehilite"><pre><span></span><span class="go">wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-with-tls.yaml</span>
 </pre></div>
 
 <p>Deploy <a href="https://github.com/jetstack/kube-lego">kube lego</a> use <a href="https://letsencrypt.org/">Let's Encrypt</a> certificates or edit the ingress rule to use a secret with an existing SSL certificate.</p>
-<h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h3>
+<h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link"> ¶</a></h3>
 <p>To test the registry is working correctly we download a known image from <a href="https://hub.docker.com">docker hub</a>, create a tag pointing to the new registry and upload the image:</p>
 <div class="codehilite"><pre><span></span><span class="go">docker pull ubuntu:16.04</span>
 <span class="go">docker tag ubuntu:16.04 `registry.&lt;your domain&gt;/ubuntu:16.04`</span>

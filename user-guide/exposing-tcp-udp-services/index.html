@@ -1148,7 +1148,7 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/exposing-tcp-udp-services.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="exposing-tcp-and-udp-services">Exposing TCP and UDP services<a class="headerlink" href="#exposing-tcp-and-udp-services" title="Permanent link">&para;</a></h1>
+                <h1 id="exposing-tcp-and-udp-services">Exposing TCP and UDP services<a class="headerlink" href="#exposing-tcp-and-udp-services" title="Permanent link"> ¶</a></h1>
 <p>Ingress does not support TCP or UDP services. For this reason this Ingress controller uses the flags <code class="codehilite">--tcp-services-configmap</code> and <code class="codehilite">--udp-services-configmap</code> to point to an existing config map where the key is the external port to use and the value indicates the service to expose using the format:
 <code class="codehilite">&lt;namespace/service name&gt;:&lt;service port&gt;:[PROXY]:[PROXY]</code></p>
 <p>It is also possible to use a number or the name of the port. The two last fields are optional.

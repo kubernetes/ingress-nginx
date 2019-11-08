@@ -1223,9 +1223,9 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/customization/custom-errors/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="custom-errors">Custom Errors<a class="headerlink" href="#custom-errors" title="Permanent link">&para;</a></h1>
+                <h1 id="custom-errors">Custom Errors<a class="headerlink" href="#custom-errors" title="Permanent link"> ¶</a></h1>
 <p>This example demonstrates how to use a custom backend to render custom error pages.</p>
-<h2 id="customized-default-backend">Customized default backend<a class="headerlink" href="#customized-default-backend" title="Permanent link">&para;</a></h2>
+<h2 id="customized-default-backend">Customized default backend<a class="headerlink" href="#customized-default-backend" title="Permanent link"> ¶</a></h2>
 <p>First, create the custom <code class="codehilite">default-backend</code>. It will be used by the Ingress controller later on.</p>
 <div class="codehilite"><pre><span></span>$ kubectl create -f custom-default-backend.yaml
 service <span class="s2">&quot;nginx-errors&quot;</span> created
@@ -1241,7 +1241,7 @@ NAME                   TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o"
 service/nginx-errors   ClusterIP   <span class="m">10</span>.0.0.12   &lt;none&gt;        <span class="m">80</span>/TCP    10s
 </pre></div>
 
-<h2 id="ingress-controller-configuration">Ingress controller configuration<a class="headerlink" href="#ingress-controller-configuration" title="Permanent link">&para;</a></h2>
+<h2 id="ingress-controller-configuration">Ingress controller configuration<a class="headerlink" href="#ingress-controller-configuration" title="Permanent link"> ¶</a></h2>
 <p>If you do not already have an instance of the NGINX Ingress controller running, deploy it according to the
 <a href="../../../deploy/">deployment guide</a>, then follow these steps:</p>
 <ol>
@@ -1265,7 +1265,7 @@ ingress-nginx   ClusterIP   <span class="m">10</span>.0.0.13   &lt;none&gt;     
 <p>The <code class="codehilite">ingress-nginx</code> Service is of type <code class="codehilite">ClusterIP</code> in this example. This may vary depending on your environment.
 Make sure you can use the Service to reach NGINX before proceeding with the rest of this example.</p>
 </div>
-<h2 id="testing-error-pages">Testing error pages<a class="headerlink" href="#testing-error-pages" title="Permanent link">&para;</a></h2>
+<h2 id="testing-error-pages">Testing error pages<a class="headerlink" href="#testing-error-pages" title="Permanent link"> ¶</a></h2>
 <p>Let us send a couple of HTTP requests using cURL and validate everything is working as expected.</p>
 <p>A request to the default backend returns a 404 error with a custom message:</p>
 <div class="codehilite"><pre><span></span>$ curl -D- http://10.0.0.13/

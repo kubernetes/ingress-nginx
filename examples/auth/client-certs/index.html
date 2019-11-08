@@ -1209,7 +1209,7 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/auth/client-certs/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link">&para;</a></h1>
+                <h1 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link"> ¶</a></h1>
 <p>It is possible to enable Client-Certificate Authentication by adding additional annotations to your Ingress Resource.
 Before getting started you must have the following Certificates Setup:</p>
 <ol>
@@ -1228,7 +1228,7 @@ Before getting started you must have the following Certificates Setup:</p>
 
 <p><strong>Note:</strong> Make sure that the Key Size is greater than 1024 and Hashing Algorithm(Digest) is something better than md5
 for each certificate generated. Otherwise you will receive an error.</p>
-<h2 id="creating-certificate-secrets">Creating Certificate Secrets<a class="headerlink" href="#creating-certificate-secrets" title="Permanent link">&para;</a></h2>
+<h2 id="creating-certificate-secrets">Creating Certificate Secrets<a class="headerlink" href="#creating-certificate-secrets" title="Permanent link"> ¶</a></h2>
 <p>There are many different ways of configuring your secrets to enable Client-Certificate
 Authentication to work properly.</p>
 <ol>
@@ -1255,7 +1255,7 @@ kubectl create secret generic tls-secret --from-file<span class="o">=</span>tls.
 </li>
 </ol>
 <p>Note: The CA Certificate must contain the trusted certificate authority chain to verify client certificates.</p>
-<h2 id="setup-instructions">Setup Instructions<a class="headerlink" href="#setup-instructions" title="Permanent link">&para;</a></h2>
+<h2 id="setup-instructions">Setup Instructions<a class="headerlink" href="#setup-instructions" title="Permanent link"> ¶</a></h2>
 <ol>
 <li>Add the annotations as provided in the <a href="ingress.yaml">ingress.yaml</a> example to your own ingress resources as required.</li>
 <li>Test by performing a curl against the Ingress Path without the Client Cert and expect a Status Code 400.</li>

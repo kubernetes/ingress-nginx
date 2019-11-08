@@ -1193,7 +1193,7 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/multiple-ingress.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="multiple-ingress-controllers">Multiple Ingress controllers<a class="headerlink" href="#multiple-ingress-controllers" title="Permanent link">&para;</a></h1>
+                <h1 id="multiple-ingress-controllers">Multiple Ingress controllers<a class="headerlink" href="#multiple-ingress-controllers" title="Permanent link"> ¶</a></h1>
 <p>If you're running multiple ingress controllers, or running on a cloud provider that natively handles ingress such as GKE,
 you need to specify the annotation <code class="codehilite">kubernetes.io/ingress.class: &quot;nginx&quot;</code> in all ingresses that you would like the ingress-nginx controller to claim.</p>
 <p>For instance,</p>
@@ -1214,7 +1214,7 @@ you need to specify the annotation <code class="codehilite">kubernetes.io/ingres
 <p>To reiterate, setting the annotation to any value which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.
 If you are only running a single NGINX ingress controller, this can be achieved by setting the annotation to any value except "nginx" or an empty string.</p>
 <p>Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.</p>
-<h2 id="multiple-ingress-nginx-controllers">Multiple ingress-nginx controllers<a class="headerlink" href="#multiple-ingress-nginx-controllers" title="Permanent link">&para;</a></h2>
+<h2 id="multiple-ingress-nginx-controllers">Multiple ingress-nginx controllers<a class="headerlink" href="#multiple-ingress-nginx-controllers" title="Permanent link"> ¶</a></h2>
 <p>This mechanism also provides users the ability to run <em>multiple</em> NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).
 To do this, the option <code class="codehilite">--ingress-class</code> must be changed to a value unique for the cluster within the definition of the replication controller.
 Here is a partial example:</p>

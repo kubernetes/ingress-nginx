@@ -1206,8 +1206,8 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/enhancements/20190815-zone-aware-routing.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="availability-zone-aware-routing">Availability zone aware routing<a class="headerlink" href="#availability-zone-aware-routing" title="Permanent link">&para;</a></h1>
-<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+                <h1 id="availability-zone-aware-routing">Availability zone aware routing<a class="headerlink" href="#availability-zone-aware-routing" title="Permanent link"> ¶</a></h1>
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link"> ¶</a></h2>
 <!-- toc -->
 
 <ul>
@@ -1220,9 +1220,9 @@
 <li><a href="#drawbacks-optional">Drawbacks [optional]</a>
 <!-- /toc --></li>
 </ul>
-<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link"> ¶</a></h2>
 <p>Teach ingress-nginx about availability zones where endpoints are running in. This way ingress-nginx pod will do its best to proxy to zone-local endpoint.</p>
-<h2 id="motivation">Motivation<a class="headerlink" href="#motivation" title="Permanent link">&para;</a></h2>
+<h2 id="motivation">Motivation<a class="headerlink" href="#motivation" title="Permanent link"> ¶</a></h2>
 <p>When users run their services across multiple availability zones they usually pay for egress traffic between zones. Providers such as GCP, Amazon EC charges money for that.
 ingress-nginx when picking an endpoint to route request to does not consider whether the endpoint is in different zone or the same one. That means it's at least equally likely
 that it will pick an endpoint from another zone and proxy the request to it. In this situation response from the endpoint to ingress-nginx pod is considered as
@@ -1231,18 +1231,18 @@ inter zone traffic and costs money.</p>
 According to https://datapath.io/resources/blog/what-are-aws-data-transfer-costs-and-how-to-minimize-them/ Amazon also charges the same amount of money sa GCP for cross zone, egress traffic.</p>
 <p>This can be a lot of money depending on once's traffic. By teaching ingress-nginx about zones we can eliminate or at least decrease this cost.</p>
 <p>Arguably inter-zone network latency should also be better than cross zone.</p>
-<h3 id="goals">Goals<a class="headerlink" href="#goals" title="Permanent link">&para;</a></h3>
+<h3 id="goals">Goals<a class="headerlink" href="#goals" title="Permanent link"> ¶</a></h3>
 <ul>
 <li>Given a regional cluster running ingress-nginx, ingress-nginx should do best effort to pick zone-local endpoint when proxying</li>
 <li>This should not impact canary feature</li>
 <li>ingress-nginx should be able to operate successfully if there's no zonal endpoints</li>
 </ul>
-<h3 id="non-goals">Non-Goals<a class="headerlink" href="#non-goals" title="Permanent link">&para;</a></h3>
+<h3 id="non-goals">Non-Goals<a class="headerlink" href="#non-goals" title="Permanent link"> ¶</a></h3>
 <ul>
 <li>This feature inherently assumes that endpoints are distributed across zones in a way that they can handle all the traffic from ingress-nginx pod(s) in that zone</li>
 <li>This feature will be relying on https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/#failure-domainbetakubernetesiozone, it is not this KEP's goal to support other cases</li>
 </ul>
-<h2 id="proposal">Proposal<a class="headerlink" href="#proposal" title="Permanent link">&para;</a></h2>
+<h2 id="proposal">Proposal<a class="headerlink" href="#proposal" title="Permanent link"> ¶</a></h2>
 <p>The idea here is to have controller part of ingress-nginx to (1) detect what zone its current pod is running in and (2) detect the zone for every endpoints it knows about.
 After that it will post that data as part of endpoints to Lua land. Then Lua balancer when picking an endpoint will try to pick zone-local endpoint first and
 if there is no zone-local endpoint then it will fallback to current behaviour.</p>
@@ -1269,12 +1269,12 @@ needs to serve the request, we will first try to use zonal balancer for that bac
 then we will use general balancer. In case of zonal outages we assume that readiness probe will fail and controller will
 see no endpoints for the backend and therefore we will use general balancer.</p>
 <p>We can enable the feature using a configmap setting. Doing it this way makes it easier to rollback in case of a problem.</p>
-<h2 id="implementation-history">Implementation History<a class="headerlink" href="#implementation-history" title="Permanent link">&para;</a></h2>
+<h2 id="implementation-history">Implementation History<a class="headerlink" href="#implementation-history" title="Permanent link"> ¶</a></h2>
 <ul>
 <li>initial version of KEP is shipped</li>
 <li>proposal and implementation details is done</li>
 </ul>
-<h2 id="drawbacks-optional">Drawbacks [optional]<a class="headerlink" href="#drawbacks-optional" title="Permanent link">&para;</a></h2>
+<h2 id="drawbacks-optional">Drawbacks [optional]<a class="headerlink" href="#drawbacks-optional" title="Permanent link"> ¶</a></h2>
 <p>More load on the Kubernetes API server.</p>
                 
                   

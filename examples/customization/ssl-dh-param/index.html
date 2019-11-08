@@ -1223,11 +1223,11 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/customization/ssl-dh-param/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="custom-dh-parameters-for-perfect-forward-secrecy">Custom DH parameters for perfect forward secrecy<a class="headerlink" href="#custom-dh-parameters-for-perfect-forward-secrecy" title="Permanent link">&para;</a></h1>
+                <h1 id="custom-dh-parameters-for-perfect-forward-secrecy">Custom DH parameters for perfect forward secrecy<a class="headerlink" href="#custom-dh-parameters-for-perfect-forward-secrecy" title="Permanent link"> ¶</a></h1>
 <p>This example aims to demonstrate the deployment of an nginx ingress controller and
 use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 "Perfect Forward Secrecy".</p>
-<h2 id="custom-configuration">Custom configuration<a class="headerlink" href="#custom-configuration" title="Permanent link">&para;</a></h2>
+<h2 id="custom-configuration">Custom configuration<a class="headerlink" href="#custom-configuration" title="Permanent link"> ¶</a></h2>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> cat configmap.yaml
 <span class="go">apiVersion: v1</span>
 <span class="go">data:</span>
@@ -1244,7 +1244,7 @@ use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f configmap.yaml
 </pre></div>
 
-<h2 id="custom-dh-parameters-secret">Custom DH parameters secret<a class="headerlink" href="#custom-dh-parameters-secret" title="Permanent link">&para;</a></h2>
+<h2 id="custom-dh-parameters-secret">Custom DH parameters secret<a class="headerlink" href="#custom-dh-parameters-secret" title="Permanent link"> ¶</a></h2>
 <div class="codehilite"><pre><span></span><span class="gp">$</span>&gt; openssl dhparam <span class="m">1024</span> <span class="m">2</span>&gt; /dev/null <span class="p">|</span> base64
 <span class="go">LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ...</span>
 </pre></div>
@@ -1265,7 +1265,7 @@ use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f ssl-dh-param.yaml
 </pre></div>
 
-<h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link">&para;</a></h2>
+<h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link"> ¶</a></h2>
 <p>Check the contents of the configmap is present in the nginx.conf file using:
 <code class="codehilite">kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf</code></p>
                 

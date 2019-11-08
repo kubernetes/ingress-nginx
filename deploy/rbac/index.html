@@ -1275,8 +1275,8 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/deploy/rbac.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="role-based-access-control-rbac">Role Based Access Control (RBAC)<a class="headerlink" href="#role-based-access-control-rbac" title="Permanent link">&para;</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+                <h1 id="role-based-access-control-rbac">Role Based Access Control (RBAC)<a class="headerlink" href="#role-based-access-control-rbac" title="Permanent link"> ¶</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link"> ¶</a></h2>
 <p>This example applies to nginx-ingress-controllers being deployed in an environment with RBAC enabled.</p>
 <p>Role Based Access Control is comprised of four layers:</p>
 <ol>
@@ -1288,13 +1288,13 @@
 <p>In order for RBAC to be applied to an nginx-ingress-controller, that controller
 should be assigned to a <code class="codehilite">ServiceAccount</code>.  That <code class="codehilite">ServiceAccount</code> should be
 bound to the <code class="codehilite">Role</code>s and <code class="codehilite">ClusterRole</code>s defined for the nginx-ingress-controller.</p>
-<h2 id="service-accounts-created-in-this-example">Service Accounts created in this example<a class="headerlink" href="#service-accounts-created-in-this-example" title="Permanent link">&para;</a></h2>
+<h2 id="service-accounts-created-in-this-example">Service Accounts created in this example<a class="headerlink" href="#service-accounts-created-in-this-example" title="Permanent link"> ¶</a></h2>
 <p>One ServiceAccount is created in this example, <code class="codehilite">nginx-ingress-serviceaccount</code>.</p>
-<h2 id="permissions-granted-in-this-example">Permissions Granted in this example<a class="headerlink" href="#permissions-granted-in-this-example" title="Permanent link">&para;</a></h2>
+<h2 id="permissions-granted-in-this-example">Permissions Granted in this example<a class="headerlink" href="#permissions-granted-in-this-example" title="Permanent link"> ¶</a></h2>
 <p>There are two sets of permissions defined in this example.  Cluster-wide
 permissions defined by the <code class="codehilite">ClusterRole</code> named <code class="codehilite">nginx-ingress-clusterrole</code>, and
 namespace specific permissions defined by the <code class="codehilite">Role</code> named <code class="codehilite">nginx-ingress-role</code>.</p>
-<h3 id="cluster-permissions">Cluster Permissions<a class="headerlink" href="#cluster-permissions" title="Permanent link">&para;</a></h3>
+<h3 id="cluster-permissions">Cluster Permissions<a class="headerlink" href="#cluster-permissions" title="Permanent link"> ¶</a></h3>
 <p>These permissions are granted in order for the nginx-ingress-controller to be
 able to function as an ingress across the cluster.  These permissions are
 granted to the ClusterRole named <code class="codehilite">nginx-ingress-clusterrole</code></p>
@@ -1305,7 +1305,7 @@ granted to the ClusterRole named <code class="codehilite">nginx-ingress-clusterr
 <li><code class="codehilite">events</code>: create, patch</li>
 <li><code class="codehilite">ingresses/status</code>: update</li>
 </ul>
-<h3 id="namespace-permissions">Namespace Permissions<a class="headerlink" href="#namespace-permissions" title="Permanent link">&para;</a></h3>
+<h3 id="namespace-permissions">Namespace Permissions<a class="headerlink" href="#namespace-permissions" title="Permanent link"> ¶</a></h3>
 <p>These permissions are granted specific to the nginx-ingress namespace.  These
 permissions are granted to the Role named <code class="codehilite">nginx-ingress-role</code></p>
 <ul>
@@ -1333,7 +1333,7 @@ are part of the request body).</p>
 </ul>
 <p>Please adapt accordingly if you overwrite either parameter when launching the
 nginx-ingress-controller.</p>
-<h3 id="bindings">Bindings<a class="headerlink" href="#bindings" title="Permanent link">&para;</a></h3>
+<h3 id="bindings">Bindings<a class="headerlink" href="#bindings" title="Permanent link"> ¶</a></h3>
 <p>The ServiceAccount <code class="codehilite">nginx-ingress-serviceaccount</code> is bound to the Role
 <code class="codehilite">nginx-ingress-role</code> and the ClusterRole <code class="codehilite">nginx-ingress-clusterrole</code>.</p>
 <p>The serviceAccountName associated with the containers in the deployment must

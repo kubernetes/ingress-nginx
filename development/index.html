@@ -1357,11 +1357,11 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/development.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="developing-for-nginx-ingress-controller">Developing for NGINX Ingress Controller<a class="headerlink" href="#developing-for-nginx-ingress-controller" title="Permanent link">&para;</a></h1>
+                <h1 id="developing-for-nginx-ingress-controller">Developing for NGINX Ingress Controller<a class="headerlink" href="#developing-for-nginx-ingress-controller" title="Permanent link"> ¶</a></h1>
 <p>This document explains how to get started with developing for NGINX Ingress controller.
 It includes how to build, test, and release ingress controllers.</p>
-<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<h3 id="getting-the-code">Getting the code<a class="headerlink" href="#getting-the-code" title="Permanent link">&para;</a></h3>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link"> ¶</a></h2>
+<h3 id="getting-the-code">Getting the code<a class="headerlink" href="#getting-the-code" title="Permanent link"> ¶</a></h3>
 <p>The code must be checked out as a subdirectory of k8s.io, and not github.com.</p>
 <div class="codehilite"><pre><span></span>mkdir -p $GOPATH/src/k8s.io
 cd $GOPATH/src/k8s.io
@@ -1370,16 +1370,16 @@ git clone https://github.com/$YOUR_GITHUB_USERNAME/ingress-nginx.git
 cd ingress-nginx
 </pre></div>
 
-<h3 id="initial-developer-environment-build">Initial developer environment build<a class="headerlink" href="#initial-developer-environment-build" title="Permanent link">&para;</a></h3>
+<h3 id="initial-developer-environment-build">Initial developer environment build<a class="headerlink" href="#initial-developer-environment-build" title="Permanent link"> ¶</a></h3>
 <blockquote>
 <p><strong>Prequisites</strong>: Minikube must be installed.
-See <a href="https://github.com/kubernetes/minikube/releases">releases</a> for installation instructions. </p>
+See <a href="https://github.com/kubernetes/minikube/releases">releases</a> for installation instructions.</p>
 </blockquote>
 <p>If you are using <strong>MacOS</strong> and deploying to <strong>minikube</strong>, the following command will build the local nginx controller container image and deploy the ingress controller onto a minikube cluster with RBAC enabled in the namespace <code class="codehilite">ingress-nginx</code>:</p>
 <div class="codehilite"><pre><span></span>$ make dev-env
 </pre></div>
 
-<h3 id="updating-the-deployment">Updating the deployment<a class="headerlink" href="#updating-the-deployment" title="Permanent link">&para;</a></h3>
+<h3 id="updating-the-deployment">Updating the deployment<a class="headerlink" href="#updating-the-deployment" title="Permanent link"> ¶</a></h3>
 <p>The nginx controller container image can be rebuilt using:
 <div class="codehilite"><pre><span></span>$ <span class="nv">ARCH</span><span class="o">=</span>amd64 <span class="nv">TAG</span><span class="o">=</span>dev <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make build container
 </pre></div></p>
@@ -1387,7 +1387,7 @@ See <a href="https://github.com/kubernetes/minikube/releases">releases</a> for i
 <div class="codehilite"><pre><span></span>$ kubectl get pods -n ingress-nginx
 $ kubectl delete pod -n ingress-nginx nginx-ingress-controller-&lt;unique-pod-id&gt;
 </pre></div></p>
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
+<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link"> ¶</a></h2>
 <p>The build uses dependencies in the <code class="codehilite">vendor</code> directory, which
 must be installed before building a binary/image. Occasionally, you
 might need to update the dependencies.</p>
@@ -1396,8 +1396,8 @@ might need to update the dependencies.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> dep version
 <span class="go">dep:</span>
 <span class="go"> version     : devel</span>
-<span class="go"> build date  : </span>
-<span class="go"> git hash    : </span>
+<span class="go"> build date  :</span>
+<span class="go"> git hash    :</span>
 <span class="go"> go version  : go1.9</span>
 <span class="go"> go compiler : gc</span>
 <span class="go"> platform    : linux/amd64</span>
@@ -1414,7 +1414,7 @@ might need to update the dependencies.</p>
 <span class="gp">$</span> dep prune
 </pre></div>
 
-<h2 id="building">Building<a class="headerlink" href="#building" title="Permanent link">&para;</a></h2>
+<h2 id="building">Building<a class="headerlink" href="#building" title="Permanent link"> ¶</a></h2>
 <p>All ingress controllers are built through a Makefile. Depending on your
 requirements you can build a raw server binary, a local container image,
 or push an image to a remote repository.</p>
@@ -1427,7 +1427,7 @@ or push an image to a remote repository.</p>
 </pre></div>
 
 <p>To find the registry simply run: <code class="codehilite">docker system info | grep Registry</code></p>
-<h3 id="building-the-e2e-test-image">Building the e2e test image<a class="headerlink" href="#building-the-e2e-test-image" title="Permanent link">&para;</a></h3>
+<h3 id="building-the-e2e-test-image">Building the e2e test image<a class="headerlink" href="#building-the-e2e-test-image" title="Permanent link"> ¶</a></h3>
 <p>The e2e test image can also be built through the Makefile.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> make e2e-test-image
 </pre></div>
@@ -1436,7 +1436,7 @@ or push an image to a remote repository.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> docker save nginx-ingress-controller:e2e <span class="p">|</span>  <span class="o">(</span><span class="nb">eval</span> <span class="k">$(</span>minikube docker-env<span class="k">)</span> <span class="o">&amp;&amp;</span> docker load<span class="o">)</span>
 </pre></div>
 
-<h3 id="nginx-controller">Nginx Controller<a class="headerlink" href="#nginx-controller" title="Permanent link">&para;</a></h3>
+<h3 id="nginx-controller">Nginx Controller<a class="headerlink" href="#nginx-controller" title="Permanent link"> ¶</a></h3>
 <p>Build a raw server binary
 <div class="codehilite"><pre><span></span><span class="gp">$</span> make build
 </pre></div></p>
@@ -1449,10 +1449,10 @@ or push an image to a remote repository.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make push
 </pre></div>
 
-<h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link">&para;</a></h2>
+<h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link"> ¶</a></h2>
 <p>There are several ways to deploy the ingress controller onto a cluster.
-Please check the <a href="./deploy">deployment guide</a></p>
-<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
+Please check the <a href="../deploy/">deployment guide</a></p>
+<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link"> ¶</a></h2>
 <p>To run unit-tests, just run</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
 <span class="gp">$</span> make <span class="nb">test</span>
@@ -1463,15 +1463,15 @@ Please check the <a href="./deploy">deployment guide</a></p>
 <span class="gp">$</span> make e2e-test
 </pre></div>
 
-<p>NOTE: if your e2e pod keeps hanging in an ImagePullBackoff, make sure you've made your e2e nginx-ingress-controller image available to minikube as explained in <a href="./Building the e2e test image">Building the e2e test image</a></p>
+<p>NOTE: if your e2e pod keeps hanging in an ImagePullBackoff, make sure you've made your e2e nginx-ingress-controller image available to minikube as explained in the <strong>Building the e2e test image</strong> section</p>
 <p>To run unit-tests for lua code locally, run:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
 <span class="gp">$</span> ./rootfs/etc/nginx/lua/test/up.sh
 <span class="gp">$</span> make lua-test
 </pre></div>
 
-<p>Lua tests are located in <code class="codehilite">$GOPATH/src/k8s.io/ingress-nginx/rootfs/etc/nginx/lua/test</code>. When creating a new test file it must follow the naming convention <code class="codehilite">&lt;mytest&gt;_test.lua</code> or it will be ignored. </p>
-<h2 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link">&para;</a></h2>
+<p>Lua tests are located in <code class="codehilite">$GOPATH/src/k8s.io/ingress-nginx/rootfs/etc/nginx/lua/test</code>. When creating a new test file it must follow the naming convention <code class="codehilite">&lt;mytest&gt;_test.lua</code> or it will be ignored.</p>
+<h2 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link"> ¶</a></h2>
 <p>All Makefiles will produce a release binary, as shown above. To publish this
 to a wider Kubernetes user base, push the image to a container registry, like
 <a href="https://cloud.google.com/container-registry/">gcr.io</a>. All release images are hosted under <code class="codehilite">gcr.io/google_containers</code> and

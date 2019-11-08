@@ -1261,13 +1261,13 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/rewrite/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="rewrite">Rewrite<a class="headerlink" href="#rewrite" title="Permanent link">&para;</a></h1>
+                <h1 id="rewrite">Rewrite<a class="headerlink" href="#rewrite" title="Permanent link"> ¶</a></h1>
 <p>This example demonstrates how to use the Rewrite annotations</p>
-<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link"> ¶</a></h2>
 <p>You will need to make sure your Ingress targets exactly one Ingress
 controller by specifying the <a href="../../user-guide/multiple-ingress/">ingress.class annotation</a>,
-and that you have an ingress controller <a href="../../deploy">running</a> in your cluster.</p>
-<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+and that you have an ingress controller <a href="../../deploy/">running</a> in your cluster.</p>
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link"> ¶</a></h2>
 <p>Rewriting can be controlled using the following annotations:</p>
 <table>
 <thead>
@@ -1305,15 +1305,15 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 </tr>
 </tbody>
 </table>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<h3 id="rewrite-target">Rewrite Target<a class="headerlink" href="#rewrite-target" title="Permanent link">&para;</a></h3>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link"> ¶</a></h2>
+<h3 id="rewrite-target">Rewrite Target<a class="headerlink" href="#rewrite-target" title="Permanent link"> ¶</a></h3>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>Starting in Version 0.22.0, ingress definitions using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/rewrite-target</code> are not backwards compatible with previous versions. In Version 0.22.0 and beyond, any substrings within the request URI that need to be passed to the rewritten path must explicitly be defined in a <a href="https://www.regular-expressions.info/refcapture.html">capture group</a>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><a href="https://www.regular-expressions.info/refcapture.html">Captured groups</a> are saved in numbered placeholders, chronologically, in the form <code class="codehilite">$1</code>, <code class="codehilite">$2</code> ... <code class="codehilite">$n</code>. These placeholders can be used as parameters in the <code class="codehilite">rewrite-target</code> annotation. </p>
+<p><a href="https://www.regular-expressions.info/refcapture.html">Captured groups</a> are saved in numbered placeholders, chronologically, in the form <code class="codehilite">$1</code>, <code class="codehilite">$2</code> ... <code class="codehilite">$n</code>. These placeholders can be used as parameters in the <code class="codehilite">rewrite-target</code> annotation.</p>
 </div>
 <p>Create an Ingress rule with a rewrite annotation:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="err">&#39;</span>
@@ -1336,12 +1336,12 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <span class="go">&#39; | kubectl create -f -</span>
 </pre></div>
 
-<p>In this ingress definition, any characters captured by <code class="codehilite">(.*)</code> will be assigned to the placeholder <code class="codehilite">$2</code>, which is then used as a parameter in the <code class="codehilite">rewrite-target</code> annotation. </p>
+<p>In this ingress definition, any characters captured by <code class="codehilite">(.*)</code> will be assigned to the placeholder <code class="codehilite">$2</code>, which is then used as a parameter in the <code class="codehilite">rewrite-target</code> annotation.</p>
 <p>For example, the ingress definition above will result in the following rewrites:
 - <code class="codehilite">rewrite.bar.com/something</code> rewrites to <code class="codehilite">rewrite.bar.com/</code>
 - <code class="codehilite">rewrite.bar.com/something/</code> rewrites to <code class="codehilite">rewrite.bar.com/</code>
 - <code class="codehilite">rewrite.bar.com/something/new</code> rewrites to <code class="codehilite">rewrite.bar.com/new</code></p>
-<h3 id="app-root">App Root<a class="headerlink" href="#app-root" title="Permanent link">&para;</a></h3>
+<h3 id="app-root">App Root<a class="headerlink" href="#app-root" title="Permanent link"> ¶</a></h3>
 <p>Create an Ingress rule with a app-root annotation:
 <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span>
 <span class="s2">apiVersion: extensions/v1beta1</span>

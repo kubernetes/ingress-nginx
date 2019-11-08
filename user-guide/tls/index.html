@@ -1303,8 +1303,8 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/tls.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="tlshttps">TLS/HTTPS<a class="headerlink" href="#tlshttps" title="Permanent link">&para;</a></h1>
-<h2 id="tls-secrets">TLS Secrets<a class="headerlink" href="#tls-secrets" title="Permanent link">&para;</a></h2>
+                <h1 id="tlshttps">TLS/HTTPS<a class="headerlink" href="#tlshttps" title="Permanent link"> ¶</a></h1>
+<h2 id="tls-secrets">TLS Secrets<a class="headerlink" href="#tls-secrets" title="Permanent link"> ¶</a></h2>
 <p>Anytime we reference a TLS secret, we mean a PEM-encoded X.509, RSA (2048) secret.</p>
 <p>You can generate a self-signed certificate and private key with:</p>
 <div class="codehilite"><pre><span></span>$ openssl req -x509 -nodes -days <span class="m">365</span> -newkey rsa:2048 -keyout <span class="si">${</span><span class="nv">KEY_FILE</span><span class="si">}</span> -out <span class="si">${</span><span class="nv">CERT_FILE</span><span class="si">}</span> -subj <span class="s2">&quot;/CN=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">/O=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -1315,7 +1315,7 @@
 </pre></div>
 
 <p>The resulting secret will be of type <code class="codehilite">kubernetes.io/tls</code>.</p>
-<h2 id="default-ssl-certificate">Default SSL Certificate<a class="headerlink" href="#default-ssl-certificate" title="Permanent link">&para;</a></h2>
+<h2 id="default-ssl-certificate">Default SSL Certificate<a class="headerlink" href="#default-ssl-certificate" title="Permanent link"> ¶</a></h2>
 <p>NGINX provides the option to configure a server as a catch-all with
 <a href="http://nginx.org/en/docs/http/server_names.html">server_name</a>
 for requests that do not match any of the configured server names.
@@ -1329,8 +1329,8 @@ If this flag is not provided NGINX will use a self-signed certificate.</p>
 add <code class="codehilite">--default-ssl-certificate=default/foo-tls</code> in the <code class="codehilite">nginx-controller</code> deployment.</p>
 <p>The default certificate will also be used for ingress <code class="codehilite">tls:</code> sections that do not
 have a <code class="codehilite">secretName</code> option.</p>
-<h2 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h2>
-<p>The <a href="cli-arguments/"><code class="codehilite">--enable-ssl-passthrough</code></a> flag enables the SSL Passthrough feature, which is disabled by
+<h2 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link"> ¶</a></h2>
+<p>The <a href="../cli-arguments/"><code class="codehilite">--enable-ssl-passthrough</code></a> flag enables the SSL Passthrough feature, which is disabled by
 default. This is required to enable passthrough backends in Ingress objects.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -1347,14 +1347,14 @@ passthrough proxy port (default: 442), which proxies the request to the default 
 <p>Unlike HTTP backends, traffic to Passthrough backends is sent to the <em>clusterIP</em> of the backing Service instead of
 individual Endpoints.</p>
 </div>
-<h2 id="http-strict-transport-security">HTTP Strict Transport Security<a class="headerlink" href="#http-strict-transport-security" title="Permanent link">&para;</a></h2>
+<h2 id="http-strict-transport-security">HTTP Strict Transport Security<a class="headerlink" href="#http-strict-transport-security" title="Permanent link"> ¶</a></h2>
 <p>HTTP Strict Transport Security (HSTS) is an opt-in security enhancement specified
 through the use of a special response header. Once a supported browser receives
 this header that browser will prevent any communications from being sent over
 HTTP to the specified domain and will instead send all communications over HTTPS.</p>
 <p>HSTS is enabled by default.</p>
 <p>To disable this behavior use <code class="codehilite">hsts: &quot;false&quot;</code> in the configuration <a href="../nginx-configuration/configmap/">ConfigMap</a>.</p>
-<h2 id="server-side-https-enforcement-through-redirect">Server-side HTTPS enforcement through redirect<a class="headerlink" href="#server-side-https-enforcement-through-redirect" title="Permanent link">&para;</a></h2>
+<h2 id="server-side-https-enforcement-through-redirect">Server-side HTTPS enforcement through redirect<a class="headerlink" href="#server-side-https-enforcement-through-redirect" title="Permanent link"> ¶</a></h2>
 <p>By default the controller redirects HTTP clients to the HTTPS port
 443 using a 308 Permanent Redirect response if TLS is enabled for that Ingress.</p>
 <p>This can be disabled globally using <code class="codehilite">ssl-redirect: &quot;false&quot;</code> in the NGINX <a href="../nginx-configuration/configmap/">config map</a>,
@@ -1367,7 +1367,7 @@ redirect to HTTPS even when there is no TLS certificate available.
 This can be achieved by using the <code class="codehilite">nginx.ingress.kubernetes.io/force-ssl-redirect: &quot;true&quot;</code>
 annotation in the particular resource.</p>
 </div>
-<h2 id="automated-certificate-management-with-kube-lego">Automated Certificate Management with Kube-Lego<a class="headerlink" href="#automated-certificate-management-with-kube-lego" title="Permanent link">&para;</a></h2>
+<h2 id="automated-certificate-management-with-kube-lego">Automated Certificate Management with Kube-Lego<a class="headerlink" href="#automated-certificate-management-with-kube-lego" title="Permanent link"> ¶</a></h2>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>Kube-Lego has reached end-of-life and is being
@@ -1381,10 +1381,10 @@ by monitoring ingress resources and their referenced secrets.</p>
 
 <p>To setup Kube-Lego you can take a look at this <a href="https://github.com/jetstack/kube-lego/tree/master/examples">full example</a>.
 The first version to fully support Kube-Lego is Nginx Ingress controller 0.8.</p>
-<h2 id="default-tls-version-and-ciphers">Default TLS Version and Ciphers<a class="headerlink" href="#default-tls-version-and-ciphers" title="Permanent link">&para;</a></h2>
+<h2 id="default-tls-version-and-ciphers">Default TLS Version and Ciphers<a class="headerlink" href="#default-tls-version-and-ciphers" title="Permanent link"> ¶</a></h2>
 <p>To provide the most secure baseline configuration possible,</p>
 <p>nginx-ingress defaults to using TLS 1.2 only and a <a href="../nginx-configuration/configmap/#ssl-ciphers">secure set of TLS ciphers</a>.</p>
-<h3 id="legacy-tls">Legacy TLS<a class="headerlink" href="#legacy-tls" title="Permanent link">&para;</a></h3>
+<h3 id="legacy-tls">Legacy TLS<a class="headerlink" href="#legacy-tls" title="Permanent link"> ¶</a></h3>
 <p>The default configuration, though secure, does not support some older browsers and operating systems.</p>
 <p>For instance, TLS 1.1+ is only enabled by default from Android 5.0 on. At the time of writing,
 May 2018, <a href="https://developer.android.com/about/dashboards/#Platform">approximately 15% of Android devices</a>

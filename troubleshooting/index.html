@@ -1283,8 +1283,8 @@ Do not move it without providing redirects.
 -----------------------------------------------
 -->
 
-<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
-<h2 id="ingress-controller-logs-and-events">Ingress-Controller Logs and Events<a class="headerlink" href="#ingress-controller-logs-and-events" title="Permanent link">&para;</a></h2>
+<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link"> ¶</a></h1>
+<h2 id="ingress-controller-logs-and-events">Ingress-Controller Logs and Events<a class="headerlink" href="#ingress-controller-logs-and-events" title="Permanent link"> ¶</a></h2>
 <p>There are many ways to troubleshoot the ingress-controller. The following are basic troubleshooting
 methods to obtain more information.</p>
 <p>Check the Ingress Resource Events</p>
@@ -1359,7 +1359,7 @@ methods to obtain more information.</p>
 <span class="go">kube-system   kubernetes-dashboard   NodePort    10.103.128.17    &lt;none&gt;        80:30000/TCP    30m</span>
 </pre></div>
 
-<h2 id="debug-logging">Debug Logging<a class="headerlink" href="#debug-logging" title="Permanent link">&para;</a></h2>
+<h2 id="debug-logging">Debug Logging<a class="headerlink" href="#debug-logging" title="Permanent link"> ¶</a></h2>
 <p>Using the flag <code class="codehilite">--v=XX</code> it is possible to increase the level of logging. This is performed by editing
 the deployment.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get deploy -n &lt;namespace-of-ingress-controller&gt;
@@ -1376,7 +1376,7 @@ the deployment.</p>
 <li><code class="codehilite">--v=3</code> shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format</li>
 <li><code class="codehilite">--v=5</code> configures NGINX in <a href="http://nginx.org/en/docs/debugging_log.html">debug mode</a></li>
 </ul>
-<h2 id="authentication-to-the-kubernetes-api-server">Authentication to the Kubernetes API Server<a class="headerlink" href="#authentication-to-the-kubernetes-api-server" title="Permanent link">&para;</a></h2>
+<h2 id="authentication-to-the-kubernetes-api-server">Authentication to the Kubernetes API Server<a class="headerlink" href="#authentication-to-the-kubernetes-api-server" title="Permanent link"> ¶</a></h2>
 <p>A number of components are involved in the authentication process and the first step is to narrow
 down the source of the problem, namely whether it is a problem with service authentication or
 with the kubeconfig file.</p>
@@ -1424,7 +1424,7 @@ on the lower left hand side.</p>
 +---------------------------------------------------+     +------------------+
 </pre></div>
 
-<h3 id="service-account">Service Account<a class="headerlink" href="#service-account" title="Permanent link">&para;</a></h3>
+<h3 id="service-account">Service Account<a class="headerlink" href="#service-account" title="Permanent link"> ¶</a></h3>
 <p>If using a service account to connect to the API server, Dashboard expects the file
 <code class="codehilite">/var/run/secrets/kubernetes.io/serviceaccount/token</code> to be present. It provides a secret
 token that is required to authenticate with the API server.</p>
@@ -1516,10 +1516,10 @@ token that is required to authenticate with the API server.</p>
 <li><a href="http://kubernetes.io/docs/user-guide/service-accounts/">User Guide: Service Accounts</a></li>
 <li><a href="http://kubernetes.io/docs/admin/service-accounts-admin/">Cluster Administrator Guide: Managing Service Accounts</a></li>
 </ul>
-<h2 id="kube-config">Kube-Config<a class="headerlink" href="#kube-config" title="Permanent link">&para;</a></h2>
+<h2 id="kube-config">Kube-Config<a class="headerlink" href="#kube-config" title="Permanent link"> ¶</a></h2>
 <p>If you want to use a kubeconfig file for authentication, follow the <a href="../deploy/">deploy procedure</a> and
 add the flag <code class="codehilite">--kubeconfig=/etc/kubernetes/kubeconfig.yaml</code> to the args section of the deployment.</p>
-<h2 id="using-gdb-with-nginx">Using GDB with Nginx<a class="headerlink" href="#using-gdb-with-nginx" title="Permanent link">&para;</a></h2>
+<h2 id="using-gdb-with-nginx">Using GDB with Nginx<a class="headerlink" href="#using-gdb-with-nginx" title="Permanent link"> ¶</a></h2>
 <p><a href="https://www.gnu.org/software/gdb/">Gdb</a> can be used to with nginx to perform a configuration
 dump. This allows us to see which configuration is being used, as well as older configurations.</p>
 <p>Note: The below is based on the nginx <a href="https://docs.nginx.com/nginx/admin-guide/monitoring/debugging/#dumping-nginx-configuration-from-a-running-process">documentation</a>.</p>

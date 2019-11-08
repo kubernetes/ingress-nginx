@@ -1381,8 +1381,8 @@ Do not move it without providing redirects.
 -----------------------------------------------
 -->
 
-<h1 id="the-ingress-nginx-kubectl-plugin">The ingress-nginx kubectl plugin<a class="headerlink" href="#the-ingress-nginx-kubectl-plugin" title="Permanent link">&para;</a></h1>
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<h1 id="the-ingress-nginx-kubectl-plugin">The ingress-nginx kubectl plugin<a class="headerlink" href="#the-ingress-nginx-kubectl-plugin" title="Permanent link"> ¶</a></h1>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link"> ¶</a></h2>
 <p>Install <a href="https://github.com/GoogleContainerTools/krew">krew</a>, then run</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl krew install ingress-nginx</span>
 </pre></div>
@@ -1442,15 +1442,15 @@ Do not move it without providing redirects.
 </pre></div>
 
 <p>Replacing <code class="codehilite">0.24.0</code> with the recently released version.</p>
-<h2 id="common-flags">Common Flags<a class="headerlink" href="#common-flags" title="Permanent link">&para;</a></h2>
+<h2 id="common-flags">Common Flags<a class="headerlink" href="#common-flags" title="Permanent link"> ¶</a></h2>
 <ul>
 <li>Every subcommand supports the basic <code class="codehilite">kubectl</code> configuration flags like <code class="codehilite">--namespace</code>, <code class="codehilite">--context</code>, <code class="codehilite">--client-key</code> and so on.</li>
 <li>Subcommands that act on a particular <code class="codehilite">ingress-nginx</code> pod (<code class="codehilite">backends</code>, <code class="codehilite">certs</code>, <code class="codehilite">conf</code>, <code class="codehilite">exec</code>, <code class="codehilite">general</code>, <code class="codehilite">logs</code>, <code class="codehilite">ssh</code>), support the <code class="codehilite">--deployment &lt;deployment&gt;</code> and <code class="codehilite">--pod &lt;pod&gt;</code> flags to select either a pod from a deployment with the given name, or a pod with the given name. The <code class="codehilite">--deployment</code> flag defaults to <code class="codehilite">nginx-ingress-controller</code>.</li>
 <li>Subcommands that inspect resources (<code class="codehilite">ingresses</code>, <code class="codehilite">lint</code>) support the <code class="codehilite">--all-namespaces</code> flag, which causes them to inspect resources in every namespace.</li>
 </ul>
-<h2 id="subcommands">Subcommands<a class="headerlink" href="#subcommands" title="Permanent link">&para;</a></h2>
+<h2 id="subcommands">Subcommands<a class="headerlink" href="#subcommands" title="Permanent link"> ¶</a></h2>
 <p>Note that <code class="codehilite">backends</code>, <code class="codehilite">general</code>, <code class="codehilite">certs</code>, and <code class="codehilite">conf</code> require <code class="codehilite">ingress-nginx</code> version <code class="codehilite">0.23.0</code> or higher.</p>
-<h3 id="backends">backends<a class="headerlink" href="#backends" title="Permanent link">&para;</a></h3>
+<h3 id="backends">backends<a class="headerlink" href="#backends" title="Permanent link"> ¶</a></h3>
 <p>Run <code class="codehilite">kubectl ingress-nginx backends</code> to get a JSON array of the backends that an ingress-nginx controller currently knows about:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx backends -n ingress-nginx
 <span class="go">[</span>
@@ -1480,11 +1480,6 @@ Do not move it without providing redirects.
 <span class="go">      }</span>
 <span class="go">    },</span>
 <span class="go">    &quot;port&quot;: 0,</span>
-<span class="go">    &quot;secureCACert&quot;: {</span>
-<span class="go">      &quot;secret&quot;: &quot;&quot;,</span>
-<span class="go">      &quot;caFilename&quot;: &quot;&quot;,</span>
-<span class="go">      &quot;caSha&quot;: &quot;&quot;</span>
-<span class="go">    },</span>
 <span class="go">    &quot;sslPassthrough&quot;: false,</span>
 <span class="go">    &quot;endpoints&quot;: [</span>
 <span class="go">      {</span>
@@ -1521,7 +1516,7 @@ Do not move it without providing redirects.
 </pre></div>
 
 <p>Add the <code class="codehilite">--list</code> option to show only the backend names. Add the <code class="codehilite">--backend &lt;backend&gt;</code> option to show only the backend with the given name.</p>
-<h3 id="certs">certs<a class="headerlink" href="#certs" title="Permanent link">&para;</a></h3>
+<h3 id="certs">certs<a class="headerlink" href="#certs" title="Permanent link"> ¶</a></h3>
 <p>Use <code class="codehilite">kubectl ingress-nginx certs --host &lt;hostname&gt;</code> to dump the SSL cert/key information for a given host. Requires that <code class="codehilite">--enable-dynamic-certificates</code> is <code class="codehilite">true</code> (this is the default as of version <code class="codehilite">0.24.0</code>).</p>
 <p><strong>WARNING:</strong> This command will dump sensitive private key information. Don't blindly share the output, and certainly don't log it anywhere.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx certs -n ingress-nginx --host testaddr.local
@@ -1537,7 +1532,7 @@ Do not move it without providing redirects.
 <span class="go">-----END RSA PRIVATE KEY-----</span>
 </pre></div>
 
-<h3 id="conf">conf<a class="headerlink" href="#conf" title="Permanent link">&para;</a></h3>
+<h3 id="conf">conf<a class="headerlink" href="#conf" title="Permanent link"> ¶</a></h3>
 <p>Use <code class="codehilite">kubectl ingress-nginx conf</code> to dump the generated <code class="codehilite">nginx.conf</code> file. Add the <code class="codehilite">--host &lt;hostname&gt;</code> option to view only the server block for that host:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl ingress-nginx conf -n ingress-nginx --host testaddr.local</span>
 
@@ -1563,7 +1558,7 @@ Do not move it without providing redirects.
 <span class="go">...</span>
 </pre></div>
 
-<h3 id="exec">exec<a class="headerlink" href="#exec" title="Permanent link">&para;</a></h3>
+<h3 id="exec">exec<a class="headerlink" href="#exec" title="Permanent link"> ¶</a></h3>
 <p><code class="codehilite">kubectl ingress-nginx exec</code> is exactly the same as <code class="codehilite">kubectl exec</code>, with the same command flags. It will automatically choose an <code class="codehilite">ingress-nginx</code> pod to run the command in.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx <span class="nb">exec</span> -i -n ingress-nginx -- ls /etc/nginx
 <span class="go">fastcgi_params</span>
@@ -1578,7 +1573,7 @@ Do not move it without providing redirects.
 <span class="go">template</span>
 </pre></div>
 
-<h3 id="general">general<a class="headerlink" href="#general" title="Permanent link">&para;</a></h3>
+<h3 id="general">general<a class="headerlink" href="#general" title="Permanent link"> ¶</a></h3>
 <p><code class="codehilite">kubectl ingress-nginx general</code> dumps miscellaneous controller state as a JSON object. Currently it just shows the number of controller pods known to a particular controller pod.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx general -n ingress-nginx
 <span class="go">{</span>
@@ -1586,7 +1581,7 @@ Do not move it without providing redirects.
 <span class="go">}</span>
 </pre></div>
 
-<h3 id="info">info<a class="headerlink" href="#info" title="Permanent link">&para;</a></h3>
+<h3 id="info">info<a class="headerlink" href="#info" title="Permanent link"> ¶</a></h3>
 <p>Shows the internal and external IP/CNAMES for an <code class="codehilite">ingress-nginx</code> service.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx info -n ingress-nginx
 <span class="go">Service cluster IP address: 10.187.253.31</span>
@@ -1594,7 +1589,7 @@ Do not move it without providing redirects.
 </pre></div>
 
 <p>Use the <code class="codehilite">--service &lt;service&gt;</code> flag if your <code class="codehilite">ingress-nginx</code> <code class="codehilite">LoadBalancer</code> service is not named <code class="codehilite">ingress-nginx</code>.</p>
-<h3 id="ingresses">ingresses<a class="headerlink" href="#ingresses" title="Permanent link">&para;</a></h3>
+<h3 id="ingresses">ingresses<a class="headerlink" href="#ingresses" title="Permanent link"> ¶</a></h3>
 <p><code class="codehilite">kubectl ingress-nginx ingresses</code>, alternately <code class="codehilite">kubectl ingress-nginx ing</code>, shows a more detailed view of the ingress definitions in a namespace. Compare:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get ingresses --all-namespaces
 <span class="go">NAMESPACE   NAME               HOSTS                            ADDRESS     PORTS   AGE</span>
@@ -1611,7 +1606,7 @@ Do not move it without providing redirects.
 <span class="go">default     test-ingress-2     *                                localhost   NO    echo-service    8080           2</span>
 </pre></div>
 
-<h3 id="lint">lint<a class="headerlink" href="#lint" title="Permanent link">&para;</a></h3>
+<h3 id="lint">lint<a class="headerlink" href="#lint" title="Permanent link"> ¶</a></h3>
 <p><code class="codehilite">kubectl ingress-nginx lint</code> can check a namespace or entire cluster for potential configuration issues. This command is especially useful when upgrading between <code class="codehilite">ingress-nginx</code> versions.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx lint --all-namespaces --verbose
 <span class="go">Checking ingresses...</span>
@@ -1649,7 +1644,7 @@ Do not move it without providing redirects.
 <span class="go">      https://github.com/kubernetes/ingress-nginx/issues/3808</span>
 </pre></div>
 
-<h3 id="logs">logs<a class="headerlink" href="#logs" title="Permanent link">&para;</a></h3>
+<h3 id="logs">logs<a class="headerlink" href="#logs" title="Permanent link"> ¶</a></h3>
 <p><code class="codehilite">kubectl ingress-nginx logs</code> is almost the same as <code class="codehilite">kubectl logs</code>, with fewer flags. It will automatically choose an <code class="codehilite">ingress-nginx</code> pod to read logs from.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx logs -n ingress-nginx
 <span class="go">-------------------------------------------------------------------------------</span>
@@ -1669,7 +1664,7 @@ Do not move it without providing redirects.
 <span class="go">...</span>
 </pre></div>
 
-<h3 id="ssh">ssh<a class="headerlink" href="#ssh" title="Permanent link">&para;</a></h3>
+<h3 id="ssh">ssh<a class="headerlink" href="#ssh" title="Permanent link"> ¶</a></h3>
 <p><code class="codehilite">kubectl ingress-nginx ssh</code> is exactly the same as <code class="codehilite">kubectl ingress-nginx exec -it -- /bin/bash</code>. Use it when you want to quickly be dropped into a shell inside a running <code class="codehilite">ingress-nginx</code> container.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx ssh -n ingress-nginx
 <span class="gp">www-data@nginx-ingress-controller-7cbf77c976-wx5pn:/etc/nginx$</span>

@@ -1209,13 +1209,13 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/customization/configuration-snippets/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="configuration-snippets">Configuration Snippets<a class="headerlink" href="#configuration-snippets" title="Permanent link">&para;</a></h1>
-<h2 id="ingress">Ingress<a class="headerlink" href="#ingress" title="Permanent link">&para;</a></h2>
+                <h1 id="configuration-snippets">Configuration Snippets<a class="headerlink" href="#configuration-snippets" title="Permanent link"> ¶</a></h1>
+<h2 id="ingress">Ingress<a class="headerlink" href="#ingress" title="Permanent link"> ¶</a></h2>
 <p>The Ingress in this example adds a custom header to Nginx configuration that only applies to that specific Ingress. If you want to add headers that apply globally to all Ingresses, please have a look at <a href="../custom-headers/">this example</a>.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl apply -f ingress.yaml
 </pre></div>
 
-<h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link">&para;</a></h2>
+<h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link"> ¶</a></h2>
 <p>Check if the contents of the annotation are present in the nginx.conf file using:
 <code class="codehilite">kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf</code></p>
                 

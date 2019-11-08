@@ -1207,9 +1207,9 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/affinity/cookie/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="sticky-sessions">Sticky sessions<a class="headerlink" href="#sticky-sessions" title="Permanent link">&para;</a></h1>
+                <h1 id="sticky-sessions">Sticky sessions<a class="headerlink" href="#sticky-sessions" title="Permanent link"> ¶</a></h1>
 <p>This example demonstrates how to achieve session affinity using cookies.</p>
-<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link"> ¶</a></h2>
 <p>Session affinity can be configured using the following annotations:</p>
 <table>
 <thead>
@@ -1237,8 +1237,8 @@
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-path</td>
-<td>Path that will be set on the cookie (required if your <a href="../../../user-guide/ingress-path-matching">Ingress paths</a> use regular expressions)</td>
-<td>string (defaults to the currently <a href="../../../user-guide/ingress-path-matching">matched path</a>)</td>
+<td>Path that will be set on the cookie (required if your <a href="../../../user-guide/ingress-path-matching/">Ingress paths</a> use regular expressions)</td>
+<td>string (defaults to the currently <a href="../../../user-guide/ingress-path-matching/">matched path</a>)</td>
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-max-age</td>
@@ -1261,17 +1261,17 @@
 <div class="codehilite"><pre><span></span><span class="go">kubectl create -f ingress.yaml</span>
 </pre></div>
 
-<h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
+<h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link"> ¶</a></h2>
 <p>You can confirm that the Ingress works:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe ing nginx-test
 <span class="go">Name:           nginx-test</span>
 <span class="go">Namespace:      default</span>
-<span class="go">Address:        </span>
+<span class="go">Address:</span>
 <span class="go">Default backend:    default-http-backend:80 (10.180.0.4:8080,10.240.0.2:8080)</span>
 <span class="go">Rules:</span>
 <span class="go">  Host                          Path    Backends</span>
 <span class="go">  ----                          ----    --------</span>
-<span class="go">  stickyingress.example.com     </span>
+<span class="go">  stickyingress.example.com</span>
 <span class="go">                                /        nginx-service:80 (&lt;none&gt;)</span>
 <span class="go">Annotations:</span>
 <span class="go">  affinity: cookie</span>
@@ -1302,7 +1302,7 @@ This cookie is created by NGINX, it contains a randomly generated key correspond
 If the user changes this cookie, NGINX creates a new one and redirects the user to another upstream.</p>
 <p>If the backend pool grows NGINX will keep sending the requests through the same server of the first request, even if it's overloaded.</p>
 <p>When the backend server is removed, the requests are re-routed to another upstream server. This does not require the cookie to be updated because the key's <a href="https://en.wikipedia.org/wiki/Consistent_hashing">consistent hash</a> will change.</p>
-<p>When you have a Service pointing to more than one Ingress, with only one containing affinity configuration, the first created Ingress will be used. 
+<p>When you have a Service pointing to more than one Ingress, with only one containing affinity configuration, the first created Ingress will be used.
 This means that you can face the situation that you've configured session affinity on one Ingress and it doesn't work because the Service is pointing to another Ingress that doesn't configure this.</p>
                 
                   

@@ -1277,16 +1277,16 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/miscellaneous.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="miscellaneous">Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permanent link">&para;</a></h1>
-<h2 id="source-ip-address">Source IP address<a class="headerlink" href="#source-ip-address" title="Permanent link">&para;</a></h2>
+                <h1 id="miscellaneous">Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permanent link"> ¶</a></h1>
+<h2 id="source-ip-address">Source IP address<a class="headerlink" href="#source-ip-address" title="Permanent link"> ¶</a></h2>
 <p>By default NGINX uses the content of the header <code class="codehilite">X-Forwarded-For</code> as the source of truth to get information about the client IP address. This works without issues in L7 <strong>if we configure the setting <code class="codehilite">proxy-real-ip-cidr</code></strong> with the correct information of the IP/network address of trusted external load balancer.</p>
 <p>If the ingress controller is running in AWS we need to use the VPC IPv4 CIDR.</p>
 <p>Another option is to enable proxy protocol using <code class="codehilite">use-proxy-protocol: &quot;true&quot;</code>.</p>
 <p>In this mode NGINX does not use the content of the header to get the source IP address of the connection.</p>
-<h2 id="proxy-protocol">Proxy Protocol<a class="headerlink" href="#proxy-protocol" title="Permanent link">&para;</a></h2>
+<h2 id="proxy-protocol">Proxy Protocol<a class="headerlink" href="#proxy-protocol" title="Permanent link"> ¶</a></h2>
 <p>If you are using a L4 proxy to forward the traffic to the NGINX pods and terminate HTTP/HTTPS there, you will lose the remote endpoint's IP address. To prevent this you could use the <a href="http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt">Proxy Protocol</a> for forwarding traffic, this will send the connection details before forwarding the actual TCP connection itself.</p>
 <p>Amongst others <a href="http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-proxy-protocol.html">ELBs in AWS</a> and <a href="http://www.haproxy.org/">HAProxy</a> support Proxy Protocol.</p>
-<h2 id="websockets">Websockets<a class="headerlink" href="#websockets" title="Permanent link">&para;</a></h2>
+<h2 id="websockets">Websockets<a class="headerlink" href="#websockets" title="Permanent link"> ¶</a></h2>
 <p>Support for websockets is provided by NGINX out of the box. No special configuration required.</p>
 <p>The only requirement to avoid the close of connections is the increase of the values of <code class="codehilite">proxy-read-timeout</code> and <code class="codehilite">proxy-send-timeout</code>.</p>
 <p>The default value of this settings is <code class="codehilite">60 seconds</code>.</p>
@@ -1295,18 +1295,18 @@
 <p class="admonition-title">Important</p>
 <p>If the NGINX ingress controller is exposed with a service <code class="codehilite">type=LoadBalancer</code> make sure the protocol between the loadbalancer and NGINX is TCP.</p>
 </div>
-<h2 id="optimizing-tls-time-to-first-byte-tttfb">Optimizing TLS Time To First Byte (TTTFB)<a class="headerlink" href="#optimizing-tls-time-to-first-byte-tttfb" title="Permanent link">&para;</a></h2>
+<h2 id="optimizing-tls-time-to-first-byte-tttfb">Optimizing TLS Time To First Byte (TTTFB)<a class="headerlink" href="#optimizing-tls-time-to-first-byte-tttfb" title="Permanent link"> ¶</a></h2>
 <p>NGINX provides the configuration option <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size">ssl_buffer_size</a> to allow the optimization of the TLS record size.</p>
 <p>This improves the <a href="https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/">TLS Time To First Byte</a> (TTTFB).
 The default value in the Ingress controller is <code class="codehilite">4k</code> (NGINX default is <code class="codehilite">16k</code>).</p>
-<h2 id="retries-in-non-idempotent-methods">Retries in non-idempotent methods<a class="headerlink" href="#retries-in-non-idempotent-methods" title="Permanent link">&para;</a></h2>
+<h2 id="retries-in-non-idempotent-methods">Retries in non-idempotent methods<a class="headerlink" href="#retries-in-non-idempotent-methods" title="Permanent link"> ¶</a></h2>
 <p>Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error.
 The previous behavior can be restored using <code class="codehilite">retry-non-idempotent=true</code> in the configuration ConfigMap.</p>
-<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link"> ¶</a></h2>
 <ul>
 <li>Ingress rules for TLS require the definition of the field <code class="codehilite">host</code></li>
 </ul>
-<h2 id="why-endpoints-and-not-services">Why endpoints and not services<a class="headerlink" href="#why-endpoints-and-not-services" title="Permanent link">&para;</a></h2>
+<h2 id="why-endpoints-and-not-services">Why endpoints and not services<a class="headerlink" href="#why-endpoints-and-not-services" title="Permanent link"> ¶</a></h2>
 <p>The NGINX ingress controller does not use <a href="http://kubernetes.io/docs/user-guide/services">Services</a> to route traffic to the pods. Instead it uses the Endpoints API in order to bypass <a href="http://kubernetes.io/docs/admin/kube-proxy/">kube-proxy</a> to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.</p>
                 
                   

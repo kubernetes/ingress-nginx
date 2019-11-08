@@ -1289,10 +1289,10 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/grpc/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="grpc">gRPC<a class="headerlink" href="#grpc" title="Permanent link">&para;</a></h1>
+                <h1 id="grpc">gRPC<a class="headerlink" href="#grpc" title="Permanent link"> ¶</a></h1>
 <p>This example demonstrates how to route traffic to a gRPC service through the
 nginx controller.</p>
-<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link"> ¶</a></h2>
 <ol>
 <li>You have a kubernetes cluster running.</li>
 <li>You have a domain name such as <code class="codehilite">example.com</code> that is configured to route
@@ -1309,7 +1309,7 @@ nginx controller.</p>
    <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller">fortune-teller</a>
    application provided here as an example. </li>
 </ol>
-<h3 id="step-1-kubernetes-deployment">Step 1: kubernetes <code class="codehilite">Deployment</code><a class="headerlink" href="#step-1-kubernetes-deployment" title="Permanent link">&para;</a></h3>
+<h3 id="step-1-kubernetes-deployment">Step 1: kubernetes <code class="codehilite">Deployment</code><a class="headerlink" href="#step-1-kubernetes-deployment" title="Permanent link"> ¶</a></h3>
 <div class="codehilite"><pre><span></span>$ kubectl create -f app.yaml
 </pre></div>
 
@@ -1332,13 +1332,13 @@ inside the cluster and arrive "insecure").</p>
 <p>For your own application you may or may not want to do this.  If you prefer to
 forward encrypted traffic to your POD and terminate TLS at the gRPC server
 itself, add the ingress annotation <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;GRPCS&quot;</code>.</p>
-<h3 id="step-2-the-kubernetes-service">Step 2: the kubernetes <code class="codehilite">Service</code><a class="headerlink" href="#step-2-the-kubernetes-service" title="Permanent link">&para;</a></h3>
+<h3 id="step-2-the-kubernetes-service">Step 2: the kubernetes <code class="codehilite">Service</code><a class="headerlink" href="#step-2-the-kubernetes-service" title="Permanent link"> ¶</a></h3>
 <div class="codehilite"><pre><span></span>$ kubectl create -f svc.yaml
 </pre></div>
 
 <p>Here we have a typical service. Nothing special, just routing traffic to the
 backend application on port <code class="codehilite">50051</code>.</p>
-<h3 id="step-3-the-kubernetes-ingress">Step 3: the kubernetes <code class="codehilite">Ingress</code><a class="headerlink" href="#step-3-the-kubernetes-ingress" title="Permanent link">&para;</a></h3>
+<h3 id="step-3-the-kubernetes-ingress">Step 3: the kubernetes <code class="codehilite">Ingress</code><a class="headerlink" href="#step-3-the-kubernetes-ingress" title="Permanent link"> ¶</a></h3>
 <div class="codehilite"><pre><span></span>$ kubectl create -f ingress.yaml
 </pre></div>
 
@@ -1353,7 +1353,7 @@ backend application on port <code class="codehilite">50051</code>.</p>
    <code class="codehilite">https://fortune-teller.stack.build:443</code> and routes unencrypted messages to
    our kubernetes service.</li>
 </ol>
-<h3 id="step-4-test-the-connection">Step 4: test the connection<a class="headerlink" href="#step-4-test-the-connection" title="Permanent link">&para;</a></h3>
+<h3 id="step-4-test-the-connection">Step 4: test the connection<a class="headerlink" href="#step-4-test-the-connection" title="Permanent link"> ¶</a></h3>
 <p>Once we've applied our configuration to kubernetes, it's time to test that we
 can actually talk to the backend.  To do this, we'll use the
 <a href="https://github.com/fullstorydev/grpcurl">grpcurl</a> utility:</p>
@@ -1363,7 +1363,7 @@ can actually talk to the backend.  To do this, we'll use the
 <span class="o">}</span>
 </pre></div>
 
-<h3 id="debugging-hints">Debugging Hints<a class="headerlink" href="#debugging-hints" title="Permanent link">&para;</a></h3>
+<h3 id="debugging-hints">Debugging Hints<a class="headerlink" href="#debugging-hints" title="Permanent link"> ¶</a></h3>
 <ol>
 <li>Obviously, watch the logs on your app.</li>
 <li>Watch the logs for the nginx-ingress-controller (increasing verbosity as
@@ -1379,7 +1379,7 @@ https://proto.stack.build, a protocol buffer / gRPC build service that can use
 to help make it easier for your users to consume your API.</p>
 <p>See also the specific GRPC settings of NGINX: https://nginx.org/en/docs/http/ngx_http_grpc_module.html</p>
 </blockquote>
-<h3 id="notes-on-using-responserequest-streams">Notes on using response/request streams<a class="headerlink" href="#notes-on-using-responserequest-streams" title="Permanent link">&para;</a></h3>
+<h3 id="notes-on-using-responserequest-streams">Notes on using response/request streams<a class="headerlink" href="#notes-on-using-responserequest-streams" title="Permanent link"> ¶</a></h3>
 <ol>
 <li>If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the <code class="codehilite">grpc_read_timeout</code> to acommodate for this.</li>
 <li>If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the 

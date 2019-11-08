@@ -1249,14 +1249,14 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/static-ip/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="static-ips">Static IPs<a class="headerlink" href="#static-ips" title="Permanent link">&para;</a></h1>
+                <h1 id="static-ips">Static IPs<a class="headerlink" href="#static-ips" title="Permanent link"> ¶</a></h1>
 <p>This example demonstrates how to assign a static-ip to an Ingress on through the Nginx controller.</p>
-<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link"> ¶</a></h2>
 <p>You need a <a href="../PREREQUISITES/#tls-certificates">TLS cert</a> and a <a href="../PREREQUISITES/#test-http-service">test HTTP service</a> for this example.
 You will also need to make sure your Ingress targets exactly one Ingress
 controller by specifying the <a href="../../user-guide/multiple-ingress/">ingress.class annotation</a>,
-and that you have an ingress controller <a href="../../deploy">running</a> in your cluster.</p>
-<h2 id="acquiring-an-ip">Acquiring an IP<a class="headerlink" href="#acquiring-an-ip" title="Permanent link">&para;</a></h2>
+and that you have an ingress controller <a href="../../deploy/">running</a> in your cluster.</p>
+<h2 id="acquiring-an-ip">Acquiring an IP<a class="headerlink" href="#acquiring-an-ip" title="Permanent link"> ¶</a></h2>
 <p>Since instances of the nginx controller actually run on nodes in your cluster,
 by default nginx Ingresses will only get static IPs if your cloudprovider
 supports static IP assignments to nodes. On GKE/GCE for example, even though
@@ -1279,7 +1279,7 @@ already has it set to "nginx-ingress-lb").</p>
 <span class="go">deployment &quot;nginx-ingress-controller&quot; created</span>
 </pre></div>
 
-<h2 id="assigning-the-ip-to-an-ingress">Assigning the IP to an Ingress<a class="headerlink" href="#assigning-the-ip-to-an-ingress" title="Permanent link">&para;</a></h2>
+<h2 id="assigning-the-ip-to-an-ingress">Assigning the IP to an Ingress<a class="headerlink" href="#assigning-the-ip-to-an-ingress" title="Permanent link"> ¶</a></h2>
 <p>From here on every Ingress created with the <code class="codehilite">ingress.class</code> annotation set to
 <code class="codehilite">nginx</code> will get the IP allocated in the previous step</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f nginx-ingress.yaml
@@ -1300,7 +1300,7 @@ already has it set to "nginx-ingress-lb").</p>
 <span class="go">...</span>
 </pre></div>
 
-<h2 id="retaining-the-ip">Retaining the IP<a class="headerlink" href="#retaining-the-ip" title="Permanent link">&para;</a></h2>
+<h2 id="retaining-the-ip">Retaining the IP<a class="headerlink" href="#retaining-the-ip" title="Permanent link"> ¶</a></h2>
 <p>You can test retention by deleting the Ingress</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl delete ing nginx-ingress
 <span class="go">ingress &quot;nginx-ingress&quot; deleted</span>
@@ -1318,7 +1318,7 @@ already has it set to "nginx-ingress-lb").</p>
 Ingresses, because all requests are proxied through the same set of nginx
 controllers.</p>
 </blockquote>
-<h2 id="promote-ephemeral-to-static-ip">Promote ephemeral to static IP<a class="headerlink" href="#promote-ephemeral-to-static-ip" title="Permanent link">&para;</a></h2>
+<h2 id="promote-ephemeral-to-static-ip">Promote ephemeral to static IP<a class="headerlink" href="#promote-ephemeral-to-static-ip" title="Permanent link"> ¶</a></h2>
 <p>To promote the allocated IP to static, you can update the Service manifest</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl patch svc nginx-ingress-lb -p <span class="s1">&#39;{&quot;spec&quot;: {&quot;loadBalancerIP&quot;: &quot;104.154.109.191&quot;}}&#39;</span>
 <span class="go">&quot;nginx-ingress-lb&quot; patched</span>

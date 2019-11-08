@@ -1249,15 +1249,15 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/auth/oauth-external-auth/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="external-oauth-authentication">External OAUTH Authentication<a class="headerlink" href="#external-oauth-authentication" title="Permanent link">&para;</a></h1>
-<h3 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h3>
+                <h1 id="external-oauth-authentication">External OAUTH Authentication<a class="headerlink" href="#external-oauth-authentication" title="Permanent link"> ¶</a></h1>
+<h3 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link"> ¶</a></h3>
 <p>The <code class="codehilite">auth-url</code> and <code class="codehilite">auth-signin</code> annotations allow you to use an external
 authentication provider to protect your Ingress resources.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>This annotation requires <code class="codehilite">nginx-ingress-controller v0.9.0</code> or greater.)</p>
 </div>
-<h3 id="key-detail">Key Detail<a class="headerlink" href="#key-detail" title="Permanent link">&para;</a></h3>
+<h3 id="key-detail">Key Detail<a class="headerlink" href="#key-detail" title="Permanent link"> ¶</a></h3>
 <p>This functionality is enabled by deploying multiple Ingress objects for a single host.
 One Ingress object has no special annotations and handles authentication.</p>
 <p>Other Ingress objects can then be annotated in such a way that require the user to
@@ -1273,10 +1273,10 @@ same endpoint.</p>
 <span class="nn">...</span>
 </pre></div>
 
-<h3 id="example-oauth2-proxy-kubernetes-dashboard">Example: OAuth2 Proxy + Kubernetes-Dashboard<a class="headerlink" href="#example-oauth2-proxy-kubernetes-dashboard" title="Permanent link">&para;</a></h3>
+<h3 id="example-oauth2-proxy-kubernetes-dashboard">Example: OAuth2 Proxy + Kubernetes-Dashboard<a class="headerlink" href="#example-oauth2-proxy-kubernetes-dashboard" title="Permanent link"> ¶</a></h3>
 <p>This example will show you how to deploy <a href="https://github.com/pusher/oauth2_proxy"><code class="codehilite">oauth2_proxy</code></a>
 into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using github as oAuth2 provider</p>
-<h4 id="prepare">Prepare<a class="headerlink" href="#prepare" title="Permanent link">&para;</a></h4>
+<h4 id="prepare">Prepare<a class="headerlink" href="#prepare" title="Permanent link"> ¶</a></h4>
 <ol>
 <li>Install the kubernetes dashboard</li>
 </ol>

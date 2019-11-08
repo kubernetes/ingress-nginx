@@ -1221,11 +1221,11 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/tls-termination/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="tls-termination">TLS termination<a class="headerlink" href="#tls-termination" title="Permanent link">&para;</a></h1>
+                <h1 id="tls-termination">TLS termination<a class="headerlink" href="#tls-termination" title="Permanent link"> ¶</a></h1>
 <p>This example demonstrates how to terminate TLS through the nginx Ingress controller.</p>
-<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link"> ¶</a></h2>
 <p>You need a <a href="../PREREQUISITES/#tls-certificates">TLS cert</a> and a <a href="../PREREQUISITES/#test-http-service">test HTTP service</a> for this example.</p>
-<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link"> ¶</a></h2>
 <p>Create a <code class="codehilite">values.yaml</code> file.</p>
 <div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
@@ -1254,7 +1254,7 @@ TLS cert, and forward un-encrypted HTTP traffic to the test HTTP service.</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f ingress.yaml</span>
 </pre></div>
 
-<h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
+<h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link"> ¶</a></h2>
 <p>You can confirm that the Ingress works.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe ing nginx-test
 <span class="go">Name:           nginx-test</span>
