@@ -253,12 +253,12 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 	klog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
 	_, _, err := k8s.ParseNameNS(configmapName)
 	if err != nil {
-		klog.Errorf("Error parsing ConfigMap reference %q: %v", configmapName, err)
+		klog.Warningf("Error parsing ConfigMap reference %q: %v", configmapName, err)
 		return []ingress.L4Service{}
 	}
 	configmap, err := n.store.GetConfigMap(configmapName)
 	if err != nil {
-		klog.Errorf("Error getting ConfigMap %q: %v", configmapName, err)
+		klog.Warningf("Error getting ConfigMap %q: %v", configmapName, err)
 		return []ingress.L4Service{}
 	}
 
