@@ -39,7 +39,7 @@ have a `secretName` option.
 
 ## SSL Passthrough
 
-The [`--enable-ssl-passthrough`](cli-arguments/) flag enables the SSL Passthrough feature, which is disabled by
+The [`--enable-ssl-passthrough`](cli-arguments.md) flag enables the SSL Passthrough feature, which is disabled by
 default. This is required to enable passthrough backends in Ingress objects.
 
 !!! warning

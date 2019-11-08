@@ -11,10 +11,10 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.superfences
-  - toc:
-      permalink: true
   - meta
-
+  - toc:
+      # insert a blank space before the character
+      permalink: " ¶"
 theme:
   name: material
   feature:
