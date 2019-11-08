@@ -196,6 +196,10 @@ type Configuration struct {
 	// and the need of establishing a new connection.
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
 
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
+	// Sets the maximum number of concurrent HTTP/2 streams in a connection.
+	HTTP2MaxConcurrentStreams int `json:"http2-max-concurrent-streams,omitempty"`
+
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
 
@@ -676,6 +680,7 @@ func NewDefault() Configuration {
 		HTTP2MaxFieldSize:                "4k",
 		HTTP2MaxHeaderSize:               "16k",
 		HTTP2MaxRequests:                 1000,
+		HTTP2MaxConcurrentStreams:        128,
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,
 		HSTSIncludeSubdomains:            true,
