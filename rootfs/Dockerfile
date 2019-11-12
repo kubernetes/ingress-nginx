@@ -14,6 +14,8 @@
 
 FROM BASEIMAGE
 
+LABEL org.opencontainers.image.source="https://github.com/kubernetes/ingress-nginx"
+
 CROSS_BUILD_COPY qemu-QEMUARCH-static /usr/bin/
 
 WORKDIR  /etc/nginx
