@@ -48,7 +48,7 @@ From here on every Ingress created with the `ingress.class` annotation set to
 $ kubectl create -f nginx-ingress.yaml
 ingress "nginx-ingress" created
 
-$ kubectl get ing nginx-ingress
+$ kubectl get ing ingress-nginx
 NAME            HOSTS     ADDRESS           PORTS     AGE
 nginx-ingress   *         104.154.109.191   80, 443   13m
 
