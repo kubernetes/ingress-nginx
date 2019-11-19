@@ -818,13 +818,16 @@ stream {
 
         {{ if not (empty $server.ProxySSL.CAFileName) }}
         # PEM sha: {{ $server.ProxySSL.CASHA }}
-        proxy_ssl_certificate                   {{ $server.ProxySSL.CAFileName }};
-        proxy_ssl_certificate_key               {{ $server.ProxySSL.CAFileName }};
         proxy_ssl_trusted_certificate           {{ $server.ProxySSL.CAFileName }};
         proxy_ssl_ciphers                       {{ $server.ProxySSL.Ciphers }};
         proxy_ssl_protocols                     {{ $server.ProxySSL.Protocols }};
         proxy_ssl_verify                        {{ $server.ProxySSL.Verify }};
         proxy_ssl_verify_depth                  {{ $server.ProxySSL.VerifyDepth }};
+        {{ end }}
+
+        {{ if not (empty $server.ProxySSL.PemFileName) }}
+        proxy_ssl_certificate                   {{ $server.ProxySSL.PemFileName }};
+        proxy_ssl_certificate_key               {{ $server.ProxySSL.PemFileName }};
         {{ end }}
 
         {{ if not (empty $server.SSLCiphers) }}
@@ -1286,6 +1289,19 @@ stream {
             {{ else }}
             # Location denied. Reason: {{ $location.Denied | quote }}
             return 503;
+            {{ end }}
+            {{ if not (empty $location.ProxySSL.CAFileName) }}
+            # PEM sha: {{ $location.ProxySSL.CASHA }}
+            proxy_ssl_trusted_certificate           {{ $location.ProxySSL.CAFileName }};
+            proxy_ssl_ciphers                       {{ $location.ProxySSL.Ciphers }};
+            proxy_ssl_protocols                     {{ $location.ProxySSL.Protocols }};
+            proxy_ssl_verify                        {{ $location.ProxySSL.Verify }};
+            proxy_ssl_verify_depth                  {{ $location.ProxySSL.VerifyDepth }};
+            {{ end }}
+
+            {{ if not (empty $location.ProxySSL.PemFileName) }}
+            proxy_ssl_certificate                   {{ $location.ProxySSL.PemFileName }};
+            proxy_ssl_certificate_key               {{ $location.ProxySSL.PemFileName }};
             {{ end }}
         }
         {{ end }}
