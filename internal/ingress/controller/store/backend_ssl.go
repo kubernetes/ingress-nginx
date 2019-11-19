@@ -115,6 +115,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 				return nil, fmt.Errorf("error while storing certificate and key: %v", err)
 			}
 
+			sslCert.PemFileName = path
 			sslCert.CACertificate = caCert
 			sslCert.CAFileName = path
 			sslCert.CASHA = file.SHA1(path)
