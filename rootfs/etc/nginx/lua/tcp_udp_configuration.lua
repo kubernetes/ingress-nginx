@@ -1,9 +1,7 @@
 -- this is the Lua representation of TCP/UDP Configuration
 local tcp_udp_configuration_data = ngx.shared.tcp_udp_configuration_data
 
-local _M = {
-  nameservers = {}
-}
+local _M = {}
 
 function _M.get_backends_data()
   return tcp_udp_configuration_data:get("backends")

@@ -39,7 +39,7 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 	It("should reload after an update in the configuration", func() {
 		host := "configmap-change"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		wlKey := "whitelist-source-range"
@@ -49,7 +49,7 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 
 		f.UpdateNginxConfigMapData(wlKey, wlValue)
 
-		checksumRegex := regexp.MustCompile("Configuration checksum:\\s+(\\d+)")
+		checksumRegex := regexp.MustCompile(`Configuration checksum:\s+(\d+)`)
 		checksum := ""
 
 		f.WaitForNginxConfiguration(
@@ -60,8 +60,7 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 					checksum = match[1]
 				}
 
-				return strings.Contains(cfg, "geo $the_real_ip $deny_") &&
-					strings.Contains(cfg, "1.1.1.1 0")
+				return strings.Contains(cfg, "allow 1.1.1.1;")
 			})
 		Expect(checksum).NotTo(BeEmpty())
 

@@ -19,23 +19,33 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"syscall"
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 func TestCreateApiserverClient(t *testing.T) {
 	_, err := createApiserverClient("", "")
 	if err == nil {
 		t.Fatal("Expected an error creating REST client without an API server URL or kubeconfig file.")
+	}
+}
+
+func init() {
+	// the default value of nginx.TemplatePath assumes the template exists in
+	// the root filesystem and not in the rootfs directory
+	path, err := filepath.Abs(filepath.Join("../../rootfs/", nginx.TemplatePath))
+	if err == nil {
+		nginx.TemplatePath = path
 	}
 }
 
@@ -48,7 +58,7 @@ func TestHandleSigterm(t *testing.T) {
 	defer deleteConfigMap(cm, ns, clientSet, t)
 
 	name := "test"
-	pod := v1.Pod{
+	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: ns,
@@ -77,19 +87,12 @@ func TestHandleSigterm(t *testing.T) {
 	}
 	conf.Client = clientSet
 
-	fs, err := file.NewFakeFS()
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
-
-	ngx := controller.NewNGINXController(conf, nil, fs)
+	ngx := controller.NewNGINXController(conf, nil)
 
 	go handleSigterm(ngx, func(code int) {
 		if code != 1 {
 			t.Errorf("Expected exit code 1 but %d received", code)
 		}
-
-		return
 	})
 
 	time.Sleep(1 * time.Second)
@@ -110,7 +113,7 @@ func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) st
 	t.Helper()
 	t.Log("Creating temporal config map")
 
-	configMap := &v1.ConfigMap{
+	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:     "config",
 			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),

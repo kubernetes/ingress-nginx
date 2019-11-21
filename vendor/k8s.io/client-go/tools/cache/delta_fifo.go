@@ -160,7 +160,7 @@ func (f *DeltaFIFO) KeyOf(obj interface{}) (string, error) {
 	return f.keyFunc(obj)
 }
 
-// Return true if an Add/Update/Delete/AddIfNotPresent are called first,
+// HasSynced returns true if an Add/Update/Delete/AddIfNotPresent are called first,
 // or an Update called first but the first batch of items inserted by Replace() has been popped
 func (f *DeltaFIFO) HasSynced() bool {
 	f.lock.Lock()
@@ -389,7 +389,7 @@ func (f *DeltaFIFO) GetByKey(key string) (item interface{}, exists bool, err err
 	return d, exists, nil
 }
 
-// Checks if the queue is closed
+// IsClosed checks if the queue is closed
 func (f *DeltaFIFO) IsClosed() bool {
 	f.closedLock.Lock()
 	defer f.closedLock.Unlock()
@@ -417,7 +417,7 @@ func (f *DeltaFIFO) Pop(process PopProcessFunc) (interface{}, error) {
 			// When Close() is called, the f.closed is set and the condition is broadcasted.
 			// Which causes this loop to continue and return from the Pop().
 			if f.IsClosed() {
-				return nil, FIFOClosedError
+				return nil, ErrFIFOClosed
 			}
 
 			f.cond.Wait()
@@ -466,6 +466,7 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 
 	if f.knownObjects == nil {
 		// Do deletion detection against our own list.
+		queuedDeletions := 0
 		for k, oldItem := range f.items {
 			if keys.Has(k) {
 				continue
@@ -474,6 +475,7 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 			if n := oldItem.Newest(); n != nil {
 				deletedObj = n.Object
 			}
+			queuedDeletions++
 			if err := f.queueActionLocked(Deleted, DeletedFinalStateUnknown{k, deletedObj}); err != nil {
 				return err
 			}
@@ -481,7 +483,9 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 
 		if !f.populated {
 			f.populated = true
-			f.initialPopulationCount = len(list)
+			// While there shouldn't be any queued deletions in the initial
+			// population of the queue, it's better to be on the safe side.
+			f.initialPopulationCount = len(list) + queuedDeletions
 		}
 
 		return nil
@@ -589,6 +593,7 @@ type KeyGetter interface {
 // DeltaType is the type of a change (addition, deletion, etc)
 type DeltaType string
 
+// Change type definition
 const (
 	Added   DeltaType = "Added"
 	Updated DeltaType = "Updated"

@@ -41,7 +41,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		host := "foo"
 		annotations := map[string]string{}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -50,7 +50,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 
@@ -59,7 +59,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
 
 		resp, body, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", "bar").
 			End()
 
@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 			"nginx.ingress.kubernetes.io/server-alias": "bar",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -85,7 +85,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		hosts := []string{"foo", "bar"}
 		for _, host := range hosts {
 			resp, body, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", host).
 				End()
 

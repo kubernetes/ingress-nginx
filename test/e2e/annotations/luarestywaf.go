@@ -38,9 +38,9 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 	Context("when lua-resty-waf is enabled", func() {
 		It("should return 403 for a malicious request that matches a default WAF rule and 200 for other requests", func() {
 			host := "foo"
-			createIngress(f, host, "http-svc", 80, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
+			createIngress(f, host, framework.EchoService, 80, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -51,11 +51,11 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		})
 		It("should not apply ignored rulesets", func() {
 			host := "foo"
-			createIngress(f, host, "http-svc", 80, map[string]string{
+			createIngress(f, host, framework.EchoService, 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf":                 "active",
 				"nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets": "41000_sqli, 42000_xss"})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -66,11 +66,11 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		})
 		It("should apply the score threshold", func() {
 			host := "foo"
-			createIngress(f, host, "http-svc", 80, map[string]string{
+			createIngress(f, host, framework.EchoService, 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf":                 "active",
 				"nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold": "20"})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -82,11 +82,11 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		It("should not reject request with an unknown content type", func() {
 			host := "foo"
 			contenttype := "application/octet-stream"
-			createIngress(f, host, "http-svc", 80, map[string]string{
+			createIngress(f, host, framework.EchoService, 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types": "true",
 				"nginx.ingress.kubernetes.io/lua-resty-waf":                             "active"})
 
-			url := fmt.Sprintf("%s?msg=my-message", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=my-message", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -99,11 +99,11 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		It("should not fail a request with multipart content type when multipart body processing disabled", func() {
 			contenttype := "multipart/form-data; boundary=alamofire.boundary.3fc2e849279e18fc"
 			host := "foo"
-			createIngress(f, host, "http-svc", 80, map[string]string{
+			createIngress(f, host, framework.EchoService, 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body": "false",
 				"nginx.ingress.kubernetes.io/lua-resty-waf":                        "active"})
 
-			url := fmt.Sprintf("%s?msg=my-message", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=my-message", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -116,10 +116,10 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		It("should fail a request with multipart content type when multipart body processing enabled by default", func() {
 			contenttype := "multipart/form-data; boundary=alamofire.boundary.3fc2e849279e18fc"
 			host := "foo"
-			createIngress(f, host, "http-svc", 80, map[string]string{
+			createIngress(f, host, framework.EchoService, 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
 
-			url := fmt.Sprintf("%s?msg=my-message", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=my-message", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -131,7 +131,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		})
 		It("should apply configured extra rules", func() {
 			host := "foo"
-			createIngress(f, host, "http-svc", 80, map[string]string{
+			createIngress(f, host, framework.EchoService, 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf": "active",
 				"nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules": `[=[
 						{ "access": [
@@ -148,7 +148,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 					]=]`,
 			})
 
-			url := fmt.Sprintf("%s?msg=my-message", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=my-message", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -157,7 +157,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			Expect(len(errs)).Should(Equal(0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			url = fmt.Sprintf("%s?msg=my-foo-message", f.IngressController.HTTPURL)
+			url = fmt.Sprintf("%s?msg=my-foo-message", f.GetURL(framework.HTTP))
 			resp, _, errs = gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -170,9 +170,9 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 	Context("when lua-resty-waf is not enabled", func() {
 		It("should return 200 even for a malicious request", func() {
 			host := "foo"
-			createIngress(f, host, "http-svc", 80, map[string]string{})
+			createIngress(f, host, framework.EchoService, 80, map[string]string{})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -183,9 +183,9 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		})
 		It("should run in simulate mode", func() {
 			host := "foo"
-			createIngress(f, host, "http-svc", 80, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "simulate"})
+			createIngress(f, host, framework.EchoService, 80, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "simulate"})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.GetURL(framework.HTTP))
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -203,7 +203,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 })
 
 func createIngress(f *framework.Framework, host, service string, port int, annotations map[string]string) {
-	ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, service, port, &annotations)
+	ing := framework.NewSingleIngress(host, "/", host, f.Namespace, service, port, &annotations)
 	f.EnsureIngress(ing)
 
 	f.WaitForNginxServer(host,
@@ -214,7 +214,7 @@ func createIngress(f *framework.Framework, host, service string, port int, annot
 	time.Sleep(1 * time.Second)
 
 	resp, body, errs := gorequest.New().
-		Get(f.IngressController.HTTPURL).
+		Get(f.GetURL(framework.HTTP)).
 		Set("Host", host).
 		End()
 

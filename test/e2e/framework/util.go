@@ -18,29 +18,28 @@ package framework
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/ingress-nginx/internal/file"
 )
 
 const (
 	// Poll how often to poll for conditions
-	Poll = 2 * time.Second
+	Poll = 3 * time.Second
 
 	// DefaultTimeout time to wait for operations to complete
-	DefaultTimeout = 5 * time.Minute
+	DefaultTimeout = 3 * time.Minute
 )
 
 func nowStamp() string {
@@ -87,30 +86,22 @@ func RestclientConfig(config, context string) (*api.Config, error) {
 	return c, nil
 }
 
-// LoadConfig deserializes the contents of a kubeconfig file into a REST configuration.
-func LoadConfig(config, context string) (*rest.Config, error) {
-	c, err := RestclientConfig(config, context)
-	if err != nil {
-		return nil, err
-	}
-	return clientcmd.NewDefaultClientConfig(*c, &clientcmd.ConfigOverrides{}).ClientConfig()
-}
-
 // RunID unique identifier of the e2e run
 var RunID = uuid.NewUUID()
 
 // CreateKubeNamespace creates a new namespace in the cluster
 func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
 	ts := time.Now().UnixNano()
-	ns := &v1.Namespace{
+	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("e2e-tests-%v-%v-", baseName, ts),
 		},
 	}
 	// Be robust about making the namespace creation call.
-	var got *v1.Namespace
-	err := wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
-		var err error
+	var got *corev1.Namespace
+	var err error
+
+	err = wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
 		got, err = c.CoreV1().Namespaces().Create(ns)
 		if err != nil {
 			Logf("Unexpected error while creating namespace: %v", err)
@@ -180,8 +171,8 @@ func noPodsInNamespace(c kubernetes.Interface, namespace string) wait.ConditionF
 
 // WaitForPodRunningInNamespace waits a default amount of time (PodStartTimeout) for the specified pod to become running.
 // Returns an error if timeout occurs first, or pod goes in to failed state.
-func WaitForPodRunningInNamespace(c kubernetes.Interface, pod *v1.Pod) error {
-	if pod.Status.Phase == v1.PodRunning {
+func WaitForPodRunningInNamespace(c kubernetes.Interface, pod *corev1.Pod) error {
+	if pod.Status.Phase == corev1.PodRunning {
 		return nil
 	}
 	return waitTimeoutForPodRunningInNamespace(c, pod.Name, pod.Namespace, DefaultTimeout)
@@ -200,7 +191,7 @@ func secretInNamespace(c kubernetes.Interface, namespace, name string) wait.Cond
 	return func() (bool, error) {
 		s, err := c.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
-			return false, err
+			return false, nil
 		}
 		if err != nil {
 			return false, err
@@ -214,13 +205,13 @@ func secretInNamespace(c kubernetes.Interface, namespace, name string) wait.Cond
 }
 
 // WaitForFileInFS waits a default amount of time for the specified file is present in the filesystem
-func WaitForFileInFS(file string, fs file.Filesystem) error {
-	return wait.PollImmediate(Poll, DefaultTimeout, fileInFS(file, fs))
+func WaitForFileInFS(file string) error {
+	return wait.PollImmediate(Poll, DefaultTimeout, fileInFS(file))
 }
 
-func fileInFS(file string, fs file.Filesystem) wait.ConditionFunc {
+func fileInFS(file string) wait.ConditionFunc {
 	return func() (bool, error) {
-		stat, err := fs.Stat(file)
+		stat, err := os.Stat(file)
 		if err != nil {
 			return false, err
 		}
@@ -268,7 +259,7 @@ func ingressInNamespace(c kubernetes.Interface, namespace, name string) wait.Con
 	return func() (bool, error) {
 		ing, err := c.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
-			return false, err
+			return false, nil
 		}
 		if err != nil {
 			return false, err
@@ -285,16 +276,24 @@ func podRunning(c kubernetes.Interface, podName, namespace string) wait.Conditio
 	return func() (bool, error) {
 		pod, err := c.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 		switch pod.Status.Phase {
-		case v1.PodRunning:
+		case corev1.PodRunning:
 			return true, nil
-		case v1.PodFailed, v1.PodSucceeded:
+		case corev1.PodFailed, corev1.PodSucceeded:
 			return false, fmt.Errorf("pod ran to completion")
 		}
 		return false, nil
 	}
+}
+
+func labelSelectorToString(labels map[string]string) string {
+	var str string
+	for k, v := range labels {
+		str += fmt.Sprintf("%s=%s,", k, v)
+	}
+	return str[:len(str)-1]
 }
 
 // NewInt32 converts int32 to a pointer

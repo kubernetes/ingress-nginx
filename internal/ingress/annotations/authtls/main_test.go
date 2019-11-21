@@ -20,33 +20,36 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -60,49 +63,199 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
+// mocks the resolver for authTLS
+type mockSecret struct {
+	resolver.Mock
+}
+
+// GetAuthCertificate from mockSecret mocks the GetAuthCertificate for authTLS
+func (m mockSecret) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
+	if name != "default/demo-secret" {
+		return nil, errors.Errorf("there is no secret with name %v", name)
+	}
+
+	return &resolver.AuthSSLCert{
+		Secret:     "default/demo-secret",
+		CAFileName: "/ssl/ca.crt",
+		CASHA:      "abc",
+	}, nil
+
+}
+
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
-
 	data := map[string]string{}
+
+	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "default/demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "1"
+	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
+	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
+
 	ing.SetAnnotations(data)
-	/*
-		tests := []struct {
-			title    string
-			url      string
-			method   string
-			sendBody bool
-			expErr   bool
-		}{
-			{"empty", "", "", false, true},
-			{"no scheme", "bar", "", false, true},
-			{"invalid host", "http://", "", false, true},
-			{"invalid host (multiple dots)", "http://foo..bar.com", "", false, true},
-			{"valid URL", "http://bar.foo.com/external-auth", "", false, false},
-			{"valid URL - send body", "http://foo.com/external-auth", "POST", true, false},
-			{"valid URL - send body", "http://foo.com/external-auth", "GET", true, false},
-		}
 
-		for _, test := range tests {
-			data[authTLSSecret] = ""
-			test.title
+	fakeSecret := &mockSecret{}
+	i, err := NewParser(fakeSecret).Parse(ing)
+	if err != nil {
+		t.Errorf("Uxpected error with ingress: %v", err)
+	}
 
-				u, err := ParseAnnotations(ing)
+	u, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
 
-				if test.expErr {
-					if err == nil {
-						t.Errorf("%v: expected error but retuned nil", test.title)
-					}
-					continue
-				}
+	secret, err := fakeSecret.GetAuthCertificate("default/demo-secret")
+	if err != nil {
+		t.Errorf("unexpected error getting secret %v", err)
+	}
 
-				if u.URL != test.url {
-					t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.url, u.URL)
-				}
-				if u.Method != test.method {
-					t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.method, u.Method)
-				}
-				if u.SendBody != test.sendBody {
-					t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.sendBody, u.SendBody)
-				}
-		}*/
+	if u.AuthSSLCert.Secret != secret.Secret {
+		t.Errorf("expected %v but got %v", secret.Secret, u.AuthSSLCert.Secret)
+	}
+	if u.VerifyClient != "off" {
+		t.Errorf("expected %v but got %v", "off", u.VerifyClient)
+	}
+	if u.ValidationDepth != 1 {
+		t.Errorf("expected %v but got %v", 1, u.ValidationDepth)
+	}
+	if u.ErrorPage != "ok.com/error" {
+		t.Errorf("expected %v but got %v", "ok.com/error", u.ErrorPage)
+	}
+	if u.PassCertToUpstream != true {
+		t.Errorf("expected %v but got %v", true, u.PassCertToUpstream)
+	}
+}
+
+func TestInvalidAnnotations(t *testing.T) {
+	ing := buildIngress()
+	fakeSecret := &mockSecret{}
+	data := map[string]string{}
+
+	// No annotation
+	_, err := NewParser(fakeSecret).Parse(ing)
+	if err == nil {
+		t.Errorf("Expected error with ingress but got nil")
+	}
+
+	// Invalid NameSpace
+	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "demo-secret"
+	ing.SetAnnotations(data)
+	_, err = NewParser(fakeSecret).Parse(ing)
+	if err == nil {
+		t.Errorf("Expected error with ingress but got nil")
+	}
+
+	// Invalid Auth Certificate
+	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "default/invalid-demo-secret"
+	ing.SetAnnotations(data)
+	_, err = NewParser(fakeSecret).Parse(ing)
+	if err == nil {
+		t.Errorf("Expected error with ingress but got nil")
+	}
+
+	// Invalid optional Annotations
+	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "default/demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "w00t"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "abcd"
+	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "nahh"
+	ing.SetAnnotations(data)
+
+	i, err := NewParser(fakeSecret).Parse(ing)
+	if err != nil {
+		t.Errorf("Uxpected error with ingress: %v", err)
+	}
+	u, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+
+	if u.VerifyClient != "on" {
+		t.Errorf("expected %v but got %v", "on", u.VerifyClient)
+	}
+	if u.ValidationDepth != 1 {
+		t.Errorf("expected %v but got %v", 1, u.ValidationDepth)
+	}
+	if u.PassCertToUpstream != false {
+		t.Errorf("expected %v but got %v", false, u.PassCertToUpstream)
+	}
+
+}
+
+func TestEquals(t *testing.T) {
+	cfg1 := &Config{}
+	cfg2 := &Config{}
+
+	// Same config
+	result := cfg1.Equal(cfg1)
+	if result != true {
+		t.Errorf("Expected true")
+	}
+
+	// compare nil
+	result = cfg1.Equal(nil)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+
+	// Different Certs
+	sslCert1 := resolver.AuthSSLCert{
+		Secret:     "default/demo-secret",
+		CAFileName: "/ssl/ca.crt",
+		CASHA:      "abc",
+	}
+	sslCert2 := resolver.AuthSSLCert{
+		Secret:     "default/other-demo-secret",
+		CAFileName: "/ssl/ca.crt",
+		CASHA:      "abc",
+	}
+	cfg1.AuthSSLCert = sslCert1
+	cfg2.AuthSSLCert = sslCert2
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.AuthSSLCert = sslCert1
+
+	// Different Verify Client
+	cfg1.VerifyClient = "on"
+	cfg2.VerifyClient = "off"
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.VerifyClient = "on"
+
+	// Different Validation Depth
+	cfg1.ValidationDepth = 1
+	cfg2.ValidationDepth = 2
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.ValidationDepth = 1
+
+	// Different Error Page
+	cfg1.ErrorPage = "error-1"
+	cfg2.ErrorPage = "error-2"
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.ErrorPage = "error-1"
+
+	// Different Pass to Upstream
+	cfg1.PassCertToUpstream = true
+	cfg2.PassCertToUpstream = false
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.PassCertToUpstream = true
+
+	// Equal Configs
+	result = cfg1.Equal(cfg2)
+	if result != true {
+		t.Errorf("Expected true")
+	}
 }

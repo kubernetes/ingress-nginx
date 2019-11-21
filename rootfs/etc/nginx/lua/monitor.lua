@@ -1,11 +1,16 @@
 local socket = ngx.socket.tcp
-local cjson = require('cjson')
+local cjson = require("cjson.safe")
 local assert = assert
+local new_tab = require "table.new"
+local clear_tab = require "table.clear"
+local clone_tab = require "table.clone"
+local nkeys = require "table.nkeys"
 
-local metrics_batch = {}
 -- if an Nginx worker processes more than (MAX_BATCH_SIZE/FLUSH_INTERVAL) RPS then it will start dropping metrics
 local MAX_BATCH_SIZE = 10000
 local FLUSH_INTERVAL = 1 -- second
+
+local metrics_batch = new_tab(MAX_BATCH_SIZE, 0)
 
 local _M = {}
 
@@ -46,12 +51,12 @@ local function flush(premature)
     return
   end
 
-  local current_metrics_batch = metrics_batch
-  metrics_batch = {}
+  local current_metrics_batch = clone_tab(metrics_batch)
+  clear_tab(metrics_batch)
 
-  local ok, payload = pcall(cjson.encode, current_metrics_batch)
-  if not ok then
-    ngx.log(ngx.ERR, "error while encoding metrics: " .. tostring(payload))
+  local payload, err = cjson.encode(current_metrics_batch)
+  if not payload then
+    ngx.log(ngx.ERR, "error while encoding metrics: ", err)
     return
   end
 
@@ -66,12 +71,13 @@ function _M.init_worker()
 end
 
 function _M.call()
-  if #metrics_batch >= MAX_BATCH_SIZE then
+  local metrics_size = nkeys(metrics_batch)
+  if metrics_size >= MAX_BATCH_SIZE then
     ngx.log(ngx.WARN, "omitting metrics for the request, current batch is full")
     return
   end
 
-  table.insert(metrics_batch, metrics())
+  metrics_batch[metrics_size + 1] = metrics()
 end
 
 if _TEST then

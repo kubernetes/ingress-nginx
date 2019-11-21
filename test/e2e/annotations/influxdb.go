@@ -53,8 +53,8 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 			createInfluxDBIngress(
 				f,
 				host,
-				"http-svc",
-				8080,
+				framework.EchoService,
+				80,
 				map[string]string{
 					"nginx.ingress.kubernetes.io/enable-influxdb":      "true",
 					"nginx.ingress.kubernetes.io/influxdb-host":        ifs.Spec.ClusterIP,
@@ -67,7 +67,7 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 			// Do a request to the echo server ingress that sends metrics
 			// to the InfluxDB backend.
 			res, _, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", host).
 				End()
 
@@ -103,7 +103,7 @@ func createInfluxDBService(f *framework.Framework) *corev1.Service {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "inflxudb-svc",
-			Namespace: f.IngressController.Namespace,
+			Namespace: f.Namespace,
 		},
 		Spec: corev1.ServiceSpec{Ports: []corev1.ServicePort{
 			{
@@ -123,7 +123,7 @@ func createInfluxDBService(f *framework.Framework) *corev1.Service {
 }
 
 func createInfluxDBIngress(f *framework.Framework, host, service string, port int, annotations map[string]string) {
-	ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, service, port, &annotations)
+	ing := framework.NewSingleIngress(host, "/", host, f.Namespace, service, port, &annotations)
 	f.EnsureIngress(ing)
 
 	f.WaitForNginxServer(host,
@@ -133,7 +133,7 @@ func createInfluxDBIngress(f *framework.Framework, host, service string, port in
 }
 
 func extractInfluxDBMeasurements(f *framework.Framework) (string, error) {
-	l, err := f.KubeClientSet.CoreV1().Pods(f.IngressController.Namespace).List(metav1.ListOptions{
+	l, err := f.KubeClientSet.CoreV1().Pods(f.Namespace).List(metav1.ListOptions{
 		LabelSelector: "app=influxdb-svc",
 	})
 	if err != nil {

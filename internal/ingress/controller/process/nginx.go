@@ -24,7 +24,6 @@ import (
 	"syscall"
 	"time"
 
-	ps "github.com/mitchellh/go-ps"
 	"github.com/ncabatoff/process-exporter/proc"
 	"k8s.io/klog"
 )
@@ -81,15 +80,4 @@ func WaitUntilPortIsAvailable(port int) {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-}
-
-// IsNginxRunning returns true if a process with the name 'nginx' is found
-func IsNginxRunning() bool {
-	processes, _ := ps.Processes()
-	for _, p := range processes {
-		if p.Executable() == "nginx" {
-			return true
-		}
-	}
-	return false
 }

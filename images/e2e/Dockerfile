@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.72
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.92
 
 RUN clean-install \
   g++ \
@@ -21,13 +21,13 @@ RUN clean-install \
   libc6-dev \
   make \
   wget \
-  luarocks \
   python \
+  parallel \
   pkg-config
 
-ENV GOLANG_VERSION 1.11.2
+ENV GOLANG_VERSION 1.13
 ENV GO_ARCH        linux-amd64
-ENV GOLANG_SHA     1dfe664fa3d8ad714bbd15a36627992effd150ddabd7523931f077b3926d736d
+ENV GOLANG_SHA     68a2297eb099d1a76097905a2ce334e3155004ec08cdea85f24527be3c48e856
 
 RUN set -eux; \
   url="https://golang.org/dl/go${GOLANG_VERSION}.${GO_ARCH}.tar.gz"; \
@@ -45,8 +45,9 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 WORKDIR $GOPATH
 
-ENV RESTY_CLI_VERSION 0.22rc2
-ENV RESTY_CLI_SHA     1ec64d204469a04da553c95eaafb2e5601a03acb8f26cc10ae16b15525228c12
+ENV RESTY_CLI_VERSION 0.25rc2
+ENV RESTY_CLI_SHA     a38d850441384fa037a5922ca012dcce8708d0e4abe34ad2fe4164a01b28bdfb
+
 RUN set -eux; \
   url="https://github.com/openresty/resty-cli/archive/v${RESTY_CLI_VERSION}.tar.gz"; \
   wget -O resty_cli.tgz "$url"; \
@@ -57,11 +58,22 @@ RUN set -eux; \
   resty -V
 
 RUN  luarocks install luacheck \
-  && luarocks install busted 2.0.rc12
+  && luarocks install busted
 
 RUN  go get github.com/onsi/ginkgo/ginkgo \
   && go get golang.org/x/lint/golint
 
-RUN  curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl \
+ARG K8S_RELEASE
+ARG ETCD_VERSION
+
+RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
   && chmod +x /usr/local/bin/kubectl
 
+RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kube-apiserver -O /usr/local/bin/kube-apiserver \
+  && chmod +x /usr/local/bin/kube-apiserver
+
+RUN curl -L https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz \
+  && mkdir -p /tmp/etcd-download \
+  && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 \
+  && cp /tmp/etcd-download/etcd /usr/local/bin \
+  && rm -rf /tmp/etcd-download

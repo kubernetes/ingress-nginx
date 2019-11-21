@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package settings
+package loadbalance
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -43,18 +44,18 @@ var _ = framework.IngressNginxDescribe("Load Balance - Round Robin", func() {
 	It("should evenly distribute requests with round-robin (default algorithm)", func() {
 		host := "load-balance.com"
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "server_name load-balance.com")
 			})
 
-		re, _ := regexp.Compile(`http-svc.*`)
+		re, _ := regexp.Compile(fmt.Sprintf(`%v.*`, framework.EchoService))
 		replicaRequestCount := map[string]int{}
 
 		for i := 0; i < 600; i++ {
 			_, body, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", host).
 				End()
 			Expect(errs).Should(BeEmpty())

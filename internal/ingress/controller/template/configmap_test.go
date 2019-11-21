@@ -25,6 +25,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/mitchellh/hashstructure"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 )
 
@@ -59,10 +60,10 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"skip-access-log-urls":          "/log,/demo,/test",
 		"use-proxy-protocol":            "true",
 		"disable-access-log":            "true",
+		"access-log-params":             "buffer=4k gzip",
 		"access-log-path":               "/var/log/test/access.log",
 		"error-log-path":                "/var/log/test/error.log",
 		"use-gzip":                      "true",
-		"enable-dynamic-tls-records":    "false",
 		"gzip-level":                    "9",
 		"gzip-types":                    "text/html",
 		"proxy-real-ip-cidr":            "1.1.1.1/8,2.2.2.2/24",
@@ -71,16 +72,17 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"nginx-status-ipv4-whitelist":   "127.0.0.1,10.0.0.0/24",
 		"nginx-status-ipv6-whitelist":   "::1,2001::/16",
 		"proxy-add-original-uri-header": "false",
+		"disable-ipv6-dns":              "true",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
 	def.DisableAccessLog = true
+	def.AccessLogParams = "buffer=4k gzip"
 	def.AccessLogPath = "/var/log/test/access.log"
 	def.ErrorLogPath = "/var/log/test/error.log"
 	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
 	def.ProxyReadTimeout = 1
 	def.ProxySendTimeout = 2
-	def.EnableDynamicTLSRecords = false
 	def.UseProxyProtocol = true
 	def.GzipLevel = 9
 	def.GzipTypes = "text/html"
@@ -91,6 +93,8 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
 	def.ProxyAddOriginalURIHeader = false
+	def.LuaSharedDicts = defaultLuaSharedDicts
+	def.DisableIpv6DNS = true
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",
@@ -119,6 +123,9 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
+	def.LuaSharedDicts = defaultLuaSharedDicts
+	def.DisableIpv6DNS = true
+
 	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",
 	})
@@ -127,13 +134,17 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 	def.Checksum = fmt.Sprintf("%v", hash)
 
-	to = ReadConfig(map[string]string{})
+	to = ReadConfig(map[string]string{
+		"disable-ipv6-dns": "true",
+	})
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 
 	def = config.NewDefault()
+	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
+	def.DisableIpv6DNS = true
 
 	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",
@@ -145,9 +156,203 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 
 	to = ReadConfig(map[string]string{
 		"whitelist-source-range": "1.1.1.1/32",
+		"disable-ipv6-dns":       "true",
 	})
 
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
+	}
+}
+
+func TestGlobalExternalAuthURLParsing(t *testing.T) {
+	errorURL := ""
+	validURL := "http://bar.foo.com/external-auth"
+
+	testCases := map[string]struct {
+		url    string
+		expect string
+	}{
+		"no scheme":                    {"bar", errorURL},
+		"invalid host":                 {"http://", errorURL},
+		"invalid host (multiple dots)": {"http://foo..bar.com", errorURL},
+		"valid URL":                    {validURL, validURL},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-url": tc.url})
+		if cfg.GlobalExternalAuth.URL != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.URL)
+		}
+	}
+}
+
+func TestGlobalExternalAuthMethodParsing(t *testing.T) {
+	testCases := map[string]struct {
+		method string
+		expect string
+	}{
+		"invalid method": {"FOO", ""},
+		"valid method":   {"POST", "POST"},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-method": tc.method})
+		if cfg.GlobalExternalAuth.Method != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.Method)
+		}
+	}
+}
+
+func TestGlobalExternalAuthSigninParsing(t *testing.T) {
+	errorURL := ""
+	validURL := "http://bar.foo.com/auth-error-page"
+
+	testCases := map[string]struct {
+		signin string
+		expect string
+	}{
+		"no scheme":                    {"bar", errorURL},
+		"invalid host":                 {"http://", errorURL},
+		"invalid host (multiple dots)": {"http://foo..bar.com", errorURL},
+		"valid URL":                    {validURL, validURL},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-signin": tc.signin})
+		if cfg.GlobalExternalAuth.SigninURL != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.SigninURL)
+		}
+	}
+}
+
+func TestGlobalExternalAuthResponseHeadersParsing(t *testing.T) {
+	testCases := map[string]struct {
+		headers string
+		expect  []string
+	}{
+		"single header":                 {"h1", []string{"h1"}},
+		"nothing":                       {"", []string{}},
+		"spaces":                        {"  ", []string{}},
+		"two headers":                   {"1,2", []string{"1", "2"}},
+		"two headers and empty entries": {",1,,2,", []string{"1", "2"}},
+		"header with spaces":            {"1 2", []string{}},
+		"header with other bad symbols": {"1+2", []string{}},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-response-headers": tc.headers})
+
+		if !reflect.DeepEqual(cfg.GlobalExternalAuth.ResponseHeaders, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.ResponseHeaders)
+		}
+	}
+}
+
+func TestGlobalExternalAuthRequestRedirectParsing(t *testing.T) {
+	testCases := map[string]struct {
+		requestRedirect string
+		expect          string
+	}{
+		"empty":                  {"", ""},
+		"valid request redirect": {"http://foo.com/redirect-me", "http://foo.com/redirect-me"},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-request-redirect": tc.requestRedirect})
+		if cfg.GlobalExternalAuth.RequestRedirect != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.RequestRedirect)
+		}
+	}
+}
+
+func TestGlobalExternalAuthSnippetParsing(t *testing.T) {
+	testCases := map[string]struct {
+		authSnippet string
+		expect      string
+	}{
+		"empty":        {"", ""},
+		"auth snippet": {"proxy_set_header My-Custom-Header 42;", "proxy_set_header My-Custom-Header 42;"},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-snippet": tc.authSnippet})
+		if cfg.GlobalExternalAuth.AuthSnippet != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.AuthSnippet)
+		}
+	}
+}
+
+func TestGlobalExternalAuthCacheDurationParsing(t *testing.T) {
+	testCases := map[string]struct {
+		durations string
+		expect    []string
+	}{
+		"nothing":                         {"", []string{authreq.DefaultCacheDuration}},
+		"spaces":                          {"  ", []string{authreq.DefaultCacheDuration}},
+		"one duration":                    {"5m", []string{"5m"}},
+		"two durations and empty entries": {",200 5m,,401 30m,", []string{"200 5m", "401 30m"}},
+		"only status code provided":       {"200", []string{authreq.DefaultCacheDuration}},
+		"mixed valid/invalid":             {"5m, xaxax", []string{authreq.DefaultCacheDuration}},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-cache-duration": tc.durations})
+
+		if !reflect.DeepEqual(cfg.GlobalExternalAuth.AuthCacheDuration, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.AuthCacheDuration)
+		}
+	}
+}
+
+func TestLuaSharedDictsParsing(t *testing.T) {
+	testsCases := []struct {
+		name   string
+		entry  map[string]string
+		expect map[string]int
+	}{
+		{
+			name:   "default dicts configured when lua-shared-dicts is not set",
+			entry:  make(map[string]string),
+			expect: defaultLuaSharedDicts,
+		},
+		{
+			name:   "configuration_data only",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:5"},
+			expect: map[string]int{"configuration_data": 5},
+		},
+		{
+			name:   "certificate_data only",
+			entry:  map[string]string{"lua-shared-dicts": "certificate_data: 4"},
+			expect: map[string]int{"certificate_data": 4},
+		},
+		{
+			name:   "custom dicts",
+			entry:  map[string]string{"lua-shared-dicts": "configuration_data:   10, my_random_dict:15 ,   another_example:2"},
+			expect: map[string]int{"configuration_data": 10, "my_random_dict": 15, "another_example": 2},
+		},
+		{
+			name:   "invalid size value should be ignored",
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 1a"},
+			expect: map[string]int{"mydict": 10},
+		},
+		{
+			name:   "dictionary size can not be larger than 200",
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 201"},
+			expect: map[string]int{"mydict": 10},
+		},
+	}
+
+	for _, tc := range testsCases {
+		// dynamically insert default dicts in the expected output
+		for dictName, dictSize := range defaultLuaSharedDicts {
+			if _, ok := tc.expect[dictName]; !ok {
+				tc.expect[dictName] = dictSize
+			}
+		}
+
+		cfg := ReadConfig(tc.entry)
+		if !reflect.DeepEqual(cfg.LuaSharedDicts, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, cfg.LuaSharedDicts)
+		}
 	}
 }

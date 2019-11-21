@@ -26,23 +26,23 @@ import (
 
 	"github.com/parnurzeal/gorequest"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
+var _ = framework.IngressNginxDescribe("Custom Default Backend", func() {
 	f := framework.NewDefaultFramework("custom-default-backend")
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
 
-		framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1beta1.Deployment) error {
+		framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+			func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
-				args = append(args, fmt.Sprintf("--default-backend-service=%s/%s", f.IngressController.Namespace, "http-svc"))
+				args = append(args, fmt.Sprintf("--default-backend-service=$(POD_NAMESPACE)/%v", framework.EchoService))
 				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.IngressController.Namespace).Update(deployment)
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
 
 				return err
 			})
@@ -54,7 +54,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 	})
 
 	It("uses custom default backend", func() {
-		resp, _, errs := gorequest.New().Get(f.IngressController.HTTPURL).End()
+		resp, _, errs := gorequest.New().Get(f.GetURL(framework.HTTP)).End()
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})

@@ -28,7 +28,6 @@ ingress "secure-demo-echo-service" created
 
 $ kubectl get po
 NAME                                        READY     STATUS    RESTARTS   AGE
-NAME                                        READY     STATUS    RESTARTS   AGE
 demo-auth-service-2769076528-7g9mh          1/1       Running            0          30s
 demo-echo-service-3636052215-3vw8c          1/1       Running            0          29s
 
@@ -114,7 +113,7 @@ $ curl -H 'Host: public-demo-echo-service.kube.local' -H 'User:internal' -v 192.
 UserID: 1443635317331776148, UserRole: admin
 ```
 
-Test 4: public service with valid auth header
+Test 4: secure service with valid auth header
 
 ```console
 $ curl -H 'Host: secure-demo-echo-service.kube.local' -H 'User:internal' -v 192.168.99.100

@@ -20,17 +20,17 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func buildIngress() *extensions.Ingress {
-	return &extensions.Ingress{
+func buildIngress() *networking.Ingress {
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{},
+		Spec: networking.IngressSpec{},
 	}
 }
 
@@ -89,9 +89,17 @@ func TestGetStringAnnotation(t *testing.T) {
 		exp    string
 		expErr bool
 	}{
-		{"valid - A", "string", "A", "A", false},
-		{"valid - B", "string", "B", "B", false},
-		{"empty", "string", "", "", true},
+		{"valid - A", "string", "A ", "A", false},
+		{"valid - B", "string", "	B", "B", false},
+		{"empty", "string", " ", "", true},
+		{"valid multiline", "string", `
+		rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break; 	
+		rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;			
+		`, `
+rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break;
+rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;
+`,
+			false},
 	}
 
 	data := map[string]string{}

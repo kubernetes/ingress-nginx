@@ -26,7 +26,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -45,11 +45,11 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 	BeforeEach(func() {
 		f.NewEchoDeployment()
 
-		s := f.EnsureSecret(buildSecret(username, password, secretName, f.IngressController.Namespace))
+		s := f.EnsureSecret(buildSecret(username, password, secretName, f.Namespace))
 
 		f.UpdateNginxConfigMapData(setting, noAuthPath)
 
-		bi := buildBasicAuthIngressWithSecondPath(host, f.IngressController.Namespace, s.Name, noAuthPath)
+		bi := buildBasicAuthIngressWithSecondPath(host, f.Namespace, s.Name, noAuthPath)
 		f.EnsureIngress(bi)
 	})
 
@@ -63,7 +63,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 
@@ -79,7 +79,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			SetBasicAuth(username, password).
 			End()
@@ -95,7 +95,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf("%s/noauth", f.IngressController.HTTPURL)).
+			Get(fmt.Sprintf("%s/noauth", f.GetURL(framework.HTTP))).
 			Set("Host", host).
 			End()
 
@@ -104,8 +104,8 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 	})
 })
 
-func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName string) *v1beta1.Ingress {
-	return &v1beta1.Ingress{
+func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName string) *extensions.Ingress {
+	return &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      host,
 			Namespace: namespace,
@@ -114,24 +114,24 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 				"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 			},
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: extensions.IngressSpec{
+			Rules: []extensions.IngressRule{
 				{
 					Host: host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
 								{
 									Path: "/",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: "http-svc",
+									Backend: extensions.IngressBackend{
+										ServiceName: framework.EchoService,
 										ServicePort: intstr.FromInt(80),
 									},
 								},
 								{
 									Path: pathName,
-									Backend: v1beta1.IngressBackend{
-										ServiceName: "http-svc",
+									Backend: extensions.IngressBackend{
+										ServiceName: framework.EchoService,
 										ServicePort: intstr.FromInt(80),
 									},
 								},

@@ -16,7 +16,7 @@
 all: all-container
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.21.0
+TAG ?= 0.26.1
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 DOCKER ?= docker
 SED_I ?= sed -i
@@ -26,62 +26,69 @@ GOHOSTOS ?= $(shell go env GOHOSTOS)
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 4
-# slow test only if takes > 40s
-SLOW_E2E_THRESHOLD ?= 40
+E2E_NODES ?= 10
+# slow test only if takes > 50s
+SLOW_E2E_THRESHOLD ?= 50
+K8S_VERSION ?= v1.14.1
 
-NODE_IP ?= $(shell minikube ip)
+E2E_CHECK_LEAKS ?=
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
 
-REPO_INFO=$(shell git config --get remote.origin.url)
-
-ifndef GIT_COMMIT
-  GIT_COMMIT := git-$(shell git rev-parse --short HEAD)
-endif
+REPO_INFO ?= $(shell git config --get remote.origin.url)
+GIT_COMMIT ?= git-$(shell git rev-parse --short HEAD)
 
 PKG = k8s.io/ingress-nginx
 
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
-DUMB_ARCH = ${ARCH}
 
-GOBUILD_FLAGS :=
 
-ALL_ARCH = amd64 arm64
+GOBUILD_FLAGS := -v
 
-QEMUVERSION = v3.0.0
+ALL_ARCH = amd64 arm arm64
+
+QEMUVERSION = v4.1.0-1
 
 BUSTED_ARGS =-v --pattern=_test
 
-IMGNAME = nginx-ingress-controller
-IMAGE = $(REGISTRY)/$(IMGNAME)
-MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
+GOOS = linux
+
+MULTI_ARCH_IMAGE = $(REGISTRY)/nginx-ingress-controller-${ARCH}
+
+# use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
+GO111MODULE=off
+
+export ARCH
+export TAG
+export PKG
+export GOARCH
+export GOOS
+export GO111MODULE
+export GIT_COMMIT
+export GOBUILD_FLAGS
+export REPO_INFO
+export BUSTED_ARGS
+export IMAGE
+export E2E_NODES
+export E2E_CHECK_LEAKS
+export SLOW_E2E_THRESHOLD
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.72
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):daf8634acf839708722cffc67a62e9316a2771c6
 
+ifeq ($(ARCH),arm)
+	QEMUARCH=arm
+endif
 ifeq ($(ARCH),arm64)
 	QEMUARCH=aarch64
 endif
 
 TEMP_DIR := $(shell mktemp -d)
 
-DEF_VARS:=ARCH=$(ARCH)           \
-	TAG=$(TAG)               \
-	PKG=$(PKG)               \
-	GOARCH=$(GOARCH)         \
-	GIT_COMMIT=$(GIT_COMMIT) \
-	REPO_INFO=$(REPO_INFO)   \
-	PWD=$(PWD)
-
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
-
-.PHONY: image-info
-image-info:
-	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
 
 .PHONY: sub-container-%
 sub-container-%:
@@ -102,15 +109,15 @@ container: clean-container .container-$(ARCH)
 
 .PHONY: .container-$(ARCH)
 .container-$(ARCH):
-	@echo "+ Copying artifact to temporary directory"
 	mkdir -p $(TEMP_DIR)/rootfs
 	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
+	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
+	cp bin/$(ARCH)/wait-shutdown $(TEMP_DIR)/rootfs/wait-shutdown
 
-	@echo "+ Building container image $(MULTI_ARCH_IMG):$(TAG)"
 	cp -RP ./* $(TEMP_DIR)
 	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
 	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
-	$(SED_I) "s|DUMB_ARCH|$(DUMB_ARCH)|g" $(DOCKERFILE)
+	$(SED_I) "s|VERSION|$(TAG)|g" $(DOCKERFILE)
 
 ifeq ($(ARCH),amd64)
 	# When building "normally" for amd64, remove the whole line, it has no part in the amd64 image
@@ -121,84 +128,71 @@ else
 	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
 endif
 
-	$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
+	echo "Building docker image..."
+	$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMAGE):$(TAG) $(TEMP_DIR)/rootfs
 
-ifeq ($(ARCH), amd64)
-	# This is for maintaining backward compatibility
-	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
-endif
 
 .PHONY: clean-container
 clean-container:
-	@echo "+ Deleting container image $(MULTI_ARCH_IMG):$(TAG)"
-	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
+	@$(DOCKER) rmi -f $(MULTI_ARCH_IMAGE):$(TAG) || true
 
 .PHONY: register-qemu
 register-qemu:
 	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
+	@$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset >&2
 
 .PHONY: push
 push: .push-$(ARCH)
 
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
-	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
-ifeq ($(ARCH), amd64)
-	$(DOCKER) push $(IMAGE):$(TAG)
-endif
+	$(DOCKER) push $(MULTI_ARCH_IMAGE):$(TAG)
 
 .PHONY: build
 build:
-	@echo "+ Building bin/$(ARCH)/nginx-ingress-controller"
-	@$(DEF_VARS) \
-	GOBUILD_FLAGS="$(GOBUILD_FLAGS)" \
-	build/go-in-docker.sh build/build.sh
+	@build/build.sh
+
+.PHONY: build-plugin
+build-plugin:
+	@build/build-plugin.sh
 
 .PHONY: clean
 clean:
-	rm -rf bin/ .gocache/ .env
+	rm -rf bin/ .gocache/
 
 .PHONY: static-check
 static-check:
-	@$(DEF_VARS) \
-	build/go-in-docker.sh build/static-check.sh
+	@build/static-check.sh
 
 .PHONY: test
 test:
-	@$(DEF_VARS)                 \
-	NODE_IP=$(NODE_IP)           \
-	DOCKER_OPTS="-i --net=host"  \
-	build/go-in-docker.sh build/test.sh
+	@build/test.sh
 
 .PHONY: lua-test
 lua-test:
-	@$(DEF_VARS)                 \
-	BUSTED_ARGS="$(BUSTED_ARGS)" \
-	build/go-in-docker.sh build/test-lua.sh
+	@build/test-lua.sh
 
 .PHONY: e2e-test
 e2e-test:
-	@$(DEF_VARS)                             \
-	FOCUS=$(FOCUS)                           \
-	E2E_NODES=$(E2E_NODES)                   \
-	DOCKER_OPTS="-i --net=host"              \
-	NODE_IP=$(NODE_IP)                       \
-	SLOW_E2E_THRESHOLD=$(SLOW_E2E_THRESHOLD) \
-	build/go-in-docker.sh build/e2e-tests.sh
+	@build/run-e2e-suite.sh
+
+.PHONY: e2e-test-image
+e2e-test-image: e2e-test-binary
+	make -C test/e2e-image
+
+.PHONY: e2e-test-binary
+e2e-test-binary:
+	@ginkgo build ./test/e2e
 
 .PHONY: cover
 cover:
-	@$(DEF_VARS)                 \
-	DOCKER_OPTS="-i --net=host"  \
-	build/go-in-docker.sh build/cover.sh
-
+	@build/cover.sh
 	echo "Uploading coverage results..."
 	@curl -s https://codecov.io/bash | bash
 
 .PHONY: vet
 vet:
-	@go vet $(shell go list ${PKG}/... | grep -v vendor)
+	@go vet $(shell go list ${PKG}/internal/... | grep -v vendor)
 
 .PHONY: release
 release: all-container all-push
@@ -206,17 +200,16 @@ release: all-container all-push
 
 .PHONY: check_dead_links
 check_dead_links:
-	docker run -t \
+	@docker run -t \
 	  -v $$PWD:/tmp aledbf/awesome_bot:0.1 \
 	  --allow-dupe \
 	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
 
 .PHONY: dep-ensure
 dep-ensure:
-	dep version || curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-	dep ensure -v
-	dep prune -v
+	go mod tidy -v
 	find vendor -name '*_test.go' -delete
+	go mod vendor
 
 .PHONY: dev-env
 dev-env:
@@ -224,13 +217,13 @@ dev-env:
 
 .PHONY: live-docs
 live-docs:
-	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker build --pull -t ingress-nginx/mkdocs images/mkdocs
 	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
 
 .PHONY: build-docs
 build-docs:
-	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
-	@docker run --rm -it -v ${PWD}:/docs ingress-nginx/mkdocs build
+	@docker build --pull -t ingress-nginx/mkdocs images/mkdocs
+	@docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
 
 .PHONY: misspell
 misspell:
@@ -239,3 +232,11 @@ misspell:
 		-locale US \
 		-error \
 		cmd/* internal/* deploy/* docs/* design/* test/* README.md
+
+.PHONY: kind-e2e-test
+kind-e2e-test:
+	test/e2e/run.sh
+
+.PHONY: run-ingress-controller
+run-ingress-controller:
+	@build/run-ingress-controller.sh

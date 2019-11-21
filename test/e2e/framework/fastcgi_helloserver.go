@@ -1,0 +1,106 @@
+/*
+Copyright 2017 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package framework
+
+import (
+	. "github.com/onsi/gomega"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/util/intstr"
+)
+
+// NewFastCGIHelloServerDeployment creates a new single replica
+// deployment of the fortune teller image in a particular namespace
+func (f *Framework) NewFastCGIHelloServerDeployment() {
+	f.NewNewFastCGIHelloServerDeploymentWithReplicas(1)
+}
+
+// NewNewFastCGIHelloServerDeploymentWithReplicas creates a new deployment of the
+// fortune teller image in a particular namespace. Number of replicas is configurable
+func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int32) {
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "fastcgi-helloserver",
+			Namespace: f.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: NewInt32(replicas),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "fastcgi-helloserver",
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": "fastcgi-helloserver",
+					},
+				},
+				Spec: corev1.PodSpec{
+					TerminationGracePeriodSeconds: NewInt64(0),
+					Containers: []corev1.Container{
+						{
+							Name:  "fastcgi-helloserver",
+							Image: "ingress-controller/fastcgi-helloserver:dev",
+							Env:   []corev1.EnvVar{},
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "fastcgi",
+									ContainerPort: 9000,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	d, err := f.EnsureDeployment(deployment)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(d).NotTo(BeNil(), "expected a fastcgi-helloserver deployment")
+
+	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
+		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
+	})
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for to become ready")
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "fastcgi-helloserver",
+			Namespace: f.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "fastcgi",
+					Port:       9000,
+					TargetPort: intstr.FromInt(9000),
+					Protocol:   "TCP",
+				},
+			},
+			Selector: map[string]string{
+				"app": "fastcgi-helloserver",
+			},
+		},
+	}
+
+	f.EnsureService(service)
+}

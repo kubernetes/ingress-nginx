@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -29,28 +29,28 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -70,15 +70,19 @@ type mockBackend struct {
 
 func (m mockBackend) GetDefaultBackend() defaults.Backend {
 	return defaults.Backend{
-		ProxyConnectTimeout:    10,
-		ProxySendTimeout:       15,
-		ProxyReadTimeout:       20,
-		ProxyBufferSize:        "10k",
-		ProxyBodySize:          "3k",
-		ProxyNextUpstream:      "error",
-		ProxyNextUpstreamTries: 3,
-		ProxyRequestBuffering:  "on",
-		ProxyBuffering:         "off",
+		ProxyConnectTimeout:      10,
+		ProxySendTimeout:         15,
+		ProxyReadTimeout:         20,
+		ProxyBuffersNumber:       4,
+		ProxyBufferSize:          "10k",
+		ProxyBodySize:            "3k",
+		ProxyNextUpstream:        "error",
+		ProxyNextUpstreamTimeout: 0,
+		ProxyNextUpstreamTries:   3,
+		ProxyRequestBuffering:    "on",
+		ProxyBuffering:           "off",
+		ProxyHTTPVersion:         "1.1",
+		ProxyMaxTempFileSize:     "1024m",
 	}
 }
 
@@ -89,12 +93,16 @@ func TestProxy(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-connect-timeout")] = "1"
 	data[parser.GetAnnotationWithPrefix("proxy-send-timeout")] = "2"
 	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "3"
+	data[parser.GetAnnotationWithPrefix("proxy-buffers-number")] = "8"
 	data[parser.GetAnnotationWithPrefix("proxy-buffer-size")] = "1k"
 	data[parser.GetAnnotationWithPrefix("proxy-body-size")] = "2k"
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream")] = "off"
+	data[parser.GetAnnotationWithPrefix("proxy-next-upstream-timeout")] = "5"
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream-tries")] = "3"
 	data[parser.GetAnnotationWithPrefix("proxy-request-buffering")] = "off"
 	data[parser.GetAnnotationWithPrefix("proxy-buffering")] = "on"
+	data[parser.GetAnnotationWithPrefix("proxy-http-version")] = "1.0"
+	data[parser.GetAnnotationWithPrefix("proxy-max-temp-file-size")] = "128k"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -114,6 +122,9 @@ func TestProxy(t *testing.T) {
 	if p.ReadTimeout != 3 {
 		t.Errorf("expected 3 as read-timeout but returned %v", p.ReadTimeout)
 	}
+	if p.BuffersNumber != 8 {
+		t.Errorf("expected 8 as proxy-buffers-number but returned %v", p.BuffersNumber)
+	}
 	if p.BufferSize != "1k" {
 		t.Errorf("expected 1k as buffer-size but returned %v", p.BufferSize)
 	}
@@ -123,6 +134,9 @@ func TestProxy(t *testing.T) {
 	if p.NextUpstream != "off" {
 		t.Errorf("expected off as next-upstream but returned %v", p.NextUpstream)
 	}
+	if p.NextUpstreamTimeout != 5 {
+		t.Errorf("expected 5 as next-upstream-timeout but returned %v", p.NextUpstreamTimeout)
+	}
 	if p.NextUpstreamTries != 3 {
 		t.Errorf("expected 3 as next-upstream-tries but returned %v", p.NextUpstreamTries)
 	}
@@ -131,6 +145,12 @@ func TestProxy(t *testing.T) {
 	}
 	if p.ProxyBuffering != "on" {
 		t.Errorf("expected on as proxy-buffering but returned %v", p.ProxyBuffering)
+	}
+	if p.ProxyHTTPVersion != "1.0" {
+		t.Errorf("expected 1.0 as proxy-http-version but returned %v", p.ProxyHTTPVersion)
+	}
+	if p.ProxyMaxTempFileSize != "128k" {
+		t.Errorf("expected 128k as proxy-max-temp-file-size but returned %v", p.ProxyMaxTempFileSize)
 	}
 }
 
@@ -157,6 +177,9 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	if p.ReadTimeout != 20 {
 		t.Errorf("expected 20 as read-timeout but returned %v", p.ReadTimeout)
 	}
+	if p.BuffersNumber != 4 {
+		t.Errorf("expected 4 as buffer-number but returned %v", p.BuffersNumber)
+	}
 	if p.BufferSize != "10k" {
 		t.Errorf("expected 10k as buffer-size but returned %v", p.BufferSize)
 	}
@@ -166,10 +189,19 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	if p.NextUpstream != "error" {
 		t.Errorf("expected error as next-upstream but returned %v", p.NextUpstream)
 	}
+	if p.NextUpstreamTimeout != 0 {
+		t.Errorf("expected 0 as next-upstream-timeout but returned %v", p.NextUpstreamTimeout)
+	}
 	if p.NextUpstreamTries != 3 {
 		t.Errorf("expected 3 as next-upstream-tries but returned %v", p.NextUpstreamTries)
 	}
 	if p.RequestBuffering != "on" {
 		t.Errorf("expected on as request-buffering but returned %v", p.RequestBuffering)
+	}
+	if p.ProxyHTTPVersion != "1.1" {
+		t.Errorf("expected 1.1 as proxy-http-version but returned %v", p.ProxyHTTPVersion)
+	}
+	if p.ProxyMaxTempFileSize != "1024m" {
+		t.Errorf("expected 1024m as proxy-max-temp-file-size but returned %v", p.ProxyMaxTempFileSize)
 	}
 }

@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 200 when no authentication is configured", func() {
 		host := "auth"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -55,7 +55,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
@@ -73,7 +73,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -82,7 +82,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
@@ -95,7 +95,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 401 when authentication is configured but Authorization header is not configured", func() {
 		host := "auth"
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -103,7 +103,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -112,7 +112,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
@@ -125,7 +125,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials", func() {
 		host := "auth"
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -133,7 +133,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -142,7 +142,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("user", "pass").
@@ -156,7 +156,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 200 when authentication is configured and Authorization header is sent", func() {
 		host := "auth"
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -164,7 +164,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -173,7 +173,38 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
+			Retry(10, 1*time.Second, http.StatusNotFound).
+			Set("Host", host).
+			SetBasicAuth("foo", "bar").
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+	})
+
+	It("should return status code 200 when authentication is configured with a map and Authorization header is sent", func() {
+		host := "auth"
+
+		s := f.EnsureSecret(buildMapSecret("foo", "bar", "test", f.Namespace))
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-type":        "basic",
+			"nginx.ingress.kubernetes.io/auth-secret":      s.Name,
+			"nginx.ingress.kubernetes.io/auth-secret-type": "auth-map",
+			"nginx.ingress.kubernetes.io/auth-realm":       "test auth",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring("server_name auth"))
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("foo", "bar").
@@ -190,7 +221,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
-					Namespace: f.IngressController.Namespace,
+					Namespace: f.Namespace,
 				},
 				Data: map[string][]byte{
 					// invalid content
@@ -206,7 +237,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -215,7 +246,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("foo", "bar").
@@ -234,7 +265,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				proxy_set_header My-Custom-Header 42;`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -251,12 +282,53 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				proxy_set_header My-Custom-Header 42;`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).ShouldNot(ContainSubstring(`proxy_set_header My-Custom-Header 42;`))
+			})
+	})
+
+	It(`should set "proxy_set_header 'My-Custom-Header' '42';" when auth-headers are set`, func() {
+		host := "auth"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-url":               "http://foo.bar/basic-auth/user/password",
+			"nginx.ingress.kubernetes.io/auth-proxy-set-headers": f.Namespace + "/auth-headers",
+		}
+
+		f.CreateConfigMap("auth-headers", map[string]string{
+			"My-Custom-Header": "42",
+		})
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring(`proxy_set_header 'My-Custom-Header' '42';`))
+			})
+	})
+
+	It(`should set cache_key when external auth cache is configured`, func() {
+		host := "auth"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-url":            "http://foo.bar/basic-auth/user/password",
+			"nginx.ingress.kubernetes.io/auth-cache-key":      "foo",
+			"nginx.ingress.kubernetes.io/auth-cache-duration": "200 202 401 30m",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(MatchRegexp(`\$cache_key.*foo`)) &&
+					Expect(server).Should(ContainSubstring(`proxy_cache_valid 200 202 401 30m;`))
+
 			})
 	})
 
@@ -268,10 +340,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 			var httpbinIP string
 
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.IngressController.Namespace, 1)
+			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
 			Expect(err).NotTo(HaveOccurred())
 
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.IngressController.Namespace).Get("httpbin", metav1.GetOptions{})
+			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 
 			httpbinIP = e.Subsets[0].Addresses[0].IP
@@ -281,7 +353,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 			}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host, func(server string) bool {
@@ -291,7 +363,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		It("should return status code 200 when signed in", func() {
 			resp, _, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Retry(10, 1*time.Second, http.StatusNotFound).
 				Set("Host", host).
 				SetBasicAuth("user", "password").
@@ -305,7 +377,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		It("should redirect to signin url when not signed in", func() {
 			resp, _, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Retry(10, 1*time.Second, http.StatusNotFound).
 				Set("Host", host).
 				RedirectPolicy(func(req gorequest.Request, via []gorequest.Request) error {
@@ -320,6 +392,185 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			}
 			Expect(resp.StatusCode).Should(Equal(http.StatusFound))
 			Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d"))))
+		})
+	})
+
+	Context("when external authentication with caching is configured", func() {
+		thisHost := "auth"
+		thatHost := "different"
+
+		fooPath := "/foo"
+		barPath := "/bar"
+
+		BeforeEach(func() {
+			f.NewHttpbinDeployment()
+
+			var httpbinIP string
+
+			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
+			Expect(err).NotTo(HaveOccurred())
+
+			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+
+			httpbinIP = e.Subsets[0].Addresses[0].IP
+
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/auth-url":            fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
+				"nginx.ingress.kubernetes.io/auth-signin":         "http://$host/auth/start",
+				"nginx.ingress.kubernetes.io/auth-cache-key":      "fixed",
+				"nginx.ingress.kubernetes.io/auth-cache-duration": "200 201 401 30m",
+			}
+
+			for _, host := range []string{thisHost, thatHost} {
+				By("Adding an ingress rule for /foo")
+				fooIng := framework.NewSingleIngress(fmt.Sprintf("foo-%s-ing", host), fooPath, host, f.Namespace, framework.EchoService, 80, &annotations)
+				f.EnsureIngress(fooIng)
+				f.WaitForNginxServer(host, func(server string) bool {
+					return Expect(server).Should(ContainSubstring("location /foo"))
+				})
+
+				By("Adding an ingress rule for /bar")
+				barIng := framework.NewSingleIngress(fmt.Sprintf("bar-%s-ing", host), barPath, host, f.Namespace, framework.EchoService, 80, &annotations)
+				f.EnsureIngress(barIng)
+				f.WaitForNginxServer(host, func(server string) bool {
+					return Expect(server).Should(ContainSubstring("location /bar"))
+				})
+			}
+		})
+
+		It("should return status code 200 when signed in after auth backend is deleted ", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			err := f.DeleteDeployment(framework.HTTPBinService)
+			Expect(err).NotTo(HaveOccurred())
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		})
+
+		It("should deny login for different location on same server", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			err := f.DeleteDeployment(framework.HTTPBinService)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+barPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			By("receiving an internal server error without cache on location /bar")
+			Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+		})
+
+		It("should deny login for different servers", func() {
+			By("logging into server thisHost /foo")
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			err := f.DeleteDeployment(framework.HTTPBinService)
+			Expect(err).NotTo(HaveOccurred())
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			resp, _, errs = gorequest.New().
+				Get(f.GetURL(framework.HTTP)+fooPath).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thatHost).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			By("receiving an internal server error without cache on thisHost location /bar")
+			Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+		})
+
+		It("should redirect to signin url when not signed in", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", thisHost).
+				RedirectPolicy(func(req gorequest.Request, via []gorequest.Request) error {
+					return http.ErrUseLastResponse
+				}).
+				Param("a", "b").
+				Param("c", "d").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusFound))
+			Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", thisHost, thisHost, url.QueryEscape("/?a=b&c=d"))))
 		})
 	})
 })
@@ -343,6 +594,23 @@ func buildSecret(username, password, name, namespace string) *corev1.Secret {
 		},
 		Data: map[string][]byte{
 			"auth": []byte(encpass),
+		},
+		Type: corev1.SecretTypeOpaque,
+	}
+}
+
+func buildMapSecret(username, password, name, namespace string) *corev1.Secret {
+	out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	Expect(err).NotTo(HaveOccurred())
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:                       name,
+			Namespace:                  namespace,
+			DeletionGracePeriodSeconds: framework.NewInt64(1),
+		},
+		Data: map[string][]byte{
+			username: []byte(out),
 		},
 		Type: corev1.SecretTypeOpaque,
 	}

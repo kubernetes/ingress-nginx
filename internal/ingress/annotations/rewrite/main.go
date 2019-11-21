@@ -17,7 +17,7 @@ limitations under the License.
 package rewrite
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -27,11 +27,6 @@ import (
 type Config struct {
 	// Target URI where the traffic must be redirected
 	Target string `json:"target"`
-	// AddBaseURL indicates if is required to add a base tag in the head
-	// of the responses from the upstream servers
-	AddBaseURL bool `json:"addBaseUrl"`
-	// BaseURLScheme override for the scheme passed to the base tag
-	BaseURLScheme string `json:"baseUrlScheme"`
 	// SSLRedirect indicates if the location section is accessible SSL only
 	SSLRedirect bool `json:"sslRedirect"`
 	// ForceSSLRedirect indicates if the location section is accessible SSL only
@@ -51,12 +46,6 @@ func (r1 *Config) Equal(r2 *Config) bool {
 		return false
 	}
 	if r1.Target != r2.Target {
-		return false
-	}
-	if r1.AddBaseURL != r2.AddBaseURL {
-		return false
-	}
-	if r1.BaseURLScheme != r2.BaseURLScheme {
 		return false
 	}
 	if r1.SSLRedirect != r2.SSLRedirect {
@@ -86,7 +75,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 
@@ -101,8 +90,6 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 		config.ForceSSLRedirect = a.r.GetDefaultBackend().ForceSSLRedirect
 	}
 
-	config.AddBaseURL, _ = parser.GetBoolAnnotation("add-base-url", ing)
-	config.BaseURLScheme, _ = parser.GetStringAnnotation("base-url-scheme", ing)
 	config.AppRoot, _ = parser.GetStringAnnotation("app-root", ing)
 	config.UseRegex, _ = parser.GetBoolAnnotation("use-regex", ing)
 

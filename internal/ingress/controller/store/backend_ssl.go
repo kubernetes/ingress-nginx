@@ -20,16 +20,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/imdario/mergo"
 	"k8s.io/klog"
 
+	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 )
 
@@ -41,7 +40,6 @@ func (s *k8sStore) syncSecret(key string) {
 
 	klog.V(3).Infof("Syncing Secret %q", key)
 
-	// TODO: getPemCertificate should not write to disk to avoid unnecessary overhead
 	cert, err := s.getPemCertificate(key)
 	if err != nil {
 		if !isErrSecretForAuth(err) {
@@ -84,6 +82,8 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 	key, okkey := secret.Data[apiv1.TLSPrivateKeyKey]
 	ca := secret.Data["ca.crt"]
 
+	crl := secret.Data["ca.crl"]
+
 	auth := secret.Data["auth"]
 
 	// namespace/secretName -> namespace-secretName
@@ -94,21 +94,42 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		if cert == nil {
 			return nil, fmt.Errorf("key 'tls.crt' missing from Secret %q", secretName)
 		}
+
 		if key == nil {
 			return nil, fmt.Errorf("key 'tls.key' missing from Secret %q", secretName)
 		}
 
-		if s.isDynamicCertificatesEnabled {
-			sslCert, err = ssl.CreateSSLCert(nsSecName, cert, key, ca)
+		sslCert, err = ssl.CreateSSLCert(cert, key, string(secret.UID))
+		if err != nil {
+			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
+		}
+
+		if len(ca) > 0 {
+			caCert, err := ssl.CheckCACert(ca)
 			if err != nil {
-				return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
+				return nil, fmt.Errorf("parsing CA certificate: %v", err)
 			}
-		} else {
-			// If 'ca.crt' is also present, it will allow this secret to be used in the
-			// 'nginx.ingress.kubernetes.io/auth-tls-secret' annotation
-			sslCert, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca, s.filesystem)
+
+			path, err := ssl.StoreSSLCertOnDisk(nsSecName, sslCert)
 			if err != nil {
-				return nil, fmt.Errorf("unexpected error creating pem file: %v", err)
+				return nil, fmt.Errorf("error while storing certificate and key: %v", err)
+			}
+
+			sslCert.PemFileName = path
+			sslCert.CACertificate = caCert
+			sslCert.CAFileName = path
+			sslCert.CASHA = file.SHA1(path)
+
+			err = ssl.ConfigureCACertWithCertAndKey(nsSecName, ca, sslCert)
+			if err != nil {
+				return nil, fmt.Errorf("error configuring CA certificate: %v", err)
+			}
+
+			if len(crl) > 0 {
+				err = ssl.ConfigureCRL(nsSecName, crl, sslCert)
+				if err != nil {
+					return nil, fmt.Errorf("error configuring CRL certificate: %v", err)
+				}
 			}
 		}
 
@@ -116,19 +137,32 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		if ca != nil {
 			msg += " and authentication"
 		}
-		klog.V(3).Info(msg)
 
-	} else if ca != nil {
-		sslCert, err = ssl.AddCertAuth(nsSecName, ca, s.filesystem)
-
-		if err != nil {
-			return nil, err
+		if crl != nil {
+			msg += " and CRL"
 		}
 
+		klog.V(3).Info(msg)
+	} else if len(ca) > 0 {
+		sslCert, err = ssl.CreateCACert(ca)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
+		}
+
+		err = ssl.ConfigureCACert(nsSecName, ca, sslCert)
+		if err != nil {
+			return nil, fmt.Errorf("error configuring CA certificate: %v", err)
+		}
+
+		if len(crl) > 0 {
+			err = ssl.ConfigureCRL(nsSecName, crl, sslCert)
+			if err != nil {
+				return nil, err
+			}
+		}
 		// makes this secret in 'syncSecret' to be used for Certificate Authentication
 		// this does not enable Certificate Authentication
 		klog.V(3).Infof("Configuring Secret %q for TLS authentication", secretName)
-
 	} else {
 		if auth != nil {
 			return nil, ErrSecretForAuth
@@ -140,58 +174,17 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 	sslCert.Name = secret.Name
 	sslCert.Namespace = secret.Namespace
 
-	return sslCert, nil
-}
-
-func (s *k8sStore) checkSSLChainIssues() {
-	for _, item := range s.ListLocalSSLCerts() {
-		secrKey := k8s.MetaNamespaceKey(item)
-		secret, err := s.GetLocalSSLCert(secrKey)
+	// the default SSL certificate needs to be present on disk
+	if secretName == s.defaultSSLCertificate {
+		path, err := ssl.StoreSSLCertOnDisk(nsSecName, sslCert)
 		if err != nil {
-			continue
+			return nil, errors.Wrap(err, "storing default SSL Certificate")
 		}
 
-		if secret.FullChainPemFileName != "" {
-			// chain already checked
-			continue
-		}
-
-		data, err := ssl.FullChainCert(secret.PemFileName, s.filesystem)
-		if err != nil {
-			klog.Errorf("Error generating CA certificate chain for Secret %q: %v", secrKey, err)
-			continue
-		}
-
-		fullChainPemFileName := fmt.Sprintf("%v/%v-%v-full-chain.pem", file.DefaultSSLDirectory, secret.Namespace, secret.Name)
-
-		file, err := s.filesystem.Create(fullChainPemFileName)
-		if err != nil {
-			klog.Errorf("Error creating SSL certificate file for Secret %q: %v", secrKey, err)
-			continue
-		}
-
-		_, err = file.Write(data)
-		if err != nil {
-			klog.Errorf("Error creating SSL certificate for Secret %q: %v", secrKey, err)
-			continue
-		}
-
-		dst := &ingress.SSLCert{}
-
-		err = mergo.MergeWithOverwrite(dst, secret)
-		if err != nil {
-			klog.Errorf("Error creating SSL certificate for Secret %q: %v", secrKey, err)
-			continue
-		}
-
-		dst.FullChainPemFileName = fullChainPemFileName
-
-		klog.Infof("Updating local copy of SSL certificate %q with missing intermediate CA certs", secrKey)
-		s.sslStore.Update(secrKey, dst)
-		// this update must trigger an update
-		// (like an update event from a change in Ingress)
-		s.sendDummyEvent()
+		sslCert.PemFileName = path
 	}
+
+	return sslCert, nil
 }
 
 // sendDummyEvent sends a dummy event to trigger an update
@@ -199,7 +192,7 @@ func (s *k8sStore) checkSSLChainIssues() {
 func (s *k8sStore) sendDummyEvent() {
 	s.updateCh.In() <- Event{
 		Type: UpdateEvent,
-		Obj: &extensions.Ingress{
+		Obj: &networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
 				Namespace: "dummy",

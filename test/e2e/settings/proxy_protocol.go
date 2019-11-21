@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"strconv"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -47,7 +46,7 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -56,11 +55,9 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 			})
 
 		ip := f.GetNginxIP()
-		port, err := f.GetNginxPort("http")
-		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX Port")
 
-		conn, err := net.Dial("tcp", net.JoinHostPort(ip, strconv.Itoa(port)))
-		Expect(err).NotTo(HaveOccurred(), "unexpected error creating connection to %s:%d", ip, port)
+		conn, err := net.Dial("tcp", net.JoinHostPort(ip, "80"))
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating connection to %s:80", ip)
 		defer conn.Close()
 
 		header := "PROXY TCP4 192.168.0.1 192.168.0.11 56324 1234\r\n"

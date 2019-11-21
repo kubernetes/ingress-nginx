@@ -18,6 +18,7 @@ package framework
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os/exec"
@@ -25,11 +26,45 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
+// GetLbAlgorithm returns algorithm identifier for the given backend
+func (f *Framework) GetLbAlgorithm(serviceName string, servicePort int) (string, error) {
+	backendName := fmt.Sprintf("%s-%s-%v", f.Namespace, serviceName, servicePort)
+	cmd := fmt.Sprintf("/dbg backends get %s", backendName)
+
+	output, err := f.ExecIngressPod(cmd)
+	if err != nil {
+		return "", err
+	}
+
+	var backend map[string]interface{}
+	err = json.Unmarshal([]byte(output), &backend)
+	if err != nil {
+		return "", err
+	}
+
+	algorithm, ok := backend["load-balance"].(string)
+	if !ok {
+		return "", fmt.Errorf("error while accessing load-balance field of backend")
+	}
+
+	return algorithm, nil
+}
+
+// ExecIngressPod executes a command inside the first container in ingress controller running pod
+func (f *Framework) ExecIngressPod(command string) (string, error) {
+	pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
+	if err != nil {
+		return "", err
+	}
+
+	return f.ExecCommand(pod, command)
+}
+
 // ExecCommand executes a command inside a the first container in a running pod
-func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
+func (f *Framework) ExecCommand(pod *corev1.Pod, command string) (string, error) {
 	var (
 		execOut bytes.Buffer
 		execErr bytes.Buffer
@@ -53,12 +88,12 @@ func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
 }
 
 // NewIngressController deploys a new NGINX Ingress controller in a namespace
-func (f *Framework) NewIngressController(namespace string) error {
+func (f *Framework) NewIngressController(namespace string, namespaceOverlay string) error {
 	// Creates an nginx deployment
-	cmd := exec.Command("./wait-for-nginx.sh", namespace)
+	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("Unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))
+		return fmt.Errorf("unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))
 	}
 
 	return nil
@@ -82,7 +117,7 @@ func (f *Framework) KubectlProxy(port int) (int, *exec.Cmd, error) {
 	buf := make([]byte, 128)
 	var n int
 	if n, err = stdout.Read(buf); err != nil {
-		return -1, cmd, fmt.Errorf("Failed to read from kubectl proxy stdout: %v", err)
+		return -1, cmd, fmt.Errorf("failed to read from kubectl proxy stdout: %v", err)
 	}
 
 	output := string(buf[:n])
@@ -93,7 +128,7 @@ func (f *Framework) KubectlProxy(port int) (int, *exec.Cmd, error) {
 		}
 	}
 
-	return -1, cmd, fmt.Errorf("Failed to parse port from proxy stdout: %s", output)
+	return -1, cmd, fmt.Errorf("failed to parse port from proxy stdout: %s", output)
 }
 
 func startCmdAndStreamOutput(cmd *exec.Cmd) (stdout, stderr io.ReadCloser, err error) {

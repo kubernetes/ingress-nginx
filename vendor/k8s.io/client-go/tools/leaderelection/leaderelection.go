@@ -16,12 +16,16 @@ limitations under the License.
 
 // Package leaderelection implements leader election of a set of endpoints.
 // It uses an annotation in the endpoints object to store the record of the
-// election state.
+// election state. This implementation does not guarantee that only one
+// client is acting as a leader (a.k.a. fencing).
 //
-// This implementation does not guarantee that only one client is acting as a
-// leader (a.k.a. fencing). A client observes timestamps captured locally to
-// infer the state of the leader election. Thus the implementation is tolerant
-// to arbitrary clock skew, but is not tolerant to arbitrary clock skew rate.
+// A client only acts on timestamps captured locally to infer the state of the
+// leader election. The client does not consider timestamps in the leader
+// election record to be accurate because these timestamps may not have been
+// produced by a local clock. The implemention does not depend on their
+// accuracy and only uses their change to indicate that another client has
+// renewed the leader lease. Thus the implementation is tolerant to arbitrary
+// clock skew, but is not tolerant to arbitrary clock skew rate.
 //
 // However the level of tolerance to skew rate can be configured by setting
 // RenewDeadline and LeaseDuration appropriately. The tolerance expressed as a
@@ -85,14 +89,23 @@ func NewLeaderElector(lec LeaderElectionConfig) (*LeaderElector, error) {
 	if lec.RetryPeriod < 1 {
 		return nil, fmt.Errorf("retryPeriod must be greater than zero")
 	}
+	if lec.Callbacks.OnStartedLeading == nil {
+		return nil, fmt.Errorf("OnStartedLeading callback must not be nil")
+	}
+	if lec.Callbacks.OnStoppedLeading == nil {
+		return nil, fmt.Errorf("OnStoppedLeading callback must not be nil")
+	}
 
 	if lec.Lock == nil {
 		return nil, fmt.Errorf("Lock must not be nil.")
 	}
-	return &LeaderElector{
-		config: lec,
-		clock:  clock.RealClock{},
-	}, nil
+	le := LeaderElector{
+		config:  lec,
+		clock:   clock.RealClock{},
+		metrics: globalMetricsFactory.newLeaderMetrics(),
+	}
+	le.metrics.leaderOff(le.config.Name)
+	return &le, nil
 }
 
 type LeaderElectionConfig struct {
@@ -102,12 +115,26 @@ type LeaderElectionConfig struct {
 	// LeaseDuration is the duration that non-leader candidates will
 	// wait to force acquire leadership. This is measured against time of
 	// last observed ack.
+	//
+	// A client needs to wait a full LeaseDuration without observing a change to
+	// the record before it can attempt to take over. When all clients are
+	// shutdown and a new set of clients are started with different names against
+	// the same leader record, they must wait the full LeaseDuration before
+	// attempting to acquire the lease. Thus LeaseDuration should be as short as
+	// possible (within your tolerance for clock skew rate) to avoid a possible
+	// long waits in the scenario.
+	//
+	// Core clients default this value to 15 seconds.
 	LeaseDuration time.Duration
 	// RenewDeadline is the duration that the acting master will retry
 	// refreshing leadership before giving up.
+	//
+	// Core clients default this value to 10 seconds.
 	RenewDeadline time.Duration
 	// RetryPeriod is the duration the LeaderElector clients should wait
 	// between tries of actions.
+	//
+	// Core clients default this value to 2 seconds.
 	RetryPeriod time.Duration
 
 	// Callbacks are callbacks that are triggered during certain lifecycle
@@ -117,6 +144,13 @@ type LeaderElectionConfig struct {
 	// WatchDog is the associated health checker
 	// WatchDog may be null if its not needed/configured.
 	WatchDog *HealthzAdaptor
+
+	// ReleaseOnCancel should be set true if the lock should be released
+	// when the run context is cancelled. If you set this to true, you must
+	// ensure all code guarded by this lease has successfully completed
+	// prior to cancelling the context, or you may have two processes
+	// simultaneously acting on the critical path.
+	ReleaseOnCancel bool
 
 	// Name is the name of the resource lock for debugging
 	Name string
@@ -151,6 +185,8 @@ type LeaderElector struct {
 
 	// clock is wrapper around time to allow for less flaky testing
 	clock clock.Clock
+
+	metrics leaderMetricsAdapter
 
 	// name is the name of the resource lock for debugging
 	name string
@@ -211,6 +247,7 @@ func (le *LeaderElector) acquire(ctx context.Context) bool {
 			return
 		}
 		le.config.Lock.RecordEvent("became leader")
+		le.metrics.leaderOn(le.config.Name)
 		klog.Infof("successfully acquired lease %v", desc)
 		cancel()
 	}, le.config.RetryPeriod, JitterFactor, true, ctx.Done())
@@ -246,9 +283,32 @@ func (le *LeaderElector) renew(ctx context.Context) {
 			return
 		}
 		le.config.Lock.RecordEvent("stopped leading")
+		le.metrics.leaderOff(le.config.Name)
 		klog.Infof("failed to renew lease %v: %v", desc, err)
 		cancel()
 	}, le.config.RetryPeriod, ctx.Done())
+
+	// if we hold the lease, give it up
+	if le.config.ReleaseOnCancel {
+		le.release()
+	}
+}
+
+// release attempts to release the leader lease if we have acquired it.
+func (le *LeaderElector) release() bool {
+	if !le.IsLeader() {
+		return true
+	}
+	leaderElectionRecord := rl.LeaderElectionRecord{
+		LeaderTransitions: le.observedRecord.LeaderTransitions,
+	}
+	if err := le.config.Lock.Update(leaderElectionRecord); err != nil {
+		klog.Errorf("Failed to release lock: %v", err)
+		return false
+	}
+	le.observedRecord = leaderElectionRecord
+	le.observedTime = le.clock.Now()
+	return true
 }
 
 // tryAcquireOrRenew tries to acquire a leader lease if it is not already acquired,
@@ -284,7 +344,8 @@ func (le *LeaderElector) tryAcquireOrRenew() bool {
 		le.observedRecord = *oldLeaderElectionRecord
 		le.observedTime = le.clock.Now()
 	}
-	if le.observedTime.Add(le.config.LeaseDuration).After(now.Time) &&
+	if len(oldLeaderElectionRecord.HolderIdentity) > 0 &&
+		le.observedTime.Add(le.config.LeaseDuration).After(now.Time) &&
 		!le.IsLeader() {
 		klog.V(4).Infof("lock is held by %v and has not yet expired", oldLeaderElectionRecord.HolderIdentity)
 		return false

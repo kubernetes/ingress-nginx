@@ -36,6 +36,8 @@ func AddConversionFuncs(scheme *runtime.Scheme) error {
 		Convert_v1_ListMeta_To_v1_ListMeta,
 
 		Convert_intstr_IntOrString_To_intstr_IntOrString,
+		Convert_Pointer_intstr_IntOrString_To_intstr_IntOrString,
+		Convert_intstr_IntOrString_To_Pointer_intstr_IntOrString,
 
 		Convert_Pointer_v1_Duration_To_v1_Duration,
 		Convert_v1_Duration_To_Pointer_v1_Duration,
@@ -77,6 +79,8 @@ func AddConversionFuncs(scheme *runtime.Scheme) error {
 		Convert_Slice_string_To_Slice_int32,
 
 		Convert_Slice_string_To_v1_DeletionPropagation,
+
+		Convert_Slice_string_To_v1_IncludeObjectPolicy,
 	)
 }
 
@@ -198,6 +202,21 @@ func Convert_intstr_IntOrString_To_intstr_IntOrString(in, out *intstr.IntOrStrin
 	return nil
 }
 
+func Convert_Pointer_intstr_IntOrString_To_intstr_IntOrString(in **intstr.IntOrString, out *intstr.IntOrString, s conversion.Scope) error {
+	if *in == nil {
+		*out = intstr.IntOrString{} // zero value
+		return nil
+	}
+	*out = **in // copy
+	return nil
+}
+
+func Convert_intstr_IntOrString_To_Pointer_intstr_IntOrString(in *intstr.IntOrString, out **intstr.IntOrString, s conversion.Scope) error {
+	temp := *in // copy
+	*out = &temp
+	return nil
+}
+
 // +k8s:conversion-fn=copy-only
 func Convert_v1_Time_To_v1_Time(in *Time, out *Time, s conversion.Scope) error {
 	// Cannot deep copy these, because time.Time has unexported fields.
@@ -314,6 +333,14 @@ func Convert_Slice_string_To_v1_DeletionPropagation(input *[]string, out *Deleti
 		*out = DeletionPropagation((*input)[0])
 	} else {
 		*out = ""
+	}
+	return nil
+}
+
+// Convert_Slice_string_To_v1_IncludeObjectPolicy allows converting a URL query parameter value
+func Convert_Slice_string_To_v1_IncludeObjectPolicy(input *[]string, out *IncludeObjectPolicy, s conversion.Scope) error {
+	if len(*input) > 0 {
+		*out = IncludeObjectPolicy((*input)[0])
 	}
 	return nil
 }

@@ -80,13 +80,13 @@ func TestControllerCounters(t *testing.T) {
 				servers := []*ingress.Server{
 					{
 						Hostname: "demo",
-						SSLCert: ingress.SSLCert{
+						SSLCert: &ingress.SSLCert{
 							ExpireTime: t1,
 						},
 					},
 					{
 						Hostname: "invalid",
-						SSLCert: ingress.SSLCert{
+						SSLCert: &ingress.SSLCert{
 							ExpireTime: time.Unix(0, 0),
 						},
 					},
@@ -135,13 +135,13 @@ func TestRemoveMetrics(t *testing.T) {
 	servers := []*ingress.Server{
 		{
 			Hostname: "demo",
-			SSLCert: ingress.SSLCert{
+			SSLCert: &ingress.SSLCert{
 				ExpireTime: t1,
 			},
 		},
 		{
 			Hostname: "invalid",
-			SSLCert: ingress.SSLCert{
+			SSLCert: &ingress.SSLCert{
 				ExpireTime: time.Unix(0, 0),
 			},
 		},

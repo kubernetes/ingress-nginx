@@ -1,7 +1,7 @@
 local ngx_balancer = require("ngx.balancer")
-local json = require("cjson")
+local cjson = require("cjson.safe")
 local util = require("util")
-local dns_util = require("util.dns")
+local dns_lookup = require("util.dns").lookup
 local configuration = require("tcp_udp_configuration")
 local round_robin = require("balancer.round_robin")
 
@@ -34,7 +34,7 @@ local function resolve_external_names(original_backend)
   local backend = util.deepcopy(original_backend)
   local endpoints = {}
   for _, endpoint in ipairs(backend.endpoints) do
-    local ips = dns_util.resolve(endpoint.address)
+    local ips = dns_lookup(endpoint.address)
     for _, ip in ipairs(ips) do
       table.insert(endpoints, {address = ip, port = endpoint.port})
     end
@@ -99,9 +99,9 @@ local function sync_backends()
     return
   end
 
-  local ok, new_backends = pcall(json.decode, backends_data)
-  if not ok then
-    ngx.log(ngx.ERR, "could not parse backends data: " .. tostring(new_backends))
+  local new_backends, err = cjson.decode(backends_data)
+  if not new_backends then
+    ngx.log(ngx.ERR, "could not parse backends data: ", err)
     return
   end
 

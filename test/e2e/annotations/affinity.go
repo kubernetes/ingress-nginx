@@ -19,7 +19,6 @@ package annotations
 import (
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -27,7 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	"k8s.io/api/extensions/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -51,74 +50,83 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 
-		md5Regex := regexp.MustCompile("SERVERID=[0-9a-f]{32}")
-		match := md5Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
-		Expect(len(match)).Should(BeNumerically("==", 1))
-
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
 	})
 
-	It("should set sticky cookie with sha1 hash", func() {
-		host := "sticky.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-hash": "sha1",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		f.EnsureIngress(ing)
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
-			})
-
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
-			Set("Host", host).
-			End()
-
-		sha1Regex := regexp.MustCompile("INGRESSCOOKIE=[0-9a-f]{40}")
-		match := sha1Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
-		Expect(len(match)).Should(BeNumerically("==", 1))
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
-	})
-
-	It("should set the path to /something on the generated cookie", func() {
-		host := "example.com"
+	It("should change cookie name on ingress definition change", func() {
+		host := "change.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/affinity":            "cookie",
 			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
 		}
 
-		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/something").
+			Get(f.GetURL(framework.HTTP)).
+			Set("Host", host).
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID"))
+
+		ing.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "OTHERCOOKIENAME"
+		f.EnsureIngress(ing)
+
+		time.Sleep(waitForLuaSync)
+
+		resp, _, errs = gorequest.New().
+			Get(f.GetURL(framework.HTTP)).
+			Set("Host", host).
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("OTHERCOOKIENAME"))
+	})
+
+	It("should set the path to /something on the generated cookie", func() {
+		host := "path.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":            "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+		}
+
+		ing := framework.NewSingleIngress(host, "/something", host, f.Namespace, framework.EchoService, 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+		time.Sleep(waitForLuaSync)
+
+		resp, _, errs := gorequest.New().
+			Get(f.GetURL(framework.HTTP)+"/something").
 			Set("Host", host).
 			End()
 
@@ -128,36 +136,36 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 	})
 
 	It("does not set the path to / on the generated cookie if there's more than one rule referring to the same backend", func() {
-		host := "example.com"
+		host := "morethanonerule.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/affinity":            "cookie",
 			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
 		}
 
-		f.EnsureIngress(&v1beta1.Ingress{
+		f.EnsureIngress(&extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        host,
-				Namespace:   f.IngressController.Namespace,
+				Namespace:   f.Namespace,
 				Annotations: annotations,
 			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
+			Spec: extensions.IngressSpec{
+				Rules: []extensions.IngressRule{
 					{
 						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
+						IngressRuleValue: extensions.IngressRuleValue{
+							HTTP: &extensions.HTTPIngressRuleValue{
+								Paths: []extensions.HTTPIngressPath{
 									{
 										Path: "/something",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
+										Backend: extensions.IngressBackend{
+											ServiceName: framework.EchoService,
 											ServicePort: intstr.FromInt(80),
 										},
 									},
 									{
 										Path: "/somewhereelese",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
+										Backend: extensions.IngressBackend{
+											ServiceName: framework.EchoService,
 											ServicePort: intstr.FromInt(80),
 										},
 									},
@@ -173,9 +181,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/something").
+			Get(f.GetURL(framework.HTTP)+"/something").
 			Set("Host", host).
 			End()
 
@@ -184,7 +193,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/something;"))
 
 		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL+"/somewhereelese").
+			Get(f.GetURL(framework.HTTP)+"/somewhereelese").
 			Set("Host", host).
 			End()
 
@@ -194,7 +203,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 	})
 
 	It("should set cookie with expires", func() {
-		host := "cookie.foo.com"
+		host := "cookieexpires.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/affinity":               "cookie",
 			"nginx.ingress.kubernetes.io/session-cookie-name":    "ExpiresCookie",
@@ -202,30 +211,35 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			"nginx.ingress.kubernetes.io/session-cookie-max-age": "259200",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		local, _ := time.LoadLocation("GMT")
+		local, err := time.LoadLocation("GMT")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(local).ShouldNot(BeNil())
+
 		duration, _ := time.ParseDuration("48h")
-		expected := time.Date(1970, time.January, 1, 0, 0, 0, 0, local).Add(duration).Format("Mon, 02-Jan-06 15:04:05 MST")
+		expected := time.Now().In(local).Add(duration).Format("Mon, 02-Jan-06 15:04")
+
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(fmt.Sprintf("Expires=%s", expected)))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Max-Age=259200"))
 	})
 
 	It("should work with use-regex annotation and session-cookie-path", func() {
-		host := "cookie.foo.com"
+		host := "useregex.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/affinity":            "cookie",
 			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
@@ -233,47 +247,45 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			"nginx.ingress.kubernetes.io/session-cookie-path": "/foo/bar",
 		}
 
-		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/foo/bar").
+			Get(f.GetURL(framework.HTTP)+"/foo/bar").
 			Set("Host", host).
 			End()
 
-		md5Regex := regexp.MustCompile("SERVERID=[0-9a-f]{32}")
-		match := md5Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
-		Expect(len(match)).Should(BeNumerically("==", 1))
-
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/foo/bar"))
 	})
 
 	It("should warn user when use-regex is true and session-cookie-path is not set", func() {
-		host := "cookie.foo.com"
+		host := "useregexwarn.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/affinity":            "cookie",
 			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
 			"nginx.ingress.kubernetes.io/use-regex":           "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/foo/bar").
+			Get(f.GetURL(framework.HTTP)+"/foo/bar").
 			Set("Host", host).
 			End()
 
@@ -286,24 +298,25 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 	})
 
 	It("should not set affinity across all server locations when using separate ingresses", func() {
-		host := "cookie.foo.com"
+		host := "separate.foo.com"
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/affinity": "cookie",
 		}
-		ing1 := framework.NewSingleIngress("ingress1", "/foo/bar", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing1 := framework.NewSingleIngress("ingress1", "/foo/bar", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing1)
 
-		ing2 := framework.NewSingleIngress("ingress2", "/foo", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{})
+		ing2 := framework.NewSingleIngress("ingress2", "/foo", host, f.Namespace, framework.EchoService, 80, &map[string]string{})
 		f.EnsureIngress(ing2)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, `location /foo/bar`) && strings.Contains(server, `location /foo`)
 			})
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/foo").
+			Get(f.GetURL(framework.HTTP)+"/foo").
 			Set("Host", host).
 			End()
 
@@ -312,7 +325,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		Expect(resp.Header.Get("Set-Cookie")).Should(Equal(""))
 
 		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL+"/foo/bar").
+			Get(f.GetURL(framework.HTTP)+"/foo/bar").
 			Set("Host", host).
 			End()
 

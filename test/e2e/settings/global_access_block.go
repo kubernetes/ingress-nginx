@@ -34,7 +34,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 	})
 
 	AfterEach(func() {
@@ -53,7 +53,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 		// This test works for minikube, but may have problems with real kubernetes clusters,
 		// especially if connection is done via Internet. In this case, the test should be disabled/removed.
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 		Expect(errs).To(BeNil())
@@ -71,7 +71,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 
 		// Should be blocked
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36").
 			End()
@@ -79,7 +79,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
 
 		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("User-Agent", "AlphaBot").
 			End()
@@ -88,7 +88,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 
 		// Shouldn't be blocked
 		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1").
 			End()
@@ -107,7 +107,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 
 		// Should be blocked
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("Referer", "example.com").
 			End()
@@ -115,7 +115,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
 
 		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("Referer", "qwerty").
 			End()
@@ -124,7 +124,7 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 
 		// Shouldn't be blocked
 		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("Referer", "qwerty123").
 			End()

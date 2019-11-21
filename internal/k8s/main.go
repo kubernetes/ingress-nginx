@@ -21,11 +21,13 @@ import (
 	"os"
 	"strings"
 
+	"k8s.io/klog"
+
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/klog"
 )
 
 // ParseNameNS parses a string searching a namespace and name
@@ -71,7 +73,6 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 type PodInfo struct {
 	Name      string
 	Namespace string
-	NodeIP    string
 	// Labels selectors of the running pod
 	// This is used to search for other Ingress controller pods
 	Labels map[string]string
@@ -95,7 +96,6 @@ func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
 	return &PodInfo{
 		Name:      podName,
 		Namespace: podNs,
-		NodeIP:    GetNodeIPOrName(kubeClient, pod.Spec.NodeName, true),
 		Labels:    pod.GetLabels(),
 	}, nil
 }
@@ -108,4 +108,31 @@ func MetaNamespaceKey(obj interface{}) string {
 	}
 
 	return key
+}
+
+// IsNetworkingIngressAvailable indicates if package "k8s.io/api/networking/v1beta1" is available or not
+var IsNetworkingIngressAvailable bool
+
+// NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1beta1" is available or not
+func NetworkingIngressAvailable(client clientset.Interface) bool {
+	// check kubernetes version to use new ingress package or not
+	version114, err := version.ParseGeneric("v1.14.0")
+	if err != nil {
+		klog.Errorf("unexpected error parsing version: %v", err)
+		return false
+	}
+
+	serverVersion, err := client.Discovery().ServerVersion()
+	if err != nil {
+		klog.Errorf("unexpected error parsing Kubernetes version: %v", err)
+		return false
+	}
+
+	runningVersion, err := version.ParseGeneric(serverVersion.String())
+	if err != nil {
+		klog.Errorf("unexpected error parsing running Kubernetes version: %v", err)
+		return false
+	}
+
+	return runningVersion.AtLeast(version114)
 }

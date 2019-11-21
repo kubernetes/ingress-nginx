@@ -43,7 +43,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Connection", func() {
 			"nginx.ingress.kubernetes.io/connection-proxy-header": "keep-alive",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -52,7 +52,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Connection", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()

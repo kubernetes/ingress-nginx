@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -49,15 +49,15 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 		port, cmd, err := f.KubectlProxy(0)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error starting kubectl proxy")
 
-		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1beta1.Deployment) error {
+		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+			func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
 				args = append(args, fmt.Sprintf("--apiserver-host=http://%s:%d", address.String(), port))
 				args = append(args, "--publish-status-address=1.1.0.0")
 				// flags --publish-service and --publish-status-address are mutually exclusive
 				var index int
 				for k, v := range args {
-					if strings.Index(v, "--publish-service") != -1 {
+					if strings.Contains(v, "--publish-service") {
 						index = k
 						break
 					}
@@ -67,14 +67,14 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 				}
 
 				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.IngressController.Namespace).Update(deployment)
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
 				return err
 			})
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment flags")
 
 		f.NewEchoDeploymentWithReplicas(1)
 
-		ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
@@ -87,16 +87,16 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 		err = cmd.Process.Kill()
 		Expect(err).NotTo(HaveOccurred(), "unexpected error terminating kubectl proxy")
 
-		ing, err = f.KubeClientSet.Extensions().Ingresses(f.IngressController.Namespace).Get(host, metav1.GetOptions{})
-		Expect(err).NotTo(HaveOccurred(), "unexpected error getting %s/%v Ingress", f.IngressController.Namespace, host)
+		ing, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred(), "unexpected error getting %s/%v Ingress", f.Namespace, host)
 
 		ing.Status.LoadBalancer.Ingress = []apiv1.LoadBalancerIngress{}
-		_, err = f.KubeClientSet.Extensions().Ingresses(f.IngressController.Namespace).UpdateStatus(ing)
+		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).UpdateStatus(ing)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error cleaning Ingress status")
 		time.Sleep(10 * time.Second)
 
 		err = f.KubeClientSet.CoreV1().
-			ConfigMaps(f.IngressController.Namespace).
+			ConfigMaps(f.Namespace).
 			Delete("ingress-controller-leader-nginx", &metav1.DeleteOptions{})
 		Expect(err).NotTo(HaveOccurred(), "unexpected error deleting leader election configmap")
 
@@ -110,9 +110,9 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 		}()
 
 		err = wait.Poll(10*time.Second, framework.DefaultTimeout, func() (done bool, err error) {
-			ing, err = f.KubeClientSet.Extensions().Ingresses(f.IngressController.Namespace).Get(host, metav1.GetOptions{})
+			ing, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			if err != nil {
-				return false, err
+				return false, nil
 			}
 
 			if len(ing.Status.LoadBalancer.Ingress) != 1 {

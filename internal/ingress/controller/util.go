@@ -17,19 +17,15 @@ limitations under the License.
 package controller
 
 import (
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"os"
+	"fmt"
 	"os/exec"
 	"syscall"
 
-	"fmt"
-
-	"k8s.io/klog"
-
 	api "k8s.io/api/core/v1"
-	"k8s.io/kubernetes/pkg/util/sysctl"
-
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/klog"
+	"k8s.io/kubernetes/pkg/util/sysctl"
 )
 
 // newUpstream creates an upstream without servers.
@@ -64,9 +60,8 @@ func sysctlSomaxconn() int {
 	return maxConns
 }
 
-// sysctlFSFileMax returns the maximum number of open file descriptors (value
-// of fs.file-max) or 0 in case of error.
-func sysctlFSFileMax() int {
+// rlimitMaxNumFiles returns hard limit for RLIMIT_NOFILE
+func rlimitMaxNumFiles() int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
@@ -78,41 +73,40 @@ func sysctlFSFileMax() int {
 }
 
 const (
-	defBinary = "/usr/sbin/nginx"
+	defBinary = "/usr/local/openresty/nginx/sbin/nginx"
 	cfgPath   = "/etc/nginx/nginx.conf"
 )
 
-var valgrind = []string{
-	"valgrind",
-	"--tool=memcheck",
-	"--leak-check=full",
-	"--show-leak-kinds=all",
-	"--leak-check=yes",
+// NginxExecTester defines the interface to execute
+// command like reload or test configuration
+type NginxExecTester interface {
+	ExecCommand(args ...string) *exec.Cmd
+	Test(cfg string) ([]byte, error)
 }
 
-func nginxExecCommand(args ...string) *exec.Cmd {
-	ngx := os.Getenv("NGINX_BINARY")
-	if ngx == "" {
-		ngx = defBinary
+// NginxCommand stores context around a given nginx executable path
+type NginxCommand struct {
+	Binary string
+}
+
+// NewNginxCommand returns a new NginxCommand from which path
+// has been detected from environment variable NGINX_BINARY or default
+func NewNginxCommand() NginxCommand {
+	return NginxCommand{
+		Binary: defBinary,
 	}
+}
 
-	cmdArgs := []string{"--deep"}
+// ExecCommand instanciates an exec.Cmd object to call nginx program
+func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
+	cmdArgs := []string{}
 
-	if os.Getenv("RUN_WITH_VALGRIND") == "true" {
-		cmdArgs = append(cmdArgs, valgrind...)
-	}
-
-	cmdArgs = append(cmdArgs, ngx, "-c", cfgPath)
+	cmdArgs = append(cmdArgs, "-c", cfgPath)
 	cmdArgs = append(cmdArgs, args...)
-
-	return exec.Command("authbind", cmdArgs...)
+	return exec.Command(nc.Binary, cmdArgs...)
 }
 
-func nginxTestCommand(cfg string) *exec.Cmd {
-	ngx := os.Getenv("NGINX_BINARY")
-	if ngx == "" {
-		ngx = defBinary
-	}
-
-	return exec.Command("authbind", "--deep", ngx, "-c", cfg, "-t")
+// Test checks if config file is a syntax valid nginx configuration
+func (nc NginxCommand) Test(cfg string) ([]byte, error) {
+	return exec.Command(nc.Binary, "-c", cfg, "-t").CombinedOutput()
 }

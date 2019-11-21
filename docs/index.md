@@ -8,4 +8,4 @@ Learn more about using Ingress on [k8s.io](http://kubernetes.io/docs/user-guide/
 
 ## Getting Started
 
-See [Deployment](./deploy) for a whirlwind tour that will get you started.
+See [Deployment](./deploy/) for a whirlwind tour that will get you started.

@@ -1,4 +1,4 @@
-FROM alpine:3.5
+FROM alpine:3.10
 MAINTAINER Roman Safronov <electroma@gmail.com>
 COPY echosvc /
 EXPOSE 8080

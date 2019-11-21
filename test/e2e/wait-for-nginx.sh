@@ -15,10 +15,14 @@
 # limitations under the License.
 
 set -e
+if ! [ -z $DEBUG ]; then
+	set -x
+fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export NAMESPACE=$1
+export NAMESPACE_OVERLAY=$2
 
 echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
 
@@ -32,8 +36,47 @@ function on_exit {
 }
 trap on_exit EXIT
 
-sed "s@\${NAMESPACE}@${NAMESPACE}@" $DIR/../manifests/ingress-controller/mandatory.yaml | kubectl apply --namespace=$NAMESPACE -f -
-cat $DIR/../manifests/ingress-controller/service-nodeport.yaml | kubectl apply --namespace=$NAMESPACE -f -
+CLUSTER_WIDE="$DIR/cluster-wide-$NAMESPACE"
+
+mkdir "$CLUSTER_WIDE"
+
+cat << EOF > "$CLUSTER_WIDE/kustomization.yaml"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../cluster-wide
+nameSuffix: "-$NAMESPACE"
+EOF
+
+OVERLAY="$DIR/overlay-$NAMESPACE"
+
+mkdir "$OVERLAY"
+
+cat << EOF > "$OVERLAY/kustomization.yaml"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: $NAMESPACE
+bases:
+- ../overlay
+- ../cluster-wide-$NAMESPACE
+EOF
+
+# Use the namespace overlay if it was requested
+if [[ ! -z "$NAMESPACE_OVERLAY" && -d "$DIR/namespace-overlays/$NAMESPACE_OVERLAY" ]]; then
+    echo "Namespace overlay $NAMESPACE_OVERLAY is being used for namespace $NAMESPACE"
+    OVERLAY="$DIR/namespace-overlays/$NAMESPACE"
+    mkdir "$OVERLAY"
+    cat << EOF > "$OVERLAY/kustomization.yaml"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: $NAMESPACE
+bases:
+- ../../namespace-overlays/$NAMESPACE_OVERLAY
+- ../../cluster-wide-$NAMESPACE
+EOF
+fi
+
+kubectl apply --kustomize "$OVERLAY"
 
 # wait for the deployment and fail if there is an error before starting the execution of any test
 kubectl rollout status \

@@ -17,39 +17,41 @@ limitations under the License.
 package canary
 
 import (
+	"testing"
+
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"testing"
+
+	"strconv"
 
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"strconv"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -61,6 +63,30 @@ func buildIngress() *extensions.Ingress {
 			},
 		},
 	}
+}
+
+func TestCanaryInvalid(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	i, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("Error Parsing Canary Annotations")
+	}
+
+	val, ok := i.(*Config)
+	if !ok {
+		t.Errorf("Expected %v and got %v", "*Config", val)
+	}
+	if val.Enabled != false {
+		t.Errorf("Expected %v but got %v", false, val.Enabled)
+	}
+	if val.Weight != 0 {
+		t.Errorf("Expected %v but got %v", 0, val.Weight)
+	}
+
 }
 
 func TestAnnotations(t *testing.T) {

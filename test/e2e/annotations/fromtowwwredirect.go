@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"time"
@@ -24,20 +25,21 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func() {
+var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", func() {
 	f := framework.NewDefaultFramework("fromtowwwredirect")
 
 	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+		f.NewEchoDeploymentWithReplicas(1)
 	})
 
 	AfterEach(func() {
 	})
 
-	It("should redirect from www", func() {
+	It("should redirect from www HTTP to HTTP", func() {
 		By("setting up server for redirect from www")
 		host := "fromtowwwredirect.bar.com"
 
@@ -45,7 +47,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 			"nginx.ingress.kubernetes.io/from-to-www-redirect": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxConfiguration(
@@ -57,7 +59,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 		By("sending request to www.fromtowwwredirect.bar.com")
 
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf("%s/%s", f.IngressController.HTTPURL, "foo")).
+			Get(fmt.Sprintf("%s/%s", f.GetURL(framework.HTTP), "foo")).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			RedirectPolicy(noRedirectPolicyFunc).
 			Set("Host", fmt.Sprintf("%s.%s", "www", host)).
@@ -66,5 +68,65 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
 		Expect(resp.Header.Get("Location")).Should(Equal("http://fromtowwwredirect.bar.com/foo"))
+	})
+
+	It("should redirect from www HTTPS to HTTPS", func() {
+		By("setting up server for redirect from www")
+
+		fromHost := fmt.Sprintf("%s.nip.io", f.GetNginxIP())
+		toHost := fmt.Sprintf("www.%s", fromHost)
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/from-to-www-redirect":  "true",
+			"nginx.ingress.kubernetes.io/configuration-snippet": "more_set_headers \"ExpectedHost: $http_host\";",
+		}
+
+		ing := framework.NewSingleIngressWithTLS(fromHost, "/", fromHost, []string{fromHost, toHost}, f.Namespace, framework.EchoService, 80, &annotations)
+		f.EnsureIngress(ing)
+
+		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
+			ing.Spec.TLS[0].Hosts,
+			ing.Spec.TLS[0].SecretName,
+			ing.Namespace)
+		Expect(err).ToNot(HaveOccurred())
+
+		f.WaitForNginxServer(toHost,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring(fmt.Sprintf(`server_name %v;`, toHost))) &&
+					Expect(server).Should(ContainSubstring(fmt.Sprintf(`return 308 $scheme://%v$request_uri;`, fromHost)))
+			})
+
+		By("sending request to www should redirect to domain without www")
+
+		resp, _, errs := gorequest.New().
+			TLSClientConfig(&tls.Config{
+				InsecureSkipVerify: true,
+				ServerName:         toHost,
+			}).
+			Get(f.GetURL(framework.HTTPS)).
+			Retry(10, 1*time.Second, http.StatusNotFound).
+			RedirectPolicy(noRedirectPolicyFunc).
+			Set("host", toHost).
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
+		Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("https://%v/", fromHost)))
+
+		By("sending request to domain should redirect to domain with www")
+
+		req := gorequest.New().
+			TLSClientConfig(&tls.Config{
+				InsecureSkipVerify: true,
+				ServerName:         toHost,
+			}).
+			Get(f.GetURL(framework.HTTPS)).
+			Set("host", toHost)
+
+		resp, _, errs = req.End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("ExpectedHost")).Should(Equal(fromHost))
 	})
 })

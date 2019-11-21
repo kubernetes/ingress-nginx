@@ -61,7 +61,7 @@ var _ = framework.IngressNginxDescribe("Geoip2", func() {
 			"nginx.ingress.kubernetes.io/configuration-snippet": configSnippet,
 		}
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations))
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
@@ -71,7 +71,7 @@ var _ = framework.IngressNginxDescribe("Geoip2", func() {
 		// Should be blocked
 		usIP := "8.8.8.8"
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("X-Forwarded-For", usIP).
 			End()
@@ -81,7 +81,7 @@ var _ = framework.IngressNginxDescribe("Geoip2", func() {
 		// Shouldn't be blocked
 		australianIP := "1.1.1.1"
 		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("X-Forwarded-For", australianIP).
 			End()

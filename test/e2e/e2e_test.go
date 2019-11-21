@@ -19,18 +19,16 @@ package e2e
 import (
 	"testing"
 
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/klog"
-
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 func init() {
+	testing.Init()
 	framework.RegisterParseFlags()
 
-	if "" == framework.TestContext.KubeConfig {
-		klog.Fatalf("environment variable %v must be set", clientcmd.RecommendedConfigPathEnvVar)
-	}
+	//	if "" == framework.TestContext.KubeConfig {
+	//		klog.Fatalf("environment variable %v must be set", clientcmd.RecommendedConfigPathEnvVar)
+	//	}
 }
 func TestE2E(t *testing.T) {
 	RunE2ETests(t)

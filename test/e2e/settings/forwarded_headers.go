@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -54,8 +54,9 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 				return strings.Contains(server, "server_name forwarded-headers")
 			})
 
+		By("ensuring single values are parsed correctly")
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("X-Forwarded-Port", "1234").
 			Set("X-Forwarded-Proto", "myproto").
@@ -70,13 +71,29 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-proto=myproto")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=1234")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-for=1.2.3.4")))
+
+		By("ensuring that first entry in X-Forwarded-Host is used as the best host")
+		resp, body, errs = gorequest.New().
+			Get(f.GetURL(framework.HTTP)).
+			Set("Host", host).
+			Set("X-Forwarded-Port", "1234").
+			Set("X-Forwarded-Proto", "myproto").
+			Set("X-Forwarded-For", "1.2.3.4").
+			Set("X-Forwarded-Host", "myhost.com, another.host,example.net").
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=myhost.com")))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-host=myhost.com")))
+
 	})
 	It("should not trust X-Forwarded headers when setting is false", func() {
 		host := "forwarded-headers"
 
 		f.UpdateNginxConfigMapData(setting, "false")
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -84,7 +101,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("X-Forwarded-Port", "1234").
 			Set("X-Forwarded-Proto", "myproto").

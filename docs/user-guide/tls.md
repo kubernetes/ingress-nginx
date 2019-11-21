@@ -7,7 +7,7 @@ Anytime we reference a TLS secret, we mean a PEM-encoded X.509, RSA (2048) secre
 You can generate a self-signed certificate and private key with:
 
 ```bash
-$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}"`
+$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}"
 ```
 
 Then create the secret in the cluster via:
@@ -34,9 +34,12 @@ If this flag is not provided NGINX will use a self-signed certificate.
 For instance, if you have a TLS secret `foo-tls` in the `default` namespace,
 add `--default-ssl-certificate=default/foo-tls` in the `nginx-controller` deployment.
 
+The default certificate will also be used for ingress `tls:` sections that do not
+have a `secretName` option.
+
 ## SSL Passthrough
 
-The [`--enable-ssl-passthrough`](cli-arguments/) flag enables the SSL Passthrough feature, which is disabled by
+The [`--enable-ssl-passthrough`](cli-arguments.md) flag enables the SSL Passthrough feature, which is disabled by
 default. This is required to enable passthrough backends in Ingress objects.
 
 !!! warning

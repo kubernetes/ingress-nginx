@@ -26,8 +26,7 @@
 		"SessionAffinity": {
 			"name": "",
 			"CookieSessionAffinity": {
-				"name": "",
-				"hash": ""
+				"name": ""
 			}
 		}
 	}, {
@@ -80,8 +79,7 @@
 		"SessionAffinity": {
 			"name": "",
 			"CookieSessionAffinity": {
-				"name": "",
-				"hash": ""
+				"name": ""
 			}
 		}
 	}],
@@ -128,7 +126,6 @@
 			},
 			"redirect": {
 				"target": "",
-				"addBaseUrl": false,
 				"sslRedirect": false,
 				"forceSSLRedirect": false,
 				"appRoot": ""
@@ -229,7 +226,6 @@
 			},
 			"redirect": {
 				"target": "",
-				"addBaseUrl": false,
 				"sslRedirect": true,
 				"forceSSLRedirect": false,
 				"appRoot": ""

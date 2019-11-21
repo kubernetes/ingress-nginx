@@ -1,15 +1,20 @@
-local json = require("cjson")
+local cjson = require("cjson.safe")
 
 -- this is the Lua representation of Configuration struct in internal/ingress/types.go
 local configuration_data = ngx.shared.configuration_data
 local certificate_data = ngx.shared.certificate_data
+local certificate_servers = ngx.shared.certificate_servers
 
-local _M = {
-  nameservers = {}
-}
+local EMPTY_UID = "-1"
+
+local _M = {}
 
 function _M.get_backends_data()
   return configuration_data:get("backends")
+end
+
+function _M.get_general_data()
+  return configuration_data:get("general")
 end
 
 local function fetch_request_body()
@@ -33,7 +38,12 @@ local function fetch_request_body()
 end
 
 function _M.get_pem_cert_key(hostname)
-  return certificate_data:get(hostname)
+  local uid = certificate_servers:get(hostname)
+  if not uid then
+    return nil
+  end
+
+  return certificate_data:get(uid)
 end
 
 local function handle_servers()
@@ -43,31 +53,45 @@ local function handle_servers()
     return
   end
 
-  local raw_servers = fetch_request_body()
+  local raw_configuration = fetch_request_body()
 
-  local ok, servers = pcall(json.decode, raw_servers)
-  if not ok then
-    ngx.log(ngx.ERR, "could not parse servers: " .. tostring(servers))
+  local configuration, err = cjson.decode(raw_configuration)
+  if not configuration then
+    ngx.log(ngx.ERR, "could not parse configuration: ", err)
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
 
   local err_buf = {}
-  for _, server in ipairs(servers) do
-    if server.hostname and server.sslCert.pemCertKey then
-      local success, err = certificate_data:safe_set(server.hostname, server.sslCert.pemCertKey)
-      if not success then
-        if err == "no memory" then
-          ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-          ngx.log(ngx.ERR, "no memory in certificate_data dictionary")
-          return
-        end
 
-        local err_msg = string.format("error setting certificate for %s: %s\n", server.hostname, tostring(err))
+  for server, uid in pairs(configuration.servers) do
+    if uid == EMPTY_UID then
+      -- notice that we do not delete certificate corresponding to this server
+      -- this is becase a certificate can be used by multiple servers/hostnames
+      certificate_servers:delete(server)
+    else
+      local success, set_err, forcible = certificate_servers:set(server, uid)
+      if not success then
+        local err_msg = string.format("error setting certificate for %s: %s\n", server, tostring(set_err))
         table.insert(err_buf, err_msg)
       end
-    else
-      ngx.log(ngx.WARN, "hostname or pemCertKey are not present")
+      if forcible then
+        local msg = string.format("certificate_servers dictionary is full, LRU entry has been removed to store %s",
+          server)
+        ngx.log(ngx.WARN, msg)
+      end
+    end
+  end
+
+  for uid, cert in pairs(configuration.certificates) do
+    local success, set_err, forcible = certificate_data:set(uid, cert)
+    if not success then
+      local err_msg = string.format("error setting certificate for %s: %s\n", uid, tostring(set_err))
+      table.insert(err_buf, err_msg)
+    end
+    if forcible then
+      local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s", uid)
+      ngx.log(ngx.WARN, msg)
     end
   end
 
@@ -80,6 +104,57 @@ local function handle_servers()
   ngx.status = ngx.HTTP_CREATED
 end
 
+local function handle_general()
+  if ngx.var.request_method == "GET" then
+    ngx.status = ngx.HTTP_OK
+    ngx.print(_M.get_general_data())
+    return
+  end
+
+  if ngx.var.request_method ~= "POST" then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Only POST and GET requests are allowed!")
+    return
+  end
+
+  local config = fetch_request_body()
+
+  local success, err = configuration_data:safe_set("general", config)
+  if not success then
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    ngx.log(ngx.ERR, "error setting general config: " .. tostring(err))
+    return
+  end
+
+  ngx.status = ngx.HTTP_CREATED
+end
+
+local function handle_certs()
+  if ngx.var.request_method ~= "GET" then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Only GET requests are allowed!")
+    return
+  end
+
+  local query = ngx.req.get_uri_args()
+  if not query["hostname"] then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Hostname must be specified.")
+    return
+  end
+
+  local key = _M.get_pem_cert_key(query["hostname"])
+  if key then
+    ngx.status = ngx.HTTP_OK
+    ngx.print(key)
+    return
+  else
+    ngx.status = ngx.HTTP_NOT_FOUND
+    ngx.print("No key associated with this hostname.")
+    return
+  end
+end
+
 function _M.call()
   if ngx.var.request_method ~= "POST" and ngx.var.request_method ~= "GET" then
     ngx.status = ngx.HTTP_BAD_REQUEST
@@ -89,6 +164,16 @@ function _M.call()
 
   if ngx.var.request_uri == "/configuration/servers" then
     handle_servers()
+    return
+  end
+
+  if ngx.var.request_uri == "/configuration/general" then
+    handle_general()
+    return
+  end
+
+  if ngx.var.uri == "/configuration/certs" then
+    handle_certs()
     return
   end
 

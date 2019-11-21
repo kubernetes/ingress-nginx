@@ -14,6 +14,13 @@
 
 FROM BASEIMAGE
 
+LABEL org.opencontainers.image.title='NGINX Ingress Controller for Kubernetes'
+LABEL org.opencontainers.image.documentation='https://kubernetes.github.io/ingress-nginx/'
+LABEL org.opencontainers.image.source="https://github.com/kubernetes/ingress-nginx"
+LABEL org.opencontainers.image.vendor='The Kubernetes Authors'
+LABEL org.opencontainers.image.licenses='Apache-2.0'
+LABEL org.opencontainers.image.version='VERSION'
+
 CROSS_BUILD_COPY qemu-QEMUARCH-static /usr/bin/
 
 WORKDIR  /etc/nginx
@@ -23,6 +30,10 @@ RUN clean-install \
   libcap2-bin
 
 COPY --chown=www-data:www-data . /
+
+RUN cp /usr/local/openresty/nginx/conf/mime.types /etc/nginx/mime.types \
+ && cp /usr/local/openresty/nginx/conf/fastcgi_params /etc/nginx/fastcgi_params
+RUN ln -s /usr/local/openresty/nginx/modules /etc/nginx/modules
 
 # Fix permission during the build to avoid issues at runtime
 # with volumes (custom templates)
@@ -42,12 +53,15 @@ RUN bash -eu -c ' \
 RUN  setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
   && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller
 
-# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
-# This only works if nginx is started with CMD or ENTRYPOINT
-RUN ln -sf /dev/stdout /var/log/nginx/access.log
-RUN ln -sf /dev/stderr /var/log/nginx/error.log
+RUN  setcap    cap_net_bind_service=+ep /usr/local/openresty/nginx/sbin/nginx \
+  && setcap -v cap_net_bind_service=+ep /usr/local/openresty/nginx/sbin/nginx
 
 USER www-data
+
+# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
+RUN  ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
+  && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log \
+  && ln -s /usr/local/openresty/nginx/logs/* /var/log/nginx
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 

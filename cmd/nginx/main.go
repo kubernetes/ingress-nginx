@@ -44,18 +44,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
+	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/version"
-)
-
-const (
-	// High enough QPS to fit all expected use cases. QPS=0 is not set here, because
-	// client code is overriding it.
-	defaultQPS = 1e6
-	// High enough Burst to fit all expected use cases. Burst=0 is not set here, because
-	// client code is overriding it.
-	defaultBurst = 1e6
-
-	fakeCertificate = "default-fake-certificate"
 )
 
 func main() {
@@ -74,9 +64,7 @@ func main() {
 		klog.Fatal(err)
 	}
 
-	nginxVersion()
-
-	fs, err := file.NewLocalFS()
+	err = file.CreateRequiredDirectories()
 	if err != nil {
 		klog.Fatal(err)
 	}
@@ -109,15 +97,13 @@ func main() {
 		}
 	}
 
-	// create the default SSL certificate (dummy)
-	defCert, defKey := ssl.GetFakeSSLCert()
-	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{}, fs)
-	if err != nil {
-		klog.Fatalf("Error generating self-signed certificate: %v", err)
-	}
+	conf.FakeCertificate = ssl.GetFakeSSLCert()
+	klog.Infof("SSL fake certificate created %v", conf.FakeCertificate.PemFileName)
 
-	conf.FakeCertificatePath = c.PemFileName
-	conf.FakeCertificateSHA = c.PemSHA
+	k8s.IsNetworkingIngressAvailable = k8s.NetworkingIngressAvailable(kubeClient)
+	if !k8s.IsNetworkingIngressAvailable {
+		klog.Warningf("Using deprecated \"k8s.io/api/extensions/v1beta1\" package because Kubernetes version is < v1.14.0")
+	}
 
 	conf.Client = kubeClient
 
@@ -131,14 +117,14 @@ func main() {
 
 	mc := metric.NewDummyCollector()
 	if conf.EnableMetrics {
-		mc, err = metric.NewCollector(conf.ListenPorts.Status, reg)
+		mc, err = metric.NewCollector(conf.MetricsPerHost, reg)
 		if err != nil {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}
 	}
 	mc.Start()
 
-	ngx := controller.NewNGINXController(conf, mc, fs)
+	ngx := controller.NewNGINXController(conf, mc)
 	go handleSigterm(ngx, func(code int) {
 		os.Exit(code)
 	})
@@ -146,10 +132,10 @@ func main() {
 	mux := http.NewServeMux()
 
 	if conf.EnableProfiling {
-		registerProfiler(mux)
+		go registerProfiler()
 	}
 
-	registerHealthz(ngx, mux)
+	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
 	registerHandlers(mux)
 
@@ -192,10 +178,6 @@ func createApiserverClient(apiserverHost, kubeConfig string) (*kubernetes.Client
 	if err != nil {
 		return nil, err
 	}
-
-	cfg.QPS = defaultQPS
-	cfg.Burst = defaultBurst
-	cfg.ContentType = "application/vnd.kubernetes.protobuf"
 
 	klog.Infof("Creating API client for %s", cfg.Host)
 
@@ -263,18 +245,12 @@ func registerHandlers(mux *http.ServeMux) {
 		b, _ := json.Marshal(version.String())
 		w.Write(b)
 	})
-
-	mux.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		err := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		if err != nil {
-			klog.Errorf("Unexpected error: %v", err)
-		}
-	})
 }
 
-func registerHealthz(ic *controller.NGINXController, mux *http.ServeMux) {
+func registerHealthz(healthPath string, ic *controller.NGINXController, mux *http.ServeMux) {
 	// expose health check endpoint (/healthz)
-	healthz.InstallHandler(mux,
+	healthz.InstallPathHandler(mux,
+		healthPath,
 		healthz.PingHealthz,
 		ic,
 	)
@@ -291,7 +267,9 @@ func registerMetrics(reg *prometheus.Registry, mux *http.ServeMux) {
 
 }
 
-func registerProfiler(mux *http.ServeMux) {
+func registerProfiler() {
+	mux := http.NewServeMux()
+
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/heap", pprof.Index)
 	mux.HandleFunc("/debug/pprof/mutex", pprof.Index)
@@ -302,6 +280,12 @@ func registerProfiler(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf("127.0.0.1:%v", nginx.ProfilerPort),
+		Handler: mux,
+	}
+	klog.Fatal(server.ListenAndServe())
 }
 
 func startHTTPServer(port int, mux *http.ServeMux) {

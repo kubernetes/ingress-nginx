@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"strings"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
@@ -50,7 +50,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to create a redirect in the paths defined in the rule.
 // If the Ingress contains both annotations the execution order is
 // temporal and then permanent
-func (r redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 	r3w, _ := parser.GetBoolAnnotation("from-to-www-redirect", ing)
 
 	tr, err := parser.GetStringAnnotation("temporal-redirect", ing)

@@ -17,14 +17,14 @@ limitations under the License.
 package luarestywaf
 
 import (
-	"reflect"
 	"strings"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	"k8s.io/ingress-nginx/internal/sets"
 )
 
 var luaRestyWAFModes = map[string]bool{"ACTIVE": true, "INACTIVE": true, "SIMULATE": true}
@@ -54,9 +54,12 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	if e1.Debug != e2.Debug {
 		return false
 	}
-	if !reflect.DeepEqual(e1.IgnoredRuleSets, e2.IgnoredRuleSets) {
+
+	match := sets.StringElementsMatch(e1.IgnoredRuleSets, e2.IgnoredRuleSets)
+	if !match {
 		return false
 	}
+
 	if e1.ExtraRulesetString != e2.ExtraRulesetString {
 		return false
 	}
@@ -85,7 +88,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress rule
 // used to indicate if the location/s contains a fragment of
 // configuration to be included inside the paths of the rules
-func (a luarestywaf) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a luarestywaf) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 

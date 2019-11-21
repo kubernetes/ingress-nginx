@@ -10,13 +10,15 @@
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
 # setup custom paths that do not require root access
-pid /tmp/nginx.pid;
+pid {{ .PID }};
 
 {{ if $cfg.UseGeoIP2 }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
 
+{{ if (shouldLoadModSecurityModule $cfg $servers) }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
+{{ end }}
 
 {{ if $cfg.EnableOpentracing }}
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
@@ -29,9 +31,7 @@ worker_processes {{ $cfg.WorkerProcesses }};
 worker_cpu_affinity {{ $cfg.WorkerCPUAffinity }};
 {{ end }}
 
-{{ if ne .MaxOpenFiles 0 }}
-worker_rlimit_nofile {{ .MaxOpenFiles }};
-{{ end }}
+worker_rlimit_nofile {{ $cfg.MaxWorkerOpenFiles }};
 
 {{/* http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout */}}
 {{/* avoid waiting too long during a reload */}}
@@ -48,27 +48,34 @@ events {
 }
 
 http {
-    lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;";
-    lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
+    lua_package_path "/etc/nginx/lua/?.lua;;";
 
-    {{ buildLuaSharedDictionaries $servers $all.Cfg.DisableLuaRestyWAF }}
+    {{ buildLuaSharedDictionaries $cfg $servers $all.Cfg.DisableLuaRestyWAF }}
 
     init_by_lua_block {
-        require("resty.core")
         collectgarbage("collect")
 
+        {{ if not $all.Cfg.DisableLuaRestyWAF }}
         local lua_resty_waf = require("resty.waf")
         lua_resty_waf.init()
+        {{ end }}
 
         -- init modules
         local ok, res
+
+        ok, res = pcall(require, "lua_ingress")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          lua_ingress = res
+          lua_ingress.set_config({{ configForLua $all }})
+        end
 
         ok, res = pcall(require, "configuration")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           configuration = res
-          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "balancer")
@@ -87,21 +94,31 @@ http {
         end
         {{ end }}
 
-        {{ if $all.DynamicCertificatesEnabled }}
         ok, res = pcall(require, "certificate")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           certificate = res
         end
-        {{ end }}
+
+        ok, res = pcall(require, "plugins")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          plugins = res
+        end
+        -- load all plugins that'll be used here
+        plugins.init({})
     }
 
     init_worker_by_lua_block {
+        lua_ingress.init_worker()
         balancer.init_worker()
         {{ if $all.EnableMetrics }}
         monitor.init_worker()
         {{ end }}
+
+        plugins.run()
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -119,6 +136,21 @@ http {
     {{ end }}
     {{ end }}
 
+    {{ if $all.Cfg.EnableModsecurity }}
+    modsecurity on;
+
+    modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+
+    {{ if $all.Cfg.EnableOWASPCoreRules }}
+    modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+    {{ else if (not (empty $all.Cfg.ModsecuritySnippet)) }}
+    modsecurity_rules '
+      {{ $all.Cfg.ModsecuritySnippet }}
+    ';
+    {{ end }}
+
+    {{ end }}
+
     {{ if $cfg.UseGeoIP }}
     {{/* databases used to determine the country depending on the client IP address */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
@@ -133,19 +165,21 @@ http {
     # https://github.com/leev/ngx_http_geoip2_module#example-usage
 
     geoip2 /etc/nginx/geoip/GeoLite2-City.mmdb {
-        $geoip2_city_country_code source=$the_real_ip country iso_code;
-        $geoip2_city_country_name source=$the_real_ip country names en;
-        $geoip2_city source=$the_real_ip city names en;
-        $geoip2_postal_code source=$the_real_ip postal code;
-        $geoip2_dma_code source=$the_real_ip location metro_code;
-        $geoip2_latitude source=$the_real_ip location latitude;
-        $geoip2_longitude source=$the_real_ip location longitude;
-        $geoip2_region_code source=$the_real_ip subdivisions 0 iso_code;
-        $geoip2_region_name source=$the_real_ip subdivisions 0 names en;
+        $geoip2_city_country_code source=$remote_addr country iso_code;
+        $geoip2_city_country_name source=$remote_addr country names en;
+        $geoip2_city source=$remote_addr city names en;
+        $geoip2_postal_code source=$remote_addr postal code;
+        $geoip2_dma_code source=$remote_addr location metro_code;
+        $geoip2_latitude source=$remote_addr location latitude;
+        $geoip2_longitude source=$remote_addr location longitude;
+        $geoip2_time_zone source=$remote_addr location time_zone;
+        $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
+        $geoip2_region_name source=$remote_addr subdivisions 0 names en;
     }
 
     geoip2 /etc/nginx/geoip/GeoLite2-ASN.mmdb {
-        $geoip2_asn source=$the_real_ip autonomous_system_number;
+        $geoip2_asn source=$remote_addr autonomous_system_number;
+        $geoip2_org source=$remote_addr autonomous_system_organization;
     }
     {{ end }}
 
@@ -176,6 +210,7 @@ http {
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
     http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
     http2_max_requests              {{ $cfg.HTTP2MaxRequests }};
+    http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
 
     types_hash_max_size             2048;
     server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};
@@ -192,6 +227,7 @@ http {
     ignore_invalid_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }};
 
     limit_req_status                {{ $cfg.LimitReqStatusCode }};
+    limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
     {{ if $cfg.EnableOpentracing }}
     opentracing on;
@@ -220,7 +256,7 @@ http {
 
     # Custom headers for response
     {{ range $k, $v := $addHeaders }}
-    add_header {{ $k }}            "{{ $v }}";
+    more_set_headers {{ printf "%s: %s" $k $v | quote }};
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
@@ -236,7 +272,7 @@ http {
     # $ingress_name
     # $service_name
     # $service_port
-    log_format upstreaminfo {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ buildLogFormatUpstream $cfg }}';
+    log_format upstreaminfo {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ $cfg.LogFormatUpstream }}';
 
     {{/* map urls that should not appear in access.log */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
@@ -252,7 +288,7 @@ http {
     {{ if $cfg.EnableSyslog }}
     access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
     {{ else }}
-    access_log {{ $cfg.AccessLogPath }} upstreaminfo if=$loggable;
+    access_log {{ $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
     {{ end }}
     {{ end }}
 
@@ -274,75 +310,6 @@ http {
         ''               close;
         {{ end }}
     }
-
-    # The following is a sneaky way to do "set $the_real_ip $remote_addr"
-    # Needed because using set is not allowed outside server blocks.
-    map '' $the_real_ip {
-    {{ if $cfg.UseProxyProtocol }}
-        # Get IP address from Proxy Protocol
-        default          $proxy_protocol_addr;
-    {{ else }}
-        default          $remote_addr;
-    {{ end }}
-    }
-
-    {{ if $cfg.UseForwardedHeaders }}
-    # trust http_x_forwarded_proto headers correctly indicate ssl offloading
-    map $http_x_forwarded_proto $pass_access_scheme {
-        default          $http_x_forwarded_proto;
-        ''               $scheme;
-    }
-
-    map $http_x_forwarded_port $pass_server_port {
-        default           $http_x_forwarded_port;
-        ''                $server_port;
-    }
-
-    # Obtain best http host
-    map $http_host $this_host {
-        default          $http_host;
-        ''               $host;
-    }
-
-    map $http_x_forwarded_host $best_http_host {
-        default          $http_x_forwarded_host;
-        ''               $this_host;
-    }
-    {{ else }}
-    map '' $pass_access_scheme {
-        default          $scheme;
-    }
-
-    map '' $pass_server_port {
-        default          $server_port;
-    }
-
-    # Obtain best http host
-    map $http_host $best_http_host {
-        default          $http_host;
-        ''               $host;
-    }
-    {{ end }}
-
-    # validate $pass_access_scheme and $scheme are http to force a redirect
-    map "$scheme:$pass_access_scheme" $redirect_to_https {
-        default          0;
-        "http:http"      1;
-        "https:http"     1;
-    }
-
-    {{ if $all.IsSSLPassthroughEnabled }}
-    # map port {{ $all.ListenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.SSLProxy }}              443;
-        default          $pass_server_port;
-    }
-    {{ else }}
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.HTTPS }}              443;
-        default          $pass_server_port;
-    }
-    {{ end }}
 
     # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
     # If no such header is provided, it can provide a random value.
@@ -378,6 +345,8 @@ http {
 
     ssl_protocols {{ $cfg.SSLProtocols }};
 
+    ssl_early_data {{ if $cfg.SSLEarlyData }}on{{ else }}off{{ end }};
+
     # turn on session caching to drastically improve performance
     {{ if $cfg.SSLSessionCache }}
     ssl_session_cache builtin:1000 shared:SSL:{{ $cfg.SSLSessionCacheSize }};
@@ -405,19 +374,18 @@ http {
     ssl_dhparam {{ $cfg.SSLDHParam }};
     {{ end }}
 
-    {{ if not $cfg.EnableDynamicTLSRecords }}
-    ssl_dyn_rec_size_lo 0;
-    {{ end }}
-
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
 
-    {{ if .CustomErrors }}
-    # Custom error pages
+    # PEM sha: {{ $cfg.DefaultSSLCertificate.PemSHA }}
+    ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
+    ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
+
+    {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
     proxy_intercept_errors on;
     {{ end }}
 
     {{ range $errCode := $cfg.CustomHTTPErrors }}
-    error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
+    error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
     proxy_ssl_session_reuse on;
 
@@ -434,6 +402,17 @@ http {
     {{ end }}
 
     upstream upstream_balancer {
+        ### Attention!!!
+        #
+        # We no longer create "upstream" section for every backend.
+        # Backends are handled dynamically using Lua. If you would like to debug
+        # and see what backends ingress-nginx has in its memory you can
+        # install our kubectl plugin https://kubernetes.github.io/ingress-nginx/kubectl-plugin.
+        # Once you have the plugin you can use "kubectl ingress-nginx backends" command to
+        # inspect current backends.
+        #
+        ###
+
         server 0.0.0.1; # placeholder
 
         balancer_by_lua_block {
@@ -448,30 +427,9 @@ http {
         {{ end }}
     }
 
-    {{/* build the maps that will be use to validate the Whitelist */}}
-    {{ range $server := $servers }}
-    {{ $enforceRegex := enforceRegexModifier $server.Locations }}
-    {{ range $location := $server.Locations }}
-    {{ $path := buildLocation $location $enforceRegex }}
-
-    {{ if isLocationAllowed $location }}
-    {{ if gt (len $location.Whitelist.CIDR) 0 }}
-
-    # Deny for {{ print $server.Hostname  $path }}
-    geo $the_real_ip {{ buildDenyVariable (print $server.Hostname "_"  $path) }} {
-        default 1;
-
-        {{ range $ip := $location.Whitelist.CIDR }}
-        {{ $ip }} 0;{{ end }}
-    }
-    {{ end }}
-    {{ end }}
-    {{ end }}
-    {{ end }}
-
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
-    geo $the_real_ip $whitelist_{{ $rl.ID }} {
+    geo $remote_addr $whitelist_{{ $rl.ID }} {
         default 0;
         {{ range $ip := $rl.Whitelist }}
         {{ $ip }} 1;{{ end }}
@@ -489,6 +447,9 @@ http {
     {{ range $zone := (buildRateLimitZones $servers) }}
     {{ $zone }}
     {{ end }}
+
+    # Cache for internal auth checks
+    proxy_cache_path /tmp/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off;
 
     # Global filters
     {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
@@ -513,28 +474,17 @@ http {
     {{ end }}
 
     {{/* Build server redirects (from/to www) */}}
-    {{ range $hostname, $to := .RedirectServers }}
+    {{ range $redirect := .RedirectServers }}
+    ## start server {{ $redirect.From }}
     server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
-        {{ else }}
-        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
-        {{ else }}
-        listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
-        {{ end }}
-        {{ end }}
-        server_name {{ $hostname }};
+        server_name {{ $redirect.From }};
 
-        {{/* default value of proxy_host is the name and port of a proxied server as specified in the proxy_pass directive */}}
-        set $proxy_host {{ $hostname }};
+        {{ buildHTTPListener  $all $redirect.From }}
+        {{ buildHTTPSListener $all $redirect.From }}
+
+        ssl_certificate_by_lua_block {
+            certificate.call()
+        }
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
@@ -549,18 +499,19 @@ http {
 
         {{ if ne $all.ListenPorts.HTTPS 443 }}
         {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $to }}{{ $redirect_port }}$request_uri;
+        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $redirect.To }}{{ $redirect_port }}$request_uri;
         {{ else }}
-        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $to }}$request_uri;
+        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $redirect.To }}$request_uri;
         {{ end }}
     }
+    ## end server {{ $redirect.From }}
     {{ end }}
 
     {{ range $server := $servers }}
 
     ## start server {{ $server.Hostname }}
     server {
-        server_name {{ $server.Hostname }} {{ $server.Alias }};
+        server_name {{ $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
@@ -580,7 +531,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -590,7 +541,9 @@ http {
     server {
         listen {{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
         {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
-        set $proxy_upstream_name "-";
+        set $proxy_upstream_name "internal";
+
+        access_log off;
 
         location / {
           return 404;
@@ -599,35 +552,23 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
-        set $proxy_upstream_name "-";
+        listen 127.0.0.1:{{ .StatusPort }};
+        set $proxy_upstream_name "internal";
 
-        {{ if gt (len $cfg.BlockUserAgents) 0 }}
-        if ($block_ua) {
-           return 403;
-        }
-        {{ end }}
-        {{ if gt (len $cfg.BlockReferers) 0 }}
-        if ($block_ref) {
-           return 403;
-        }
+        keepalive_timeout 0;
+        gzip off;
+
+        access_log off;
+
+        {{ if $cfg.EnableOpentracing }}
+        opentracing off;
         {{ end }}
 
         location {{ $healthzURI }} {
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-            access_log off;
             return 200;
         }
 
         location /is-dynamic-lb-initialized {
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-            access_log off;
-
             content_by_lua_block {
                 local configuration = require("configuration")
                 local backend_data = configuration.get_backends_data()
@@ -641,31 +582,13 @@ http {
             }
         }
 
-        location /nginx_status {
-            set $proxy_upstream_name "internal";
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-
-            access_log off;
+        location {{ .StatusPath }} {
             stub_status on;
         }
 
         location /configuration {
-            access_log off;
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-
-            allow 127.0.0.1;
-            {{ if $IsIPV6Enabled }}
-            allow ::1;
-            {{ end }}
-            deny all;
-
-            # this should be equals to configuration_data dict
-            client_max_body_size                    10m;
-            client_body_buffer_size                 10m;
+            client_max_body_size                    {{ luaConfigurationRequestBodySize $cfg }}m;
+            client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }}m;
             proxy_buffering                         off;
 
             content_by_lua_block {
@@ -674,16 +597,10 @@ http {
         }
 
         location / {
-            {{ if .CustomErrors }}
-            proxy_set_header    X-Code 404;
-            {{ end }}
-            set $proxy_upstream_name "upstream-default-backend";
-            proxy_set_header    Host   $best_http_host;
-
-            proxy_pass          http://upstream_balancer;
+            content_by_lua_block {
+                ngx.exit(ngx.HTTP_NOT_FOUND)
+            }
         }
-
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
 }
 
@@ -694,18 +611,23 @@ stream {
     lua_shared_dict tcp_udp_configuration_data 5M;
 
     init_by_lua_block {
-        require("resty.core")
         collectgarbage("collect")
 
         -- init modules
         local ok, res
+
+        ok, res = pcall(require, "configuration")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          configuration = res
+        end
 
         ok, res = pcall(require, "tcp_udp_configuration")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           tcp_udp_configuration = res
-          tcp_udp_configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "tcp_udp_balancer")
@@ -722,12 +644,12 @@ stream {
 
     lua_add_variable $proxy_upstream_name;
 
-    log_format log_stream {{ $cfg.LogFormatStream }};
+    log_format log_stream '{{ $cfg.LogFormatStream }}';
 
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
-    access_log {{ $cfg.AccessLogPath }} log_stream;
+    access_log {{ $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
     {{ end }}
 
     error_log  {{ $cfg.ErrorLogPath }};
@@ -741,7 +663,9 @@ stream {
     }
 
     server {
-        listen unix:/tmp/ingress-stream.sock;
+        listen 127.0.0.1:{{ .StreamPort }};
+
+        access_log off;
 
         content_by_lua_block {
           tcp_udp_configuration.call()
@@ -803,10 +727,10 @@ stream {
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
-        {{ $proxySetHeaders := .ProxySetHeaders }}
         {{ $enableMetrics := .EnableMetrics }}
+        {{ $upstreamName := .UpstreamName }}
         {{ range $errCode := .ErrorCodes }}
-        location @custom_{{ $errCode }} {
+        location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
 
             proxy_intercept_errors off;
@@ -818,9 +742,10 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            proxy_set_header       X-Request-ID       $req_id;
             proxy_set_header       Host               $best_http_host;
 
-            set $proxy_upstream_name "upstream-default-backend";
+            set $proxy_upstream_name {{ $upstreamName | quote }};
 
             rewrite                (.*) / break;
 
@@ -860,51 +785,15 @@ stream {
 {{ define "SERVER" }}
         {{ $all := .First }}
         {{ $server := .Second }}
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}};
-        {{ else }}
-        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}};
-        {{ end }}
-        {{ if $all.IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{ end }};
-        {{ else }}
-        listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{ end }};
-        {{ end }}
-        {{ end }}
+
+        {{ buildHTTPListener  $all $server.Hostname }}
+        {{ buildHTTPSListener $all $server.Hostname }}
+
         set $proxy_upstream_name "-";
 
-        {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
-        {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
-        {{ if not (empty $server.SSLCert.PemFileName) }}
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ else }}
-        listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ end }}
-        {{ if $all.IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        {{ if not (empty $server.SSLCert.PemFileName) }}listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ else }}
-        {{ if not (empty $server.SSLCert.PemFileName) }}listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ end }}
-        {{ end }}
-        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
-        # PEM sha: {{ $server.SSLCert.PemSHA }}
-        ssl_certificate                         {{ $server.SSLCert.PemFileName }};
-        ssl_certificate_key                     {{ $server.SSLCert.PemFileName }};
-        {{ if not (empty $server.SSLCert.FullChainPemFileName)}}
-        ssl_trusted_certificate                 {{ $server.SSLCert.FullChainPemFileName }};
-        ssl_stapling                            on;
-        ssl_stapling_verify                     on;
-        {{ end }}
-
-        {{ if $all.DynamicCertificatesEnabled}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
-        {{ end }}
-        {{ end }}
 
         {{ if not (empty $server.AuthTLSError) }}
         # {{ $server.AuthTLSError }}
@@ -912,13 +801,33 @@ stream {
         {{ else }}
 
         {{ if not (empty $server.CertificateAuth.CAFileName) }}
-        # PEM sha: {{ $server.CertificateAuth.PemSHA }}
+        # PEM sha: {{ $server.CertificateAuth.CASHA }}
         ssl_client_certificate                  {{ $server.CertificateAuth.CAFileName }};
         ssl_verify_client                       {{ $server.CertificateAuth.VerifyClient }};
         ssl_verify_depth                        {{ $server.CertificateAuth.ValidationDepth }};
+
+        {{ if not (empty $server.CertificateAuth.CRLFileName) }}
+        # PEM sha: {{ $server.CertificateAuth.CRLSHA }}
+        ssl_crl                  {{ $server.CertificateAuth.CRLFileName }};
+        {{ end }}
+
         {{ if not (empty $server.CertificateAuth.ErrorPage)}}
         error_page 495 496 = {{ $server.CertificateAuth.ErrorPage }};
         {{ end }}
+        {{ end }}
+
+        {{ if not (empty $server.ProxySSL.CAFileName) }}
+        # PEM sha: {{ $server.ProxySSL.CASHA }}
+        proxy_ssl_trusted_certificate           {{ $server.ProxySSL.CAFileName }};
+        proxy_ssl_ciphers                       {{ $server.ProxySSL.Ciphers }};
+        proxy_ssl_protocols                     {{ $server.ProxySSL.Protocols }};
+        proxy_ssl_verify                        {{ $server.ProxySSL.Verify }};
+        proxy_ssl_verify_depth                  {{ $server.ProxySSL.VerifyDepth }};
+        {{ end }}
+
+        {{ if not (empty $server.ProxySSL.PemFileName) }}
+        proxy_ssl_certificate                   {{ $server.ProxySSL.PemFileName }};
+        proxy_ssl_certificate_key               {{ $server.ProxySSL.PemFileName }};
         {{ end }}
 
         {{ if not (empty $server.SSLCiphers) }}
@@ -929,13 +838,22 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders (collectCustomErrorsPerServer $server) $all.EnableMetrics) }}
+        {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
+        {{ end }}
+
 
         {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location $enforceRegex }}
         {{ $proxySetHeader := proxySetHeader $location }}
-        {{ $authPath := buildAuthLocation $location }}
+        {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
+        {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+
+        {{ $externalAuth := $location.ExternalAuth }}
+        {{ if eq $applyGlobalAuth true }}
+        {{ $externalAuth = $all.Cfg.GlobalExternalAuth }}
+        {{ end }}
 
         {{ if not (empty $location.Rewrite.AppRoot)}}
         if ($uri = /) {
@@ -947,44 +865,65 @@ stream {
         location = {{ $authPath }} {
             internal;
 
+            {{ if $externalAuth.AuthCacheKey }}
+            set $tmp_cache_key '{{ $server.Hostname }}{{ $authPath }}{{ $externalAuth.AuthCacheKey }}';
+            set $cache_key '';
+
+            rewrite_by_lua_block {
+                ngx.var.cache_key = ngx.encode_base64(ngx.sha1_bin(ngx.var.tmp_cache_key))
+            }
+
+            proxy_cache auth_cache;
+
+            {{- range $dur := $externalAuth.AuthCacheDuration }}
+            proxy_cache_valid {{ $dur }};
+            {{- end }}
+
+            proxy_cache_key "$cache_key";
+            {{ end }}
+
             # ngx_auth_request module overrides variables in the parent request,
             # therefore we have to explicitly set this variable again so that when the parent request
             # resumes it has the correct value set for this variable so that Lua can pick backend correctly
-            set $proxy_upstream_name "{{ buildUpstreamName $location }}";
+            set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
 
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
             proxy_set_header            X-Forwarded-Proto "";
 
-            {{ if $location.ExternalAuth.Method }}
-            proxy_method                {{ $location.ExternalAuth.Method }};
+            {{ if $externalAuth.Method }}
+            proxy_method                {{ $externalAuth.Method }};
             proxy_set_header            X-Original-URI          $request_uri;
             proxy_set_header            X-Scheme                $pass_access_scheme;
             {{ end }}
 
-            proxy_set_header            Host                    {{ $location.ExternalAuth.Host }};
+            proxy_set_header            Host                    {{ $externalAuth.Host }};
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Original-Method       $request_method;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
-            proxy_set_header            X-Real-IP               $the_real_ip;
+            proxy_set_header            X-Real-IP               $remote_addr;
             {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
             proxy_set_header            X-Forwarded-For        $full_x_forwarded_for;
             {{ else }}
-            proxy_set_header            X-Forwarded-For        $the_real_ip;
+            proxy_set_header            X-Forwarded-For        $remote_addr;
             {{ end }}
 
-            {{ if $location.ExternalAuth.RequestRedirect }}
-            proxy_set_header            X-Auth-Request-Redirect {{ $location.ExternalAuth.RequestRedirect }};
+            {{ if $externalAuth.RequestRedirect }}
+            proxy_set_header            X-Auth-Request-Redirect {{ $externalAuth.RequestRedirect }};
             {{ else }}
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
 
+            {{ if $externalAuth.AuthCacheKey }}
+            proxy_buffering                         "on";
+            {{ else }}
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
+            {{ end }}
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
-            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
+            proxy_http_version                      {{ $location.Proxy.ProxyHTTPVersion }};
 
-            proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
             {{ if isValidByteSize $location.Proxy.BodySize true }}
@@ -1004,36 +943,53 @@ stream {
             proxy_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
             {{ end }}
 
-            {{ if not (empty $location.ExternalAuth.AuthSnippet) }}
-            {{ $location.ExternalAuth.AuthSnippet }}
+            {{- range $line := buildAuthProxySetHeaders $externalAuth.ProxySetHeaders}}
+            {{ $line }}
+            {{- end }}
+
+            {{ if not (empty $externalAuth.AuthSnippet) }}
+            {{ $externalAuth.AuthSnippet }}
             {{ end }}
 
-            set $target {{ $location.ExternalAuth.URL }};
+            set $target {{ $externalAuth.URL }};
             proxy_pass $target;
         }
         {{ end }}
 
+
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
-            set $namespace      "{{ $ing.Namespace }}";
-            set $ingress_name   "{{ $ing.Rule }}";
-            set $service_name   "{{ $ing.Service }}";
-            set $service_port   "{{ $location.Port }}";
-            set $location_path  "{{ $location.Path | escapeLiteralDollar }}";
+            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
+            set $namespace      {{ $ing.Namespace | quote}};
+            set $ingress_name   {{ $ing.Rule | quote }};
+            set $service_name   {{ $ing.Service | quote }};
+            set $service_port   {{ $ing.ServicePort | quote }};
+            set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
 
             {{ if $all.Cfg.EnableOpentracing }}
             {{ opentracingPropagateContext $location }};
             {{ end }}
 
+            {{ if $location.Mirror.URI }}
+            mirror {{ $location.Mirror.URI }};
+            mirror_request_body {{ $location.Mirror.RequestBody }};
+            {{ end }}
+
             rewrite_by_lua_block {
+                lua_ingress.rewrite({{ locationConfigForLua $location $all }})
                 balancer.rewrite()
+                plugins.run()
             }
+
+            {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
+            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
+            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
+            # that means currently `satisfy any` and lua-resty-waf together will potentiall render any
+            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
             access_by_lua_block {
-                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 
-                waf:set_option("mode", "{{ $location.LuaRestyWAF.Mode }}")
+                waf:set_option("mode", {{ $location.LuaRestyWAF.Mode | quote }})
                 waf:set_option("storage_zone", "waf_storage")
 
                 {{ if $location.LuaRestyWAF.AllowUnknownContentTypes }}
@@ -1062,7 +1018,7 @@ stream {
                 {{ end }}
 
                 {{ range $ruleset := $location.LuaRestyWAF.IgnoredRuleSets }}
-                waf:set_option("ignore_ruleset", "{{ $ruleset }}")
+                waf:set_option("ignore_ruleset", {{ $ruleset | quote }})
                 {{ end }}
 
                 {{ if gt (len $location.LuaRestyWAF.ExtraRulesetString) 0 }}
@@ -1070,14 +1026,17 @@ stream {
                 {{ end }}
 
                 waf:exec()
-                {{ end }}
             }
+            {{ end }}
+
             header_filter_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require "resty.waf"
                 local waf = lua_resty_waf:new()
                 waf:exec()
                 {{ end }}
+
+                plugins.run()
             }
             body_filter_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
@@ -1097,14 +1056,9 @@ stream {
                 {{ if $all.EnableMetrics }}
                 monitor.call()
                 {{ end }}
-            }
 
-            {{ if (and (not (empty $server.SSLCert.PemFileName)) $all.Cfg.HSTS) }}
-            if ($scheme = https) {
-            more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";
+                plugins.run()
             }
-            {{ end }}
-
 
             {{ if not $location.Logs.Access }}
             access_log off;
@@ -1114,51 +1068,47 @@ stream {
             rewrite_log on;
             {{ end }}
 
+            {{ if $location.HTTP2PushPreload }}
+            http2_push_preload on;
+            {{ end }}
+
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
-            set $proxy_upstream_name "{{ buildUpstreamName $location }}";
+            set $balancer_ewma_score -1;
+            set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
+            set $proxy_host          $proxy_upstream_name;
+            set $pass_access_scheme  $scheme;
+            set $pass_server_port    $server_port;
+            set $best_http_host      $http_host;
+            set $pass_port           $pass_server_port;
 
-            {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
-            {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCert.PemFileName)) $location.Rewrite.SSLRedirect)) }}
-            {{ if not (isLocationInLocationList $location $all.Cfg.NoTLSRedirectLocations) }}
-            # enforce ssl on server side
-            if ($redirect_to_https) {
-                {{ if $location.UsePortInRedirects }}
-                # using custom ports require a different rewrite directive
-                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$host{{ $redirect_port }}$request_uri;
-
-                return 497;
-                {{ else }}
-                return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host$request_uri;
-                {{ end }}
-            }
-            {{ end }}
-            {{ end }}
+            set $proxy_alternative_upstream_name "";
 
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
+            {{ if not $all.Cfg.EnableModsecurity }}
             modsecurity on;
+
+            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+            {{ end }}
 
             {{ if $location.ModSecurity.Snippet }}
             modsecurity_rules '
                 {{ $location.ModSecurity.Snippet }}
             ';
-            {{ else if (or $location.ModSecurity.OWASPRules $all.Cfg.EnableOWASPCoreRules) }}
+            {{ else if (and ((not $all.Cfg.EnableOWASPCoreRules) $location.ModSecurity.OWASPRules))}}
             modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
-            {{ else }}
-            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
             {{ end }}
 
             {{ if (not (empty $location.ModSecurity.TransactionID)) }}
-            modsecurity_transaction_id "{{ $location.ModSecurity.TransactionID }}";
+            modsecurity_transaction_id {{ $location.ModSecurity.TransactionID | quote }};
             {{ end }}
             {{ end }}
 
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
-            if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
-                return 403;
-            }
+            {{ range $ip := $location.Whitelist.CIDR }}
+            allow {{ $ip }};{{ end }}
+            deny all;
             {{ end }}
 
             {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}
@@ -1167,22 +1117,22 @@ stream {
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthResponseHeaders $location }}
+            {{- range $line := buildAuthResponseHeaders $externalAuth.ResponseHeaders }}
             {{ $line }}
             {{- end }}
             {{ end }}
 
-            {{ if $location.ExternalAuth.SigninURL }}
+            {{ if $externalAuth.SigninURL }}
             set_escape_uri $escaped_request_uri $request_uri;
-            error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
+            error_page 401 = {{ buildAuthSignURL $externalAuth.SigninURL }};
             {{ end }}
 
             {{ if $location.BasicDigestAuth.Secured }}
             {{ if eq $location.BasicDigestAuth.Type "basic" }}
-            auth_basic "{{ $location.BasicDigestAuth.Realm }}";
+            auth_basic {{ $location.BasicDigestAuth.Realm | quote }};
             auth_basic_user_file {{ $location.BasicDigestAuth.File }};
             {{ else }}
-            auth_digest "{{ $location.BasicDigestAuth.Realm }}";
+            auth_digest {{ $location.BasicDigestAuth.Realm | quote }};
             auth_digest_user_file {{ $location.BasicDigestAuth.File }};
             {{ end }}
             proxy_set_header Authorization "";
@@ -1214,10 +1164,12 @@ stream {
             {{ end }}
 
             {{/* By default use vhost as Host to upstream, but allow overrides */}}
+            {{ if not (eq $proxySetHeader "grpc_set_header") }}
             {{ if not (empty $location.UpstreamVhost) }}
-            {{ $proxySetHeader }} Host                   "{{ $location.UpstreamVhost }}";
+            {{ $proxySetHeader }} Host                   {{ $location.UpstreamVhost | quote }};
             {{ else }}
             {{ $proxySetHeader }} Host                   $best_http_host;
+            {{ end }}
             {{ end }}
 
             # Pass the extracted client certificate to the backend
@@ -1239,11 +1191,11 @@ stream {
             {{ end }}
 
             {{ $proxySetHeader }} X-Request-ID           $req_id;
-            {{ $proxySetHeader }} X-Real-IP              $the_real_ip;
+            {{ $proxySetHeader }} X-Real-IP              $remote_addr;
             {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
             {{ $proxySetHeader }} X-Forwarded-For        $full_x_forwarded_for;
             {{ else }}
-            {{ $proxySetHeader }} X-Forwarded-For        $the_real_ip;
+            {{ $proxySetHeader }} X-Forwarded-For        $remote_addr;
             {{ end }}
             {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
@@ -1262,7 +1214,7 @@ stream {
 
             # Custom headers to proxied server
             {{ range $k, $v := $all.ProxySetHeaders }}
-            {{ $proxySetHeader }} {{ $k }}                    "{{ $v }}";
+            {{ $proxySetHeader }} {{ $k }}                    {{ $v | quote }};
             {{ end }}
 
             proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
@@ -1271,22 +1223,20 @@ stream {
 
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
-            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
+            {{ if isValidByteSize $location.Proxy.ProxyMaxTempFileSize true }}
+            proxy_max_temp_file_size                {{ $location.Proxy.ProxyMaxTempFileSize }};
+            {{ end }}
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
-
-            proxy_http_version                      1.1;
+            proxy_http_version                      {{ $location.Proxy.ProxyHTTPVersion }};
 
             proxy_cookie_domain                     {{ $location.Proxy.CookieDomain }};
             proxy_cookie_path                       {{ $location.Proxy.CookiePath }};
 
             # In case of errors try the next upstream server before returning an error
             proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream $all.Cfg.RetryNonIdempotent }};
+            proxy_next_upstream_timeout             {{ $location.Proxy.NextUpstreamTimeout }};
             proxy_next_upstream_tries               {{ $location.Proxy.NextUpstreamTries }};
-
-            {{/* rewrite only works if the content is not compressed */}}
-            {{ if $location.Rewrite.AddBaseURL }}
-            {{ $proxySetHeader }}                        Accept-Encoding     "";
-            {{ end }}
 
             {{/* Add any additional configuration defined */}}
             {{ $location.ConfigurationSnippet }}
@@ -1304,6 +1254,11 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            proxy_set_header       X-Request-ID       $req_id;
+            {{ end }}
+
+            {{ if $location.Satisfy }}
+            satisfy {{ $location.Satisfy }};
             {{ end }}
 
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}
@@ -1313,8 +1268,17 @@ stream {
             {{ end }}
 
             {{ range $errCode := $location.CustomHTTPErrors }}
-            error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
+            error_page {{ $errCode }} = @custom_{{ $location.DefaultBackendUpstreamName }}_{{ $errCode }};{{ end }}
 
+            {{ if (eq $location.BackendProtocol "FCGI") }}
+            include /etc/nginx/fastcgi_params;
+            {{ end }}
+            {{- if $location.FastCGI.Index -}}
+            fastcgi_index {{ $location.FastCGI.Index | quote }};
+            {{- end -}}
+            {{ range $k, $v := $location.FastCGI.Params }}
+            fastcgi_param {{ $k }} {{ $v | quote }};
+            {{ end }}
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
@@ -1323,8 +1287,21 @@ stream {
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }} {{ $location.Proxy.ProxyRedirectTo }};
             {{ end }}
             {{ else }}
-            # Location denied. Reason: {{ $location.Denied | printf "%q" }}
+            # Location denied. Reason: {{ $location.Denied | quote }}
             return 503;
+            {{ end }}
+            {{ if not (empty $location.ProxySSL.CAFileName) }}
+            # PEM sha: {{ $location.ProxySSL.CASHA }}
+            proxy_ssl_trusted_certificate           {{ $location.ProxySSL.CAFileName }};
+            proxy_ssl_ciphers                       {{ $location.ProxySSL.Ciphers }};
+            proxy_ssl_protocols                     {{ $location.ProxySSL.Protocols }};
+            proxy_ssl_verify                        {{ $location.ProxySSL.Verify }};
+            proxy_ssl_verify_depth                  {{ $location.ProxySSL.VerifyDepth }};
+            {{ end }}
+
+            {{ if not (empty $location.ProxySSL.PemFileName) }}
+            proxy_ssl_certificate                   {{ $location.ProxySSL.PemFileName }};
+            proxy_ssl_certificate_key               {{ $location.ProxySSL.PemFileName }};
             {{ end }}
         }
         {{ end }}

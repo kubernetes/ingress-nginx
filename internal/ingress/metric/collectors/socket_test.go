@@ -288,7 +288,7 @@ func TestCollector(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			registry := prometheus.NewPedanticRegistry()
 
-			sc, err := NewSocketCollector("pod", "default", "ingress")
+			sc, err := NewSocketCollector("pod", "default", "ingress", true)
 			if err != nil {
 				t.Errorf("%v: unexpected error creating new SocketCollector: %v", c.name, err)
 			}

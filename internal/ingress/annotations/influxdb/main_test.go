@@ -20,35 +20,35 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -59,6 +59,36 @@ func buildIngress() *extensions.Ingress {
 				},
 			},
 		},
+	}
+}
+
+func TestIngressInvalidInfluxDB(t *testing.T) {
+	ing := buildIngress()
+
+	influx, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	nginxInflux, ok := influx.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type")
+	}
+
+	if nginxInflux.InfluxDBEnabled == true {
+		t.Errorf("expected influxdb enabled but returned %v", nginxInflux.InfluxDBEnabled)
+	}
+
+	if nginxInflux.InfluxDBMeasurement != "default" {
+		t.Errorf("expected measurement name not found. Found %v", nginxInflux.InfluxDBMeasurement)
+	}
+
+	if nginxInflux.InfluxDBPort != "8089" {
+		t.Errorf("expected port not found. Found %v", nginxInflux.InfluxDBPort)
+	}
+
+	if nginxInflux.InfluxDBHost != "127.0.0.1" {
+		t.Errorf("expected host not found. Found %v", nginxInflux.InfluxDBHost)
+	}
+
+	if nginxInflux.InfluxDBServerName != "nginx-ingress" {
+		t.Errorf("expected server name not found. Found %v", nginxInflux.InfluxDBServerName)
 	}
 }
 

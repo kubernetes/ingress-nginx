@@ -26,35 +26,36 @@ import (
 	"github.com/pkg/errors"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -93,6 +94,42 @@ func TestIngressWithoutAuth(t *testing.T) {
 	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
+	}
+}
+
+func TestIngressAuthBadAuthType(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "invalid"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	expected := ing_errors.NewLocationDenied("invalid authentication type")
+	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	if err.Error() != expected.Error() {
+		t.Errorf("expected '%v' but got '%v'", expected, err)
+	}
+}
+
+func TestInvalidIngressAuthNoSecret(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	expected := ing_errors.LocationDenied{
+		Reason: errors.New("error reading secret name from annotation: ingress rule without annotations"),
+	}
+	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	if err.Error() != expected.Reason.Error() {
+		t.Errorf("expected '%v' but got '%v'", expected, err)
 	}
 }
 
@@ -145,6 +182,25 @@ func TestIngressAuthWithoutSecret(t *testing.T) {
 	}
 }
 
+func TestIngressAuthInvalidSecretKey(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	data[parser.GetAnnotationWithPrefix("auth-secret")] = "demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-secret-type")] = "invalid-type"
+	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	_, err := NewParser(dir, mockSecret{}).Parse(ing)
+	if err == nil {
+		t.Errorf("expected an error with invalid secret name")
+	}
+}
+
 func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%v", time.Now().Unix()))
 	if err != nil {
@@ -160,20 +216,30 @@ func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
 	return tmpfile.Name(), dir, s
 }
 
-func TestDumpSecret(t *testing.T) {
+func TestDumpSecretAuthFile(t *testing.T) {
 	tmpfile, dir, s := dummySecretContent(t)
 	defer os.RemoveAll(dir)
 
 	sd := s.Data
 	s.Data = nil
 
-	err := dumpSecret(tmpfile, s)
+	err := dumpSecretAuthFile(tmpfile, s)
 	if err == nil {
 		t.Errorf("Expected error with secret without auth")
 	}
 
 	s.Data = sd
-	err = dumpSecret(tmpfile, s)
+	err = dumpSecretAuthFile(tmpfile, s)
+	if err != nil {
+		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
+	}
+}
+
+func TestDumpSecretAuthMap(t *testing.T) {
+	tmpfile, dir, s := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	err := dumpSecretAuthMap(tmpfile, s)
 	if err != nil {
 		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
 	}

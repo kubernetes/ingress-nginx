@@ -21,18 +21,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"sort"
 	"sync"
 	"time"
 
-	"github.com/eapache/channels"
+	"k8s.io/klog"
 
+	"github.com/eapache/channels"
 	corev1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
@@ -40,7 +42,6 @@ import (
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -54,6 +55,9 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
 )
+
+// IngressFilterFunc decides if an Ingress should be omitted or not
+type IngressFilterFunc func(*ingress.Ingress) bool
 
 // Storer is the interface that wraps the required methods to gather information
 // about ingresses, services, secrets and ingress annotations.
@@ -74,10 +78,10 @@ type Storer interface {
 	GetServiceEndpoints(key string) (*corev1.Endpoints, error)
 
 	// ListIngresses returns a list of all Ingresses in the store.
-	ListIngresses() []*ingress.Ingress
+	ListIngresses(IngressFilterFunc) []*ingress.Ingress
 
-	// ListControllerPods returns a list of ingress-nginx controller Pods.
-	ListControllerPods() []*corev1.Pod
+	// GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods.
+	GetRunningControllerPodsCount() int
 
 	// GetLocalSSLCert returns the local copy of a SSLCert
 	GetLocalSSLCert(name string) (*ingress.SSLCert, error)
@@ -148,9 +152,9 @@ func (e NotExistsError) Error() string {
 
 // Run initiates the synchronization of the informers against the API server.
 func (i *Informer) Run(stopCh chan struct{}) {
+	go i.Secret.Run(stopCh)
 	go i.Endpoint.Run(stopCh)
 	go i.Service.Run(stopCh)
-	go i.Secret.Run(stopCh)
 	go i.ConfigMap.Run(stopCh)
 	go i.Pod.Run(stopCh)
 
@@ -161,8 +165,9 @@ func (i *Informer) Run(stopCh chan struct{}) {
 		i.Service.HasSynced,
 		i.Secret.HasSynced,
 		i.ConfigMap.HasSynced,
+		i.Pod.HasSynced,
 	) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
 
 	// in big clusters, deltas can keep arriving even after HasSynced
@@ -176,14 +181,12 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	if !cache.WaitForCacheSync(stopCh,
 		i.Ingress.HasSynced,
 	) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
 }
 
 // k8sStore internal Storer implementation using informers and thread safe stores
 type k8sStore struct {
-	isOCSPCheckEnabled bool
-
 	// backendConfig contains the running configuration from the configmap
 	// this is required because this rarely changes but is a very expensive
 	// operation to execute in each OnUpdate invocation
@@ -206,8 +209,6 @@ type k8sStore struct {
 	// secret in the annotations.
 	secretIngressMap ObjectRefMap
 
-	filesystem file.Filesystem
-
 	// updateCh
 	updateCh *channels.RingChannel
 
@@ -219,35 +220,29 @@ type k8sStore struct {
 
 	defaultSSLCertificate string
 
-	isDynamicCertificatesEnabled bool
-
 	pod *k8s.PodInfo
 }
 
 // New creates a new object store to be used in the ingress controller
-func New(checkOCSP bool,
+func New(
 	namespace, configmap, tcp, udp, defaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
-	fs file.Filesystem,
 	updateCh *channels.RingChannel,
-	isDynamicCertificatesEnabled bool,
-	pod *k8s.PodInfo) Storer {
+	pod *k8s.PodInfo,
+	disableCatchAll bool) Storer {
 
 	store := &k8sStore{
-		isOCSPCheckEnabled:           checkOCSP,
-		informers:                    &Informer{},
-		listers:                      &Lister{},
-		sslStore:                     NewSSLCertTracker(),
-		filesystem:                   fs,
-		updateCh:                     updateCh,
-		backendConfig:                ngx_config.NewDefault(),
-		syncSecretMu:                 &sync.Mutex{},
-		backendConfigMu:              &sync.RWMutex{},
-		secretIngressMap:             NewObjectRefMap(),
-		defaultSSLCertificate:        defaultSSLCertificate,
-		isDynamicCertificatesEnabled: isDynamicCertificatesEnabled,
-		pod:                          pod,
+		informers:             &Informer{},
+		listers:               &Lister{},
+		sslStore:              NewSSLCertTracker(),
+		updateCh:              updateCh,
+		backendConfig:         ngx_config.NewDefault(),
+		syncSecretMu:          &sync.Mutex{},
+		backendConfigMu:       &sync.RWMutex{},
+		secretIngressMap:      NewObjectRefMap(),
+		defaultSSLCertificate: defaultSSLCertificate,
+		pod:                   pod,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -269,7 +264,12 @@ func New(checkOCSP bool,
 		informers.WithNamespace(namespace),
 		informers.WithTweakListOptions(func(*metav1.ListOptions) {}))
 
-	store.informers.Ingress = infFactory.Extensions().V1beta1().Ingresses().Informer()
+	if k8s.IsNetworkingIngressAvailable {
+		store.informers.Ingress = infFactory.Networking().V1beta1().Ingresses().Informer()
+	} else {
+		store.informers.Ingress = infFactory.Extensions().V1beta1().Ingresses().Informer()
+	}
+
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
 
 	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
@@ -288,12 +288,10 @@ func New(checkOCSP bool,
 	store.informers.Pod = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (k8sruntime.Object, error) {
-
 				options.LabelSelector = labelSelector.String()
 				return client.CoreV1().Pods(store.pod.Namespace).List(options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-
 				options.LabelSelector = labelSelector.String()
 				return client.CoreV1().Pods(store.pod.Namespace).Watch(options)
 			},
@@ -304,12 +302,53 @@ func New(checkOCSP bool,
 	)
 	store.listers.Pod.Store = store.informers.Pod.GetStore()
 
+	ingDeleteHandler := func(obj interface{}) {
+		ing, ok := toIngress(obj)
+		if !ok {
+			// If we reached here it means the ingress was deleted but its final state is unrecorded.
+			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+			if !ok {
+				klog.Errorf("couldn't get object from tombstone %#v", obj)
+				return
+			}
+			ing, ok = tombstone.Obj.(*networkingv1beta1.Ingress)
+			if !ok {
+				klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
+				return
+			}
+		}
+
+		if !class.IsValid(ing) {
+			klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
+			return
+		}
+		if isCatchAllIngress(ing.Spec) && disableCatchAll {
+			klog.Infof("ignoring delete for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
+			return
+		}
+		recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
+
+		store.listers.IngressWithAnnotation.Delete(ing)
+
+		key := k8s.MetaNamespaceKey(ing)
+		store.secretIngressMap.Delete(key)
+
+		updateCh.In() <- Event{
+			Type: DeleteEvent,
+			Obj:  obj,
+		}
+	}
+
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			ing := obj.(*extensions.Ingress)
+			ing, _ := toIngress(obj)
 			if !class.IsValid(ing) {
 				a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
 				klog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
+				return
+			}
+			if isCatchAllIngress(ing.Spec) && disableCatchAll {
+				klog.Infof("ignoring add for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
 				return
 			}
 			recorder.Eventf(ing, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
@@ -323,52 +362,35 @@ func New(checkOCSP bool,
 				Obj:  obj,
 			}
 		},
-		DeleteFunc: func(obj interface{}) {
-			ing, ok := obj.(*extensions.Ingress)
-			if !ok {
-				// If we reached here it means the ingress was deleted but its final state is unrecorded.
-				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
-				if !ok {
-					klog.Errorf("couldn't get object from tombstone %#v", obj)
-					return
-				}
-				ing, ok = tombstone.Obj.(*extensions.Ingress)
-				if !ok {
-					klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
-					return
-				}
-			}
-			if !class.IsValid(ing) {
-				klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
-				return
-			}
-			recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
-
-			store.listers.IngressWithAnnotation.Delete(ing)
-
-			key := k8s.MetaNamespaceKey(ing)
-			store.secretIngressMap.Delete(key)
-
-			updateCh.In() <- Event{
-				Type: DeleteEvent,
-				Obj:  obj,
-			}
-		},
+		DeleteFunc: ingDeleteHandler,
 		UpdateFunc: func(old, cur interface{}) {
-			oldIng := old.(*extensions.Ingress)
-			curIng := cur.(*extensions.Ingress)
+			oldIng, _ := toIngress(old)
+			curIng, _ := toIngress(cur)
+
 			validOld := class.IsValid(oldIng)
 			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
+				if isCatchAllIngress(curIng.Spec) && disableCatchAll {
+					klog.Infof("ignoring update for catch-all ingress %v/%v because of --disable-catch-all", curIng.Namespace, curIng.Name)
+					return
+				}
+
 				klog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validOld && !validCur {
 				klog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
-				recorder.Eventf(curIng, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+				ingDeleteHandler(old)
+				return
 			} else if validCur && !reflect.DeepEqual(old, cur) {
+				if isCatchAllIngress(curIng.Spec) && disableCatchAll {
+					klog.Infof("ignoring update for catch-all ingress %v/%v and delete old one because of --disable-catch-all", curIng.Namespace, curIng.Name)
+					ingDeleteHandler(old)
+					return
+				}
+
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else {
-				klog.Infof("ignoring ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				klog.V(3).Infof("No changes on ingress %v/%v. Skipping update", curIng.Namespace, curIng.Name)
 				return
 			}
 
@@ -469,6 +491,7 @@ func New(checkOCSP bool,
 					}
 					store.syncIngress(ing)
 				}
+
 				updateCh.In() <- Event{
 					Type: DeleteEvent,
 					Obj:  obj,
@@ -502,48 +525,69 @@ func New(checkOCSP bool,
 		},
 	}
 
+	// TODO: add e2e test to verify that changes to one or more configmap trigger an update
+	changeTriggerUpdate := func(name string) bool {
+		return name == configmap || name == tcp || name == udp
+	}
+
 	cmEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			cm := obj.(*corev1.ConfigMap)
 			key := k8s.MetaNamespaceKey(cm)
 			// updates to configuration configmaps can trigger an update
-			if key == configmap || key == tcp || key == udp {
+			if changeTriggerUpdate(key) {
 				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
+
 				if key == configmap {
 					store.setConfig(cm)
 				}
-				updateCh.In() <- Event{
-					Type: ConfigurationEvent,
-					Obj:  obj,
-				}
+			}
+
+			updateCh.In() <- Event{
+				Type: ConfigurationEvent,
+				Obj:  obj,
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
-			if !reflect.DeepEqual(old, cur) {
-				cm := cur.(*corev1.ConfigMap)
-				key := k8s.MetaNamespaceKey(cm)
-				// updates to configuration configmaps can trigger an update
-				if key == configmap || key == tcp || key == udp {
+			if reflect.DeepEqual(old, cur) {
+				return
+			}
+
+			// used to limit the number of events
+			triggerUpdate := false
+
+			cm := cur.(*corev1.ConfigMap)
+			key := k8s.MetaNamespaceKey(cm)
+			// updates to configuration configmaps can trigger an update
+			if changeTriggerUpdate(key) {
+				recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
+				triggerUpdate = true
+			}
+
+			if key == configmap {
+				store.setConfig(cm)
+			}
+
+			ings := store.listers.IngressWithAnnotation.List()
+			for _, ingKey := range ings {
+				key := k8s.MetaNamespaceKey(ingKey)
+				ing, err := store.getIngress(key)
+				if err != nil {
+					klog.Errorf("could not find Ingress %v in local store: %v", key, err)
+					continue
+				}
+
+				if parser.AnnotationsReferencesConfigmap(ing) {
 					recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
-					if key == configmap {
-						store.setConfig(cm)
-					}
+					store.syncIngress(ing)
+					triggerUpdate = true
+				}
+			}
 
-					ings := store.listers.IngressWithAnnotation.List()
-					for _, ingKey := range ings {
-						key := k8s.MetaNamespaceKey(ingKey)
-						ing, err := store.getIngress(key)
-						if err != nil {
-							klog.Errorf("could not find Ingress %v in local store: %v", key, err)
-							continue
-						}
-						store.syncIngress(ing)
-					}
-
-					updateCh.In() <- Event{
-						Type: ConfigurationEvent,
-						Obj:  cur,
-					}
+			if triggerUpdate {
+				updateCh.In() <- Event{
+					Type: ConfigurationEvent,
+					Obj:  cur,
 				}
 			}
 		},
@@ -595,15 +639,22 @@ func New(checkOCSP bool,
 	return store
 }
 
+// isCatchAllIngress returns whether or not an ingress produces a
+// catch-all server, and so should be ignored when --disable-catch-all is set
+func isCatchAllIngress(spec networkingv1beta1.IngressSpec) bool {
+	return spec.Backend != nil && len(spec.Rules) == 0
+}
+
 // syncIngress parses ingress annotations converting the value of the
 // annotation to a go struct
-func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
+func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	klog.V(3).Infof("updating annotations information for ingress %v", key)
 
-	copyIng := &extensions.Ingress{}
+	copyIng := &networkingv1beta1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
+	ing.Status.DeepCopyInto(&copyIng.Status)
 
 	for ri, rule := range copyIng.Spec.Rules {
 		if rule.HTTP == nil {
@@ -628,7 +679,7 @@ func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 
 // updateSecretIngressMap takes an Ingress and updates all Secret objects it
 // references in secretIngressMap.
-func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
+func (s *k8sStore) updateSecretIngressMap(ing *networkingv1beta1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	klog.V(3).Infof("updating references to secrets for ingress %v", key)
 
@@ -652,6 +703,8 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 	secretAnnotations := []string{
 		"auth-secret",
 		"auth-tls-secret",
+		"proxy-ssl-secret",
+		"secure-verify-ca-secret",
 	}
 	for _, ann := range secretAnnotations {
 		secrKey, err := objectRefAnnotationNsKey(ann, ing)
@@ -670,7 +723,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 
 // objectRefAnnotationNsKey returns an object reference formatted as a
 // 'namespace/name' key from the given annotation name.
-func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, error) {
+func objectRefAnnotationNsKey(ann string, ing *networkingv1beta1.Ingress) (string, error) {
 	annValue, err := parser.GetStringAnnotation(ann, ing)
 	if err != nil {
 		return "", err
@@ -689,7 +742,7 @@ func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, erro
 
 // syncSecrets synchronizes data from all Secrets referenced by the given
 // Ingress with the local store and file system.
-func (s *k8sStore) syncSecrets(ing *extensions.Ingress) {
+func (s *k8sStore) syncSecrets(ing *networkingv1beta1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	for _, secrKey := range s.secretIngressMap.ReferencedBy(key) {
 		s.syncSecret(secrKey)
@@ -719,7 +772,7 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 }
 
 // getIngress returns the Ingress matching key.
-func (s *k8sStore) getIngress(key string) (*extensions.Ingress, error) {
+func (s *k8sStore) getIngress(key string) (*networkingv1beta1.Ingress, error) {
 	ing, err := s.listers.IngressWithAnnotation.ByKey(key)
 	if err != nil {
 		return nil, err
@@ -729,13 +782,31 @@ func (s *k8sStore) getIngress(key string) (*extensions.Ingress, error) {
 }
 
 // ListIngresses returns the list of Ingresses
-func (s *k8sStore) ListIngresses() []*ingress.Ingress {
+func (s *k8sStore) ListIngresses(filter IngressFilterFunc) []*ingress.Ingress {
 	// filter ingress rules
 	ingresses := make([]*ingress.Ingress, 0)
 	for _, item := range s.listers.IngressWithAnnotation.List() {
 		ing := item.(*ingress.Ingress)
+
+		if filter != nil && filter(ing) {
+			continue
+		}
+
 		ingresses = append(ingresses, ing)
 	}
+
+	// sort Ingresses using the CreationTimestamp field
+	sort.SliceStable(ingresses, func(i, j int) bool {
+		ir := ingresses[i].CreationTimestamp
+		jr := ingresses[j].CreationTimestamp
+		if ir.Equal(&jr) {
+			in := fmt.Sprintf("%v/%v", ingresses[i].Namespace, ingresses[i].Name)
+			jn := fmt.Sprintf("%v/%v", ingresses[j].Namespace, ingresses[j].Name)
+			klog.V(3).Infof("Ingress %v and %v have identical CreationTimestamp", in, jn)
+			return in > jn
+		}
+		return ir.Before(&jr)
+	})
 
 	return ingresses
 }
@@ -767,9 +838,12 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 	}
 
 	return &resolver.AuthSSLCert{
-		Secret:     name,
-		CAFileName: cert.CAFileName,
-		PemSHA:     cert.PemSHA,
+		Secret:      name,
+		CAFileName:  cert.CAFileName,
+		CASHA:       cert.CASHA,
+		CRLFileName: cert.CRLFileName,
+		CRLSHA:      cert.CRLSHA,
+		PemFileName: cert.PemFileName,
 	}, nil
 }
 
@@ -826,15 +900,11 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 func (s *k8sStore) Run(stopCh chan struct{}) {
 	// start informers
 	s.informers.Run(stopCh)
-
-	if s.isOCSPCheckEnabled {
-		go wait.Until(s.checkSSLChainIssues, 60*time.Second, stopCh)
-	}
 }
 
-// ListControllerPods returns a list of ingress-nginx controller Pods
-func (s *k8sStore) ListControllerPods() []*corev1.Pod {
-	var pods []*corev1.Pod
+// GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods
+func (s k8sStore) GetRunningControllerPodsCount() int {
+	count := 0
 
 	for _, i := range s.listers.Pod.List() {
 		pod := i.(*corev1.Pod)
@@ -843,8 +913,45 @@ func (s *k8sStore) ListControllerPods() []*corev1.Pod {
 			continue
 		}
 
-		pods = append(pods, pod)
+		count++
 	}
 
-	return pods
+	return count
+}
+
+var runtimeScheme = k8sruntime.NewScheme()
+
+func init() {
+	extensionsv1beta1.AddToScheme(runtimeScheme)
+	networkingv1beta1.AddToScheme(runtimeScheme)
+}
+
+func fromExtensions(old *extensionsv1beta1.Ingress) (*networkingv1beta1.Ingress, error) {
+	networkingIngress := &networkingv1beta1.Ingress{}
+
+	err := runtimeScheme.Convert(old, networkingIngress, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return networkingIngress, nil
+}
+
+func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
+	oldVersion, inExtension := obj.(*extensionsv1beta1.Ingress)
+	if inExtension {
+		ing, err := fromExtensions(oldVersion)
+		if err != nil {
+			klog.Errorf("unexpected error converting Ingress from extensions package: %v", err)
+			return nil, false
+		}
+
+		return ing, true
+	}
+
+	if ing, ok := obj.(*networkingv1beta1.Ingress); ok {
+		return ing, true
+	}
+
+	return nil, false
 }

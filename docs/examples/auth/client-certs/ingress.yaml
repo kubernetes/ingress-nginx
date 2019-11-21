@@ -11,20 +11,19 @@ metadata:
     # Specify an error page to be redirected to verification errors
     nginx.ingress.kubernetes.io/auth-tls-error-page: "http://www.mysite.com/error-cert.html"
     # Specify if certificates are passed to upstream server
-    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "false"
+    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
   name: nginx-test
   namespace: default
 spec:
   rules:
-  - host: ingress.test.com
+  - host: mydomain.com
     http:
       paths:
       - backend:
-          serviceName: http-svc:80
+          serviceName: http-svc
           servicePort: 80
         path: /
   tls:
   - hosts:
-    - ingress.test.com
+    - mydomain.com
     secretName: tls-secret
-

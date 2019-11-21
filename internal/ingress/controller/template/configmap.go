@@ -29,31 +29,54 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/runtime"
 )
 
 const (
-	customHTTPErrors         = "custom-http-errors"
-	skipAccessLogUrls        = "skip-access-log-urls"
-	whitelistSourceRange     = "whitelist-source-range"
-	proxyRealIPCIDR          = "proxy-real-ip-cidr"
-	bindAddress              = "bind-address"
-	httpRedirectCode         = "http-redirect-code"
-	blockCIDRs               = "block-cidrs"
-	blockUserAgents          = "block-user-agents"
-	blockReferers            = "block-referers"
-	proxyStreamResponses     = "proxy-stream-responses"
-	hideHeaders              = "hide-headers"
-	nginxStatusIpv4Whitelist = "nginx-status-ipv4-whitelist"
-	nginxStatusIpv6Whitelist = "nginx-status-ipv6-whitelist"
-	proxyHeaderTimeout       = "proxy-protocol-header-timeout"
-	workerProcesses          = "worker-processes"
+	customHTTPErrors          = "custom-http-errors"
+	skipAccessLogUrls         = "skip-access-log-urls"
+	whitelistSourceRange      = "whitelist-source-range"
+	proxyRealIPCIDR           = "proxy-real-ip-cidr"
+	bindAddress               = "bind-address"
+	httpRedirectCode          = "http-redirect-code"
+	blockCIDRs                = "block-cidrs"
+	blockUserAgents           = "block-user-agents"
+	blockReferers             = "block-referers"
+	proxyStreamResponses      = "proxy-stream-responses"
+	hideHeaders               = "hide-headers"
+	nginxStatusIpv4Whitelist  = "nginx-status-ipv4-whitelist"
+	nginxStatusIpv6Whitelist  = "nginx-status-ipv6-whitelist"
+	proxyHeaderTimeout        = "proxy-protocol-header-timeout"
+	workerProcesses           = "worker-processes"
+	globalAuthURL             = "global-auth-url"
+	globalAuthMethod          = "global-auth-method"
+	globalAuthSignin          = "global-auth-signin"
+	globalAuthResponseHeaders = "global-auth-response-headers"
+	globalAuthRequestRedirect = "global-auth-request-redirect"
+	globalAuthSnippet         = "global-auth-snippet"
+	globalAuthCacheKey        = "global-auth-cache-key"
+	globalAuthCacheDuration   = "global-auth-cache-duration"
+	luaSharedDictsKey         = "lua-shared-dicts"
 )
 
 var (
-	validRedirectCodes = sets.NewInt([]int{301, 302, 307, 308}...)
+	validRedirectCodes    = sets.NewInt([]int{301, 302, 307, 308}...)
+	defaultLuaSharedDicts = map[string]int{
+		"configuration_data":            20,
+		"certificate_data":              20,
+		"balancer_ewma":                 10,
+		"balancer_ewma_last_touched_at": 10,
+		"balancer_ewma_locks":           1,
+		"certificate_servers":           5,
+	}
+)
+
+const (
+	maxAllowedLuaDictSize = 200
+	maxNumberOfLuaDicts   = 100
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
@@ -77,7 +100,41 @@ func ReadConfig(src map[string]string) config.Configuration {
 	blockCIDRList := make([]string, 0)
 	blockUserAgentList := make([]string, 0)
 	blockRefererList := make([]string, 0)
+	responseHeaders := make([]string, 0)
+	luaSharedDicts := make(map[string]int)
 
+	//parse lua shared dict values
+	if val, ok := conf[luaSharedDictsKey]; ok {
+		delete(conf, luaSharedDictsKey)
+		lsd := strings.Split(val, ",")
+		for _, v := range lsd {
+			v = strings.Replace(v, " ", "", -1)
+			results := strings.SplitN(v, ":", 2)
+			dictName := results[0]
+			size, err := strconv.Atoi(results[1])
+			if err != nil {
+				klog.Errorf("Ignoring non integer value %v for Lua dictionary %v: %v.", results[1], dictName, err)
+				continue
+			}
+			if size > maxAllowedLuaDictSize {
+				klog.Errorf("Ignoring %v for Lua dictionary %v: maximum size is %v.", size, dictName, maxAllowedLuaDictSize)
+				continue
+			}
+			if len(luaSharedDicts)+1 > maxNumberOfLuaDicts {
+				klog.Errorf("Ignoring %v for Lua dictionary %v: can not configure more than %v dictionaries.",
+					size, dictName, maxNumberOfLuaDicts)
+				continue
+			}
+
+			luaSharedDicts[dictName] = size
+		}
+	}
+	// set default Lua shared dicts
+	for k, v := range defaultLuaSharedDicts {
+		if _, ok := luaSharedDicts[k]; !ok {
+			luaSharedDicts[k] = v
+		}
+	}
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
 		for _, i := range strings.Split(val, ",") {
@@ -150,6 +207,91 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 	}
 
+	// Verify that the configured global external authorization URL is parsable as URL. if not, set the default value
+	if val, ok := conf[globalAuthURL]; ok {
+		delete(conf, globalAuthURL)
+
+		authURL, message := authreq.ParseStringToURL(val)
+		if authURL == nil {
+			klog.Warningf("Global auth location denied - %v.", message)
+		} else {
+			to.GlobalExternalAuth.URL = val
+			to.GlobalExternalAuth.Host = authURL.Hostname()
+		}
+	}
+
+	// Verify that the configured global external authorization method is a valid HTTP method. if not, set the default value
+	if val, ok := conf[globalAuthMethod]; ok {
+		delete(conf, globalAuthMethod)
+
+		if len(val) != 0 && !authreq.ValidMethod(val) {
+			klog.Warningf("Global auth location denied - %v.", "invalid HTTP method")
+		} else {
+			to.GlobalExternalAuth.Method = val
+		}
+	}
+
+	// Verify that the configured global external authorization error page is set and valid. if not, set the default value
+	if val, ok := conf[globalAuthSignin]; ok {
+		delete(conf, globalAuthSignin)
+
+		signinURL, _ := authreq.ParseStringToURL(val)
+		if signinURL == nil {
+			klog.Warningf("Global auth location denied - %v.", "global-auth-signin setting is undefined and will not be set")
+		} else {
+			to.GlobalExternalAuth.SigninURL = val
+		}
+	}
+
+	// Verify that the configured global external authorization response headers are valid. if not, set the default value
+	if val, ok := conf[globalAuthResponseHeaders]; ok {
+		delete(conf, globalAuthResponseHeaders)
+
+		if len(val) != 0 {
+			harr := strings.Split(val, ",")
+			for _, header := range harr {
+				header = strings.TrimSpace(header)
+				if len(header) > 0 {
+					if !authreq.ValidHeader(header) {
+						klog.Warningf("Global auth location denied - %v.", "invalid headers list")
+					} else {
+						responseHeaders = append(responseHeaders, header)
+					}
+				}
+			}
+		}
+		to.GlobalExternalAuth.ResponseHeaders = responseHeaders
+	}
+
+	if val, ok := conf[globalAuthRequestRedirect]; ok {
+		delete(conf, globalAuthRequestRedirect)
+
+		to.GlobalExternalAuth.RequestRedirect = val
+	}
+
+	if val, ok := conf[globalAuthSnippet]; ok {
+		delete(conf, globalAuthSnippet)
+
+		to.GlobalExternalAuth.AuthSnippet = val
+	}
+
+	if val, ok := conf[globalAuthCacheKey]; ok {
+		delete(conf, globalAuthCacheKey)
+
+		to.GlobalExternalAuth.AuthCacheKey = val
+	}
+
+	// Verify that the configured global external authorization cache duration is valid
+	if val, ok := conf[globalAuthCacheDuration]; ok {
+		delete(conf, globalAuthCacheDuration)
+
+		cacheDurations, err := authreq.ParseStringToCacheDurations(val)
+		if err != nil {
+			klog.Warningf("Global auth location denied - %s", err)
+		}
+		to.GlobalExternalAuth.AuthCacheDuration = cacheDurations
+	}
+
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value
 	if val, ok := conf[proxyHeaderTimeout]; ok {
 		delete(conf, proxyHeaderTimeout)
@@ -210,6 +352,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.HideHeaders = hideHeadersList
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
+	to.LuaSharedDicts = luaSharedDicts
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,

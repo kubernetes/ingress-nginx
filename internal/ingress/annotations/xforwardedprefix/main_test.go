@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -35,21 +35,21 @@ func TestParse(t *testing.T) {
 
 	testCases := []struct {
 		annotations map[string]string
-		expected    bool
+		expected    string
 	}{
-		{map[string]string{annotation: "true"}, true},
-		{map[string]string{annotation: "1"}, true},
-		{map[string]string{annotation: ""}, false},
-		{map[string]string{}, false},
-		{nil, false},
+		{map[string]string{annotation: "true"}, "true"},
+		{map[string]string{annotation: "1"}, "1"},
+		{map[string]string{annotation: ""}, ""},
+		{map[string]string{}, ""},
+		{nil, ""},
 	}
 
-	ing := &extensions.Ingress{
+	ing := &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{},
+		Spec: networking.IngressSpec{},
 	}
 
 	for _, testCase := range testCases {

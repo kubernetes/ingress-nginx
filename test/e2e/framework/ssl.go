@@ -34,7 +34,7 @@ import (
 
 	. "github.com/onsi/gomega"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -338,19 +338,24 @@ func tlsConfig(serverName string, pemCA []byte) (*tls.Config, error) {
 // given URL using the given TLS configuration and returns whether the TLS
 // handshake completed successfully.
 func matchTLSServerName(url string, tlsConfig *tls.Config) wait.ConditionFunc {
-	return func() (ready bool, err error) {
+	return func() (bool, error) {
 		u, err := net_url.Parse(url)
 		if err != nil {
-			return
+			return false, err
 		}
 
-		conn, err := tls.Dial("tcp", u.Host, tlsConfig)
+		port := u.Port()
+		if port == "" {
+			port = "443"
+		}
+
+		conn, err := tls.Dial("tcp", fmt.Sprintf("%v:%v", u.Host, port), tlsConfig)
 		if err != nil {
+			Logf("Unexpected TLS error: %v", err)
 			return false, nil
 		}
 		conn.Close()
 
-		ready = true
-		return
+		return true, nil
 	}
 }
