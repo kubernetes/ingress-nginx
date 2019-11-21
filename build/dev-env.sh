@@ -33,7 +33,8 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
-test $(minikube status | grep -c Running) -ge 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
+{ [ "$(minikube status | grep -c Running)" -ge 2 ] && minikube status | grep -qE ': Configured$|Correctly Configured'; } \
+  || minikube start \
     --extra-config=kubelet.sync-frequency=1s \
     --extra-config=apiserver.authorization-mode=RBAC
 
