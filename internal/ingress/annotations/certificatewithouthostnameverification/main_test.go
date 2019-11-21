@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package portinredirect
+package certificatewithouthostnameverification
 
 import (
 	"fmt"
@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -65,39 +64,27 @@ func buildIngress() *networking.Ingress {
 	}
 }
 
-type mockBackend struct {
-	resolver.Mock
-	usePortInRedirects bool
-}
-
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{UsePortInRedirects: m.usePortInRedirects}
-}
-
-func TestPortInRedirect(t *testing.T) {
+func TestCertificateWithoutHostnameVerification(t *testing.T) {
 	tests := []struct {
-		title   string
-		usePort *bool
-		def     bool
-		exp     bool
+		title                                  string
+		certificateWithoutHostnameVerification *bool
+		exp                                    bool
 	}{
-		{"false - default false", newFalse(), false, false},
-		{"false - default true", newFalse(), true, false},
-		{"no annotation - default false", nil, false, false},
-		{"no annotation - default true", nil, true, true},
-		{"true - default true", newTrue(), true, true},
+		{"false", newFalse(), false},
+		{"true", newTrue(), true},
+		{"no annotation (expect default to false because previous behavior was to verify hostname)", nil, false},
 	}
 
 	for _, test := range tests {
 		ing := buildIngress()
 
 		data := map[string]string{}
-		if test.usePort != nil {
-			data[parser.GetAnnotationWithPrefix("use-port-in-redirects")] = fmt.Sprintf("%v", *test.usePort)
+		if test.certificateWithoutHostnameVerification != nil {
+			data[parser.GetAnnotationWithPrefix("use-certificate-without-hostname-verification")] = fmt.Sprintf("%v", *test.certificateWithoutHostnameVerification)
 		}
 		ing.SetAnnotations(data)
 
-		i, err := NewParser(mockBackend{usePortInRedirects: test.def}).Parse(ing)
+		i, err := NewParser(resolver.Mock{}).Parse(ing)
 		if err != nil {
 			t.Errorf("unexpected error parsing a valid annotation: %v", err)
 		}

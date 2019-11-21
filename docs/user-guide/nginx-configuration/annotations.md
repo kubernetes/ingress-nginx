@@ -117,6 +117,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/mirror-uri](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
+|[nginx.ingress.kubernetes.io/use-certificate-without-hostname-verification](#use-certificate-without-hostname-verification)|"true" or "false"|
 
 ### Canary
 
@@ -875,3 +876,15 @@ nginx.ingress.kubernetes.io/mirror-request-body: "off"
 The request sent to the mirror is linked to the orignial request. If you have a slow mirror backend, then the orignial request will throttle.
 
 For more information on the mirror module see https://nginx.org/en/docs/http/ngx_http_mirror_module.html
+
+### Use certificate without hostname verification
+
+By default, a TLS certificate is only used if its Common Name (CN) or Subject Alternative Name (SAN) matches the hostname of your ingress.
+
+If you want to explicitly force use of a mismatching certificate and skip the hostname check, use:
+
+```yaml
+nginx.ingress.kubernetes.io/use-certificate-without-hostname-verification: "true"
+```
+
+This can make sense in rare application scenarios where a 3rd party makes requests and checks the certificate against a custom CA without verifying the server name.
