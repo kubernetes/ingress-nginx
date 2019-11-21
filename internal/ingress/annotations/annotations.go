@@ -141,11 +141,8 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
 			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
-<<<<<<< HEAD
 			"ProxyProtocol":        proxyprotocol.NewParser(cfg),
-=======
 			"ProxySSL":             proxyssl.NewParser(cfg),
->>>>>>> master
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
