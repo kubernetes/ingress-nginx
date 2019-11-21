@@ -1104,6 +1104,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				continue
 			}
 
+			servers[host].ProxyProtocol = anns.ProxyProtocol
+
 			if len(ing.Spec.TLS) == 0 {
 				klog.V(3).Infof("Ingress %q does not contains a TLS section.", ingKey)
 				continue

@@ -140,6 +140,7 @@ var (
 		"filterRateLimits":                filterRateLimits,
 		"buildRateLimitZones":             buildRateLimitZones,
 		"buildRateLimit":                  buildRateLimit,
+		"buildSSLPassthroughUpstreams":    buildSSLPassthroughUpstreams,
 		"configForLua":                    configForLua,
 		"locationConfigForLua":            locationConfigForLua,
 		"buildResolvers":                  buildResolvers,
@@ -382,6 +383,38 @@ func enforceRegexModifier(input interface{}) bool {
 		}
 	}
 	return false
+}
+
+func buildSSLPassthroughUpstreams(b interface{}, sslb interface{}) string {
+	backends := b.([]*ingress.Backend)
+	sslBackends := sslb.([]*ingress.SSLPassthroughBackend)
+	buf := bytes.NewBuffer(make([]byte, 0, 10))
+
+	// multiple services can use the same upstream.
+	// avoid duplications using a map[name]=true
+	u := make(map[string]bool)
+	for _, passthrough := range sslBackends {
+		if u[passthrough.Backend] {
+			continue
+		}
+		u[passthrough.Backend] = true
+		fmt.Fprintf(buf, "upstream %v {\n", passthrough.Backend)
+		for _, backend := range backends {
+			if backend.Name == passthrough.Backend {
+				for _, server := range backend.Endpoints {
+					fmt.Fprintf(buf, "\t\tserver %v:%v;\n", server.Address, server.Port)
+				}
+				break
+			}
+
+			if backend.ProxyProtocol {
+				fmt.Fprintf(buf, "\t\tproxy_protocol on;\n")
+			}
+		}
+		fmt.Fprint(buf, "\t}\n\n")
+	}
+
+	return buf.String()
 }
 
 // buildLocation produces the location string, if the ingress has redirects

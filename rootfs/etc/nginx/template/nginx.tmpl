@@ -6,6 +6,7 @@
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
+{{ $passthroughBackends := .PassthroughBackends }}
 
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
@@ -600,6 +601,43 @@ http {
 }
 
 stream {
+    {{ if $all.IsSSLPassthroughEnabled }}
+    # map FQDN that requires SSL passthrough
+    map $ssl_preread_server_name $stream_upstream {
+        hostnames;
+        {{ range $i, $passthrough := .PassthroughBackends }}
+        {{   $passthrough.Hostname }}         {{  $passthrough.Backend }};
+        {{ end }}
+
+        # Add non SSLPassthrough backends list to gracefully handle situation when SSLPassthrough wildcard overlaps with non SSLPassthrough direct matching domain
+        {{ range $server := $servers }}
+        {{   if $server.SSLPassthrough }}
+        {{     $server.Hostname }} nginx-ssl-backend;
+        {{     range $server.Aliases }}
+        {{       . }} nginx-ssl-backend;
+        {{     end }}
+        {{   end }}
+        {{ end }}
+
+        # send SSL traffic to this nginx in a different port
+        default                         nginx-ssl-backend;
+    }
+
+    # configure default backend for SSL
+    upstream nginx-ssl-backend {
+        server 127.0.0.1:{{ $all.ListenPorts.SSLProxy }};
+    }
+
+    {{ buildSSLPassthroughUpstreams $backends .PassthroughBackends }}
+
+    server {
+        listen                  {{ $all.ListenPorts.HTTPS }} {{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        {{ if $IsIPV6Enabled }}listen                  [::]:443 {{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};{{ end }}
+        proxy_pass              $stream_upstream;
+        ssl_preread             on;
+    }
+    {{ end }}
+
     lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;";
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
 

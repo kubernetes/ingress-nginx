@@ -35,7 +35,6 @@ import (
 	"text/template"
 	"time"
 
-	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -300,10 +299,6 @@ func (n *NGINXController) Start() {
 		Pgid:    0,
 	}
 
-	if n.cfg.EnableSSLPassthrough {
-		n.setupSSLProxy()
-	}
-
 	klog.Info("Starting NGINX process")
 	n.start(cmd)
 
@@ -451,40 +446,39 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 // generateTemplate returns the nginx configuration file content
 func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
 
-	if n.cfg.EnableSSLPassthrough {
-		servers := []*TCPServer{}
-		for _, pb := range ingressCfg.PassthroughBackends {
-			svc := pb.Service
-			if svc == nil {
-				klog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
-				continue
-			}
-			port, err := strconv.Atoi(pb.Port.String())
-			if err != nil {
-				for _, sp := range svc.Spec.Ports {
-					if sp.Name == pb.Port.String() {
-						port = int(sp.Port)
-						break
-					}
-				}
-			} else {
-				for _, sp := range svc.Spec.Ports {
-					if sp.Port == int32(port) {
-						port = int(sp.Port)
-						break
-					}
+	servers := []*TCPServer{}
+	for _, pb := range ingressCfg.PassthroughBackends {
+		svc := pb.Service
+		if svc == nil {
+			klog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
+			continue
+		}
+		port, err := strconv.Atoi(pb.Port.String())
+		if err != nil {
+			for _, sp := range svc.Spec.Ports {
+				if sp.Name == pb.Port.String() {
+					port = int(sp.Port)
+					break
 				}
 			}
-
-			// TODO: Allow PassthroughBackends to specify they support proxy-protocol
-			servers = append(servers, &TCPServer{
-				Hostname:      pb.Hostname,
-				IP:            svc.Spec.ClusterIP,
-				Port:          port,
-				ProxyProtocol: false,
-			})
+		} else {
+			for _, sp := range svc.Spec.Ports {
+				if sp.Port == int32(port) {
+					port = int(sp.Port)
+					break
+				}
+			}
 		}
 
+		servers = append(servers, &TCPServer{
+			Hostname:      pb.Hostname,
+			IP:            svc.Spec.ClusterIP,
+			Port:          port,
+			ProxyProtocol: pb.ProxyProtocol,
+		})
+	}
+
+	if len(servers) > 0 {
 		n.Proxy.ServerList = servers
 	}
 
@@ -742,53 +736,6 @@ func nextPowerOf2(v int) int {
 	return v
 }
 
-func (n *NGINXController) setupSSLProxy() {
-	cfg := n.store.GetBackendConfiguration()
-	sslPort := n.cfg.ListenPorts.HTTPS
-	proxyPort := n.cfg.ListenPorts.SSLProxy
-
-	klog.Info("Starting TLS proxy for SSL Passthrough")
-	n.Proxy = &TCPProxy{
-		Default: &TCPServer{
-			Hostname:      "localhost",
-			IP:            "127.0.0.1",
-			Port:          proxyPort,
-			ProxyProtocol: true,
-		},
-	}
-
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", sslPort))
-	if err != nil {
-		klog.Fatalf("%v", err)
-	}
-
-	proxyList := &proxyproto.Listener{Listener: listener, ProxyHeaderTimeout: cfg.ProxyProtocolHeaderTimeout}
-
-	// accept TCP connections on the configured HTTPS port
-	go func() {
-		for {
-			var conn net.Conn
-			var err error
-
-			if n.store.GetBackendConfiguration().UseProxyProtocol {
-				// wrap the listener in order to decode Proxy
-				// Protocol before handling the connection
-				conn, err = proxyList.Accept()
-			} else {
-				conn, err = listener.Accept()
-			}
-
-			if err != nil {
-				klog.Warningf("Error accepting TCP connection: %v", err)
-				continue
-			}
-
-			klog.V(3).Infof("Handling connection from remote address %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
-			go n.Proxy.Handle(conn)
-		}
-	}()
-}
-
 // Helper function to clear Certificates from the ingress configuration since they should be ignored when
 // checking if the new configuration changes can be applied dynamically if dynamic certificates is on
 func clearCertificates(config *ingress.Configuration) {
@@ -957,6 +904,7 @@ func configureBackends(rawBackends []*ingress.Backend) error {
 			Name:                 backend.Name,
 			Port:                 backend.Port,
 			SSLPassthrough:       backend.SSLPassthrough,
+			ProxyProtocol:        backend.ProxyProtocol,
 			SessionAffinity:      backend.SessionAffinity,
 			UpstreamHashBy:       backend.UpstreamHashBy,
 			LoadBalancing:        backend.LoadBalancing,

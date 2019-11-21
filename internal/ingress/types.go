@@ -87,6 +87,8 @@ type Backend struct {
 	Port    intstr.IntOrString `json:"port"`
 	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
 	SSLPassthrough bool `json:"sslPassthrough"`
+	// ProxyProtocol indicates that Ingress controller will use proxy protocol for endpoints.
+	ProxyProtocol bool `json:"proxyProtocol"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// StickySessionAffinitySession contains the StickyConfig object with stickyness configuration
@@ -174,6 +176,8 @@ type Endpoint struct {
 type Server struct {
 	// Hostname returns the FQDN of the server
 	Hostname string `json:"hostname"`
+	// ProxyProtocol indicates that Ingress controller will use proxy protocol for endpoints.
+	ProxyProtocol bool `json:"proxyProtocol"`
 	// SSLPassthrough indicates if the TLS termination is realized in
 	// the server or in the remote endpoint
 	SSLPassthrough bool `json:"sslPassthrough"`
@@ -337,8 +341,10 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *apiv1.Service     `json:"-"`
-	Port    intstr.IntOrString `json:"port"`
+	Service *apiv1.Service `json:"-"`
+	// ProxyProtocol indicates that Ingress controller will use proxy protocol for endpoints.
+	ProxyProtocol bool               `json:"proxyProtocol"`
+	Port          intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
 	// Hostname returns the FQDN of the server
