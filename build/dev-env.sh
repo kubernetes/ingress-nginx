@@ -33,15 +33,17 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
-test $(minikube status | grep -c Running) -ge 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
+{ [ "$(minikube status | grep -c Running)" -ge 2 ] && minikube status | grep -qE ': Configured$|Correctly Configured'; } \
+  || minikube start \
     --extra-config=kubelet.sync-frequency=1s \
     --extra-config=apiserver.authorization-mode=RBAC
 
+# shellcheck disable=SC2046
 eval $(minikube docker-env --shell bash)
 
 echo "[dev-env] building container"
 make build container
-docker tag "${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG}" ${DEV_IMAGE}
+docker tag "${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG}" "${DEV_IMAGE}"
 
 # kubectl >= 1.14 includes Kustomize via "apply -k". Makes it easier to use on Linux as well, assuming kubectl installed
 KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
@@ -56,7 +58,7 @@ if ! kubectl get namespace "${NAMESPACE}"; then
   kubectl create namespace "${NAMESPACE}"
 fi
 
-kubectl get deploy nginx-ingress-controller -n ${NAMESPACE} && kubectl delete deploy nginx-ingress-controller -n ${NAMESPACE}
+kubectl get deploy nginx-ingress-controller -n "${NAMESPACE}" && kubectl delete deploy nginx-ingress-controller -n "${NAMESPACE}"
 
 ROOT=./deploy/minikube
 
