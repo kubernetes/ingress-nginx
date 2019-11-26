@@ -365,6 +365,10 @@ _New Features:_
 
 - NGINX 1.15.10
 
+_Breaking changes:_
+
+- `x-forwarded-prefix` annotation changed from a boolean to a string, see [#3786](https://github.com/kubernetes/ingress-nginx/pull/3786)
+
 _Changes:_
 
 - [X] [#3743](https://github.com/kubernetes/ingress-nginx/pull/3743) Remove session-cookie-hash annotation
