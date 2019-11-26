@@ -338,7 +338,13 @@ func statusAddressFromService(service string, kubeClient clientset.Interface) ([
 	case apiv1.ServiceTypeClusterIP:
 		return []string{svc.Spec.ClusterIP}, nil
 	case apiv1.ServiceTypeNodePort:
-		return []string{svc.Spec.ClusterIP}, nil
+		addresses := []string{}
+		if svc.Spec.ExternalIPs != nil {
+			addresses = append(addresses, svc.Spec.ExternalIPs...)
+		} else {
+			addresses = append(addresses, svc.Spec.ClusterIP)
+		}
+		return addresses, nil
 	case apiv1.ServiceTypeLoadBalancer:
 		addresses := []string{}
 		for _, ip := range svc.Status.LoadBalancer.Ingress {
