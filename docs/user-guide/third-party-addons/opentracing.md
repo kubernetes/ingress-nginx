@@ -13,6 +13,15 @@ data:
   enable-opentracing: "true"
 ```
 
+To enable or disable instrumentation for a single Ingress, use
+the `enable-opentracing` annotation:
+```
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/enable-opentracing: "true"
+```
+
 We must also set the host to use when uploading traces:
 
 ```

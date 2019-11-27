@@ -98,6 +98,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf](#lua-resty-waf)|string|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
@@ -667,6 +668,15 @@ Note that rewrite logs are sent to the error_log file at the notice level. To en
 
 ```yaml
 nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
+```
+
+### Enable Opentracing
+
+Opentracing can be enabled or disabled globally through the ConfigMap but this will sometimes need to be overridden
+to enable it or disable it for a specific ingress (e.g. to turn off tracing of external health check endpoints)
+
+```yaml
+nginx.ingress.kubernetes.io/enable-opentracing: "true"
 ```
 
 ### X-Forwarded-Prefix Header
