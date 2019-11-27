@@ -45,7 +45,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -111,7 +110,6 @@ type Ingress struct {
 	XForwardedPrefix   string
 	SSLCiphers         string
 	Logs               log.Config
-	LuaRestyWAF        luarestywaf.Config
 	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
 	Mirror             mirror.Config
@@ -160,7 +158,6 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),
-			"LuaRestyWAF":          luarestywaf.NewParser(cfg),
 			"InfluxDB":             influxdb.NewParser(cfg),
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
 			"ModSecurity":          modsecurity.NewParser(cfg),

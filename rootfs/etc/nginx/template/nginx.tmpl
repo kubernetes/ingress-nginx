@@ -50,15 +50,10 @@ events {
 http {
     lua_package_path "/etc/nginx/lua/?.lua;;";
 
-    {{ buildLuaSharedDictionaries $cfg $servers $all.Cfg.DisableLuaRestyWAF }}
+    {{ buildLuaSharedDictionaries $cfg $servers }}
 
     init_by_lua_block {
         collectgarbage("collect")
-
-        {{ if not $all.Cfg.DisableLuaRestyWAF }}
-        local lua_resty_waf = require("resty.waf")
-        lua_resty_waf.init()
-        {{ end }}
 
         -- init modules
         local ok, res
@@ -989,78 +984,20 @@ stream {
                 plugins.run()
             }
 
-            {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
             # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
             # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
-            # that means currently `satisfy any` and lua-resty-waf together will potentiall render any
             # other authentication method such as basic auth or external auth useless - all requests will be allowed.
-            access_by_lua_block {
-                local lua_resty_waf = require("resty.waf")
-                local waf = lua_resty_waf:new()
-
-                waf:set_option("mode", {{ $location.LuaRestyWAF.Mode | quote }})
-                waf:set_option("storage_zone", "waf_storage")
-
-                {{ if $location.LuaRestyWAF.AllowUnknownContentTypes }}
-                waf:set_option("allow_unknown_content_types", true)
-                {{ else }}
-                waf:set_option("allowed_content_types", { "text/html", "text/json", "application/json" })
-                {{ end }}
-
-                waf:set_option("event_log_level", ngx.WARN)
-
-                {{ if gt $location.LuaRestyWAF.ScoreThreshold 0 }}
-                waf:set_option("score_threshold", {{ $location.LuaRestyWAF.ScoreThreshold }})
-                {{ end }}
-
-                {{ if not $location.LuaRestyWAF.ProcessMultipartBody }}
-                waf:set_option("process_multipart_body", false)
-                {{ end }}
-
-                {{ if $location.LuaRestyWAF.Debug }}
-                waf:set_option("debug", true)
-                waf:set_option("event_log_request_arguments", true)
-                waf:set_option("event_log_request_body", true)
-                waf:set_option("event_log_request_headers", true)
-                waf:set_option("req_tid_header", true)
-                waf:set_option("res_tid_header", true)
-                {{ end }}
-
-                {{ range $ruleset := $location.LuaRestyWAF.IgnoredRuleSets }}
-                waf:set_option("ignore_ruleset", {{ $ruleset | quote }})
-                {{ end }}
-
-                {{ if gt (len $location.LuaRestyWAF.ExtraRulesetString) 0 }}
-                waf:set_option("add_ruleset_string", "10000_extra_rules", {{ $location.LuaRestyWAF.ExtraRulesetString }})
-                {{ end }}
-
-                waf:exec()
-            }
-            {{ end }}
+            #access_by_lua_block {
+            #}
 
             header_filter_by_lua_block {
-                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
-                local lua_resty_waf = require "resty.waf"
-                local waf = lua_resty_waf:new()
-                waf:exec()
-                {{ end }}
-
                 plugins.run()
             }
+
             body_filter_by_lua_block {
-                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
-                local lua_resty_waf = require "resty.waf"
-                local waf = lua_resty_waf:new()
-                waf:exec()
-                {{ end }}
             }
 
             log_by_lua_block {
-                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
-                local lua_resty_waf = require "resty.waf"
-                local waf = lua_resty_waf:new()
-                waf:exec()
-                {{ end }}
                 balancer.log()
                 {{ if $all.EnableMetrics }}
                 monitor.call()
