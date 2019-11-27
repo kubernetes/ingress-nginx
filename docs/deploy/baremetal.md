@@ -245,7 +245,7 @@ for generating redirect URLs that take into account the URL used by external cli
     NodePort:
 
     ```console
-    $ curl -D- http://myapp.example.com:30100`
+    $ curl -D- http://myapp.example.com:30100
     HTTP/1.1 308 Permanent Redirect
     Server: nginx/1.15.2
     Location: https://myapp.example.com/  #-> missing NodePort in HTTPS redirect
