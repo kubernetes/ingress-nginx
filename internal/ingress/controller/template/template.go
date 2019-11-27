@@ -93,11 +93,6 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	outCmdBuf := t.bp.Get()
 	defer t.bp.Put(outCmdBuf)
 
-	// TODO: remove once we found a fix for coredump running luarocks install lrexlib
-	if runtime.GOARCH == "arm" {
-		conf.Cfg.DisableLuaRestyWAF = true
-	}
-
 	if klog.V(3) {
 		b, err := json.Marshal(conf)
 		if err != nil {
@@ -134,7 +129,6 @@ var (
 			return true
 		},
 		"escapeLiteralDollar":             escapeLiteralDollar,
-		"shouldConfigureLuaRestyWAF":      shouldConfigureLuaRestyWAF,
 		"buildLuaSharedDictionaries":      buildLuaSharedDictionaries,
 		"luaConfigurationRequestBodySize": luaConfigurationRequestBodySize,
 		"buildLocation":                   buildLocation,
@@ -225,15 +219,7 @@ func quote(input interface{}) string {
 	return fmt.Sprintf("%q", inputStr)
 }
 
-func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
-	if !disableLuaRestyWAF && len(mode) > 0 {
-		return true
-	}
-
-	return false
-}
-
-func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF bool) string {
+func buildLuaSharedDictionaries(c interface{}, s interface{}) string {
 	var out []string
 
 	cfg, ok := c.(config.Configuration)
@@ -241,7 +227,8 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF
 		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
 		return ""
 	}
-	servers, ok := s.([]*ingress.Server)
+
+	_, ok = s.([]*ingress.Server)
 	if !ok {
 		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
 		return ""
@@ -249,23 +236,6 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}, disableLuaRestyWAF
 
 	for name, size := range cfg.LuaSharedDicts {
 		out = append(out, fmt.Sprintf("lua_shared_dict %s %dM", name, size))
-	}
-
-	// TODO: there must be a better place for this
-	if _, ok := cfg.LuaSharedDicts["waf_storage"]; !ok && !disableLuaRestyWAF {
-		luaRestyWAFEnabled := func() bool {
-			for _, server := range servers {
-				for _, location := range server.Locations {
-					if len(location.LuaRestyWAF.Mode) > 0 {
-						return true
-					}
-				}
-			}
-			return false
-		}()
-		if luaRestyWAFEnabled {
-			out = append(out, "lua_shared_dict waf_storage 64M")
-		}
 	}
 
 	sort.Strings(out)
