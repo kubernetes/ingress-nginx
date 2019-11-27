@@ -966,7 +966,16 @@ stream {
             set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
 
             {{ if $all.Cfg.EnableOpentracing }}
+            {{ if and $location.Opentracing.Set (not $location.Opentracing.Enabled) }}
+            opentracing off;
+            {{ else }}
             {{ opentracingPropagateContext $location }};
+            {{ end }}
+            {{ else }}
+            {{ if and $location.Opentracing.Set $location.Opentracing.Enabled }}
+            opentracing on;
+            {{ opentracingPropagateContext $location }};
+            {{ end }}
             {{ end }}
 
             {{ if $location.Mirror.URI }}

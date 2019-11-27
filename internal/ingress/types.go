@@ -34,6 +34,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
@@ -329,6 +330,9 @@ type Location struct {
 	// Mirror allows you to mirror traffic to a "test" backend
 	// +optional
 	Mirror mirror.Config `json:"mirror,omitempty"`
+	// Opentracing allows the global opentracing setting to be overridden for a location
+	// +optional
+	Opentracing opentracing.Config `json:"opentracing"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
