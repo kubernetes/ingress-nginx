@@ -1,6 +1,6 @@
 FROM quay.io/kubernetes-ingress-controller/debian-base-amd64:0.1
 
-ENV TERRAFORM_VERSION 0.12.9
+ENV TERRAFORM_VERSION 0.12.16
 
 RUN clean-install \
     bash \
