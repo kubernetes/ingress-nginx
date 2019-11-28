@@ -782,10 +782,17 @@ Note: If you use both `enable-owasp-core-rules` and `modsecurity-snippet` annota
 `modsecurity-snippet` will take effect. If you wish to include the [OWASP Core Rule Set](https://www.modsecurity.org/CRS/Documentation/) or
 [recommended configuration](https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended) simply use the include
 statement:
+
+nginx 0.24.1 and below
 ```yaml
 nginx.ingress.kubernetes.io/modsecurity-snippet: |
 Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 Include /etc/nginx/modsecurity/modsecurity.conf
+```
+nginx 0.25.0 and above
+```yaml
+nginx.ingress.kubernetes.io/modsecurity-snippet: |
+Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ```
 
 ### InfluxDB
