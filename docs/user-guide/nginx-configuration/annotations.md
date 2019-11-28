@@ -346,7 +346,7 @@ Enables automatic conversion of preload links specified in the “Link” respon
 
 ### Server Alias
 
-Allows the definition of one or more aliases in the server definition of the NGINX configuration using the annotation `nginx.ingress.kubernetes.io/server-alias: "<alias 1>,<alias 2>"`.
+Allows the definition of one or more aliases in the server definition of the NGINX configuration using the annotation `nginx.ingress.kubernetes.io/server-alias: "<alias 1> <alias 2>"`.
 This will create a server with the same configuration, but adding new values to the `server_name` directive.
 
 !!! Note
