@@ -84,4 +84,4 @@ echo "
 make sub-push-amd64
 make sub-push-arm
 make sub-push-arm64
-" | parallel {}
+" | parallel --joblog /tmp/log {} || cat /tmp/log
