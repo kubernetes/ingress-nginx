@@ -48,14 +48,13 @@ KIND_CLUSTER_NAME="ingress-nginx-dev"
 kind --version || $(echo "Please install kind before running e2e tests";exit 1)
 
 echo "[dev-env] creating Kubernetes cluster with kind"
-# TODO: replace the custom images after https://github.com/kubernetes-sigs/kind/issues/531
+
+export KUBECONFIG="${HOME}/.kube/kind-config-${KIND_CLUSTER_NAME}"
 kind create cluster \
   --loglevel=${KIND_LOG_LEVEL} \
   --name ${KIND_CLUSTER_NAME} \
   --config ${DIR}/kind.yaml \
   --image "kindest/node:${K8S_VERSION}"
-
-export KUBECONFIG="$(kind get kubeconfig-path --name="${KIND_CLUSTER_NAME}")"
 
 echo "Kubernetes cluster:"
 kubectl get nodes -o wide
