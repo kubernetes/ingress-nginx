@@ -1041,7 +1041,7 @@ stream {
             modsecurity_rules '
                 {{ $location.ModSecurity.Snippet }}
             ';
-            {{ else if (and ((not $all.Cfg.EnableOWASPCoreRules) $location.ModSecurity.OWASPRules))}}
+            {{ else if (and (not $all.Cfg.EnableOWASPCoreRules) ($location.ModSecurity.OWASPRules))}}
             modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
             {{ end }}
 
