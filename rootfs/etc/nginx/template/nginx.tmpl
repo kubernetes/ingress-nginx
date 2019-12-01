@@ -611,7 +611,7 @@ stream {
 
         # Add non SSLPassthrough backends list to gracefully handle situation when SSLPassthrough wildcard overlaps with non SSLPassthrough direct matching domain
         {{ range $server := $servers }}
-        {{   if $server.SSLPassthrough }}
+        {{   if not $server.SSLPassthrough }}
         {{     $server.Hostname }} nginx-ssl-backend;
         {{     range $server.Aliases }}
         {{       . }} nginx-ssl-backend;
