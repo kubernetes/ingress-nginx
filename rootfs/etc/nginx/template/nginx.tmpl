@@ -610,14 +610,14 @@ stream {
         {{ end }}
 
         # Add non SSLPassthrough backends list to gracefully handle situation when SSLPassthrough wildcard overlaps with non SSLPassthrough direct matching domain
-        {{ range $server := $servers }}
-        {{   if not $server.SSLPassthrough }}
-        {{     $server.Hostname }} nginx-ssl-backend;
-        {{     range $server.Aliases }}
-        {{       . }} nginx-ssl-backend;
-        {{     end }}
-        {{   end }}
-        {{ end }}
+        #{{ range $server := $servers }}
+        #{{   if not $server.SSLPassthrough }}
+        #{{     $server.Hostname }} nginx-ssl-backend;
+        #{{     range $server.Aliases }}
+        #{{       . }} nginx-ssl-backend;
+        #{{     end }}
+        #{{   end }}
+        #{{ end }}
 
         # send SSL traffic to this nginx in a different port
         default                         nginx-ssl-backend;
