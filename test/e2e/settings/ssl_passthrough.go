@@ -17,6 +17,7 @@ limitations under the License.
 package settings
 
 import (
+	"crypto/tls"
 	"net/http"
 	"time"
 
@@ -32,6 +33,9 @@ import (
 var _ = framework.IngressNginxDescribe("ssl-passthrough", func() {
 	f := framework.NewDefaultFramework("ssl-passthrough")
 
+	var tlsConfig *tls.Config
+	secretName := "ssl-passthrough-cert"
+
 	BeforeEach(func() {
 		framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
@@ -42,16 +46,23 @@ var _ = framework.IngressNginxDescribe("ssl-passthrough", func() {
 
 				return err
 			})
+
+		f.NewEchoDeployment()
+
+		var err error
+		tlsConfig, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
+			[]string{"*"},
+			secretName,
+			f.Namespace)
+		Expect(err).NotTo(HaveOccurred())
+
+		f.NewSSLEchoDeploymentWithNameAndReplicas("ssl-echo", secretName, 1)
 	})
 
 	It("Non ssl-passthrough backend still work", func() {
-		f.NewEchoDeployment()
-
 		host := "foo.bar.com"
 
-		annotations := map[string]string{}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -70,6 +81,20 @@ var _ = framework.IngressNginxDescribe("ssl-passthrough", func() {
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 
-	// It("connect to ssl-passthrough backend", func() {
-	// })
+	It("connect to ssl-passthrough backend", func() {
+		host := "foo"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/ssl-passthrough": "true",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 443, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring(host))
+			})
+
+		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
+	})
 })

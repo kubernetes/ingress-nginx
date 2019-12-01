@@ -360,6 +360,220 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 	}
 
 	return d
+
+}
+
+// NewSSLEchoDeploymentWithNameAndReplicas creates a new deployment of the echoserver listening https in a particular namespace. Number of
+// replicas is configurable and
+// name is configurable
+// tlsSecretName should contain name of existing secret with TLS certificate that would be used for serving via HTTPs
+func (f *Framework) NewSSLEchoDeploymentWithNameAndReplicas(name string, tlsSecretName string, replicas int) {
+
+	data := map[string]string{}
+	data["nginx.conf"] = `#
+
+env HOSTNAME;
+env NODE_NAME;
+env POD_NAME;
+env POD_NAMESPACE;
+env POD_IP;
+
+daemon off;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+	default_type 'text/plain';
+	client_max_body_size 0;
+
+	init_by_lua_block {
+		local template = require "resty.template"
+
+		tmpl = template.compile([[
+
+Hostname: {*os.getenv("HOSTNAME") or "N/A"*}
+
+Pod Information:
+{% if os.getenv("POD_NAME") then %}
+	node name:	{*os.getenv("NODE_NAME") or "N/A"*}
+	pod name:	{*os.getenv("POD_NAME") or "N/A"*}
+	pod namespace:	{*os.getenv("POD_NAMESPACE") or "N/A"*}
+	pod IP:	{*os.getenv("POD_IP") or "N/A"*}
+{% else %}
+	-no pod information available-
+{% end %}
+
+Server values:
+	server_version=nginx: {*ngx.var.nginx_version*} - lua: {*ngx.config.ngx_lua_version*}
+
+Request Information:
+	client_address={*ngx.var.remote_addr*}
+	method={*ngx.req.get_method()*}
+	real path={*ngx.var.request_uri*}
+	query={*ngx.var.query_string or ""*}
+	request_version={*ngx.req.http_version()*}
+	request_scheme={*ngx.var.scheme*}
+	request_uri={*ngx.var.scheme.."://"..ngx.var.host..":"..ngx.var.server_port..ngx.var.request_uri*}
+
+Request Headers:
+{% for i, key in ipairs(keys) do %}
+	{% local val = headers[key] %}
+	{% if type(val) == "table" then %}
+		{% for i = 1,#val do %}
+	{*key*}={*val[i]*}
+		{% end %}
+	{% else %}
+	{*key*}={*val*}
+	{% end %}
+{% end %}
+
+Request Body:
+{*ngx.var.request_body or "	-no body in request-"*}
+]])
+	}
+
+	server {
+		listen 80 default_server reuseport;
+
+		server_name _;
+
+		keepalive_timeout 620s;
+
+		location / {
+			lua_need_request_body on;
+
+			content_by_lua_block {
+				ngx.header["Server"] = "echoserver"
+
+				local headers = ngx.req.get_headers()
+				local keys = {}
+				for key, val in pairs(headers) do
+					table.insert(keys, key)
+				end
+				table.sort(keys)
+
+				ngx.say(tmpl({os=os, ngx=ngx, keys=keys, headers=headers}))
+			}
+		}
+	}
+	server {
+		listen 443 ssl default_server reuseport;
+
+		server_name _;
+
+		keepalive_timeout 620s;
+
+		ssl on;
+		ssl_certificate /mnt/tls.crt;
+		ssl_certificate_key /mnt/tls.key;
+
+		location / {
+			lua_need_request_body on;
+
+			content_by_lua_block {
+				ngx.header["Server"] = "echoserver"
+
+				local headers = ngx.req.get_headers()
+				local keys = {}
+				for key, val in pairs(headers) do
+					table.insert(keys, key)
+				end
+				table.sort(keys)
+
+				ngx.say(tmpl({os=os, ngx=ngx, keys=keys, headers=headers}))
+			}
+		}
+	}
+}
+`
+
+	_, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(&corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: f.Namespace,
+		},
+		Data: data,
+	})
+	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
+
+	deployment := newDeployment(name, f.Namespace, "openresty/openresty:1.15.8.2-alpine", 80, int32(replicas),
+		[]string{
+			"/bin/sh",
+			"-c",
+			"apk add -U perl curl && opm get bungle/lua-resty-template && openresty",
+		},
+		[]corev1.VolumeMount{
+			{
+				Name:      name,
+				MountPath: "/usr/local/openresty/nginx/conf/nginx.conf",
+				SubPath:   "nginx.conf",
+				ReadOnly:  true,
+			},
+			{
+				Name:      "tls",
+				MountPath: "/mnt",
+				ReadOnly:  true,
+			},
+		},
+		[]corev1.Volume{
+			{
+				Name: name,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: name,
+						},
+					},
+				},
+			},
+			{
+				Name: "tls",
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: tlsSecretName,
+					},
+				},
+			},
+		},
+	)
+
+	d, err := f.EnsureDeployment(deployment)
+	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
+	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: f.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       80,
+					TargetPort: intstr.FromInt(80),
+					Protocol:   corev1.ProtocolTCP,
+				},
+				{
+					Name:       "https",
+					Port:       443,
+					TargetPort: intstr.FromInt(443),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+			Selector: map[string]string{
+				"app": name,
+			},
+		},
+	}
+
+	s := f.EnsureService(service)
+	Expect(s).NotTo(BeNil(), "expected a service but none returned")
+
+	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, replicas)
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
 }
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
