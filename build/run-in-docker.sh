@@ -30,7 +30,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v11272019-7e993dda1
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v12022019-e864fc719
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 
