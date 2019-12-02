@@ -1151,10 +1151,15 @@
                 
                 
                 <h1 id="sysctl-tuning">Sysctl tuning<a class="headerlink" href="#sysctl-tuning" title="Permanent link"> ¶</a></h1>
-<p>This example aims to demonstrate the use of an Init Container to adjust sysctl default values
-using <code class="codehilite">kubectl patch</code></p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --patch=&quot;$(cat patch.json)&quot;</span>
+<p>This example aims to demonstrate the use of an Init Container to adjust sysctl default values using <code class="codehilite">kubectl patch</code></p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller \</span>
+<span class="go">    --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/sysctl/patch.json)&quot;</span>
 </pre></div>
+
+<p><strong>Changes:</strong>
+- Backlog Queue setting <code class="codehilite">net.core.somaxconn</code> from <code class="codehilite">128</code> to <code class="codehilite">32768</code>
+- Ephemeral Ports setting <code class="codehilite">net.ipv4.ip_local_port_range</code> from <code class="codehilite">32768 60999</code> to <code class="codehilite">1024 65000</code></p>
+<p>In a <a href="https://www.nginx.com/blog/tuning-nginx/">post from the NGINX blog</a> it is possible to see an explanation for these changes</p>
                 
                   
                 

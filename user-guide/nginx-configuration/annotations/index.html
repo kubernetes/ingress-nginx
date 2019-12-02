@@ -908,6 +908,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-opentracing" class="md-nav__link">
+    Enable Opentracing
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#x-forwarded-prefix-header" class="md-nav__link">
     X-Forwarded-Prefix Header
   </a>
@@ -1871,6 +1878,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-opentracing" class="md-nav__link">
+    Enable Opentracing
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#x-forwarded-prefix-header" class="md-nav__link">
     X-Forwarded-Prefix Header
   </a>
@@ -2298,6 +2312,10 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#enable-access-log">nginx.ingress.kubernetes.io/enable-access-log</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
+<td><a href="#enable-opentracing">nginx.ingress.kubernetes.io/enable-opentracing</a></td>
 <td>"true" or "false"</td>
 </tr>
 <tr>
@@ -2827,6 +2845,12 @@ Note that rewrite logs are sent to the error_log file at the notice level. To en
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/enable-rewrite-log</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </pre></div>
 
+<h3 id="enable-opentracing">Enable Opentracing<a class="headerlink" href="#enable-opentracing" title="Permanent link"> ¶</a></h3>
+<p>Opentracing can be enabled or disabled globally through the ConfigMap but this will sometimes need to be overridden
+to enable it or disable it for a specific ingress (e.g. to turn off tracing of external health check endpoints)</p>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/enable-opentracing</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+</pre></div>
+
 <h3 id="x-forwarded-prefix-header">X-Forwarded-Prefix Header<a class="headerlink" href="#x-forwarded-prefix-header" title="Permanent link"> ¶</a></h3>
 <p>To add the non-standard <code class="codehilite">X-Forwarded-Prefix</code> header to the upstream request with a string value, the following annotation can be used:</p>
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/x-forwarded-prefix</span><span class="p">:</span> <span class="s">&quot;/path&quot;</span>
@@ -2893,10 +2917,15 @@ setting the following annotation:
 <p>Note: If you use both <code class="codehilite">enable-owasp-core-rules</code> and <code class="codehilite">modsecurity-snippet</code> annotations together, only the
 <code class="codehilite">modsecurity-snippet</code> will take effect. If you wish to include the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> or
 <a href="https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended">recommended configuration</a> simply use the include
-statement:
+statement:</p>
+<p>nginx 0.24.1 and below
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
 <span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf</span>
 <span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/modsecurity/modsecurity.conf</span>
+</pre></div>
+nginx 0.25.0 and above
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
+<span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf</span>
 </pre></div></p>
 <h3 id="influxdb">InfluxDB<a class="headerlink" href="#influxdb" title="Permanent link"> ¶</a></h3>
 <p>Using <code class="codehilite">influxdb-*</code> annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
