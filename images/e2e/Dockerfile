@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:d523b4a96eec80324ee04afed74bf8bddcba09cf
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:97c59728dc26300675fbd3c8836046faced05044
 
 RUN clean-install \
   g++ \
