@@ -1156,10 +1156,12 @@
 <span class="go">    --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/sysctl/patch.json)&quot;</span>
 </pre></div>
 
-<p><strong>Changes:</strong>
-- Backlog Queue setting <code class="codehilite">net.core.somaxconn</code> from <code class="codehilite">128</code> to <code class="codehilite">32768</code>
-- Ephemeral Ports setting <code class="codehilite">net.ipv4.ip_local_port_range</code> from <code class="codehilite">32768 60999</code> to <code class="codehilite">1024 65000</code></p>
-<p>In a <a href="https://www.nginx.com/blog/tuning-nginx/">post from the NGINX blog</a> it is possible to see an explanation for these changes</p>
+<p><strong>Changes:</strong></p>
+<ul>
+<li>Backlog Queue setting <code class="codehilite">net.core.somaxconn</code> from <code class="codehilite">128</code> to <code class="codehilite">32768</code></li>
+<li>Ephemeral Ports setting <code class="codehilite">net.ipv4.ip_local_port_range</code> from <code class="codehilite">32768 60999</code> to <code class="codehilite">1024 65000</code></li>
+</ul>
+<p>In a <a href="https://www.nginx.com/blog/tuning-nginx/">post from the NGINX blog</a>, it is possible to see an explanation for the changes.</p>
                 
                   
                 
