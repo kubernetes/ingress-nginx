@@ -44,6 +44,10 @@ func parseFlags() (bool, *controller.Configuration, error) {
 Takes the form "protocol://address:port". If not specified, it is assumed the
 program runs inside a Kubernetes cluster and local discovery is attempted.`)
 
+		rootCAFile = flags.String("certificate-authority", "",
+			`Path to a cert file for the certificate authority. This certificate is used
+only when the flag --apiserver-host is specified.`)
+
 		kubeConfigFile = flags.String("kubeconfig", "",
 			`Path to a kubeconfig file containing authorization and API server information.`)
 
@@ -287,6 +291,10 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		ValidationWebhook:         *validationWebhook,
 		ValidationWebhookCertPath: *validationWebhookCert,
 		ValidationWebhookKeyPath:  *validationWebhookKey,
+	}
+
+	if *apiserverHost != "" {
+		config.RootCAFile = *rootCAFile
 	}
 
 	return false, config, nil
