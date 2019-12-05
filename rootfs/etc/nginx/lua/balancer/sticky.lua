@@ -70,8 +70,14 @@ function _M.balance(self)
   if not key then
     key = string.format("%s.%s.%s", ngx.now(), ngx.worker.pid(), math.random(999999))
 
+    -- ngx.var.host.server_name
+    local host = ngx.var.host
+    if ngx.var.server_name == '_' then
+      host = ngx.var.server_name
+    end
+    
     if self.cookie_session_affinity.locations then
-      local locs = self.cookie_session_affinity.locations[ngx.var.host]
+      local locs = self.cookie_session_affinity.locations[host]
       if locs ~= nil then
         for _, path in pairs(locs) do
           if ngx.var.location_path == path then
