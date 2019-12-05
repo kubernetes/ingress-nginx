@@ -49,9 +49,12 @@ const (
 
 // Configuration contains all the settings required by an Ingress controller
 type Configuration struct {
-	APIServerHost  string
+	APIServerHost string
+	RootCAFile    string
+
 	KubeConfigFile string
-	Client         clientset.Interface
+
+	Client clientset.Interface
 
 	ResyncPeriod time.Duration
 
