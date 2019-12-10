@@ -41,6 +41,9 @@ worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
 {{ $cfg.MainSnippet }}
 {{ end }}
 
+# enable PCRE JIT for the regular expressions known by the time of configuration parsing.
+pcre_jit on;
+
 events {
     multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
     worker_connections  {{ $cfg.MaxWorkerConnections }};
