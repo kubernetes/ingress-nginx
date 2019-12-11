@@ -127,6 +127,12 @@ Request Body:
 		location / {
 			lua_need_request_body on;
 
+			header_filter_by_lua_block {
+				if ngx.var.arg_hsts == "true" then
+					ngx.header["Strict-Transport-Security"] = "max-age=3600; preload"
+				end
+			}
+
 			content_by_lua_block {
 				ngx.header["Server"] = "echoserver"
 
