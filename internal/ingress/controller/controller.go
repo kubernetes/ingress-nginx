@@ -1115,6 +1115,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
 			if tlsSecretName == "" {
 				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
+				servers[host].SSLCert = n.getDefaultSSLCertificate()
 				continue
 			}
 
@@ -1122,6 +1123,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
 				klog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
+				servers[host].SSLCert = n.getDefaultSSLCertificate()
 				continue
 			}
 
@@ -1136,6 +1138,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					klog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
 						secrKey, host, err)
 					klog.Warningf("Using default certificate")
+					servers[host].SSLCert = n.getDefaultSSLCertificate()
 					continue
 				}
 			}
