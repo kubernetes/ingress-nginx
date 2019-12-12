@@ -34,7 +34,7 @@ Create an Ingress rule with a rewrite annotation:
 
 ```console
 $ echo '
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   annotations:
@@ -65,7 +65,7 @@ For example, the ingress definition above will result in the following rewrites:
 Create an Ingress rule with a app-root annotation:
 ```
 $ echo "
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   annotations:

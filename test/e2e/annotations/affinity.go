@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -142,29 +142,29 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
 		}
 
-		f.EnsureIngress(&extensions.Ingress{
+		f.EnsureIngress(&networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        host,
 				Namespace:   f.Namespace,
 				Annotations: annotations,
 			},
-			Spec: extensions.IngressSpec{
-				Rules: []extensions.IngressRule{
+			Spec: networking.IngressSpec{
+				Rules: []networking.IngressRule{
 					{
 						Host: host,
-						IngressRuleValue: extensions.IngressRuleValue{
-							HTTP: &extensions.HTTPIngressRuleValue{
-								Paths: []extensions.HTTPIngressPath{
+						IngressRuleValue: networking.IngressRuleValue{
+							HTTP: &networking.HTTPIngressRuleValue{
+								Paths: []networking.HTTPIngressPath{
 									{
 										Path: "/something",
-										Backend: extensions.IngressBackend{
+										Backend: networking.IngressBackend{
 											ServiceName: framework.EchoService,
 											ServicePort: intstr.FromInt(80),
 										},
 									},
 									{
 										Path: "/somewhereelese",
-										Backend: extensions.IngressBackend{
+										Backend: networking.IngressBackend{
 											ServiceName: framework.EchoService,
 											ServicePort: intstr.FromInt(80),
 										},

@@ -104,7 +104,7 @@ func checkIngress(hostname string, f *framework.Framework) {
 }
 
 func deleteIngress(hostname string, f *framework.Framework) {
-	err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Delete(hostname, &metav1.DeleteOptions{})
+	err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Delete(hostname, &metav1.DeleteOptions{})
 	Expect(err).NotTo(HaveOccurred(), "unexpected error deleting ingress")
 }
 
