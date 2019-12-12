@@ -36,7 +36,8 @@ DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 { [ "$(minikube status | grep -c Running)" -ge 2 ] && minikube status | grep -qE ': Configured$|Correctly Configured'; } \
   || minikube start \
     --extra-config=kubelet.sync-frequency=1s \
-    --extra-config=apiserver.authorization-mode=RBAC
+    --extra-config=apiserver.authorization-mode=RBAC \
+    --kubernetes-version=v1.15.0
 
 # shellcheck disable=SC2046
 eval $(minikube docker-env --shell bash)

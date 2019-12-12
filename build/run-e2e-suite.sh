@@ -69,6 +69,8 @@ until kubectl get secret | grep -q -e ^ingress-nginx-e2e-token; do \
   sleep 3; \
 done
 
+echo -e "Starting the e2e test pod"
+
 kubectl run --rm \
   --attach \
   --restart=Never \
