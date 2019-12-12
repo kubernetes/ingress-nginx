@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/parnurzeal/gorequest"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -46,18 +46,18 @@ var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
 			"nginx.ingress.kubernetes.io/proxy-buffer-size": "8k",
 		}
 
-		ing := &extensions.Ingress{
+		ing := &networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        "default-backend-annotations",
 				Namespace:   f.Namespace,
 				Annotations: annotations,
 			},
-			Spec: extensions.IngressSpec{
-				Backend: &extensions.IngressBackend{
+			Spec: networking.IngressSpec{
+				Backend: &networking.IngressBackend{
 					ServiceName: framework.EchoService,
 					ServicePort: intstr.FromInt(80),
 				},
-				Rules: []extensions.IngressRule{
+				Rules: []networking.IngressRule{
 					{
 						Host: host,
 					},

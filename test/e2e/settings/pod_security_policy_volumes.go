@@ -40,7 +40,7 @@ var _ = framework.IngressNginxDescribe("Pod Security Policies with volumes", fun
 
 	It("should be running with a Pod Security Policy", func() {
 		psp := createPodSecurityPolicy()
-		_, err := f.KubeClientSet.ExtensionsV1beta1().PodSecurityPolicies().Create(psp)
+		_, err := f.KubeClientSet.PolicyV1beta1().PodSecurityPolicies().Create(psp)
 		if !k8sErrors.IsAlreadyExists(err) {
 			Expect(err).NotTo(HaveOccurred(), "creating Pod Security Policy")
 		}

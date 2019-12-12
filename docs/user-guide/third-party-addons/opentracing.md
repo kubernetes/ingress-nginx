@@ -29,7 +29,7 @@ zipkin-collector-host: zipkin.default.svc.cluster.local
 jaeger-collector-host: jaeger-agent.default.svc.cluster.local
 datadog-collector-host: datadog-agent.default.svc.cluster.local
 ```
-NOTE: While the option is called `jaeger-collector-host`, you will need to point this to a `jaeger-agent`, and not the `jaeger-collector` component.  
+NOTE: While the option is called `jaeger-collector-host`, you will need to point this to a `jaeger-agent`, and not the `jaeger-collector` component.
 
 Next you will need to deploy a distributed tracing system which uses OpenTracing.
 [Zipkin](https://github.com/openzipkin/zipkin) and
@@ -147,7 +147,7 @@ In the Zipkin interface we can see the details:
 
     # Apply the Ingress Resource
     $ echo '
-      apiVersion: extensions/v1beta1
+      apiVersion: networking.k8s.io/v1beta1
       kind: Ingress
       metadata:
         name: echo-ingress
