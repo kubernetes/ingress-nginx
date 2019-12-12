@@ -891,6 +891,10 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	s.backendConfigMu.Lock()
 	defer s.backendConfigMu.Unlock()
 
+	if cmap == nil {
+		return
+	}
+
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
 	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }
