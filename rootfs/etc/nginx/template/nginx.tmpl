@@ -991,6 +991,7 @@ stream {
             #}
 
             header_filter_by_lua_block {
+                lua_ingress.header()
                 plugins.run()
             }
 

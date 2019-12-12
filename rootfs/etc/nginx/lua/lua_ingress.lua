@@ -142,7 +142,9 @@ function _M.rewrite(location_config)
 
     ngx_redirect(uri, config.http_redirect_code)
   end
+end
 
+function _M.header()
   if config.hsts and ngx.var.scheme == "https" and certificate_configured_for_current_request then
     local value = "max-age=" .. config.hsts_max_age
     if config.hsts_include_subdomains then

@@ -154,6 +154,18 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Strict-Transport-Security")).Should(Equal("max-age=86400; preload"))
+
+		By("overriding what's set from the upstream")
+
+		// we can not use gorequest here because it flattens the duplicate headers
+		// and specifically in case of Strict-Transport-Security it ignore extra headers
+		// intead of concatenating, rightfully. And I don't know of any API it provides for getting raw headers.
+		curlCmd := fmt.Sprintf("curl -I -k --fail --silent --resolve settings-tls:443:127.0.0.1 https://settings-tls/%v", "?hsts=true")
+		output, err := f.ExecIngressPod(curlCmd)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(output).Should(ContainSubstring("strict-transport-security: max-age=86400; preload"))
+		// this is what the upstream sets
+		Expect(output).ShouldNot(ContainSubstring("strict-transport-security: max-age=3600; preload"))
 	})
 
 	It("should not use ports during the HTTP to HTTPS redirection", func() {
