@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/util/retry"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 )
 
@@ -69,18 +70,24 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 
 // EnsureIngress creates an Ingress object or returns it if it already exists.
 func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingress {
-	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Update(ingress)
+	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Create(ingress)
 	if err != nil {
-		if k8sErrors.IsNotFound(err) {
-			ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Create(ingress)
-			Expect(err).NotTo(HaveOccurred(), "unexpected error creating ingress")
-			return ing
-		}
+		if k8sErrors.IsAlreadyExists(err) {
+			err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				var err error
+				ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Update(ingress)
+				if err != nil {
+					return err
+				}
 
-		Expect(err).NotTo(HaveOccurred())
+				return nil
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+		}
 	}
 
-	Expect(ing).NotTo(BeNil())
+	Expect(ing).NotTo(BeNil(), "expected an ingress but none returned")
 
 	if ing.Annotations == nil {
 		ing.Annotations = make(map[string]string)
@@ -91,33 +98,47 @@ func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingre
 
 // EnsureService creates a Service object or returns it if it already exists.
 func (f *Framework) EnsureService(service *core.Service) *core.Service {
-	s, err := f.KubeClientSet.CoreV1().Services(service.Namespace).Update(service)
+	s, err := f.KubeClientSet.CoreV1().Services(service.Namespace).Create(service)
 	if err != nil {
-		if k8sErrors.IsNotFound(err) {
-			s, err := f.KubeClientSet.CoreV1().Services(service.Namespace).Create(service)
-			Expect(err).NotTo(HaveOccurred(), "unexpected error creating service")
-			return s
+		if k8sErrors.IsAlreadyExists(err) {
+			err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				var err error
+				s, err = f.KubeClientSet.CoreV1().Services(service.Namespace).Update(service)
+				if err != nil {
+					return err
+				}
 
+				return nil
+			})
+
+			Expect(err).NotTo(HaveOccurred())
 		}
-
-		Expect(err).NotTo(HaveOccurred())
 	}
 
 	Expect(s).NotTo(BeNil(), "expected a service but none returned")
-
 	return s
 }
 
 // EnsureDeployment creates a Deployment object or returns it if it already exists.
-func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
-	d, err := f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Update(deployment)
+func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Deployment {
+	d, err := f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Create(deployment)
 	if err != nil {
-		if k8sErrors.IsNotFound(err) {
-			return f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Create(deployment)
+		if k8sErrors.IsAlreadyExists(err) {
+			err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				d, err = f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Update(deployment)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			})
+
+			Expect(err).NotTo(HaveOccurred())
 		}
-		return nil, err
 	}
-	return d, nil
+
+	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+	return d
 }
 
 // WaitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.

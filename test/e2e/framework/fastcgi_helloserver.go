@@ -73,11 +73,10 @@ func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int3
 		},
 	}
 
-	d, err := f.EnsureDeployment(deployment)
-	Expect(err).NotTo(HaveOccurred())
+	d := f.EnsureDeployment(deployment)
 	Expect(d).NotTo(BeNil(), "expected a fastcgi-helloserver deployment")
 
-	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
+	err := WaitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for to become ready")
