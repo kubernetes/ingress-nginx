@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
 			"nginx.ingress.kubernetes.io/whitelist-source-range": "18.0.0.0/8, 56.0.0.0/8",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

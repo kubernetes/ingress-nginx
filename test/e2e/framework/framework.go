@@ -407,17 +407,17 @@ func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name st
 }
 
 // NewSingleIngressWithTLS creates a simple ingress rule with TLS spec included
-func NewSingleIngressWithTLS(name, path, host string, tlsHosts []string, ns, service string, port int, annotations *map[string]string) *networking.Ingress {
+func NewSingleIngressWithTLS(name, path, host string, tlsHosts []string, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, tlsHosts)
 }
 
 // NewSingleIngress creates a simple ingress rule
-func NewSingleIngress(name, path, host, ns, service string, port int, annotations *map[string]string) *networking.Ingress {
+func NewSingleIngress(name, path, host, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, nil)
 }
 
 // NewSingleIngressWithMultiplePaths creates a simple ingress rule with multiple paths
-func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations *map[string]string) *networking.Ingress {
+func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	spec := networking.IngressSpec{
 		Rules: []networking.IngressRule{
 			{
@@ -442,7 +442,7 @@ func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, se
 	return newSingleIngress(name, ns, annotations, spec)
 }
 
-func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations *map[string]string, tlsHosts []string) *networking.Ingress {
+func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations map[string]string, tlsHosts []string) *networking.Ingress {
 
 	spec := networking.IngressSpec{
 		Rules: []networking.IngressRule{
@@ -478,7 +478,7 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 }
 
 // NewSingleIngressWithBackendAndRules creates an ingress with both a default backend and a rule
-func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations *map[string]string) *networking.Ingress {
+func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations map[string]string) *networking.Ingress {
 	spec := networking.IngressSpec{
 		Backend: &networking.IngressBackend{
 			ServiceName: defaultService,
@@ -508,7 +508,7 @@ func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService st
 }
 
 // NewSingleCatchAllIngress creates a simple ingress with a catch-all backend
-func NewSingleCatchAllIngress(name, ns, service string, port int, annotations *map[string]string) *networking.Ingress {
+func NewSingleCatchAllIngress(name, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	spec := networking.IngressSpec{
 		Backend: &networking.IngressBackend{
 			ServiceName: service,
@@ -518,19 +518,19 @@ func NewSingleCatchAllIngress(name, ns, service string, port int, annotations *m
 	return newSingleIngress(name, ns, annotations, spec)
 }
 
-func newSingleIngress(name, ns string, annotations *map[string]string, spec networking.IngressSpec) *networking.Ingress {
+func newSingleIngress(name, ns string, annotations map[string]string, spec networking.IngressSpec) *networking.Ingress {
 	if annotations == nil {
-		annotations = &map[string]string{}
+		annotations = make(map[string]string)
 	}
 
 	ing := &networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   ns,
-			Annotations: *annotations,
+			Name:      name,
+			Namespace: ns,
 		},
 		Spec: spec,
 	}
+	ing.SetAnnotations(annotations)
 
 	return ing
 }

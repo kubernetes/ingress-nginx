@@ -38,7 +38,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "HTTPS",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -53,7 +53,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -68,7 +68,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPCS",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -83,7 +83,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "FCGI",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -98,7 +98,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "AJP",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Proxy host variable", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Custom-Header: $proxy_host"`,
 		}
-		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, framework.EchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, framework.EchoService, 80, annotations))
 
 		f.WaitForNginxConfiguration(
 			func(server string) bool {
@@ -68,7 +68,7 @@ var _ = framework.IngressNginxDescribe("Proxy host variable", func() {
 			"nginx.ingress.kubernetes.io/upstream-vhost":        upstreamVHost,
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Custom-Header: $proxy_host"`,
 		}
-		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, framework.EchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, framework.EchoService, 80, annotations))
 
 		f.WaitForNginxConfiguration(
 			func(server string) bool {

@@ -43,7 +43,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Connection", func() {
 			"nginx.ingress.kubernetes.io/connection-proxy-header": "keep-alive",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

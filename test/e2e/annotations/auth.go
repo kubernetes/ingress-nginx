@@ -73,7 +73,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -103,7 +103,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -133,7 +133,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -164,7 +164,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -195,7 +195,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":       "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -237,7 +237,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -265,7 +265,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				proxy_set_header My-Custom-Header 42;`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -282,7 +282,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				proxy_set_header My-Custom-Header 42;`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -303,7 +303,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"My-Custom-Header": "42",
 		})
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -321,7 +321,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-cache-duration": "200 202 401 30m",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -353,7 +353,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 			}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host, func(server string) bool {
@@ -424,14 +424,14 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 			for _, host := range []string{thisHost, thatHost} {
 				By("Adding an ingress rule for /foo")
-				fooIng := framework.NewSingleIngress(fmt.Sprintf("foo-%s-ing", host), fooPath, host, f.Namespace, framework.EchoService, 80, &annotations)
+				fooIng := framework.NewSingleIngress(fmt.Sprintf("foo-%s-ing", host), fooPath, host, f.Namespace, framework.EchoService, 80, annotations)
 				f.EnsureIngress(fooIng)
 				f.WaitForNginxServer(host, func(server string) bool {
 					return Expect(server).Should(ContainSubstring("location /foo"))
 				})
 
 				By("Adding an ingress rule for /bar")
-				barIng := framework.NewSingleIngress(fmt.Sprintf("bar-%s-ing", host), barPath, host, f.Namespace, framework.EchoService, 80, &annotations)
+				barIng := framework.NewSingleIngress(fmt.Sprintf("bar-%s-ing", host), barPath, host, f.Namespace, framework.EchoService, 80, annotations)
 				f.EnsureIngress(barIng)
 				f.WaitForNginxServer(host, func(server string) bool {
 					return Expect(server).Should(ContainSubstring("location /bar"))

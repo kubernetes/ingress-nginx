@@ -40,7 +40,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Mirror", func() {
 			"nginx.ingress.kubernetes.io/mirror-uri": "/mirror",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -55,7 +55,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Mirror", func() {
 			"nginx.ingress.kubernetes.io/mirror-request-body": "off",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

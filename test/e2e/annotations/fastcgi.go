@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Annotations - FastCGI", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "FCGI",
 		}
 
-		ing := framework.NewSingleIngress(host, "/hello", host, f.Namespace, "fastcgi-helloserver", 9000, &annotations)
+		ing := framework.NewSingleIngress(host, "/hello", host, f.Namespace, "fastcgi-helloserver", 9000, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -60,7 +60,7 @@ var _ = framework.IngressNginxDescribe("Annotations - FastCGI", func() {
 			"nginx.ingress.kubernetes.io/fastcgi-index":    "index.php",
 		}
 
-		ing := framework.NewSingleIngress(host, "/hello", host, f.Namespace, "fastcgi-helloserver", 9000, &annotations)
+		ing := framework.NewSingleIngress(host, "/hello", host, f.Namespace, "fastcgi-helloserver", 9000, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -92,7 +92,7 @@ var _ = framework.IngressNginxDescribe("Annotations - FastCGI", func() {
 			"nginx.ingress.kubernetes.io/fastcgi-params-configmap": "fastcgi-configmap",
 		}
 
-		ing := framework.NewSingleIngress(host, "/hello", host, f.Namespace, "fastcgi-helloserver", 9000, &annotations)
+		ing := framework.NewSingleIngress(host, "/hello", host, f.Namespace, "fastcgi-helloserver", 9000, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -110,7 +110,7 @@ var _ = framework.IngressNginxDescribe("Annotations - FastCGI", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "FCGI",
 		}
 
-		ing := framework.NewSingleIngress(host, path, host, f.Namespace, "fastcgi-helloserver", 9000, &annotations)
+		ing := framework.NewSingleIngress(host, path, host, f.Namespace, "fastcgi-helloserver", 9000, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

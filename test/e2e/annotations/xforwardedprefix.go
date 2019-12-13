@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func(
 			"nginx.ingress.kubernetes.io/rewrite-target":     "/foo",
 		}
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("proxy_set_header X-Forwarded-Prefix \"/test/value\";"))
@@ -66,7 +66,7 @@ var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func(
 			"nginx.ingress.kubernetes.io/rewrite-target":     "/foo",
 		}
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(And(ContainSubstring(host), Not(ContainSubstring("proxy_set_header X-Forwarded-Prefix"))))

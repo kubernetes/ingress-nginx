@@ -58,7 +58,7 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			annotationKey: "all",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &initAnnotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, initAnnotations)
 		f.EnsureIngress(ing)
 
 		for key, result := range results {
@@ -116,7 +116,7 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			"nginx.ingress.kubernetes.io/satisfy": "any",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(server string) bool {

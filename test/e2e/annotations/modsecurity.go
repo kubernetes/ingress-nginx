@@ -41,7 +41,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/enable-modsecurity": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -61,7 +61,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/modsecurity-transaction-id": "modsecurity-$request_id",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -80,7 +80,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/enable-modsecurity": "false",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -98,7 +98,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/modsecurity-snippet": "SecRuleEngine On",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

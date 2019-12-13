@@ -53,7 +53,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			"nginx.ingress.kubernetes.io/auth-tls-secret": nameSpace + "/" + host,
 		}
 
-		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
 
 		assertSslClientCertificateConfig(f, host, "on", "1")
 
@@ -95,7 +95,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			"nginx.ingress.kubernetes.io/auth-tls-verify-depth":  "2",
 		}
 
-		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
 
 		assertSslClientCertificateConfig(f, host, "off", "2")
 
@@ -130,7 +130,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			"nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream": "true",
 		}
 
-		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
 
 		assertSslClientCertificateConfig(f, host, "on", "1")
 

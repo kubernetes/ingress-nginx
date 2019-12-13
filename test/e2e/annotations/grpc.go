@@ -48,7 +48,7 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "fortune-teller", 50051, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "fortune-teller", 50051, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -87,7 +87,7 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 		}
 		f.EnsureService(svc)
 
-		annotations := &map[string]string{
+		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		}
 
@@ -143,7 +143,7 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 		}
 		f.EnsureService(svc)
 
-		annotations := &map[string]string{
+		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPCS",
 			"nginx.ingress.kubernetes.io/configuration-snippet": `
 			   # without this setting NGINX sends echo instead

@@ -194,7 +194,10 @@ func ensureIngress(f *framework.Framework, host string, deploymentName string) *
 
 func createIngress(f *framework.Framework, host string, deploymentName string) *networking.Ingress {
 	ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, deploymentName, 80,
-		&map[string]string{"nginx.ingress.kubernetes.io/load-balance": "ewma"}))
+		map[string]string{
+			"nginx.ingress.kubernetes.io/load-balance": "ewma",
+		},
+	))
 
 	f.WaitForNginxServer(host,
 		func(server string) bool {
