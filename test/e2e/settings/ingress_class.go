@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -140,6 +141,9 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 				End()
 			Expect(errs).To(BeNil())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			Expect(err).To(BeNil())
 
 			delete(ing.Annotations, "kubernetes.io/ingress.class")
 			f.EnsureIngress(ing)
