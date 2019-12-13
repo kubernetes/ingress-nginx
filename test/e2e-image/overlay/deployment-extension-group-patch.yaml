@@ -1,3 +1,0 @@
-- op: replace
-  path: /apiVersion
-  value: extensions/v1beta1
