@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -58,11 +58,11 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			annotationKey: "all",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &initAnnotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, initAnnotations)
 		f.EnsureIngress(ing)
 
 		for key, result := range results {
-			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *extensions.Ingress) error {
+			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *networking.Ingress) error {
 				ingress.ObjectMeta.Annotations[annotationKey] = annotations[key]
 				return nil
 			})
@@ -116,7 +116,7 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			"nginx.ingress.kubernetes.io/satisfy": "any",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(server string) bool {

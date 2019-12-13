@@ -41,7 +41,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		host := "foo"
 		annotations := map[string]string{}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 			"nginx.ingress.kubernetes.io/server-alias": "bar",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

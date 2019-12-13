@@ -24,7 +24,9 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -43,9 +45,9 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 		It("should ignore Ingress with class", func() {
 			invalidHost := "foo"
 			annotations := map[string]string{
-				"kubernetes.io/ingress.class": "testclass",
+				class.IngressKey: "testclass",
 			}
-			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			validHost := "bar"
@@ -75,7 +77,7 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 
 	Context("With a specific ingress-class", func() {
 		BeforeEach(func() {
-			framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 				func(deployment *appsv1.Deployment) error {
 					args := deployment.Spec.Template.Spec.Containers[0].Args
 					args = append(args, "--ingress-class=testclass")
@@ -84,6 +86,7 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 
 					return err
 				})
+			Expect(err).To(BeNil())
 		})
 
 		It("should ignore Ingress with no class", func() {
@@ -94,9 +97,9 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 
 			validHost := "foo"
 			annotations := map[string]string{
-				"kubernetes.io/ingress.class": "testclass",
+				class.IngressKey: "testclass",
 			}
-			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, &annotations)
+			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(validHost, func(cfg string) bool {
@@ -125,10 +128,10 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 		It("should delete Ingress when class is removed", func() {
 			host := "foo"
 			annotations := map[string]string{
-				"kubernetes.io/ingress.class": "testclass",
+				class.IngressKey: "testclass",
 			}
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
-			ing = f.EnsureIngress(ing)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host, func(cfg string) bool {
 				return strings.Contains(cfg, "server_name foo")
@@ -141,8 +144,12 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			Expect(errs).To(BeNil())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			delete(ing.Annotations, "kubernetes.io/ingress.class")
-			f.EnsureIngress(ing)
+			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			Expect(err).To(BeNil())
+
+			delete(ing.Annotations, class.IngressKey)
+			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ing.Namespace).Update(ing)
+			Expect(err).To(BeNil())
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return !strings.Contains(cfg, "server_name foo")
@@ -156,5 +163,4 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 		})
 	})
-
 })

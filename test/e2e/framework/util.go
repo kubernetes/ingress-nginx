@@ -235,7 +235,7 @@ func WaitForNoIngressInNamespace(c kubernetes.Interface, namespace, name string)
 
 func noIngressInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
 	return func() (bool, error) {
-		ing, err := c.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+		ing, err := c.NetworkingV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return true, nil
 		}
@@ -257,7 +257,7 @@ func WaitForIngressInNamespace(c kubernetes.Interface, namespace, name string) e
 
 func ingressInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
 	return func() (bool, error) {
-		ing, err := c.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+		ing, err := c.NetworkingV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
 		}

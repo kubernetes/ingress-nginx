@@ -39,6 +39,7 @@ RUN apt-get update \
     && apt-get install -y \
         bc \
         rpm \
+        parallel \
     && rm -rf /var/lib/apt/lists/*
 
 ARG K8S_RELEASE

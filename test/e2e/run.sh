@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KIND_LOG_LEVEL="info"
+KIND_LOG_LEVEL="0"
 
 if ! [ -z $DEBUG ]; then
   set -x
-  KIND_LOG_LEVEL="debug"
+  KIND_LOG_LEVEL="6"
 fi
 
 set -o errexit
@@ -41,7 +41,7 @@ export TAG=dev
 export ARCH=amd64
 export REGISTRY=ingress-controller
 
-export K8S_VERSION=${K8S_VERSION:-v1.15.3}
+export K8S_VERSION=${K8S_VERSION:-v1.17.0}
 
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
@@ -51,7 +51,7 @@ echo "[dev-env] creating Kubernetes cluster with kind"
 
 export KUBECONFIG="${HOME}/.kube/kind-config-${KIND_CLUSTER_NAME}"
 kind create cluster \
-  --loglevel=${KIND_LOG_LEVEL} \
+  --verbosity=${KIND_LOG_LEVEL} \
   --name ${KIND_CLUSTER_NAME} \
   --config ${DIR}/kind.yaml \
   --image "kindest/node:${K8S_VERSION}"
@@ -59,15 +59,13 @@ kind create cluster \
 echo "Kubernetes cluster:"
 kubectl get nodes -o wide
 
-kubectl config set-context kubernetes-admin@${KIND_CLUSTER_NAME}
-
 echo "[dev-env] building container"
 echo "
 make -C ${DIR}/../../ build container
 make -C ${DIR}/../../ e2e-test-image
 make -C ${DIR}/../../images/fastcgi-helloserver/ build container
 make -C ${DIR}/../../images/httpbin/ container
-" | parallel --progress {}
+" | parallel --progress --joblog /tmp/log {} || cat /tmp/log
 
 # Remove after https://github.com/kubernetes/ingress-nginx/pull/4271 is merged
 docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
@@ -82,11 +80,11 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-c
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/fastcgi-helloserver:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" openresty/openresty:1.15.8.2-alpine
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
-" | parallel --progress
+" | parallel --progress --joblog /tmp/log {} || cat /tmp/log
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
 
 kind delete cluster \
-  --loglevel=${KIND_LOG_LEVEL} \
+  --verbosity=${KIND_LOG_LEVEL} \
   --name ${KIND_CLUSTER_NAME}

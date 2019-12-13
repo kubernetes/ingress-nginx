@@ -123,7 +123,7 @@ func createInfluxDBService(f *framework.Framework) *corev1.Service {
 }
 
 func createInfluxDBIngress(f *framework.Framework, host, service string, port int, annotations map[string]string) {
-	ing := framework.NewSingleIngress(host, "/", host, f.Namespace, service, port, &annotations)
+	ing := framework.NewSingleIngress(host, "/", host, f.Namespace, service, port, annotations)
 	f.EnsureIngress(ing)
 
 	f.WaitForNginxServer(host,

@@ -118,7 +118,7 @@ var _ = framework.IngressNginxDescribe("Listen on nondefault ports", func() {
 					"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 				}
 
-				ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, &annotations)
+				ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 
 				f.EnsureIngress(ing)
 				tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,

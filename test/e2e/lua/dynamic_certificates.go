@@ -27,7 +27,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -44,9 +44,9 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 	It("picks up the certificate when we add TLS spec to existing ingress", func() {
 		ensureIngress(f, host, framework.EchoService)
 
-		ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+		ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 		Expect(err).ToNot(HaveOccurred())
-		ing.Spec.TLS = []extensions.IngressTLS{
+		ing.Spec.TLS = []networking.IngressTLS{
 			{
 				Hosts:      []string{host},
 				SecretName: host,
@@ -57,7 +57,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 			ing.Spec.TLS[0].SecretName,
 			ing.Namespace)
 		Expect(err).ToNot(HaveOccurred())
-		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Update(ing)
+		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(ing)
 		Expect(err).ToNot(HaveOccurred())
 		time.Sleep(waitForLuaSync)
 
@@ -143,7 +143,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 		})
 
 		It("picks up the updated certificate without reloading", func() {
-			ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			Expect(err).ToNot(HaveOccurred())
 
 			ensureHTTPSRequest(fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.GetURL(framework.HTTPS)), host, host)
@@ -177,7 +177,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 		})
 
 		It("falls back to using default certificate when secret gets deleted without reloading", func() {
-			ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 
 			ensureHTTPSRequest(fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.GetURL(framework.HTTPS)), host, host)
 
@@ -210,10 +210,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 
 		It("picks up a non-certificate only change", func() {
 			newHost := "foo2.com"
-			ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			ing.Spec.Rules[0].Host = newHost
-			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Update(ing)
+			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(ing)
 			Expect(err).ToNot(HaveOccurred())
 			time.Sleep(waitForLuaSync)
 
@@ -222,10 +222,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 		})
 
 		It("removes HTTPS configuration when we delete TLS spec", func() {
-			ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			ing.Spec.TLS = []extensions.IngressTLS{}
-			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Update(ing)
+			ing.Spec.TLS = []networking.IngressTLS{}
+			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(ing)
 			Expect(err).ToNot(HaveOccurred())
 			time.Sleep(waitForLuaSync)
 

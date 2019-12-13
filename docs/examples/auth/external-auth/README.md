@@ -2,7 +2,7 @@
 
 ### Example 1:
 
-Use an external service (Basic Auth) located in `https://httpbin.org` 
+Use an external service (Basic Auth) located in `https://httpbin.org`
 
 ```
 $ kubectl create -f ingress.yaml
@@ -13,7 +13,7 @@ NAME            HOSTS                         ADDRESS       PORTS     AGE
 external-auth   external-auth-01.sample.com   172.17.4.99   80        13s
 
 $ kubectl get ing external-auth -o yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   annotations:

@@ -27,7 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/nginx"
@@ -146,11 +146,11 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 				return true
 			})
 
-			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get("foo.com", metav1.GetOptions{})
+			ingress, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get("foo.com", metav1.GetOptions{})
 			Expect(err).ToNot(HaveOccurred())
 
 			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
-			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Update(ingress)
+			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(ingress)
 			Expect(err).ToNot(HaveOccurred())
 			time.Sleep(waitForLuaSync)
 
@@ -184,7 +184,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	})
 })
 
-func ensureIngress(f *framework.Framework, host string, deploymentName string) *extensions.Ingress {
+func ensureIngress(f *framework.Framework, host string, deploymentName string) *networking.Ingress {
 	ing := createIngress(f, host, deploymentName)
 	time.Sleep(waitForLuaSync)
 	ensureRequest(f, host)
@@ -192,9 +192,12 @@ func ensureIngress(f *framework.Framework, host string, deploymentName string) *
 	return ing
 }
 
-func createIngress(f *framework.Framework, host string, deploymentName string) *extensions.Ingress {
+func createIngress(f *framework.Framework, host string, deploymentName string) *networking.Ingress {
 	ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, deploymentName, 80,
-		&map[string]string{"nginx.ingress.kubernetes.io/load-balance": "ewma"}))
+		map[string]string{
+			"nginx.ingress.kubernetes.io/load-balance": "ewma",
+		},
+	))
 
 	f.WaitForNginxServer(host,
 		func(server string) bool {

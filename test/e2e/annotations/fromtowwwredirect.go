@@ -47,7 +47,7 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 			"nginx.ingress.kubernetes.io/from-to-www-redirect": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxConfiguration(
@@ -81,7 +81,7 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 			"nginx.ingress.kubernetes.io/configuration-snippet": "more_set_headers \"ExpectedHost: $http_host\";",
 		}
 
-		ing := framework.NewSingleIngressWithTLS(fromHost, "/", fromHost, []string{fromHost, toHost}, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngressWithTLS(fromHost, "/", fromHost, []string{fromHost, toHost}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,

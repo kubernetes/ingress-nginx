@@ -22,12 +22,6 @@ patchesJson6902:
     kind: Service
     name: ingress-nginx
     version: v1
-- path: deployment-extension-group-patch.yaml
-  target:
-    group: apps
-    kind: Deployment
-    name: nginx-ingress-controller
-    version: v1
 - path: role.yaml
   target:
     group: rbac.authorization.k8s.io
