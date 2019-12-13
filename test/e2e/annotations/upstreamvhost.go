@@ -38,7 +38,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Upstreamvhost", func() {
 			"nginx.ingress.kubernetes.io/upstream-vhost": "upstreamvhost.bar.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

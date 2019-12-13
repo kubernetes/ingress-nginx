@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -216,7 +217,7 @@ func TestStore(t *testing.T) {
 				Name:      "custom-class",
 				Namespace: ns,
 				Annotations: map[string]string{
-					"kubernetes.io/ingress.class": "something",
+					class.IngressKey: "something",
 				},
 			},
 			Spec: networking.IngressSpec{
@@ -331,7 +332,7 @@ func TestStore(t *testing.T) {
 				Name:      "custom-class",
 				Namespace: ns,
 				Annotations: map[string]string{
-					"kubernetes.io/ingress.class": "something",
+					class.IngressKey: "something",
 				},
 			},
 			Spec: networking.IngressSpec{
@@ -874,7 +875,7 @@ func TestListIngresses(t *testing.T) {
 				Name:      "test-2",
 				Namespace: "testns",
 				Annotations: map[string]string{
-					"kubernetes.io/ingress.class": "something",
+					class.IngressKey: "something",
 				},
 				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
@@ -924,7 +925,7 @@ func TestListIngresses(t *testing.T) {
 				Name:      "test-4",
 				Namespace: "testns",
 				Annotations: map[string]string{
-					"kubernetes.io/ingress.class": "nginx",
+					class.IngressKey: "nginx",
 				},
 				CreationTimestamp: metav1.NewTime(time.Now()),
 			},

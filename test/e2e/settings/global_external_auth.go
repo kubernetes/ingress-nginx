@@ -125,7 +125,7 @@ var _ = framework.IngressNginxDescribe("Global External Auth", func() {
 			annotations := map[string]string{
 				enableGlobalExternalAuthAnnotation: "false",
 			}
-			barIng := framework.NewSingleIngress("bar-ingress", barPath, host, f.Namespace, echoServiceName, 80, &annotations)
+			barIng := framework.NewSingleIngress("bar-ingress", barPath, host, f.Namespace, echoServiceName, 80, annotations)
 			f.EnsureIngress(barIng)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
