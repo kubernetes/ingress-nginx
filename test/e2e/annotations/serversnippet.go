@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ServerSnippet", func() {
 				more_set_headers "Content-Type: $content_type";`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

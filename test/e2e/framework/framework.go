@@ -18,9 +18,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -28,8 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
-
-	"github.com/pkg/errors"
 	"k8s.io/klog"
 
 	. "github.com/onsi/ginkgo"
@@ -393,8 +392,8 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 }
 
 // UpdateIngress runs the given updateFunc on the ingress
-func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name string, updateFunc func(d *extensions.Ingress) error) error {
-	ingress, err := kubeClientSet.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name string, updateFunc func(d *networking.Ingress) error) error {
+	ingress, err := kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -403,37 +402,37 @@ func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name st
 		return err
 	}
 
-	_, err = kubeClientSet.ExtensionsV1beta1().Ingresses(namespace).Update(ingress)
+	_, err = kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Update(ingress)
 	return err
 }
 
 // NewSingleIngressWithTLS creates a simple ingress rule with TLS spec included
-func NewSingleIngressWithTLS(name, path, host string, tlsHosts []string, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
+func NewSingleIngressWithTLS(name, path, host string, tlsHosts []string, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, tlsHosts)
 }
 
 // NewSingleIngress creates a simple ingress rule
-func NewSingleIngress(name, path, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
+func NewSingleIngress(name, path, host, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, nil)
 }
 
 // NewSingleIngressWithMultiplePaths creates a simple ingress rule with multiple paths
-func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
-	spec := extensions.IngressSpec{
-		Rules: []extensions.IngressRule{
+func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations map[string]string) *networking.Ingress {
+	spec := networking.IngressSpec{
+		Rules: []networking.IngressRule{
 			{
 				Host: host,
-				IngressRuleValue: extensions.IngressRuleValue{
-					HTTP: &extensions.HTTPIngressRuleValue{},
+				IngressRuleValue: networking.IngressRuleValue{
+					HTTP: &networking.HTTPIngressRuleValue{},
 				},
 			},
 		},
 	}
 
 	for _, path := range paths {
-		spec.Rules[0].IngressRuleValue.HTTP.Paths = append(spec.Rules[0].IngressRuleValue.HTTP.Paths, extensions.HTTPIngressPath{
+		spec.Rules[0].IngressRuleValue.HTTP.Paths = append(spec.Rules[0].IngressRuleValue.HTTP.Paths, networking.HTTPIngressPath{
 			Path: path,
-			Backend: extensions.IngressBackend{
+			Backend: networking.IngressBackend{
 				ServiceName: service,
 				ServicePort: intstr.FromInt(port),
 			},
@@ -443,18 +442,18 @@ func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, se
 	return newSingleIngress(name, ns, annotations, spec)
 }
 
-func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations *map[string]string, tlsHosts []string) *extensions.Ingress {
+func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations map[string]string, tlsHosts []string) *networking.Ingress {
 
-	spec := extensions.IngressSpec{
-		Rules: []extensions.IngressRule{
+	spec := networking.IngressSpec{
+		Rules: []networking.IngressRule{
 			{
 				Host: host,
-				IngressRuleValue: extensions.IngressRuleValue{
-					HTTP: &extensions.HTTPIngressRuleValue{
-						Paths: []extensions.HTTPIngressPath{
+				IngressRuleValue: networking.IngressRuleValue{
+					HTTP: &networking.HTTPIngressRuleValue{
+						Paths: []networking.HTTPIngressPath{
 							{
 								Path: path,
-								Backend: extensions.IngressBackend{
+								Backend: networking.IngressBackend{
 									ServiceName: service,
 									ServicePort: intstr.FromInt(port),
 								},
@@ -467,7 +466,7 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 	}
 
 	if len(tlsHosts) > 0 {
-		spec.TLS = []extensions.IngressTLS{
+		spec.TLS = []networking.IngressTLS{
 			{
 				Hosts:      tlsHosts,
 				SecretName: host,
@@ -479,21 +478,21 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 }
 
 // NewSingleIngressWithBackendAndRules creates an ingress with both a default backend and a rule
-func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations *map[string]string) *extensions.Ingress {
-	spec := extensions.IngressSpec{
-		Backend: &extensions.IngressBackend{
+func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations map[string]string) *networking.Ingress {
+	spec := networking.IngressSpec{
+		Backend: &networking.IngressBackend{
 			ServiceName: defaultService,
 			ServicePort: intstr.FromInt(defaultPort),
 		},
-		Rules: []extensions.IngressRule{
+		Rules: []networking.IngressRule{
 			{
 				Host: host,
-				IngressRuleValue: extensions.IngressRuleValue{
-					HTTP: &extensions.HTTPIngressRuleValue{
-						Paths: []extensions.HTTPIngressPath{
+				IngressRuleValue: networking.IngressRuleValue{
+					HTTP: &networking.HTTPIngressRuleValue{
+						Paths: []networking.HTTPIngressPath{
 							{
 								Path: path,
-								Backend: extensions.IngressBackend{
+								Backend: networking.IngressBackend{
 									ServiceName: service,
 									ServicePort: intstr.FromInt(port),
 								},
@@ -509,9 +508,9 @@ func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService st
 }
 
 // NewSingleCatchAllIngress creates a simple ingress with a catch-all backend
-func NewSingleCatchAllIngress(name, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
-	spec := extensions.IngressSpec{
-		Backend: &extensions.IngressBackend{
+func NewSingleCatchAllIngress(name, ns, service string, port int, annotations map[string]string) *networking.Ingress {
+	spec := networking.IngressSpec{
+		Backend: &networking.IngressBackend{
 			ServiceName: service,
 			ServicePort: intstr.FromInt(port),
 		},
@@ -519,19 +518,19 @@ func NewSingleCatchAllIngress(name, ns, service string, port int, annotations *m
 	return newSingleIngress(name, ns, annotations, spec)
 }
 
-func newSingleIngress(name, ns string, annotations *map[string]string, spec extensions.IngressSpec) *extensions.Ingress {
+func newSingleIngress(name, ns string, annotations map[string]string, spec networking.IngressSpec) *networking.Ingress {
 	if annotations == nil {
-		annotations = &map[string]string{}
+		annotations = make(map[string]string)
 	}
 
-	ing := &extensions.Ingress{
+	ing := &networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   ns,
-			Annotations: *annotations,
+			Name:      name,
+			Namespace: ns,
 		},
 		Spec: spec,
 	}
+	ing.SetAnnotations(annotations)
 
 	return ing
 }

@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 				"nginx.ingress.kubernetes.io/default-backend": framework.EchoService,
 			}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "invalid", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "invalid", 80, annotations)
 			f.EnsureIngress(ing)
 
 			time.Sleep(5 * time.Second)

@@ -7,7 +7,7 @@ webhooks:
 - name: validate.nginx.ingress.kubernetes.io
   rules:
   - apiGroups:
-    - extensions
+    - networking.k8s.io
     apiVersions:
     - v1beta1
     operations:
@@ -20,6 +20,6 @@ webhooks:
     service:
       namespace: ingress-nginx
       name: nginx-ingress-webhook
-      path: /extensions/v1beta1/ingresses
+      path: /networking.k8s.io/v1beta1/ingresses
     caBundle: <certificate.pem | base64>
 ---

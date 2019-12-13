@@ -81,7 +81,7 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 			"nginx.ingress.kubernetes.io/proxy-send-timeout": "600",
 			"nginx.ingress.kubernetes.io/proxy-read-timeout": "600",
 		}
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.SlowEchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.SlowEchoService, 80, annotations))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -139,7 +139,7 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 			"nginx.ingress.kubernetes.io/proxy-send-timeout": "600",
 			"nginx.ingress.kubernetes.io/proxy-read-timeout": "600",
 		}
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.SlowEchoService, 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.SlowEchoService, 80, annotations))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {

@@ -50,7 +50,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -65,7 +65,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, &canaryAnnotations)
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -92,7 +92,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 
 			f.EnsureIngress(canaryIng)
 
@@ -116,7 +116,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				host := "foo"
 				annotations := map[string]string{}
 
-				ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+				ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 				f.EnsureIngress(ing)
 
 				f.WaitForNginxServer(host,
@@ -132,7 +132,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				canaryIngName := fmt.Sprintf("%v-canary", host)
 
 				canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-					80, &canaryAnnotations)
+					80, canaryAnnotations)
 				f.EnsureIngress(canaryIng)
 
 				time.Sleep(waitForLuaSync)
@@ -170,7 +170,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -186,7 +186,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -227,14 +227,14 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
 
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -271,7 +271,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -287,7 +287,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -296,7 +296,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"foo": "bar",
 			}
 
-			modIng := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &modAnnotations)
+			modIng := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, modAnnotations)
 
 			f.EnsureIngress(modIng)
 
@@ -335,7 +335,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -351,7 +351,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -361,7 +361,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader2",
 			}
 
-			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, &modCanaryAnnotations)
+			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, modCanaryAnnotations)
 			f.EnsureIngress(modCanaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -398,7 +398,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -414,7 +414,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -464,7 +464,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -481,7 +481,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -544,7 +544,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -562,7 +562,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -586,7 +586,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -602,7 +602,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -652,7 +652,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,
@@ -668,7 +668,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, &canaryAnnotations)
+				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
 			time.Sleep(waitForLuaSync)
@@ -692,7 +692,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"nginx.ingress.kubernetes.io/canary-weight": "100",
 			}
 
-			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, &modCanaryAnnotations)
+			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, modCanaryAnnotations)
 
 			f.EnsureIngress(modCanaryIng)
 
@@ -719,7 +719,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
 			}
 
-			ing := framework.NewSingleCatchAllIngress(canaryIngName, f.Namespace, canaryService, 80, &annotations)
+			ing := framework.NewSingleCatchAllIngress(canaryIngName, f.Namespace, canaryService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			ing = framework.NewSingleCatchAllIngress(host, f.Namespace, framework.EchoService, 80, nil)
@@ -744,7 +744,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
 			}
 
-			ing := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, &annotations)
+			ing := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			otherHost := "bar"
@@ -769,7 +769,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 		}
 
 		paths := []string{"/foo", "/bar"}
-		ing := framework.NewSingleIngressWithMultiplePaths(canaryIngName, paths, host, f.Namespace, "httpy-svc-canary", 80, &annotations)
+		ing := framework.NewSingleIngressWithMultiplePaths(canaryIngName, paths, host, f.Namespace, "httpy-svc-canary", 80, annotations)
 		f.EnsureIngress(ing)
 
 		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
