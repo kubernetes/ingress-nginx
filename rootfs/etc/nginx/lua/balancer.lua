@@ -9,6 +9,7 @@ local chashsubset = require("balancer.chashsubset")
 local sticky_balanced = require("balancer.sticky_balanced")
 local sticky_persistent = require("balancer.sticky_persistent")
 local ewma = require("balancer.ewma")
+local bridge_tracer = require("opentracing_bridge_tracer")
 local string = string
 local ipairs = ipairs
 local table = table
@@ -250,46 +251,67 @@ function _M.init_worker()
   end
 end
 
-function _M.rewrite()
-  local balancer = get_balancer()
-  if not balancer then
-    ngx.status = ngx.HTTP_SERVICE_UNAVAILABLE
-    return ngx.exit(ngx.status)
+local function trace_function(label, func)
+  local tracer, parent_context, span
+  if ngx.var.opentracing_binary_context then
+    tracer = bridge_tracer.new_from_global()
+    parent_context = tracer:binary_extract(ngx.var.opentracing_binary_context)
+    span = tracer:start_span("balancer.lua:" .. tostring(label), {["references"] = {{"child_of", parent_context}}})
   end
+
+  func()
+
+  if ngx.var.opentracing_binary_context then
+    span:finish()
+  end
+end
+
+function _M.rewrite()
+  trace_function("rewrite()", function()
+    local balancer = get_balancer()
+    if not balancer then
+      ngx.status = ngx.HTTP_SERVICE_UNAVAILABLE
+      return ngx.exit(ngx.status)
+    end
+  end)
 end
 
 function _M.balance()
-  local balancer = get_balancer()
-  if not balancer then
-    return
-  end
+  trace_function("balance()", function()
+    local balancer = get_balancer()
+    if not balancer then
+      return
+    end
 
-  local peer = balancer:balance()
-  if not peer then
-    ngx.log(ngx.WARN, "no peer was returned, balancer: " .. balancer.name)
-    return
-  end
+    local peer = balancer:balance()
+    if not peer then
+      ngx.log(ngx.WARN, "no peer was returned, balancer: " .. balancer.name)
+      return
+    end
 
-  ngx_balancer.set_more_tries(1)
+    ngx_balancer.set_more_tries(1)
 
-  local ok, err = ngx_balancer.set_current_peer(peer)
-  if not ok then
-    ngx.log(ngx.ERR, "error while setting current upstream peer ", peer,
-            ": ", err)
-  end
+    local ok, err = ngx_balancer.set_current_peer(peer)
+    if not ok then
+      ngx.log(ngx.ERR, "error while setting current upstream peer ", peer,
+              ": ", err)
+    end
+  end)
 end
 
 function _M.log()
-  local balancer = get_balancer()
-  if not balancer then
-    return
-  end
+  trace_function("log()", function()
+    local balancer = get_balancer()
+    if not balancer then
+      return
+    end
 
-  if not balancer.after_balance then
-    return
-  end
+    if not balancer.after_balance then
+      return
+    end
 
-  balancer:after_balance()
+    balancer:after_balance()
+  end)
 end
 
 if _TEST then
