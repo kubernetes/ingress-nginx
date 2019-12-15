@@ -79,12 +79,8 @@ var _ = framework.IngressNginxDescribe("default-ssl-certificate", func() {
 	It("uses default ssl certificate for host based ingress when configured certificate does not match host", func() {
 		host := "foo"
 
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, service, port, nil))
-		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
-			[]string{"not.foo"},
-			ing.Spec.TLS[0].SecretName,
-			ing.Namespace)
-		Expect(err).NotTo(HaveOccurred())
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, service, port, nil)
+		tlsConfig := f.EnsureTLSIngress(ing)
 
 		By("making sure new ingress is deployed")
 		expectedConfig := fmt.Sprintf(`set $proxy_upstream_name "%v-%v-%v";`, f.Namespace, service, port)

@@ -17,6 +17,7 @@ limitations under the License.
 package framework
 
 import (
+	"crypto/tls"
 	"fmt"
 	"strings"
 	"time"
@@ -69,7 +70,21 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 }
 
 // EnsureIngress creates an Ingress object or returns it if it already exists.
-func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingress {
+func (f *Framework) EnsureIngress(ingress *networking.Ingress) {
+	f.ensureIngress(ingress)
+}
+
+func (f *Framework) EnsureTLSIngress(ingress *networking.Ingress) *tls.Config {
+	ing := f.ensureIngress(ingress)
+	tlsConfig, err := CreateIngressTLSSecret(f.KubeClientSet,
+		ing.Spec.TLS[0].Hosts,
+		ing.Spec.TLS[0].SecretName,
+		ing.Namespace)
+	Expect(err).NotTo(HaveOccurred())
+	return tlsConfig
+}
+
+func (f *Framework) ensureIngress(ingress *networking.Ingress) *networking.Ingress {
 	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Create(ingress)
 	if err != nil {
 		if k8sErrors.IsAlreadyExists(err) {
@@ -88,11 +103,6 @@ func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingre
 	}
 
 	Expect(ing).NotTo(BeNil(), "expected an ingress but none returned")
-
-	if ing.Annotations == nil {
-		ing.Annotations = make(map[string]string)
-	}
-
 	return ing
 }
 

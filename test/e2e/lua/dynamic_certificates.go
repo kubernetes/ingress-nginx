@@ -108,7 +108,8 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 
 	Context("given an ingress with TLS correctly configured", func() {
 		BeforeEach(func() {
-			ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
+			ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil)
+			f.EnsureIngress(ing)
 
 			time.Sleep(waitForLuaSync)
 

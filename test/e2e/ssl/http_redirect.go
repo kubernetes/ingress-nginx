@@ -40,7 +40,7 @@ var _ = framework.IngressNginxDescribe("sslredirect", func() {
 	It("should redirect from HTTP to HTTPS when secret is missing", func() {
 		host := "redirect.com"
 
-		_ = f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {

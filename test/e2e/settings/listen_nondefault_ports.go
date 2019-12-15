@@ -72,14 +72,7 @@ var _ = framework.IngressNginxDescribe("Listen on nondefault ports", func() {
 		It("should set X-Forwarded-Port header to 443", func() {
 
 			ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil)
-			f.EnsureIngress(ing)
-
-			tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
-				ing.Spec.TLS[0].Hosts,
-				ing.Spec.TLS[0].SecretName,
-				ing.Namespace)
-			Expect(err).NotTo(HaveOccurred())
-
+			tlsConfig := f.EnsureTLSIngress(ing)
 			framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 
 			f.WaitForNginxServer(host,
@@ -119,13 +112,7 @@ var _ = framework.IngressNginxDescribe("Listen on nondefault ports", func() {
 				}
 
 				ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
-
-				f.EnsureIngress(ing)
-				tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
-					ing.Spec.TLS[0].Hosts,
-					ing.Spec.TLS[0].SecretName,
-					ing.Namespace)
-				Expect(err).NotTo(HaveOccurred())
+				tlsConfig := f.EnsureTLSIngress(ing)
 				framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 				f.WaitForNginxServer(host,
 					func(server string) bool {

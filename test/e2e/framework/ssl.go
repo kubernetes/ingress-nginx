@@ -35,6 +35,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -53,40 +54,48 @@ func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretN
 		return nil, fmt.Errorf("require a non-empty host for client hello")
 	}
 
-	var serverKey, serverCert bytes.Buffer
-	var data map[string][]byte
 	host := strings.Join(hosts, ",")
 
+	var serverKey, serverCert bytes.Buffer
 	if err := generateRSACert(host, true, &serverKey, &serverCert); err != nil {
 		return nil, err
 	}
 
-	data = map[string][]byte{
+	data := map[string][]byte{
 		v1.TLSCertKey:       serverCert.Bytes(),
 		v1.TLSPrivateKeyKey: serverKey.Bytes(),
 	}
 
-	newSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: secretName,
-		},
-		Data: data,
-	}
-
-	var apierr error
-	curSecret, err := client.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
-	if err == nil && curSecret != nil {
-		curSecret.Data = newSecret.Data
-		_, apierr = client.CoreV1().Secrets(namespace).Update(curSecret)
-	} else {
-		_, apierr = client.CoreV1().Secrets(namespace).Create(newSecret)
-	}
-	if apierr != nil {
-		return nil, apierr
+	err := createOrUpdateSecret(secretName, namespace, data, client)
+	if err != nil {
+		return nil, err
 	}
 
 	serverName := hosts[0]
 	return tlsConfig(serverName, serverCert.Bytes())
+}
+
+func createOrUpdateSecret(name, namespace string, data map[string][]byte, client kubernetes.Interface) error {
+	sec, err := client.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		_, err := client.CoreV1().Secrets(namespace).Create(&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: name,
+			},
+			Data: data,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	sec.Data = data
+	_, err = client.CoreV1().Secrets(namespace).Update(sec)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // CreateIngressMASecret creates or updates a Secret containing a Mutual Auth
@@ -98,35 +107,19 @@ func CreateIngressMASecret(client kubernetes.Interface, host string, secretName,
 	}
 
 	var caCert, serverKey, serverCert, clientKey, clientCert bytes.Buffer
-	var data map[string][]byte
-
 	if err := generateRSAMutualAuthCerts(host, &caCert, &serverKey, &serverCert, &clientKey, &clientCert); err != nil {
 		return nil, err
 	}
 
-	data = map[string][]byte{
+	data := map[string][]byte{
 		v1.TLSCertKey:       serverCert.Bytes(),
 		v1.TLSPrivateKeyKey: serverKey.Bytes(),
 		"ca.crt":            caCert.Bytes(),
 	}
 
-	newSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: secretName,
-		},
-		Data: data,
-	}
-
-	var apierr error
-	curSecret, err := client.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
-	if err == nil && curSecret != nil {
-		curSecret.Data = newSecret.Data
-		_, apierr = client.CoreV1().Secrets(namespace).Update(curSecret)
-	} else {
-		_, apierr = client.CoreV1().Secrets(namespace).Create(newSecret)
-	}
-	if apierr != nil {
-		return nil, apierr
+	err := createOrUpdateSecret(secretName, namespace, data, client)
+	if err != nil {
+		return nil, err
 	}
 
 	clientPair, err := tls.X509KeyPair(clientCert.Bytes(), clientKey.Bytes())

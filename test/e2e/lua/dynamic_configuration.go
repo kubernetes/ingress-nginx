@@ -27,7 +27,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/nginx"
@@ -111,13 +110,18 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(waitForLuaSync * 2)
 
-			ensureRequestWithStatus(f, "foo.com", 503)
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)).
+				Set("Host", "foo.com").
+				End()
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(503))
 		})
 
 		It("handles endpoints only changes consistently (down scaling of replicas vs. empty service)", func() {
 			deploymentName := "scalingecho"
 			f.NewEchoDeploymentWithNameAndReplicas(deploymentName, 0)
-			createIngress(f, "scaling.foo.com", deploymentName)
+			ensureIngress(f, "scaling.foo.com", deploymentName)
 			originalResponseCode := runRequest(f, "scaling.foo.com")
 
 			replicas := 2
@@ -184,16 +188,8 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	})
 })
 
-func ensureIngress(f *framework.Framework, host string, deploymentName string) *networking.Ingress {
-	ing := createIngress(f, host, deploymentName)
-	time.Sleep(waitForLuaSync)
-	ensureRequest(f, host)
-
-	return ing
-}
-
-func createIngress(f *framework.Framework, host string, deploymentName string) *networking.Ingress {
-	ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, deploymentName, 80,
+func ensureIngress(f *framework.Framework, host string, deploymentName string) {
+	f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, deploymentName, 80,
 		map[string]string{
 			"nginx.ingress.kubernetes.io/load-balance": "ewma",
 		},
@@ -205,7 +201,8 @@ func createIngress(f *framework.Framework, host string, deploymentName string) *
 				strings.Contains(server, "proxy_pass http://upstream_balancer;")
 		})
 
-	return ing
+	time.Sleep(waitForLuaSync)
+	ensureRequest(f, host)
 }
 
 func ensureRequest(f *framework.Framework, host string) {
@@ -215,15 +212,6 @@ func ensureRequest(f *framework.Framework, host string) {
 		End()
 	Expect(errs).Should(BeEmpty())
 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-}
-
-func ensureRequestWithStatus(f *framework.Framework, host string, statusCode int) {
-	resp, _, errs := gorequest.New().
-		Get(f.GetURL(framework.HTTP)).
-		Set("Host", host).
-		End()
-	Expect(errs).Should(BeEmpty())
-	Expect(resp.StatusCode).Should(Equal(statusCode))
 }
 
 func runRequest(f *framework.Framework, host string) int {

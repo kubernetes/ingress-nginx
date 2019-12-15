@@ -21,9 +21,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 
-	networking "k8s.io/api/networking/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -40,9 +37,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 
 	It("should not exists Server header in the response", func() {
 		f.UpdateNginxConfigMapData(serverTokens, "false")
-
 		f.EnsureIngress(framework.NewSingleIngress(serverTokens, "/", serverTokens, f.Namespace, framework.EchoService, 80, nil))
-
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "server_tokens off") &&
@@ -52,35 +47,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 
 	It("should exists Server header in the response when is enabled", func() {
 		f.UpdateNginxConfigMapData(serverTokens, "true")
-
-		f.EnsureIngress(&networking.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        serverTokens,
-				Namespace:   f.Namespace,
-				Annotations: map[string]string{},
-			},
-			Spec: networking.IngressSpec{
-				Rules: []networking.IngressRule{
-					{
-						Host: serverTokens,
-						IngressRuleValue: networking.IngressRuleValue{
-							HTTP: &networking.HTTPIngressRuleValue{
-								Paths: []networking.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: networking.IngressBackend{
-											ServiceName: framework.EchoService,
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
-
+		f.EnsureIngress(framework.NewSingleIngress(serverTokens, "/", serverTokens, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "server_tokens on")

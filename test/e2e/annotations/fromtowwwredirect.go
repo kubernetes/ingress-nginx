@@ -82,13 +82,7 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 		}
 
 		ing := framework.NewSingleIngressWithTLS(fromHost, "/", fromHost, []string{fromHost, toHost}, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
-			ing.Spec.TLS[0].Hosts,
-			ing.Spec.TLS[0].SecretName,
-			ing.Namespace)
-		Expect(err).ToNot(HaveOccurred())
+		f.EnsureTLSIngress(ing)
 
 		f.WaitForNginxServer(toHost,
 			func(server string) bool {

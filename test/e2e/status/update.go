@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 
 		f.NewEchoDeploymentWithReplicas(1)
 
-		ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
@@ -87,7 +87,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 		err = cmd.Process.Kill()
 		Expect(err).NotTo(HaveOccurred(), "unexpected error terminating kubectl proxy")
 
-		ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+		ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred(), "unexpected error getting %s/%v Ingress", f.Namespace, host)
 
 		ing.Status.LoadBalancer.Ingress = []apiv1.LoadBalancerIngress{}
