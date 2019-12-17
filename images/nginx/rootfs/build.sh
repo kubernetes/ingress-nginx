@@ -30,7 +30,7 @@ export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=741b1af2805388e98dbfea449f40c6d6b19c13be
 export MSGPACK_VERSION=3.2.0
 export DATADOG_CPP_VERSION=1.1.1
-export MODSECURITY_VERSION=d7101e13685efd7e7c9f808871b202656a969f4b
+export MODSECURITY_VERSION=1.0.1
 export MODSECURITY_LIB_VERSION=3.0.3
 export OWASP_MODSECURITY_CRS_VERSION=3.2.0
 export LUA_BRIDGE_TRACER_VERSION=0.1.1
@@ -144,8 +144,8 @@ get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
 get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src 5c8d25e68fb852f61489b669aebb7bd8ca8c88ebb5e5f969212fcceff3ee2d0b \
-        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
+get_src c969a78659bb47c84929de0b9adc1f8c512a51ec9dd3b162cb568ae228d3d59e \
+        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
 
 get_src db377619a07d538bdbf328272fdec3893e6f674bdf469b3b575f778866e3ace7 \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/$JAEGER_VERSION.tar.gz"
