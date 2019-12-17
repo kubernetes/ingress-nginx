@@ -1009,7 +1009,7 @@ type errorLocation struct {
 // of errorLocations, each of which contain the upstream name and a list of
 // error codes for that given upstream, so that sufficiently unique
 // @custom error location blocks can be created in the template
-func buildCustomErrorLocationsPerServer(input interface{}) interface{} {
+func buildCustomErrorLocationsPerServer(input interface{}) []errorLocation {
 	server, ok := input.(*ingress.Server)
 	if !ok {
 		klog.Errorf("expected a '*ingress.Server' type but %T was returned", input)

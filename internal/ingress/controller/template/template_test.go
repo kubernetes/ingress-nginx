@@ -1108,12 +1108,8 @@ func TestBuildCustomErrorLocationsPerServer(t *testing.T) {
 
 	for _, c := range testCases {
 		response := buildCustomErrorLocationsPerServer(c.server)
-		if results, ok := response.([]errorLocation); ok {
-			if !reflect.DeepEqual(c.expectedResults, results) {
-				t.Errorf("Expected %+v but got %+v", c.expectedResults, results)
-			}
-		} else {
-			t.Error("Unable to convert to []errorLocation")
+		if !reflect.DeepEqual(c.expectedResults, response) {
+			t.Errorf("Expected %+v but got %+v", c.expectedResults, response)
 		}
 	}
 }
