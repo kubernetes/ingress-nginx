@@ -1323,7 +1323,7 @@ _New Features:_
   - The annotation `nginx.ingress.kubernetes.io/grpc-backend: "true"` enable this feature
   - If the gRPC service requires TLS `nginx.ingress.kubernetes.io/secure-backends: "true"`
 - Configurable load balancing with EWMA
-- Support for [lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf) as alternative to ModSecurity. [Check configuration guide](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/annotations.md#lua-resty-waf)
+- Support for [lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf) as alternative to ModSecurity. [Check configuration guide](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#lua-resty-waf)
 - Support for session affinity when dynamic configuration is enabled.
 - Add NoAuthLocations and default it to "/.well-known/acme-challenge"
 
