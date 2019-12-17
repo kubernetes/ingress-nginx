@@ -1492,7 +1492,7 @@ To check that your kube API server runs with the required flags, please refer to
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">validate.nginx.ingress.kubernetes.io</span>
   <span class="nt">rules</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">extensions</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
     <span class="nt">apiVersions</span><span class="p">:</span>
     <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">v1beta1</span>
     <span class="nt">operations</span><span class="p">:</span>
@@ -1505,7 +1505,7 @@ To check that your kube API server runs with the required flags, please refer to
     <span class="nt">service</span><span class="p">:</span>
       <span class="nt">namespace</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ingress-nginx</span>
       <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ingress-validation-webhook</span>
-      <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/extensions/v1beta1/ingress</span>
+      <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/networking.k8s.io/v1beta1/ingress</span>
     <span class="nt">caBundle</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;pem encoded ca cert that signs the server cert used by the webhook&gt;</span>
 </pre></div>
                 

@@ -1277,12 +1277,12 @@
 <h2 id="regular-expression-support">Regular Expression Support<a class="headerlink" href="#regular-expression-support" title="Permanent link"> ¶</a></h2>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>Regular expressions and wild cards are not supported in the <code class="codehilite">spec.rules.host</code> field. Full hostnames must be used. </p>
+<p>Regular expressions and wild cards are not supported in the <code class="codehilite">spec.rules.host</code> field. Full hostnames must be used.</p>
 </div>
 <p>The ingress controller supports <strong>case insensitive</strong> regular expressions in the <code class="codehilite">spec.rules.http.paths.path</code> field.
 This can be enabled by setting the <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> annotation to <code class="codehilite">true</code> (the default is false).</p>
 <p>See the <a href="../nginx-configuration/annotations/#use-regex">description</a> of the <code class="codehilite">use-regex</code> annotation for more details.</p>
-<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress</span>
@@ -1310,7 +1310,7 @@ This can be enabled by setting the <code class="codehilite">nginx.ingress.kubern
 <p><strong>Please read the <a href="#warning">warning</a> before using regular expressions in your ingress definitions.</strong></p>
 <h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link"> ¶</a></h3>
 <p>Let the following two ingress definitions be created:</p>
-<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-1</span>
@@ -1329,7 +1329,7 @@ This can be enabled by setting the <code class="codehilite">nginx.ingress.kubern
           <span class="nt">servicePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 
-<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-2</span>
@@ -1375,7 +1375,7 @@ location ~* &quot;^/foo/bar&quot; {
 <p>This case is expected and a result of NGINX's a first match policy for paths that use the regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a>. For more information about how a path is chosen, please read the following article: <a href="https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms">"Understanding Nginx Server and Location Block Selection Algorithms"</a>.</p>
 <h3 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link"> ¶</a></h3>
 <p>Let the following ingress be defined:</p>
-<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-3</span>

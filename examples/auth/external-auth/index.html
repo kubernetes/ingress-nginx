@@ -1197,7 +1197,7 @@
                 
                 <h1 id="external-basic-authentication">External Basic Authentication<a class="headerlink" href="#external-basic-authentication" title="Permanent link"> ¶</a></h1>
 <h3 id="example-1">Example 1:<a class="headerlink" href="#example-1" title="Permanent link"> ¶</a></h3>
-<p>Use an external service (Basic Auth) located in <code class="codehilite">https://httpbin.org</code> </p>
+<p>Use an external service (Basic Auth) located in <code class="codehilite">https://httpbin.org</code></p>
 <div class="codehilite"><pre><span></span>$ kubectl create -f ingress.yaml
 ingress <span class="s2">&quot;external-auth&quot;</span> created
 
@@ -1206,7 +1206,7 @@ NAME            HOSTS                         ADDRESS       PORTS     AGE
 external-auth   external-auth-01.sample.com   <span class="m">172</span>.17.4.99   <span class="m">80</span>        13s
 
 $ kubectl get ing external-auth -o yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   annotations:

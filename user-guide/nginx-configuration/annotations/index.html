@@ -2607,7 +2607,7 @@ place over the alias configuration.</p>
 <p>For more information please see <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name">the <code class="codehilite">server_name</code> documentation</a>.</p>
 <h3 id="server-snippet">Server snippet<a class="headerlink" href="#server-snippet" title="Permanent link"> ¶</a></h3>
 <p>Using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/server-snippet</code> it is possible to add custom configuration in the server configuration block.</p>
-<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">annotations</span><span class="p">:</span>

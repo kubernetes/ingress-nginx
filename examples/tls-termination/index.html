@@ -1227,7 +1227,7 @@
 <p>You need a <a href="../PREREQUISITES/#tls-certificates">TLS cert</a> and a <a href="../PREREQUISITES/#test-http-service">test HTTP service</a> for this example.</p>
 <h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link"> ¶</a></h2>
 <p>Create a <code class="codehilite">values.yaml</code> file.</p>
-<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-test</span>
@@ -1235,7 +1235,7 @@
   <span class="nt">tls</span><span class="p">:</span>
     <span class="p p-Indicator">-</span> <span class="nt">hosts</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">foo.bar.com</span>
-      <span class="c1"># This assumes tls-secret exists and the SSL </span>
+      <span class="c1"># This assumes tls-secret exists and the SSL</span>
       <span class="c1"># certificate contains a CN for foo.bar.com</span>
       <span class="nt">secretName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tls-secret</span>
   <span class="nt">rules</span><span class="p">:</span>
@@ -1249,7 +1249,7 @@
             <span class="nt">servicePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 
-<p>The following command instructs the controller to terminate traffic using the provided 
+<p>The following command instructs the controller to terminate traffic using the provided
 TLS cert, and forward un-encrypted HTTP traffic to the test HTTP service.</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f ingress.yaml</span>
 </pre></div>

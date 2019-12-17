@@ -1270,7 +1270,7 @@ the <code class="codehilite">enable-opentracing</code> annotation:
 jaeger-collector-host: jaeger-agent.default.svc.cluster.local
 datadog-collector-host: datadog-agent.default.svc.cluster.local
 </pre></div>
-NOTE: While the option is called <code class="codehilite">jaeger-collector-host</code>, you will need to point this to a <code class="codehilite">jaeger-agent</code>, and not the <code class="codehilite">jaeger-collector</code> component.  </p>
+NOTE: While the option is called <code class="codehilite">jaeger-collector-host</code>, you will need to point this to a <code class="codehilite">jaeger-agent</code>, and not the <code class="codehilite">jaeger-collector</code> component.</p>
 <p>Next you will need to deploy a distributed tracing system which uses OpenTracing.
 <a href="https://github.com/openzipkin/zipkin">Zipkin</a> and
 <a href="https://github.com/jaegertracing/jaeger">Jaeger</a> and
@@ -1375,7 +1375,7 @@ $ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echo
 
 # Apply the Ingress Resource
 $ echo &#39;
-  apiVersion: extensions/v1beta1
+  apiVersion: networking.k8s.io/v1beta1
   kind: Ingress
   metadata:
     name: echo-ingress
