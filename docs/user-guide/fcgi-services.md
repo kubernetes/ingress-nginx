@@ -99,7 +99,7 @@ To specify an index file, the `fastcgi-index` annotation value can optionally be
 
 To specify [_NGINX_ `fastcgi_param` directives](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_param), the `fastcgi-params-configmap` annotation is used, which in turn must lead to a _ConfigMap_ object containing the _NGINX_ `fastcgi_param` directives as key/values.
 
-> `nginx.ingress.kubernetes.io/fastcgi-params: "example-configmap"`
+> `nginx.ingress.kubernetes.io/fastcgi-params-configmap: "example-configmap"`
 
 And the _ConfigMap_ object to specify the `SCRIPT_FILENAME` and `HTTP_PROXY`  _NGINX's_ `fastcgi_param` directives will look like the following:
 
@@ -114,4 +114,4 @@ data:
 ```
 Using the _namespace/_ prefix is also supported, for example:
 
-> `nginx.ingress.kubernetes.io/fastcgi-params: "example-namespace/example-configmap"`
+> `nginx.ingress.kubernetes.io/fastcgi-params-configmap: "example-namespace/example-configmap"`
