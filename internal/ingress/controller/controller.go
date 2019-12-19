@@ -984,12 +984,13 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				Backend:      du.Name,
 				Proxy:        ngxProxy,
 				Service:      du.Service,
-				Logs: log.Config{
-					Access:  n.store.GetBackendConfiguration().EnableAccessLogForDefaultBackend,
-					Rewrite: false,
-				},
 			},
-		}}
+		},
+		Logs: log.Config{
+			Access:  n.store.GetBackendConfiguration().EnableAccessLogForDefaultBackend,
+			Rewrite: false,
+		},
+	}
 
 	// initialize all other servers
 	for _, ing := range data {
@@ -1061,6 +1062,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				},
 				SSLPassthrough: anns.SSLPassthrough,
 				SSLCiphers:     anns.SSLCiphers,
+				Logs:           anns.Logs,
 			}
 		}
 	}
@@ -1201,7 +1203,6 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.XForwardedPrefix = anns.XForwardedPrefix
 	loc.UsePortInRedirects = anns.UsePortInRedirects
 	loc.Connection = anns.Connection
-	loc.Logs = anns.Logs
 	loc.InfluxDB = anns.InfluxDB
 	loc.DefaultBackend = anns.DefaultBackend
 	loc.BackendProtocol = anns.BackendProtocol

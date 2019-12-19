@@ -97,3 +97,41 @@ func TestIngressRewriteLogConfig(t *testing.T) {
 		t.Errorf("expected rewrite log to be enabled but it is disabled")
 	}
 }
+
+func TestIngressLogFormatUpstreamLogConfig(t *testing.T) {
+	ing := buildIngress()
+
+	const logFormat = `{"request": "$request"}`
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("log-format-upstream")] = logFormat
+	ing.SetAnnotations(data)
+
+	log, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	nginxLogs, ok := log.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type")
+	}
+
+	if nginxLogs.LogFormatUpstream != logFormat {
+		t.Errorf("expected log-format-upstream to be '%s', but got '%s'", logFormat, nginxLogs.LogFormatUpstream)
+	}
+}
+
+func TestIngressLogFormatEscapeJSONLogConfig(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("log-format-escape-json")] = "true"
+	ing.SetAnnotations(data)
+
+	log, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	nginxLogs, ok := log.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type")
+	}
+
+	if !nginxLogs.LogFormatEscapeJSON {
+		t.Errorf("expected log-format-escape-json to be enabled but it is disabled")
+	}
+}

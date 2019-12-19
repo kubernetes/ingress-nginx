@@ -265,6 +265,12 @@ http {
     # $service_port
     log_format upstreaminfo {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ $cfg.LogFormatUpstream }}';
 
+    {{ range $server := $servers }}
+        {{ if not (empty $server.Logs.LogFormatUpstream) }}
+        log_format upstreaminfo-{{ $server.Hostname }} {{ if $server.Logs.LogFormatEscapeJSON }}escape=json {{ end }}'{{ $server.Logs.LogFormatUpstream }}';
+        {{ end }}
+    {{ end }}
+
     {{/* map urls that should not appear in access.log */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
     map $request_uri $loggable {
@@ -828,6 +834,18 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
+        {{ if not $server.Logs.Access }}
+        access_log off;
+        {{ else }}
+            {{ if not (empty $server.Logs.LogFormatUpstream) }}
+            access_log {{ $all.Cfg.AccessLogPath }} upstreaminfo-{{ $server.Hostname }} {{ $all.Cfg.AccessLogParams }} if=$loggable;
+            {{ end }}
+        {{ end }}
+
+        {{ if $server.Logs.Rewrite }}
+        rewrite_log on;
+        {{ end }}
+
         {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
         {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
         {{ end }}
@@ -999,14 +1017,6 @@ stream {
 
                 plugins.run()
             }
-
-            {{ if not $location.Logs.Access }}
-            access_log off;
-            {{ end }}
-
-            {{ if $location.Logs.Rewrite }}
-            rewrite_log on;
-            {{ end }}
 
             {{ if $location.HTTP2PushPreload }}
             http2_push_preload on;

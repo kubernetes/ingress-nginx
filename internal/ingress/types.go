@@ -200,6 +200,9 @@ type Server struct {
 	SSLCiphers string `json:"sslCiphers,omitempty"`
 	// AuthTLSError contains the reason why the access to a server should be denied
 	AuthTLSError string `json:"authTLSError,omitempty"`
+	// Logs allows to enable or disable the nginx logs
+	// By default access logs are enabled and rewrite logs are disabled
+	Logs log.Config `json:"logs,omitempty"`
 }
 
 // Location describes an URI inside a server.
@@ -306,9 +309,6 @@ type Location struct {
 	// original location.
 	// +optional
 	XForwardedPrefix string `json:"xForwardedPrefix,omitempty"`
-	// Logs allows to enable or disable the nginx logs
-	// By default access logs are enabled and rewrite logs are disabled
-	Logs log.Config `json:"logs,omitempty"`
 	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database
 	// +optional
 	InfluxDB influxdb.Config `json:"influxDB,omitempty"`

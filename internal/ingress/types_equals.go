@@ -308,6 +308,9 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.AuthTLSError != s2.AuthTLSError {
 		return false
 	}
+	if !(&s1.Logs).Equal(&s2.Logs) {
+		return false
+	}
 
 	if len(s1.Locations) != len(s2.Locations) {
 		return false
@@ -405,9 +408,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 	if !(&l1.Connection).Equal(&l2.Connection) {
-		return false
-	}
-	if !(&l1.Logs).Equal(&l2.Logs) {
 		return false
 	}
 

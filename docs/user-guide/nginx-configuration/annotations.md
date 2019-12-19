@@ -120,6 +120,8 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-target](#mirror)|string|
+|[nginx.ingress.kubernetes.io/log-format-upstream](#log-format-upstream)|string|
+|[nginx.ingress.kubernetes.io/log-format-escape-json](#log-format-escape-json)|string|
 
 ### Canary
 
@@ -886,3 +888,23 @@ nginx.ingress.kubernetes.io/mirror-request-body: "off"
 The request sent to the mirror is linked to the orignial request. If you have a slow mirror backend, then the orignial request will throttle.
 
 For more information on the mirror module see https://nginx.org/en/docs/http/ngx_http_mirror_module.html
+
+
+### log-format-upstream
+
+Overrdes the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format) for a given Ingress.
+Example for json output:
+
+```json
+
+log-format-upstream: '{"time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$req_id",
+  "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":$status, "vhost": "$host", "request_proto": "$server_protocol",
+  "path": "$uri", "request_query": "$args", "request_length": $request_length, "duration": $request_time,"method": "$request_method", "http_referrer": "$http_referer",
+  "http_user_agent": "$http_user_agent" }'
+```
+
+Please check the [log-format](log-format.md) for definition of each field.
+
+### log-format-escape-json
+
+Sets if the escape parameter allows JSON ("true") or default characters escaping in variables ("false") for the Ingress [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).

@@ -29,8 +29,10 @@ type log struct {
 
 // Config contains the configuration to be used in the Ingress
 type Config struct {
-	Access  bool `json:"accessLog"`
-	Rewrite bool `json:"rewriteLog"`
+	Access              bool   `json:"accessLog"`
+	Rewrite             bool   `json:"rewriteLog"`
+	LogFormatUpstream   string `json:"logFormatUpstream,omitempty"`
+	LogFormatEscapeJSON bool   `json:"logFormatEscapeJSON,omitempty"`
 }
 
 // Equal tests for equality between two Config types
@@ -40,6 +42,14 @@ func (bd1 *Config) Equal(bd2 *Config) bool {
 	}
 
 	if bd1.Rewrite != bd2.Rewrite {
+		return false
+	}
+
+	if bd1.LogFormatUpstream != bd2.LogFormatUpstream {
+		return false
+	}
+
+	if bd1.LogFormatEscapeJSON != bd2.LogFormatEscapeJSON {
 		return false
 	}
 
@@ -65,6 +75,16 @@ func (l log) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.Rewrite, err = parser.GetBoolAnnotation("enable-rewrite-log", ing)
 	if err != nil {
 		config.Rewrite = false
+	}
+
+	config.LogFormatUpstream, err = parser.GetStringAnnotation("log-format-upstream", ing)
+	if err != nil {
+		config.LogFormatUpstream = ""
+	}
+
+	config.LogFormatEscapeJSON, err = parser.GetBoolAnnotation("log-format-escape-json", ing)
+	if err != nil {
+		config.LogFormatEscapeJSON = false
 	}
 
 	return config, nil
