@@ -952,6 +952,14 @@ stream {
         {{ end }}
 
 
+        {{ if $externalAuth.SigninURL }}
+        location {{ buildAuthSignURLLocation $location.Path $externalAuth.SigninURL }} {
+            internal;
+
+            return 302 {{ buildAuthSignURL $externalAuth.SigninURL }};
+        }
+        {{ end }}
+
         location {{ $path }} {
             {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
             set $namespace      {{ $ing.Namespace | quote}};
@@ -1071,7 +1079,7 @@ stream {
 
             {{ if $externalAuth.SigninURL }}
             set_escape_uri $escaped_request_uri $request_uri;
-            error_page 401 = {{ buildAuthSignURL $externalAuth.SigninURL }};
+            error_page 401 = {{ buildAuthSignURLLocation $location.Path $externalAuth.SigninURL }};
             {{ end }}
 
             {{ if $location.BasicDigestAuth.Secured }}

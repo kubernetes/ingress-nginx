@@ -18,7 +18,9 @@ package template
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -164,6 +166,7 @@ var (
 		"isValidByteSize":                    isValidByteSize,
 		"buildForwardedFor":                  buildForwardedFor,
 		"buildAuthSignURL":                   buildAuthSignURL,
+		"buildAuthSignURLLocation":           buildAuthSignURLLocation,
 		"buildOpentracing":                   buildOpentracing,
 		"proxySetHeader":                     proxySetHeader,
 		"buildInfluxDB":                      buildInfluxDB,
@@ -883,24 +886,25 @@ func buildForwardedFor(input interface{}) string {
 	return fmt.Sprintf("$http_%v", ffh)
 }
 
-func buildAuthSignURL(input interface{}) string {
-	s, ok := input.(string)
-	if !ok {
-		klog.Errorf("expected an 'string' type but %T was returned", input)
-		return ""
-	}
-
-	u, _ := url.Parse(s)
+func buildAuthSignURL(authSignURL string) string {
+	u, _ := url.Parse(authSignURL)
 	q := u.Query()
 	if len(q) == 0 {
-		return fmt.Sprintf("%v?rd=$pass_access_scheme://$http_host$escaped_request_uri", s)
+		return fmt.Sprintf("%v?rd=$pass_access_scheme://$http_host$escaped_request_uri", authSignURL)
 	}
 
 	if q.Get("rd") != "" {
-		return s
+		return authSignURL
 	}
 
-	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$escaped_request_uri", s)
+	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$escaped_request_uri", authSignURL)
+}
+
+func buildAuthSignURLLocation(location, authSignURL string) string {
+	hasher := sha1.New()
+	hasher.Write([]byte(location))
+	hasher.Write([]byte(authSignURL))
+	return "@" + hex.EncodeToString(hasher.Sum(nil))
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
