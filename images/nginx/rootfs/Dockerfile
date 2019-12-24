@@ -13,22 +13,67 @@
 # limitations under the License.
 
 
-FROM BASEIMAGE
+FROM BASEIMAGE as builder
 
 CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
 
-ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
-
-# Add LuaRocks paths
-# see https://github.com/openresty/docker-openresty/blob/de05cd72594498b83e3a97e2f632da6aa75ec01d/bionic/Dockerfile#L168
-ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua;/usr/local/lib/lua/?.lua"
-ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so"
+RUN clean-install bash
 
 COPY . /
 
-RUN clean-install bash
-
 RUN /build.sh
+
+# Use a multi-stage build
+FROM BASEIMAGE
+
+ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
+
+ENV LUA_PATH="/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/lib/lua/?.lua;;"
+ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /opt /opt
+COPY --chown=www-data:www-data --from=builder /etc/nginx /etc/nginx
+
+RUN apt-get update && apt-get dist-upgrade -y \
+  && clean-install \
+    bash \
+    curl ca-certificates \
+    libgeoip1 \
+    patch \
+    libpcre3 \
+    zlib1g \
+    libaio1 \
+    openssl \
+    util-linux \
+    lmdb-utils \
+    libcurl4 \
+    libprotobuf17 \
+    libz3-4 \
+    procps \
+    libxml2 libpcre++0v5 \
+    liblmdb0 \
+    libmaxminddb0 \
+    dumb-init \
+    nano \
+    libyaml-cpp0.6 \
+    libyajl2 \
+  && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
+  && ln -s /usr/local/lib/mimalloc-1.2/libmimalloc.so /usr/local/lib/libmimalloc.so \
+  && bash -eu -c ' \
+  writeDirs=( \
+    /var/log/nginx \
+    /var/lib/nginx/body \
+    /var/lib/nginx/fastcgi \
+    /var/lib/nginx/proxy \
+    /var/lib/nginx/scgi \
+    /var/lib/nginx/uwsgi \
+    /var/log/audit \
+  ); \
+  for dir in "${writeDirs[@]}"; do \
+    mkdir -p ${dir}; \
+    chown -R www-data.www-data ${dir}; \
+  done'
 
 EXPOSE 80 443
 
