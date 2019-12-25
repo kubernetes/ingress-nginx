@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.26.2
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.26.2`
+
+_Changes:_
+
+- [X] [#4859](https://github.com/kubernetes/ingress-nginx/pull/4859) Use a named location for authSignURL
+
 ### 0.26.1
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.26.1`
