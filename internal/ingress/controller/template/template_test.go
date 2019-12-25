@@ -763,14 +763,6 @@ func TestFilterRateLimits(t *testing.T) {
 }
 
 func TestBuildAuthSignURL(t *testing.T) {
-	invalidType := &ingress.Ingress{}
-	expected := ""
-	actual := buildAuthSignURL(invalidType)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
 	cases := map[string]struct {
 		Input, Output string
 	}{
