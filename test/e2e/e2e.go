@@ -38,6 +38,7 @@ import (
 	_ "k8s.io/ingress-nginx/test/e2e/leaks"
 	_ "k8s.io/ingress-nginx/test/e2e/loadbalance"
 	_ "k8s.io/ingress-nginx/test/e2e/lua"
+	_ "k8s.io/ingress-nginx/test/e2e/security"
 	_ "k8s.io/ingress-nginx/test/e2e/servicebackend"
 	_ "k8s.io/ingress-nginx/test/e2e/settings"
 	_ "k8s.io/ingress-nginx/test/e2e/ssl"
