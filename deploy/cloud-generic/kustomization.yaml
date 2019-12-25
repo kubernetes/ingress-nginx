@@ -12,7 +12,7 @@ resources:
 - service.yaml
 images:
 - name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
-  newTag: 0.26.1
+  newTag: 0.26.2
 vars:
 - fieldref:
     fieldPath: metadata.name
