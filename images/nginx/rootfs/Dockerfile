@@ -13,18 +13,17 @@
 # limitations under the License.
 
 
-FROM BASEIMAGE as builder
+FROM alpine:3.11 as builder
 
 CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
 
-RUN clean-install bash
-
 COPY . /
 
-RUN /build.sh
+RUN apk add -U bash \
+  && /build.sh
 
 # Use a multi-stage build
-FROM BASEIMAGE
+FROM alpine:3.11
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
@@ -33,33 +32,29 @@ ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
-COPY --chown=www-data:www-data --from=builder /etc/nginx /etc/nginx
+COPY --from=builder /etc/nginx /etc/nginx
 
-RUN apt-get update && apt-get dist-upgrade -y \
-  && clean-install \
+RUN apk add -U --no-cache \
     bash \
-    curl ca-certificates \
-    libgeoip1 \
-    patch \
-    libpcre3 \
-    zlib1g \
-    libaio1 \
     openssl \
-    util-linux \
-    lmdb-utils \
-    libcurl4 \
-    libprotobuf17 \
-    libz3-4 \
-    procps \
-    libxml2 libpcre++0v5 \
-    liblmdb0 \
-    libmaxminddb0 \
+    pcre \
+    zlib \
+    geoip \
+    curl ca-certificates \
+    patch \
+    yajl \
+    lmdb \
+    libxml2 \
+    libmaxminddb \
+    yaml-cpp \
     dumb-init \
     nano \
-    libyaml-cpp0.6 \
-    libyajl2 \
+    tzdata \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && ln -s /usr/local/lib/mimalloc-1.2/libmimalloc.so /usr/local/lib/libmimalloc.so \
+  && addgroup -Sg 101 www-data \
+  && adduser -S -D -H -u 101 -h /usr/local/nginx \
+    -s /sbin/nologin -G www-data -g www-data www-data \
   && bash -eu -c ' \
   writeDirs=( \
     /var/log/nginx \
