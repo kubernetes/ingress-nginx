@@ -25,21 +25,21 @@ CROSS_BUILD_COPY qemu-QEMUARCH-static /usr/bin/
 
 WORKDIR  /etc/nginx
 
-RUN clean-install \
+RUN apk add -U --no-cache \
   diffutils \
-  libcap2-bin
+  libcap
 
 COPY --chown=www-data:www-data . /
 
 # Fix permission during the build to avoid issues at runtime
 # with volumes (custom templates)
-RUN bash -eu -c ' \
+RUN bash -xeu -c ' \
   writeDirs=( \
+    /etc/ingress-controller \
     /etc/ingress-controller/ssl \
     /etc/ingress-controller/auth \
     /var/log \
     /var/log/nginx \
-    /tmp \
   ); \
   for dir in "${writeDirs[@]}"; do \
     mkdir -p ${dir}; \

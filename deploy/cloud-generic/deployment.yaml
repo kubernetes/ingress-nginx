@@ -30,8 +30,8 @@ spec:
                 - ALL
               add:
                 - NET_BIND_SERVICE
-            # www-data -> 33
-            runAsUser: 33
+            # www-data -> 101
+            runAsUser: 101
           env:
             - name: POD_NAME
               valueFrom:

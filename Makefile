@@ -77,7 +77,7 @@ export E2E_CHECK_LEAKS
 export SLOW_E2E_THRESHOLD
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):23612cfde79b6ae7af4d30c3a7aaac0dcb5e6a27
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):4cad1304ef05799cd5b7eae5d2f49e36d12c5b21
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
