@@ -67,47 +67,47 @@ get_src()
   rm -rf "$f"
 }
 
-apt-get update && apt-get dist-upgrade -y
+apk update
+apk upgrade
 
 # install required packages to build
-clean-install \
+apk add \
   bash \
-  build-essential \
+  gcc \
+  clang \
+  libc-dev \
+  make \
+  automake \
+  openssl-dev \
+  pcre-dev \
+  zlib-dev \
+  linux-headers \
+  libxslt-dev \
+  gd-dev \
+  geoip-dev \
+  perl-dev \
+  libedit-dev \
+  mercurial \
+  alpine-sdk \
+  findutils \
   curl ca-certificates \
-  libgeoip1 \
-  libgeoip-dev \
+  geoip-dev \
   patch \
-  libpcre3 \
-  libpcre3-dev \
-  libssl-dev \
-  zlib1g \
-  zlib1g-dev \
-  libaio1 \
   libaio-dev \
   openssl \
-  libperl-dev \
   cmake \
   util-linux \
-  lmdb-utils \
+  lmdb-tools \
   wget \
-  libcurl4-openssl-dev \
-  libprotobuf-dev protobuf-compiler \
-  libz-dev \
-  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
+  curl-dev \
+  libprotobuf \
+  git g++ pkgconf flex bison doxygen yajl-dev lmdb-dev libtool autoconf libxml2 pcre-dev libxml2-dev \
   python \
   libmaxminddb-dev \
   bc \
   unzip \
   dos2unix mercurial \
-  libyaml-cpp0.6 \
-  || exit 1
-
-# https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1667178.html
-if [[ ${ARCH} == "armv7l" ]]; then
-  echo "Fixing ca-certificates"
-  touch /etc/ssl/certs/ca-certificates.crt
-  c_rehash
-fi
+  yaml-cpp
 
 mkdir -p /etc/nginx
 
@@ -228,18 +228,6 @@ export LUAJIT_INC=/usr/local/include/luajit-2.1
 cd "$BUILD_PATH/luajit2-$LUAJIT_VERSION"
 make CCDEBUG=-g
 make install
-
-if [[ ${ARCH} == "armv7l" ]]; then
-  export PCRE_DIR=/usr/lib/arm-linux-gnueabihf
-fi
-
-if [[ ${ARCH} == "x86_64" ]]; then
-  export PCRE_DIR=/usr/lib/x86_64-linux-gnu
-fi
-
-if [[ ${ARCH} == "aarch64" ]]; then
-  export PCRE_DIR=/usr/lib/aarch64-linux-gnu
-fi
 
 cd "$BUILD_PATH"
 
@@ -554,7 +542,7 @@ export LUA_INCLUDE_DIR=/usr/local/include/luajit-2.1
 ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
 
 if [[ ${ARCH} != "armv7l" ]]; then
-  luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
+  luarocks install lrexlib-pcre 2.7.2-1
 fi
 
 cd "$BUILD_PATH/lua-resty-core-$LUA_RESTY_CORE"
@@ -582,7 +570,6 @@ make install
 
 cd "$BUILD_PATH/lua-resty-string-0.11"
 make install
-
 
 # build Lua bridge tracer
 cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"
@@ -612,6 +599,9 @@ writeDirs=( \
   /var/log/audit \
   /var/log/nginx \
 );
+
+addgroup -Sg 101 www-data
+adduser -S -D -H -u 101 -h /usr/local/nginx -s /sbin/nologin -G www-data -g www-data www-data
 
 for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};

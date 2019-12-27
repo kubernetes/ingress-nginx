@@ -32,9 +32,6 @@ IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
-# Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/debian-base-$(ARCH):0.1
-
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
 endif
@@ -62,7 +59,6 @@ all-push: $(addprefix sub-push-,$(ALL_ARCH))
 container: .container-$(ARCH)
 .container-$(ARCH):
 	cp -r ./rootfs/* $(TEMP_DIR)
-	cd $(TEMP_DIR) && $(SED_I) 's|BASEIMAGE|$(BASEIMAGE)|g' Dockerfile
 	cd $(TEMP_DIR) && $(SED_I) "s|ARCH|$(QEMUARCH)|g" Dockerfile
 
 ifeq ($(ARCH),amd64)
