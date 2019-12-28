@@ -447,7 +447,6 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 	spec := networking.IngressSpec{
 		Rules: []networking.IngressRule{
 			{
-				Host: host,
 				IngressRuleValue: networking.IngressRuleValue{
 					HTTP: &networking.HTTPIngressRuleValue{
 						Paths: []networking.HTTPIngressPath{
@@ -463,6 +462,11 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 				},
 			},
 		},
+	}
+
+	// allow ingresses without host field
+	if host != "" {
+		spec.Rules[0].Host = host
 	}
 
 	if len(tlsHosts) > 0 {
