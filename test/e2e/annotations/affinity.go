@@ -333,4 +333,28 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/foo/bar"))
 	})
+
+	It("should set sticky cookie without host", func() {
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":            "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+		}
+
+		ing := framework.NewSingleIngress("default-no-host", "/", "", f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer("_",
+			func(server string) bool {
+				return strings.Contains(server, "server_name _")
+			})
+		time.Sleep(waitForLuaSync)
+
+		resp, _, errs := gorequest.New().
+			Get(f.GetURL(framework.HTTP)).
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
+	})
 })

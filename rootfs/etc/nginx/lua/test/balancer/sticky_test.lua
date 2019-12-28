@@ -202,7 +202,7 @@ describe("Sticky", function()
         local sticky_balancer_instance = sticky:new(b)
         assert.has_no.errors(function() sticky_balancer_instance:balance() end)
         assert.spy(s).was_called()
-      end 
+      end
 
       it("sets a cookie on the client", function() test(sticky_balanced) end)
       it("sets a cookie on the client", function() test(sticky_persistent) end)
@@ -352,5 +352,42 @@ describe("Sticky", function()
         test(sticky_persistent, false)
       end)
     end)
+  end)
+
+  context("when client doesn't have a cookie set and no host header, matching default server '_'",
+  function()
+    before_each(function ()
+      ngx.var.host = "not-default-server"
+      ngx.var.server_name = "_"
+    end)
+
+    local function test(sticky)
+      local s = {}
+      cookie.new = function(self)
+        local cookie_instance = {
+          set = function(self, payload)
+            assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
+            assert.equal(payload.path, ngx.var.location_path)
+            assert.equal(payload.domain, nil)
+            assert.equal(payload.httponly, true)
+            assert.equal(payload.secure, false)
+            return true, nil
+          end,
+          get = function(k) return false end,
+        }
+        s = spy.on(cookie_instance, "set")
+        return cookie_instance, false
+      end
+
+      local b = get_test_backend()
+      b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
+      b.sessionAffinityConfig.cookieSessionAffinity.locations["_"] = {"/"}
+      local sticky_balancer_instance = sticky:new(b)
+      assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+      assert.spy(s).was_called()
+    end
+
+    it("sets a cookie on the client", function() test(sticky_balanced) end)
+    it("sets a cookie on the client", function() test(sticky_persistent) end)
   end)
 end)
