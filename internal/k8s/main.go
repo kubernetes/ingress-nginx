@@ -48,14 +48,18 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 		return ""
 	}
 
-	if useInternalIP {
-		for _, address := range node.Status.Addresses {
-			if address.Type == apiv1.NodeInternalIP {
-				if address.Address != "" {
-					return address.Address
-				}
+	defaultOrInternalIP := ""
+	for _, address := range node.Status.Addresses {
+		if address.Type == apiv1.NodeInternalIP {
+			if address.Address != "" {
+				defaultOrInternalIP = address.Address
+				break
 			}
 		}
+	}
+
+	if useInternalIP {
+		return defaultOrInternalIP
 	}
 
 	for _, address := range node.Status.Addresses {
@@ -66,7 +70,7 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 		}
 	}
 
-	return ""
+	return defaultOrInternalIP
 }
 
 // PodInfo contains runtime information about the pod running the Ingres controller
