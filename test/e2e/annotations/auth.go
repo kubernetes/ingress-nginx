@@ -332,6 +332,52 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 	})
 
+	It("retains cookie set by external authentication server", func() {
+		host := "auth"
+
+		f.NewHttpbinDeployment()
+
+		var httpbinIP string
+
+		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
+		Expect(err).NotTo(HaveOccurred())
+
+		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		httpbinIP = e.Subsets[0].Addresses[0].IP
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set?alma=armud", httpbinIP),
+			"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host, func(server string) bool {
+			return Expect(server).Should(ContainSubstring("server_name auth"))
+		})
+
+		resp, _, errs := gorequest.New().
+			Get(f.GetURL(framework.HTTP)).
+			Retry(10, 1*time.Second, http.StatusNotFound).
+			Set("Host", host).
+			RedirectPolicy(func(req gorequest.Request, via []gorequest.Request) error {
+				return http.ErrUseLastResponse
+			}).
+			Param("a", "b").
+			Param("c", "d").
+			End()
+
+		for _, err := range errs {
+			Expect(err).NotTo(HaveOccurred())
+		}
+		Expect(resp.StatusCode).Should(Equal(http.StatusFound))
+		Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d"))))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("alma=armud; Path=/"))
+	})
+
 	Context("when external authentication is configured", func() {
 		host := "auth"
 

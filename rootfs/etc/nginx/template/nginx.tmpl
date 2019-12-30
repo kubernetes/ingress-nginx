@@ -956,6 +956,8 @@ stream {
         location {{ buildAuthSignURLLocation $location.Path $externalAuth.SigninURL }} {
             internal;
 
+            add_header Set-Cookie $auth_cookie;
+
             return 302 {{ buildAuthSignURL $externalAuth.SigninURL }};
         }
         {{ end }}
