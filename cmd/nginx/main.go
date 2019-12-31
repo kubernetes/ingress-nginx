@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -139,7 +138,6 @@ func main() {
 
 	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
-	registerHandlers(mux)
 
 	go startHTTPServer(conf.ListenPorts.Health, mux)
 
@@ -251,14 +249,6 @@ func handleFatalInitError(err error) {
 		"Refer to the troubleshooting guide for more information: "+
 		"https://kubernetes.github.io/ingress-nginx/troubleshooting/",
 		err)
-}
-
-func registerHandlers(mux *http.ServeMux) {
-	mux.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		b, _ := json.Marshal(version.String())
-		w.Write(b)
-	})
 }
 
 func registerHealthz(healthPath string, ic *controller.NGINXController, mux *http.ServeMux) {
