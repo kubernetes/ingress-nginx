@@ -37,6 +37,8 @@ var _ = framework.IngressNginxDescribe("Geoip2", func() {
 	})
 
 	It("should only allow requests from specific countries", func() {
+		Skip("GeoIP test are temporarily disabled")
+
 		f.UpdateNginxConfigMapData("use-geoip2", "true")
 
 		httpSnippetAllowingOnlyAustralia :=

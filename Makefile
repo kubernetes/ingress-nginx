@@ -50,7 +50,7 @@ GOBUILD_FLAGS := -v
 
 ALL_ARCH = amd64 arm arm64
 
-QEMUVERSION = v4.1.0-1
+QEMUVERSION = v4.1.1-1
 
 BUSTED_ARGS =-v --pattern=_test
 
@@ -77,7 +77,7 @@ export E2E_CHECK_LEAKS
 export SLOW_E2E_THRESHOLD
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):daf8634acf839708722cffc67a62e9316a2771c6
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):422f554ba9cb291b4402306d77e218dff63ffab4
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
