@@ -520,6 +520,12 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 		}
 	}
 
+	// TODO: add support for custom protocols
+	if location.Backend == "upstream-default-backend" {
+		proto = "http://"
+		proxyPass = "proxy_pass"
+	}
+
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
 	defProxyPass := fmt.Sprintf("%v %s%s;", proxyPass, proto, upstreamName)
 
