@@ -39,12 +39,12 @@ RUN apk add --no-cache \
   gcc \
   git \
   musl-dev \
+  python \
   openssl
 
 RUN set -eux; \
   apk add --no-cache --virtual .build-deps \
     g++ \
-    python \
     pkgconfig \
     openssl \
     unzip \
