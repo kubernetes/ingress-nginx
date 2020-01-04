@@ -1,18 +1,16 @@
-FROM quay.io/kubernetes-ingress-controller/e2e:v12182019-870be3bcd AS BASE
+FROM quay.io/kubernetes-ingress-controller/e2e:v01042020-d05149a70 AS BASE
 
-FROM quay.io/kubernetes-ingress-controller/debian-base-amd64:0.1
+FROM alpine:3.11
 
-RUN clean-install \
+RUN apk add -U --no-cache \
     ca-certificates \
     bash \
     curl \
-    tzdata
-
-RUN curl -Lo /usr/local/bin/kubectl \
-    https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl \
-    && chmod +x /usr/local/bin/kubectl
+    tzdata \
+    openssl
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/
+COPY --from=BASE /usr/local/bin/kubectl /usr/local/bin/
 
 COPY e2e.sh             /e2e.sh
 COPY cloud-generic      /cloud-generic
