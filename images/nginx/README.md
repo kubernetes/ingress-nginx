@@ -1,6 +1,4 @@
-OpenResty base image using [debian-base](https://quay.io/kubernetes-ingress-controller/debian-base-amd64)
-
-OpenResty® is a dynamic web platform based on NGINX and LuaJIT.
+NGINX base image using [alpine](https://www.alpinelinux.org/)
 
 This custom image contains:
 
@@ -20,7 +18,7 @@ This image provides a default configuration file with no backend servers.
 _Using docker_
 
 ```console
-docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro quay.io/kubernetes-ingress-controller/nginx:0.90
+docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro quay.io/kubernetes-ingress-controller/nginx:0.95
 ```
 
 _Creating a replication controller_
