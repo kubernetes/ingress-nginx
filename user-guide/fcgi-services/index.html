@@ -1345,7 +1345,7 @@
 <h3 id="the-nginxingresskubernetesiofastcgi-params-configmap-annotation">The <code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params-configmap</code> Annotation<a class="headerlink" href="#the-nginxingresskubernetesiofastcgi-params-configmap-annotation" title="Permanent link"> ¶</a></h3>
 <p>To specify <a href="http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_param"><em>NGINX</em> <code class="codehilite">fastcgi_param</code> directives</a>, the <code class="codehilite">fastcgi-params-configmap</code> annotation is used, which in turn must lead to a <em>ConfigMap</em> object containing the <em>NGINX</em> <code class="codehilite">fastcgi_param</code> directives as key/values.</p>
 <blockquote>
-<p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params: &quot;example-configmap&quot;</code></p>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params-configmap: &quot;example-configmap&quot;</code></p>
 </blockquote>
 <p>And the <em>ConfigMap</em> object to specify the <code class="codehilite">SCRIPT_FILENAME</code> and <code class="codehilite">HTTP_PROXY</code>  <em>NGINX's</em> <code class="codehilite">fastcgi_param</code> directives will look like the following:</p>
 <p><div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
@@ -1358,7 +1358,7 @@
 </pre></div>
 Using the <em>namespace/</em> prefix is also supported, for example:</p>
 <blockquote>
-<p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params: &quot;example-namespace/example-configmap&quot;</code></p>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/fastcgi-params-configmap: &quot;example-namespace/example-configmap&quot;</code></p>
 </blockquote>
                 
                   

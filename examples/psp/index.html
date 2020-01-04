@@ -1151,7 +1151,7 @@
                 <h1 id="pod-security-policy-psp">Pod Security Policy (PSP)<a class="headerlink" href="#pod-security-policy-psp" title="Permanent link"> ¶</a></h1>
 <p>In most clusters today, by default, all resources (e.g. Deployments and ReplicatSets)
 have permissions to create pods.
-Kubernetes however provides a more fine-grained authorization policy called 
+Kubernetes however provides a more fine-grained authorization policy called
 <a href="https://kubernetes.io/docs/concepts/policy/pod-security-policy/">Pod Security Policy (PSP)</a>.</p>
 <p>PSP allows the cluster owner to define the permission of each object, for example creating a pod.
 If you have PSP enabled on the cluster, and you deploy ingress-nginx,
@@ -1160,8 +1160,8 @@ you will need to provide the Deployment with the permissions to create pods.</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/psp/psp.yaml</span>
 </pre></div></p>
 <p>Now that the pod security policy is applied, we can continue as usual by applying the
-<a href="https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml">mandatory.yaml</a>
-according to the <a href="../../deploy/">Installation Guide</a>. </p>
+<a href="https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.26.2/deploy/static/mandatory.yaml">mandatory.yaml</a>
+according to the <a href="../../deploy/">Installation Guide</a>.</p>
 <p>Note: PSP permissions must be granted before to the creation of the Deployment and the ReplicaSet.
 If the Deployment or ReplicaSet already exist, they will receive the PSP permissions
 only after deleting them and reapplying mandatory.yaml.</p>
