@@ -1,9 +1,11 @@
 .PHONY: all
 all: container
 
+DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
 .PHONY: container
 container:
-	make -C ../../ e2e-test-binary
+	${DIR}/../../build/run-in-docker.sh make e2e-test-binary
 
 	cp ../e2e/e2e.test .
 	cp ../e2e/wait-for-nginx.sh .
