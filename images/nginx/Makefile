@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.94
+TAG ?= 0.95
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
 DOCKER ?= docker
@@ -26,14 +26,11 @@ ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
 
-QEMUVERSION=v4.1.0-1
+QEMUVERSION=v4.1.1-1
 
 IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
-
-# Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/debian-base-$(ARCH):0.1
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
@@ -62,7 +59,6 @@ all-push: $(addprefix sub-push-,$(ALL_ARCH))
 container: .container-$(ARCH)
 .container-$(ARCH):
 	cp -r ./rootfs/* $(TEMP_DIR)
-	cd $(TEMP_DIR) && $(SED_I) 's|BASEIMAGE|$(BASEIMAGE)|g' Dockerfile
 	cd $(TEMP_DIR) && $(SED_I) "s|ARCH|$(QEMUARCH)|g" Dockerfile
 
 ifeq ($(ARCH),amd64)
