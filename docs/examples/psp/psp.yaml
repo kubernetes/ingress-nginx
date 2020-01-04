@@ -35,7 +35,7 @@ spec:
   runAsUser:
     rule: 'MustRunAsNonRoot'
     ranges:
-    - min: 33
+    - min: 101
       max: 65535
   seLinux:
     rule: 'RunAsAny'

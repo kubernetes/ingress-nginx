@@ -214,7 +214,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 
-	It("should return status code 500 when authentication is configured with invalid content and Authorization header is sent", func() {
+	It("should return status code 401 when authentication is configured with invalid content and Authorization header is sent", func() {
 		host := "auth"
 
 		s := f.EnsureSecret(
@@ -253,7 +253,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			End()
 
 		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+		Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
 	})
 
 	It(`should set snippet "proxy_set_header My-Custom-Header 42;" when external auth is configured`, func() {
