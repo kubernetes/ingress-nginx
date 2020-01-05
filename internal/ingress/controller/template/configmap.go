@@ -71,6 +71,7 @@ var (
 		"balancer_ewma_last_touched_at": 10,
 		"balancer_ewma_locks":           1,
 		"certificate_servers":           5,
+		"ocsp_cache":                    5, // 1MB ~100 responses
 	}
 )
 
