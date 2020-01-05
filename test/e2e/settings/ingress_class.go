@@ -86,7 +86,7 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 
 					return err
 				})
-			Expect(err).To(BeNil())
+			Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment flags")
 		})
 
 		It("should ignore Ingress with no class", func() {

@@ -96,7 +96,7 @@ var _ = framework.IngressNginxDescribe("Pod Security Policies with volumes", fun
 
 				return err
 			})
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment")
 
 		f.NewEchoDeployment()
 
