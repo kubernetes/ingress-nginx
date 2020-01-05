@@ -1277,9 +1277,7 @@ yourself by reading the official documentation thoroughly.</p>
 <p>MetalLB can be deployed either with a simple Kubernetes manifest or with Helm. The rest of this example assumes MetalLB
 was deployed following the <a href="https://metallb.universe.tf/installation/">Installation</a> instructions.</p>
 <p>MetalLB requires a pool of IP addresses in order to be able to take ownership of the <code class="codehilite">ingress-nginx</code> Service. This pool
-can be defined in a ConfigMap named <code class="codehilite">config</code> located in the same namespace as the MetalLB controller. In the simplest
-possible scenario, the pool is composed of the IP addresses of Kubernetes nodes, but IP addresses can also be handed out
-by a DHCP server.</p>
+can be defined in a ConfigMap named <code class="codehilite">config</code> located in the same namespace as the MetalLB controller. This pool of IPs <strong>must</strong> be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
@@ -1304,13 +1302,13 @@ the <em>loadBalancer</em> IP field of the <code class="codehilite">ingress-nginx
     <span class="no">- name: default</span>
       <span class="no">protocol: layer2</span>
       <span class="no">addresses:</span>
-      <span class="no">- 203.0.113.2-203.0.113.3</span>
+      <span class="no">- 203.0.113.10-203.0.113.15</span>
 </pre></div>
 
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl -n ingress-nginx get svc
 <span class="go">NAME                   TYPE          CLUSTER-IP     EXTERNAL-IP  PORT(S)</span>
 <span class="go">default-http-backend   ClusterIP     10.0.64.249    &lt;none&gt;       80/TCP</span>
-<span class="go">ingress-nginx          LoadBalancer  10.0.220.217   203.0.113.3  80:30100/TCP,443:30101/TCP</span>
+<span class="go">ingress-nginx          LoadBalancer  10.0.220.217   203.0.113.10  80:30100/TCP,443:30101/TCP</span>
 </pre></div>
 
 </div>
