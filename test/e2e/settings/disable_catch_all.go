@@ -37,7 +37,7 @@ var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
 
-		framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
 				args = append(args, "--disable-catch-all=true")
@@ -46,6 +46,7 @@ var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
 
 				return err
 			})
+		Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment flags")
 	})
 
 	AfterEach(func() {
