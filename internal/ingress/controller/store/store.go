@@ -54,6 +54,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 // IngressFilterFunc decides if an Ingress should be omitted or not
@@ -896,6 +897,11 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	}
 
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
+	if s.backendConfig.UseGeoIP2 && !nginx.GeoLite2DBExists() {
+		klog.Warning("The GeoIP2 feature is enabled but the databases are missing. Disabling.")
+		s.backendConfig.UseGeoIP2 = false
+	}
+
 	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }
 
