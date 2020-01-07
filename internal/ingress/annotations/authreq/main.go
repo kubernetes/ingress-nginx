@@ -44,7 +44,7 @@ type Config struct {
 	AuthSnippet       string            `json:"authSnippet"`
 	AuthCacheKey      string            `json:"authCacheKey"`
 	AuthCacheDuration []string          `json:"authCacheDuration"`
-	ProxySetHeaders   map[string]string `json:"proxySetHeaders",omitempty`
+	ProxySetHeaders   map[string]string `json:"proxySetHeaders,omitempty"`
 }
 
 // DefaultCacheDuration is the fallback value if no cache duration is provided
