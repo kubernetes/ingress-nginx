@@ -69,13 +69,14 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 	}
 
 	It("should shutdown after waiting 60 seconds for pending connections to be closed", func() {
-		framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
 				grace := int64(3600)
 				deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
 				return err
 			})
+		Expect(err).NotTo(HaveOccurred())
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/proxy-send-timeout": "600",
@@ -127,13 +128,14 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 	})
 
 	It("should shutdown after waiting 150 seconds for pending connections to be closed", func() {
-		framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
 				grace := int64(3600)
 				deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
 				return err
 			})
+		Expect(err).NotTo(HaveOccurred())
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/proxy-send-timeout": "600",

@@ -109,7 +109,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 			}
 		}()
 
-		err = wait.Poll(10*time.Second, framework.DefaultTimeout, func() (done bool, err error) {
+		err = wait.Poll(10*time.Second, 4*time.Minute, func() (done bool, err error) {
 			ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			if err != nil {
 				return false, nil

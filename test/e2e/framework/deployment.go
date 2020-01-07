@@ -423,7 +423,8 @@ func (f *Framework) ScaleDeploymentToZero(name string) {
 	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
 
 	d.Spec.Replicas = NewInt32(0)
+	f.EnsureDeployment(d)
 
-	d = f.EnsureDeployment(d)
-	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 0)
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for no endpoints")
 }

@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("default-ssl-certificate", func() {
 			f.Namespace)
 		Expect(err).NotTo(HaveOccurred())
 
-		framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
 				args = append(args, "--default-ssl-certificate=$(POD_NAMESPACE)/"+secretName)
@@ -55,6 +55,7 @@ var _ = framework.IngressNginxDescribe("default-ssl-certificate", func() {
 
 				return err
 			})
+		Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment flags")
 
 		// this asserts that it configures default custom ssl certificate without an ingress at all
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)

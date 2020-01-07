@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -37,19 +38,21 @@ var _ = framework.IngressNginxDescribe("Custom Default Backend", func() {
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
 
-		framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
-				args = append(args, fmt.Sprintf("--default-backend-service=$(POD_NAMESPACE)/%v", framework.EchoService))
+				args = append(args, fmt.Sprintf("--default-backend-service=%v/%v", f.Namespace, framework.EchoService))
 				deployment.Spec.Template.Spec.Containers[0].Args = args
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
 
 				return err
 			})
+		Expect(err).NotTo(HaveOccurred())
+		time.Sleep(1 * time.Second)
 
 		f.WaitForNginxServer("_",
 			func(server string) bool {
-				return strings.Contains(server, "set $proxy_upstream_name \"upstream-default-backend\"")
+				return strings.Contains(server, `set $proxy_upstream_name "upstream-default-backend"`)
 			})
 	})
 
