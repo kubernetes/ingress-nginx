@@ -7,6 +7,7 @@ RUN apk add -U --no-cache \
     bash \
     curl \
     tzdata \
+    libc6-compat \
     openssl
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/

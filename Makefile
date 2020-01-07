@@ -17,9 +17,27 @@
 
 .DEFAULT_GOAL:=help
 
+.EXPORT_ALL_VARIABLES:
+
+ifndef VERBOSE
+.SILENT:
+endif
+
+# set default shell
+SHELL = /bin/bash
+
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
 TAG ?= master
 DOCKER ?= docker
+
+# Use docker to run makefile tasks
+USE_DOCKER ?= true
+
+# Disable run docker tasks if running in prow.
+# only checks the existence of the variable, not the value.
+ifdef DIND_TASKS
+USE_DOCKER=false
+endif
 
 # e2e settings
 # Allow limiting the scope of the e2e tests. By default run everything
@@ -30,12 +48,6 @@ E2E_NODES ?= 10
 SLOW_E2E_THRESHOLD ?= 50
 # run e2e test suite with tests that check for memory leaks? (default is false)
 E2E_CHECK_LEAKS ?=
-
-# fix sed for osx
-SED_I ?= sed -i
-ifeq ($(GOHOSTOS),darwin)
-  SED_I=sed -i ''
-endif
 
 REPO_INFO ?= $(shell git config --get remote.origin.url)
 GIT_COMMIT ?= git-$(shell git rev-parse --short HEAD)
@@ -54,26 +66,16 @@ MULTI_ARCH_IMAGE = $(REGISTRY)/nginx-ingress-controller-${ARCH}
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 GOARCH = ${ARCH}
 GOOS = linux
-
 GOBUILD_FLAGS := -v
+
+# fix sed for osx
+SED_I ?= sed -i
+ifeq ($(GOHOSTOS),darwin)
+  SED_I=sed -i ''
+endif
 
 # use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
 GO111MODULE=off
-
-export ARCH
-export TAG
-export PKG
-export GOARCH
-export GOOS
-export GO111MODULE
-export GIT_COMMIT
-export GOBUILD_FLAGS
-export REPO_INFO
-export BUSTED_ARGS
-export IMAGE
-export E2E_NODES
-export E2E_CHECK_LEAKS
-export SLOW_E2E_THRESHOLD
 
 # Set default base image dynamically for each arch
 BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):422f554ba9cb291b4402306d77e218dff63ffab4
@@ -86,7 +88,6 @@ ifeq ($(ARCH),arm64)
 endif
 
 TEMP_DIR := $(shell mktemp -d)
-
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
 
 help:  ## Display this help
@@ -154,11 +155,33 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 
 .PHONY: build
 build: ## Build ingress controller, debug tool and pre-stop hook.
+ifeq ($(USE_DOCKER), true)
+	@build/run-in-docker.sh \
+		PKG=$(PKG) \
+		ARCH=$(PKG) \
+		GIT_COMMIT=$(GIT_COMMIT) \
+		REPO_INFO=$(REPO_INFO) \
+		TAG=$(TAG) \
+		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
+		build/build.sh
+else
 	@build/build.sh
+endif
 
 .PHONY: build-plugin
 build-plugin: ## Build ingress-nginx krew plugin.
+ifeq ($(USE_DOCKER), true)
+	@build/run-in-docker.sh \
+		PKG=$(PKG) \
+		ARCH=$(PKG) \
+		GIT_COMMIT=$(GIT_COMMIT) \
+		REPO_INFO=$(REPO_INFO) \
+		TAG=$(TAG) \
+		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
+		build/build-plugin.sh
+else
 	@build/build-plugin.sh
+endif
 
 .PHONY: clean
 clean: ## Remove .gocache directory.
@@ -166,15 +189,37 @@ clean: ## Remove .gocache directory.
 
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint and lualint.
+ifeq ($(USE_DOCKER), true)
+	@build/run-in-docker.sh \
+		build/static-check.sh
+else
 	@build/static-check.sh
+endif
 
 .PHONY: test
 test: ## Run go unit tests.
+ifeq ($(USE_DOCKER), true)
+	@build/run-in-docker.sh \
+		PKG=$(PKG) \
+		ARCH=$(PKG) \
+		GIT_COMMIT=$(GIT_COMMIT) \
+		REPO_INFO=$(REPO_INFO) \
+		TAG=$(TAG) \
+		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
+		build/test.sh
+else
 	@build/test.sh
+endif
 
 .PHONY: lua-test
 lua-test: ## Run lua unit tests.
+ifeq ($(USE_DOCKER), true)
+	@build/run-in-docker.sh \
+		BUSTED_ARGS=$(BUSTED_ARGS) \
+		build/test-lua.sh
+else
 	@build/test-lua.sh
+endif
 
 .PHONY: e2e-test
 e2e-test: ## Run e2e tests (expects access to a working Kubernetes cluster).
@@ -182,11 +227,16 @@ e2e-test: ## Run e2e tests (expects access to a working Kubernetes cluster).
 
 .PHONY: e2e-test-image
 e2e-test-image: e2e-test-binary ## Build image for e2e tests.
-	make -C test/e2e-image
+	@make -C test/e2e-image
 
 .PHONY: e2e-test-binary
 e2e-test-binary: ## Build ginkgo binary for e2e tests.
+ifeq ($(USE_DOCKER), true)
+	@build/run-in-docker.sh \
+		ginkgo build ./test/e2e
+else
 	@ginkgo build ./test/e2e
+endif
 
 .PHONY: cover
 cover: ## Run go coverage unit tests.
@@ -217,7 +267,7 @@ dep-ensure: ## Update and vendo go dependencies.
 
 .PHONY: dev-env
 dev-env: ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
-	@build/dev-env.sh
+	@USE_DOCKER=false build/dev-env.sh
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
@@ -239,7 +289,7 @@ misspell: ## Check for spelling errors.
 
 .PHONY: kind-e2e-test
 kind-e2e-test: ## Run e2e tests using kind.
-	test/e2e/run.sh
+	@test/e2e/run.sh
 
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
