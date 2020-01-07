@@ -923,7 +923,7 @@ func TestGetIngressInformation(t *testing.T) {
 		},
 		"valid ingress definition with name validIng in namespace default": {
 			&ingress.Ingress{
-				networking.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "validIng",
 						Namespace: apiv1.NamespaceDefault,
@@ -937,7 +937,6 @@ func TestGetIngressInformation(t *testing.T) {
 						},
 					},
 				},
-				nil,
 			},
 			"host1",
 			"",
@@ -952,7 +951,7 @@ func TestGetIngressInformation(t *testing.T) {
 		},
 		"valid ingress definition with name demo in namespace something and path /ok using a service with name b-svc port 80": {
 			&ingress.Ingress{
-				networking.Ingress{
+				Ingress: networking.Ingress{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "demo",
 						Namespace: "something",
@@ -982,7 +981,6 @@ func TestGetIngressInformation(t *testing.T) {
 						},
 					},
 				},
-				nil,
 			},
 			"foo.bar",
 			"/ok",
