@@ -381,8 +381,7 @@ describe("Balancer", function()
       assert.has_no.errors(function() balancer.sync_backend(backend) end)
       assert.spy(s_ngx_log).was_called_with(ngx.INFO,
       "LB algorithm changed from round_robin to ewma, resetting the instance")
-      -- TODO(elvinefendi) figure out why
-      -- assert.spy(s).was_called_with(new_implementation, backend) does not work here
+      assert.spy(s).was_called_with(new_implementation, backend)
       assert.spy(s).was_called(1)
       assert.spy(s_old).was_not_called()
     end)
