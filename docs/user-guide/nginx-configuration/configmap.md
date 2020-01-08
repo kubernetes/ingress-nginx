@@ -131,6 +131,12 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-debug-header](#jaeger-debug-header)|string|uber-debug-id|
 |[jaeger-baggage-header](#jaeger-baggage-header)|string|jaeger-baggage|
 |[jaeger-trace-baggage-header-prefix](#jaeger-trace-baggage-header-prefix)|string|uberctx-|
+|[datadog-collector-host](#datadog-collector-host)|string|""|
+|[datadog-collector-port](#datadog-collector-port)|int|8126|
+|[datadog-service-name](#datadog-service-name)|service|"nginx"|
+|[datadog-operation-name-override](#datadog-operation-name-override)|service|"nginx.handle"|
+|[datadog-priority-sampling](#datadog-priority-sampling)|bool|"true"|
+|[datadog-sample-rate](#datadog-sample-rate)|float|1.0|
 |[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
@@ -779,6 +785,32 @@ Specifies the header name used to submit baggage if there is no root span. _**de
 ## jaeger-tracer-baggage-header-prefix
 
 Specifies the header prefix used to propagate baggage. _**default:**_ uberctx-
+
+## datadog-collector-host
+
+Specifies the datadog agent host to use when uploading traces. It must be a valid URL.
+
+## datadog-collector-port
+
+Specifies the port to use when uploading traces. _**default:**_ 8126
+
+## datadog-service-name
+
+Specifies the service name to use for any traces created. _**default:**_ nginx
+
+## datadog-operation-name-override
+
+Overrides the operation naem to use for any traces crated. _**default:**_ nginx.handle
+
+## datadog-priority-sampling
+
+Specifies to use client-side sampling.
+If true disables client-side sampling (thus ignoring `sample_rate`) and enables distributed priority sampling, where traces are sampled based on a combination of user-assigned priorities and configuration from the agent. _**default:**_ true
+
+## datadog-sample-rate
+
+Specifies sample rate for any traces created.
+This is effective only when `datadog-priority-sampling` is `false` _**default:**_ 1.0
 
 ## main-snippet
 
