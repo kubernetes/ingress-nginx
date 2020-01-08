@@ -88,6 +88,12 @@ datadog-service-name
 
 # specifies the operation name to use for any traces collected, Default: nginx.handle
 datadog-operation-name-override
+
+# Specifies to use client-side sampling for distributed priority sampling and ignore sample rate, Default: true
+datadog-priority-sampling
+
+# specifies sample rate for any traces created, Default: 1.0
+datadog-sample-rate
 ```
 
 All these options (including host) allow environment variables, such as `$HOSTNAME` or `$HOST_IP`. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like `$HOST_IP` (which can be 'mounted' with the `status.hostIP` fieldpath, as described [here](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api)) to make sure traces will be sent to the local agent.

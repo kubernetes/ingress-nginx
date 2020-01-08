@@ -1075,7 +1075,9 @@ const datadogTmpl = `{
   "service": "{{ .DatadogServiceName }}",
   "agent_host": "{{ .DatadogCollectorHost }}",
   "agent_port": {{ .DatadogCollectorPort }},
-  "operation_name_override": "{{ .DatadogOperationNameOverride }}"
+  "operation_name_override": "{{ .DatadogOperationNameOverride }}",
+  "sample_rate": {{ .DatadogSampleRate }},
+  "dd.priority.sampling": {{ .DatadogPrioritySampling }}
 }`
 
 func createOpentracingCfg(cfg ngx_config.Configuration) error {
