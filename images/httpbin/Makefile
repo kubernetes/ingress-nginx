@@ -20,7 +20,7 @@ ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/debian-base-$(ARCH):0.1
+BASEIMAGE=quay.io/kubernetes-ingress-controller/debian-base-$(ARCH):0.1
 
 ALL_ARCH = amd64 arm arm64
 
