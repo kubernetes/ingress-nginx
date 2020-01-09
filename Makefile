@@ -154,11 +154,11 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 	$(DOCKER) push $(MULTI_ARCH_IMAGE):$(TAG)
 
 .PHONY: build
-build: ## Build ingress controller, debug tool and pre-stop hook.
+build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
 ifeq ($(USE_DOCKER), true)
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
-		ARCH=$(PKG) \
+		ARCH=$(ARCH) \
 		GIT_COMMIT=$(GIT_COMMIT) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
@@ -169,11 +169,11 @@ else
 endif
 
 .PHONY: build-plugin
-build-plugin: ## Build ingress-nginx krew plugin.
+build-plugin: check-go-version ## Build ingress-nginx krew plugin.
 ifeq ($(USE_DOCKER), true)
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
-		ARCH=$(PKG) \
+		ARCH=$(ARCH) \
 		GIT_COMMIT=$(GIT_COMMIT) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
@@ -197,11 +197,11 @@ else
 endif
 
 .PHONY: test
-test: ## Run go unit tests.
+test: check-go-version ## Run go unit tests.
 ifeq ($(USE_DOCKER), true)
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
-		ARCH=$(PKG) \
+		ARCH=$(ARCH) \
 		GIT_COMMIT=$(GIT_COMMIT) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
@@ -222,7 +222,7 @@ else
 endif
 
 .PHONY: e2e-test
-e2e-test: ## Run e2e tests (expects access to a working Kubernetes cluster).
+e2e-test: check-go-version ## Run e2e tests (expects access to a working Kubernetes cluster).
 	@build/run-e2e-suite.sh
 
 .PHONY: e2e-test-image
@@ -230,7 +230,7 @@ e2e-test-image: e2e-test-binary ## Build image for e2e tests.
 	@make -C test/e2e-image
 
 .PHONY: e2e-test-binary
-e2e-test-binary: ## Build ginkgo binary for e2e tests.
+e2e-test-binary: check-go-version ## Build ginkgo binary for e2e tests.
 ifeq ($(USE_DOCKER), true)
 	@build/run-in-docker.sh \
 		ginkgo build ./test/e2e
@@ -239,7 +239,7 @@ else
 endif
 
 .PHONY: cover
-cover: ## Run go coverage unit tests.
+cover: check-go-version ## Run go coverage unit tests.
 	@build/cover.sh
 	echo "Uploading coverage results..."
 	@curl -s https://codecov.io/bash | bash
@@ -260,13 +260,13 @@ check_dead_links: ## Check if the documentation contains dead links.
 	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
 
 .PHONY: dep-ensure
-dep-ensure: ## Update and vendo go dependencies.
+dep-ensure: check-go-version ## Update and vendo go dependencies.
 	go mod tidy -v
 	find vendor -name '*_test.go' -delete
 	go mod vendor
 
 .PHONY: dev-env
-dev-env: ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
+dev-env: check-go-version ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
 	@USE_DOCKER=false build/dev-env.sh
 
 .PHONY: live-docs
@@ -280,7 +280,7 @@ build-docs: ## Build documentation (output in ./site directory).
 	@docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
 
 .PHONY: misspell
-misspell: ## Check for spelling errors.
+misspell: check-go-version ## Check for spelling errors.
 	@go get github.com/client9/misspell/cmd/misspell
 	misspell \
 		-locale US \
@@ -288,9 +288,13 @@ misspell: ## Check for spelling errors.
 		cmd/* internal/* deploy/* docs/* design/* test/* README.md
 
 .PHONY: kind-e2e-test
-kind-e2e-test: ## Run e2e tests using kind.
+kind-e2e-test: check-go-version ## Run e2e tests using kind.
 	@test/e2e/run.sh
 
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
 	@build/run-ingress-controller.sh
+
+.PHONY: check-go-version
+check-go-version:
+	@hack/check-go-version.sh
