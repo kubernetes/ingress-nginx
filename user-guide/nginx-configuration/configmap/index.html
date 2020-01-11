@@ -1322,6 +1322,48 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#datadog-collector-host" class="md-nav__link">
+    datadog-collector-host
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-collector-port" class="md-nav__link">
+    datadog-collector-port
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-service-name" class="md-nav__link">
+    datadog-service-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-operation-name-override" class="md-nav__link">
+    datadog-operation-name-override
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-priority-sampling" class="md-nav__link">
+    datadog-priority-sampling
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-sample-rate" class="md-nav__link">
+    datadog-sample-rate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#main-snippet" class="md-nav__link">
     main-snippet
   </a>
@@ -2906,6 +2948,48 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#datadog-collector-host" class="md-nav__link">
+    datadog-collector-host
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-collector-port" class="md-nav__link">
+    datadog-collector-port
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-service-name" class="md-nav__link">
+    datadog-service-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-operation-name-override" class="md-nav__link">
+    datadog-operation-name-override
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-priority-sampling" class="md-nav__link">
+    datadog-priority-sampling
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datadog-sample-rate" class="md-nav__link">
+    datadog-sample-rate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#main-snippet" class="md-nav__link">
     main-snippet
   </a>
@@ -3761,6 +3845,36 @@ Same for numbers, like "100".</p>
 <td align="left">uberctx-</td>
 </tr>
 <tr>
+<td align="left"><a href="#datadog-collector-host">datadog-collector-host</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
+<td align="left"><a href="#datadog-collector-port">datadog-collector-port</a></td>
+<td align="left">int</td>
+<td align="left">8126</td>
+</tr>
+<tr>
+<td align="left"><a href="#datadog-service-name">datadog-service-name</a></td>
+<td align="left">service</td>
+<td align="left">"nginx"</td>
+</tr>
+<tr>
+<td align="left"><a href="#datadog-operation-name-override">datadog-operation-name-override</a></td>
+<td align="left">service</td>
+<td align="left">"nginx.handle"</td>
+</tr>
+<tr>
+<td align="left"><a href="#datadog-priority-sampling">datadog-priority-sampling</a></td>
+<td align="left">bool</td>
+<td align="left">"true"</td>
+</tr>
+<tr>
+<td align="left"><a href="#datadog-sample-rate">datadog-sample-rate</a></td>
+<td align="left">float</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
 <td align="left"><a href="#main-snippet">main-snippet</a></td>
 <td align="left">string</td>
 <td align="left">""</td>
@@ -4196,7 +4310,14 @@ To create a ticket: <code class="codehilite">openssl rand 80 | openssl enc -A -b
 </blockquote>
 <h2 id="use-geoip2">use-geoip2<a class="headerlink" href="#use-geoip2" title="Permanent link"> ¶</a></h2>
 <p>Enables the <a href="https://github.com/leev/ngx_http_geoip2_module">geoip2 module</a> for NGINX.
-<em><strong>default:</strong></em> false</p>
+Since <code class="codehilite">0.27.0</code> and due to a <a href="https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases">change in the MaxMind databases</a> a license is required to have access to the databases.
+For this reason, it is required to define a new flag <code class="codehilite">--maxmind-license-key</code> in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
+Alternatively, it is possible to use a volume to mount the files <code class="codehilite">/etc/nginx/geoip/GeoLite2-City.mmdb</code> and <code class="codehilite">/etc/nginx/geoip/GeoLite2-ASN.mmdb</code>, avoiding the overhead of the download.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If the feature is enabled but the files are missing, GeoIP2 will not be enabled.</p>
+</div>
+<p><em><strong>default:</strong></em> false</p>
 <h2 id="enable-brotli">enable-brotli<a class="headerlink" href="#enable-brotli" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables compression of HTTP responses using the <a href="https://github.com/google/ngx_brotli">"brotli" module</a>.
 The default mime type list to compress is: <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>. <em><strong>default:</strong></em> is disabled</p>
@@ -4327,6 +4448,20 @@ Leave blank to use default value (localhost). <em><strong>default:</strong></em>
 <p>Specifies the header name used to submit baggage if there is no root span. <em><strong>default:</strong></em> jaeger-baggage</p>
 <h2 id="jaeger-tracer-baggage-header-prefix">jaeger-tracer-baggage-header-prefix<a class="headerlink" href="#jaeger-tracer-baggage-header-prefix" title="Permanent link"> ¶</a></h2>
 <p>Specifies the header prefix used to propagate baggage. <em><strong>default:</strong></em> uberctx-</p>
+<h2 id="datadog-collector-host">datadog-collector-host<a class="headerlink" href="#datadog-collector-host" title="Permanent link"> ¶</a></h2>
+<p>Specifies the datadog agent host to use when uploading traces. It must be a valid URL.</p>
+<h2 id="datadog-collector-port">datadog-collector-port<a class="headerlink" href="#datadog-collector-port" title="Permanent link"> ¶</a></h2>
+<p>Specifies the port to use when uploading traces. <em><strong>default:</strong></em> 8126</p>
+<h2 id="datadog-service-name">datadog-service-name<a class="headerlink" href="#datadog-service-name" title="Permanent link"> ¶</a></h2>
+<p>Specifies the service name to use for any traces created. <em><strong>default:</strong></em> nginx</p>
+<h2 id="datadog-operation-name-override">datadog-operation-name-override<a class="headerlink" href="#datadog-operation-name-override" title="Permanent link"> ¶</a></h2>
+<p>Overrides the operation naem to use for any traces crated. <em><strong>default:</strong></em> nginx.handle</p>
+<h2 id="datadog-priority-sampling">datadog-priority-sampling<a class="headerlink" href="#datadog-priority-sampling" title="Permanent link"> ¶</a></h2>
+<p>Specifies to use client-side sampling.
+If true disables client-side sampling (thus ignoring <code class="codehilite">sample_rate</code>) and enables distributed priority sampling, where traces are sampled based on a combination of user-assigned priorities and configuration from the agent. <em><strong>default:</strong></em> true</p>
+<h2 id="datadog-sample-rate">datadog-sample-rate<a class="headerlink" href="#datadog-sample-rate" title="Permanent link"> ¶</a></h2>
+<p>Specifies sample rate for any traces created.
+This is effective only when <code class="codehilite">datadog-priority-sampling</code> is <code class="codehilite">false</code> <em><strong>default:</strong></em> 1.0</p>
 <h2 id="main-snippet">main-snippet<a class="headerlink" href="#main-snippet" title="Permanent link"> ¶</a></h2>
 <p>Adds custom configuration to the main section of the nginx configuration.</p>
 <h2 id="http-snippet">http-snippet<a class="headerlink" href="#http-snippet" title="Permanent link"> ¶</a></h2>
