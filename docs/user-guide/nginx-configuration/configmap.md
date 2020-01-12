@@ -14,6 +14,9 @@ data:
   ssl-protocols: SSLv2
 ```
 
+Please note that the name of the ConfigMap needs to be the name that the Controller deployment is looking for.
+For example if using the Helm release, `helm get <your release name>` will print the yaml of the release. There should be a `--configmap` argument that shows what the ConfigMap name should be.
+
 !!! Important
     The key and values in a ConfigMap can only be strings.
     This means that we want a value with boolean values we need to quote the values, like "true" or "false".
