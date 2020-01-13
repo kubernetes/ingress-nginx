@@ -64,18 +64,26 @@ apt -q=3 update
 
 apt -q=3 install docker-ce --yes
 
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
+mkdir -p ~/.docker
+echo '{ "experimental": "enabled", "aliases": { "builder": "buildx" } }' > ~/.docker/config.json
+
 echo ${docker_password} | docker login -u ${docker_username} --password-stdin quay.io
 
 curl -sL -o /usr/local/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 chmod +x /usr/local/bin/gimme
 
-eval "$(gimme 1.13)"
+eval "$(gimme 1.13.6)"
 
 git clone https://github.com/kubernetes/ingress-nginx
 
 cd ingress-nginx/images/nginx
 
-make register-qemu
+docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
+
+docker buildx create --name ingress-nginx
+docker buildx use ingress-nginx
 
 export TAG=$(git rev-parse HEAD)
 
