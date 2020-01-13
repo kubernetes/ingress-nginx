@@ -15,8 +15,6 @@
 
 FROM alpine:3.11 as builder
 
-CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
-
 COPY . /
 
 RUN apk add -U bash \

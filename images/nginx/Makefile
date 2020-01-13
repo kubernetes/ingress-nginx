@@ -19,27 +19,10 @@ ARCH ?= $(shell go env GOARCH)
 DOCKER ?= docker
 
 ALL_ARCH = amd64 arm arm64
-SED_I?=sed -i
-GOHOSTOS ?= $(shell go env GOHOSTOS)
-
-ifeq ($(GOHOSTOS),darwin)
-  SED_I=sed -i ''
-endif
-
-QEMUVERSION=v4.1.1-1
 
 IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
-
-ifeq ($(ARCH),arm)
-	QEMUARCH=arm
-endif
-ifeq ($(ARCH),arm64)
-	QEMUARCH=aarch64
-endif
-
-TEMP_DIR := $(shell mktemp -d)
 
 all: all-container
 
@@ -58,29 +41,16 @@ all-push: $(addprefix sub-push-,$(ALL_ARCH))
 
 container: .container-$(ARCH)
 .container-$(ARCH):
-	cp -r ./rootfs/* $(TEMP_DIR)
-	cd $(TEMP_DIR) && $(SED_I) "s|ARCH|$(QEMUARCH)|g" Dockerfile
-
-ifeq ($(ARCH),amd64)
-	# When building "normally" for amd64, remove the whole line, it has no part in the amd64 image
-	cd $(TEMP_DIR) && $(SED_I) "/CROSS_BUILD_/d" Dockerfile
-else
-	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
-	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)
-	cd $(TEMP_DIR) && $(SED_I) "s/CROSS_BUILD_//g" Dockerfile
-endif
-
-	$(DOCKER) build --no-cache -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)
+	$(DOCKER) buildx build \
+		--no-cache \
+		--progress plain \
+		--platform linux/$(ARCH) \
+		-t $(MULTI_ARCH_IMG):$(TAG) rootfs
 
 ifeq ($(ARCH), amd64)
 	# This is for to maintain the backward compatibility
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
-
-.PHONY: register-qemu
-register-qemu:
-	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 
 push: .push-$(ARCH)
 .push-$(ARCH): .container-$(ARCH)
