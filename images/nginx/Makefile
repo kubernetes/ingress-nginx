@@ -15,53 +15,45 @@
 # 0.0.0 shouldn't clobber any released builds
 TAG ?= 0.96
 REGISTRY ?= quay.io/kubernetes-ingress-controller
-ARCH ?= $(shell go env GOARCH)
-DOCKER ?= docker
-
-ALL_ARCH = amd64 arm arm64
 
 IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)
-MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
-all: all-container
+PLATFORMS = amd64 arm arm64
 
-image-info:
-	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+COMMA := ,
 
-sub-container-%:
-	$(MAKE) ARCH=$* container
+all: container
 
-sub-push-%:
-	$(MAKE) ARCH=$* push
-
-all-container: $(addprefix sub-container-,$(ALL_ARCH))
-
-all-push: $(addprefix sub-push-,$(ALL_ARCH))
-
-container: .container-$(ARCH)
-.container-$(ARCH):
-	$(DOCKER) buildx build \
+container:
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
 		--no-cache \
 		--progress plain \
-		--platform linux/$(ARCH) \
-		-t $(MULTI_ARCH_IMG):$(TAG) rootfs
+		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--tag $(IMAGE):$(TAG) rootfs
+
+	# https://github.com/docker/buildx/issues/59
+	$(foreach PLATFORM,$(PLATFORMS), \
+			DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
+			--load \
+			--progress plain \
+			--platform $(PLATFORM) \
+			--tag $(IMAGE)-$(PLATFORM):$(TAG) rootfs;)
 
 ifeq ($(ARCH), amd64)
 	# This is for to maintain the backward compatibility
-	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
+	docker tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
-push: .push-$(ARCH)
-.push-$(ARCH): .container-$(ARCH)
-	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
+push: container
+	$(foreach PLATFORM,$(PLATFORMS), \
+		docker push $(IMAGE)-$(PLATFORM):$(TAG);)
+
 ifeq ($(ARCH), amd64)
-	$(DOCKER) push $(IMAGE):$(TAG)
+	docker push $(IMAGE):$(TAG)
 endif
 
-clean: $(addprefix sub-clean-,$(ALL_ARCH))
-sub-clean-%:
-	$(DOCKER) rmi -f $(IMAGE)-$*:$(TAG) || true
-
-release: all-container all-push
+release: push
 	echo "done"

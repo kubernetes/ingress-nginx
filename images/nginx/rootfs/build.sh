@@ -43,7 +43,7 @@ export LUA_BRIDGE_TRACER_VERSION=0.1.1
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export RESTY_LUAROCKS_VERSION=3.2.1
+export RESTY_LUAROCKS_VERSION=3.1.3
 export LUAJIT_VERSION=9d5750d28478abfdcaefdfdc408f87752a21e431
 export LUA_RESTY_BALANCER=0.03
 export LUA_RESTY_CORE=0.1.17
@@ -194,7 +194,7 @@ get_src 41378438c833e313a18869d0c4a72704b4835c30acaf7fd68013ab6732ff78a7 \
 get_src 5f629a50ba22347c441421091da70fdc2ac14586619934534e5a0f8a1390a950 \
         "https://github.com/yaoweibin/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
-get_src f27e20c9cdb3ffb991ccdb85796c36a0690566676f8e1a59b0d0ee6598907d04 \
+get_src c573435f495aac159e34eaa0a3847172a2298eb6295fcdc35d565f9f9b990513 \
         "https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz"
 
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \

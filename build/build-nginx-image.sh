@@ -38,7 +38,11 @@ if [ ! -f "${ENV_FILE}" ]; then
 fi
 
 # build local terraform image to build nginx
-docker build -t build-nginx-terraform $DIR/images/nginx
+export DOCKER_CLI_EXPERIMENTAL=enabled
+docker buildx build \
+  --no-cache \
+  --platform linux/amd64 \
+  --tag build-nginx-terraform $DIR/images/nginx
 
 # build nginx and publish docker images to quay.io.
 # this can take up to two hours.
