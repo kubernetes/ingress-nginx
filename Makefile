@@ -78,14 +78,7 @@ endif
 GO111MODULE=off
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):422f554ba9cb291b4402306d77e218dff63ffab4
-
-ifeq ($(ARCH),arm)
-	QEMUARCH=arm
-endif
-ifeq ($(ARCH),arm64)
-	QEMUARCH=aarch64
-endif
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):26f574dc279aa853736d7f7249965e90e47171d6
 
 TEMP_DIR := $(shell mktemp -d)
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
@@ -122,28 +115,19 @@ container: clean-container .container-$(ARCH) ## Build image for a particular ar
 
 	cp -RP ./* $(TEMP_DIR)
 	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
-	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
 	$(SED_I) "s|VERSION|$(TAG)|g" $(DOCKERFILE)
 
-ifeq ($(ARCH),amd64)
-	# When building "normally" for amd64, remove the whole line, it has no part in the amd64 image
-	$(SED_I) "/CROSS_BUILD_/d" $(DOCKERFILE)
-else
-	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
-	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/v4.1.1-1/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)/rootfs
-	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
-endif
-
 	echo "Building docker image..."
-	$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMAGE):$(TAG) $(TEMP_DIR)/rootfs
+	$(DOCKER) buildx build \
+		--no-cache \
+		--load \
+		--progress plain \
+		--platform linux/$(ARCH) \
+		-t $(MULTI_ARCH_IMAGE):$(TAG) $(TEMP_DIR)/rootfs
 
 .PHONY: clean-container
 clean-container: ## Removes local image
 	@$(DOCKER) rmi -f $(MULTI_ARCH_IMAGE):$(TAG) || true
-
-.PHONY: register-qemu
-register-qemu: ## Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	@$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset >&2
 
 .PHONY: push
 push: .push-$(ARCH) ## Publish image for a particular arch.
@@ -267,7 +251,7 @@ dep-ensure: check-go-version ## Update and vendo go dependencies.
 
 .PHONY: dev-env
 dev-env: check-go-version ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
-	@USE_DOCKER=false build/dev-env.sh
+	@DIND_DOCKER=0 USE_DOCKER=false build/dev-env.sh
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000

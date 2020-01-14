@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:422f554ba9cb291b4402306d77e218dff63ffab4
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:26f574dc279aa853736d7f7249965e90e47171d6
 
 ARG GOLANG_VERSION
 ARG GOLANG_SHA
@@ -33,7 +33,6 @@ RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 RUN apk add --no-cache \
   bash \
   ca-certificates \
-  parallel \
   wget \
   make \
   gcc \

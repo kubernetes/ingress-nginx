@@ -43,6 +43,8 @@ export REGISTRY=ingress-controller
 
 export K8S_VERSION=${K8S_VERSION:-v1.17.0}
 
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
 kind --version || $(echo "Please install kind before running e2e tests";exit 1)
