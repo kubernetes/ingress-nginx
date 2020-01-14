@@ -1184,7 +1184,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		EnableOpentracing:    true,
 		DatadogCollectorHost: "datadog-host.com",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgDatadog)
 
 	if expected != actual {
