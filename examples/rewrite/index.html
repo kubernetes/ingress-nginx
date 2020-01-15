@@ -1337,10 +1337,12 @@ and that you have an ingress controller <a href="../../deploy/">running</a> in y
 </pre></div>
 
 <p>In this ingress definition, any characters captured by <code class="codehilite">(.*)</code> will be assigned to the placeholder <code class="codehilite">$2</code>, which is then used as a parameter in the <code class="codehilite">rewrite-target</code> annotation.</p>
-<p>For example, the ingress definition above will result in the following rewrites:
-- <code class="codehilite">rewrite.bar.com/something</code> rewrites to <code class="codehilite">rewrite.bar.com/</code>
-- <code class="codehilite">rewrite.bar.com/something/</code> rewrites to <code class="codehilite">rewrite.bar.com/</code>
-- <code class="codehilite">rewrite.bar.com/something/new</code> rewrites to <code class="codehilite">rewrite.bar.com/new</code></p>
+<p>For example, the ingress definition above will result in the following rewrites:</p>
+<ul>
+<li><code class="codehilite">rewrite.bar.com/something</code> rewrites to <code class="codehilite">rewrite.bar.com/</code></li>
+<li><code class="codehilite">rewrite.bar.com/something/</code> rewrites to <code class="codehilite">rewrite.bar.com/</code></li>
+<li><code class="codehilite">rewrite.bar.com/something/new</code> rewrites to <code class="codehilite">rewrite.bar.com/new</code></li>
+</ul>
 <h3 id="app-root">App Root<a class="headerlink" href="#app-root" title="Permanent link"> ¶</a></h3>
 <p>Create an Ingress rule with a app-root annotation:
 <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span>

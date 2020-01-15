@@ -1461,7 +1461,7 @@ To change this behavior use the flag <code class="codehilite">--watch-namespace<
 </pre></div></p>
 </div>
 <p>The following <strong>Mandatory Command</strong> is required for all deployments.</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/mandatory.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/mandatory.yaml</span>
 </pre></div>
 
 <div class="admonition tip">
@@ -1473,7 +1473,7 @@ To change this behavior use the flag <code class="codehilite">--watch-namespace<
 <h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link"> ¶</a></h4>
 <p>Kubernetes is available in Docker for Mac (from <a href="https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018">version 18.06.0-ce</a>)</p>
 <p>Create a service</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/cloud-generic.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/cloud-generic.yaml</span>
 </pre></div>
 
 <h4 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link"> ¶</a></h4>
@@ -1511,16 +1511,16 @@ Please check the <a href="https://aws.amazon.com/elasticloadbalancing/details/">
 <p>For L4:</p>
 <p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code class="codehilite">provider/aws/service-l4.yaml</code></p>
 <p>Then execute:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/aws/service-l4.yaml</span>
-<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/aws/patch-configmap-l4.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/aws/service-l4.yaml</span>
+<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/aws/patch-configmap-l4.yaml</span>
 </pre></div>
 
 <p>For L7:</p>
 <p>Change line of the file <code class="codehilite">provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code class="codehilite">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</code></p>
 <p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code class="codehilite">provider/aws/service-l7.yaml</code></p>
 <p>Then execute:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/aws/service-l7.yaml</span>
-<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/aws/patch-configmap-l7.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/aws/service-l7.yaml</span>
+<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/aws/patch-configmap-l7.yaml</span>
 </pre></div>
 
 <p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
@@ -1532,21 +1532,21 @@ Please check the <a href="https://aws.amazon.com/elasticloadbalancing/details/">
 <p>More information with regards to idle timeouts for your Load Balancer can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/config-idle-timeout.html">official AWS documentation</a>.</p>
 <h5 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link"> ¶</a></h5>
 <p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/aws/service-nlb.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/aws/service-nlb.yaml</span>
 </pre></div>
 
 <h4 id="gce-gke">GCE-GKE<a class="headerlink" href="#gce-gke" title="Permanent link"> ¶</a></h4>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/cloud-generic.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/cloud-generic.yaml</span>
 </pre></div>
 
 <p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
 <h4 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link"> ¶</a></h4>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/cloud-generic.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/cloud-generic.yaml</span>
 </pre></div>
 
 <h4 id="bare-metal">Bare-metal<a class="headerlink" href="#bare-metal" title="Permanent link"> ¶</a></h4>
 <p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.0/deploy/static/provider/baremetal/service-nodeport.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.27.1/deploy/static/provider/baremetal/service-nodeport.yaml</span>
 </pre></div>
 
 <div class="admonition tip">
