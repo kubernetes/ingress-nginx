@@ -1,5 +1,17 @@
 # Changelog
 
+### 0.27.1
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.27.1`
+
+Fix regression in Jaeger opentracing module, incorrect UID in webhook AdmissionResponse in Kubernetes > 1.16.0.
+
+_Changes:_
+
+- [X] [#4920](https://github.com/kubernetes/ingress-nginx/pull/4920) Rollback jaeger module version
+- [X] [#4922](https://github.com/kubernetes/ingress-nginx/pull/4922) Use docker buildx and remove qemu-static
+- [X] [#4927](https://github.com/kubernetes/ingress-nginx/pull/4927) Fix incorrect UID in webhook AdmissionResponse
+
 ### 0.27.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.27.0`
