@@ -36,7 +36,7 @@ $ cat ssl-dh-param.yaml
 apiVersion: v1
 data:
   dhparam.pem: "LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ..."
-kind: ConfigMap
+kind: Secret
 metadata:
   name: nginx-configuration
   namespace: ingress-nginx
