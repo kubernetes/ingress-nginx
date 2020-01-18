@@ -26,9 +26,9 @@ require (
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/paultag/sniff v0.0.0-20170624152000-87325c3dddf4
 	github.com/pkg/errors v0.8.1
-	github.com/prometheus/client_golang v1.0.0
-	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90
-	github.com/prometheus/common v0.4.1
+	github.com/prometheus/client_golang v1.3.0
+	github.com/prometheus/client_model v0.1.0
+	github.com/prometheus/common v0.7.0
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
