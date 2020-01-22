@@ -390,4 +390,70 @@ describe("Sticky", function()
     it("sets a cookie on the client", function() test(sticky_balanced) end)
     it("sets a cookie on the client", function() test(sticky_persistent) end)
   end)
+
+  describe("SameSite settings", function()
+    local mocked_cookie_new = cookie.new
+
+    before_each(function()
+      package.loaded["balancer.sticky_balanced"] = nil
+      package.loaded["balancer.sticky_persistent"] = nil
+      sticky_balanced = require("balancer.sticky_balanced")
+      sticky_persistent = require("balancer.sticky_persistent")
+    end)
+
+    after_each(function()
+      cookie.new = mocked_cookie_new
+    end)
+
+    local function test_set_cookie(sticky, samesite, conditional_samesite_none, expected_path)
+      local s = {}
+      cookie.new = function(self)
+        local cookie_instance = {
+          set = function(self, payload)
+            assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
+            assert.equal(payload.path, expected_path)
+            assert.equal(payload.domain, nil)
+            assert.equal(payload.httponly, true)
+            assert.equal(payload.secure, false)
+            return true, nil
+          end,
+          get = function(k) return false end,
+        }
+        s = spy.on(cookie_instance, "set")
+        return cookie_instance, false
+      end
+      local b = get_test_backend()
+      b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
+      b.sessionAffinityConfig.cookieSessionAffinity.locations["test.com"] = {"/"}
+      b.sessionAffinityConfig.cookieSessionAffinity.samesite = samesite
+      b.sessionAffinityConfig.cookieSessionAffinity.conditional_samesite_none = conditional_samesite_none
+      local sticky_balancer_instance = sticky:new(b)
+      assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+      assert.spy(s).was_called()
+    end
+
+    it("returns a cookie with SameSite=Strict when user specifies samesite strict", function()
+      test_set_cookie(sticky_balanced, "Strict", false, "/; SameSite=Strict")
+    end)
+    it("returns a cookie with SameSite=Strict when user specifies samesite strict and conditional samesite none", function()
+      test_set_cookie(sticky_balanced, "Strict", true, "/; SameSite=Strict")
+    end)
+    it("returns a cookie with SameSite=Lax when user specifies samesite lax", function()
+      test_set_cookie(sticky_balanced, "Lax", false, "/; SameSite=Lax")
+    end)
+    it("returns a cookie with SameSite=Lax when user specifies samesite lax and conditional samesite none", function()
+      test_set_cookie(sticky_balanced, "Lax", true, "/; SameSite=Lax")
+    end)
+    it("returns a cookie with SameSite=None when user specifies samesite None", function()
+      test_set_cookie(sticky_balanced, "None", false, "/; SameSite=None")
+    end)
+    it("returns a cookie with SameSite=None when user specifies samesite None and conditional samesite none with supported user agent", function()
+      mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.2704.103 Safari/537.36"} })
+      test_set_cookie(sticky_balanced, "None", true, "/; SameSite=None")
+    end)
+    it("returns a cookie without SameSite=None when user specifies samesite None and conditional samesite none with unsupported user agent", function()
+      mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"} })
+      test_set_cookie(sticky_balanced, "None", true, "/")
+    end)
+  end)
 end)
