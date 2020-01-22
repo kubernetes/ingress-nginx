@@ -57,6 +57,11 @@ export FOCUS
 
 echo -e "${BGREEN}Granting permissions to ingress-nginx e2e service account...${NC}"
 kubectl create serviceaccount ingress-nginx-e2e || true
+if ! [ -z ${PRIVATE_DOCKER_REGISTRY_SECRET_NAME+x} ]; then
+    export PATCH_SERVICEACCOUNT="'{\"imagePullSecrets\": [{\"name\": \"${PRIVATE_DOCKER_REGISTRY_SECRET_NAME}\"}]}'"
+    echo "${PATCH_SERVICEACCOUNT}"
+    eval "kubectl patch serviceaccount ingress-nginx-e2e -p $(echo "${PATCH_SERVICEACCOUNT}")"
+fi
 kubectl create clusterrolebinding permissive-binding \
   --clusterrole=cluster-admin \
   --user=admin \
@@ -69,15 +74,28 @@ until kubectl get secret | grep -q -e ^ingress-nginx-e2e-token; do \
   sleep 3; \
 done
 
+echo -e "Setting the e2e test image"
+if ! [ -z ${CUSTOM_REGISTRY+x} ]; then
+  export USE_E2E_IMAGE=${REGISTRY}/nginx-ingress-controller:e2e
+  export IMAGE_POLICY='Always'
+else
+  export USE_E2E_IMAGE=nginx-ingress-controller:e2e
+  export IMAGE_POLICY='IfNotPresent'
+fi
+
 echo -e "Starting the e2e test pod"
 
 kubectl run --rm \
   --attach \
   --restart=Never \
+  --image-pull-policy=${IMAGE_POLICY} \
   --generator=run-pod/v1 \
+  --env="IMAGE_PULL_POLICY=${IMAGE_POLICY}" \
+  --env="REGISTRY=${REGISTRY:-ingress-controller}" \
+  --env="PRIVATE_DOCKER_REGISTRY_SECRET_NAME=${PRIVATE_DOCKER_REGISTRY_SECRET_NAME:-}" \
   --env="E2E_NODES=${E2E_NODES}" \
   --env="FOCUS=${FOCUS}" \
   --env="E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS}" \
   --env="SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD}" \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
-  e2e --image=nginx-ingress-controller:e2e
+  e2e --image=${USE_E2E_IMAGE}

@@ -21,7 +21,10 @@ import (
 
 	. "github.com/onsi/gomega"
 
+	"os"
+
 	appsv1 "k8s.io/api/apps/v1"
+	core "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -51,7 +54,8 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int) {
 // replicas is configurable and
 // name is configurable
 func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas int) {
-	deployment := newDeployment(name, f.Namespace, "ingress-controller/echo:dev", 80, int32(replicas),
+	imageName := os.Getenv("REGISTRY") + "/echo:dev"
+	deployment := newDeployment(name, f.Namespace, imageName, f.GetImagePullPolicy(), 80, int32(replicas),
 		[]string{
 			"openresty",
 		},
@@ -119,7 +123,7 @@ server {
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
 
-	deployment := newDeployment(SlowEchoService, f.Namespace, "openresty/openresty:1.15.8.2-alpine", 80, 1,
+	deployment := newDeployment(SlowEchoService, f.Namespace, "openresty/openresty:1.15.8.2-alpine", f.GetImagePullPolicy(), 80, 1,
 		nil,
 		[]corev1.VolumeMount{
 			{
@@ -263,7 +267,7 @@ func (f *Framework) NewGRPCBinDeployment() {
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
 }
 
-func newDeployment(name, namespace, image string, port int32, replicas int32, command []string,
+func newDeployment(name, namespace, image string, imagePullPolicy core.PullPolicy, port int32, replicas int32, command []string,
 	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume) *appsv1.Deployment {
 	probe := &corev1.Probe{
 		InitialDelaySeconds: 1,
@@ -300,9 +304,10 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 					TerminationGracePeriodSeconds: NewInt64(0),
 					Containers: []corev1.Container{
 						{
-							Name:  name,
-							Image: image,
-							Env:   []corev1.EnvVar{},
+							Name:            name,
+							Image:           image,
+							ImagePullPolicy: imagePullPolicy,
+							Env:             []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "http",
@@ -329,12 +334,44 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
 func (f *Framework) NewHttpbinDeployment() {
-	f.NewDeployment(HTTPBinService, "ingress-controller/httpbin:dev", 80, 1)
+	imageName := os.Getenv("REGISTRY") + "/httpbin:dev"
+	f.NewDeployment(HTTPBinService, imageName, 80, 1)
+}
+
+// GetPrivateRegistrySecretName returns the private docker registry secret name
+func GetPrivateRegistrySecretName() string {
+	privateDockerRegistrySecretName := os.Getenv("PRIVATE_DOCKER_REGISTRY_SECRET_NAME")
+	if len(privateDockerRegistrySecretName) != 0 {
+		return privateDockerRegistrySecretName
+	}
+	return ""
+}
+
+// CopySecretToNamespace copys an given kubernetes secret to the given namespace.
+func (f *Framework) CopySecretToNamespace(secret *corev1.Secret, namespace string) {
+	newSecret := secret.DeepCopy()
+	newSecret.ObjectMeta.Namespace = namespace
+	newSecret.ResourceVersion = ""
+	newSecret.SelfLink = ""
+	newSecret.UID = ""
+	newSecret.CreationTimestamp = metav1.Time{}
+	createdSecret := f.EnsureSecret(newSecret)
+	Expect(createdSecret).NotTo(BeNil(), "expected a secret but none returned")
+}
+
+// DistributePrivateRegistrySecretToNamespace should distribute the private docker registry secret to a given namespace
+func (f *Framework) DistributePrivateRegistrySecretToNamespace(namespace string) {
+	privateRegistrySecretName := GetPrivateRegistrySecretName()
+	if len(privateRegistrySecretName) != 0 {
+		privateRegistrySecret, err := f.KubeClientSet.CoreV1().Secrets("default").Get(privateRegistrySecretName, metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred(), "failed to get a secret")
+		f.CopySecretToNamespace(privateRegistrySecret, namespace)
+	}
 }
 
 // NewDeployment creates a new deployment in a particular namespace.
 func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {
-	deployment := newDeployment(name, f.Namespace, image, port, replicas, nil, nil, nil)
+	deployment := newDeployment(name, f.Namespace, image, f.GetImagePullPolicy(), port, replicas, nil, nil, nil)
 
 	f.EnsureDeployment(deployment)
 

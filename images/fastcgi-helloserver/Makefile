@@ -31,6 +31,9 @@ container: clean build
 		--platform linux/amd64 \
 		-t $(IMAGE):$(TAG) rootfs
 
+push:
+	$(DOCKER) push ${IMAGE}:${TAG}
+
 build: clean
 	CGO_ENABLED=0 go build -a -installsuffix cgo \
 		-ldflags "-s -w" \

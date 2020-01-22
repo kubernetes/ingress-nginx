@@ -120,7 +120,11 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 # internal task
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
-	docker push $(BASE_IMAGE)-$(ARCH):$(TAG)
+ifdef CUSTOM_REGISTRY
+	@docker push $(REGISTRY)/nginx-ingress-controller-$(ARCH):$(TAG)
+else
+	@docker push $(BASE_IMAGE)-$(ARCH):$(TAG)
+endif
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
@@ -154,7 +158,7 @@ endif
 
 .PHONY: clean
 clean: ## Remove .gocache directory.
-	rm -rf bin/ .gocache/
+	rm -rf bin/ .gocache/ .cache
 
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint and lualint.
@@ -259,6 +263,18 @@ misspell: check-go-version ## Check for spelling errors.
 .PHONY: kind-e2e-test
 kind-e2e-test: check-go-version ## Run e2e tests using kind.
 	@test/e2e/run.sh
+
+.PHONY: cluster-e2e-test
+cluster-e2e-test: check-go-version ## Run e2e tests on existing cluster.
+ifndef REGISTRY
+	@echo "Missing REGISTRY env variable"
+else ifndef KUBECONFIG
+	@echo "Missing KUBECONFIG env variable"
+else ifndef PRIVATE_DOCKER_REGISTRY_SECRET_NAME
+	@echo "Missing PRIVATE_DOCKER_REGISTRY_SECRET_NAME env variable"
+else
+	@test/e2e/cluster-run.sh
+endif
 
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.

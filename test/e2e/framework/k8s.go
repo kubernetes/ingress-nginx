@@ -107,9 +107,14 @@ func (f *Framework) EnsureService(service *core.Service) *core.Service {
 
 // EnsureDeployment creates a Deployment object or returns it if it already exists.
 func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Deployment {
-	err := createDeploymentWithRetries(f.KubeClientSet, f.Namespace, deployment)
-	Expect(err).To(BeNil(), "unexpected error creating deployment")
+	f.DistributePrivateRegistrySecretToNamespace(f.Namespace)
+	privateRegistrySecretName := GetPrivateRegistrySecretName()
+	if len(privateRegistrySecretName) != 0 {
+		deployment.Spec.Template.Spec.ImagePullSecrets = []core.LocalObjectReference{{Name: privateRegistrySecretName}}
+	}
 
+        err := createDeploymentWithRetries(f.KubeClientSet, f.Namespace, deployment)
+        Expect(err).To(BeNil(), "unexpected error creating deployment")
 	s, err := f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Get(deployment.Name, metav1.GetOptions{})
 	Expect(err).To(BeNil(), "unexpected error searching deployment")
 	Expect(s).NotTo(BeNil())

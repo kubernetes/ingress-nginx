@@ -24,13 +24,32 @@ endif
 	cp ../e2e/wait-for-nginx.sh .
 	cp -r ../../deploy/cloud-generic .
 	cp -r ../../deploy/cluster-wide .
+ifdef CUSTOM_REGISTRY
+	@docker buildx build \
+                --load \
+                --progress plain \
+                --tag ${REGISTRY}/nginx-ingress-controller:e2e .
+else
+	@docker buildx build \
+                --load \
+                --progress plain \
+                --tag nginx-ingress-controller:e2e .
+endif
 
-	docker buildx build \
-		--load \
-		--progress plain \
-		--tag nginx-ingress-controller:e2e .
+.PHONY: push
+push:
+ifdef CUSTOM_REGISTRY
+	@docker push ${REGISTRY}/nginx-ingress-controller:e2e
+else
+	@echo "REGISTRY environment variable is not set."
+endif
 
 .PHONY: clean
 clean:
 	rm -rf _cache e2e.test kubectl cluster ginkgo
-	docker rmi -f nginx-ingress-controller:e2e || true
+ifdef CUSTOM_REGISTRY
+	@docker rmi -f ${REGISTRY}/nginx-ingress-controller:e2e || true
+else
+	@docker rmi -f nginx-ingress-controller:e2e || true
+endif
+	

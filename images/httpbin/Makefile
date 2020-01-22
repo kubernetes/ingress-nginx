@@ -29,5 +29,8 @@ container:
 		--platform linux/amd64 \
 		-t $(IMAGE):$(TAG) rootfs
 
+push:
+	$(DOCKER) push ${IMAGE}:${TAG}
+
 clean:
 	$(DOCKER) rmi -f $(IMAGE):$(TAG) || true

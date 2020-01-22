@@ -24,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"os"
 )
 
 // NewFastCGIHelloServerDeployment creates a new single replica
@@ -35,6 +36,8 @@ func (f *Framework) NewFastCGIHelloServerDeployment() {
 // NewNewFastCGIHelloServerDeploymentWithReplicas creates a new deployment of the
 // fortune teller image in a particular namespace. Number of replicas is configurable
 func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int32) {
+	imageName := os.Getenv("REGISTRY") + "/fastcgi-helloserver:dev"
+
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fastcgi-helloserver",
@@ -57,9 +60,10 @@ func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int3
 					TerminationGracePeriodSeconds: NewInt64(0),
 					Containers: []corev1.Container{
 						{
-							Name:  "fastcgi-helloserver",
-							Image: "ingress-controller/fastcgi-helloserver:dev",
-							Env:   []corev1.EnvVar{},
+							Name:            "fastcgi-helloserver",
+							Image:           imageName,
+							ImagePullPolicy: f.GetImagePullPolicy(),
+							Env:             []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "fastcgi",

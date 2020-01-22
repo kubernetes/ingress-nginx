@@ -15,6 +15,7 @@ package framework
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -184,6 +185,16 @@ func (f *Framework) GetNginxPodIP() []string {
 func (f *Framework) GetURL(scheme RequestScheme) string {
 	ip := f.GetNginxIP()
 	return fmt.Sprintf("%v://%v", scheme, ip)
+}
+
+// GetImagePullPolicy should return:
+// - PullIfNotPresent on local cluster e.g.:Minicube and Kind.
+// - PullAlways if it deploys on an existing (not local) Kubernetes cluster (refresh local docker images)
+func (f *Framework) GetImagePullPolicy() v1.PullPolicy {
+	if os.Getenv("IMAGE_PULL_POLICY") == "Always" {
+		return v1.PullAlways
+	}
+	return v1.PullIfNotPresent
 }
 
 // WaitForNginxServer waits until the nginx configuration contains a particular server section

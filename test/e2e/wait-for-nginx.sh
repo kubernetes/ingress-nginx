@@ -73,7 +73,33 @@ namespace: $NAMESPACE
 bases:
 - ../../namespace-overlays/$NAMESPACE_OVERLAY
 - ../../cluster-wide-$NAMESPACE
+images:
+- name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
+  newName: $REGISTRY/nginx-ingress-controller
+  newTag: dev
 EOF
+    if [[ ! -z "$PRIVATE_DOCKER_REGISTRY_SECRET_NAME" ]]; then
+        cat << EOF >> "$OVERLAY/kustomization.yaml"
+patchesStrategicMerge:
+- patch.yaml
+EOF
+
+        cat << EOF > "$OVERLAY/patch.yaml"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+  namespace: $NAMESPACE
+spec:
+  template:
+    spec:
+      containers:
+        - name: nginx-ingress-controller
+          imagePullPolicy: Always
+      imagePullSecrets:
+      - name: $PRIVATE_DOCKER_REGISTRY_SECRET_NAME
+EOF
+    fi
 fi
 
 kubectl apply --kustomize "$OVERLAY"
