@@ -105,7 +105,6 @@ end
 -- phases or redirection
 function _M.rewrite(location_config)
   ngx.var.pass_access_scheme = ngx.var.scheme
-  ngx.var.pass_server_port = ngx.var.server_port
   ngx.var.best_http_host = ngx.var.http_host or ngx.var.host
 
   if config.use_forwarded_headers then
