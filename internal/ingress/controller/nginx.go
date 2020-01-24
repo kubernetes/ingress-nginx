@@ -334,7 +334,7 @@ func (n *NGINXController) Start() {
 		select {
 		case err := <-n.ngxErrCh:
 			if n.isShuttingDown {
-				break
+				return
 			}
 
 			// if the nginx master process dies the workers continue to process requests,
@@ -358,6 +358,7 @@ func (n *NGINXController) Start() {
 			if n.isShuttingDown {
 				break
 			}
+
 			if evt, ok := event.(store.Event); ok {
 				klog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
 				if evt.Type == store.ConfigurationEvent {
@@ -371,7 +372,7 @@ func (n *NGINXController) Start() {
 				klog.Warningf("Unexpected event type received %T", event)
 			}
 		case <-n.stopCh:
-			break
+			return
 		}
 	}
 }
