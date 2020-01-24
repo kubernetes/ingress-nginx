@@ -323,6 +323,12 @@ http {
         ''               "$realip_remote_addr";
         {{ end}}
     }
+
+    map $http_x_forwarded_proto $full_x_forwarded_proto {
+        default $http_x_forwarded_proto;
+        "" $scheme;
+    }
+
     {{ end }}
 
     # Create a variable that contains the literal $ character.
@@ -1132,6 +1138,7 @@ stream {
             {{ $proxySetHeader }} X-Real-IP              $remote_addr;
             {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
             {{ $proxySetHeader }} X-Forwarded-For        $full_x_forwarded_for;
+            {{ $proxySetHeader }} X-Forwarded-Proto      $full_x_forwarded_proto;
             {{ else }}
             {{ $proxySetHeader }} X-Forwarded-For        $remote_addr;
             {{ end }}
