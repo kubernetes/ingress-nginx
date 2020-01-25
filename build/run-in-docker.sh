@@ -25,6 +25,10 @@ set -o pipefail
 # temporal directory for the /etc/ingress-controller directory
 INGRESS_VOLUME=$(mktemp -d)
 
+if [[ "$OSTYPE" == darwin* ]]; then
+  INGRESS_VOLUME=/private$INGRESS_VOLUME
+fi
+
 function cleanup {
   rm -rf "${INGRESS_VOLUME}"
 }

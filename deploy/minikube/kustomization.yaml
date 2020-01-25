@@ -6,5 +6,4 @@ bases:
 - ../cluster-wide
 images:
 - name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
-  newName: ingress-controller/nginx-ingress-controller
   newTag: dev
