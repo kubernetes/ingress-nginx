@@ -96,12 +96,13 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 			Expect(resp.StatusCode).Should(Equal(test.Status))
 		}
 	})
+
 	It("enables access logging for default backend", func() {
 		f.UpdateNginxConfigMapData("enable-access-log-for-default-backend", "true")
-		host := "foo"
+
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/somethingOne").
-			Set("Host", host).
+			Set("Host", "foo").
 			End()
 
 		Expect(len(errs)).Should(Equal(0))
@@ -114,10 +115,10 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 
 	It("disables access logging for default backend", func() {
 		f.UpdateNginxConfigMapData("enable-access-log-for-default-backend", "false")
-		host := "bar"
+
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/somethingTwo").
-			Set("Host", host).
+			Set("Host", "bar").
 			End()
 
 		Expect(len(errs)).Should(Equal(0))

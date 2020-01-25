@@ -332,6 +332,7 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 	config[key] = value
 
 	f.SetNginxConfigMapData(config)
+	time.Sleep(1 * time.Second)
 }
 
 // DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.

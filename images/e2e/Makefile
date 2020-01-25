@@ -20,7 +20,7 @@ IMAGE = $(REGISTRY)/e2e
 all: docker-build docker-push
 
 docker-build:
-	docker build \
+	docker buildx build \
 		--pull \
 		--load \
 		--build-arg K8S_RELEASE=v1.15.7 \
