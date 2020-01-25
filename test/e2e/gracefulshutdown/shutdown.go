@@ -50,6 +50,8 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 				return Expect(server).Should(ContainSubstring("server_name shutdown"))
 			})
 
+		time.Sleep(1 * time.Second)
+
 		resp, _, _ := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/sleep/1").
 			Set("Host", host).
@@ -88,6 +90,8 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name shutdown"))
 			})
+
+		time.Sleep(1 * time.Second)
 
 		result := make(chan *asyncResult)
 
@@ -147,6 +151,8 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name shutdown"))
 			})
+
+		time.Sleep(1 * time.Second)
 
 		result := make(chan *asyncResult)
 

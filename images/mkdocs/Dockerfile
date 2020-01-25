@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.10
+FROM alpine:3.11
 
-RUN apk update && apk add --no-cache \
+RUN apk add --no-cache \
   bash \
   git \
   git-fast-import \
