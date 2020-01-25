@@ -125,23 +125,22 @@ func main() {
 	}
 	mc.Start()
 
-	ngx := controller.NewNGINXController(conf, mc)
-	go handleSigterm(ngx, func(code int) {
-		os.Exit(code)
-	})
-
-	mux := http.NewServeMux()
-
 	if conf.EnableProfiling {
 		go registerProfiler()
 	}
 
+	ngx := controller.NewNGINXController(conf, mc)
+
+	mux := http.NewServeMux()
 	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
 
 	go startHTTPServer(conf.ListenPorts.Health, mux)
+	go ngx.Start()
 
-	ngx.Start()
+	handleSigterm(ngx, func(code int) {
+		os.Exit(code)
+	})
 }
 
 type exiter func(code int)
