@@ -40,6 +40,7 @@ fi
 # build local terraform image to build nginx
 export DOCKER_CLI_EXPERIMENTAL=enabled
 docker buildx build \
+  --load \
   --no-cache \
   --platform linux/amd64 \
   --tag build-nginx-terraform $DIR/images/nginx

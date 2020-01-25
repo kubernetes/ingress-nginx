@@ -251,7 +251,7 @@ dep-ensure: check-go-version ## Update and vendo go dependencies.
 
 .PHONY: dev-env
 dev-env: check-go-version ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
-	@DIND_DOCKER=0 USE_DOCKER=false build/dev-env.sh
+	@DIND_TASKS=0 USE_DOCKER=false build/dev-env.sh
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
@@ -273,7 +273,7 @@ misspell: check-go-version ## Check for spelling errors.
 
 .PHONY: kind-e2e-test
 kind-e2e-test: check-go-version ## Run e2e tests using kind.
-	@test/e2e/run.sh
+	@DIND_TASKS=0 test/e2e/run.sh
 
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
