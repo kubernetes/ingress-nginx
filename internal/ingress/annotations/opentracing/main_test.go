@@ -74,9 +74,7 @@ func TestIngressAnnotationOpentracingSetTrue(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a Config type")
 	}
-	if !openTracing.Set {
-		t.Errorf("expected annotation value to be set")
-	}
+
 	if !openTracing.Enabled {
 		t.Errorf("expected annotation value to be true, got false")
 	}
@@ -95,9 +93,7 @@ func TestIngressAnnotationOpentracingSetFalse(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a Config type")
 	}
-	if !openTracing.Set {
-		t.Errorf("expected annotation value to be set")
-	}
+
 	if openTracing.Enabled {
 		t.Errorf("expected annotation value to be false, got true")
 	}
@@ -111,11 +107,8 @@ func TestIngressAnnotationOpentracingUnset(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
-	openTracing, ok := val.(*Config)
+	_, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
-	}
-	if openTracing.Set {
-		t.Errorf("expected annotation value to be unset")
 	}
 }
