@@ -68,7 +68,7 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		Expect(err).NotTo(HaveOccurred(), "unexpected error reading connection data")
 		body := string(data)
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", "proxy-protocol")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=80")))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=1234")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-for=192.168.0.1")))
 	})
 })
