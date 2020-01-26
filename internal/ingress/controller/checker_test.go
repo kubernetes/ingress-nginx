@@ -48,7 +48,7 @@ func TestNginxCheck(t *testing.T) {
 
 			listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 			if err != nil {
-				t.Fatalf("crating tcp listener: %s", err)
+				t.Fatalf("creating tcp listener: %s", err)
 			}
 			defer listener.Close()
 
