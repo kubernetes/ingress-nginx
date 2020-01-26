@@ -25,8 +25,10 @@ EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
 
+.PHONY: all
 all: container
 
+.PHONY: container
 container:
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
 		--no-cache \
@@ -47,6 +49,7 @@ ifeq ($(ARCH), amd64)
 	docker tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
+.PHONY: push
 push: container
 	$(foreach PLATFORM,$(PLATFORMS), \
 		docker push $(IMAGE)-$(PLATFORM):$(TAG);)
@@ -55,5 +58,13 @@ ifeq ($(ARCH), amd64)
 	docker push $(IMAGE):$(TAG)
 endif
 
+.PHONY: release
 release: push
 	echo "done"
+
+.PHONY: init-docker-buildx
+init-docker-buildx:
+	docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
+	docker buildx create --name ingress-nginx --use || true
+	docker buildx inspect --bootstrap
+endif

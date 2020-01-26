@@ -67,7 +67,7 @@ make -C ${DIR}/../../ build container
 make -C ${DIR}/../../ e2e-test-image
 make -C ${DIR}/../../images/fastcgi-helloserver/ build container
 make -C ${DIR}/../../images/httpbin/ container
-" | parallel --progress --joblog /tmp/log {} || cat /tmp/log
+" | parallel --joblog /tmp/log {} || cat /tmp/log
 
 # Remove after https://github.com/kubernetes/ingress-nginx/pull/4271 is merged
 docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
@@ -82,7 +82,7 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-c
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/fastcgi-helloserver:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" openresty/openresty:1.15.8.2-alpine
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
-" | parallel --progress --joblog /tmp/log {} || cat /tmp/log
+" | parallel --joblog /tmp/log {} || cat /tmp/log
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
