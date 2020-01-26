@@ -151,13 +151,13 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 func TestConfigureDynamically(t *testing.T) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 	if err != nil {
-		t.Fatalf("crating tcp listener: %s", err)
+		t.Fatalf("creating tcp listener: %s", err)
 	}
 	defer listener.Close()
 
 	streamListener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StreamPort))
 	if err != nil {
-		t.Fatalf("crating tcp listener: %s", err)
+		t.Fatalf("creating tcp listener: %s", err)
 	}
 	defer streamListener.Close()
 
@@ -320,13 +320,13 @@ func TestConfigureDynamically(t *testing.T) {
 func TestConfigureCertificates(t *testing.T) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 	if err != nil {
-		t.Fatalf("crating tcp listener: %s", err)
+		t.Fatalf("creating tcp listener: %s", err)
 	}
 	defer listener.Close()
 
 	streamListener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StreamPort))
 	if err != nil {
-		t.Fatalf("crating tcp listener: %s", err)
+		t.Fatalf("creating tcp listener: %s", err)
 	}
 	defer streamListener.Close()
 
