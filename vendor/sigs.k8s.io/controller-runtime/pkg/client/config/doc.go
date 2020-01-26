@@ -14,5 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package config contains libraries for initializing rest configs for talking to the Kubernetes API
+// Package config contains libraries for initializing REST configs for talking to the Kubernetes API
 package config
