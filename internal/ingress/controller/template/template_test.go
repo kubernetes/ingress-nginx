@@ -39,6 +39,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -883,14 +884,14 @@ func TestEscapeLiteralDollar(t *testing.T) {
 }
 
 func TestOpentracingPropagateContext(t *testing.T) {
-	tests := map[interface{}]string{
-		&ingress.Location{BackendProtocol: "HTTP"}:  "opentracing_propagate_context",
-		&ingress.Location{BackendProtocol: "HTTPS"}: "opentracing_propagate_context",
-		&ingress.Location{BackendProtocol: "GRPC"}:  "opentracing_grpc_propagate_context",
-		&ingress.Location{BackendProtocol: "GRPCS"}: "opentracing_grpc_propagate_context",
-		&ingress.Location{BackendProtocol: "AJP"}:   "opentracing_propagate_context",
-		&ingress.Location{BackendProtocol: "FCGI"}:  "opentracing_propagate_context",
-		"not a location": "opentracing_propagate_context",
+	tests := map[*ingress.Location]string{
+		{BackendProtocol: "HTTP"}:  "opentracing_propagate_context;",
+		{BackendProtocol: "HTTPS"}: "opentracing_propagate_context;",
+		{BackendProtocol: "GRPC"}:  "opentracing_grpc_propagate_context;",
+		{BackendProtocol: "GRPCS"}: "opentracing_grpc_propagate_context;",
+		{BackendProtocol: "AJP"}:   "opentracing_propagate_context;",
+		{BackendProtocol: "FCGI"}:  "opentracing_propagate_context;",
+		nil:                        "",
 	}
 
 	for loc, expectedDirective := range tests {
@@ -1278,5 +1279,29 @@ func TestShouldLoadModSecurityModule(t *testing.T) {
 	actual = shouldLoadModSecurityModule(configuration, servers)
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
+func TestOpentracingForLocation(t *testing.T) {
+	testCases := []struct {
+		description string
+		globalOT    bool
+		isOTInLoc   bool
+		expected    string
+	}{
+		{"globally enabled but not in location", true, false, "opentracing off;"},
+		{"globally enabled and enabled in location", true, true, "opentracing_propagate_context;"},
+		{"globally disabled and not enabled in location", false, false, ""},
+		{"globally disabled but enabled in location", false, true, "opentracing_propagate_context;"},
+	}
+
+	for _, testCase := range testCases {
+		actual := buildOpentracingForLocation(testCase.globalOT, &ingress.Location{
+			Opentracing: opentracing.Config{Enabled: testCase.isOTInLoc},
+		})
+
+		if testCase.expected != actual {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.description, testCase.expected, actual)
+		}
 	}
 }

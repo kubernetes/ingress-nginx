@@ -173,11 +173,11 @@ var (
 		"enforceRegexModifier":               enforceRegexModifier,
 		"stripLocationModifer":               stripLocationModifer,
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
-		"opentracingPropagateContext":        opentracingPropagateContext,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
 		"buildHTTPListener":                  buildHTTPListener,
 		"buildHTTPSListener":                 buildHTTPSListener,
+		"buildOpentracingForLocation":        buildOpentracingForLocation,
 	}
 )
 
@@ -1064,18 +1064,16 @@ func buildCustomErrorLocationsPerServer(input interface{}) []errorLocation {
 	return errorLocations
 }
 
-func opentracingPropagateContext(loc interface{}) string {
-	location, ok := loc.(*ingress.Location)
-	if !ok {
-		klog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
-		return "opentracing_propagate_context"
+func opentracingPropagateContext(location *ingress.Location) string {
+	if location == nil {
+		return ""
 	}
 
 	if location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
-		return "opentracing_grpc_propagate_context"
+		return "opentracing_grpc_propagate_context;"
 	}
 
-	return "opentracing_propagate_context"
+	return "opentracing_propagate_context;"
 }
 
 // shouldLoadModSecurityModule determines whether or not the ModSecurity module needs to be loaded.
@@ -1270,4 +1268,22 @@ func httpsListener(addresses []string, co string, tc config.TemplateConfig) []st
 	}
 
 	return out
+}
+
+func buildOpentracingForLocation(isOTEnabled bool, location *ingress.Location) string {
+	isOTEnabledInLoc := location.Opentracing.Enabled
+
+	if isOTEnabled {
+		if !isOTEnabledInLoc {
+			return "opentracing off;"
+		}
+
+		return opentracingPropagateContext(location)
+	}
+
+	if isOTEnabledInLoc {
+		return opentracingPropagateContext(location)
+	}
+
+	return ""
 }
