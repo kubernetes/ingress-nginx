@@ -24,11 +24,10 @@ ifndef VERBOSE
 endif
 
 # set default shell
-SHELL = /bin/bash
+SHELL=/bin/bash -o pipefail
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
 TAG ?= master
-DOCKER ?= docker
 
 # Use docker to run makefile tasks
 USE_DOCKER ?= true
@@ -60,6 +59,8 @@ BUSTED_ARGS =-v --pattern=_test
 
 ARCH ?= $(shell go env GOARCH)
 
+BASEIMAGE_TAG = 26f574dc279aa853736d7f7249965e90e47171d6
+
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 MULTI_ARCH_IMAGE = $(REGISTRY)/nginx-ingress-controller-${ARCH}
 
@@ -76,9 +77,6 @@ endif
 
 # use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
 GO111MODULE=off
-
-# Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):26f574dc279aa853736d7f7249965e90e47171d6
 
 TEMP_DIR := $(shell mktemp -d)
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
@@ -107,27 +105,32 @@ container: clean-container .container-$(ARCH) ## Build image for a particular ar
 
 # internal task to build image for a particular arch.
 .PHONY: .container-$(ARCH)
-.container-$(ARCH):
+.container-$(ARCH): init-docker-buildx
 	mkdir -p $(TEMP_DIR)/rootfs
 	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
 	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
 	cp bin/$(ARCH)/wait-shutdown $(TEMP_DIR)/rootfs/wait-shutdown
 
+	# Set default base image dynamically for each arch
+
 	cp -RP ./* $(TEMP_DIR)
-	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
+	$(SED_I) "s|BASEIMAGE|quay.io/kubernetes-ingress-controller/nginx-$(ARCH):$(BASEIMAGE_TAG)|g" $(DOCKERFILE)
 	$(SED_I) "s|VERSION|$(TAG)|g" $(DOCKERFILE)
 
-	echo "Building docker image..."
-	$(DOCKER) buildx build \
-		--no-cache \
+	echo "Building docker image ($(ARCH))..."
+	# buildx assumes images are multi-arch
+	docker buildx build \
+		--pull \
 		--load \
+		--no-cache \
 		--progress plain \
 		--platform linux/$(ARCH) \
 		-t $(MULTI_ARCH_IMAGE):$(TAG) $(TEMP_DIR)/rootfs
 
 .PHONY: clean-container
 clean-container: ## Removes local image
-	@$(DOCKER) rmi -f $(MULTI_ARCH_IMAGE):$(TAG) || true
+	echo "removing old image $(MULTI_ARCH_IMAGE):$(TAG)"
+	@docker rmi -f $(MULTI_ARCH_IMAGE):$(TAG) || true
 
 .PHONY: push
 push: .push-$(ARCH) ## Publish image for a particular arch.
@@ -135,7 +138,7 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 # internal task
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
-	$(DOCKER) push $(MULTI_ARCH_IMAGE):$(TAG)
+	docker push $(MULTI_ARCH_IMAGE):$(TAG)
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
@@ -282,3 +285,14 @@ run-ingress-controller: ## Run the ingress controller locally using a kubectl pr
 .PHONY: check-go-version
 check-go-version:
 	@hack/check-go-version.sh
+
+.PHONY: init-docker-buildx
+init-docker-buildx:
+ifeq ($(DIND_TASKS),)
+ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
+$(error "buildx not vailable. Docker 19.03 or higher is required")
+endif
+	docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
+	docker buildx create --name ingress-nginx --use || true
+	docker buildx inspect --bootstrap
+endif
