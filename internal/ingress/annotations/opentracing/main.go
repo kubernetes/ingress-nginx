@@ -30,16 +30,14 @@ type opentracing struct {
 // Config contains the configuration to be used in the Ingress
 type Config struct {
 	Enabled bool `json:"enabled"`
-	Set     bool `json:"set"`
 }
 
 // Equal tests for equality between two Config types
 func (bd1 *Config) Equal(bd2 *Config) bool {
-	if bd1.Set != bd2.Set {
-		return false
-	} else if bd1.Enabled != bd2.Enabled {
+	if bd1.Enabled != bd2.Enabled {
 		return false
 	}
+
 	return true
 }
 
@@ -51,7 +49,8 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 func (s opentracing) Parse(ing *networking.Ingress) (interface{}, error) {
 	enabled, err := parser.GetBoolAnnotation("enable-opentracing", ing)
 	if err != nil {
-		return &Config{Set: false, Enabled: false}, nil
+		return &Config{Enabled: false}, nil
 	}
-	return &Config{Set: true, Enabled: enabled}, nil
+
+	return &Config{Enabled: enabled}, nil
 }
