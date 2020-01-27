@@ -25,7 +25,10 @@ endif
 	cp -r ../../deploy/cloud-generic .
 	cp -r ../../deploy/cluster-wide .
 
-	docker build -t nginx-ingress-controller:e2e .
+	docker buildx build \
+		--load \
+		--progress plain \
+		--tag nginx-ingress-controller:e2e .
 
 .PHONY: clean
 clean:

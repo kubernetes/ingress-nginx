@@ -38,6 +38,7 @@ RUN apk add --no-cache \
   gcc \
   git \
   musl-dev \
+  perl \
   python \
   openssl
 
@@ -47,7 +48,6 @@ RUN set -eux; \
     pkgconfig \
     openssl \
     unzip \
-    perl \
     go \
   ; \
 	export \

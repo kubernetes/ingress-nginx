@@ -23,10 +23,11 @@ docker-build:
 	docker buildx build \
 		--pull \
 		--load \
+		--progress plain \
 		--build-arg K8S_RELEASE=v1.15.7 \
 		--build-arg ETCD_VERSION=v3.3.18 \
-		--build-arg GOLANG_VERSION=1.13.5 \
-		--build-arg GOLANG_SHA=27d356e2a0b30d9983b60a788cf225da5f914066b37a6b4f69d457ba55a626ff \
+		--build-arg GOLANG_VERSION=1.13.6 \
+		--build-arg GOLANG_SHA=aae5be954bdc40bcf8006eb77e8d8a5dde412722bc8effcdaf9772620d06420c \
 		--build-arg RESTY_CLI_VERSION=0.25rc2 \
 		--build-arg RESTY_CLI_SHA=a38d850441384fa037a5922ca012dcce8708d0e4abe34ad2fe4164a01b28bdfb \
 		-t $(IMAGE):$(TAG) .
