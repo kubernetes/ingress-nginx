@@ -1,5 +1,29 @@
 # Changelog
 
+### 0.28.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.28.0`
+
+Fix occasional prometheus `http: superfluous response.WriteHeader call...` error [#4943](https://github.com/kubernetes/ingress-nginx/pull/4943)
+Remove prometheus socket before the start of metrics collector [#4961](https://github.com/kubernetes/ingress-nginx/pull/4961)
+Reduce CPU utilization when the ingress controller is shutting down [#4959](https://github.com/kubernetes/ingress-nginx/pull/4959)
+Avoid overlap of configuration definitions [#4960](https://github.com/kubernetes/ingress-nginx/pull/4960)
+
+_Changes:_
+
+- [X] [#4912](https://github.com/kubernetes/ingress-nginx/pull/4912) Update README.md
+- [X] [#4914](https://github.com/kubernetes/ingress-nginx/pull/4914) Disable docker in docker tasks in terraform release script
+- [X] [#4932](https://github.com/kubernetes/ingress-nginx/pull/4932) Cleanup dev-env script
+- [X] [#4943](https://github.com/kubernetes/ingress-nginx/pull/4943) Update client_golang dependency to v1.3.0
+- [X] [#4956](https://github.com/kubernetes/ingress-nginx/pull/4956) Fix proxy protocol support for X-Forwarded-Port
+- [X] [#4959](https://github.com/kubernetes/ingress-nginx/pull/4959) Refactor how to handle sigterm and nginx process goroutine
+- [X] [#4960](https://github.com/kubernetes/ingress-nginx/pull/4960) Avoid overlap of configuration definitions
+- [X] [#4961](https://github.com/kubernetes/ingress-nginx/pull/4961) Remove prometheus socket before listen
+- [X] [#4962](https://github.com/kubernetes/ingress-nginx/pull/4962) Cleanup of e2e docker images
+- [X] [#4965](https://github.com/kubernetes/ingress-nginx/pull/4965) Move opentracing configuration for location to go
+- [X] [#4966](https://github.com/kubernetes/ingress-nginx/pull/4966) Add verification of docker buildx support
+- [X] [#4967](https://github.com/kubernetes/ingress-nginx/pull/4967) Update go dependencies
+
 ### 0.27.1
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.27.1`
