@@ -48,7 +48,7 @@ var _ = framework.IngressNginxDescribe("Custom Default Backend", func() {
 				return err
 			})
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		f.WaitForNginxServer("_",
 			func(server string) bool {

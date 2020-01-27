@@ -93,6 +93,8 @@ func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingre
 		ing.Annotations = make(map[string]string)
 	}
 
+	time.Sleep(5 * time.Second)
+
 	return ing
 }
 
