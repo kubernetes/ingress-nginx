@@ -40,6 +40,11 @@ var (
 	AuthDirectory = "/etc/ingress-controller/auth"
 )
 
+const (
+	fileAuth = "auth-file"
+	mapAuth  = "auth-map"
+)
+
 // Config returns authentication configuration for an Ingress rule
 type Config struct {
 	Type       string `json:"type"`
@@ -107,7 +112,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	var secretType string
 	secretType, err = parser.GetStringAnnotation("auth-secret-type", ing)
 	if err != nil {
-		secretType = "auth-file"
+		secretType = fileAuth
 	}
 
 	s, err := parser.GetStringAnnotation("auth-secret", ing)
@@ -138,19 +143,20 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	realm, _ := parser.GetStringAnnotation("auth-realm", ing)
 
-	passFile := fmt.Sprintf("%v/%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.GetName())
+	passFilename := fmt.Sprintf("%v/%v-%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.UID, secret.UID)
 
-	if secretType == "auth-file" {
-		err = dumpSecretAuthFile(passFile, secret)
+	switch secretType {
+	case fileAuth:
+		err = dumpSecretAuthFile(passFilename, secret)
 		if err != nil {
 			return nil, err
 		}
-	} else if secretType == "auth-map" {
-		err = dumpSecretAuthMap(passFile, secret)
+	case mapAuth:
+		err = dumpSecretAuthMap(passFilename, secret)
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	default:
 		return nil, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "invalid auth-secret-type in annotation, must be 'auth-file' or 'auth-map'"),
 		}
@@ -159,9 +165,9 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	return &Config{
 		Type:       at,
 		Realm:      realm,
-		File:       passFile,
+		File:       passFilename,
 		Secured:    true,
-		FileSHA:    file.SHA1(passFile),
+		FileSHA:    file.SHA1(passFilename),
 		Secret:     name,
 		SecretType: secretType,
 	}, nil
