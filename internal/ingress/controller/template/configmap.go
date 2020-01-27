@@ -61,6 +61,7 @@ const (
 	globalAuthCacheKey        = "global-auth-cache-key"
 	globalAuthCacheDuration   = "global-auth-cache-duration"
 	luaSharedDictsKey         = "lua-shared-dicts"
+	authSecretKeys            = "auth-secret-keys"
 )
 
 var (
@@ -72,6 +73,7 @@ var (
 		"balancer_ewma_last_touched_at": 10,
 		"balancer_ewma_locks":           1,
 		"certificate_servers":           5,
+		"oidc_locations":                10,
 	}
 )
 
@@ -103,6 +105,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	blockRefererList := make([]string, 0)
 	responseHeaders := make([]string, 0)
 	luaSharedDicts := make(map[string]int)
+	authSecretKeyList := make([]string, 0)
 
 	//parse lua shared dict values
 	if val, ok := conf[luaSharedDictsKey]; ok {
@@ -341,6 +344,11 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, workerProcesses)
 	}
 
+	if val, ok := conf[authSecretKeys]; ok {
+		delete(conf, authSecretKeys)
+		authSecretKeyList = strings.Split(val, ",")
+	}
+
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
 	to.WhitelistSourceRange = whiteList
@@ -354,6 +362,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
 	to.LuaSharedDicts = luaSharedDicts
+	to.AuthSecretKeys = authSecretKeyList
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,

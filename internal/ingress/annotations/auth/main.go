@@ -17,6 +17,8 @@ limitations under the License.
 package auth
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"regexp"
@@ -34,7 +36,7 @@ import (
 )
 
 var (
-	authTypeRegex = regexp.MustCompile(`basic|digest`)
+	authTypeRegex = regexp.MustCompile(`basic|digest|oidc`)
 	// AuthDirectory default directory used to store files
 	// to authenticate request
 	AuthDirectory = "/etc/ingress-controller/auth"
@@ -47,13 +49,16 @@ const (
 
 // Config returns authentication configuration for an Ingress rule
 type Config struct {
-	Type       string `json:"type"`
-	Realm      string `json:"realm"`
-	File       string `json:"file"`
-	Secured    bool   `json:"secured"`
-	FileSHA    string `json:"fileSha"`
-	Secret     string `json:"secret"`
-	SecretType string `json:"secretType"`
+	Type          string `json:"type"`
+	Realm         string `json:"realm"`
+	File          string `json:"file"`
+	Secured       bool   `json:"secured"`
+	FileSHA       string `json:"fileSha"`
+	Secret        string `json:"secret"`
+	SecretType    string `json:"secretType"`
+	SecretData    string `json:"secretData"`
+	ConfigMap     string `json:"configMap"`
+	ConfigMapData string `json:"configMapData"`
 }
 
 // Equal tests for equality between two Config types
@@ -80,6 +85,12 @@ func (bd1 *Config) Equal(bd2 *Config) bool {
 		return false
 	}
 	if bd1.Secret != bd2.Secret {
+		return false
+	}
+	if bd1.SecretData != bd2.SecretData {
+		return false
+	}
+	if bd1.ConfigMapData != bd2.ConfigMapData {
 		return false
 	}
 	return true
@@ -109,12 +120,6 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("invalid authentication type")
 	}
 
-	var secretType string
-	secretType, err = parser.GetStringAnnotation("auth-secret-type", ing)
-	if err != nil {
-		secretType = fileAuth
-	}
-
 	s, err := parser.GetStringAnnotation("auth-secret", ing)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
@@ -133,43 +138,85 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 		sns = ing.Namespace
 	}
 
-	name := fmt.Sprintf("%v/%v", sns, sname)
-	secret, err := a.r.GetSecret(name)
+	secretName := fmt.Sprintf("%v/%v", sns, sname)
+	secret, err := a.r.GetSecret(secretName)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
-			Reason: errors.Wrapf(err, "unexpected error reading secret %v", name),
+			Reason: errors.Wrapf(err, "unexpected error reading secret %v", secretName),
 		}
 	}
 
-	realm, _ := parser.GetStringAnnotation("auth-realm", ing)
+	var realm, passFile, secretType, cmName string
+	var configMap *api.ConfigMap
+	var cmBuffer, secretBuffer *bytes.Buffer
 
-	passFilename := fmt.Sprintf("%v/%v-%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.UID, secret.UID)
+	if at == "oidc" {
+		cm, err := parser.GetStringAnnotation("auth-config", ing)
 
-	switch secretType {
-	case fileAuth:
-		err = dumpSecretAuthFile(passFilename, secret)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			cmns, cmname, err := cache.SplitMetaNamespaceKey(cm)
+			if err != nil {
+				return nil, ing_errors.LocationDenied{
+					Reason: errors.Wrap(err, "error parsing configmap name from annotation"),
+				}
+			}
+			if cmns == "" {
+				cmns = ing.Namespace
+			}
+			cmName = fmt.Sprintf("%v/%v", cmns, cmname)
+			configMap, err = a.r.GetConfigMap(cmName)
+			if err != nil {
+				return nil, ing_errors.LocationDenied{
+					Reason: errors.Wrapf(err, "unexpected error reading configmap %v", cmName),
+				}
+			}
+			dumpCMAuthBuffer(cmBuffer, configMap)
+		} else if err == ing_errors.ErrMissingAnnotations {
+			cmName = ""
+		} else {
+			return nil, ing_errors.LocationDenied{
+				Reason: errors.Wrap(err, "error reading configmap name from annotation"),
+			}
 		}
-	case mapAuth:
-		err = dumpSecretAuthMap(passFilename, secret)
+		dumpSecretAuthBuffer(secretBuffer, secret)
+	} else {
+		realm, _ = parser.GetStringAnnotation("auth-realm", ing)
+
+		passFile = fmt.Sprintf("%v/%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.GetName())
+
+		var secretType string
+		secretType, err = parser.GetStringAnnotation("auth-secret-type", ing)
 		if err != nil {
-			return nil, err
+			secretType = "auth-file"
 		}
-	default:
-		return nil, ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "invalid auth-secret-type in annotation, must be 'auth-file' or 'auth-map'"),
+		if secretType == "auth-file" {
+			err = dumpSecretAuthFile(passFile, secret)
+			if err != nil {
+				return nil, err
+			}
+		} else if secretType == "auth-map" {
+			err = dumpSecretAuthMap(passFile, secret)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, ing_errors.LocationDenied{
+				Reason: errors.Wrap(err, "invalid auth-secret-type in annotation, must be 'auth-file' or 'auth-map'"),
+			}
 		}
 	}
 
 	return &Config{
-		Type:       at,
-		Realm:      realm,
-		File:       passFilename,
-		Secured:    true,
-		FileSHA:    file.SHA1(passFilename),
-		Secret:     name,
-		SecretType: secretType,
+		Type:          at,
+		Realm:         realm,
+		File:          passFile,
+		Secured:       true,
+		FileSHA:       file.SHA1(passFile),
+		Secret:        secretName,
+		SecretType:    secretType,
+		SecretData:    secretBuffer.String(),
+		ConfigMap:     cmName,
+		ConfigMapData: cmBuffer.String(),
 	}, nil
 }
 
@@ -210,4 +257,28 @@ func dumpSecretAuthMap(filename string, secret *api.Secret) error {
 	}
 
 	return nil
+}
+
+func dumpSecretAuthBuffer(buffer *bytes.Buffer, secret *api.Secret) {
+	builder := &strings.Builder{}
+	for key, value := range secret.Data {
+		builder.WriteString(key)
+		builder.WriteString(":")
+		builder.WriteString(string(value))
+		builder.WriteString("\n")
+	}
+
+	buffer.Write([]byte(builder.String()))
+}
+
+func dumpCMAuthBuffer(buffer *bytes.Buffer, cm *api.ConfigMap) {
+	builder := &strings.Builder{}
+	for key, value := range cm.Data {
+		builder.WriteString(key)
+		builder.WriteString(":")
+		str := base64.StdEncoding.EncodeToString([]byte(value))
+		builder.WriteString(str)
+		builder.WriteString("\n")
+	}
+	buffer.Write([]byte(builder.String()))
 }

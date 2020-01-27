@@ -84,8 +84,13 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 
 	crl := secret.Data["ca.crl"]
 
-	auth := secret.Data["auth"]
-
+	authValid := false
+	for _, authKey := range s.backendConfig.AuthSecretKeys {
+		if _, ok := secret.Data[authKey]; ok {
+			authValid = true
+			break
+		}
+	}
 	// namespace/secretName -> namespace-secretName
 	nsSecName := strings.Replace(secretName, "/", "-", -1)
 
@@ -164,7 +169,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		// this does not enable Certificate Authentication
 		klog.V(3).Infof("Configuring Secret %q for TLS authentication", secretName)
 	} else {
-		if auth != nil {
+		if authValid {
 			return nil, ErrSecretForAuth
 		}
 

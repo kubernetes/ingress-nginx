@@ -648,6 +648,10 @@ type Configuration struct {
 	// DefaultSSLCertificate holds the default SSL certificate to use in the configuration
 	// It can be the fake certificate or the one behind the flag --default-ssl-certificate
 	DefaultSSLCertificate *ingress.SSLCert `json:"-"`
+
+	// AuthSecretKeys lists the accepted values of the key in the Kubernetes Secrets referenced
+	// in the auth-secret annotation
+	AuthSecretKeys []string `json:"auth-secret-keys",omitempty`
 }
 
 // NewDefault returns the default nginx configuration
@@ -791,6 +795,7 @@ func NewDefault() Configuration {
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",
 		GlobalExternalAuth:           defGlobalExternalAuth,
+		AuthSecretKeys:               []string{"auth"},
 	}
 
 	if klog.V(5) {

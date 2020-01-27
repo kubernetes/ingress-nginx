@@ -531,6 +531,7 @@ func New(
 		return name == configmap || name == tcp || name == udp
 	}
 
+<<<<<<< HEAD
 	handleCfgMapEvent := func(key string, cfgMap *corev1.ConfigMap, eventName string) {
 		// updates to configuration configmaps can trigger an update
 		triggerUpdate := false
@@ -539,9 +540,26 @@ func New(
 			recorder.Eventf(cfgMap, corev1.EventTypeNormal, eventName, fmt.Sprintf("ConfigMap %v", key))
 			if key == configmap {
 				store.setConfig(cfgMap)
+=======
+	cmEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			cm := obj.(*corev1.ConfigMap)
+			key := k8s.MetaNamespaceKey(cm)
+
+			triggerUpdate := false
+
+			// updates to configuration configmaps can trigger an update
+			if changeTriggerUpdate(key) {
+				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
+				triggerUpdate = true
+				if key == configmap {
+					store.setConfig(cm)
+				}
+>>>>>>> Support for OIDC plugin configuration. First version, no tests.
 			}
 		}
 
+<<<<<<< HEAD
 		ings := store.listers.IngressWithAnnotation.List()
 		for _, ingKey := range ings {
 			key := k8s.MetaNamespaceKey(ingKey)
@@ -549,6 +567,34 @@ func New(
 			if err != nil {
 				klog.Errorf("could not find Ingress %v in local store: %v", key, err)
 				continue
+=======
+			ings := store.listers.IngressWithAnnotation.List()
+			for _, ingKey := range ings {
+				key := k8s.MetaNamespaceKey(ingKey)
+				ing, err := store.getIngress(key)
+				if err != nil {
+					klog.Errorf("could not find Ingress %v in local store: %v", key, err)
+					continue
+				}
+
+				if parser.AnnotationsReferencesConfigmap(ing) {
+					recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
+					store.syncIngress(ing)
+					triggerUpdate = true
+				}
+			}
+
+			if triggerUpdate {
+				updateCh.In() <- Event{
+					Type: ConfigurationEvent,
+					Obj:  obj,
+				}
+			}
+		},
+		UpdateFunc: func(old, cur interface{}) {
+			if reflect.DeepEqual(old, cur) {
+				return
+>>>>>>> Support for OIDC plugin configuration. First version, no tests.
 			}
 
 			if parser.AnnotationsReferencesConfigmap(ing) {

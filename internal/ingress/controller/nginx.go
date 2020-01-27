@@ -49,6 +49,7 @@ import (
 	adm_controler "k8s.io/ingress-nginx/internal/admission/controller"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
@@ -856,6 +857,9 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 	clearCertificates(&copyOfRunningConfig)
 	clearCertificates(&copyOfPcfg)
 
+	clearOIDCConfig(&copyOfRunningConfig)
+	clearOIDCConfig(&copyOfPcfg)
+
 	return copyOfRunningConfig.Equal(&copyOfPcfg)
 }
 
@@ -896,6 +900,7 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 		if err != nil {
 			return err
 		}
+		err = configureOIDCPlugin(pcfg.Servers)
 	}
 
 	return nil
@@ -1214,4 +1219,80 @@ func buildRedirects(servers []*ingress.Server) []*redirect {
 	}
 
 	return redirectServers
+}
+
+// Helper function to clear OIDC plugin config from the ingress configuration since they should be ignored when
+// checking if the new configuration changes can be applied dynamically
+func clearOIDCConfig(config *ingress.Configuration) {
+	var clearedServers []*ingress.Server
+	for _, server := range config.Servers {
+		copyOfServer := *server
+		for i, _ := range copyOfServer.Locations {
+			if copyOfServer.Locations[i].BasicDigestAuth.Type == "oidc" {
+				copyOfServer.Locations[i].BasicDigestAuth = auth.Config{}
+			}
+		}
+
+		clearedServers = append(clearedServers, &copyOfServer)
+	}
+	config.Servers = clearedServers
+}
+
+type OIDCPluginConfiguration struct {
+	Locations  map[string]string `json:"locations"`
+	Secrets    map[string]string `json:"secrets"`
+	ConfigMaps map[string]string `json:"configmaps"`
+}
+
+// configureOIDCPlugin JSON encodes OIDC secrets and configmaps and POSTs it to an internal HTTP endpoint
+// that is handled by Lua
+func configureOIDCPlugin(rawServers []*ingress.Server) error {
+
+	configuration := &OIDCPluginConfiguration{
+		Locations:  map[string]string{},
+		Secrets:    map[string]string{},
+		ConfigMaps: map[string]string{},
+	}
+
+	configure := func(hostname string, path string, authConf auth.Config) {
+		secretName := ""
+		configMapName := ""
+		if authConf.Type == "oidc" {
+			if authConf.Secret != "" {
+				secretName = authConf.Secret
+			}
+			if authConf.ConfigMap != "" {
+				configMapName = authConf.ConfigMap
+			}
+			if _, found := configuration.Secrets[secretName]; !found && secretName != "" {
+				configuration.Secrets[secretName] = authConf.SecretData
+			}
+			if _, found := configuration.ConfigMaps[configMapName]; !found && configMapName != "" {
+				configuration.ConfigMaps[configMapName] = authConf.ConfigMapData
+			}
+		}
+
+		configuration.Locations[hostname+path] = secretName + ":" + configMapName
+
+	}
+
+	for _, rawServer := range rawServers {
+		for _, location := range rawServer.Locations {
+			configure(rawServer.Hostname, location.Path, location.BasicDigestAuth)
+			for _, alias := range rawServer.Aliases {
+				configure(alias, location.Path, location.BasicDigestAuth)
+			}
+		}
+	}
+
+	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/oidcplugin", "application/json", configuration)
+	if err != nil {
+		return err
+	}
+
+	if statusCode != http.StatusCreated {
+		return fmt.Errorf("unexpected error code: %d", statusCode)
+	}
+
+	return nil
 }

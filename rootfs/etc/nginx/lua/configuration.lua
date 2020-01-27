@@ -4,6 +4,7 @@ local cjson = require("cjson.safe")
 local configuration_data = ngx.shared.configuration_data
 local certificate_data = ngx.shared.certificate_data
 local certificate_servers = ngx.shared.certificate_servers
+local oidc_locations = ngx.shared.oidc_locations
 
 local EMPTY_UID = "-1"
 
@@ -155,6 +156,76 @@ local function handle_certs()
   end
 end
 
+local function handle_oidcplugin()
+  if ngx.var.request_method ~= "POST" then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Only POST requests are allowed!")
+    return
+  end
+
+  local raw_configuration = fetch_request_body()
+
+  local configuration, err = cjson.decode(raw_configuration)
+  if not configuration then
+    ngx.log(ngx.ERR, "could not parse oidc configuration: ", err)
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+
+  local err_buf = {}
+
+  for location, secretconfig in pairs(configuration.locations) do
+    if secretconfig == '' then
+      -- notice that we do not delete secret or configmap corresponding to this server
+      -- this is becase those can be used by multiple locations
+      oidc_locations:delete(location)
+    else
+      local success, set_err, forcible = oidc_locations:set(location, secretconfig)
+      if not success then
+        local err_msg = string.format("error setting oidc config for %s: %s\n", location, tostring(set_err))
+        table.insert(err_buf, err_msg)
+      end
+      if forcible then
+        local msg = string.format("oidc_locations dictionary is full, LRU entry has been removed to store %s",
+          location)
+        ngx.log(ngx.WARN, msg)
+      end
+    end
+  end
+
+  for secretname, secret in pairs(configuration.secrets) do
+    local success, set_err, forcible = certificate_data:set(secretname, secret)
+    if not success then
+      local err_msg = string.format("error setting oidc secret for %s: %s\n", secretname, tostring(set_err))
+      table.insert(err_buf, err_msg)
+    end
+    if forcible then
+      local msg = string.format("oidc_locations dictionary is full, LRU entry has been removed to store %s", secretname)
+      ngx.log(ngx.WARN, msg)
+    end
+  end
+
+  for cmname, configmap in pairs(configuration.configmaps) do
+    local success, set_err, forcible = certificate_data:set(cmname, configmap)
+    if not success then
+      local err_msg = string.format("error setting oidc config map for %s: %s\n", cmname, tostring(set_err))
+      table.insert(err_buf, err_msg)
+    end
+    if forcible then
+      local msg = string.format("oidc_locations dictionary is full, LRU entry has been removed to store %s", cmname)
+      ngx.log(ngx.WARN, msg)
+    end
+  end
+
+  if #err_buf > 0 then
+    ngx.log(ngx.ERR, table.concat(err_buf))
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    return
+  end
+
+  ngx.status = ngx.HTTP_CREATED
+end
+
 function _M.call()
   if ngx.var.request_method ~= "POST" and ngx.var.request_method ~= "GET" then
     ngx.status = ngx.HTTP_BAD_REQUEST
@@ -174,6 +245,11 @@ function _M.call()
 
   if ngx.var.uri == "/configuration/certs" then
     handle_certs()
+    return
+  end
+
+  if ngx.var.request_uri == "/configuration/oidcplugin" then
+    handle_oidcplugin()
     return
   end
 
