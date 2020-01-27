@@ -19,7 +19,6 @@ package annotations
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,8 +28,6 @@ import (
 )
 
 const (
-	waitForLuaSync = 5 * time.Second
-
 	canaryService = "echo-canary"
 )
 
@@ -68,8 +65,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			time.Sleep(waitForLuaSync)
-
 			resp, body, errs := gorequest.New().
 				Get(f.GetURL(framework.HTTP)).
 				Set("Host", host).
@@ -95,8 +90,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				80, canaryAnnotations)
 
 			f.EnsureIngress(canaryIng)
-
-			time.Sleep(waitForLuaSync)
 
 			resp, _, errs := gorequest.New().
 				Get(f.GetURL(framework.HTTP)).
@@ -135,7 +128,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 					80, canaryAnnotations)
 				f.EnsureIngress(canaryIng)
 
-				time.Sleep(waitForLuaSync)
+
 
 				By("returning a 503 status when the mainline deployment has 0 replicas and a request is sent to the canary")
 
@@ -189,8 +182,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			time.Sleep(waitForLuaSync)
-
 			By("routing requests destined for the mainline ingress to the maineline upstream")
 			resp, body, errs := gorequest.New().
 				Get(f.GetURL(framework.HTTP)).
@@ -229,8 +220,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
-
-			time.Sleep(waitForLuaSync)
 
 			annotations := map[string]string{}
 
@@ -289,8 +278,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
-
-			time.Sleep(waitForLuaSync)
 
 			modAnnotations := map[string]string{
 				"foo": "bar",
@@ -354,8 +341,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			time.Sleep(waitForLuaSync)
-
 			modCanaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader2",
@@ -363,8 +348,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, modCanaryAnnotations)
 			f.EnsureIngress(modCanaryIng)
-
-			time.Sleep(waitForLuaSync)
 
 			By("routing requests destined for the mainline ingress to the mainline upstream")
 
@@ -416,8 +399,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
-
-			time.Sleep(waitForLuaSync)
 
 			By("routing requests to the canary upstream when header is set to 'always'")
 
@@ -483,8 +464,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
-
-			time.Sleep(waitForLuaSync)
 
 			By("routing requests to the canary upstream when header is set to 'DoCanary'")
 
@@ -565,8 +544,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			time.Sleep(waitForLuaSync)
-
 			By("routing requests to the canary upstream when header value does not match and cookie is set to 'always'")
 			resp, body, errs := gorequest.New().
 				Get(f.GetURL(framework.HTTP)).
@@ -604,8 +581,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
-
-			time.Sleep(waitForLuaSync)
 
 			By("routing requests to the canary upstream when cookie is set to 'always'")
 			resp, body, errs := gorequest.New().
@@ -671,8 +646,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			time.Sleep(waitForLuaSync)
-
 			By("returning requests from the mainline only when weight is equal to 0")
 
 			resp, body, errs := gorequest.New().
@@ -695,8 +668,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			modCanaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService, 80, modCanaryAnnotations)
 
 			f.EnsureIngress(modCanaryIng)
-
-			time.Sleep(waitForLuaSync)
 
 			resp, body, errs = gorequest.New().
 				Get(f.GetURL(framework.HTTP)).
@@ -750,8 +721,6 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			otherHost := "bar"
 			ing = framework.NewSingleIngress(otherHost, "/", otherHost, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
-
-			time.Sleep(waitForLuaSync)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return Expect(cfg).Should(ContainSubstring("server_name "+otherHost)) &&

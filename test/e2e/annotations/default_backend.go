@@ -19,7 +19,6 @@ package annotations
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -44,8 +43,6 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 
 			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "invalid", 80, annotations)
 			f.EnsureIngress(ing)
-
-			time.Sleep(5 * time.Second)
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {

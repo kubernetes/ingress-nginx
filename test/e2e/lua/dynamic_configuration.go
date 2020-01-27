@@ -73,7 +73,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			replicas := 2
 			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, framework.EchoService, replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
-			time.Sleep(waitForLuaSync)
 
 			ensureRequest(f, "foo.com")
 
@@ -152,7 +151,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
 			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(ingress)
 			Expect(err).ToNot(HaveOccurred())
-			time.Sleep(waitForLuaSync)
 
 			ensureRequest(f, "foo.com")
 
@@ -176,7 +174,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 3, nil)
 		Expect(err).ToNot(HaveOccurred())
-		time.Sleep(waitForLuaSync)
 
 		output, err = f.ExecIngressPod(curlCmd)
 		Expect(err).ToNot(HaveOccurred())
@@ -186,7 +183,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 func ensureIngress(f *framework.Framework, host string, deploymentName string) *networking.Ingress {
 	ing := createIngress(f, host, deploymentName)
-	time.Sleep(waitForLuaSync)
+
 	ensureRequest(f, host)
 
 	return ing
