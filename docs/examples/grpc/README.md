@@ -13,12 +13,12 @@ nginx controller.
    for the ingress).
 3. You have the nginx-ingress controller installed in typical fashion (must be
    at least
-   [quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.13.0](https://quay.io/kubernetes-ingress-controller/nginx-ingress-controller)
+   [quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.28.0](https://quay.io/kubernetes-ingress-controller/nginx-ingress-controller)
    for grpc support.
 4. You have a backend application running a gRPC server and listening for TCP
    traffic.  If you prefer, you can use the
    [fortune-teller](https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller)
-   application provided here as an example. 
+   application provided here as an example.
 
 ### Step 1: kubernetes `Deployment`
 
@@ -108,7 +108,7 @@ $ grpcurl fortune-teller.stack.build:443 build.stack.fortune.FortuneTeller/Predi
 ### Notes on using response/request streams
 
 1. If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the `grpc_read_timeout` to acommodate for this.
-2. If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the 
+2. If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the
 `grpc_send_timeout` and the `client_body_timeout`.
 3. If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: `grpc_read_timeout`, `grpc_send_timeout` and `client_body_timeout`.
 
