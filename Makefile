@@ -27,7 +27,7 @@ endif
 SHELL=/bin/bash -o pipefail
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= master
+TAG ?= 0.28.0
 
 # Use docker to run makefile tasks
 USE_DOCKER ?= true
