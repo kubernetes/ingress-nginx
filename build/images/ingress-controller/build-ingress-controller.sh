@@ -83,6 +83,8 @@ cd ingress-nginx
 # disable docker in docker tasks
 export DIND_TASKS=0
 
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
 make init-docker-buildx
 docker buildx use ingress-nginx --default --global
 
