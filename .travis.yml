@@ -2,9 +2,6 @@ dist: trusty
 
 sudo: required
 
-services:
-  - docker
-
 language: generic
 
 notifications:
@@ -13,6 +10,7 @@ notifications:
     on_success: never
 
 before_install:
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
   - curl -fsSL https://get.docker.com | sh
   - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
   - mkdir -p $HOME/.docker
