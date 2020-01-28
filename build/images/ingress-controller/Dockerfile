@@ -1,4 +1,4 @@
-FROM 8s.gcr.io/debian-base:v2.0.0
+FROM k8s.gcr.io/debian-base:v2.0.0
 
 ENV TERRAFORM_VERSION 0.12.19
 
