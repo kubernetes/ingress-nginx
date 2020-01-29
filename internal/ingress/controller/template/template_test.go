@@ -1153,7 +1153,7 @@ func TestBuildInfluxDB(t *testing.T) {
 func TestBuildOpenTracing(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	actual := buildOpentracing(invalidType)
+	actual := buildOpentracing(invalidType, []*ingress.Server{})
 
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -1164,7 +1164,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		JaegerCollectorHost: "jaeger-host.com",
 	}
 	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;\r\n"
-	actual = buildOpentracing(cfgJaeger)
+	actual = buildOpentracing(cfgJaeger, []*ingress.Server{})
 
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -1175,7 +1175,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		ZipkinCollectorHost: "zipkin-host.com",
 	}
 	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;\r\n"
-	actual = buildOpentracing(cfgZipkin)
+	actual = buildOpentracing(cfgZipkin, []*ingress.Server{})
 
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -1186,7 +1186,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		DatadogCollectorHost: "datadog-host.com",
 	}
 	expected = "opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
-	actual = buildOpentracing(cfgDatadog)
+	actual = buildOpentracing(cfgDatadog, []*ingress.Server{})
 
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -1283,25 +1283,89 @@ func TestShouldLoadModSecurityModule(t *testing.T) {
 }
 
 func TestOpentracingForLocation(t *testing.T) {
+	trueVal := true
+
+	loadOT := `opentracing on;
+opentracing_propagate_context;`
 	testCases := []struct {
 		description string
 		globalOT    bool
-		isOTInLoc   bool
+		isSetInLoc  bool
+		isOTInLoc   *bool
 		expected    string
 	}{
-		{"globally enabled but not in location", true, false, "opentracing off;"},
-		{"globally enabled and enabled in location", true, true, "opentracing_propagate_context;"},
-		{"globally disabled and not enabled in location", false, false, ""},
-		{"globally disabled but enabled in location", false, true, "opentracing_propagate_context;"},
+		{"globally enabled, without annotation", true, false, nil, loadOT},
+		{"globally enabled and enabled in location", true, true, &trueVal, loadOT},
+		{"globally disabled and not enabled in location", false, false, nil, ""},
+		{"globally disabled but enabled in location", false, true, &trueVal, loadOT},
+		{"globally disabled, enabled in location but false", false, true, &trueVal, loadOT},
 	}
 
 	for _, testCase := range testCases {
-		actual := buildOpentracingForLocation(testCase.globalOT, &ingress.Location{
-			Opentracing: opentracing.Config{Enabled: testCase.isOTInLoc},
-		})
+		il := &ingress.Location{
+			Opentracing: opentracing.Config{Set: testCase.isSetInLoc},
+		}
+		if il.Opentracing.Set {
+			il.Opentracing.Enabled = *testCase.isOTInLoc
+		}
+
+		actual := buildOpentracingForLocation(testCase.globalOT, il)
 
 		if testCase.expected != actual {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.description, testCase.expected, actual)
 		}
+	}
+}
+
+func TestShouldLoadOpentracingModule(t *testing.T) {
+	// ### Invalid argument type tests ###
+	// The first tests should return false.
+	expected := false
+
+	invalidType := &ingress.Ingress{}
+	actual := shouldLoadOpentracingModule(config.Configuration{}, invalidType)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	actual = shouldLoadOpentracingModule(invalidType, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	// ### Functional tests ###
+	actual = shouldLoadOpentracingModule(config.Configuration{}, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	// All further tests should return true.
+	expected = true
+
+	configuration := config.Configuration{EnableOpentracing: true}
+	actual = shouldLoadOpentracingModule(configuration, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	servers := []*ingress.Server{
+		{
+			Locations: []*ingress.Location{
+				{
+					Opentracing: opentracing.Config{
+						Enabled: true,
+					},
+				},
+			},
+		},
+	}
+	actual = shouldLoadOpentracingModule(config.Configuration{}, servers)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	actual = shouldLoadOpentracingModule(configuration, servers)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 }

@@ -662,11 +662,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	if cfg.EnableOpentracing {
-		err := createOpentracingCfg(cfg)
-		if err != nil {
-			return err
-		}
+	err = createOpentracingCfg(cfg)
+	if err != nil {
+		return err
 	}
 
 	err = n.testTemplate(content)
