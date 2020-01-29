@@ -178,6 +178,7 @@ var (
 		"buildHTTPListener":                  buildHTTPListener,
 		"buildHTTPSListener":                 buildHTTPSListener,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
+		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
 	}
 )
 
@@ -928,14 +929,20 @@ func randomString() string {
 	return string(b)
 }
 
-func buildOpentracing(input interface{}) string {
-	cfg, ok := input.(config.Configuration)
+func buildOpentracing(c interface{}, s interface{}) string {
+	cfg, ok := c.(config.Configuration)
 	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
 		return ""
 	}
 
-	if !cfg.EnableOpentracing {
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return ""
+	}
+
+	if !shouldLoadOpentracingModule(cfg, servers) {
 		return ""
 	}
 
@@ -1272,18 +1279,60 @@ func httpsListener(addresses []string, co string, tc config.TemplateConfig) []st
 
 func buildOpentracingForLocation(isOTEnabled bool, location *ingress.Location) string {
 	isOTEnabledInLoc := location.Opentracing.Enabled
+	isOTSetInLoc := location.Opentracing.Set
 
 	if isOTEnabled {
-		if !isOTEnabledInLoc {
+		if isOTSetInLoc && !isOTEnabledInLoc {
 			return "opentracing off;"
 		}
 
-		return opentracingPropagateContext(location)
+		opc := opentracingPropagateContext(location)
+		if opc != "" {
+			opc = fmt.Sprintf("opentracing on;\n%v", opc)
+		}
+
+		return opc
 	}
 
-	if isOTEnabledInLoc {
-		return opentracingPropagateContext(location)
+	if isOTSetInLoc && isOTEnabledInLoc {
+		opc := opentracingPropagateContext(location)
+		if opc != "" {
+			opc = fmt.Sprintf("opentracing on;\n%v", opc)
+		}
+
+		return opc
 	}
 
 	return ""
+}
+
+// shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.
+// First, it checks if `enable-opentracing` is set in the ConfigMap. If it is not, it iterates over all locations to
+// check if Opentracing is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentracing`.
+func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	if cfg.EnableOpentracing {
+		return true
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.Opentracing.Enabled {
+				return true
+			}
+		}
+	}
+
+	return false
 }

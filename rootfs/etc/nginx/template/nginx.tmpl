@@ -20,7 +20,7 @@ load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
-{{ if $cfg.EnableOpentracing }}
+{{ if (shouldLoadOpentracingModule $cfg $servers) }}
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 {{ end }}
 
@@ -224,11 +224,7 @@ http {
     limit_req_status                {{ $cfg.LimitReqStatusCode }};
     limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
-    {{ if $cfg.EnableOpentracing }}
-    opentracing on;
-    {{ end }}
-
-    {{ buildOpentracing $cfg }}
+    {{ buildOpentracing $cfg $servers }}
 
     include /etc/nginx/mime.types;
     default_type text/html;
@@ -1021,13 +1017,13 @@ stream {
             set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
             set $proxy_host          $proxy_upstream_name;
             set $pass_access_scheme  $scheme;
-            
+
             {{ if $all.Cfg.UseProxyProtocol }}
             set $pass_server_port    $proxy_protocol_server_port;
             {{ else }}
             set $pass_server_port    $server_port;
             {{ end }}
-            
+
             set $best_http_host      $http_host;
             set $pass_port           $pass_server_port;
 
