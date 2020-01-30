@@ -1281,6 +1281,11 @@
 </div>
 <p>The ingress controller supports <strong>case insensitive</strong> regular expressions in the <code class="codehilite">spec.rules.http.paths.path</code> field.
 This can be enabled by setting the <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> annotation to <code class="codehilite">true</code> (the default is false).</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+</div>
+<p>Kubernetes only accept expressions that comply with the RE2 engine syntax. It is possible that valid expressions accepted by NGINX cannot be used with ingress-nginx, because the PCRE library (used in NGINX) supports a wider syntax than RE2.
+See the <a href="https://github.com/google/re2/wiki/Syntax">RE2 Syntax</a> documentation for differences.</p>
 <p>See the <a href="../nginx-configuration/annotations/#use-regex">description</a> of the <code class="codehilite">use-regex</code> annotation for more details.</p>
 <div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>

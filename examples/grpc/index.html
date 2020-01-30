@@ -1302,12 +1302,12 @@ nginx controller.</p>
    for the ingress).</li>
 <li>You have the nginx-ingress controller installed in typical fashion (must be
    at least
-   <a href="https://quay.io/kubernetes-ingress-controller/nginx-ingress-controller">quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.13.0</a>
+   <a href="https://quay.io/kubernetes-ingress-controller/nginx-ingress-controller">quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.28.0</a>
    for grpc support.</li>
 <li>You have a backend application running a gRPC server and listening for TCP
    traffic.  If you prefer, you can use the
    <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller">fortune-teller</a>
-   application provided here as an example. </li>
+   application provided here as an example.</li>
 </ol>
 <h3 id="step-1-kubernetes-deployment">Step 1: kubernetes <code class="codehilite">Deployment</code><a class="headerlink" href="#step-1-kubernetes-deployment" title="Permanent link"> ¶</a></h3>
 <div class="codehilite"><pre><span></span>$ kubectl create -f app.yaml
@@ -1382,7 +1382,7 @@ to help make it easier for your users to consume your API.</p>
 <h3 id="notes-on-using-responserequest-streams">Notes on using response/request streams<a class="headerlink" href="#notes-on-using-responserequest-streams" title="Permanent link"> ¶</a></h3>
 <ol>
 <li>If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the <code class="codehilite">grpc_read_timeout</code> to acommodate for this.</li>
-<li>If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the 
+<li>If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the
 <code class="codehilite">grpc_send_timeout</code> and the <code class="codehilite">client_body_timeout</code>.</li>
 <li>If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: <code class="codehilite">grpc_read_timeout</code>, <code class="codehilite">grpc_send_timeout</code> and <code class="codehilite">client_body_timeout</code>.</li>
 </ol>
