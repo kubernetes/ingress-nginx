@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KIND_LOG_LEVEL="0"
+KIND_LOG_LEVEL="1"
 
 if ! [ -z $DEBUG ]; then
   set -x
@@ -24,6 +24,18 @@ fi
 set -o errexit
 set -o nounset
 set -o pipefail
+
+cleanup() {
+  if [[ "${KUBETEST_IN_DOCKER:-}" == "true" ]]; then
+    kind "export" logs --name ${KIND_CLUSTER_NAME} "${ARTIFACTS}/logs" || true
+  fi
+
+  kind delete cluster \
+    --verbosity=${KIND_LOG_LEVEL} \
+    --name ${KIND_CLUSTER_NAME}
+}
+
+trap cleanup EXIT
 
 if ! command -v parallel &> /dev/null; then
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
@@ -56,6 +68,7 @@ kind create cluster \
   --verbosity=${KIND_LOG_LEVEL} \
   --name ${KIND_CLUSTER_NAME} \
   --config ${DIR}/kind.yaml \
+  --retain \
   --image "kindest/node:${K8S_VERSION}"
 
 echo "Kubernetes cluster:"
@@ -86,7 +99,3 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
-
-kind delete cluster \
-  --verbosity=${KIND_LOG_LEVEL} \
-  --name ${KIND_CLUSTER_NAME}
