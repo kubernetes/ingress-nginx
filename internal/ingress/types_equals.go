@@ -179,6 +179,12 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	if csa1.MaxAge != csa2.MaxAge {
 		return false
 	}
+	if csa1.SameSite != csa2.SameSite {
+		return false
+	}
+	if csa1.ConditionalSameSiteNone != csa2.ConditionalSameSiteNone {
+		return false
+	}
 
 	return true
 }
