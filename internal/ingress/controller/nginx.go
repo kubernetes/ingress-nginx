@@ -499,14 +499,25 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 	var serverNameBytes int
 
 	for _, srv := range ingressCfg.Servers {
-		if longestName < len(srv.Hostname) {
-			longestName = len(srv.Hostname)
+		hostnameLength := len(srv.Hostname)
+		if srv.RedirectFromToWWW {
+			hostnameLength += 4
 		}
-		serverNameBytes += len(srv.Hostname)
+		if longestName < hostnameLength {
+			longestName = hostnameLength
+		}
+
+		for _, alias := range srv.Aliases {
+			if longestName < len(alias) {
+				longestName = len(alias)
+			}
+		}
+
+		serverNameBytes += hostnameLength
 	}
 
-	if cfg.ServerNameHashBucketSize == 0 {
-		nameHashBucketSize := nginxHashBucketSize(longestName)
+	nameHashBucketSize := nginxHashBucketSize(longestName)
+	if cfg.ServerNameHashBucketSize < nameHashBucketSize {
 		klog.V(3).Infof("Adjusting ServerNameHashBucketSize variable to %d", nameHashBucketSize)
 		cfg.ServerNameHashBucketSize = nameHashBucketSize
 	}
