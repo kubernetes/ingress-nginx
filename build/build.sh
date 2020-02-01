@@ -44,6 +44,7 @@ if [ "$missing" = true ]; then
 fi
 
 export CGO_ENABLED=0
+export GOARCH=${ARCH}
 
 go build \
   "${GOBUILD_FLAGS}" \
