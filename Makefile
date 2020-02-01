@@ -42,7 +42,7 @@ endif
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 10
+E2E_NODES ?= 12
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
 # run e2e test suite with tests that check for memory leaks? (default is false)
@@ -53,27 +53,17 @@ GIT_COMMIT ?= git-$(shell git rev-parse --short HEAD)
 
 PKG = k8s.io/ingress-nginx
 
-ALL_ARCH = amd64 arm arm64
-
 BUSTED_ARGS =-v --pattern=_test
 
 ARCH ?= $(shell go env GOARCH)
 
-BASEIMAGE_TAG = 26f574dc279aa853736d7f7249965e90e47171d6
-
 REGISTRY ?= quay.io/kubernetes-ingress-controller
-MULTI_ARCH_IMAGE = $(REGISTRY)/nginx-ingress-controller-${ARCH}
 
-GOHOSTOS ?= $(shell go env GOHOSTOS)
-GOARCH = ${ARCH}
-GOOS = linux
+BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx
+BASE_TAG ?= 26f574dc279aa853736d7f7249965e90e47171d6
+
+GOARCH=$(ARCH)
 GOBUILD_FLAGS := -v
-
-# fix sed for osx
-SED_I ?= sed -i
-ifeq ($(GOHOSTOS),darwin)
-  SED_I=sed -i ''
-endif
 
 # use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
 GO111MODULE=off
@@ -94,12 +84,6 @@ sub-container-%:
 sub-push-%: ## Publish image for a particular arch.
 	$(MAKE) ARCH=$* push
 
-.PHONY: all-container
-all-container: $(addprefix sub-container-,$(ALL_ARCH)) ## Build image for amd64, arm and arm64.
-
-.PHONY: all-push
-all-push: $(addprefix sub-push-,$(ALL_ARCH)) ## Publish images for amd64, arm and arm64.
-
 .PHONY: container
 container: clean-container .container-$(ARCH) ## Build image for a particular arch.
 
@@ -111,11 +95,7 @@ container: clean-container .container-$(ARCH) ## Build image for a particular ar
 	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
 	cp bin/$(ARCH)/wait-shutdown $(TEMP_DIR)/rootfs/wait-shutdown
 
-	# Set default base image dynamically for each arch
-
-	cp -RP ./* $(TEMP_DIR)
-	$(SED_I) "s|BASEIMAGE|quay.io/kubernetes-ingress-controller/nginx-$(ARCH):$(BASEIMAGE_TAG)|g" $(DOCKERFILE)
-	$(SED_I) "s|VERSION|$(TAG)|g" $(DOCKERFILE)
+	cp -RP rootfs/* $(TEMP_DIR)/rootfs
 
 	echo "Building docker image ($(ARCH))..."
 	# buildx assumes images are multi-arch
@@ -125,12 +105,14 @@ container: clean-container .container-$(ARCH) ## Build image for a particular ar
 		--no-cache \
 		--progress plain \
 		--platform linux/$(ARCH) \
-		-t $(MULTI_ARCH_IMAGE):$(TAG) $(TEMP_DIR)/rootfs
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)-$(ARCH):$(BASE_TAG)" \
+		--build-arg VERSION="$(TAG)" \
+		-t $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG) $(TEMP_DIR)/rootfs
 
 .PHONY: clean-container
 clean-container: ## Removes local image
-	echo "removing old image $(MULTI_ARCH_IMAGE):$(TAG)"
-	@docker rmi -f $(MULTI_ARCH_IMAGE):$(TAG) || true
+	echo "removing old image $(BASE_IMAGE)-$(ARCH):$(TAG)"
+	@docker rmi -f $(BASE_IMAGE)-$(ARCH):$(TAG) || true
 
 .PHONY: push
 push: .push-$(ARCH) ## Publish image for a particular arch.
@@ -138,7 +120,7 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 # internal task
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
-	docker push $(MULTI_ARCH_IMAGE):$(TAG)
+	docker push $(BASE_IMAGE)-$(ARCH):$(TAG)
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
@@ -234,10 +216,6 @@ cover: check-go-version ## Run go coverage unit tests.
 .PHONY: vet
 vet:
 	@go vet $(shell go list ${PKG}/internal/... | grep -v vendor)
-
-.PHONY: release
-release: all-container all-push ## Build and publish images of the ingress controller.
-	echo "done"
 
 .PHONY: check_dead_links
 check_dead_links: ## Check if the documentation contains dead links.
