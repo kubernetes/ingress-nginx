@@ -1,0 +1,19 @@
+# HG changeset patch
+# User Yichun Zhang <agentzh@gmail.com>
+# Date 1383598130 28800
+# Node ID f64218e1ac963337d84092536f588b8e0d99bbaa
+# Parent  dea321e5c0216efccbb23e84bbce7cf3e28f130c
+Cache: gracefully exit the cache manager process.
+
+diff -r dea321e5c021 -r f64218e1ac96 src/os/unix/ngx_process_cycle.c
+--- a/src/os/unix/ngx_process_cycle.c	Thu Oct 31 18:23:49 2013 +0400
++++ b/src/os/unix/ngx_process_cycle.c	Mon Nov 04 12:48:50 2013 -0800
+@@ -1335,7 +1335,7 @@
+ 
+         if (ngx_terminate || ngx_quit) {
+             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
+-            exit(0);
++            ngx_worker_process_exit(cycle);
+         }
+ 
+         if (ngx_reopen) {
