@@ -29,7 +29,6 @@ import (
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
-
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1367,5 +1366,69 @@ func TestShouldLoadOpentracingModule(t *testing.T) {
 	actual = shouldLoadOpentracingModule(configuration, servers)
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
+func TestModSecurityForLocation(t *testing.T) {
+	loadModule := `modsecurity on;
+modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+`
+
+	modsecRule := `modsecurity_rules '
+#RULE#
+';
+`
+	owaspRules := `modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+`
+
+	transactionID := "0000000"
+	transactionCfg := fmt.Sprintf(`modsecurity_transaction_id "%v";
+`, transactionID)
+
+	testRule := "#RULE#"
+
+	testCases := []struct {
+		description         string
+		isEnabledInCM       bool
+		isOwaspEnabledInCM  bool
+		isEnabledInLoc      bool
+		isOwaspEnabledInLoc bool
+		snippet             string
+		transactionID       string
+		expected            string
+	}{
+		{"configmap enabled, configmap OWASP disabled, without annotation, snippet or transaction ID", true, false, false, false, "", "", ""},
+		{"configmap enabled, configmap OWASP disabled, without annotation, snippet and with transaction ID", true, false, false, false, "", transactionID, ""},
+		{"configmap enabled, configmap OWASP  enabled, without annotation, OWASP enabled", true, true, false, false, "", "", ""},
+		{"configmap enabled, configmap OWASP  enabled, without annotation, OWASP disabled, with snippet and no transaction ID", true, true, true, false, testRule, "", modsecRule},
+		{"configmap enabled, configmap OWASP  enabled, without annotation, OWASP disabled, with snippet and transaction ID", true, true, true, false, testRule, transactionID, fmt.Sprintf("%v%v", modsecRule, transactionCfg)},
+		{"configmap enabled, with annotation, OWASP disabled", true, false, true, false, "", "", ""},
+		{"configmap enabled, configmap OWASP disabled, with annotation, OWASP enabled, no snippet and no transaction ID", true, false, true, true, "", "", owaspRules},
+		{"configmap enabled, configmap OWASP disabled, with annotation, OWASP enabled, with snippet and no transaction ID", true, false, true, true, "", "", owaspRules},
+		{"configmap enabled, configmap OWASP disabled, with annotation, OWASP enabled, with snippet and transaction ID", true, false, true, true, "", transactionID, fmt.Sprintf("%v%v", owaspRules, transactionCfg)},
+		{"configmap enabled, OWASP configmap enabled, with annotation, OWASP disabled", true, true, true, false, "", "", ""},
+		{"configmap disabled, with annotation, OWASP disabled", false, false, true, false, "", "", loadModule},
+		{"configmap disabled, with annotation, OWASP disabled", false, false, true, false, testRule, "", fmt.Sprintf("%v%v", loadModule, modsecRule)},
+		{"configmap disabled, with annotation, OWASP enabled", false, false, true, false, testRule, "", fmt.Sprintf("%v%v", loadModule, modsecRule)},
+	}
+
+	for _, testCase := range testCases {
+		il := &ingress.Location{
+			ModSecurity: modsecurity.Config{
+				Enable:        testCase.isEnabledInLoc,
+				OWASPRules:    testCase.isOwaspEnabledInLoc,
+				Snippet:       testCase.snippet,
+				TransactionID: testCase.transactionID,
+			},
+		}
+
+		actual := buildModSecurityForLocation(config.Configuration{
+			EnableModsecurity:    testCase.isEnabledInCM,
+			EnableOWASPCoreRules: testCase.isOwaspEnabledInCM,
+		}, il)
+
+		if testCase.expected != actual {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.description, testCase.expected, actual)
+		}
 	}
 }

@@ -1029,25 +1029,7 @@ stream {
 
             set $proxy_alternative_upstream_name "";
 
-            {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
-            {{ if not $all.Cfg.EnableModsecurity }}
-            modsecurity on;
-
-            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-            {{ end }}
-
-            {{ if $location.ModSecurity.Snippet }}
-            modsecurity_rules '
-                {{ $location.ModSecurity.Snippet }}
-            ';
-            {{ else if (and (not $all.Cfg.EnableOWASPCoreRules) ($location.ModSecurity.OWASPRules))}}
-            modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
-            {{ end }}
-
-            {{ if (not (empty $location.ModSecurity.TransactionID)) }}
-            modsecurity_transaction_id {{ $location.ModSecurity.TransactionID | quote }};
-            {{ end }}
-            {{ end }}
+            {{ buildModSecurityForLocation $all.Cfg $location }}
 
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}

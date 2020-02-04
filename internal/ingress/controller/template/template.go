@@ -179,6 +179,7 @@ var (
 		"buildHTTPSListener":                 buildHTTPSListener,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
+		"buildModSecurityForLocation":        buildModSecurityForLocation,
 	}
 )
 
@@ -1335,4 +1336,44 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 	}
 
 	return false
+}
+
+func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Location) string {
+	isMSEnabledInLoc := location.ModSecurity.Enable
+	isMSEnabled := cfg.EnableModsecurity
+
+	if !isMSEnabled && !isMSEnabledInLoc {
+		return ""
+	}
+
+	if !isMSEnabledInLoc {
+		return ""
+	}
+
+	var buffer bytes.Buffer
+
+	if !isMSEnabled {
+		buffer.WriteString(`modsecurity on;
+modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+`)
+	}
+
+	if !cfg.EnableOWASPCoreRules && location.ModSecurity.OWASPRules {
+		buffer.WriteString(`modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+`)
+	}
+
+	if location.ModSecurity.Snippet != "" {
+		buffer.WriteString(fmt.Sprintf(`modsecurity_rules '
+%v
+';
+`, location.ModSecurity.Snippet))
+	}
+
+	if location.ModSecurity.TransactionID != "" {
+		buffer.WriteString(fmt.Sprintf(`modsecurity_transaction_id "%v";
+`, location.ModSecurity.TransactionID))
+	}
+
+	return buffer.String()
 }
