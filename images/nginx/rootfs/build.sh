@@ -21,7 +21,7 @@ set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-export NGINX_VERSION=1.17.7
+export NGINX_VERSION=1.17.8
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -44,10 +44,11 @@ export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 export RESTY_LUAROCKS_VERSION=3.1.3
-export LUAJIT_VERSION=9d5750d28478abfdcaefdfdc408f87752a21e431
+export LUAJIT_VERSION=38cb695de87cfeadcba5eeaf57f39e41d529aa1f
 export LUA_RESTY_BALANCER=0.03
 export LUA_RESTY_CORE=0.1.17
 export LUA_CJSON_VERSION=2.1.0.7
+export LUA_RESTY_COOKIE_VERSION=766ad8c15e498850ac77f5e0265f1d3f30dc4027
 
 export BUILD_PATH=/tmp/build
 
@@ -131,7 +132,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src b62756842807e5693b794e5d0ae289bd8ae5b098e66538b2a91eb80f25c591ff \
+get_src 97d23ecf6d5150b30e284b40e8a6f7e3bb5be6b601e373a4d013768d5a25965b \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -176,7 +177,7 @@ get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
 
-get_src 266ed1abb70a9806d97cb958537a44b67db6afb33d3b32292a2d68a2acedea75 \
+get_src 7df70318762f4150e6fe27dd1838b4b89a24ed9351c82d0b332d7d8457dd1b95 \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 
 get_src 052fd37cd698e24ab73ee18fc3fa55acd1d43153c12a0e65b0fba0447de1117e \
@@ -211,6 +212,9 @@ get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
 
 get_src 59d2f18ecadba48be61061004c8664eaed1111a3372cd2567cb24c5a47eb41fe \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz"
+
+get_src f818b5cef0881e5987606f2acda0e491531a0cb0c126d8dca02e2343edf641ef \
+        "https://github.com/cloudflare/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
@@ -556,8 +560,11 @@ cd "$BUILD_PATH/lua-cjson-$LUA_CJSON_VERSION"
 make all
 make install
 
+cd "$BUILD_PATH/lua-resty-cookie-$LUA_RESTY_COOKIE_VERSION"
+make all
+make install
+
 luarocks install lua-resty-iputils 0.3.0-1
-luarocks install lua-resty-cookie 0.1.0-1
 luarocks install lua-resty-lrucache 0.09-2
 luarocks install lua-resty-lock 0.08-0
 luarocks install lua-resty-dns 0.21-1
