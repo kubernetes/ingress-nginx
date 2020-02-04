@@ -17,12 +17,10 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/google/uuid"
 	"k8s.io/api/admission/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	networking "k8s.io/api/networking/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/klog"
 )
@@ -46,7 +44,6 @@ func (ia *IngressAdmission) HandleAdmission(ar *v1beta1.AdmissionReview) error {
 	if ar.Request == nil {
 		klog.Infof("rejecting nil request")
 		ar.Response = &v1beta1.AdmissionResponse{
-			UID:     types.UID(uuid.New().String()),
 			Allowed: false,
 		}
 		return nil
@@ -59,7 +56,7 @@ func (ia *IngressAdmission) HandleAdmission(ar *v1beta1.AdmissionReview) error {
 
 	if ar.Request.Resource == ingressResource || ar.Request.Resource == oldIngressResource {
 		ar.Response = &v1beta1.AdmissionResponse{
-			UID:     types.UID(uuid.New().String()),
+			UID:     ar.Request.UID,
 			Allowed: false,
 		}
 		ingress := networking.Ingress{}
@@ -89,7 +86,7 @@ func (ia *IngressAdmission) HandleAdmission(ar *v1beta1.AdmissionReview) error {
 
 	klog.Infof("accepting non ingress %s in namespace %s %s", ar.Request.Name, ar.Request.Namespace, ar.Request.Resource.String())
 	ar.Response = &v1beta1.AdmissionResponse{
-		UID:     types.UID(uuid.New().String()),
+		UID:     ar.Request.UID,
 		Allowed: true,
 	}
 	return nil

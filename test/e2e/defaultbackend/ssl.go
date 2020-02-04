@@ -59,6 +59,7 @@ var _ = framework.IngressNginxDescribe("Default backend - SSL", func() {
 				InsecureSkipVerify: true,
 			}).
 			Set("Host", "foo.bar.com").End()
+
 		Expect(errs).Should(BeEmpty())
 		Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
 		for _, pc := range resp.TLS.PeerCertificates {

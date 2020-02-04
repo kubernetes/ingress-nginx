@@ -57,7 +57,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)).
@@ -83,7 +82,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)).
@@ -96,8 +94,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 
 		ing.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "OTHERCOOKIENAME"
 		f.EnsureIngress(ing)
-
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs = gorequest.New().
 			Get(f.GetURL(framework.HTTP)).
@@ -123,7 +119,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/something").
@@ -181,7 +176,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/something").
@@ -218,7 +212,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)).
@@ -254,7 +247,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/foo/bar").
@@ -282,7 +274,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/foo/bar").
@@ -313,7 +304,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, `location /foo/bar`) && strings.Contains(server, `location /foo`)
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)+"/foo").
@@ -347,7 +337,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			func(server string) bool {
 				return strings.Contains(server, "server_name _")
 			})
-		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)).

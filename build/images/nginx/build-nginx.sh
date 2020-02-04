@@ -50,7 +50,6 @@ apt -q=3 install \
   curl \
   make \
   htop \
-  parallel \
   software-properties-common --yes
 
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -64,24 +63,23 @@ apt -q=3 update
 
 apt -q=3 install docker-ce --yes
 
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
 echo ${docker_password} | docker login -u ${docker_username} --password-stdin quay.io
 
 curl -sL -o /usr/local/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 chmod +x /usr/local/bin/gimme
 
-eval "$(gimme 1.13)"
+eval "$(gimme 1.13.7)"
 
 git clone https://github.com/kubernetes/ingress-nginx
 
 cd ingress-nginx/images/nginx
 
-make register-qemu
-
 export TAG=$(git rev-parse HEAD)
 
-echo "Building NGINX image in parallel:"
-echo "
-make sub-push-amd64
-make sub-push-arm
-make sub-push-arm64
-" | parallel --joblog /tmp/log {} || cat /tmp/log
+make init-docker-buildx
+docker buildx use ingress-nginx --default --global
+
+echo "Building NGINX images..."
+make release

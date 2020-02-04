@@ -37,9 +37,12 @@ type Config struct {
 func (bd1 *Config) Equal(bd2 *Config) bool {
 	if bd1.Set != bd2.Set {
 		return false
-	} else if bd1.Enabled != bd2.Enabled {
+	}
+
+	if bd1.Enabled != bd2.Enabled {
 		return false
 	}
+
 	return true
 }
 
@@ -53,5 +56,6 @@ func (s opentracing) Parse(ing *networking.Ingress) (interface{}, error) {
 	if err != nil {
 		return &Config{Set: false, Enabled: false}, nil
 	}
+
 	return &Config{Set: true, Enabled: enabled}, nil
 }

@@ -334,7 +334,7 @@ func (n *NGINXController) Start() {
 		select {
 		case err := <-n.ngxErrCh:
 			if n.isShuttingDown {
-				break
+				return
 			}
 
 			// if the nginx master process dies the workers continue to process requests,
@@ -358,6 +358,7 @@ func (n *NGINXController) Start() {
 			if n.isShuttingDown {
 				break
 			}
+
 			if evt, ok := event.(store.Event); ok {
 				klog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
 				if evt.Type == store.ConfigurationEvent {
@@ -371,7 +372,7 @@ func (n *NGINXController) Start() {
 				klog.Warningf("Unexpected event type received %T", event)
 			}
 		case <-n.stopCh:
-			break
+			return
 		}
 	}
 }
@@ -498,14 +499,25 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 	var serverNameBytes int
 
 	for _, srv := range ingressCfg.Servers {
-		if longestName < len(srv.Hostname) {
-			longestName = len(srv.Hostname)
+		hostnameLength := len(srv.Hostname)
+		if srv.RedirectFromToWWW {
+			hostnameLength += 4
 		}
-		serverNameBytes += len(srv.Hostname)
+		if longestName < hostnameLength {
+			longestName = hostnameLength
+		}
+
+		for _, alias := range srv.Aliases {
+			if longestName < len(alias) {
+				longestName = len(alias)
+			}
+		}
+
+		serverNameBytes += hostnameLength
 	}
 
-	if cfg.ServerNameHashBucketSize == 0 {
-		nameHashBucketSize := nginxHashBucketSize(longestName)
+	nameHashBucketSize := nginxHashBucketSize(longestName)
+	if cfg.ServerNameHashBucketSize < nameHashBucketSize {
 		klog.V(3).Infof("Adjusting ServerNameHashBucketSize variable to %d", nameHashBucketSize)
 		cfg.ServerNameHashBucketSize = nameHashBucketSize
 	}
@@ -661,11 +673,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	if cfg.EnableOpentracing {
-		err := createOpentracingCfg(cfg)
-		if err != nil {
-			return err
-		}
+	err = createOpentracingCfg(cfg)
+	if err != nil {
+		return err
 	}
 
 	err = n.testTemplate(content)

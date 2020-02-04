@@ -173,11 +173,13 @@ var (
 		"enforceRegexModifier":               enforceRegexModifier,
 		"stripLocationModifer":               stripLocationModifer,
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
-		"opentracingPropagateContext":        opentracingPropagateContext,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
 		"buildHTTPListener":                  buildHTTPListener,
 		"buildHTTPSListener":                 buildHTTPSListener,
+		"buildOpentracingForLocation":        buildOpentracingForLocation,
+		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
+		"buildModSecurityForLocation":        buildModSecurityForLocation,
 	}
 )
 
@@ -928,14 +930,20 @@ func randomString() string {
 	return string(b)
 }
 
-func buildOpentracing(input interface{}) string {
-	cfg, ok := input.(config.Configuration)
+func buildOpentracing(c interface{}, s interface{}) string {
+	cfg, ok := c.(config.Configuration)
 	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
 		return ""
 	}
 
-	if !cfg.EnableOpentracing {
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return ""
+	}
+
+	if !shouldLoadOpentracingModule(cfg, servers) {
 		return ""
 	}
 
@@ -949,7 +957,7 @@ func buildOpentracing(input interface{}) string {
 			buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
 		}
 	} else if cfg.DatadogCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;")
+		buf.WriteString("opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;")
 	}
 
 	buf.WriteString("\r\n")
@@ -1064,18 +1072,16 @@ func buildCustomErrorLocationsPerServer(input interface{}) []errorLocation {
 	return errorLocations
 }
 
-func opentracingPropagateContext(loc interface{}) string {
-	location, ok := loc.(*ingress.Location)
-	if !ok {
-		klog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
-		return "opentracing_propagate_context"
+func opentracingPropagateContext(location *ingress.Location) string {
+	if location == nil {
+		return ""
 	}
 
 	if location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
-		return "opentracing_grpc_propagate_context"
+		return "opentracing_grpc_propagate_context;"
 	}
 
-	return "opentracing_propagate_context"
+	return "opentracing_propagate_context;"
 }
 
 // shouldLoadModSecurityModule determines whether or not the ModSecurity module needs to be loaded.
@@ -1270,4 +1276,104 @@ func httpsListener(addresses []string, co string, tc config.TemplateConfig) []st
 	}
 
 	return out
+}
+
+func buildOpentracingForLocation(isOTEnabled bool, location *ingress.Location) string {
+	isOTEnabledInLoc := location.Opentracing.Enabled
+	isOTSetInLoc := location.Opentracing.Set
+
+	if isOTEnabled {
+		if isOTSetInLoc && !isOTEnabledInLoc {
+			return "opentracing off;"
+		}
+
+		opc := opentracingPropagateContext(location)
+		if opc != "" {
+			opc = fmt.Sprintf("opentracing on;\n%v", opc)
+		}
+
+		return opc
+	}
+
+	if isOTSetInLoc && isOTEnabledInLoc {
+		opc := opentracingPropagateContext(location)
+		if opc != "" {
+			opc = fmt.Sprintf("opentracing on;\n%v", opc)
+		}
+
+		return opc
+	}
+
+	return ""
+}
+
+// shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.
+// First, it checks if `enable-opentracing` is set in the ConfigMap. If it is not, it iterates over all locations to
+// check if Opentracing is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentracing`.
+func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	if cfg.EnableOpentracing {
+		return true
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.Opentracing.Enabled {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Location) string {
+	isMSEnabledInLoc := location.ModSecurity.Enable
+	isMSEnabled := cfg.EnableModsecurity
+
+	if !isMSEnabled && !isMSEnabledInLoc {
+		return ""
+	}
+
+	if !isMSEnabledInLoc {
+		return ""
+	}
+
+	var buffer bytes.Buffer
+
+	if !isMSEnabled {
+		buffer.WriteString(`modsecurity on;
+modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+`)
+	}
+
+	if !cfg.EnableOWASPCoreRules && location.ModSecurity.OWASPRules {
+		buffer.WriteString(`modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+`)
+	}
+
+	if location.ModSecurity.Snippet != "" {
+		buffer.WriteString(fmt.Sprintf(`modsecurity_rules '
+%v
+';
+`, location.ModSecurity.Snippet))
+	}
+
+	if location.ModSecurity.TransactionID != "" {
+		buffer.WriteString(fmt.Sprintf(`modsecurity_transaction_id "%v";
+`, location.ModSecurity.TransactionID))
+	}
+
+	return buffer.String()
 }

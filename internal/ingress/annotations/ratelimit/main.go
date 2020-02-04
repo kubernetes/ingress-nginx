@@ -175,7 +175,7 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		}, nil
 	}
 
-	zoneName := fmt.Sprintf("%v_%v", ing.GetNamespace(), ing.GetName())
+	zoneName := fmt.Sprintf("%v_%v_%v", ing.GetNamespace(), ing.GetName(), ing.UID)
 
 	return &Config{
 		Connections: Zone{

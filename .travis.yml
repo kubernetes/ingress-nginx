@@ -1,9 +1,6 @@
-dist: trusty
+dist: bionic
 
 sudo: required
-
-services:
-  - docker
 
 language: generic
 
@@ -11,6 +8,14 @@ notifications:
   email:
     on_failure: always
     on_success: never
+
+before_install:
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - curl -fsSL https://get.docker.com | sh
+  - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+  - mkdir -p $HOME/.docker
+  - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+  - sudo service docker start
 
 # New secure variables can be added using travis encrypt -r kubernetes/ingress-nginx --add K=V
 env:

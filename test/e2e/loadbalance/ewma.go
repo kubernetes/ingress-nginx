@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/parnurzeal/gorequest"
 
@@ -47,7 +46,6 @@ var _ = framework.IngressNginxDescribe("Load Balance - EWMA", func() {
 			func(server string) bool {
 				return strings.Contains(server, "server_name load-balance.com")
 			})
-		time.Sleep(waitForLuaSync)
 
 		algorithm, err := f.GetLbAlgorithm(framework.EchoService, 80)
 		Expect(err).Should(BeNil())

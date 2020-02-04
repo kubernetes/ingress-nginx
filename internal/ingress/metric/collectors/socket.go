@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"syscall"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -97,6 +98,9 @@ var (
 // the ingress watch namespace and class used by the controller
 func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
+	// unix sockets must be unlink()ed before being used
+	syscall.Unlink(socket)
+
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
 		return nil, err

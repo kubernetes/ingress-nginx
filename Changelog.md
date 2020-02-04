@@ -1,5 +1,162 @@
 # Changelog
 
+### 0.28.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.28.0`
+
+Fix occasional prometheus `http: superfluous response.WriteHeader call...` error [#4943](https://github.com/kubernetes/ingress-nginx/pull/4943)
+Remove prometheus socket before the start of metrics collector [#4961](https://github.com/kubernetes/ingress-nginx/pull/4961)
+Reduce CPU utilization when the ingress controller is shutting down [#4959](https://github.com/kubernetes/ingress-nginx/pull/4959)
+Avoid overlap of configuration definitions [#4960](https://github.com/kubernetes/ingress-nginx/pull/4960)
+
+_Changes:_
+
+- [X] [#4912](https://github.com/kubernetes/ingress-nginx/pull/4912) Update README.md
+- [X] [#4914](https://github.com/kubernetes/ingress-nginx/pull/4914) Disable docker in docker tasks in terraform release script
+- [X] [#4932](https://github.com/kubernetes/ingress-nginx/pull/4932) Cleanup dev-env script
+- [X] [#4943](https://github.com/kubernetes/ingress-nginx/pull/4943) Update client_golang dependency to v1.3.0
+- [X] [#4956](https://github.com/kubernetes/ingress-nginx/pull/4956) Fix proxy protocol support for X-Forwarded-Port
+- [X] [#4959](https://github.com/kubernetes/ingress-nginx/pull/4959) Refactor how to handle sigterm and nginx process goroutine
+- [X] [#4960](https://github.com/kubernetes/ingress-nginx/pull/4960) Avoid overlap of configuration definitions
+- [X] [#4961](https://github.com/kubernetes/ingress-nginx/pull/4961) Remove prometheus socket before listen
+- [X] [#4962](https://github.com/kubernetes/ingress-nginx/pull/4962) Cleanup of e2e docker images
+- [X] [#4965](https://github.com/kubernetes/ingress-nginx/pull/4965) Move opentracing configuration for location to go
+- [X] [#4966](https://github.com/kubernetes/ingress-nginx/pull/4966) Add verification of docker buildx support
+- [X] [#4967](https://github.com/kubernetes/ingress-nginx/pull/4967) Update go dependencies
+
+### 0.27.1
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.27.1`
+
+Fix regression in Jaeger opentracing module, incorrect UID in webhook AdmissionResponse in Kubernetes > 1.16.0.
+
+_Changes:_
+
+- [X] [#4920](https://github.com/kubernetes/ingress-nginx/pull/4920) Rollback jaeger module version
+- [X] [#4922](https://github.com/kubernetes/ingress-nginx/pull/4922) Use docker buildx and remove qemu-static
+- [X] [#4927](https://github.com/kubernetes/ingress-nginx/pull/4927) Fix incorrect UID in webhook AdmissionResponse
+
+### 0.27.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.27.0`
+
+_New Features:_
+
+- NGINX 1.17.7
+- Migration to alpinelinux.
+- Global [Modsecurity Snippet via ConfigMap](https://github.com/kubernetes/ingress-nginx/pull/4087)
+- Support Datadog sample rate with global trace sampling from configmap [#4897](https://github.com/kubernetes/ingress-nginx/pull/4897)
+- Modsecurity CRS v3.2.0 [#4829](https://github.com/kubernetes/ingress-nginx/pull/4829)
+- Modsecurity-nginx v1.0.1 [#4842](https://github.com/kubernetes/ingress-nginx/pull/4842)
+- Allow enabling/disabling opentracing for ingresses [#4732](https://github.com/kubernetes/ingress-nginx/pull/4732)
+
+_Breaking Changes:_
+
+- Enable download of GeoLite2 databases [#4896](https://github.com/kubernetes/ingress-nginx/pull/4896)
+
+  _From maxmind website:_
+
+  ```
+  Due to upcoming data privacy regulations, we are making significant changes to how you access free GeoLite2 databases starting December 30, 2019.
+  Learn more on our blog https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/
+  ```
+
+  Because of this change, it is not clear we can provide the databases directly from the docker image.
+  To enable the feature, we provide two options:
+  - Add the flag `--maxmind-license-key` to download the databases when the ingress controller starts.
+  - or add a volume to mount the files `GeoLite2-City.mmdb` and `GeoLite2-ASN.mmdb` in the directory `/etc/nginx/geoip`.
+
+  **If any of these conditions are not met, the geoip2 module will be disabled**
+
+- The feature `lua-resty-waf` was removed.
+
+- Due to the migration to alpinelinux the uid of the user is different. Please make sure to update it `runAsUser: 101` or the ingress controller will not start (CrashLoopBackOff).
+
+_Changes:_
+
+- [X] [#4087](https://github.com/kubernetes/ingress-nginx/pull/4087) Define Modsecurity Snippet via ConfigMap
+- [X] [#4603](https://github.com/kubernetes/ingress-nginx/pull/4603) optimize: local cache global variable and reduce string object creation.
+- [X] [#4613](https://github.com/kubernetes/ingress-nginx/pull/4613) Terraform release
+- [X] [#4619](https://github.com/kubernetes/ingress-nginx/pull/4619) Issue 4244
+- [X] [#4620](https://github.com/kubernetes/ingress-nginx/pull/4620) ISSUE-4244 e2e test
+- [X] [#4645](https://github.com/kubernetes/ingress-nginx/pull/4645) Bind ingress controller to linux nodes to avoid Windows scheduling on kubernetes cluster includes linux nodes and windows nodes
+- [X] [#4650](https://github.com/kubernetes/ingress-nginx/pull/4650) Expose GeoIP2 Organization as variable $geoip2_org
+- [X] [#4658](https://github.com/kubernetes/ingress-nginx/pull/4658) Need to quote expansion of `$cfg.LogFormatStream` in `log_stream` access log
+- [X] [#4664](https://github.com/kubernetes/ingress-nginx/pull/4664) warn when ConfigMap is missing or not parsable instead of erroring
+- [X] [#4669](https://github.com/kubernetes/ingress-nginx/pull/4669) Simplify initialization function of bytes.Buffer
+- [X] [#4671](https://github.com/kubernetes/ingress-nginx/pull/4671) Discontinue use of a single DNS query to validate an endpoint name
+- [X] [#4673](https://github.com/kubernetes/ingress-nginx/pull/4673) More helpful dns error
+- [X] [#4678](https://github.com/kubernetes/ingress-nginx/pull/4678) Increase the kubernetes 1.14 version to the installation prompt
+- [X] [#4689](https://github.com/kubernetes/ingress-nginx/pull/4689) Server-only authentication of backends and per-location SSL config
+- [X] [#4693](https://github.com/kubernetes/ingress-nginx/pull/4693) Adding some documentation about the use of metrics-per-host and enabl…
+- [X] [#4694](https://github.com/kubernetes/ingress-nginx/pull/4694) Enhancement : add remote_addr in TCP access log
+- [X] [#4695](https://github.com/kubernetes/ingress-nginx/pull/4695) Removing secure-verify-ca-secret support
+- [X] [#4700](https://github.com/kubernetes/ingress-nginx/pull/4700) adds hability to use externalIP when controller service is of type NodePort
+- [X] [#4730](https://github.com/kubernetes/ingress-nginx/pull/4730) add configuration for http2_max_concurrent_streams
+- [X] [#4732](https://github.com/kubernetes/ingress-nginx/pull/4732) Allow enabling/disabling opentracing for ingresses
+- [X] [#4745](https://github.com/kubernetes/ingress-nginx/pull/4745) add cmluciano to owners
+- [X] [#4747](https://github.com/kubernetes/ingress-nginx/pull/4747) Docker image: Add source code reference label
+- [X] [#4766](https://github.com/kubernetes/ingress-nginx/pull/4766) dev-env.sh: fix for parsing `minikube status` output of newer versions, fix shellcheck lints
+- [X] [#4779](https://github.com/kubernetes/ingress-nginx/pull/4779) Remove lua-resty-waf feature
+- [X] [#4780](https://github.com/kubernetes/ingress-nginx/pull/4780) Update nginx image to use openresty master
+- [X] [#4785](https://github.com/kubernetes/ingress-nginx/pull/4785) Update nginx image and Go to 1.13.4
+- [X] [#4791](https://github.com/kubernetes/ingress-nginx/pull/4791) deploy: add protocol to all Container/ServicePorts
+- [X] [#4793](https://github.com/kubernetes/ingress-nginx/pull/4793)  Fix issue in logic of modsec template
+- [X] [#4794](https://github.com/kubernetes/ingress-nginx/pull/4794) Remove extra annotation when Enabling ModSecurity
+- [X] [#4797](https://github.com/kubernetes/ingress-nginx/pull/4797) Add a datasource variable $DS_PROMETHEUS
+- [X] [#4803](https://github.com/kubernetes/ingress-nginx/pull/4803) Update nginx image to fix regression in jaeger tracing
+- [X] [#4805](https://github.com/kubernetes/ingress-nginx/pull/4805) Update nginx and e2e images
+- [X] [#4806](https://github.com/kubernetes/ingress-nginx/pull/4806) Add log to parallel command to dump logs in case of errors
+- [X] [#4807](https://github.com/kubernetes/ingress-nginx/pull/4807) Allow custom CA certificate when flag --api-server is specified
+- [X] [#4813](https://github.com/kubernetes/ingress-nginx/pull/4813) Update default SSL ciphers
+- [X] [#4816](https://github.com/kubernetes/ingress-nginx/pull/4816) apply default certificate again in cases of invalid or incomplete cert config
+- [X] [#4823](https://github.com/kubernetes/ingress-nginx/pull/4823) Update go dependencies to v1.17.0
+- [X] [#4826](https://github.com/kubernetes/ingress-nginx/pull/4826) regression test and fix for duplicate hsts bug
+- [X] [#4827](https://github.com/kubernetes/ingress-nginx/pull/4827) Migrate ingress definitions from extensions to networking.k8s.io
+- [X] [#4829](https://github.com/kubernetes/ingress-nginx/pull/4829) Update modsecurity crs to v3.2.0
+- [X] [#4840](https://github.com/kubernetes/ingress-nginx/pull/4840) Return specific type
+- [X] [#4842](https://github.com/kubernetes/ingress-nginx/pull/4842) Update Modsecurity-nginx to latest (v1.0.1)
+- [X] [#4843](https://github.com/kubernetes/ingress-nginx/pull/4843) Define minimum limits to run the ingress controller
+- [X] [#4848](https://github.com/kubernetes/ingress-nginx/pull/4848) Update nginx image
+- [X] [#4859](https://github.com/kubernetes/ingress-nginx/pull/4859) Use a named location for authSignURL
+- [X] [#4862](https://github.com/kubernetes/ingress-nginx/pull/4862) Update nginx image
+- [X] [#4863](https://github.com/kubernetes/ingress-nginx/pull/4863) Switch to nginx again
+- [X] [#4866](https://github.com/kubernetes/ingress-nginx/pull/4866) Improve issue and pull request template
+- [X] [#4867](https://github.com/kubernetes/ingress-nginx/pull/4867) Fix sticky session for ingress without host
+- [X] [#4870](https://github.com/kubernetes/ingress-nginx/pull/4870) Default backend protocol only supports http
+- [X] [#4871](https://github.com/kubernetes/ingress-nginx/pull/4871) Fix ingress status regression introduced in #4490
+- [X] [#4875](https://github.com/kubernetes/ingress-nginx/pull/4875) Remove /build endpoint
+- [X] [#4880](https://github.com/kubernetes/ingress-nginx/pull/4880) Remove download of geoip databases
+- [X] [#4882](https://github.com/kubernetes/ingress-nginx/pull/4882) Use yaml files from a particular tag, not from master
+- [X] [#4883](https://github.com/kubernetes/ingress-nginx/pull/4883) Update e2e image
+- [X] [#4884](https://github.com/kubernetes/ingress-nginx/pull/4884) Update e2e image
+- [X] [#4886](https://github.com/kubernetes/ingress-nginx/pull/4886) Fix flaking e2e tests
+- [X] [#4887](https://github.com/kubernetes/ingress-nginx/pull/4887) Master branch uses a master tag image
+- [X] [#4891](https://github.com/kubernetes/ingress-nginx/pull/4891) Add help task
+- [X] [#4893](https://github.com/kubernetes/ingress-nginx/pull/4893) Use docker to run makefile tasks
+- [X] [#4894](https://github.com/kubernetes/ingress-nginx/pull/4894) Remove todo from lua test
+- [X] [#4896](https://github.com/kubernetes/ingress-nginx/pull/4896) Enable download of GeoLite2 databases
+- [X] [#4897](https://github.com/kubernetes/ingress-nginx/pull/4897) Support Datadog sample rate with global trace sampling from configmap
+- [X] [#4907](https://github.com/kubernetes/ingress-nginx/pull/4907) Add script to check go version and fix output directory permissions
+
+_Documentation:_
+
+- [X] [#4623](https://github.com/kubernetes/ingress-nginx/pull/4623) remove duplicated line in docs
+- [X] [#4681](https://github.com/kubernetes/ingress-nginx/pull/4681) Fix docs/development.md describing inaccurate issues
+- [X] [#4683](https://github.com/kubernetes/ingress-nginx/pull/4683) Fixed upgrading example command
+- [X] [#4708](https://github.com/kubernetes/ingress-nginx/pull/4708) add proxy-max-temp-file-size doc
+- [X] [#4727](https://github.com/kubernetes/ingress-nginx/pull/4727) update docs, remove output in prometheus deploy command
+- [X] [#4744](https://github.com/kubernetes/ingress-nginx/pull/4744) Fix generation of sitemap.xml file
+- [X] [#4746](https://github.com/kubernetes/ingress-nginx/pull/4746) Fix broken links in documentation
+- [X] [#4748](https://github.com/kubernetes/ingress-nginx/pull/4748) Update documentation for static ip example
+- [X] [#4749](https://github.com/kubernetes/ingress-nginx/pull/4749) Update documentation for rate limiting
+- [X] [#4765](https://github.com/kubernetes/ingress-nginx/pull/4765) Fix extra word
+- [X] [#4777](https://github.com/kubernetes/ingress-nginx/pull/4777) [docs] Add info about x-forwarded-prefix breaking change
+- [X] [#4800](https://github.com/kubernetes/ingress-nginx/pull/4800) Update sysctl example
+- [X] [#4801](https://github.com/kubernetes/ingress-nginx/pull/4801) Fix markdown list
+- [X] [#4849](https://github.com/kubernetes/ingress-nginx/pull/4849) Fixed documentation for FCGI annotation.
+- [X] [#4885](https://github.com/kubernetes/ingress-nginx/pull/4885) Correct MetalLB setup instructions.
+
 ### 0.26.2
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.26.2`

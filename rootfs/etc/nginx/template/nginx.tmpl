@@ -20,7 +20,7 @@ load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
-{{ if $cfg.EnableOpentracing }}
+{{ if (shouldLoadOpentracingModule $cfg $servers) }}
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 {{ end }}
 
@@ -224,11 +224,7 @@ http {
     limit_req_status                {{ $cfg.LimitReqStatusCode }};
     limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
-    {{ if $cfg.EnableOpentracing }}
-    opentracing on;
-    {{ end }}
-
-    {{ buildOpentracing $cfg }}
+    {{ buildOpentracing $cfg $servers }}
 
     include /etc/nginx/mime.types;
     default_type text/html;
@@ -959,6 +955,13 @@ stream {
         }
         {{ end }}
 
+        {{ if and $location.Mirror.URI  $location.Mirror.BackendURL }}
+        location = {{ $location.Mirror.URI }} {
+            internal;
+            proxy_pass {{ $location.Mirror.BackendURL }};
+        }
+        {{ end }}
+
         location {{ $path }} {
             {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
             set $namespace      {{ $ing.Namespace | quote}};
@@ -967,18 +970,7 @@ stream {
             set $service_port   {{ $ing.ServicePort | quote }};
             set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
 
-            {{ if $all.Cfg.EnableOpentracing }}
-            {{ if and $location.Opentracing.Set (not $location.Opentracing.Enabled) }}
-            opentracing off;
-            {{ else }}
-            {{ opentracingPropagateContext $location }};
-            {{ end }}
-            {{ else }}
-            {{ if and $location.Opentracing.Set $location.Opentracing.Enabled }}
-            opentracing on;
-            {{ opentracingPropagateContext $location }};
-            {{ end }}
-            {{ end }}
+            {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $location }}
 
             {{ if $location.Mirror.URI }}
             mirror {{ $location.Mirror.URI }};
@@ -1032,31 +1024,19 @@ stream {
             set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
             set $proxy_host          $proxy_upstream_name;
             set $pass_access_scheme  $scheme;
+
+            {{ if $all.Cfg.UseProxyProtocol }}
+            set $pass_server_port    $proxy_protocol_server_port;
+            {{ else }}
             set $pass_server_port    $server_port;
+            {{ end }}
+
             set $best_http_host      $http_host;
             set $pass_port           $pass_server_port;
 
             set $proxy_alternative_upstream_name "";
 
-            {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
-            {{ if not $all.Cfg.EnableModsecurity }}
-            modsecurity on;
-
-            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-            {{ end }}
-
-            {{ if $location.ModSecurity.Snippet }}
-            modsecurity_rules '
-                {{ $location.ModSecurity.Snippet }}
-            ';
-            {{ else if (and (not $all.Cfg.EnableOWASPCoreRules) ($location.ModSecurity.OWASPRules))}}
-            modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
-            {{ end }}
-
-            {{ if (not (empty $location.ModSecurity.TransactionID)) }}
-            modsecurity_transaction_id {{ $location.ModSecurity.TransactionID | quote }};
-            {{ end }}
-            {{ end }}
+            {{ buildModSecurityForLocation $all.Cfg $location }}
 
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}

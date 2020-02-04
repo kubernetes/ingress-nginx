@@ -1,4 +1,4 @@
-FROM quay.io/kubernetes-ingress-controller/e2e:v01042020-8fb2695d5 AS BASE
+FROM quay.io/kubernetes-ingress-controller/e2e:v02042020-08e19a278 AS BASE
 
 FROM alpine:3.11
 
@@ -7,6 +7,7 @@ RUN apk add -U --no-cache \
     bash \
     curl \
     tzdata \
+    libc6-compat \
     openssl
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/

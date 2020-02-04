@@ -592,6 +592,8 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					ups.SessionAffinity.CookieSessionAffinity.Expires = anns.SessionAffinity.Cookie.Expires
 					ups.SessionAffinity.CookieSessionAffinity.MaxAge = anns.SessionAffinity.Cookie.MaxAge
 					ups.SessionAffinity.CookieSessionAffinity.Path = cookiePath
+					ups.SessionAffinity.CookieSessionAffinity.SameSite = anns.SessionAffinity.Cookie.SameSite
+					ups.SessionAffinity.CookieSessionAffinity.ConditionalSameSiteNone = anns.SessionAffinity.Cookie.ConditionalSameSiteNone
 					ups.SessionAffinity.CookieSessionAffinity.ChangeOnFailure = anns.SessionAffinity.Cookie.ChangeOnFailure
 
 					locs := ups.SessionAffinity.CookieSessionAffinity.Locations
@@ -1152,12 +1154,28 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	}
 
 	for host, hostAliases := range allAliases {
-		for index, alias := range hostAliases {
-			if _, ok := servers[alias]; ok {
-				klog.Warningf("Conflicting hostname (%v) and alias (%v). Removing alias to avoid conflicts.", host, alias)
-				servers[host].Aliases = append(servers[host].Aliases[:index], servers[host].Aliases[index+1:]...)
-			}
+		if _, ok := servers[host]; !ok {
+			continue
 		}
+
+		uniqAliases := sets.NewString()
+		for _, alias := range hostAliases {
+			if alias == host {
+				continue
+			}
+
+			if _, ok := servers[alias]; ok {
+				continue
+			}
+
+			if uniqAliases.Has(alias) {
+				continue
+			}
+
+			uniqAliases.Insert(alias)
+		}
+
+		servers[host].Aliases = uniqAliases.List()
 	}
 
 	return servers

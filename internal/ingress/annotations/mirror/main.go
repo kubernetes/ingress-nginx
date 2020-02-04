@@ -27,6 +27,7 @@ import (
 type Config struct {
 	URI         string `json:"uri"`
 	RequestBody string `json:"requestBody"`
+	BackendURL  string `json:"backendUrl"`
 }
 
 type mirror struct {
@@ -52,6 +53,11 @@ func (a mirror) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.RequestBody, err = parser.GetStringAnnotation("mirror-request-body", ing)
 	if err != nil || config.RequestBody != "off" {
 		config.RequestBody = "on"
+	}
+
+	config.BackendURL, err = parser.GetStringAnnotation("mirror-backend-url", ing)
+	if err != nil {
+		config.BackendURL = ""
 	}
 
 	return config, nil

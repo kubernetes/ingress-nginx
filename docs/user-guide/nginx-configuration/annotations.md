@@ -84,6 +84,8 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-change-on-failure](#cookie-affinity)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/session-cookie-samesite](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none](#cookie-affinity)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
@@ -117,6 +119,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/modsecurity-transaction-id](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/mirror-uri](#mirror)|string|
+|[nginx.ingress.kubernetes.io/mirror-backend-url](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
 
 ### Canary
@@ -169,6 +172,7 @@ If you use the ``cookie`` affinity type you can also specify the name of the coo
 
 The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.
 
+Use `nginx.ingress.kubernetes.io/session-cookie-samesite` to apply a `SameSite` attribute to the sticky cookie. Browser accepted values are `None`, `Lax`, and `Strict`. Some older browsers reject cookies with the more-recently-defined `SameSite=None`. To omit `SameSite=None` from these older browsers, add the annotation `nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true"`.
 
 ### Authentication
 
@@ -866,18 +870,24 @@ nginx.ingress.kubernetes.io/satisfy: "any"
 
 Enables a request to be mirrored to a mirror backend. Responses by mirror backends are ignored. This feature is useful, to see how requests will react in "test" backends.
 
-You can mirror a request to the `/mirror` path on your ingress, by applying the below:
+You can mirror a request to the `/mirror` path on your ingress, by applying:
 
 ```yaml
 nginx.ingress.kubernetes.io/mirror-uri: "/mirror"
 ```
 
-The mirror path can be defined as a separate ingress resource:
+The mirror backend url can be set by applying:
+
+```yaml
+nginx.ingress.kubernetes.io/mirror-backend-url: https://test.env.com/$request_uri
+```
+
+which will add the following location in `nginx.conf`:
 
 ```
 location = /mirror {
     internal;
-    proxy_pass http://test_backend;
+    proxy_pass https://test.env.com/$request_uri;
 }
 ```
 

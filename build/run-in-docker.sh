@@ -25,12 +25,16 @@ set -o pipefail
 # temporal directory for the /etc/ingress-controller directory
 INGRESS_VOLUME=$(mktemp -d)
 
+if [[ "$OSTYPE" == darwin* ]]; then
+  INGRESS_VOLUME=/private$INGRESS_VOLUME
+fi
+
 function cleanup {
   rm -rf "${INGRESS_VOLUME}"
 }
 trap cleanup EXIT
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v01042020-8fb2695d5
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v02042020-08e19a278
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 
@@ -47,6 +51,9 @@ if [ ! -d "${MINIKUBE_PATH}" ]; then
   echo "Minikube directory not found! Volume will be excluded from docker build."
   MINIKUBE_VOLUME=""
 fi
+
+# create output directory as current user to avoid problem with docker.
+mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
 docker run                                            \
   --tty                                               \

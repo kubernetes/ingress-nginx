@@ -13,85 +13,60 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.95
+TAG ?= 0.97
 REGISTRY ?= quay.io/kubernetes-ingress-controller
-ARCH ?= $(shell go env GOARCH)
-DOCKER ?= docker
-
-ALL_ARCH = amd64 arm arm64
-SED_I?=sed -i
-GOHOSTOS ?= $(shell go env GOHOSTOS)
-
-ifeq ($(GOHOSTOS),darwin)
-  SED_I=sed -i ''
-endif
-
-QEMUVERSION=v4.1.1-1
 
 IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)
-MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
-ifeq ($(ARCH),arm)
-	QEMUARCH=arm
-endif
-ifeq ($(ARCH),arm64)
-	QEMUARCH=aarch64
-endif
+PLATFORMS = amd64 arm arm64
 
-TEMP_DIR := $(shell mktemp -d)
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+COMMA := ,
 
-all: all-container
+.PHONY: all
+all: container
 
-image-info:
-	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
+.PHONY: container
+container:
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
+		--no-cache \
+		--progress plain \
+		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--tag $(IMAGE):$(TAG) rootfs
 
-sub-container-%:
-	$(MAKE) ARCH=$* container
-
-sub-push-%:
-	$(MAKE) ARCH=$* push
-
-all-container: $(addprefix sub-container-,$(ALL_ARCH))
-
-all-push: $(addprefix sub-push-,$(ALL_ARCH))
-
-container: .container-$(ARCH)
-.container-$(ARCH):
-	cp -r ./rootfs/* $(TEMP_DIR)
-	cd $(TEMP_DIR) && $(SED_I) "s|ARCH|$(QEMUARCH)|g" Dockerfile
-
-ifeq ($(ARCH),amd64)
-	# When building "normally" for amd64, remove the whole line, it has no part in the amd64 image
-	cd $(TEMP_DIR) && $(SED_I) "/CROSS_BUILD_/d" Dockerfile
-else
-	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
-	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)
-	cd $(TEMP_DIR) && $(SED_I) "s/CROSS_BUILD_//g" Dockerfile
-endif
-
-	$(DOCKER) build --no-cache -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)
+	# https://github.com/docker/buildx/issues/59
+	$(foreach PLATFORM,$(PLATFORMS), \
+			DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
+			--load \
+			--progress plain \
+			--platform $(PLATFORM) \
+			--tag $(IMAGE)-$(PLATFORM):$(TAG) rootfs;)
 
 ifeq ($(ARCH), amd64)
 	# This is for to maintain the backward compatibility
-	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
+	docker tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
-.PHONY: register-qemu
-register-qemu:
-	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
+.PHONY: push
+push: container
+	$(foreach PLATFORM,$(PLATFORMS), \
+		docker push $(IMAGE)-$(PLATFORM):$(TAG);)
 
-push: .push-$(ARCH)
-.push-$(ARCH): .container-$(ARCH)
-	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
 ifeq ($(ARCH), amd64)
-	$(DOCKER) push $(IMAGE):$(TAG)
+	docker push $(IMAGE):$(TAG)
 endif
 
-clean: $(addprefix sub-clean-,$(ALL_ARCH))
-sub-clean-%:
-	$(DOCKER) rmi -f $(IMAGE)-$*:$(TAG) || true
-
-release: all-container all-push
+.PHONY: release
+release: push
 	echo "done"
+
+.PHONY: init-docker-buildx
+init-docker-buildx:
+ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
+	$(error "buildx not vailable. Docker 19.03 or higher is required")
+endif
+	docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
+	docker buildx create --name ingress-nginx --use || true
+	docker buildx inspect --bootstrap

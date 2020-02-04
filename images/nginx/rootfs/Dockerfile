@@ -13,9 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.11 as builder
-
-CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
+FROM --platform=$BUILDPLATFORM alpine:3.11 as builder
 
 COPY . /
 
@@ -23,7 +21,7 @@ RUN apk add -U bash \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.11
+FROM --platform=$BUILDPLATFORM alpine:3.11
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 

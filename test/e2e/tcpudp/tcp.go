@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/parnurzeal/gorequest"
 
@@ -33,10 +32,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
-)
-
-const (
-	waitForLuaSync = 5 * time.Second
 )
 
 var _ = framework.IngressNginxDescribe("TCP Feature", func() {
@@ -166,8 +161,6 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 			ConfigMaps(f.Namespace).
 			Update(config)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating configmap")
-
-		time.Sleep(waitForLuaSync)
 
 		// Validate that the generated nginx config contains the expected `proxy_upstream_name` value
 		f.WaitForNginxConfiguration(

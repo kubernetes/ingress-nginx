@@ -46,6 +46,12 @@ const (
 	// This is used to control the cookie path when use-regex is set to true
 	annotationAffinityCookiePath = "session-cookie-path"
 
+	// This is used to control the SameSite attribute of the cookie
+	annotationAffinityCookieSameSite = "session-cookie-samesite"
+
+	// This is used to control whether SameSite=None should be conditionally applied based on the User-Agent
+	annotationAffinityCookieConditionalSameSiteNone = "session-cookie-conditional-samesite-none"
+
 	// This is used to control the cookie change after request failure
 	annotationAffinityCookieChangeOnFailure = "session-cookie-change-on-failure"
 )
@@ -75,6 +81,10 @@ type Cookie struct {
 	Path string `json:"path"`
 	// Flag that allows cookie regeneration on request failure
 	ChangeOnFailure bool `json:"changeonfailure"`
+	// SameSite attribute value
+	SameSite string `json:"samesite"`
+	// Flag that conditionally applies SameSite=None attribute on cookie if user agent accepts it.
+	ConditionalSameSiteNone bool `json:"conditional-samesite-none"`
 }
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
@@ -105,6 +115,16 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 	cookie.Path, err = parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
 	if err != nil {
 		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
+	}
+
+	cookie.SameSite, err = parser.GetStringAnnotation(annotationAffinityCookieSameSite, ing)
+	if err != nil {
+		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieSameSite)
+	}
+
+	cookie.ConditionalSameSiteNone, err = parser.GetBoolAnnotation(annotationAffinityCookieConditionalSameSiteNone, ing)
+	if err != nil {
+		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieConditionalSameSiteNone)
 	}
 
 	cookie.ChangeOnFailure, err = parser.GetBoolAnnotation(annotationAffinityCookieChangeOnFailure, ing)

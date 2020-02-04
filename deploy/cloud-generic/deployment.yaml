@@ -15,7 +15,7 @@ spec:
       serviceAccountName: nginx-ingress-serviceaccount
       containers:
         - name: nginx-ingress-controller
-          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:master
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.28.0
           args:
             - /nginx-ingress-controller
             - --configmap=$(POD_NAMESPACE)/$(NGINX_CONFIGMAP_NAME)
@@ -72,3 +72,20 @@ spec:
               exec:
                 command:
                   - /wait-shutdown
+
+---
+
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+spec:
+  limits:
+  - min:
+      memory: 90Mi
+      cpu: 100m
+    type: Container

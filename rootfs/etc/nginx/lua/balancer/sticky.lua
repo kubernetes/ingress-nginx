@@ -2,6 +2,7 @@ local balancer_resty = require("balancer.resty")
 local ck = require("resty.cookie")
 local ngx_balancer = require("ngx.balancer")
 local split = require("util.split")
+local same_site = require("util.same_site")
 
 local _M = balancer_resty:new()
 local DEFAULT_COOKIE_NAME = "route"
@@ -41,6 +42,20 @@ function _M.set_cookie(self, value)
   local cookie_path = self.cookie_session_affinity.path
   if not cookie_path then
     cookie_path = ngx.var.location_path
+  end
+
+  local cookie_samesite = self.cookie_session_affinity.samesite
+  if cookie_samesite then
+    local cookie_conditional_samesite_none = self.cookie_session_affinity.conditional_samesite_none
+    if cookie_conditional_samesite_none
+        and cookie_samesite == "None"
+        and not same_site.same_site_none_compatible(ngx.var.http_user_agent) then
+      cookie_samesite = nil
+    end
+  end
+
+  if cookie_samesite then
+    cookie_path = cookie_path .. "; SameSite=" .. cookie_samesite
   end
 
   local cookie_data = {

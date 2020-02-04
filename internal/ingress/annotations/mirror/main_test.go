@@ -31,6 +31,7 @@ import (
 func TestParse(t *testing.T) {
 	uri := parser.GetAnnotationWithPrefix("mirror-uri")
 	requestBody := parser.GetAnnotationWithPrefix("mirror-request-body")
+	backendUrl := parser.GetAnnotationWithPrefix("mirror-backend-url")
 
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
@@ -41,29 +42,35 @@ func TestParse(t *testing.T) {
 		annotations map[string]string
 		expected    *Config
 	}{
-		{map[string]string{uri: "/mirror", requestBody: ""}, &Config{
+		{map[string]string{uri: "/mirror", requestBody: "", backendUrl: "https://test.env.com/$request_uri"}, &Config{
 			URI:         "/mirror",
 			RequestBody: "on",
+			BackendURL:  "https://test.env.com/$request_uri",
 		}},
 		{map[string]string{uri: "/mirror", requestBody: "off"}, &Config{
 			URI:         "/mirror",
 			RequestBody: "off",
+			BackendURL:  "",
 		}},
 		{map[string]string{uri: "", requestBody: "ahh"}, &Config{
 			URI:         "",
 			RequestBody: "on",
+			BackendURL:  "",
 		}},
 		{map[string]string{uri: "", requestBody: ""}, &Config{
 			URI:         "",
 			RequestBody: "on",
+			BackendURL:  "",
 		}},
 		{map[string]string{}, &Config{
 			URI:         "",
 			RequestBody: "on",
+			BackendURL:  "",
 		}},
 		{nil, &Config{
 			URI:         "",
 			RequestBody: "on",
+			BackendURL:  "",
 		}},
 	}
 

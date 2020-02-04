@@ -49,6 +49,21 @@ var _ = framework.IngressNginxDescribe("Annotations - Mirror", func() {
 			})
 	})
 
+	It("should set mirror-backend-url to https://test.env.com/$request_uri", func() {
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/mirror-uri":         "/mirror",
+			"nginx.ingress.kubernetes.io/mirror-backend-url": "https://test.env.com/$request_uri",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "mirror /mirror;") && strings.Contains(server, "mirror_request_body on;") && strings.Contains(server, "proxy_pass https://test.env.com/$request_uri;")
+			})
+	})
+
 	It("should disable mirror-request-body", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/mirror-uri":          "/mirror",
