@@ -47,34 +47,13 @@ The build uses dependencies in the `vendor` directory, which
 must be installed before building a binary/image. Occasionally, you
 might need to update the dependencies.
 
-This guide requires you to install the [dep](https://github.com/golang/dep) dependency tool.
-
-Check the version of `dep` you are using and make sure it is up to date.
-
-```console
-$ dep version
-dep:
- version     : devel
- build date  :
- git hash    :
- go version  : go1.9
- go compiler : gc
- platform    : linux/amd64
-```
-
-If you have an older version of `dep`, you can update it as follows:
-
-```console
-$ go get -u github.com/golang/dep
-```
+This guide requires you to install go 1.13 or newer.
 
 This will automatically save the dependencies to the `vendor/` directory.
 
 ```console
-$ cd $GOPATH/src/k8s.io/ingress-nginx
-$ dep ensure
-$ dep ensure -update
-$ dep prune
+$ go get
+$ make dep-ensure
 ```
 
 ## Building
