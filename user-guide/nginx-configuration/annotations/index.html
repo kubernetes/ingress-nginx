@@ -2259,6 +2259,14 @@ table below.</p>
 <td>"true" or "false"</td>
 </tr>
 <tr>
+<td><a href="#cookie-affinity">nginx.ingress.kubernetes.io/session-cookie-samesite</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#cookie-affinity">nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
 <td><a href="#server-side-https-enforcement-through-redirect">nginx.ingress.kubernetes.io/ssl-redirect</a></td>
 <td>"true" or "false"</td>
 </tr>
@@ -2440,6 +2448,7 @@ The only affinity type available for NGINX is <code class="codehilite">cookie</c
 <h4 id="cookie-affinity">Cookie affinity<a class="headerlink" href="#cookie-affinity" title="Permanent link"> ¶</a></h4>
 <p>If you use the <code class="codehilite">cookie</code> affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-name</code>. The default is to create a cookie named 'INGRESSCOOKIE'.</p>
 <p>The NGINX annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-path</code> defines the path that will be set on the cookie. This is optional unless the annotation <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> is set to true; Session cookie paths do not support regex.</p>
+<p>Use <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-samesite</code> to apply a <code class="codehilite">SameSite</code> attribute to the sticky cookie. Browser accepted values are <code class="codehilite">None</code>, <code class="codehilite">Lax</code>, and <code class="codehilite">Strict</code>. Some older browsers reject cookies with the more-recently-defined <code class="codehilite">SameSite=None</code>. To omit <code class="codehilite">SameSite=None</code> from these older browsers, add the annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: &quot;true&quot;</code>.</p>
 <h3 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link"> ¶</a></h3>
 <p>Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.</p>
 <p>The annotations are:

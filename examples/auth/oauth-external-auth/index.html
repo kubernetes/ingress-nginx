@@ -1301,7 +1301,7 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using g
 </li>
 <li>OAUTH2_PROXY_CLIENT_SECRET with the github <code class="codehilite">&lt;Client Secret&gt;</code></li>
 <li>
-<p>OAUTH2_PROXY_COOKIE_SECRET with value of <code class="codehilite"><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import os,base64; print base64.b64encode(os.urandom(16))&#39;</span></code></p>
+<p>OAUTH2_PROXY_COOKIE_SECRET with value of <code class="codehilite"><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import os,base64; print(base64.b64encode(os.urandom(16)).decode(&quot;ascii&quot;))&#39;</span></code></p>
 </li>
 <li>
 <p>Customize the contents of the file dashboard-ingress.yaml:</p>

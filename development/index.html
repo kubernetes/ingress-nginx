@@ -1391,27 +1391,10 @@ $ kubectl delete pod -n ingress-nginx nginx-ingress-controller-&lt;unique-pod-id
 <p>The build uses dependencies in the <code class="codehilite">vendor</code> directory, which
 must be installed before building a binary/image. Occasionally, you
 might need to update the dependencies.</p>
-<p>This guide requires you to install the <a href="https://github.com/golang/dep">dep</a> dependency tool.</p>
-<p>Check the version of <code class="codehilite">dep</code> you are using and make sure it is up to date.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> dep version
-<span class="go">dep:</span>
-<span class="go"> version     : devel</span>
-<span class="go"> build date  :</span>
-<span class="go"> git hash    :</span>
-<span class="go"> go version  : go1.9</span>
-<span class="go"> go compiler : gc</span>
-<span class="go"> platform    : linux/amd64</span>
-</pre></div>
-
-<p>If you have an older version of <code class="codehilite">dep</code>, you can update it as follows:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> go get -u github.com/golang/dep
-</pre></div>
-
+<p>This guide requires you to install go 1.13 or newer.</p>
 <p>This will automatically save the dependencies to the <code class="codehilite">vendor/</code> directory.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
-<span class="gp">$</span> dep ensure
-<span class="gp">$</span> dep ensure -update
-<span class="gp">$</span> dep prune
+<div class="codehilite"><pre><span></span><span class="gp">$</span> go get
+<span class="gp">$</span> make dep-ensure
 </pre></div>
 
 <h2 id="building">Building<a class="headerlink" href="#building" title="Permanent link"> ¶</a></h2>

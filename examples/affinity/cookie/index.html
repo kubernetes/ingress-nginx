@@ -1241,6 +1241,16 @@
 <td>string (defaults to the currently <a href="../../../user-guide/ingress-path-matching/">matched path</a>)</td>
 </tr>
 <tr>
+<td>nginx.ingress.kubernetes.io/session-cookie-samesite</td>
+<td>SameSite attribute to apply to the cookie</td>
+<td>Browser accepted values are <code class="codehilite">None</code>, <code class="codehilite">Lax</code>, and <code class="codehilite">Strict</code></td>
+</tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none</td>
+<td>Will omit <code class="codehilite">SameSite=None</code> attribute for older browsers which reject the more-recently defined <code class="codehilite">SameSite=None</code> value</td>
+<td><code class="codehilite">&quot;true&quot;</code> or <code class="codehilite">&quot;false&quot;</code></td>
+</tr>
+<tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-max-age</td>
 <td>Time until the cookie expires, corresponds to the <code class="codehilite">Max-Age</code> cookie directive</td>
 <td>number of seconds</td>
