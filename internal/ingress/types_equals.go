@@ -440,15 +440,11 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if l1.Mirror.URI != l2.Mirror.URI {
-		return false
-	}
-
-	if l1.Mirror.RequestBody != l2.Mirror.RequestBody {
-		return false
-	}
-
 	if !l1.Opentracing.Equal(&l2.Opentracing) {
+		return false
+	}
+
+	if !l1.Mirror.Equal(&l2.Mirror) {
 		return false
 	}
 
