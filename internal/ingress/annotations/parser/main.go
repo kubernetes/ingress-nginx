@@ -18,6 +18,7 @@ package parser
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -151,4 +152,23 @@ func AnnotationsReferencesConfigmap(ing *networking.Ingress) bool {
 	}
 
 	return false
+}
+
+// StringToURL parses the provided string into URL and returns error
+// message in case of failure
+func StringToURL(input string) (*url.URL, error) {
+	parsedURL, err := url.Parse(input)
+	if err != nil {
+		return nil, fmt.Errorf("%v is not a valid URL: %v", input, err)
+	}
+
+	if parsedURL.Scheme == "" {
+		return nil, fmt.Errorf("url scheme is empty")
+	} else if parsedURL.Host == "" {
+		return nil, fmt.Errorf("url host is empty")
+	} else if strings.Contains(parsedURL.Host, "..") {
+		return nil, fmt.Errorf("invalid url host")
+	}
+
+	return parsedURL, nil
 }

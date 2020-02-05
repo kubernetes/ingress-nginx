@@ -17,6 +17,8 @@ limitations under the License.
 package mirror
 
 import (
+	"fmt"
+
 	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -25,8 +27,34 @@ import (
 
 // Config returns the mirror to use in a given location
 type Config struct {
-	URI         string `json:"uri"`
+	Source      string `json:"source"`
 	RequestBody string `json:"requestBody"`
+	Target      string `json:"target"`
+}
+
+// Equal tests for equality between two Configuration types
+func (m1 *Config) Equal(m2 *Config) bool {
+	if m1 == m2 {
+		return true
+	}
+
+	if m1 == nil || m2 == nil {
+		return false
+	}
+
+	if m1.Source != m2.Source {
+		return false
+	}
+
+	if m1.RequestBody != m2.RequestBody {
+		return false
+	}
+
+	if m1.Target != m2.Target {
+		return false
+	}
+
+	return true
 }
 
 type mirror struct {
@@ -41,17 +69,19 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure mirror
 func (a mirror) Parse(ing *networking.Ingress) (interface{}, error) {
-	config := &Config{}
-	var err error
-
-	config.URI, err = parser.GetStringAnnotation("mirror-uri", ing)
-	if err != nil {
-		config.URI = ""
+	config := &Config{
+		Source: fmt.Sprintf("/_mirror-%v", ing.UID),
 	}
 
+	var err error
 	config.RequestBody, err = parser.GetStringAnnotation("mirror-request-body", ing)
 	if err != nil || config.RequestBody != "off" {
 		config.RequestBody = "on"
+	}
+
+	config.Target, err = parser.GetStringAnnotation("mirror-target", ing)
+	if err != nil {
+		config.Target = ""
 	}
 
 	return config, nil

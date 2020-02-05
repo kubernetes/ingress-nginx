@@ -30,6 +30,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/runtime"
@@ -211,7 +212,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[globalAuthURL]; ok {
 		delete(conf, globalAuthURL)
 
-		authURL, message := authreq.ParseStringToURL(val)
+		authURL, message := parser.StringToURL(val)
 		if authURL == nil {
 			klog.Warningf("Global auth location denied - %v.", message)
 		} else {
@@ -235,7 +236,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[globalAuthSignin]; ok {
 		delete(conf, globalAuthSignin)
 
-		signinURL, _ := authreq.ParseStringToURL(val)
+		signinURL, _ := parser.StringToURL(val)
 		if signinURL == nil {
 			klog.Warningf("Global auth location denied - %v.", "global-auth-signin setting is undefined and will not be set")
 		} else {
