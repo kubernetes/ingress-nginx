@@ -226,9 +226,9 @@ check_dead_links: ## Check if the documentation contains dead links.
 
 .PHONY: dep-ensure
 dep-ensure: check-go-version ## Update and vendo go dependencies.
-	go mod tidy -v
+	GO111MODULE=on go mod tidy -v
 	find vendor -name '*_test.go' -delete
-	go mod vendor
+	GO111MODULE=on go mod vendor
 
 .PHONY: dev-env
 dev-env: check-go-version ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
