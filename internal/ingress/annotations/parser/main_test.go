@@ -17,6 +17,7 @@ limitations under the License.
 package parser
 
 import (
+	"net/url"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -93,8 +94,8 @@ func TestGetStringAnnotation(t *testing.T) {
 		{"valid - B", "string", "	B", "B", false},
 		{"empty", "string", " ", "", true},
 		{"valid multiline", "string", `
-		rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break; 	
-		rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;			
+		rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break;
+		rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;
 		`, `
 rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break;
 rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;
@@ -160,5 +161,42 @@ func TestGetIntAnnotation(t *testing.T) {
 		}
 
 		delete(data, test.field)
+	}
+}
+
+func TestStringToURL(t *testing.T) {
+	validURL := "http://bar.foo.com/external-auth"
+	validParsedURL, _ := url.Parse(validURL)
+
+	tests := []struct {
+		title   string
+		url     string
+		message string
+		parsed  *url.URL
+		expErr  bool
+	}{
+		{"empty", "", "url scheme is empty", nil, true},
+		{"no scheme", "bar", "url scheme is empty", nil, true},
+		{"invalid host", "http://", "url host is empty", nil, true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "invalid url host", nil, true},
+		{"valid URL", validURL, "", validParsedURL, false},
+	}
+
+	for _, test := range tests {
+		i, err := StringToURL(test.url)
+		if test.expErr {
+			if err == nil {
+				t.Fatalf("%v: expected error but none returned", test.title)
+			}
+
+			if err.Error() != test.message {
+				t.Errorf("%v: expected error \"%v\" but \"%v\" was returned", test.title, test.message, err)
+			}
+			continue
+		}
+
+		if i.String() != test.parsed.String() {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.parsed, i)
+		}
 	}
 }

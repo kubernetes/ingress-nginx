@@ -66,6 +66,7 @@ func GetIngressLints() []IngressLint {
 		removedAnnotation("add-base-url", 3174, "0.22.0"),
 		removedAnnotation("base-url-scheme", 3174, "0.22.0"),
 		removedAnnotation("session-cookie-hash", 3743, "0.24.0"),
+		removedAnnotation("mirror-uri", 5015, "0.28.1"),
 		{
 			message: "The rewrite-target annotation value does not reference a capture group",
 			issue:   3174,

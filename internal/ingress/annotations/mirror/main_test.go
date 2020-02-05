@@ -17,7 +17,6 @@ limitations under the License.
 package mirror
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -29,41 +28,28 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	uri := parser.GetAnnotationWithPrefix("mirror-uri")
 	requestBody := parser.GetAnnotationWithPrefix("mirror-request-body")
+	backendURL := parser.GetAnnotationWithPrefix("mirror-target")
 
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
 		t.Fatalf("expected a parser.IngressAnnotation but returned nil")
 	}
 
+	ngxURI := "/_mirror-c89a5111-b2e9-4af8-be19-c2a4a924c256"
 	testCases := []struct {
 		annotations map[string]string
 		expected    *Config
 	}{
-		{map[string]string{uri: "/mirror", requestBody: ""}, &Config{
-			URI:         "/mirror",
+		{map[string]string{backendURL: "https://test.env.com/$request_uri"}, &Config{
+			Source:      ngxURI,
 			RequestBody: "on",
+			Target:      "https://test.env.com/$request_uri",
 		}},
-		{map[string]string{uri: "/mirror", requestBody: "off"}, &Config{
-			URI:         "/mirror",
+		{map[string]string{requestBody: "off"}, &Config{
+			Source:      ngxURI,
 			RequestBody: "off",
-		}},
-		{map[string]string{uri: "", requestBody: "ahh"}, &Config{
-			URI:         "",
-			RequestBody: "on",
-		}},
-		{map[string]string{uri: "", requestBody: ""}, &Config{
-			URI:         "",
-			RequestBody: "on",
-		}},
-		{map[string]string{}, &Config{
-			URI:         "",
-			RequestBody: "on",
-		}},
-		{nil, &Config{
-			URI:         "",
-			RequestBody: "on",
+			Target:      "",
 		}},
 	}
 
@@ -71,6 +57,7 @@ func TestParse(t *testing.T) {
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
+			UID:       "c89a5111-b2e9-4af8-be19-c2a4a924c256",
 		},
 		Spec: networking.IngressSpec{},
 	}
@@ -78,7 +65,6 @@ func TestParse(t *testing.T) {
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		result, _ := ap.Parse(ing)
-		fmt.Printf("%t", result)
 		if !reflect.DeepEqual(result, testCase.expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
