@@ -26,6 +26,7 @@ require (
 	github.com/prometheus/common v0.9.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.4.0
 	github.com/tallclair/mdtoc v0.0.0-20190627191617-4dc3d6f90813
 	github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
 	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
@@ -47,6 +48,7 @@ require (
 	moul.io/http2curl v1.0.0 // indirect
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.4.0
+	sigs.k8s.io/kind v0.7.0 // indirect
 )
 
 replace (

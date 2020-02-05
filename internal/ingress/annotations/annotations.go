@@ -41,6 +41,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/http2pushpreload"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/httpport"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
@@ -113,6 +114,7 @@ type Ingress struct {
 	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
 	Mirror             mirror.Config
+	HTTPListeners      httpport.Config
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -162,6 +164,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
 			"ModSecurity":          modsecurity.NewParser(cfg),
 			"Mirror":               mirror.NewParser(cfg),
+			"HTTPListeners":        httpport.NewParser(cfg),
 		},
 	}
 }

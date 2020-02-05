@@ -82,6 +82,20 @@ local function redirect_host()
   return host_port[1];
 end
 
+local function redirect_port()
+  local host_port, err = ngx_re_split(ngx.var.best_http_host, ":")
+  if err then
+    ngx.log(ngx.ERR, "could not parse variable: ", err)
+    return config.listen_ports.https;
+  end
+  for k, v in pairs(config.server_https_ports) do
+    if k == host_port[1] then
+       return v;
+    end
+  end
+  return config.listen_ports.https;
+end
+
 local function parse_x_forwarded_host()
   local hosts, err = ngx_re_split(ngx.var.http_x_forwarded_host, ",")
   if err then
@@ -142,7 +156,7 @@ function _M.rewrite(location_config)
     local uri = string_format("https://%s%s", redirect_host(), ngx.var.request_uri)
 
     if location_config.use_port_in_redirects then
-      uri = string_format("https://%s:%s%s", redirect_host(), config.listen_ports.https, ngx.var.request_uri)
+      uri = string_format("https://%s:%s%s", redirect_host(), redirect_port(), ngx.var.request_uri)
     end
 
     ngx_redirect(uri, config.http_redirect_code)

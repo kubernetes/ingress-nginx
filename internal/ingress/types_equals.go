@@ -313,6 +313,10 @@ func (s1 *Server) Equal(s2 *Server) bool {
 		return false
 	}
 
+	if !(&s1.HTTPListeners).Equal(&s2.HTTPListeners) {
+		return false
+	}
+
 	// Location are sorted
 	for idx, s1l := range s1.Locations {
 		if !s1l.Equal(s2.Locations[idx]) {

@@ -510,6 +510,13 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				continue
 			}
 
+			if server.HTTPListeners.HTTPPort == 0 && server.HTTPListeners.HTTPSPort == 0 {
+				server.HTTPListeners = anns.HTTPListeners
+			} else {
+				klog.V(3).Infof("Server %q is already configured with HTTP(S) ports (Ingress %q)",
+					server.Hostname, ingKey)
+			}
+
 			for _, path := range rule.HTTP.Paths {
 				upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
 

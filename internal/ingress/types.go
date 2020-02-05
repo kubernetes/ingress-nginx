@@ -28,6 +28,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/httpport"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
@@ -199,7 +200,8 @@ type Server struct {
 	// SSLCiphers returns list of ciphers to be enabled
 	SSLCiphers string `json:"sslCiphers,omitempty"`
 	// AuthTLSError contains the reason why the access to a server should be denied
-	AuthTLSError string `json:"authTLSError,omitempty"`
+	AuthTLSError  string          `json:"authTLSError,omitempty"`
+	HTTPListeners httpport.Config `json:"httpListeners,omitempty"`
 }
 
 // Location describes an URI inside a server.

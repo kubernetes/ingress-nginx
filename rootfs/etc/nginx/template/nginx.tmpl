@@ -487,13 +487,8 @@ http {
            return 403;
         }
         {{ end }}
-
-        {{ if ne $all.ListenPorts.HTTPS 443 }}
-        {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $redirect.To }}{{ $redirect_port }}$request_uri;
-        {{ else }}
-        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $redirect.To }}$request_uri;
-        {{ end }}
+        
+        return {{ buildRedirect $all $redirect.To }}$request_uri;
     }
     ## end server {{ $redirect.From }}
     {{ end }}

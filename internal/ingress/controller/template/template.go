@@ -33,6 +33,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	text_template "text/template"
 	"time"
@@ -181,6 +182,7 @@ var (
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
+		"buildRedirect":                      buildRedirect,
 	}
 )
 
@@ -273,12 +275,23 @@ func configForLua(input interface{}) string {
 		return "{}"
 	}
 
+	servers_https_ports := "{ "
+
+	for _, server := range all.Servers {
+		if server.HTTPListeners.HTTPSPort != 0 {
+			servers_https_ports = servers_https_ports + server.Hostname + " = " + strconv.Itoa(server.HTTPListeners.HTTPSPort) + "," + " "
+		}
+	}
+
+	servers_https_ports = strings.TrimSuffix(servers_https_ports, ", ") + "}"
+
 	return fmt.Sprintf(`{
 		use_forwarded_headers = %t,
 		use_proxy_protocol = %t,
 		is_ssl_passthrough_enabled = %t,
 		http_redirect_code = %v,
 		listen_ports = { ssl_proxy = "%v", https = "%v" },
+		server_https_ports = %v,
 
 		hsts = %t,
 		hsts_max_age = %v,
@@ -291,6 +304,7 @@ func configForLua(input interface{}) string {
 		all.Cfg.HTTPRedirectCode,
 		all.ListenPorts.SSLProxy,
 		all.ListenPorts.HTTPS,
+		servers_https_ports,
 
 		all.Cfg.HSTS,
 		all.Cfg.HSTSMaxAge,
@@ -1143,7 +1157,19 @@ func buildHTTPListener(t interface{}, s interface{}) string {
 
 	co := commonListenOptions(tc, hostname)
 
-	out = append(out, httpListener(addrV4, co, tc)...)
+	var httpPort int
+
+	for _, server := range tc.Servers {
+		if server.Hostname == hostname {
+			if server.HTTPListeners.HTTPPort != 0 {
+				httpPort = server.HTTPListeners.HTTPPort
+			} else {
+				httpPort = tc.ListenPorts.HTTP
+			}
+		}
+	}
+
+	out = append(out, httpListener(addrV4, co, httpPort)...)
 
 	if !tc.IsIPV6Enabled {
 		return strings.Join(out, "\n")
@@ -1154,7 +1180,7 @@ func buildHTTPListener(t interface{}, s interface{}) string {
 		addrV6 = tc.Cfg.BindAddressIpv6
 	}
 
-	out = append(out, httpListener(addrV6, co, tc)...)
+	out = append(out, httpListener(addrV6, co, httpPort)...)
 
 	return strings.Join(out, "\n")
 }
@@ -1181,7 +1207,19 @@ func buildHTTPSListener(t interface{}, s interface{}) string {
 		addrV4 = tc.Cfg.BindAddressIpv4
 	}
 
-	out = append(out, httpsListener(addrV4, co, tc)...)
+	var httpsPort int
+
+	for _, server := range tc.Servers {
+		if server.Hostname == hostname {
+			if server.HTTPListeners.HTTPSPort != 0 {
+				httpsPort = server.HTTPListeners.HTTPSPort
+			} else {
+				httpsPort = tc.ListenPorts.HTTP
+			}
+		}
+	}
+
+	out = append(out, httpsListener(addrV4, co, tc, httpsPort)...)
 
 	if !tc.IsIPV6Enabled {
 		return strings.Join(out, "\n")
@@ -1192,7 +1230,7 @@ func buildHTTPSListener(t interface{}, s interface{}) string {
 		addrV6 = tc.Cfg.BindAddressIpv6
 	}
 
-	out = append(out, httpsListener(addrV6, co, tc)...)
+	out = append(out, httpsListener(addrV6, co, tc, httpsPort)...)
 
 	return strings.Join(out, "\n")
 }
@@ -1221,16 +1259,16 @@ func commonListenOptions(template config.TemplateConfig, hostname string) string
 	return strings.Join(out, " ")
 }
 
-func httpListener(addresses []string, co string, tc config.TemplateConfig) []string {
+func httpListener(addresses []string, co string, httpPort int) []string {
 	out := make([]string, 0)
 	for _, address := range addresses {
 		l := make([]string, 0)
 		l = append(l, "listen")
 
 		if address == "" {
-			l = append(l, fmt.Sprintf("%v", tc.ListenPorts.HTTP))
+			l = append(l, fmt.Sprintf("%v", httpPort))
 		} else {
-			l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTP))
+			l = append(l, fmt.Sprintf("%v:%v", address, httpPort))
 		}
 
 		l = append(l, co)
@@ -1241,7 +1279,7 @@ func httpListener(addresses []string, co string, tc config.TemplateConfig) []str
 	return out
 }
 
-func httpsListener(addresses []string, co string, tc config.TemplateConfig) []string {
+func httpsListener(addresses []string, co string, tc config.TemplateConfig, httpsPort int) []string {
 	out := make([]string, 0)
 	for _, address := range addresses {
 		l := make([]string, 0)
@@ -1257,9 +1295,9 @@ func httpsListener(addresses []string, co string, tc config.TemplateConfig) []st
 			l = append(l, "proxy_protocol")
 		} else {
 			if address == "" {
-				l = append(l, fmt.Sprintf("%v", tc.ListenPorts.HTTPS))
+				l = append(l, fmt.Sprintf("%v", httpsPort))
 			} else {
-				l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTPS))
+				l = append(l, fmt.Sprintf("%v:%v", address, httpsPort))
 			}
 
 			if tc.Cfg.UseProxyProtocol {
@@ -1405,4 +1443,39 @@ proxy_pass %v;
 	}
 
 	return buffer.String()
+}
+
+func buildRedirect(t interface{}, s interface{}) string {
+	tc, ok := t.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was returned", t)
+		return ""
+	}
+
+	redirectTo, ok := s.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", s)
+		return ""
+	}
+
+	for _, server := range tc.Servers {
+		if server.Hostname == redirectTo {
+			if server.HTTPListeners.HTTPSPort != 0 {
+				if server.HTTPListeners.HTTPSPort != 443 {
+					return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo + ":" + strconv.Itoa(server.HTTPListeners.HTTPSPort)
+				} else {
+					return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo
+				}
+			} else if tc.ListenPorts.HTTPS != 443 {
+				return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo + ":" + strconv.Itoa(tc.ListenPorts.HTTPS)
+			} else {
+				return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo
+			}
+		}
+	}
+	if tc.ListenPorts.HTTPS != 443 {
+		return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo + ":" + strconv.Itoa(tc.ListenPorts.HTTPS)
+	} else {
+		return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo
+	}
 }

@@ -195,6 +195,8 @@ github.com/parnurzeal/gorequest
 github.com/peterbourgon/diskv
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/prometheus/client_golang v1.4.0
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
@@ -215,6 +217,8 @@ github.com/sirupsen/logrus
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
+# github.com/stretchr/testify v1.4.0
+github.com/stretchr/testify/assert
 # github.com/tallclair/mdtoc v0.0.0-20190627191617-4dc3d6f90813
 github.com/tallclair/mdtoc
 # github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
