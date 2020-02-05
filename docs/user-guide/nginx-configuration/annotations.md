@@ -118,8 +118,8 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
 |[nginx.ingress.kubernetes.io/modsecurity-transaction-id](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
-|[nginx.ingress.kubernetes.io/mirror-uri](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
+|[nginx.ingress.kubernetes.io/mirror-target](#mirror)|string|
 
 ### Canary
 
@@ -869,19 +869,10 @@ nginx.ingress.kubernetes.io/satisfy: "any"
 
 Enables a request to be mirrored to a mirror backend. Responses by mirror backends are ignored. This feature is useful, to see how requests will react in "test" backends.
 
-You can mirror a request to the `/mirror` path on your ingress, by applying the below:
+The mirror backend can be set by applying:
 
 ```yaml
-nginx.ingress.kubernetes.io/mirror-uri: "/mirror"
-```
-
-The mirror path can be defined as a separate ingress resource:
-
-```
-location = /mirror {
-    internal;
-    proxy_pass http://test_backend;
-}
+nginx.ingress.kubernetes.io/mirror-target: https://test.env.com/$request_uri
 ```
 
 By default the request-body is sent to the mirror backend, but can be turned off by applying:

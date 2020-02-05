@@ -18,7 +18,6 @@ package authreq
 
 import (
 	"fmt"
-	"net/url"
 	"reflect"
 	"testing"
 
@@ -173,7 +172,6 @@ func TestHeaderAnnotations(t *testing.T) {
 			continue
 		}
 
-		t.Log(i)
 		u, ok := i.(*Config)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)
@@ -221,7 +219,6 @@ func TestCacheDurationAnnotations(t *testing.T) {
 			continue
 		}
 
-		t.Log(i)
 		u, ok := i.(*Config)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)
@@ -232,41 +229,6 @@ func TestCacheDurationAnnotations(t *testing.T) {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.duration, u.AuthCacheDuration)
 		}
 	}
-}
-
-func TestParseStringToURL(t *testing.T) {
-	validURL := "http://bar.foo.com/external-auth"
-	validParsedURL, _ := url.Parse(validURL)
-
-	tests := []struct {
-		title   string
-		url     string
-		message string
-		parsed  *url.URL
-		expErr  bool
-	}{
-		{"empty", "", "url scheme is empty.", nil, true},
-		{"no scheme", "bar", "url scheme is empty.", nil, true},
-		{"invalid host", "http://", "url host is empty.", nil, true},
-		{"invalid host (multiple dots)", "http://foo..bar.com", "invalid url host.", nil, true},
-		{"valid URL", validURL, "", validParsedURL, false},
-	}
-
-	for _, test := range tests {
-
-		i, err := ParseStringToURL(test.url)
-		if test.expErr {
-			if err != test.message {
-				t.Errorf("%v: expected error \"%v\" but \"%v\" was returned", test.title, test.message, err)
-			}
-			continue
-		}
-
-		if i.String() != test.parsed.String() {
-			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.parsed, i)
-		}
-	}
-
 }
 
 func TestParseStringToCacheDurations(t *testing.T) {
@@ -331,7 +293,6 @@ func TestProxySetHeaders(t *testing.T) {
 			configMapResolver.ConfigMaps["proxy-headers-map"] = &api.ConfigMap{Data: test.headers}
 		}
 
-		t.Log(configMapResolver)
 		i, err := NewParser(configMapResolver).Parse(ing)
 		if test.expErr {
 			if err == nil {
@@ -340,7 +301,6 @@ func TestProxySetHeaders(t *testing.T) {
 			continue
 		}
 
-		t.Log(i)
 		u, ok := i.(*Config)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)

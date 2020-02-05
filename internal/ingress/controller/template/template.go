@@ -180,6 +180,7 @@ var (
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
+		"buildMirrorLocations":               buildMirrorLocations,
 	}
 )
 
@@ -1373,6 +1374,32 @@ modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
 	if location.ModSecurity.TransactionID != "" {
 		buffer.WriteString(fmt.Sprintf(`modsecurity_transaction_id "%v";
 `, location.ModSecurity.TransactionID))
+	}
+
+	return buffer.String()
+}
+
+func buildMirrorLocations(locs []*ingress.Location) string {
+	var buffer bytes.Buffer
+
+	mapped := sets.String{}
+
+	for _, loc := range locs {
+		if loc.Mirror.Source == "" || loc.Mirror.Target == "" {
+			continue
+		}
+
+		if mapped.Has(loc.Mirror.Source) {
+			continue
+		}
+
+		mapped.Insert(loc.Mirror.Source)
+		buffer.WriteString(fmt.Sprintf(`location = %v {
+internal;
+proxy_pass %v;
+}
+
+`, loc.Mirror.Source, loc.Mirror.Target))
 	}
 
 	return buffer.String()

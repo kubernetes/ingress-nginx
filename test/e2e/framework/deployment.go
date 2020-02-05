@@ -306,7 +306,7 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume) *appsv1.Deployment {
 	probe := &corev1.Probe{
 		InitialDelaySeconds: 1,
-		PeriodSeconds:       5,
+		PeriodSeconds:       10,
 		SuccessThreshold:    1,
 		TimeoutSeconds:      1,
 		Handler: corev1.Handler{
