@@ -193,11 +193,21 @@ NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the
 To install the chart with the release name `my-nginx`:
 
 ```console
-helm install stable/nginx-ingress --name my-nginx
+helm install my-nginx stable/nginx-ingress
 ```
 
 If the kubernetes cluster has RBAC enabled, then run:
 
+```console
+helm install my-nginx stable/nginx-ingress --set rbac.create=true
+```
+
+If you are using [Helm 2](https://v2.helm.sh/) then specify release name using `--name` flag
+
+```console
+helm install stable/nginx-ingress --name my-nginx
+```
+or
 ```console
 helm install stable/nginx-ingress --name my-nginx --set rbac.create=true
 ```
