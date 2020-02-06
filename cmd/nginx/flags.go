@@ -152,6 +152,8 @@ Requires the update-status parameter.`)
 			`Enables the collection of NGINX metrics`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host`)
+		allowAllHostsMetrics = flags.Bool("allow-all-hosts-metrics", false,
+			`Allow collecting metrics for ingresses with no specified host`)
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
@@ -270,6 +272,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		EnableProfiling:        *profiling,
 		EnableMetrics:          *enableMetrics,
 		MetricsPerHost:         *metricsPerHost,
+		AllowAllHostsMetrics:   *allowAllHostsMetrics,
 		EnableSSLPassthrough:   *enableSSLPassthrough,
 		ResyncPeriod:           *resyncPeriod,
 		DefaultService:         *defaultSvc,

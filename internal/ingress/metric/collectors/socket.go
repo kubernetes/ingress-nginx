@@ -79,6 +79,8 @@ type SocketCollector struct {
 	hosts sets.String
 
 	metricsPerHost bool
+
+	allowAllHostsMetrics bool
 }
 
 var (
@@ -100,7 +102,7 @@ var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*SocketCollector, error) {
+func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, allowAllHostsMetrics bool) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	_ = syscall.Unlink(socket)
@@ -130,6 +132,8 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 		listener: listener,
 
 		metricsPerHost: metricsPerHost,
+
+		allowAllHostsMetrics: allowAllHostsMetrics,
 
 		responseTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
@@ -230,7 +234,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 	}
 
 	for _, stats := range statsBatch {
-		if !sc.hosts.Has(stats.Host) {
+		if !sc.hosts.Has(stats.Host) && !sc.allowAllHostsMetrics {
 			klog.V(3).Infof("skiping metric for host %v that is not being served", stats.Host)
 			continue
 		}
