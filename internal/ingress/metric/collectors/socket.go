@@ -94,12 +94,16 @@ var (
 	}
 )
 
+// DefObjectives was removed in https://github.com/prometheus/client_golang/pull/262
+// updating the library to latest version changed the output of the metrics
+var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
+
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
 func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
-	syscall.Unlink(socket)
+	_ = syscall.Unlink(socket)
 
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
@@ -193,6 +197,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Help:        "Upstream service latency per Ingress",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
+				Objectives:  defObjectives,
 			},
 			[]string{"ingress", "namespace", "service"},
 		),

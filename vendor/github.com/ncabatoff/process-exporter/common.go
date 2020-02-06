@@ -1,12 +1,17 @@
 package common
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type (
 	ProcAttributes struct {
-		Name     string
-		Cmdline  []string
-		Username string
+		Name      string
+		Cmdline   []string
+		Username  string
+		PID       int
+		StartTime time.Time
 	}
 
 	MatchNamer interface {

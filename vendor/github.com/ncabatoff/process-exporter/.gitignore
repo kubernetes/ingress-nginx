@@ -1,4 +1,4 @@
-.*.sw?
+.idea
 process-exporter
 load-generator
 integration-tester
