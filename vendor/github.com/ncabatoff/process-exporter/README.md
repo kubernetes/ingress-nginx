@@ -4,9 +4,8 @@ Prometheus exporter that mines /proc to report on selected processes.
 [release]: https://github.com/ncabatoff/process-exporter/releases/latest
 
 [![Release](https://img.shields.io/github/release/ncabatoff/process-exporter.svg?style=flat-square")][release]
-[![Build Status](https://travis-ci.org/ncabatoff/process-exporter.svg?branch=master)](https://travis-ci.org/ncabatoff/process-exporter)
 [![Powered By: GoReleaser](https://img.shields.io/badge/powered%20by-goreleaser-green.svg?branch=master)](https://github.com/goreleaser)
-
+[![CircleCI](https://circleci.com/gh/ncabatoff/process-exporter.svg?style=shield)](https://circleci.com/gh/ncabatoff/process-exporter)
 Some apps are impractical to instrument directly, either because you
 don't control the code or they're written in a language that isn't easy to
 instrument with Prometheus.  We must instead resort to mining /proc.
@@ -39,6 +38,9 @@ walking the process tree upwards.  In other words, resource usage of
 subprocesses is added to their parent's usage unless the subprocess identifies
 as a different group name.
 
+-threads (default:true) means that metrics will be broken down by thread name
+as well as group name.
+
 -recheck (default:false) means that on each scrape the process names are
 re-evaluated. This is disabled by default as an optimization, but since
 processes can choose to change their names, this may result in a process
@@ -48,13 +50,15 @@ it's assumed its proper name.
 -procnames is intended as a quick alternative to using a config file.  Details
 in the following section.
 
+To disable any of these options, use the `-option=false`.
+
 ## Configuration and group naming
 
 To select and group the processes to monitor, either provide command-line
-arguments or use a YAML configuration file. 
+arguments or use a YAML configuration file.
 
 The recommended option is to use a config file via -config.path, but for
-convenience and backwards compatability the -procnames/-namemapping options
+convenience and backwards compatibility the -procnames/-namemapping options
 exist as an alternative.
 
 ### Using a config file
@@ -75,7 +79,7 @@ The default config shipped with the deb/rpm packages is:
 ```
 process_names:
   - name: "{{.Comm}}"
-    cmdline: 
+    cmdline:
     - '.+'
 ```
 
@@ -98,6 +102,14 @@ Template variables available:
 - `{{.ExeFull}}` contains the fully qualified path of the executable
 - `{{.Username}}` contains the username of the effective user
 - `{{.Matches}}` map contains all the matches resulting from applying cmdline regexps
+- `{{.PID}}` contains the PID of the process.  Note that using PID means the group
+  will only contain a single process.
+- `{{.StartTime}}` contains the start time of the process.  This can be useful
+  in conjunction with PID because PIDs get reused over time.
+
+Using `PID` or `StartTime` is discouraged: this is almost never what you want,
+and is likely to result in high cardinality metrics which Prometheus will have
+trouble with.
 
 #### Using a config file: process selectors
 
@@ -108,7 +120,7 @@ or in the case of `cmdline`, a regexp to apply to the command line.  The cmdline
 regexp uses the [Go syntax](https://golang.org/pkg/regexp).
 
 For `comm` and `exe`, the list of strings is an OR, meaning any process
-matching any of the strings will be added to the item's group.  
+matching any of the strings will be added to the item's group.
 
 For `cmdline`, the list of regexes is an AND, meaning they all must match.  Any
 capturing groups in a regexp must use the `?P<name>` option to assign a name to
@@ -122,23 +134,23 @@ match.
 
 process_names:
   # comm is the second field of /proc/<pid>/stat minus parens.
-  # It is the base executable name, truncated at 15 chars.  
+  # It is the base executable name, truncated at 15 chars.
   # It cannot be modified by the program, unlike exe.
   - comm:
     - bash
-    
+
   # exe is argv[0]. If no slashes, only basename of argv[0] need match.
   # If exe contains slashes, argv[0] must match exactly.
-  - exe: 
+  - exe:
     - postgres
     - /usr/local/bin/prometheus
 
   # cmdline is a list of regexps applied to argv.
   # Each must match, and any captures are added to the .Matches map.
   - name: "{{.ExeFull}}:{{.Matches.Cfgfile}}"
-    exe: 
+    exe:
     - /usr/local/bin/process-exporter
-    cmdline: 
+    cmdline:
     - -config.path\s+(?P<Cfgfile>\S+)
 
 ```
@@ -148,14 +160,14 @@ Here's the config I use on my home machine:
 ```
 
 process_names:
-  - comm: 
+  - comm:
     - chromium-browse
     - bash
     - prometheus
     - gvim
-  - exe: 
+  - exe:
     - /sbin/upstart
-    cmdline: 
+    cmdline:
     - --user
     name: upstart:-user
 
@@ -169,14 +181,14 @@ a process is the value found in the second field of /proc/<pid>/stat
 name of the executable.
 
 If -namemapping isn't provided, every process with a comm value present
-in -procnames is assigned to a group based on that name, and any other 
+in -procnames is assigned to a group based on that name, and any other
 processes are ignored.
 
-The -namemapping option is a comma-separated list of alternating 
+The -namemapping option is a comma-separated list of alternating
 name,regexp values. It allows assigning a name to a process based on a
 combination of the process name and command line. For example, using
 
-  -namemapping "python2,([^/]+)\.py,java,-jar\s+([^/]+).jar" 
+  -namemapping "python2,([^/]+)\.py,java,-jar\s+([^/]+).jar"
 
 will make it so that each different python2 and java -jar invocation will be
 tracked with distinct metrics. Processes whose remapped name is absent from
@@ -194,7 +206,7 @@ unless they're one of the others named explicitly with -procnames, like gvim.
 ## Group Metrics
 
 There's no meaningful way to name a process that will only ever name a single process, so process-exporter assumes that every metric will be attached
-to a group of processes - not a 
+to a group of processes - not a
 [process group](https://en.wikipedia.org/wiki/Process_group) in the technical
 sense, just one or more processes that meet a configuration's specification
 of what should be monitored and how to name it.
@@ -206,20 +218,14 @@ the label `groupname`.
 
 Number of processes in this group.
 
-### cpu_user_seconds_total counter
+### cpu_seconds_total counter
 
-CPU usage based on /proc/[pid]/stat field utime(14) i.e. user time.
-A value of 1 indicates that the processes in this group have been scheduled
-in user mode for a total of 1 second on a single virtual CPU.
-
-### cpu_system_seconds_total counter
-
-CPU usage based on /proc/[pid]/stat field stime(15) i.e. system time.
+CPU usage based on /proc/[pid]/stat fields utime(14) and stime(15) i.e. user and system time. This is similar to the node\_exporter's `node_cpu_seconds_total`.
 
 ### read_bytes_total counter
 
 Bytes read based on /proc/[pid]/io field read_bytes.  The man page
-says 
+says
 
 > Attempt to count the number of bytes which this process really did cause to be fetched from the storage layer.  This is accurate for block-backed filesystems.
 
@@ -227,7 +233,7 @@ but I would take it with a grain of salt.
 
 ### write_bytes_total counter
 
-Bytes written based on /proc/[pid]/io field write_bytes.  As with 
+Bytes written based on /proc/[pid]/io field write_bytes.  As with
 read_bytes, somewhat dubious.  May be useful for isolating which processes
 are doing the most I/O, but probably not measuring just how much I/O is happening.
 
@@ -247,7 +253,7 @@ and nonvoluntary_ctxt_switches.  The extra label `ctxswitchtype` can have two va
 
 ### memory_bytes gauge
 
-Number of bytes of memory used.  The extra label `memtype` can have two values:
+Number of bytes of memory used.  The extra label `memtype` can have three values:
 
 *resident*: Field rss(24) from /proc/[pid]/stat, whose doc says:
 
@@ -265,7 +271,7 @@ Number of file descriptors, based on counting how many entries are in the direct
 ### worst_fd_ratio gauge
 
 Worst ratio of open filedescs to filedesc limit, amongst all the procs in the
-group. The limit is the fd soft limit based on /proc/[pid]/limits. 
+group. The limit is the fd soft limit based on /proc/[pid]/limits.
 
 Normally Prometheus metrics ought to be as "basic" as possible (i.e. the raw
 values rather than a derived ratio), but we use a ratio here because nothing
@@ -297,6 +303,9 @@ The extra label `state` can have these values: `Running`, `Sleeping`, `Waiting`,
 
 ## Group Thread Metrics
 
+Since publishing thread metrics adds a lot of overhead, use the `-threads` command-line argument to disable them, 
+if necessary.
+
 All these metrics start with `namedprocess_namegroup_` and have at minimum
 the labels `groupname` and `threadname`.  `threadname` is field comm(2) from
 /proc/[pid]/stat.  Just as groupname breaks the set of processes down into
@@ -315,7 +324,7 @@ the label `cpumode` is used to distinguish between `user` and `system` time.
 ### thread_io_bytes_total counter
 
 Same as read_bytes_total and write_bytes_total, but broken down
-per-thread subgroup.  Unlike read_bytes_total/write_bytes_total, 
+per-thread subgroup.  Unlike read_bytes_total/write_bytes_total,
 the label `iomode` is used to distinguish between `read` and `write` bytes.
 
 ### thread_major_page_faults_total counter
@@ -347,9 +356,7 @@ An example Grafana dashboard to view the metrics is available at https://grafana
 
 ## Building
 
-Install [dep](https://github.com/golang/dep), then:
-
+Requires Go 1.12 installed.
 ```
-dep ensure
 make
 ```

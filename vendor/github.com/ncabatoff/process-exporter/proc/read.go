@@ -379,7 +379,7 @@ func (p proc) GetCounts() (Counts, int, error) {
 		if err == os.ErrNotExist {
 			err = ErrProcNotExist
 		}
-		return Counts{}, 0, err
+		return Counts{}, 0, fmt.Errorf("error reading stat file: %v", err)
 	}
 
 	status, err := p.getStatus()
@@ -387,7 +387,7 @@ func (p proc) GetCounts() (Counts, int, error) {
 		if err == os.ErrNotExist {
 			err = ErrProcNotExist
 		}
-		return Counts{}, 0, err
+		return Counts{}, 0, fmt.Errorf("error reading status file: %v", err)
 	}
 
 	io, err := p.getIo()
@@ -450,10 +450,8 @@ func (p proc) GetMetrics() (Metrics, int, error) {
 	// Ditto for states
 	states, _ := p.GetStates()
 
-	status, err := p.getStatus()
-	if err != nil {
-		return Metrics{}, 0, err
-	}
+	// Ditto for status
+	status, _ := p.getStatus()
 
 	numfds, err := p.Proc.FileDescriptorsLen()
 	if err != nil {
