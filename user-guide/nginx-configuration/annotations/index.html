@@ -2395,11 +2395,11 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
-<td><a href="#mirror">nginx.ingress.kubernetes.io/mirror-uri</a></td>
+<td><a href="#mirror">nginx.ingress.kubernetes.io/mirror-request-body</a></td>
 <td>string</td>
 </tr>
 <tr>
-<td><a href="#mirror">nginx.ingress.kubernetes.io/mirror-request-body</a></td>
+<td><a href="#mirror">nginx.ingress.kubernetes.io/mirror-target</a></td>
 <td>string</td>
 </tr>
 </tbody>
@@ -2985,15 +2985,8 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
 
 <h3 id="mirror">Mirror<a class="headerlink" href="#mirror" title="Permanent link"> ¶</a></h3>
 <p>Enables a request to be mirrored to a mirror backend. Responses by mirror backends are ignored. This feature is useful, to see how requests will react in "test" backends.</p>
-<p>You can mirror a request to the <code class="codehilite">/mirror</code> path on your ingress, by applying the below:</p>
-<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/mirror-uri</span><span class="p">:</span> <span class="s">&quot;/mirror&quot;</span>
-</pre></div>
-
-<p>The mirror path can be defined as a separate ingress resource:</p>
-<div class="codehilite"><pre><span></span><span class="nt">location</span> <span class="o">=</span> <span class="o">/</span><span class="nt">mirror</span> <span class="p">{</span>
-    <span class="err">internal</span><span class="p">;</span>
-    <span class="err">proxy_pass</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">test_backend</span><span class="p">;</span>
-<span class="p">}</span>
+<p>The mirror backend can be set by applying:</p>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/mirror-target</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://test.env.com/$request_uri</span>
 </pre></div>
 
 <p>By default the request-body is sent to the mirror backend, but can be turned off by applying:</p>
