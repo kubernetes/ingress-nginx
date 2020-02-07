@@ -23,7 +23,7 @@ import (
 
 	"k8s.io/klog"
 
-	"github.com/paultag/sniff/parser"
+	"pault.ag/go/sniff/parser"
 )
 
 // TCPServer describes a server that works in passthrough mode.

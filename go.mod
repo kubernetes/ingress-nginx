@@ -20,7 +20,6 @@ require (
 	github.com/onsi/gomega v1.8.1
 	github.com/opencontainers/runc v1.0.0-rc9
 	github.com/parnurzeal/gorequest v0.2.16
-	github.com/paultag/sniff v0.0.0-20200207005214-cf7e4d167732
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.4.0
 	github.com/prometheus/client_model v0.2.0
@@ -46,7 +45,7 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/kubernetes v1.17.2
 	moul.io/http2curl v1.0.0 // indirect
-	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732 // indirect
+	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 
