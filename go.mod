@@ -3,7 +3,7 @@ module k8s.io/ingress-nginx
 go 1.13
 
 require (
-	github.com/armon/go-proxyproto v0.0.0-20190211145416-68259f75880e
+	github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
 	github.com/eapache/channels v1.1.0
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
@@ -11,7 +11,7 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/json-iterator/go v1.1.9
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
-	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
+	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
@@ -20,8 +20,7 @@ require (
 	github.com/onsi/gomega v1.8.1
 	github.com/opencontainers/runc v1.0.0-rc9
 	github.com/parnurzeal/gorequest v0.2.16
-	github.com/paultag/sniff v0.0.0-20200207005214-cf7e4d167732
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.9.1
@@ -46,7 +45,7 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/kubernetes v1.17.2
 	moul.io/http2curl v1.0.0 // indirect
-	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732 // indirect
+	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 
