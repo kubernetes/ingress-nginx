@@ -17,7 +17,7 @@ github.com/BurntSushi/toml
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
-# github.com/armon/go-proxyproto v0.0.0-20190211145416-68259f75880e
+# github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
 github.com/armon/go-proxyproto
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
@@ -127,7 +127,7 @@ github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
+# github.com/mitchellh/go-ps v1.0.0
 github.com/mitchellh/go-ps
 # github.com/mitchellh/hashstructure v1.0.0
 github.com/mitchellh/hashstructure
@@ -193,7 +193,7 @@ github.com/opencontainers/runtime-spec/specs-go
 github.com/parnurzeal/gorequest
 # github.com/peterbourgon/diskv v2.0.1+incompatible
 github.com/peterbourgon/diskv
-# github.com/pkg/errors v0.8.1
+# github.com/pkg/errors v0.9.1
 github.com/pkg/errors
 # github.com/prometheus/client_golang v1.4.0
 github.com/prometheus/client_golang/prometheus
