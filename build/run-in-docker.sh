@@ -61,6 +61,7 @@ docker run                                            \
   ${DOCKER_OPTS}                                      \
   -e GOCACHE="/go/src/${PKG}/.cache"                  \
   -e GO111MODULE=off                                  \
+  -e DIND_TASKS=0                                     \
   -v "${HOME}/.kube:${HOME}/.kube"                    \
   -v "${KUBE_ROOT}:/go/src/${PKG}"                    \
   -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" \
