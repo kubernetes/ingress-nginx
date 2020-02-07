@@ -19,5 +19,5 @@ spec:
       - name: fortune-teller-app
         image: quay.io/kubernetes-ingress-controller/grpc-fortune-teller:0.1
         ports:
-          - containerPort: 50051
-            name: grpc
+        - containerPort: 50051
+          name: grpc
