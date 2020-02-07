@@ -44,6 +44,14 @@ func GetHostname(data []byte) (string, error) {
 	return string(sni), nil
 }
 
+/* Return the length computed from the two octets starting at index */
+func lengthFromData(data []byte, index int) int {
+	b1 := int(data[index])
+	b2 := int(data[index+1])
+
+	return (b1 << 8) + b2
+}
+
 /* Given a Server Name TLS Extension block, parse out and return the SNI
  * (Server Name Indication) payload */
 func GetSNIBlock(data []byte) ([]byte, error) {
@@ -53,11 +61,11 @@ func GetSNIBlock(data []byte) ([]byte, error) {
 		if index >= len(data) {
 			break
 		}
-		length := int((data[index] << 8) + data[index+1])
+		length := lengthFromData(data, index)
 		endIndex := index + 2 + length
 		if data[index+2] == 0x00 { /* SNI */
 			sni := data[index+3:]
-			sniLength := int((sni[0] << 8) + sni[1])
+			sniLength := lengthFromData(sni, 0)
 			return sni[2 : sniLength+2], nil
 		}
 		index = endIndex
@@ -75,17 +83,17 @@ func GetSNBlock(data []byte) ([]byte, error) {
 		return []byte{}, fmt.Errorf("Not enough bytes to be an SN block")
 	}
 
-	extensionLength := int((data[index] << 8) + data[index+1])
+	extensionLength := lengthFromData(data, index)
 	if extensionLength+2 > len(data) {
 		return []byte{}, fmt.Errorf("Extension looks bonkers")
 	}
 	data = data[2 : extensionLength+2]
 
 	for {
-		if index+3 >= len(data) {
+		if index+4 >= len(data) {
 			break
 		}
-		length := int((data[index+2] << 8) + data[index+3])
+		length := lengthFromData(data, index+2)
 		endIndex := index + 4 + length
 		if data[index] == 0x00 && data[index+1] == 0x00 {
 			return data[index+4 : endIndex], nil
@@ -121,7 +129,7 @@ func GetExtensionBlock(data []byte) ([]byte, error) {
 	}
 
 	/* Index is at Cipher List Length bits */
-	if newIndex := (index + 2 + int((data[index]<<8)+data[index+1])); (newIndex + 1) < len(data) {
+	if newIndex := (index + 2 + lengthFromData(data, index)); (newIndex + 1) < len(data) {
 		index = newIndex
 	} else {
 		return []byte{}, fmt.Errorf("Not enough bytes for the Cipher List")
