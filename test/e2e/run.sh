@@ -53,7 +53,7 @@ export TAG=dev
 export ARCH=amd64
 export REGISTRY=ingress-controller
 
-export K8S_VERSION=${K8S_VERSION:-v1.17.0}
+export K8S_VERSION=${K8S_VERSION:-v1.17.2@sha256:59df31fc61d1da5f46e8a61ef612fa53d3f9140f82419d1ef1a6b9656c6b737c}
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
