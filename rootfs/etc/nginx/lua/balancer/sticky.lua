@@ -54,15 +54,12 @@ function _M.set_cookie(self, value)
     end
   end
 
-  if cookie_samesite then
-    cookie_path = cookie_path .. "; SameSite=" .. cookie_samesite
-  end
-
   local cookie_data = {
     key = self:cookie_name(),
     value = value,
     path = cookie_path,
     httponly = true,
+    samesite = cookie_samesite,
     secure = ngx.var.https == "on",
   }
 
