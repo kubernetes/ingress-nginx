@@ -40,7 +40,7 @@ If you do not already have an instance of the NGINX Ingress controller running, 
     ingress-nginx   ClusterIP   10.0.0.13   <none>        80/TCP,443/TCP   10m
     ```
 
-!!! Note
+!!! note
     The `ingress-nginx` Service is of type `ClusterIP` in this example. This may vary depending on your environment.
     Make sure you can use the Service to reach NGINX before proceeding with the rest of this example.
 
