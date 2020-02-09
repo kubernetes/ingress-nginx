@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#command-line-arguments" tabindex="1" class="md-skip">
+      <a href="#command-line-arguments" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1150,7 +1150,7 @@
                 
                 <h1 id="command-line-arguments">Command line arguments<a class="headerlink" href="#command-line-arguments" title="Permanent link"> ¶</a></h1>
 <p>The following command line arguments are accepted by the Ingress controller executable.</p>
-<p>They are set in the container spec of the <code class="codehilite">nginx-ingress-controller</code> Deployment manifest</p>
+<p>They are set in the container spec of the <code class="codehilite"><span class="err">nginx-ingress-controller</span></code> Deployment manifest</p>
 <table>
 <thead>
 <tr>
@@ -1160,189 +1160,190 @@
 </thead>
 <tbody>
 <tr>
-<td><code class="codehilite">--alsologtostderr</code></td>
+<td><code class="codehilite"><span class="err">--alsologtostderr</span></code></td>
 <td>log to standard error as well as files</td>
 </tr>
 <tr>
-<td><code class="codehilite">--annotations-prefix string</code></td>
+<td><code class="codehilite"><span class="err">--annotations-prefix string</span></code></td>
 <td>Prefix of the Ingress annotations specific to the NGINX controller. (default "nginx.ingress.kubernetes.io")</td>
 </tr>
 <tr>
-<td><code class="codehilite">--apiserver-host string</code></td>
+<td><code class="codehilite"><span class="err">--apiserver-host string</span></code></td>
 <td>Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--configmap string</code></td>
+<td><code class="codehilite"><span class="err">--configmap string</span></code></td>
 <td>Name of the ConfigMap containing custom global configurations for the controller.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--default-backend-service string</code></td>
+<td><code class="codehilite"><span class="err">--default-backend-service string</span></code></td>
 <td>Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. If not specified, a 404 page will be returned directly from NGINX.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--default-server-port int</code></td>
-<td>When <code class="codehilite">default-backend-service</code> is not specified or specified service does not have any endpoint, a local endpoint with this port will be used to serve 404 page from inside Nginx.</td>
+<td><code class="codehilite"><span class="err">--default-server-port int</span></code></td>
+<td>When <code class="codehilite"><span class="err">default-backend-service</span></code> is not specified or specified service does not have any endpoint, a local endpoint with this port will be used to serve 404 page from inside Nginx.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--default-ssl-certificate string</code></td>
+<td><code class="codehilite"><span class="err">--default-ssl-certificate string</span></code></td>
 <td>Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name".</td>
 </tr>
 <tr>
-<td><code class="codehilite">--disable-catch-all</code></td>
+<td><code class="codehilite"><span class="err">--disable-catch-all</span></code></td>
 <td>Disable support for catch-all Ingresses.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--election-id string</code></td>
+<td><code class="codehilite"><span class="err">--election-id string</span></code></td>
 <td>Election id to use for Ingress status updates. (default "ingress-controller-leader")</td>
 </tr>
 <tr>
-<td><code class="codehilite">--enable-dynamic-certificates</code></td>
-<td>Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off (default behaviour). Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. Once the backing Lua shared dictionary <code class="codehilite">certificate_data</code> is full, the least recently used certificate will be removed to store new ones. (enabled by default)</td>
+<td><code class="codehilite"><span class="err">--enable-dynamic-certificates</span></code></td>
+<td>Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off (default behaviour). Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. Once the backing Lua shared dictionary <code class="codehilite"><span class="err">certificate_data</span></code> is full, the least recently used certificate will be removed to store new ones. (enabled by default)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--enable-metrics</code></td>
+<td><code class="codehilite"><span class="err">--enable-metrics</span></code></td>
 <td>Enable the collection of metrics for scraping by Prometheus (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--enable-ssl-chain-completion</code></td>
+<td><code class="codehilite"><span class="err">--enable-ssl-chain-completion</span></code></td>
 <td>Autocomplete SSL certificate chains with missing intermediate CA certificates. A valid certificate chain is required to enable OCSP stapling. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--enable-ssl-passthrough</code></td>
+<td><code class="codehilite"><span class="err">--enable-ssl-passthrough</span></code></td>
 <td>Enable SSL Passthrough.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--health-check-path string</code></td>
+<td><code class="codehilite"><span class="err">--health-check-path string</span></code></td>
 <td>URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz")</td>
 </tr>
 <tr>
-<td><code class="codehilite">--health-check-timeout duration</code></td>
+<td><code class="codehilite"><span class="err">--health-check-timeout duration</span></code></td>
 <td>Time limit, in seconds, for a probe to health-check-path to succeed. (default 10)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--healthz-port int</code></td>
+<td><code class="codehilite"><span class="err">--healthz-port int</span></code></td>
 <td>Port to use for the healthz endpoint. (default 10254)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--http-port int</code></td>
+<td><code class="codehilite"><span class="err">--http-port int</span></code></td>
 <td>Port to use for servicing HTTP traffic. (default 80)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--https-port int</code></td>
+<td><code class="codehilite"><span class="err">--https-port int</span></code></td>
 <td>Port to use for servicing HTTPS traffic. (default 443)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--status-port int</code></td>
+<td><code class="codehilite"><span class="err">--status-port int</span></code></td>
 <td>Port to use for the lua HTTP endpoint configuration. (default 10246)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--stream-port int</code></td>
+<td><code class="codehilite"><span class="err">--stream-port int</span></code></td>
 <td>Port to use for the lua TCP/UDP endpoint configuration. (default 10247)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--ingress-class string</code></td>
+<td><code class="codehilite"><span class="err">--ingress-class string</span></code></td>
 <td>Name of the ingress class this controller satisfies. The class of an Ingress object is set using the annotation "kubernetes.io/ingress.class". All ingress classes are satisfied if this parameter is left empty.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--kubeconfig string</code></td>
+<td><code class="codehilite"><span class="err">--kubeconfig string</span></code></td>
 <td>Path to a kubeconfig file containing authorization and API server information.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--log_backtrace_at traceLocation</code></td>
+<td><code class="codehilite"><span class="err">--log_backtrace_at traceLocation</span></code></td>
 <td>when logging hits line file:N, emit a stack trace (default :0)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--log_dir string</code></td>
+<td><code class="codehilite"><span class="err">--log_dir string</span></code></td>
 <td>If non-empty, write log files in this directory</td>
 </tr>
 <tr>
-<td><code class="codehilite">--logtostderr</code></td>
+<td><code class="codehilite"><span class="err">--logtostderr</span></code></td>
 <td>log to standard error instead of files (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--metrics-per-host</code></td>
+<td><code class="codehilite"><span class="err">--metrics-per-host</span></code></td>
 <td>enable host labels for prometheus metrics. You may want to disable this to reduce the number of time-series created. (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--profiling</code></td>
+<td><code class="codehilite"><span class="err">--profiling</span></code></td>
 <td>Enable profiling via web interface host:port/debug/pprof/ (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--publish-service string</code></td>
+<td><code class="codehilite"><span class="err">--publish-service string</span></code></td>
 <td>Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--publish-status-address string</code></td>
+<td><code class="codehilite"><span class="err">--publish-status-address string</span></code></td>
 <td>Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--report-node-internal-ip-address</code></td>
+<td><code class="codehilite"><span class="err">--report-node-internal-ip-address</span></code></td>
 <td>Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--ssl-passthrough-proxy-port int</code></td>
+<td><code class="codehilite"><span class="err">--ssl-passthrough-proxy-port int</span></code></td>
 <td>Port to use internally for SSL Passthrough. (default 442)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--stderrthreshold severity</code></td>
+<td><code class="codehilite"><span class="err">--stderrthreshold severity</span></code></td>
 <td>logs at or above this threshold go to stderr (default 2)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--sync-period duration</code></td>
+<td><code class="codehilite"><span class="err">--sync-period duration</span></code></td>
 <td>Period at which the controller forces the repopulation of its local object stores. Disabled by default.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--sync-rate-limit float32</code></td>
+<td><code class="codehilite"><span class="err">--sync-rate-limit float32</span></code></td>
 <td>Define the sync frequency upper limit (default 0.3)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--tcp-services-configmap string</code></td>
+<td><code class="codehilite"><span class="err">--tcp-services-configmap string</span></code></td>
 <td>Name of the ConfigMap containing the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port number or name. TCP ports 80 and 443 are reserved by the controller for servicing HTTP traffic.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--udp-services-configmap string</code></td>
+<td><code class="codehilite"><span class="err">--udp-services-configmap string</span></code></td>
 <td>Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--update-status</code></td>
+<td><code class="codehilite"><span class="err">--update-status</span></code></td>
 <td>Update the load-balancer status of Ingress objects this controller satisfies. Requires setting the publish-service parameter to a valid Service reference. (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--update-status-on-shutdown</code></td>
+<td><code class="codehilite"><span class="err">--update-status-on-shutdown</span></code></td>
 <td>Update the load-balancer status of Ingress objects when the controller shuts down. Requires the update-status parameter. (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">-v</code>, <code class="codehilite">--v Level</code></td>
+<td><code class="codehilite"><span class="err">-v</span></code>, <code class="codehilite"><span class="err">--v Level</span></code></td>
 <td>log level for V logs</td>
 </tr>
 <tr>
-<td><code class="codehilite">--version</code></td>
+<td><code class="codehilite"><span class="err">--version</span></code></td>
 <td>Show release information about the NGINX Ingress controller and exit.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--vmodule moduleSpec</code></td>
+<td><code class="codehilite"><span class="err">--vmodule moduleSpec</span></code></td>
 <td>comma-separated list of pattern=N settings for file-filtered logging</td>
 </tr>
 <tr>
-<td><code class="codehilite">--watch-namespace string</code></td>
+<td><code class="codehilite"><span class="err">--watch-namespace string</span></code></td>
 <td>Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--validating-webhook</code></td>
+<td><code class="codehilite"><span class="err">--validating-webhook</span></code></td>
 <td>The address to start an admission controller on</td>
 </tr>
 <tr>
-<td><code class="codehilite">--validating-webhook-certificate</code></td>
+<td><code class="codehilite"><span class="err">--validating-webhook-certificate</span></code></td>
 <td>The certificate the webhook is using for its TLS handling</td>
 </tr>
 <tr>
-<td><code class="codehilite">--validating-webhook-key</code></td>
+<td><code class="codehilite"><span class="err">--validating-webhook-key</span></code></td>
 <td>The key the webhook is using for its TLS handling</td>
 </tr>
 </tbody>
 </table>
                 
                   
+                
                 
               
               
@@ -1398,9 +1399,9 @@
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1410,7 +1411,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
       

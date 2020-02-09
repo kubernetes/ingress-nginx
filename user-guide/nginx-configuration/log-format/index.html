@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#log-format" tabindex="1" class="md-skip">
+      <a href="#log-format" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1152,12 +1152,12 @@
                 
                 <h1 id="log-format">Log format<a class="headerlink" href="#log-format" title="Permanent link"> ¶</a></h1>
 <p>The default configuration uses a custom logging format to add additional information about upstreams, response time and status.</p>
-<div class="codehilite"><pre><span></span>log_format upstreaminfo
-    &#39;$remote_addr - $remote_user [$time_local] &quot;$request&quot; &#39;
-    &#39;$status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;
-    &#39;$request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr &#39;
-    &#39;$upstream_response_length $upstream_response_time $upstream_status $req_id&#39;;
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="err">log_format upstreaminfo</span>
+<span class="err">    &#39;$remote_addr - $remote_user [$time_local] &quot;$request&quot; &#39;</span>
+<span class="err">    &#39;$status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;</span>
+<span class="err">    &#39;$request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr &#39;</span>
+<span class="err">    &#39;$upstream_response_length $upstream_response_time $upstream_status $req_id&#39;;</span>
+</code></pre></div>
 
 <table>
 <thead>
@@ -1168,75 +1168,75 @@
 </thead>
 <tbody>
 <tr>
-<td><code class="codehilite">$proxy_protocol_addr</code></td>
+<td><code class="codehilite"><span class="err">$proxy_protocol_addr</span></code></td>
 <td>remote address if proxy protocol is enabled</td>
 </tr>
 <tr>
-<td><code class="codehilite">$remote_addr</code></td>
+<td><code class="codehilite"><span class="err">$remote_addr</span></code></td>
 <td>the source IP address of the client</td>
 </tr>
 <tr>
-<td><code class="codehilite">$remote_user</code></td>
+<td><code class="codehilite"><span class="err">$remote_user</span></code></td>
 <td>user name supplied with the Basic authentication</td>
 </tr>
 <tr>
-<td><code class="codehilite">$time_local</code></td>
+<td><code class="codehilite"><span class="err">$time_local</span></code></td>
 <td>local time in the Common Log Format</td>
 </tr>
 <tr>
-<td><code class="codehilite">$request</code></td>
+<td><code class="codehilite"><span class="err">$request</span></code></td>
 <td>full original request line</td>
 </tr>
 <tr>
-<td><code class="codehilite">$status</code></td>
+<td><code class="codehilite"><span class="err">$status</span></code></td>
 <td>response status</td>
 </tr>
 <tr>
-<td><code class="codehilite">$body_bytes_sent</code></td>
+<td><code class="codehilite"><span class="err">$body_bytes_sent</span></code></td>
 <td>number of bytes sent to a client, not counting the response header</td>
 </tr>
 <tr>
-<td><code class="codehilite">$http_referer</code></td>
+<td><code class="codehilite"><span class="err">$http_referer</span></code></td>
 <td>value of the Referer header</td>
 </tr>
 <tr>
-<td><code class="codehilite">$http_user_agent</code></td>
+<td><code class="codehilite"><span class="err">$http_user_agent</span></code></td>
 <td>value of User-Agent header</td>
 </tr>
 <tr>
-<td><code class="codehilite">$request_length</code></td>
+<td><code class="codehilite"><span class="err">$request_length</span></code></td>
 <td>request length (including request line, header, and request body)</td>
 </tr>
 <tr>
-<td><code class="codehilite">$request_time</code></td>
+<td><code class="codehilite"><span class="err">$request_time</span></code></td>
 <td>time elapsed since the first bytes were read from the client</td>
 </tr>
 <tr>
-<td><code class="codehilite">$proxy_upstream_name</code></td>
-<td>name of the upstream. The format is <code class="codehilite">upstream-&lt;namespace&gt;-&lt;service name&gt;-&lt;service port&gt;</code></td>
+<td><code class="codehilite"><span class="err">$proxy_upstream_name</span></code></td>
+<td>name of the upstream. The format is <code class="codehilite"><span class="err">upstream-&lt;namespace&gt;-&lt;service name&gt;-&lt;service port&gt;</span></code></td>
 </tr>
 <tr>
-<td><code class="codehilite">$proxy_alternative_upstream_name</code></td>
-<td>name of the alternative upstream. The format is <code class="codehilite">upstream-&lt;namespace&gt;-&lt;service name&gt;-&lt;service port&gt;</code></td>
+<td><code class="codehilite"><span class="err">$proxy_alternative_upstream_name</span></code></td>
+<td>name of the alternative upstream. The format is <code class="codehilite"><span class="err">upstream-&lt;namespace&gt;-&lt;service name&gt;-&lt;service port&gt;</span></code></td>
 </tr>
 <tr>
-<td><code class="codehilite">$upstream_addr</code></td>
+<td><code class="codehilite"><span class="err">$upstream_addr</span></code></td>
 <td>the IP address and port (or the path to the domain socket) of the upstream server. If several servers were contacted during request processing, their addresses are separated by commas.</td>
 </tr>
 <tr>
-<td><code class="codehilite">$upstream_response_length</code></td>
+<td><code class="codehilite"><span class="err">$upstream_response_length</span></code></td>
 <td>the length of the response obtained from the upstream server</td>
 </tr>
 <tr>
-<td><code class="codehilite">$upstream_response_time</code></td>
+<td><code class="codehilite"><span class="err">$upstream_response_time</span></code></td>
 <td>time spent on receiving the response from the upstream server as seconds with millisecond resolution</td>
 </tr>
 <tr>
-<td><code class="codehilite">$upstream_status</code></td>
+<td><code class="codehilite"><span class="err">$upstream_status</span></code></td>
 <td>status code of the response obtained from the upstream server</td>
 </tr>
 <tr>
-<td><code class="codehilite">$req_id</code></td>
+<td><code class="codehilite"><span class="err">$req_id</span></code></td>
 <td>the randomly generated ID of the request</td>
 </tr>
 </tbody>
@@ -1251,19 +1251,19 @@
 </thead>
 <tbody>
 <tr>
-<td><code class="codehilite">$namespace</code></td>
+<td><code class="codehilite"><span class="err">$namespace</span></code></td>
 <td>namespace of the ingress</td>
 </tr>
 <tr>
-<td><code class="codehilite">$ingress_name</code></td>
+<td><code class="codehilite"><span class="err">$ingress_name</span></code></td>
 <td>name of the ingress</td>
 </tr>
 <tr>
-<td><code class="codehilite">$service_name</code></td>
+<td><code class="codehilite"><span class="err">$service_name</span></code></td>
 <td>name of the service</td>
 </tr>
 <tr>
-<td><code class="codehilite">$service_port</code></td>
+<td><code class="codehilite"><span class="err">$service_port</span></code></td>
 <td>port of the service</td>
 </tr>
 </tbody>
@@ -1275,6 +1275,7 @@
 </ul>
                 
                   
+                
                 
               
               
@@ -1330,9 +1331,9 @@
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1342,7 +1343,7 @@
       
     </div>
     
-      <script src="../../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
       

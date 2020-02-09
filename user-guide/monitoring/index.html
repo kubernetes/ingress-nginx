@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#prometheus-and-grafana-installation" tabindex="1" class="md-skip">
+      <a href="#prometheus-and-grafana-installation" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1251,7 +1251,7 @@
 <p>This tutorial will show you how to install <a href="https://prometheus.io/">Prometheus</a> and <a href="https://grafana.com/">Grafana</a> for scraping the metrics of the NGINX Ingress controller.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>This example uses <code class="codehilite">emptyDir</code> volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.</p>
+<p>This example uses <code class="codehilite"><span class="err">emptyDir</span></code> volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.</p>
 </div>
 <h2 id="before-you-begin">Before You Begin<a class="headerlink" href="#before-you-begin" title="Permanent link"> ¶</a></h2>
 <p>The NGINX Ingress controller should already be deployed according to the deployment instructions <a href="../../deploy/">here</a>.</p>
@@ -1260,49 +1260,50 @@
 <p>The Prometheus server must be configured so that it can discover endpoints of services. If a Prometheus server is already running in the cluster and if it is configured in a way that it can find the ingress controller pods, no extra configuration is needed.</p>
 <p>If there is no existing Prometheus server running, the rest of this tutorial will guide you through the steps needed to deploy a properly configured Prometheus server.</p>
 <p>Running the following command deploys prometheus in Kubernetes:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/</span>
+</code></pre></div>
 
 <h3 id="prometheus-dashboard">Prometheus Dashboard<a class="headerlink" href="#prometheus-dashboard" title="Permanent link"> ¶</a></h3>
 <p>Open Prometheus dashboard in a web browser:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl get svc -n ingress-nginx</span>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl get svc -n ingress-nginx</span>
 <span class="go">NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE</span>
 <span class="go">default-http-backend   ClusterIP   10.103.59.201   &lt;none&gt;        80/TCP                                       3d</span>
 <span class="go">ingress-nginx          NodePort    10.97.44.72     &lt;none&gt;        80:30100/TCP,443:30154/TCP,10254:32049/TCP   5h</span>
 <span class="go">prometheus-server      NodePort    10.98.233.86    &lt;none&gt;        9090:32630/TCP                               1m</span>
-</pre></div>
+</code></pre></div>
 
 <p>Obtain the IP address of the nodes in the running cluster:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl get nodes -o wide</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl get nodes -o wide</span>
+</code></pre></div>
 
 <p>In some cases where the node only have internal IP addresses we need to execute:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl get nodes --selector=kubernetes.io/role!=master -o jsonpath={.items[*].status.addresses[?\(@.type==\&quot;InternalIP\&quot;\)].address}</span>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl get nodes --selector=kubernetes.io/role!=master -o jsonpath={.items[*].status.addresses[?\(@.type==\&quot;InternalIP\&quot;\)].address}</span>
 <span class="go">10.192.0.2 10.192.0.3 10.192.0.4</span>
-</pre></div>
+</code></pre></div>
 
 <p>Open your browser and visit the following URL: <em>http://{node IP address}:{prometheus-svc-nodeport}</em> to load the Prometheus Dashboard.</p>
 <p>According to the above example, this URL will be http://10.192.0.3:32630</p>
 <p><img alt="Dashboard" src="../../images/prometheus-dashboard.png" /></p>
 <h3 id="grafana">Grafana<a class="headerlink" href="#grafana" title="Permanent link"> ¶</a></h3>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/grafana/</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/grafana/</span>
+</code></pre></div>
 
-<div class="codehilite"><pre><span></span><span class="go">kubectl get svc -n ingress-nginx</span>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl get svc -n ingress-nginx</span>
 <span class="go">NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE</span>
 <span class="go">default-http-backend   ClusterIP   10.103.59.201   &lt;none&gt;        80/TCP                                       3d</span>
 <span class="go">ingress-nginx          NodePort    10.97.44.72     &lt;none&gt;        80:30100/TCP,443:30154/TCP,10254:32049/TCP   5h</span>
 <span class="go">prometheus-server      NodePort    10.98.233.86    &lt;none&gt;        9090:32630/TCP                               10m</span>
 <span class="go">grafana                NodePort    10.98.233.87    &lt;none&gt;        3000:31086/TCP                               10m</span>
-</pre></div>
+</code></pre></div>
 
 <p>Open your browser and visit the following URL: <em>http://{node IP address}:{grafana-svc-nodeport}</em> to load the Grafana Dashboard.
 According to the above example, this URL will be http://10.192.0.3:31086</p>
-<p>The username and password is <code class="codehilite">admin</code></p>
+<p>The username and password is <code class="codehilite"><span class="err">admin</span></code></p>
 <p>After the login you can import the Grafana dashboard from <em>https://github.com/kubernetes/ingress-nginx/tree/master/deploy/grafana/dashboards</em></p>
 <p><img alt="Dashboard" src="../../images/grafana.png" /></p>
                 
                   
+                
                 
               
               
@@ -1358,9 +1359,9 @@ According to the above example, this URL will be http://10.192.0.3:31086</p>
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1370,7 +1371,7 @@ According to the above example, this URL will be http://10.192.0.3:31086</p>
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
       

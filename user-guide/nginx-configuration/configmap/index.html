@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#configmaps" tabindex="1" class="md-skip">
+      <a href="#configmaps" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -3301,17 +3301,17 @@
 components for the nginx-controller.</p>
 <p>In order to overwrite nginx-controller configuration values as seen in <a href="https://github.com/kubernetes/ingress-nginx/blob/master/internal/ingress/controller/config/config.go">config.go</a>,
 you can add key-value pairs to the data section of the config-map. For Example:</p>
-<div class="codehilite"><pre><span></span><span class="nt">data</span><span class="p">:</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">data</span><span class="p">:</span>
   <span class="nt">map-hash-bucket-size</span><span class="p">:</span> <span class="s">&quot;128&quot;</span>
   <span class="nt">ssl-protocols</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">SSLv2</span>
-</pre></div>
+</code></pre></div>
 
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The key and values in a ConfigMap can only be strings.
 This means that we want a value with boolean values we need to quote the values, like "true" or "false".
 Same for numbers, like "100".</p>
-<p>"Slice" types (defined below as <code class="codehilite">[]string</code> or <code class="codehilite">[]int</code> can be provided as a comma-delimited string.</p>
+<p>"Slice" types (defined below as <code class="codehilite"><span class="err">[]string</span></code> or <code class="codehilite"><span class="err">[]int</span></code> can be provided as a comma-delimited string.</p>
 </div>
 <h2 id="configuration-options">Configuration options<a class="headerlink" href="#configuration-options" title="Permanent link"> ¶</a></h2>
 <p>The following table shows a configuration option's name, type, and the default value:</p>
@@ -3492,12 +3492,12 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#log-format-upstream">log-format-upstream</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite">$remote_addr - $remote_user [$time_local] &quot;$request&quot; $status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id</code></td>
+<td align="left"><code class="codehilite"><span class="err">$remote_addr - $remote_user [$time_local] &quot;$request&quot; $status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id</span></code></td>
 </tr>
 <tr>
 <td align="left"><a href="#log-format-stream">log-format-stream</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite">[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time</code></td>
+<td align="left"><code class="codehilite"><span class="err">[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time</span></code></td>
 </tr>
 <tr>
 <td align="left"><a href="#enable-multi-accept">enable-multi-accept</a></td>
@@ -3547,7 +3547,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#server-name-hash-bucket-size">server-name-hash-bucket-size</a></td>
 <td align="left">int</td>
-<td align="left"><code class="codehilite">&lt;size of the processor’s cache line&gt;</code></td>
+<td align="left"><code class="codehilite"><span class="err">&lt;size of the processor’s cache line&gt;</span></code></td>
 </tr>
 <tr>
 <td align="left"><a href="#proxy-headers-hash-max-size">proxy-headers-hash-max-size</a></td>
@@ -3607,7 +3607,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#ssl-session-ticket-key">ssl-session-ticket-key</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite">&lt;Randomly Generated&gt;</code></td>
+<td align="left"><code class="codehilite"><span class="err">&lt;Randomly Generated&gt;</span></code></td>
 </tr>
 <tr>
 <td align="left"><a href="#ssl-session-timeout">ssl-session-timeout</a></td>
@@ -3677,7 +3677,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#worker-processes">worker-processes</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite">&lt;Number of CPUs&gt;</code></td>
+<td align="left"><code class="codehilite"><span class="err">&lt;Number of CPUs&gt;</span></code></td>
 </tr>
 <tr>
 <td align="left"><a href="#worker-cpu-affinity">worker-cpu-affinity</a></td>
@@ -4095,13 +4095,13 @@ Same for numbers, like "100".</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log">http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log</a></p>
 <h2 id="access-log-path">access-log-path<a class="headerlink" href="#access-log-path" title="Permanent link"> ¶</a></h2>
-<p>Access log path. Goes to <code class="codehilite">/var/log/nginx/access.log</code> by default.</p>
-<p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/access.log</code> is a symlink to <code class="codehilite">/dev/stdout</code></p>
+<p>Access log path. Goes to <code class="codehilite"><span class="err">/var/log/nginx/access.log</span></code> by default.</p>
+<p><strong>Note:</strong> the file <code class="codehilite"><span class="err">/var/log/nginx/access.log</span></code> is a symlink to <code class="codehilite"><span class="err">/dev/stdout</span></code></p>
 <h2 id="enable-access-log-for-default-backend">enable-access-log-for-default-backend<a class="headerlink" href="#enable-access-log-for-default-backend" title="Permanent link"> ¶</a></h2>
 <p>Enables logging access to default backend. <em><strong>default:</strong></em> is disabled.</p>
 <h2 id="error-log-path">error-log-path<a class="headerlink" href="#error-log-path" title="Permanent link"> ¶</a></h2>
-<p>Error log path. Goes to <code class="codehilite">/var/log/nginx/error.log</code> by default.</p>
-<p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/error.log</code> is a symlink to <code class="codehilite">/dev/stderr</code></p>
+<p>Error log path. Goes to <code class="codehilite"><span class="err">/var/log/nginx/error.log</span></code> by default.</p>
+<p><strong>Note:</strong> the file <code class="codehilite"><span class="err">/var/log/nginx/error.log</span></code> is a symlink to <code class="codehilite"><span class="err">/dev/stderr</span></code></p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/ngx_core_module.html#error_log">http://nginx.org/en/docs/ngx_core_module.html#error_log</a></p>
 <h2 id="enable-modsecurity">enable-modsecurity<a class="headerlink" href="#enable-modsecurity" title="Permanent link"> ¶</a></h2>
@@ -4131,9 +4131,9 @@ Same for numbers, like "100".</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log">http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log</a></p>
 <h2 id="disable-ipv6">disable-ipv6<a class="headerlink" href="#disable-ipv6" title="Permanent link"> ¶</a></h2>
-<p>Disable listening on IPV6. <em><strong>default:</strong></em> <code class="codehilite">false</code>; IPv6 listening is enabled</p>
+<p>Disable listening on IPV6. <em><strong>default:</strong></em> <code class="codehilite"><span class="err">false</span></code>; IPv6 listening is enabled</p>
 <h2 id="disable-ipv6-dns">disable-ipv6-dns<a class="headerlink" href="#disable-ipv6-dns" title="Permanent link"> ¶</a></h2>
-<p>Disable IPV6 for nginx DNS resolver. <em><strong>default:</strong></em> <code class="codehilite">false</code>; IPv6 resolving enabled.</p>
+<p>Disable IPV6 for nginx DNS resolver. <em><strong>default:</strong></em> <code class="codehilite"><span class="err">false</span></code>; IPv6 resolving enabled.</p>
 <h2 id="enable-underscores-in-headers">enable-underscores-in-headers<a class="headerlink" href="#enable-underscores-in-headers" title="Permanent link"> ¶</a></h2>
 <p>Enables underscores in header names. <em><strong>default:</strong></em> is disabled</p>
 <h2 id="ignore-invalid-headers">ignore-invalid-headers<a class="headerlink" href="#ignore-invalid-headers" title="Permanent link"> ¶</a></h2>
@@ -4192,11 +4192,11 @@ HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature
 <h2 id="log-format-upstream">log-format-upstream<a class="headerlink" href="#log-format-upstream" title="Permanent link"> ¶</a></h2>
 <p>Sets the nginx <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format">log format</a>.
 Example for json output:</p>
-<div class="codehilite"><pre><span></span><span class="err">log-format-upstream:</span> <span class="err">&#39;</span><span class="p">{</span><span class="nt">&quot;time&quot;</span><span class="p">:</span> <span class="s2">&quot;$time_iso8601&quot;</span><span class="p">,</span> <span class="nt">&quot;remote_addr&quot;</span><span class="p">:</span> <span class="s2">&quot;$proxy_protocol_addr&quot;</span><span class="p">,</span> <span class="nt">&quot;x-forward-for&quot;</span><span class="p">:</span> <span class="s2">&quot;$proxy_add_x_forwarded_for&quot;</span><span class="p">,</span> <span class="nt">&quot;request_id&quot;</span><span class="p">:</span> <span class="s2">&quot;$req_id&quot;</span><span class="p">,</span>
+<div class="codehilite"><pre><span></span><code><span class="err">log-format-upstream:</span> <span class="err">&#39;</span><span class="p">{</span><span class="nt">&quot;time&quot;</span><span class="p">:</span> <span class="s2">&quot;$time_iso8601&quot;</span><span class="p">,</span> <span class="nt">&quot;remote_addr&quot;</span><span class="p">:</span> <span class="s2">&quot;$proxy_protocol_addr&quot;</span><span class="p">,</span> <span class="nt">&quot;x-forward-for&quot;</span><span class="p">:</span> <span class="s2">&quot;$proxy_add_x_forwarded_for&quot;</span><span class="p">,</span> <span class="nt">&quot;request_id&quot;</span><span class="p">:</span> <span class="s2">&quot;$req_id&quot;</span><span class="p">,</span>
   <span class="nt">&quot;remote_user&quot;</span><span class="p">:</span> <span class="s2">&quot;$remote_user&quot;</span><span class="p">,</span> <span class="nt">&quot;bytes_sent&quot;</span><span class="p">:</span> <span class="err">$bytes_sent</span><span class="p">,</span> <span class="nt">&quot;request_time&quot;</span><span class="p">:</span> <span class="err">$request_time</span><span class="p">,</span> <span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="err">$status</span><span class="p">,</span> <span class="nt">&quot;vhost&quot;</span><span class="p">:</span> <span class="s2">&quot;$host&quot;</span><span class="p">,</span> <span class="nt">&quot;request_proto&quot;</span><span class="p">:</span> <span class="s2">&quot;$server_protocol&quot;</span><span class="p">,</span>
   <span class="nt">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;$uri&quot;</span><span class="p">,</span> <span class="nt">&quot;request_query&quot;</span><span class="p">:</span> <span class="s2">&quot;$args&quot;</span><span class="p">,</span> <span class="nt">&quot;request_length&quot;</span><span class="p">:</span> <span class="err">$request_length</span><span class="p">,</span> <span class="nt">&quot;duration&quot;</span><span class="p">:</span> <span class="err">$request_time</span><span class="p">,</span><span class="nt">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;$request_method&quot;</span><span class="p">,</span> <span class="nt">&quot;http_referrer&quot;</span><span class="p">:</span> <span class="s2">&quot;$http_referer&quot;</span><span class="p">,</span>
   <span class="nt">&quot;http_user_agent&quot;</span><span class="p">:</span> <span class="s2">&quot;$http_user_agent&quot;</span> <span class="p">}</span><span class="err">&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>Please check the <a href="../log-format/">log-format</a> for definition of each field.</p>
 <h2 id="log-format-stream">log-format-stream<a class="headerlink" href="#log-format-stream" title="Permanent link"> ¶</a></h2>
@@ -4257,7 +4257,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <h2 id="ssl-ciphers">ssl-ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link"> ¶</a></h2>
 <p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers">ciphers</a> list to enable. The ciphers are specified in the format understood by the OpenSSL library.</p>
 <p>The default cipher list is:
- <code class="codehilite">ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256</code>.</p>
+ <code class="codehilite"><span class="c">ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256</span></code>.</p>
 <p>The ordering of a ciphersuite is very important because it decides which algorithms are going to be selected in priority. The recommendation above prioritizes algorithms that provide perfect <a href="https://wiki.mozilla.org/Security/Server_Side_TLS#Forward_Secrecy">forward secrecy</a>.</p>
 <p>Please check the <a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla SSL Configuration Generator</a>.</p>
 <h2 id="ssl-ecdh-curve">ssl-ecdh-curve<a class="headerlink" href="#ssl-ecdh-curve" title="Permanent link"> ¶</a></h2>
@@ -4273,12 +4273,12 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <li><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam">http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam</a></li>
 </ul>
 <h2 id="ssl-protocols">ssl-protocols<a class="headerlink" href="#ssl-protocols" title="Permanent link"> ¶</a></h2>
-<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols">SSL protocols</a> to use. The default is: <code class="codehilite">TLSv1.2</code>.</p>
-<p>Please check the result of the configuration using <code class="codehilite">https://ssllabs.com/ssltest/analyze.html</code> or <code class="codehilite">https://testssl.sh</code>.</p>
+<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols">SSL protocols</a> to use. The default is: <code class="codehilite"><span class="err">TLSv1.2</span></code>.</p>
+<p>Please check the result of the configuration using <code class="codehilite"><span class="c">https://ssllabs.com/ssltest/analyze.html</span></code> or <code class="codehilite"><span class="c">https://testssl.sh</span></code>.</p>
 <h2 id="ssl-early-data">ssl-early-data<a class="headerlink" href="#ssl-early-data" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables TLS 1.3 <a href="https://tools.ietf.org/html/rfc8446#section-2.3">early data</a></p>
-<p>This requires <code class="codehilite">ssl-protocols</code> to have <code class="codehilite">TLSv1.3</code> enabled.</p>
-<p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data">ssl_early_data</a>. The default is: <code class="codehilite">false</code>.</p>
+<p>This requires <code class="codehilite"><span class="err">ssl-protocols</span></code> to have <code class="codehilite"><span class="err">TLSv1.3</span></code> enabled.</p>
+<p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data">ssl_early_data</a>. The default is: <code class="codehilite"><span class="err">false</span></code>.</p>
 <h2 id="ssl-session-cache">ssl-session-cache<a class="headerlink" href="#ssl-session-cache" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables the use of shared <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache">SSL cache</a> among worker processes.</p>
 <h2 id="ssl-session-cache-size">ssl-session-cache-size<a class="headerlink" href="#ssl-session-cache-size" title="Permanent link"> ¶</a></h2>
@@ -4287,7 +4287,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <p>Enables or disables session resumption through <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session tickets</a>.</p>
 <h2 id="ssl-session-ticket-key">ssl-session-ticket-key<a class="headerlink" href="#ssl-session-ticket-key" title="Permanent link"> ¶</a></h2>
 <p>Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
-To create a ticket: <code class="codehilite">openssl rand 80 | openssl enc -A -base64</code></p>
+To create a ticket: <code class="codehilite"><span class="err">openssl rand 80 | openssl enc -A -base64</span></code></p>
 <p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session ticket-key</a>, by default, a randomly generated key is used.</p>
 <h2 id="ssl-session-timeout">ssl-session-timeout<a class="headerlink" href="#ssl-session-timeout" title="Permanent link"> ¶</a></h2>
 <p>Sets the time during which a client may <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout">reuse the session</a> parameters stored in a cache.</p>
@@ -4310,9 +4310,9 @@ To create a ticket: <code class="codehilite">openssl rand 80 | openssl enc -A -b
 </blockquote>
 <h2 id="use-geoip2">use-geoip2<a class="headerlink" href="#use-geoip2" title="Permanent link"> ¶</a></h2>
 <p>Enables the <a href="https://github.com/leev/ngx_http_geoip2_module">geoip2 module</a> for NGINX.
-Since <code class="codehilite">0.27.0</code> and due to a <a href="https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases">change in the MaxMind databases</a> a license is required to have access to the databases.
-For this reason, it is required to define a new flag <code class="codehilite">--maxmind-license-key</code> in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
-Alternatively, it is possible to use a volume to mount the files <code class="codehilite">/etc/nginx/geoip/GeoLite2-City.mmdb</code> and <code class="codehilite">/etc/nginx/geoip/GeoLite2-ASN.mmdb</code>, avoiding the overhead of the download.</p>
+Since <code class="codehilite"><span class="err">0.27.0</span></code> and due to a <a href="https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases">change in the MaxMind databases</a> a license is required to have access to the databases.
+For this reason, it is required to define a new flag <code class="codehilite"><span class="err">--maxmind-license-key</span></code> in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
+Alternatively, it is possible to use a volume to mount the files <code class="codehilite"><span class="err">/etc/nginx/geoip/GeoLite2-City.mmdb</span></code> and <code class="codehilite"><span class="err">/etc/nginx/geoip/GeoLite2-ASN.mmdb</span></code>, avoiding the overhead of the download.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>If the feature is enabled but the files are missing, GeoIP2 will not be enabled.</p>
@@ -4320,7 +4320,7 @@ Alternatively, it is possible to use a volume to mount the files <code class="co
 <p><em><strong>default:</strong></em> false</p>
 <h2 id="enable-brotli">enable-brotli<a class="headerlink" href="#enable-brotli" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables compression of HTTP responses using the <a href="https://github.com/google/ngx_brotli">"brotli" module</a>.
-The default mime type list to compress is: <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>. <em><strong>default:</strong></em> is disabled</p>
+The default mime type list to compress is: <code class="codehilite"><span class="err">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</span></code>. <em><strong>default:</strong></em> is disabled</p>
 <blockquote>
 <p><strong>Note:</strong> Brotli does not works in Safari &lt; 11. For more information see <a href="https://caniuse.com/#feat=brotli">https://caniuse.com/#feat=brotli</a></p>
 </blockquote>
@@ -4328,14 +4328,14 @@ The default mime type list to compress is: <code class="codehilite">application/
 <p>Sets the Brotli Compression Level that will be used. <em><strong>default:</strong></em> 4</p>
 <h2 id="brotli-types">brotli-types<a class="headerlink" href="#brotli-types" title="Permanent link"> ¶</a></h2>
 <p>Sets the MIME Types that will be compressed on-the-fly by brotli.
-<em><strong>default:</strong></em> <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code></p>
+<em><strong>default:</strong></em> <code class="codehilite"><span class="err">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</span></code></p>
 <h2 id="use-http2">use-http2<a class="headerlink" href="#use-http2" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_v2_module.html">HTTP/2</a> support in secure connections.</p>
 <h2 id="gzip-level">gzip-level<a class="headerlink" href="#gzip-level" title="Permanent link"> ¶</a></h2>
 <p>Sets the gzip Compression Level that will be used. <em><strong>default:</strong></em> 5</p>
 <h2 id="gzip-types">gzip-types<a class="headerlink" href="#gzip-types" title="Permanent link"> ¶</a></h2>
-<p>Sets the MIME types in addition to "text/html" to compress. The special value "*" matches any MIME type. Responses with the "text/html" type are always compressed if <code class="codehilite">[use-gzip](#use-gzip)</code> is enabled.
-<em><strong>default:</strong></em> <code class="codehilite">application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>.</p>
+<p>Sets the MIME types in addition to "text/html" to compress. The special value "*" matches any MIME type. Responses with the "text/html" type are always compressed if <code class="codehilite"><span class="err">[use-gzip](#use-gzip)</span></code> is enabled.
+<em><strong>default:</strong></em> <code class="codehilite"><span class="err">application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</span></code>.</p>
 <h2 id="worker-processes">worker-processes<a class="headerlink" href="#worker-processes" title="Permanent link"> ¶</a></h2>
 <p>Sets the number of <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_processes">worker processes</a>.
 The default of "auto" means number of available CPU cores.</p>
@@ -4344,7 +4344,7 @@ The default of "auto" means number of available CPU cores.</p>
 By default worker processes are not bound to any specific CPUs. The value can be:</p>
 <ul>
 <li>"": empty string indicate no affinity is applied.</li>
-<li>cpumask: e.g. <code class="codehilite">0001 0010 0100 1000</code> to bind processes to specific cpus.</li>
+<li>cpumask: e.g. <code class="codehilite"><span class="err">0001 0010 0100 1000</span></code> to bind processes to specific cpus.</li>
 <li>auto: binding worker processes automatically to available CPUs.</li>
 </ul>
 <h2 id="worker-shutdown-timeout">worker-shutdown-timeout<a class="headerlink" href="#worker-shutdown-timeout" title="Permanent link"> ¶</a></h2>
@@ -4356,10 +4356,10 @@ The value can either be:</p>
 <li>round_robin: to use the default round robin loadbalancer</li>
 <li>ewma: to use the Peak EWMA method for routing (<a href="https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/balancer/ewma.lua">implementation</a>)</li>
 </ul>
-<p>The default is <code class="codehilite">round_robin</code>.</p>
+<p>The default is <code class="codehilite"><span class="err">round_robin</span></code>.</p>
 <ul>
-<li>To load balance using consistent hashing of IP or other variables, consider the <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> annotation.</li>
-<li>To load balance using session cookies, consider the <code class="codehilite">nginx.ingress.kubernetes.io/affinity</code> annotation.</li>
+<li>To load balance using consistent hashing of IP or other variables, consider the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/upstream-hash-by</span></code> annotation.</li>
+<li>To load balance using session cookies, consider the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/affinity</span></code> annotation.</li>
 </ul>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/load_balancing.html">http://nginx.org/en/docs/http/load_balancing.html</a></p>
@@ -4402,8 +4402,8 @@ requests is made, the connection is closed.
 <h2 id="bind-address">bind-address<a class="headerlink" href="#bind-address" title="Permanent link"> ¶</a></h2>
 <p>Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.</p>
 <h2 id="use-forwarded-headers">use-forwarded-headers<a class="headerlink" href="#use-forwarded-headers" title="Permanent link"> ¶</a></h2>
-<p>If true, NGINX passes the incoming <code class="codehilite">X-Forwarded-*</code> headers to upstreams. Use this option when NGINX is behind another L7 proxy / load balancer that is setting these headers.</p>
-<p>If false, NGINX ignores incoming <code class="codehilite">X-Forwarded-*</code> headers, filling them with the request information it sees. Use this option if NGINX is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.</p>
+<p>If true, NGINX passes the incoming <code class="codehilite"><span class="err">X-Forwarded-*</span></code> headers to upstreams. Use this option when NGINX is behind another L7 proxy / load balancer that is setting these headers.</p>
+<p>If false, NGINX ignores incoming <code class="codehilite"><span class="err">X-Forwarded-*</span></code> headers, filling them with the request information it sees. Use this option if NGINX is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.</p>
 <h2 id="forwarded-for-header">forwarded-for-header<a class="headerlink" href="#forwarded-for-header" title="Permanent link"> ¶</a></h2>
 <p>Sets the header field for identifying the originating IP address of a client. <em><strong>default:</strong></em> X-Forwarded-For</p>
 <h2 id="compute-full-forwarded-for">compute-full-forwarded-for<a class="headerlink" href="#compute-full-forwarded-for" title="Permanent link"> ¶</a></h2>
@@ -4458,10 +4458,10 @@ Leave blank to use default value (localhost). <em><strong>default:</strong></em>
 <p>Overrides the operation naem to use for any traces crated. <em><strong>default:</strong></em> nginx.handle</p>
 <h2 id="datadog-priority-sampling">datadog-priority-sampling<a class="headerlink" href="#datadog-priority-sampling" title="Permanent link"> ¶</a></h2>
 <p>Specifies to use client-side sampling.
-If true disables client-side sampling (thus ignoring <code class="codehilite">sample_rate</code>) and enables distributed priority sampling, where traces are sampled based on a combination of user-assigned priorities and configuration from the agent. <em><strong>default:</strong></em> true</p>
+If true disables client-side sampling (thus ignoring <code class="codehilite"><span class="err">sample_rate</span></code>) and enables distributed priority sampling, where traces are sampled based on a combination of user-assigned priorities and configuration from the agent. <em><strong>default:</strong></em> true</p>
 <h2 id="datadog-sample-rate">datadog-sample-rate<a class="headerlink" href="#datadog-sample-rate" title="Permanent link"> ¶</a></h2>
 <p>Specifies sample rate for any traces created.
-This is effective only when <code class="codehilite">datadog-priority-sampling</code> is <code class="codehilite">false</code> <em><strong>default:</strong></em> 1.0</p>
+This is effective only when <code class="codehilite"><span class="err">datadog-priority-sampling</span></code> is <code class="codehilite"><span class="err">false</span></code> <em><strong>default:</strong></em> 1.0</p>
 <h2 id="main-snippet">main-snippet<a class="headerlink" href="#main-snippet" title="Permanent link"> ¶</a></h2>
 <p>Adds custom configuration to the main section of the nginx configuration.</p>
 <h2 id="http-snippet">http-snippet<a class="headerlink" href="#http-snippet" title="Permanent link"> ¶</a></h2>
@@ -4474,7 +4474,7 @@ This is effective only when <code class="codehilite">datadog-priority-sampling</
 <h2 id="custom-http-errors">custom-http-errors<a class="headerlink" href="#custom-http-errors" title="Permanent link"> ¶</a></h2>
 <p>Enables which HTTP codes should be passed for processing with the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page">error_page directive</a></p>
 <p>Setting at least one code also enables <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors">proxy_intercept_errors</a> which are required to process error_page.</p>
-<p>Example usage: <code class="codehilite">custom-http-errors: 404,415</code></p>
+<p>Example usage: <code class="codehilite"><span class="c">custom-http-errors: 404,415</span></code></p>
 <h2 id="proxy-body-size">proxy-body-size<a class="headerlink" href="#proxy-body-size" title="Permanent link"> ¶</a></h2>
 <p>Sets the maximum allowed size of the client request body.
 See NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size">client_max_body_size</a>.</p>
@@ -4508,10 +4508,10 @@ See NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#clien
 <p>Sets the global value of redirects (301) to HTTPS if the server has a TLS certificate (defined in an Ingress rule).
 <em><strong>default:</strong></em> "true"</p>
 <h2 id="whitelist-source-range">whitelist-source-range<a class="headerlink" href="#whitelist-source-range" title="Permanent link"> ¶</a></h2>
-<p>Sets the default whitelisted IPs for each <code class="codehilite">server</code> block. This can be overwritten by an annotation on an Ingress rule.
+<p>Sets the default whitelisted IPs for each <code class="codehilite"><span class="err">server</span></code> block. This can be overwritten by an annotation on an Ingress rule.
 See <a href="http://nginx.org/en/docs/http/ngx_http_access_module.html">ngx_http_access_module</a>.</p>
 <h2 id="skip-access-log-urls">skip-access-log-urls<a class="headerlink" href="#skip-access-log-urls" title="Permanent link"> ¶</a></h2>
-<p>Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like <code class="codehilite">/health</code> or <code class="codehilite">health-check</code> that make "complex" reading the logs. <em><strong>default:</strong></em> is empty</p>
+<p>Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like <code class="codehilite"><span class="err">/health</span></code> or <code class="codehilite"><span class="err">health-check</span></code> that make "complex" reading the logs. <em><strong>default:</strong></em> is empty</p>
 <h2 id="limit-rate">limit-rate<a class="headerlink" href="#limit-rate" title="Permanent link"> ¶</a></h2>
 <p>Limits the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.</p>
 <p><em>References:</em>
@@ -4520,13 +4520,13 @@ See <a href="http://nginx.org/en/docs/http/ngx_http_access_module.html">ngx_http
 <p>Sets the initial amount after which the further transmission of a response to a client will be rate limited.</p>
 <h2 id="lua-shared-dicts">lua-shared-dicts<a class="headerlink" href="#lua-shared-dicts" title="Permanent link"> ¶</a></h2>
 <p>Customize default Lua shared dictionaries or define more. You can use the following syntax to do so:</p>
-<div class="codehilite"><pre><span></span>lua-shared-dicts: &quot;&lt;my dict name&gt;: &lt;my dict size&gt;, [&lt;my dict name&gt;: &lt;my dict size&gt;], ...&quot;
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="c">lua-shared-dicts: &quot;&lt;my dict name&gt;: &lt;my dict size&gt;, [&lt;my dict name&gt;: &lt;my dict size&gt;], ...&quot;</span>
+</code></pre></div>
 
-<p>For example following will set default <code class="codehilite">certificate_data</code> dictionary to <code class="codehilite">100M</code> and will introduce a new dictionary called
-<code class="codehilite">my_custom_plugin</code>:</p>
-<div class="codehilite"><pre><span></span>lua-shared-dicts: &quot;certificate_data: 100, my_custom_plugin: 5&quot;
-</pre></div>
+<p>For example following will set default <code class="codehilite"><span class="err">certificate_data</span></code> dictionary to <code class="codehilite"><span class="err">100M</span></code> and will introduce a new dictionary called
+<code class="codehilite"><span class="err">my_custom_plugin</span></code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="c">lua-shared-dicts: &quot;certificate_data: 100, my_custom_plugin: 5&quot;</span>
+</code></pre></div>
 
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after">http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after</a></p>
@@ -4549,34 +4549,34 @@ Supported codes are <a href="https://developer.mozilla.org/docs/Web/HTTP/Status/
 <em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>
 <h2 id="global-auth-url">global-auth-url<a class="headerlink" href="#global-auth-url" title="Permanent link"> ¶</a></h2>
 <p>A url to an existing service that provides authentication for all the locations.
-Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.kubernetes.io/auth-url</code>.
-Locations that should not get authenticated can be listed using <code class="codehilite">no-auth-locations</code> See <a href="#no-auth-locations">no-auth-locations</a>. In addition, each service can be excluded from authentication via annotation <code class="codehilite">enable-global-auth</code> set to "false".
+Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-url</span></code>.
+Locations that should not get authenticated can be listed using <code class="codehilite"><span class="err">no-auth-locations</span></code> See <a href="#no-auth-locations">no-auth-locations</a>. In addition, each service can be excluded from authentication via annotation <code class="codehilite"><span class="err">enable-global-auth</span></code> set to "false".
 <em><strong>default:</strong></em> ""</p>
 <p><em>References:</em> <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#external-authentication">https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#external-authentication</a></p>
 <h2 id="global-auth-method">global-auth-method<a class="headerlink" href="#global-auth-method" title="Permanent link"> ¶</a></h2>
 <p>A HTTP method to use for an existing service that provides authentication for all the locations.
-Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.kubernetes.io/auth-method</code>.
+Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-method</span></code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-signin">global-auth-signin<a class="headerlink" href="#global-auth-signin" title="Permanent link"> ¶</a></h2>
 <p>Sets the location of the error page for an existing service that provides authentication for all the locations.
-Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.kubernetes.io/auth-signin</code>.
+Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-signin</span></code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-response-headers">global-auth-response-headers<a class="headerlink" href="#global-auth-response-headers" title="Permanent link"> ¶</a></h2>
 <p>Sets the headers to pass to backend once authentication request completes. Applied to all the locations.
-Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.kubernetes.io/auth-response-headers</code>.
+Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-response-headers</span></code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-request-redirect">global-auth-request-redirect<a class="headerlink" href="#global-auth-request-redirect" title="Permanent link"> ¶</a></h2>
 <p>Sets the X-Auth-Request-Redirect header value. Applied to all the locations.
-Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.kubernetes.io/auth-request-redirect</code>.
+Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-request-redirect</span></code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-snippet">global-auth-snippet<a class="headerlink" href="#global-auth-snippet" title="Permanent link"> ¶</a></h2>
 <p>Sets a custom snippet to use with external authentication. Applied to all the locations.
-Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.kubernetes.io/auth-request-redirect</code>.
+Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-request-redirect</span></code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-cache-key">global-auth-cache-key<a class="headerlink" href="#global-auth-cache-key" title="Permanent link"> ¶</a></h2>
-<p>Enables caching for global auth requests. Specify a lookup key for auth responses, e.g. <code class="codehilite">$remote_user$http_authorization</code>.</p>
+<p>Enables caching for global auth requests. Specify a lookup key for auth responses, e.g. <code class="codehilite"><span class="err">$remote_user$http_authorization</span></code>.</p>
 <h2 id="global-auth-cache-duration">global-auth-cache-duration<a class="headerlink" href="#global-auth-cache-duration" title="Permanent link"> ¶</a></h2>
-<p>Set a caching time for auth responses based on their response codes, e.g. <code class="codehilite">200 202 30m</code>. See <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid">proxy_cache_valid</a> for details. You may specify multiple, comma-separated values: <code class="codehilite">200 202 10m, 401 5m</code>. defaults to <code class="codehilite">200 202 401 5m</code>.</p>
+<p>Set a caching time for auth responses based on their response codes, e.g. <code class="codehilite"><span class="err">200 202 30m</span></code>. See <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid">proxy_cache_valid</a> for details. You may specify multiple, comma-separated values: <code class="codehilite"><span class="err">200 202 10m, 401 5m</span></code>. defaults to <code class="codehilite"><span class="err">200 202 401 5m</span></code>.</p>
 <h2 id="no-auth-locations">no-auth-locations<a class="headerlink" href="#no-auth-locations" title="Permanent link"> ¶</a></h2>
 <p>A comma-separated list of locations that should not get authenticated.
 <em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>
@@ -4586,16 +4586,17 @@ Similar to the Ingress rule annotation <code class="codehilite">nginx.ingress.ku
 <a href="http://nginx.org/en/docs/http/ngx_http_access_module.html#deny">http://nginx.org/en/docs/http/ngx_http_access_module.html#deny</a></p>
 <h2 id="block-user-agents">block-user-agents<a class="headerlink" href="#block-user-agents" title="Permanent link"> ¶</a></h2>
 <p>A comma-separated list of User-Agent, request from which have to be blocked globally.
-It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code class="codehilite">map</code> Nginx directive documentation.</p>
+It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code class="codehilite"><span class="err">map</span></code> Nginx directive documentation.</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#map">http://nginx.org/en/docs/http/ngx_http_map_module.html#map</a></p>
 <h2 id="block-referers">block-referers<a class="headerlink" href="#block-referers" title="Permanent link"> ¶</a></h2>
 <p>A comma-separated list of Referers, request from which have to be blocked globally.
-It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code class="codehilite">map</code> Nginx directive documentation.</p>
+It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code class="codehilite"><span class="err">map</span></code> Nginx directive documentation.</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#map">http://nginx.org/en/docs/http/ngx_http_map_module.html#map</a></p>
                 
                   
+                
                 
               
               
@@ -4651,9 +4652,9 @@ It's possible to use here full strings and regular expressions. More details abo
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -4663,7 +4664,7 @@ It's possible to use here full strings and regular expressions. More details abo
       
     </div>
     
-      <script src="../../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
       

@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#role-based-access-control-rbac" tabindex="1" class="md-skip">
+      <a href="#role-based-access-control-rbac" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1280,40 +1280,40 @@
 <p>This example applies to nginx-ingress-controllers being deployed in an environment with RBAC enabled.</p>
 <p>Role Based Access Control is comprised of four layers:</p>
 <ol>
-<li><code class="codehilite">ClusterRole</code> - permissions assigned to a role that apply to an entire cluster</li>
-<li><code class="codehilite">ClusterRoleBinding</code> - binding a ClusterRole to a specific account</li>
-<li><code class="codehilite">Role</code> - permissions assigned to a role that apply to a specific namespace</li>
-<li><code class="codehilite">RoleBinding</code> - binding a Role to a specific account</li>
+<li><code class="codehilite"><span class="err">ClusterRole</span></code> - permissions assigned to a role that apply to an entire cluster</li>
+<li><code class="codehilite"><span class="err">ClusterRoleBinding</span></code> - binding a ClusterRole to a specific account</li>
+<li><code class="codehilite"><span class="err">Role</span></code> - permissions assigned to a role that apply to a specific namespace</li>
+<li><code class="codehilite"><span class="err">RoleBinding</span></code> - binding a Role to a specific account</li>
 </ol>
 <p>In order for RBAC to be applied to an nginx-ingress-controller, that controller
-should be assigned to a <code class="codehilite">ServiceAccount</code>.  That <code class="codehilite">ServiceAccount</code> should be
-bound to the <code class="codehilite">Role</code>s and <code class="codehilite">ClusterRole</code>s defined for the nginx-ingress-controller.</p>
+should be assigned to a <code class="codehilite"><span class="err">ServiceAccount</span></code>.  That <code class="codehilite"><span class="err">ServiceAccount</span></code> should be
+bound to the <code class="codehilite"><span class="err">Role</span></code>s and <code class="codehilite"><span class="err">ClusterRole</span></code>s defined for the nginx-ingress-controller.</p>
 <h2 id="service-accounts-created-in-this-example">Service Accounts created in this example<a class="headerlink" href="#service-accounts-created-in-this-example" title="Permanent link"> ¶</a></h2>
-<p>One ServiceAccount is created in this example, <code class="codehilite">nginx-ingress-serviceaccount</code>.</p>
+<p>One ServiceAccount is created in this example, <code class="codehilite"><span class="err">nginx-ingress-serviceaccount</span></code>.</p>
 <h2 id="permissions-granted-in-this-example">Permissions Granted in this example<a class="headerlink" href="#permissions-granted-in-this-example" title="Permanent link"> ¶</a></h2>
 <p>There are two sets of permissions defined in this example.  Cluster-wide
-permissions defined by the <code class="codehilite">ClusterRole</code> named <code class="codehilite">nginx-ingress-clusterrole</code>, and
-namespace specific permissions defined by the <code class="codehilite">Role</code> named <code class="codehilite">nginx-ingress-role</code>.</p>
+permissions defined by the <code class="codehilite"><span class="err">ClusterRole</span></code> named <code class="codehilite"><span class="err">nginx-ingress-clusterrole</span></code>, and
+namespace specific permissions defined by the <code class="codehilite"><span class="err">Role</span></code> named <code class="codehilite"><span class="err">nginx-ingress-role</span></code>.</p>
 <h3 id="cluster-permissions">Cluster Permissions<a class="headerlink" href="#cluster-permissions" title="Permanent link"> ¶</a></h3>
 <p>These permissions are granted in order for the nginx-ingress-controller to be
 able to function as an ingress across the cluster.  These permissions are
-granted to the ClusterRole named <code class="codehilite">nginx-ingress-clusterrole</code></p>
+granted to the ClusterRole named <code class="codehilite"><span class="err">nginx-ingress-clusterrole</span></code></p>
 <ul>
-<li><code class="codehilite">configmaps</code>, <code class="codehilite">endpoints</code>, <code class="codehilite">nodes</code>, <code class="codehilite">pods</code>, <code class="codehilite">secrets</code>: list, watch</li>
-<li><code class="codehilite">nodes</code>: get</li>
-<li><code class="codehilite">services</code>, <code class="codehilite">ingresses</code>: get, list, watch</li>
-<li><code class="codehilite">events</code>: create, patch</li>
-<li><code class="codehilite">ingresses/status</code>: update</li>
+<li><code class="codehilite"><span class="err">configmaps</span></code>, <code class="codehilite"><span class="err">endpoints</span></code>, <code class="codehilite"><span class="err">nodes</span></code>, <code class="codehilite"><span class="err">pods</span></code>, <code class="codehilite"><span class="err">secrets</span></code>: list, watch</li>
+<li><code class="codehilite"><span class="err">nodes</span></code>: get</li>
+<li><code class="codehilite"><span class="err">services</span></code>, <code class="codehilite"><span class="err">ingresses</span></code>: get, list, watch</li>
+<li><code class="codehilite"><span class="err">events</span></code>: create, patch</li>
+<li><code class="codehilite"><span class="err">ingresses/status</span></code>: update</li>
 </ul>
 <h3 id="namespace-permissions">Namespace Permissions<a class="headerlink" href="#namespace-permissions" title="Permanent link"> ¶</a></h3>
 <p>These permissions are granted specific to the nginx-ingress namespace.  These
-permissions are granted to the Role named <code class="codehilite">nginx-ingress-role</code></p>
+permissions are granted to the Role named <code class="codehilite"><span class="err">nginx-ingress-role</span></code></p>
 <ul>
-<li><code class="codehilite">configmaps</code>, <code class="codehilite">pods</code>, <code class="codehilite">secrets</code>: get</li>
-<li><code class="codehilite">endpoints</code>: get</li>
+<li><code class="codehilite"><span class="err">configmaps</span></code>, <code class="codehilite"><span class="err">pods</span></code>, <code class="codehilite"><span class="err">secrets</span></code>: get</li>
+<li><code class="codehilite"><span class="err">endpoints</span></code>: get</li>
 </ul>
 <p>Furthermore to support leader-election, the nginx-ingress-controller needs to
-have access to a <code class="codehilite">configmap</code> using the resourceName <code class="codehilite">ingress-controller-leader-nginx</code></p>
+have access to a <code class="codehilite"><span class="err">configmap</span></code> using the resourceName <code class="codehilite"><span class="err">ingress-controller-leader-nginx</span></code></p>
 <blockquote>
 <p>Note that resourceNames can NOT be used to limit requests using the “create”
 verb because authorizers only have access to information that can be obtained
@@ -1321,26 +1321,27 @@ from the request URL, method, and headers (resource names in a “create” requ
 are part of the request body).</p>
 </blockquote>
 <ul>
-<li><code class="codehilite">configmaps</code>: get, update (for resourceName <code class="codehilite">ingress-controller-leader-nginx</code>)</li>
-<li><code class="codehilite">configmaps</code>: create</li>
+<li><code class="codehilite"><span class="err">configmaps</span></code>: get, update (for resourceName <code class="codehilite"><span class="err">ingress-controller-leader-nginx</span></code>)</li>
+<li><code class="codehilite"><span class="err">configmaps</span></code>: create</li>
 </ul>
-<p>This resourceName is the concatenation of the <code class="codehilite">election-id</code> and the
-<code class="codehilite">ingress-class</code> as defined by the ingress-controller, which defaults to:</p>
+<p>This resourceName is the concatenation of the <code class="codehilite"><span class="err">election-id</span></code> and the
+<code class="codehilite"><span class="err">ingress-class</span></code> as defined by the ingress-controller, which defaults to:</p>
 <ul>
-<li><code class="codehilite">election-id</code>: <code class="codehilite">ingress-controller-leader</code></li>
-<li><code class="codehilite">ingress-class</code>: <code class="codehilite">nginx</code></li>
-<li><code class="codehilite">resourceName</code> : <code class="codehilite">&lt;election-id&gt;-&lt;ingress-class&gt;</code></li>
+<li><code class="codehilite"><span class="err">election-id</span></code>: <code class="codehilite"><span class="err">ingress-controller-leader</span></code></li>
+<li><code class="codehilite"><span class="err">ingress-class</span></code>: <code class="codehilite"><span class="err">nginx</span></code></li>
+<li><code class="codehilite"><span class="err">resourceName</span></code> : <code class="codehilite"><span class="err">&lt;election-id&gt;-&lt;ingress-class&gt;</span></code></li>
 </ul>
 <p>Please adapt accordingly if you overwrite either parameter when launching the
 nginx-ingress-controller.</p>
 <h3 id="bindings">Bindings<a class="headerlink" href="#bindings" title="Permanent link"> ¶</a></h3>
-<p>The ServiceAccount <code class="codehilite">nginx-ingress-serviceaccount</code> is bound to the Role
-<code class="codehilite">nginx-ingress-role</code> and the ClusterRole <code class="codehilite">nginx-ingress-clusterrole</code>.</p>
+<p>The ServiceAccount <code class="codehilite"><span class="err">nginx-ingress-serviceaccount</span></code> is bound to the Role
+<code class="codehilite"><span class="err">nginx-ingress-role</span></code> and the ClusterRole <code class="codehilite"><span class="err">nginx-ingress-clusterrole</span></code>.</p>
 <p>The serviceAccountName associated with the containers in the deployment must
 match the serviceAccount. The namespace references in the Deployment metadata, 
 container arguments, and POD_NAMESPACE should be in the nginx-ingress namespace.</p>
                 
                   
+                
                 
               
               
@@ -1396,9 +1397,9 @@ container arguments, and POD_NAMESPACE should be in the nginx-ingress namespace.
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1408,7 +1409,7 @@ container arguments, and POD_NAMESPACE should be in the nginx-ingress namespace.
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
       

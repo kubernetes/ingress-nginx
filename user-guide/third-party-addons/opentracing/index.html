@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#opentracing" tabindex="1" class="md-skip">
+      <a href="#opentracing" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1255,97 +1255,97 @@
 By default this feature is disabled.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link"> ¶</a></h2>
 <p>To enable the instrumentation we must enable OpenTracing in the configuration ConfigMap:
-<div class="codehilite"><pre><span></span><span class="n">data</span><span class="o">:</span>
+<div class="codehilite"><pre><span></span><code><span class="n">data</span><span class="o">:</span>
   <span class="n">enable</span><span class="o">-</span><span class="n">opentracing</span><span class="o">:</span> <span class="s2">&quot;true&quot;</span>
-</pre></div></p>
+</code></pre></div></p>
 <p>To enable or disable instrumentation for a single Ingress, use
-the <code class="codehilite">enable-opentracing</code> annotation:
-<div class="codehilite"><pre><span></span><span class="n">kind</span><span class="o">:</span> <span class="n">Ingress</span>
+the <code class="codehilite"><span class="err">enable-opentracing</span></code> annotation:
+<div class="codehilite"><pre><span></span><code><span class="n">kind</span><span class="o">:</span> <span class="n">Ingress</span>
 <span class="n">metadata</span><span class="o">:</span>
   <span class="n">annotations</span><span class="o">:</span>
     <span class="n">nginx</span><span class="o">.</span><span class="na">ingress</span><span class="o">.</span><span class="na">kubernetes</span><span class="o">.</span><span class="na">io</span><span class="o">/</span><span class="n">enable</span><span class="o">-</span><span class="n">opentracing</span><span class="o">:</span> <span class="s2">&quot;true&quot;</span>
-</pre></div></p>
+</code></pre></div></p>
 <p>We must also set the host to use when uploading traces:</p>
-<p><div class="codehilite"><pre><span></span>zipkin-collector-host: zipkin.default.svc.cluster.local
-jaeger-collector-host: jaeger-agent.default.svc.cluster.local
-datadog-collector-host: datadog-agent.default.svc.cluster.local
-</pre></div>
-NOTE: While the option is called <code class="codehilite">jaeger-collector-host</code>, you will need to point this to a <code class="codehilite">jaeger-agent</code>, and not the <code class="codehilite">jaeger-collector</code> component.</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c">zipkin-collector-host: zipkin.default.svc.cluster.local</span>
+<span class="c">jaeger-collector-host: jaeger-agent.default.svc.cluster.local</span>
+<span class="c">datadog-collector-host: datadog-agent.default.svc.cluster.local</span>
+</code></pre></div>
+NOTE: While the option is called <code class="codehilite"><span class="err">jaeger-collector-host</span></code>, you will need to point this to a <code class="codehilite"><span class="err">jaeger-agent</span></code>, and not the <code class="codehilite"><span class="err">jaeger-collector</span></code> component.</p>
 <p>Next you will need to deploy a distributed tracing system which uses OpenTracing.
 <a href="https://github.com/openzipkin/zipkin">Zipkin</a> and
 <a href="https://github.com/jaegertracing/jaeger">Jaeger</a> and
 <a href="https://github.com/DataDog/dd-opentracing-cpp">Datadog</a>
 have been tested.</p>
 <p>Other optional configuration options:
-<div class="codehilite"><pre><span></span># specifies the port to use when uploading traces, Default: 9411
-zipkin-collector-port
+<div class="codehilite"><pre><span></span><code><span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="n">port</span> <span class="k">to</span> <span class="n">use</span> <span class="k">when</span> <span class="n">uploading</span> <span class="n">traces</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="mi">9411</span>
+<span class="n">zipkin</span><span class="o">-</span><span class="n">collector</span><span class="o">-</span><span class="n">port</span>
 
-# specifies the service name to use for any traces created, Default: nginx
-zipkin-service-name
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="n">service</span> <span class="n">name</span> <span class="k">to</span> <span class="n">use</span> <span class="k">for</span> <span class="k">any</span> <span class="n">traces</span> <span class="n">created</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="n">nginx</span>
+<span class="n">zipkin</span><span class="o">-</span><span class="n">service</span><span class="o">-</span><span class="n">name</span>
 
-# specifies sample rate for any traces created, Default: 1.0
-zipkin-sample-rate
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">sample</span> <span class="n">rate</span> <span class="k">for</span> <span class="k">any</span> <span class="n">traces</span> <span class="n">created</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span>
+<span class="n">zipkin</span><span class="o">-</span><span class="n">sample</span><span class="o">-</span><span class="n">rate</span>
 
-# specifies the port to use when uploading traces, Default: 6831
-jaeger-collector-port
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="n">port</span> <span class="k">to</span> <span class="n">use</span> <span class="k">when</span> <span class="n">uploading</span> <span class="n">traces</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="mi">6831</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">collector</span><span class="o">-</span><span class="n">port</span>
 
-# specifies the service name to use for any traces created, Default: nginx
-jaeger-service-name
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="n">service</span> <span class="n">name</span> <span class="k">to</span> <span class="n">use</span> <span class="k">for</span> <span class="k">any</span> <span class="n">traces</span> <span class="n">created</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="n">nginx</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">service</span><span class="o">-</span><span class="n">name</span>
 
-# specifies the sampler to be used when sampling traces.
-# The available samplers are: const, probabilistic, ratelimiting, remote, Default: const
-jaeger-sampler-type
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="n">sampler</span> <span class="k">to</span> <span class="n">be</span> <span class="n">used</span> <span class="k">when</span> <span class="n">sampling</span> <span class="n">traces</span><span class="p">.</span>
+<span class="o">#</span> <span class="n">The</span> <span class="n">available</span> <span class="n">samplers</span> <span class="k">are</span><span class="p">:</span> <span class="n">const</span><span class="p">,</span> <span class="n">probabilistic</span><span class="p">,</span> <span class="n">ratelimiting</span><span class="p">,</span> <span class="n">remote</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="n">const</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">sampler</span><span class="o">-</span><span class="k">type</span>
 
-# specifies the argument to be passed to the sampler constructor, Default: 1
-jaeger-sampler-param
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="n">argument</span> <span class="k">to</span> <span class="n">be</span> <span class="n">passed</span> <span class="k">to</span> <span class="n">the</span> <span class="n">sampler</span> <span class="k">constructor</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="mi">1</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">sampler</span><span class="o">-</span><span class="n">param</span>
 
-# Specifies the custom remote sampler host to be passed to the sampler constructor. Must be a valid URL.
-# Default: http://127.0.0.1
-jaeger-sampler-host
+<span class="o">#</span> <span class="n">Specifies</span> <span class="n">the</span> <span class="n">custom</span> <span class="n">remote</span> <span class="n">sampler</span> <span class="k">host</span> <span class="k">to</span> <span class="n">be</span> <span class="n">passed</span> <span class="k">to</span> <span class="n">the</span> <span class="n">sampler</span> <span class="k">constructor</span><span class="p">.</span> <span class="n">Must</span> <span class="n">be</span> <span class="n">a</span> <span class="k">valid</span> <span class="n">URL</span><span class="p">.</span>
+<span class="o">#</span> <span class="k">Default</span><span class="p">:</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">sampler</span><span class="o">-</span><span class="k">host</span>
 
-# Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. Default: 5778
-jaeger-sampler-port
+<span class="o">#</span> <span class="n">Specifies</span> <span class="n">the</span> <span class="n">custom</span> <span class="n">remote</span> <span class="n">sampler</span> <span class="n">port</span> <span class="k">to</span> <span class="n">be</span> <span class="n">passed</span> <span class="k">to</span> <span class="n">the</span> <span class="n">sampler</span> <span class="k">constructor</span><span class="p">.</span> <span class="n">Must</span> <span class="n">be</span> <span class="n">a</span> <span class="nb">number</span><span class="p">.</span> <span class="k">Default</span><span class="p">:</span> <span class="mi">5778</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">sampler</span><span class="o">-</span><span class="n">port</span>
 
-# Specifies the header name used for passing trace context. Must be a string. Default: uber-trace-id
-jaeger-trace-context-header-name
+<span class="o">#</span> <span class="n">Specifies</span> <span class="n">the</span> <span class="n">header</span> <span class="n">name</span> <span class="n">used</span> <span class="k">for</span> <span class="n">passing</span> <span class="n">trace</span> <span class="n">context</span><span class="p">.</span> <span class="n">Must</span> <span class="n">be</span> <span class="n">a</span> <span class="n">string</span><span class="p">.</span> <span class="k">Default</span><span class="p">:</span> <span class="n">uber</span><span class="o">-</span><span class="n">trace</span><span class="o">-</span><span class="n">id</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">trace</span><span class="o">-</span><span class="n">context</span><span class="o">-</span><span class="n">header</span><span class="o">-</span><span class="n">name</span>
 
-# Specifies the header name used for force sampling. Must be a string. Default: jaeger-debug-id
-jaeger-debug-header
+<span class="o">#</span> <span class="n">Specifies</span> <span class="n">the</span> <span class="n">header</span> <span class="n">name</span> <span class="n">used</span> <span class="k">for</span> <span class="k">force</span> <span class="n">sampling</span><span class="p">.</span> <span class="n">Must</span> <span class="n">be</span> <span class="n">a</span> <span class="n">string</span><span class="p">.</span> <span class="k">Default</span><span class="p">:</span> <span class="n">jaeger</span><span class="o">-</span><span class="n">debug</span><span class="o">-</span><span class="n">id</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">debug</span><span class="o">-</span><span class="n">header</span>
 
-# Specifies the header name used to submit baggage if there is no root span. Must be a string. Default: jaeger-baggage
-jaeger-baggage-header
+<span class="o">#</span> <span class="n">Specifies</span> <span class="n">the</span> <span class="n">header</span> <span class="n">name</span> <span class="n">used</span> <span class="k">to</span> <span class="n">submit</span> <span class="n">baggage</span> <span class="k">if</span> <span class="n">there</span> <span class="k">is</span> <span class="k">no</span> <span class="n">root</span> <span class="n">span</span><span class="p">.</span> <span class="n">Must</span> <span class="n">be</span> <span class="n">a</span> <span class="n">string</span><span class="p">.</span> <span class="k">Default</span><span class="p">:</span> <span class="n">jaeger</span><span class="o">-</span><span class="n">baggage</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">baggage</span><span class="o">-</span><span class="n">header</span>
 
-# Specifies the header prefix used to propagate baggage. Must be a string. Default: uberctx-
-jaeger-tracer-baggage-header-prefix
+<span class="o">#</span> <span class="n">Specifies</span> <span class="n">the</span> <span class="n">header</span> <span class="k">prefix</span> <span class="n">used</span> <span class="k">to</span> <span class="n">propagate</span> <span class="n">baggage</span><span class="p">.</span> <span class="n">Must</span> <span class="n">be</span> <span class="n">a</span> <span class="n">string</span><span class="p">.</span> <span class="k">Default</span><span class="p">:</span> <span class="n">uberctx</span><span class="o">-</span>
+<span class="n">jaeger</span><span class="o">-</span><span class="n">tracer</span><span class="o">-</span><span class="n">baggage</span><span class="o">-</span><span class="n">header</span><span class="o">-</span><span class="k">prefix</span>
 
-# specifies the port to use when uploading traces, Default 8126
-datadog-collector-port
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="n">port</span> <span class="k">to</span> <span class="n">use</span> <span class="k">when</span> <span class="n">uploading</span> <span class="n">traces</span><span class="p">,</span> <span class="k">Default</span> <span class="mi">8126</span>
+<span class="n">datadog</span><span class="o">-</span><span class="n">collector</span><span class="o">-</span><span class="n">port</span>
 
-# specifies the service name to use for any traces created, Default: nginx
-datadog-service-name
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="n">service</span> <span class="n">name</span> <span class="k">to</span> <span class="n">use</span> <span class="k">for</span> <span class="k">any</span> <span class="n">traces</span> <span class="n">created</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="n">nginx</span>
+<span class="n">datadog</span><span class="o">-</span><span class="n">service</span><span class="o">-</span><span class="n">name</span>
 
-# specifies the operation name to use for any traces collected, Default: nginx.handle
-datadog-operation-name-override
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">the</span> <span class="k">operation</span> <span class="n">name</span> <span class="k">to</span> <span class="n">use</span> <span class="k">for</span> <span class="k">any</span> <span class="n">traces</span> <span class="n">collected</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="n">nginx</span><span class="p">.</span><span class="n">handle</span>
+<span class="n">datadog</span><span class="o">-</span><span class="k">operation</span><span class="o">-</span><span class="n">name</span><span class="o">-</span><span class="n">override</span>
 
-# Specifies to use client-side sampling for distributed priority sampling and ignore sample rate, Default: true
-datadog-priority-sampling
+<span class="o">#</span> <span class="n">Specifies</span> <span class="k">to</span> <span class="n">use</span> <span class="n">client</span><span class="o">-</span><span class="n">side</span> <span class="n">sampling</span> <span class="k">for</span> <span class="n">distributed</span> <span class="n">priority</span> <span class="n">sampling</span> <span class="k">and</span> <span class="k">ignore</span> <span class="n">sample</span> <span class="n">rate</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="k">true</span>
+<span class="n">datadog</span><span class="o">-</span><span class="n">priority</span><span class="o">-</span><span class="n">sampling</span>
 
-# specifies sample rate for any traces created, Default: 1.0
-datadog-sample-rate
-</pre></div></p>
-<p>All these options (including host) allow environment variables, such as <code class="codehilite">$HOSTNAME</code> or <code class="codehilite">$HOST_IP</code>. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like <code class="codehilite">$HOST_IP</code> (which can be 'mounted' with the <code class="codehilite">status.hostIP</code> fieldpath, as described <a href="https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api">here</a>) to make sure traces will be sent to the local agent.</p>
+<span class="o">#</span> <span class="n">specifies</span> <span class="n">sample</span> <span class="n">rate</span> <span class="k">for</span> <span class="k">any</span> <span class="n">traces</span> <span class="n">created</span><span class="p">,</span> <span class="k">Default</span><span class="p">:</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span>
+<span class="n">datadog</span><span class="o">-</span><span class="n">sample</span><span class="o">-</span><span class="n">rate</span>
+</code></pre></div></p>
+<p>All these options (including host) allow environment variables, such as <code class="codehilite"><span class="err">$HOSTNAME</span></code> or <code class="codehilite"><span class="err">$HOST_IP</span></code>. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like <code class="codehilite"><span class="err">$HOST_IP</span></code> (which can be 'mounted' with the <code class="codehilite"><span class="err">status.hostIP</span></code> fieldpath, as described <a href="https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api">here</a>) to make sure traces will be sent to the local agent.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link"> ¶</a></h2>
 <p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed
 using Minikube.</p>
 <h3 id="zipkin">Zipkin<a class="headerlink" href="#zipkin" title="Permanent link"> ¶</a></h3>
 <p>In the <a href="https://github.com/rnburn/zipkin-date-server">rnburn/zipkin-date-server</a>
 GitHub repository is an example of a dockerized date service. To install the example and Zipkin collector run:</p>
-<div class="codehilite"><pre><span></span>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
-kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="err">kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml</span>
+<span class="err">kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml</span>
+</code></pre></div>
 
 <p>Also we need to configure the NGINX controller ConfigMap with the required values:</p>
-<div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
+<div class="codehilite"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
 <span class="s1">apiVersion: v1</span>
 <span class="s1">kind: ConfigMap</span>
 <span class="s1">data:</span>
@@ -1355,7 +1355,7 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
 <span class="s1">  name: nginx-configuration</span>
 <span class="s1">  namespace: kube-system</span>
 <span class="s1">&#39;</span> <span class="p">|</span> kubectl replace -f -
-</pre></div>
+</code></pre></div>
 
 <p>In the Zipkin interface we can see the details:
 <img alt="zipkin screenshot" src="../../../images/zipkin-demo.png" title="zipkin collector screenshot" /></p>
@@ -1363,43 +1363,43 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
 <ol>
 <li>
 <p>Enable Ingress addon in Minikube:
-    <div class="codehilite"><pre><span></span>$ minikube addons <span class="nb">enable</span> ingress
-</pre></div></p>
+    <div class="codehilite"><pre><span></span><code>$ minikube addons <span class="nb">enable</span> ingress
+</code></pre></div></p>
 </li>
 <li>
 <p>Add Minikube IP to /etc/hosts:
-    <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="k">$(</span>minikube ip<span class="k">)</span><span class="s2"> example.com&quot;</span> <span class="p">|</span> sudo tee -a /etc/hosts
-</pre></div></p>
+    <div class="codehilite"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="k">$(</span>minikube ip<span class="k">)</span><span class="s2"> example.com&quot;</span> <span class="p">|</span> sudo tee -a /etc/hosts
+</code></pre></div></p>
 </li>
 <li>
 <p>Apply a basic Service and Ingress Resource:
-    <div class="codehilite"><pre><span></span># Create Echoheaders Deployment
-$ kubectl run echoheaders --image=k8s.gcr.io/echoserver:1.4 --replicas=1 --port=8080
+    <div class="codehilite"><pre><span></span><code><span class="o">#</span> <span class="k">Create</span> <span class="n">Echoheaders</span> <span class="n">Deployment</span>
+<span class="err">$</span> <span class="n">kubectl</span> <span class="n">run</span> <span class="n">echoheaders</span> <span class="c1">--image=k8s.gcr.io/echoserver:1.4 --replicas=1 --port=8080</span>
 
-# Expose as a Cluster-IP
-$ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
+<span class="o">#</span> <span class="n">Expose</span> <span class="k">as</span> <span class="n">a</span> <span class="k">Cluster</span><span class="o">-</span><span class="n">IP</span>
+<span class="err">$</span> <span class="n">kubectl</span> <span class="n">expose</span> <span class="n">deployment</span> <span class="n">echoheaders</span> <span class="c1">--port=80 --target-port=8080 --name=echoheaders-x</span>
 
-# Apply the Ingress Resource
-$ echo &#39;
-  apiVersion: networking.k8s.io/v1beta1
-  kind: Ingress
-  metadata:
-    name: echo-ingress
-  spec:
-    rules:
-    - host: example.com
-      http:
-        paths:
-        - backend:
-            serviceName: echoheaders-x
-            servicePort: 80
-          path: /echo
-  &#39; | kubectl apply -f -
-</pre></div></p>
+<span class="o">#</span> <span class="n">Apply</span> <span class="n">the</span> <span class="n">Ingress</span> <span class="n">Resource</span>
+<span class="err">$</span> <span class="n">echo</span> <span class="s1">&#39;</span>
+<span class="s1">  apiVersion: networking.k8s.io/v1beta1</span>
+<span class="s1">  kind: Ingress</span>
+<span class="s1">  metadata:</span>
+<span class="s1">    name: echo-ingress</span>
+<span class="s1">  spec:</span>
+<span class="s1">    rules:</span>
+<span class="s1">    - host: example.com</span>
+<span class="s1">      http:</span>
+<span class="s1">        paths:</span>
+<span class="s1">        - backend:</span>
+<span class="s1">            serviceName: echoheaders-x</span>
+<span class="s1">            servicePort: 80</span>
+<span class="s1">          path: /echo</span>
+<span class="s1">  &#39;</span> <span class="o">|</span> <span class="n">kubectl</span> <span class="n">apply</span> <span class="o">-</span><span class="n">f</span> <span class="o">-</span>
+</code></pre></div></p>
 </li>
 <li>
 <p>Enable OpenTracing and set the jaeger-collector-host:
-    <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
+    <div class="codehilite"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
 <span class="s1">  apiVersion: v1</span>
 <span class="s1">  kind: ConfigMap</span>
 <span class="s1">  data:</span>
@@ -1409,16 +1409,16 @@ $ echo &#39;
 <span class="s1">    name: nginx-configuration</span>
 <span class="s1">    namespace: kube-system</span>
 <span class="s1">  &#39;</span> <span class="p">|</span> kubectl replace -f -
-</pre></div></p>
+</code></pre></div></p>
 </li>
 <li>
 <p>Apply the Jaeger All-In-One Template:
-    <div class="codehilite"><pre><span></span>$ kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml
-</pre></div></p>
+    <div class="codehilite"><pre><span></span><code>$ kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml
+</code></pre></div></p>
 </li>
 <li>
 <p>Make a few requests to the Service:
-    <div class="codehilite"><pre><span></span>$ curl example.com/echo -d <span class="s2">&quot;meow&quot;</span>
+    <div class="codehilite"><pre><span></span><code>$ curl example.com/echo -d <span class="s2">&quot;meow&quot;</span>
 
 CLIENT VALUES:
 <span class="nv">client_address</span><span class="o">=</span><span class="m">172</span>.17.0.5
@@ -1447,20 +1447,21 @@ x-real-ip<span class="o">=</span><span class="m">192</span>.168.99.1
 x-scheme<span class="o">=</span>http
 BODY:
 meow
-</pre></div></p>
+</code></pre></div></p>
 </li>
 <li>
 <p>View the Jaeger UI:
-    <div class="codehilite"><pre><span></span>$ minikube service jaeger-query --url
+    <div class="codehilite"><pre><span></span><code>$ minikube service jaeger-query --url
 
 http://192.168.99.100:30183
-</pre></div></p>
+</code></pre></div></p>
 <p>In the Jaeger interface we can see the details:
 <img alt="jaeger screenshot" src="../../../images/jaeger-demo.png" title="jaeger collector screenshot" /></p>
 </li>
 </ol>
                 
                   
+                
                 
               
               
@@ -1516,9 +1517,9 @@ http://192.168.99.100:30183
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1528,7 +1529,7 @@ http://192.168.99.100:30183
       
     </div>
     
-      <script src="../../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
       

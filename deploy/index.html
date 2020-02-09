@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#installation-guide" tabindex="1" class="md-skip">
+      <a href="#installation-guide" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1446,7 +1446,7 @@
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>The default configuration watches Ingress object from <em>all the namespaces</em>.
-To change this behavior use the flag <code class="codehilite">--watch-namespace</code> to limit the scope to a particular namespace.</p>
+To change this behavior use the flag <code class="codehilite"><span class="err">--watch-namespace</span></code> to limit the scope to a particular namespace.</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -1455,51 +1455,51 @@ To change this behavior use the flag <code class="codehilite">--watch-namespace<
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>If you're using GKE you need to initialize your user as a cluster-admin with the following command:
-<div class="codehilite"><pre><span></span><span class="go">kubectl create clusterrolebinding cluster-admin-binding \</span>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl create clusterrolebinding cluster-admin-binding \</span>
 <span class="go">  --clusterrole cluster-admin \</span>
 <span class="go">  --user $(gcloud config get-value account)</span>
-</pre></div></p>
+</code></pre></div></p>
 </div>
 <p>The following <strong>Mandatory Command</strong> is required for all deployments.</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/mandatory.yaml</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/mandatory.yaml</span>
+</code></pre></div>
 
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>If you are using a Kubernetes version previous to 1.14, you need to change <code class="codehilite">kubernetes.io/os</code> to <code class="codehilite">beta.kubernetes.io/os</code> at line 217 of <a href="https://github.com/kubernetes/ingress-nginx/blob/master/deploy/static/mandatory.yaml#L217">mandatory.yaml</a>, see <a href="https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/">Labels details</a>.</p>
+<p>If you are using a Kubernetes version previous to 1.14, you need to change <code class="codehilite"><span class="err">kubernetes.io/os</span></code> to <code class="codehilite"><span class="err">beta.kubernetes.io/os</span></code> at line 217 of <a href="https://github.com/kubernetes/ingress-nginx/blob/master/deploy/static/mandatory.yaml#L217">mandatory.yaml</a>, see <a href="https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/">Labels details</a>.</p>
 </div>
 <h3 id="provider-specific-steps">Provider Specific Steps<a class="headerlink" href="#provider-specific-steps" title="Permanent link"> ¶</a></h3>
 <p>There are cloud provider specific yaml files.</p>
 <h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link"> ¶</a></h4>
 <p>Kubernetes is available in Docker for Mac (from <a href="https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018">version 18.06.0-ce</a>)</p>
 <p>Create a service</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/cloud-generic.yaml</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/cloud-generic.yaml</span>
+</code></pre></div>
 
 <h4 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link"> ¶</a></h4>
 <p>For standard usage:</p>
-<div class="codehilite"><pre><span></span><span class="go">minikube addons enable ingress</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">minikube addons enable ingress</span>
+</code></pre></div>
 
 <p>For development:</p>
 <ol>
 <li>Disable the ingress addon:</li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="go">minikube addons disable ingress</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">minikube addons disable ingress</span>
+</code></pre></div>
 
 <ol>
-<li>Execute <code class="codehilite">make dev-env</code></li>
-<li>Confirm the <code class="codehilite">nginx-ingress-controller</code> deployment exists:</li>
+<li>Execute <code class="codehilite"><span class="err">make dev-env</span></code></li>
+<li>Confirm the <code class="codehilite"><span class="err">nginx-ingress-controller</span></code> deployment exists:</li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n ingress-nginx
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get pods -n ingress-nginx
 <span class="go">NAME                                       READY     STATUS    RESTARTS   AGE</span>
 <span class="go">default-http-backend-66b447d9cf-rrlf9      1/1       Running   0          12s</span>
 <span class="go">nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s</span>
-</pre></div>
+</code></pre></div>
 
 <h4 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link"> ¶</a></h4>
-<p>In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of <code class="codehilite">Type=LoadBalancer</code>.
+<p>In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of <code class="codehilite"><span class="err">Type=LoadBalancer</span></code>.
 Since Kubernetes v1.9.0 it is possible to use a classic load balancer (ELB) or network load balancer (NLB)
 Please check the <a href="https://aws.amazon.com/elasticloadbalancing/details/">elastic load balancing AWS details page</a></p>
 <h5 id="elastic-load-balancer-elb">Elastic Load Balancer - ELB<a class="headerlink" href="#elastic-load-balancer-elb" title="Permanent link"> ¶</a></h5>
@@ -1509,45 +1509,45 @@ Please check the <a href="https://aws.amazon.com/elasticloadbalancing/details/">
 <li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer">Layer 7</a>: use HTTP as the listener protocol for port 80 and terminate TLS in the ELB</li>
 </ul>
 <p>For L4:</p>
-<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code class="codehilite">provider/aws/service-l4.yaml</code></p>
+<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite"><span class="err">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</span></code> in <code class="codehilite"><span class="err">provider/aws/service-l4.yaml</span></code></p>
 <p>Then execute:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/aws/service-l4.yaml</span>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/aws/service-l4.yaml</span>
 <span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/aws/patch-configmap-l4.yaml</span>
-</pre></div>
+</code></pre></div>
 
 <p>For L7:</p>
-<p>Change line of the file <code class="codehilite">provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code class="codehilite">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</code></p>
-<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code class="codehilite">provider/aws/service-l7.yaml</code></p>
+<p>Change line of the file <code class="codehilite"><span class="err">provider/aws/service-l7.yaml</span></code> replacing the dummy id with a valid one <code class="codehilite"><span class="err">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</span></code></p>
+<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite"><span class="err">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</span></code> in <code class="codehilite"><span class="err">provider/aws/service-l7.yaml</span></code></p>
 <p>Then execute:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/aws/service-l7.yaml</span>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/aws/service-l7.yaml</span>
 <span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/aws/patch-configmap-l7.yaml</span>
-</pre></div>
+</code></pre></div>
 
 <p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
 <p><img alt="Listeners" src="../images/elb-l7-listener.png" /></p>
 <h5 id="elb-idle-timeouts">ELB Idle Timeouts<a class="headerlink" href="#elb-idle-timeouts" title="Permanent link"> ¶</a></h5>
-<p>In some scenarios users will need to modify the value of the ELB idle timeout. Users need to ensure the idle timeout is less than the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> that is configured for NGINX. By default NGINX <code class="codehilite">keepalive_timeout</code> is set to <code class="codehilite">75s</code>.</p>
-<p>The default ELB idle timeout will work for most scenarios, unless the NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> has been modified, in which case <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> will need to be modified to ensure it is less than the <code class="codehilite">keepalive_timeout</code> the user has configured.</p>
-<p><em>Please Note: An idle timeout of <code class="codehilite">3600s</code> is recommended when using WebSockets.</em></p>
+<p>In some scenarios users will need to modify the value of the ELB idle timeout. Users need to ensure the idle timeout is less than the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> that is configured for NGINX. By default NGINX <code class="codehilite"><span class="err">keepalive_timeout</span></code> is set to <code class="codehilite"><span class="err">75s</span></code>.</p>
+<p>The default ELB idle timeout will work for most scenarios, unless the NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> has been modified, in which case <code class="codehilite"><span class="err">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</span></code> will need to be modified to ensure it is less than the <code class="codehilite"><span class="err">keepalive_timeout</span></code> the user has configured.</p>
+<p><em>Please Note: An idle timeout of <code class="codehilite"><span class="err">3600s</span></code> is recommended when using WebSockets.</em></p>
 <p>More information with regards to idle timeouts for your Load Balancer can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/config-idle-timeout.html">official AWS documentation</a>.</p>
 <h5 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link"> ¶</a></h5>
 <p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/aws/service-nlb.yaml</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/aws/service-nlb.yaml</span>
+</code></pre></div>
 
 <h4 id="gce-gke">GCE-GKE<a class="headerlink" href="#gce-gke" title="Permanent link"> ¶</a></h4>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/cloud-generic.yaml</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/cloud-generic.yaml</span>
+</code></pre></div>
 
 <p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
 <h4 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link"> ¶</a></h4>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/cloud-generic.yaml</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/cloud-generic.yaml</span>
+</code></pre></div>
 
 <h4 id="bare-metal">Bare-metal<a class="headerlink" href="#bare-metal" title="Permanent link"> ¶</a></h4>
 <p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/baremetal/service-nodeport.yaml</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.28.0/deploy/static/provider/baremetal/service-nodeport.yaml</span>
+</code></pre></div>
 
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -1555,41 +1555,42 @@ Please check the <a href="https://aws.amazon.com/elasticloadbalancing/details/">
 </div>
 <h3 id="verify-installation">Verify installation<a class="headerlink" href="#verify-installation" title="Permanent link"> ¶</a></h3>
 <p>To check if the ingress controller pods have started, run the following command:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch</span>
+</code></pre></div>
 
-<p>Once the operator pods are running, you can cancel the above command by typing <code class="codehilite">Ctrl+C</code>.
+<p>Once the operator pods are running, you can cancel the above command by typing <code class="codehilite"><span class="err">Ctrl+C</span></code>.
 Now, you are ready to create your first ingress.</p>
 <h3 id="detect-installed-version">Detect installed version<a class="headerlink" href="#detect-installed-version" title="Permanent link"> ¶</a></h3>
-<p>To detect which version of the ingress controller is running, exec into the pod and run <code class="codehilite">nginx-ingress-controller version</code> command.</p>
-<div class="codehilite"><pre><span></span><span class="go">POD_NAMESPACE=ingress-nginx</span>
+<p>To detect which version of the ingress controller is running, exec into the pod and run <code class="codehilite"><span class="err">nginx-ingress-controller version</span></code> command.</p>
+<div class="codehilite"><pre><span></span><code><span class="go">POD_NAMESPACE=ingress-nginx</span>
 <span class="go">POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx -o jsonpath=&#39;{.items[0].metadata.name}&#39;)</span>
 
 <span class="go">kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version</span>
-</pre></div>
+</code></pre></div>
 
 <h2 id="using-helm">Using Helm<a class="headerlink" href="#using-helm" title="Permanent link"> ¶</a></h2>
 <p>NGINX Ingress controller can be installed via <a href="https://helm.sh/">Helm</a> using the chart <a href="https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress">stable/nginx-ingress</a> from the official charts repository.
-To install the chart with the release name <code class="codehilite">my-nginx</code>:</p>
-<div class="codehilite"><pre><span></span><span class="go">helm install my-nginx stable/nginx-ingress</span>
-</pre></div>
+To install the chart with the release name <code class="codehilite"><span class="err">my-nginx</span></code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="go">helm install my-nginx stable/nginx-ingress</span>
+</code></pre></div>
 
 <p>If the kubernetes cluster has RBAC enabled, then run:</p>
-<div class="codehilite"><pre><span></span><span class="go">helm install my-nginx stable/nginx-ingress --set rbac.create=true</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">helm install my-nginx stable/nginx-ingress --set rbac.create=true</span>
+</code></pre></div>
 
-<p>If you are using <a href="https://v2.helm.sh/">Helm 2</a> then specify release name using <code class="codehilite">--name</code> flag</p>
-<p><div class="codehilite"><pre><span></span><span class="go">helm install stable/nginx-ingress --name my-nginx</span>
-</pre></div>
+<p>If you are using <a href="https://v2.helm.sh/">Helm 2</a> then specify release name using <code class="codehilite"><span class="err">--name</span></code> flag</p>
+<p><div class="codehilite"><pre><span></span><code><span class="go">helm install stable/nginx-ingress --name my-nginx</span>
+</code></pre></div>
 or
-<div class="codehilite"><pre><span></span><span class="go">helm install stable/nginx-ingress --name my-nginx --set rbac.create=true</span>
-</pre></div></p>
+<div class="codehilite"><pre><span></span><code><span class="go">helm install stable/nginx-ingress --name my-nginx --set rbac.create=true</span>
+</code></pre></div></p>
 <p>Detect installed version:</p>
-<div class="codehilite"><pre><span></span><span class="go">POD_NAME=$(kubectl get pods -l app.kubernetes.io/name=ingress-nginx -o jsonpath=&#39;{.items[0].metadata.name}&#39;)</span>
+<div class="codehilite"><pre><span></span><code><span class="go">POD_NAME=$(kubectl get pods -l app.kubernetes.io/name=ingress-nginx -o jsonpath=&#39;{.items[0].metadata.name}&#39;)</span>
 <span class="go">kubectl exec -it $POD_NAME -- /nginx-ingress-controller --version</span>
-</pre></div>
+</code></pre></div>
                 
                   
+                
                 
               
               
@@ -1645,9 +1646,9 @@ or
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1657,7 +1658,7 @@ or
       
     </div>
     
-      <script src="../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
       

@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#bare-metal-considerations" tabindex="1" class="md-skip">
+      <a href="#bare-metal-considerations" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1263,7 +1263,7 @@ Kubernetes cluster running on bare-metal.</p>
 supported cloud provider, effectively allowing the usage of LoadBalancer Services within any cluster.</p>
 <p>This section demonstrates how to use the <a href="https://metallb.universe.tf/tutorial/layer2/">Layer 2 configuration mode</a> of MetalLB together with the NGINX
 Ingress controller in a Kubernetes cluster that has <strong>publicly accessible nodes</strong>. In this mode, one node attracts all
-the traffic for the <code class="codehilite">ingress-nginx</code> Service IP. See <a href="https://metallb.universe.tf/usage/#traffic-policies">Traffic policies</a> for more details.</p>
+the traffic for the <code class="codehilite"><span class="err">ingress-nginx</span></code> Service IP. See <a href="https://metallb.universe.tf/usage/#traffic-policies">Traffic policies</a> for more details.</p>
 <p><img alt="MetalLB in L2 mode" src="../../images/baremetal/metallb.jpg" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1276,22 +1276,22 @@ yourself by reading the official documentation thoroughly.</p>
 </div>
 <p>MetalLB can be deployed either with a simple Kubernetes manifest or with Helm. The rest of this example assumes MetalLB
 was deployed following the <a href="https://metallb.universe.tf/installation/">Installation</a> instructions.</p>
-<p>MetalLB requires a pool of IP addresses in order to be able to take ownership of the <code class="codehilite">ingress-nginx</code> Service. This pool
-can be defined in a ConfigMap named <code class="codehilite">config</code> located in the same namespace as the MetalLB controller. This pool of IPs <strong>must</strong> be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.</p>
+<p>MetalLB requires a pool of IP addresses in order to be able to take ownership of the <code class="codehilite"><span class="err">ingress-nginx</span></code> Service. This pool
+can be defined in a ConfigMap named <code class="codehilite"><span class="err">config</span></code> located in the same namespace as the MetalLB controller. This pool of IPs <strong>must</strong> be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
 environments this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
 <span class="go">host-3   Ready    node     203.0.113.3</span>
-</pre></div>
+</code></pre></div>
 
 <p>After creating the following ConfigMap, MetalLB takes ownership of one of the IP addresses in the pool and updates
-the <em>loadBalancer</em> IP field of the <code class="codehilite">ingress-nginx</code> Service accordingly.</p>
-<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+the <em>loadBalancer</em> IP field of the <code class="codehilite"><span class="err">ingress-nginx</span></code> Service accordingly.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">namespace</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">metallb-system</span>
@@ -1303,26 +1303,26 @@ the <em>loadBalancer</em> IP field of the <code class="codehilite">ingress-nginx
       <span class="no">protocol: layer2</span>
       <span class="no">addresses:</span>
       <span class="no">- 203.0.113.10-203.0.113.15</span>
-</pre></div>
+</code></pre></div>
 
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl -n ingress-nginx get svc
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get svc
 <span class="go">NAME                   TYPE          CLUSTER-IP     EXTERNAL-IP  PORT(S)</span>
 <span class="go">default-http-backend   ClusterIP     10.0.64.249    &lt;none&gt;       80/TCP</span>
 <span class="go">ingress-nginx          LoadBalancer  10.0.220.217   203.0.113.10  80:30100/TCP,443:30101/TCP</span>
-</pre></div>
+</code></pre></div>
 
 </div>
-<p>As soon as MetalLB sets the external IP address of the <code class="codehilite">ingress-nginx</code> LoadBalancer Service, the corresponding entries
+<p>As soon as MetalLB sets the external IP address of the <code class="codehilite"><span class="err">ingress-nginx</span></code> LoadBalancer Service, the corresponding entries
 are created in the iptables NAT table and the node with the selected IP address starts responding to HTTP requests on
 the ports configured in the LoadBalancer Service:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -D- http://203.0.113.3 -H <span class="s1">&#39;Host: myapp.example.com&#39;</span>
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> curl -D- http://203.0.113.3 -H <span class="s1">&#39;Host: myapp.example.com&#39;</span>
 <span class="go">HTTP/1.1 200 OK</span>
 <span class="go">Server: nginx/1.15.2</span>
-</pre></div>
+</code></pre></div>
 
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>In order to preserve the source IP address in HTTP requests sent to NGINX, it is necessary to use the <code class="codehilite">Local</code>
+<p>In order to preserve the source IP address in HTTP requests sent to NGINX, it is necessary to use the <code class="codehilite"><span class="err">Local</span></code>
 traffic policy. Traffic policies are described in more details in <a href="https://metallb.universe.tf/usage/#traffic-policies">Traffic policies</a> as
 well as in the next section.</p>
 </div>
@@ -1331,42 +1331,42 @@ well as in the next section.</p>
 <a href="../#bare-metal">installation guide</a>.</p>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
-<p>A Service of type <code class="codehilite">NodePort</code> exposes, via the <code class="codehilite">kube-proxy</code> component, the <strong>same unprivileged</strong> port (default:
+<p>A Service of type <code class="codehilite"><span class="err">NodePort</span></code> exposes, via the <code class="codehilite"><span class="err">kube-proxy</span></code> component, the <strong>same unprivileged</strong> port (default:
 30000-32767) on every Kubernetes node, masters included. For more information, see <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport">Services</a>.</p>
 </div>
 <p>In this configuration, the NGINX container remains isolated from the host network. As a result, it can safely bind to
 any port, including the standard HTTP ports 80 and 443. However, due to the container namespace isolation, a client
 located outside the cluster network (e.g. on the public internet) is not able to access Ingress hosts directly on ports
-80 and 443. Instead, the external client must append the NodePort allocated to the <code class="codehilite">ingress-nginx</code> Service to HTTP
+80 and 443. Instead, the external client must append the NodePort allocated to the <code class="codehilite"><span class="err">ingress-nginx</span></code> Service to HTTP
 requests.</p>
 <p><img alt="NodePort request flow" src="../../images/baremetal/nodeport.jpg" /></p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p>Given the NodePort <code class="codehilite">30100</code> allocated to the <code class="codehilite">ingress-nginx</code> Service</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl -n ingress-nginx get svc
+<p>Given the NodePort <code class="codehilite"><span class="err">30100</span></code> allocated to the <code class="codehilite"><span class="err">ingress-nginx</span></code> Service</p>
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get svc
 <span class="go">NAME                   TYPE        CLUSTER-IP     PORT(S)</span>
 <span class="go">default-http-backend   ClusterIP   10.0.64.249    80/TCP</span>
 <span class="go">ingress-nginx          NodePort    10.0.220.217   80:30100/TCP,443:30101/TCP</span>
-</pre></div>
+</code></pre></div>
 
-<p>and a Kubernetes node with the public IP address <code class="codehilite">203.0.113.2</code> (the external IP is added as an example, in most
+<p>and a Kubernetes node with the public IP address <code class="codehilite"><span class="err">203.0.113.2</span></code> (the external IP is added as an example, in most
 bare-metal environments this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
 <span class="go">host-3   Ready    node     203.0.113.3</span>
-</pre></div>
+</code></pre></div>
 
-<p>a client would reach an Ingress with <code class="codehilite"><span class="n">host</span><span class="o">:</span> <span class="n">myapp</span><span class="o">.</span><span class="na">example</span><span class="o">.</span><span class="na">com</span></code> at <code class="codehilite">http://myapp.example.com:30100</code>, where the
+<p>a client would reach an Ingress with <code class="codehilite"><span class="n">host</span><span class="o">:</span> <span class="n">myapp</span><span class="o">.</span><span class="na">example</span><span class="o">.</span><span class="na">com</span></code> at <code class="codehilite"><span class="c">http://myapp.example.com:30100</span></code>, where the
 myapp.example.com subdomain resolves to the 203.0.113.2 IP address.</p>
 </div>
 <div class="admonition danger">
 <p class="admonition-title">Impact on the host system</p>
-<p>While it may sound tempting to reconfigure the NodePort range using the <code class="codehilite">--service-node-port-range</code> API server flag
+<p>While it may sound tempting to reconfigure the NodePort range using the <code class="codehilite"><span class="err">--service-node-port-range</span></code> API server flag
 to include unprivileged ports and be able to expose ports 80 and 443, doing so may result in unexpected issues
 including (but not limited to) the use of ports otherwise reserved to system daemons and the necessity to grant
-<code class="codehilite">kube-proxy</code> privileges it may otherwise not require.</p>
+<code class="codehilite"><span class="err">kube-proxy</span></code> privileges it may otherwise not require.</p>
 <p>This practice is therefore <strong>discouraged</strong>. See the other approaches proposed in this page for alternatives.</p>
 </div>
 <p>This approach has a few other limitations one ought to be aware of:</p>
@@ -1376,8 +1376,8 @@ including (but not limited to) the use of ports otherwise reserved to system dae
 <p>Services of type NodePort perform <a href="https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-type-nodeport">source address translation</a> by default. This means the source IP of a
 HTTP request is always <strong>the IP address of the Kubernetes node that received the request</strong> from the perspective of
 NGINX.</p>
-<p>The recommended way to preserve the source IP in a NodePort setup is to set the value of the <code class="codehilite">externalTrafficPolicy</code>
-field of the <code class="codehilite">ingress-nginx</code> Service spec to <code class="codehilite">Local</code> (<a href="https://github.com/kubernetes/ingress-nginx/blob/nginx-0.19.0/deploy/provider/aws/service-nlb.yaml#L12-L14">example</a>).</p>
+<p>The recommended way to preserve the source IP in a NodePort setup is to set the value of the <code class="codehilite"><span class="err">externalTrafficPolicy</span></code>
+field of the <code class="codehilite"><span class="err">ingress-nginx</span></code> Service spec to <code class="codehilite"><span class="err">Local</span></code> (<a href="https://github.com/kubernetes/ingress-nginx/blob/nginx-0.19.0/deploy/provider/aws/service-nlb.yaml#L12-L14">example</a>).</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This setting effectively <strong>drops packets</strong> sent to Kubernetes nodes which are not running any instance of the NGINX
@@ -1388,40 +1388,40 @@ the NGINX Ingress controller should be scheduled or not scheduled.</p>
 <p class="admonition-title">Example</p>
 <p>In a Kubernetes cluster composed of 3 nodes (the external IP is added as an example, in most bare-metal environments
 this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
 <span class="go">host-3   Ready    node     203.0.113.3</span>
-</pre></div>
+</code></pre></div>
 
-<p>with a <code class="codehilite">nginx-ingress-controller</code> Deployment composed of 2 replicas</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
+<p>with a <code class="codehilite"><span class="err">nginx-ingress-controller</span></code> Deployment composed of 2 replicas</p>
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
 <span class="go">NAME                                       READY   STATUS    IP           NODE</span>
 <span class="go">default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1   host-2</span>
 <span class="go">nginx-ingress-controller-cf9ff8c96-8vvf8   1/1     Running   172.17.0.3   host-3</span>
 <span class="go">nginx-ingress-controller-cf9ff8c96-pxsds   1/1     Running   172.17.1.4   host-2</span>
-</pre></div>
+</code></pre></div>
 
-<p>Requests sent to <code class="codehilite">host-2</code> and <code class="codehilite">host-3</code> would be forwarded to NGINX and original client's IP would be preserved,
-while requests to <code class="codehilite">host-1</code> would get dropped because there is no NGINX replica running on that node.</p>
+<p>Requests sent to <code class="codehilite"><span class="err">host-2</span></code> and <code class="codehilite"><span class="err">host-3</span></code> would be forwarded to NGINX and original client's IP would be preserved,
+while requests to <code class="codehilite"><span class="err">host-1</span></code> would get dropped because there is no NGINX replica running on that node.</p>
 </div>
 <ul>
 <li><strong>Ingress status</strong></li>
 </ul>
 <p>Because NodePort Services do not get a LoadBalancerIP assigned by definition, the NGINX Ingress controller <strong>does not
 update the status of Ingress objects it manages</strong>.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get ingress
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get ingress
 <span class="go">NAME           HOSTS               ADDRESS   PORTS</span>
 <span class="go">test-ingress   myapp.example.com             80</span>
-</pre></div>
+</code></pre></div>
 
 <p>Despite the fact there is no load balancer providing a public IP address to the NGINX Ingress controller, it is possible
-to force the status update of all managed Ingress objects by setting the <code class="codehilite">externalIPs</code> field of the <code class="codehilite">ingress-nginx</code>
+to force the status update of all managed Ingress objects by setting the <code class="codehilite"><span class="err">externalIPs</span></code> field of the <code class="codehilite"><span class="err">ingress-nginx</span></code>
 Service.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>There is more to setting <code class="codehilite">externalIPs</code> than just enabling the NGINX Ingress controller to update the status of
+<p>There is more to setting <code class="codehilite"><span class="err">externalIPs</span></code> than just enabling the NGINX Ingress controller to update the status of
 Ingress objects. Please read about this option in the <a href="https://kubernetes.io/docs/concepts/services-networking/service/#external-ips">Services</a> page of official Kubernetes
 documentation as well as the section about <a href="#external-ips">External IPs</a> in this document for more information.</p>
 </div>
@@ -1429,26 +1429,26 @@ documentation as well as the section about <a href="#external-ips">External IPs<
 <p class="admonition-title">Example</p>
 <p>Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
 environments this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
 <span class="go">host-3   Ready    node     203.0.113.3</span>
-</pre></div>
+</code></pre></div>
 
-<p>one could edit the <code class="codehilite">ingress-nginx</code> Service and add the following field to the object spec</p>
-<div class="codehilite"><pre><span></span><span class="nt">spec</span><span class="p">:</span>
+<p>one could edit the <code class="codehilite"><span class="err">ingress-nginx</span></code> Service and add the following field to the object spec</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">spec</span><span class="p">:</span>
   <span class="nt">externalIPs</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.1</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.2</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.3</span>
-</pre></div>
+</code></pre></div>
 
 <p>which would in turn be reflected on Ingress objects as follows:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get ingress -o wide
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get ingress -o wide
 <span class="go">NAME           HOSTS               ADDRESS                               PORTS</span>
 <span class="go">test-ingress   myapp.example.com   203.0.113.1,203.0.113.2,203.0.113.3   80</span>
-</pre></div>
+</code></pre></div>
 
 </div>
 <ul>
@@ -1458,30 +1458,30 @@ environments this value is &lt;None>)</p>
 for generating redirect URLs that take into account the URL used by external clients, including the NodePort.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p>Redirects generated by NGINX, for instance HTTP to HTTPS or <code class="codehilite">domain</code> to <code class="codehilite">www.domain</code>, are generated without
+<p>Redirects generated by NGINX, for instance HTTP to HTTPS or <code class="codehilite"><span class="err">domain</span></code> to <code class="codehilite"><span class="err">www.domain</span></code>, are generated without
 NodePort:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -D- http://myapp.example.com:30100<span class="sb">`</span>
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> curl -D- http://myapp.example.com:30100<span class="sb">`</span>
 <span class="go">HTTP/1.1 308 Permanent Redirect</span>
 <span class="go">Server: nginx/1.15.2</span>
 <span class="go">Location: https://myapp.example.com/  #-&gt; missing NodePort in HTTPS redirect</span>
-</pre></div>
+</code></pre></div>
 
 </div>
 <h2 id="via-the-host-network">Via the host network<a class="headerlink" href="#via-the-host-network" title="Permanent link"> ¶</a></h2>
 <p>In a setup where there is no external load balancer available but using NodePorts is not an option, one can configure
-<code class="codehilite">ingress-nginx</code> Pods to use the network of the host they run on instead of a dedicated network namespace. The benefit of
+<code class="codehilite"><span class="err">ingress-nginx</span></code> Pods to use the network of the host they run on instead of a dedicated network namespace. The benefit of
 this approach is that the NGINX Ingress controller can bind ports 80 and 443 directly to Kubernetes nodes' network
 interfaces, without the extra network translation imposed by NodePort Services.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This approach does not leverage any Service object to expose the NGINX Ingress controller. If the <code class="codehilite">ingress-nginx</code>
+<p>This approach does not leverage any Service object to expose the NGINX Ingress controller. If the <code class="codehilite"><span class="err">ingress-nginx</span></code>
 Service exists in the target cluster, it is <strong>recommended to delete it</strong>.</p>
 </div>
-<p>This can be achieved by enabling the <code class="codehilite">hostNetwork</code> option in the Pods' spec.</p>
-<div class="codehilite"><pre><span></span><span class="nt">template</span><span class="p">:</span>
+<p>This can be achieved by enabling the <code class="codehilite"><span class="err">hostNetwork</span></code> option in the Pods' spec.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">template</span><span class="p">:</span>
   <span class="nt">spec</span><span class="p">:</span>
     <span class="nt">hostNetwork</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-</pre></div>
+</code></pre></div>
 
 <div class="admonition danger">
 <p class="admonition-title">Security considerations</p>
@@ -1490,26 +1490,26 @@ including the host's loopback. Please evaluate the impact this may have on the s
 </div>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p>Consider this <code class="codehilite">nginx-ingress-controller</code> Deployment composed of 2 replicas, NGINX Pods inherit from the IP address
+<p>Consider this <code class="codehilite"><span class="err">nginx-ingress-controller</span></code> Deployment composed of 2 replicas, NGINX Pods inherit from the IP address
 of their host instead of an internal Pod IP.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
 <span class="go">NAME                                       READY   STATUS    IP            NODE</span>
 <span class="go">default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1    host-2</span>
 <span class="go">nginx-ingress-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3</span>
 <span class="go">nginx-ingress-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2</span>
-</pre></div>
+</code></pre></div>
 
 </div>
 <p>One major limitation of this deployment approach is that only <strong>a single NGINX Ingress controller Pod</strong> may be scheduled
 on each cluster node, because binding the same port multiple times on the same network interface is technically
 impossible. Pods that are unschedulable due to such situation fail with the following event:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl -n ingress-nginx describe pod &lt;unschedulable-nginx-ingress-controller-pod&gt;
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx describe pod &lt;unschedulable-nginx-ingress-controller-pod&gt;
 <span class="go">...</span>
 <span class="go">Events:</span>
 <span class="go">  Type     Reason            From               Message</span>
 <span class="go">  ----     ------            ----               -------</span>
 <span class="go">  Warning  FailedScheduling  default-scheduler  0/3 nodes are available: 3 node(s) didn&#39;t have free ports for the requested pod ports.</span>
-</pre></div>
+</code></pre></div>
 
 <p>One way to ensure only schedulable Pods are created is to deploy the NGINX Ingress controller as a <em>DaemonSet</em> instead
 of a traditional Deployment.</p>
@@ -1526,43 +1526,43 @@ configuration of the corresponding manifest at the user's discretion.</p>
 <li><strong>DNS resolution</strong></li>
 </ul>
 <p>Pods configured with <code class="codehilite"><span class="n">hostNetwork</span><span class="o">:</span> <span class="kc">true</span></code> do not use the internal DNS resolver (i.e. <em>kube-dns</em> or <em>CoreDNS</em>), unless
-their <code class="codehilite">dnsPolicy</code> spec field is set to <a href="https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy"><code class="codehilite">ClusterFirstWithHostNet</code></a>. Consider using this setting if NGINX is
+their <code class="codehilite"><span class="err">dnsPolicy</span></code> spec field is set to <a href="https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy"><code class="codehilite"><span class="err">ClusterFirstWithHostNet</span></code></a>. Consider using this setting if NGINX is
 expected to resolve internal names for any reason.</p>
 <ul>
 <li><strong>Ingress status</strong></li>
 </ul>
 <p>Because there is no Service exposing the NGINX Ingress controller in a configuration using the host network, the default
-<code class="codehilite">--publish-service</code> flag used in standard cloud setups <strong>does not apply</strong> and the status of all Ingress objects remains
+<code class="codehilite"><span class="err">--publish-service</span></code> flag used in standard cloud setups <strong>does not apply</strong> and the status of all Ingress objects remains
 blank.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get ingress
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get ingress
 <span class="go">NAME           HOSTS               ADDRESS   PORTS</span>
 <span class="go">test-ingress   myapp.example.com             80</span>
-</pre></div>
+</code></pre></div>
 
 <p>Instead, and because bare-metal nodes usually don't have an ExternalIP, one has to enable the
-<a href="../../user-guide/cli-arguments/"><code class="codehilite">--report-node-internal-ip-address</code></a> flag, which sets the status of all Ingress objects to the internal IP
+<a href="../../user-guide/cli-arguments/"><code class="codehilite"><span class="err">--report-node-internal-ip-address</span></code></a> flag, which sets the status of all Ingress objects to the internal IP
 address of all nodes running the NGINX Ingress controller.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p>Given a <code class="codehilite">nginx-ingress-controller</code> DaemonSet composed of 2 replicas</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
+<p>Given a <code class="codehilite"><span class="err">nginx-ingress-controller</span></code> DaemonSet composed of 2 replicas</p>
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
 <span class="go">NAME                                       READY   STATUS    IP            NODE</span>
 <span class="go">default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1    host-2</span>
 <span class="go">nginx-ingress-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3</span>
 <span class="go">nginx-ingress-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2</span>
-</pre></div>
+</code></pre></div>
 
 <p>the controller sets the status of all Ingress objects it manages to the following value:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get ingress -o wide
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get ingress -o wide
 <span class="go">NAME           HOSTS               ADDRESS                   PORTS</span>
 <span class="go">test-ingress   myapp.example.com   203.0.113.2,203.0.113.3   80</span>
-</pre></div>
+</code></pre></div>
 
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Alternatively, it is possible to override the address written to Ingress objects using the
-<code class="codehilite">--publish-status-address</code> flag. See <a href="../../user-guide/cli-arguments/">Command line arguments</a>.</p>
+<code class="codehilite"><span class="err">--publish-status-address</span></code> flag. See <a href="../../user-guide/cli-arguments/">Command line arguments</a>.</p>
 </div>
 <h2 id="using-a-self-provisioned-edge">Using a self-provisioned edge<a class="headerlink" href="#using-a-self-provisioned-edge" title="Permanent link"> ¶</a></h2>
 <p>Similarly to cloud environments, this deployment approach requires an edge network component providing a public
@@ -1581,48 +1581,49 @@ on the target nodes as shown in the diagram below:</p>
 <p>This method does not allow preserving the source IP of HTTP requests in any manner, it is therefore <strong>not
 recommended</strong> to use it despite its apparent simplicity.</p>
 </div>
-<p>The <code class="codehilite">externalIPs</code> Service option was previously mentioned in the <a href="#over-a-nodeport-service">NodePort</a> section.</p>
-<p>As per the <a href="https://kubernetes.io/docs/concepts/services-networking/service/#external-ips">Services</a> page of the official Kubernetes documentation, the <code class="codehilite">externalIPs</code> option causes
-<code class="codehilite">kube-proxy</code> to route traffic sent to arbitrary IP addresses <strong>and on the Service ports</strong> to the endpoints of that
+<p>The <code class="codehilite"><span class="err">externalIPs</span></code> Service option was previously mentioned in the <a href="#over-a-nodeport-service">NodePort</a> section.</p>
+<p>As per the <a href="https://kubernetes.io/docs/concepts/services-networking/service/#external-ips">Services</a> page of the official Kubernetes documentation, the <code class="codehilite"><span class="err">externalIPs</span></code> option causes
+<code class="codehilite"><span class="err">kube-proxy</span></code> to route traffic sent to arbitrary IP addresses <strong>and on the Service ports</strong> to the endpoints of that
 Service. These IP addresses <strong>must belong to the target node</strong>.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
 environments this value is &lt;None>)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get node
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl get node
 <span class="go">NAME     STATUS   ROLES    EXTERNAL-IP</span>
 <span class="go">host-1   Ready    master   203.0.113.1</span>
 <span class="go">host-2   Ready    node     203.0.113.2</span>
 <span class="go">host-3   Ready    node     203.0.113.3</span>
-</pre></div>
+</code></pre></div>
 
-<p>and the following <code class="codehilite">ingress-nginx</code> NodePort Service</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl -n ingress-nginx get svc
+<p>and the following <code class="codehilite"><span class="err">ingress-nginx</span></code> NodePort Service</p>
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get svc
 <span class="go">NAME                   TYPE        CLUSTER-IP     PORT(S)</span>
 <span class="go">ingress-nginx          NodePort    10.0.220.217   80:30100/TCP,443:30101/TCP</span>
-</pre></div>
+</code></pre></div>
 
 <p>One could set the following external IPs in the Service spec, and NGINX would become available on both the NodePort
 and the Service port:</p>
-<div class="codehilite"><pre><span></span><span class="nt">spec</span><span class="p">:</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">spec</span><span class="p">:</span>
   <span class="nt">externalIPs</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.2</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.3</span>
-</pre></div>
+</code></pre></div>
 
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -D- http://myapp.example.com:30100
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> curl -D- http://myapp.example.com:30100
 <span class="go">HTTP/1.1 200 OK</span>
 <span class="go">Server: nginx/1.15.2</span>
 
 <span class="gp">$</span> curl -D- http://myapp.example.com
 <span class="go">HTTP/1.1 200 OK</span>
 <span class="go">Server: nginx/1.15.2</span>
-</pre></div>
+</code></pre></div>
 
 <p>We assume the myapp.example.com subdomain above resolves to both 203.0.113.2 and 203.0.113.3 IP addresses.</p>
 </div>
                 
                   
+                
                 
               
               
@@ -1678,9 +1679,9 @@ and the Service port:</p>
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1690,7 +1691,7 @@ and the Service port:</p>
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
       

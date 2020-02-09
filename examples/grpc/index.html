@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#grpc" tabindex="1" class="md-skip">
+      <a href="#grpc" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1295,9 +1295,9 @@ nginx controller.</p>
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link"> ¶</a></h2>
 <ol>
 <li>You have a kubernetes cluster running.</li>
-<li>You have a domain name such as <code class="codehilite">example.com</code> that is configured to route
+<li>You have a domain name such as <code class="codehilite"><span class="err">example.com</span></code> that is configured to route
    traffic to the ingress controller.  Replace references to
-   <code class="codehilite">fortune-teller.stack.build</code> (the domain name used in this example) to your
+   <code class="codehilite"><span class="err">fortune-teller.stack.build</span></code> (the domain name used in this example) to your
    own domain name (you're also responsible for provisioning an SSL certificate
    for the ingress).</li>
 <li>You have the nginx-ingress controller installed in typical fashion (must be
@@ -1309,59 +1309,59 @@ nginx controller.</p>
    <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller">fortune-teller</a>
    application provided here as an example.</li>
 </ol>
-<h3 id="step-1-kubernetes-deployment">Step 1: kubernetes <code class="codehilite">Deployment</code><a class="headerlink" href="#step-1-kubernetes-deployment" title="Permanent link"> ¶</a></h3>
-<div class="codehilite"><pre><span></span>$ kubectl create -f app.yaml
-</pre></div>
+<h3 id="step-1-kubernetes-deployment">Step 1: kubernetes <code class="codehilite"><span class="err">Deployment</span></code><a class="headerlink" href="#step-1-kubernetes-deployment" title="Permanent link"> ¶</a></h3>
+<div class="codehilite"><pre><span></span><code>$ kubectl create -f app.yaml
+</code></pre></div>
 
 <p>This is a standard kubernetes deployment object.  It is running a grpc service
-listening on port <code class="codehilite">50051</code>.</p>
+listening on port <code class="codehilite"><span class="err">50051</span></code>.</p>
 <p>The sample application
 <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller">fortune-teller-app</a>
 is a grpc server implemented in go. Here's the stripped-down implementation:</p>
-<div class="codehilite"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">grpcServer</span> <span class="o">:=</span> <span class="nx">grpc</span><span class="p">.</span><span class="nx">NewServer</span><span class="p">()</span>
     <span class="nx">fortune</span><span class="p">.</span><span class="nx">RegisterFortuneTellerServer</span><span class="p">(</span><span class="nx">grpcServer</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">FortuneTeller</span><span class="p">{})</span>
     <span class="nx">lis</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Listen</span><span class="p">(</span><span class="s">&quot;tcp&quot;</span><span class="p">,</span> <span class="s">&quot;:50051&quot;</span><span class="p">)</span>
     <span class="nx">grpcServer</span><span class="p">.</span><span class="nx">Serve</span><span class="p">(</span><span class="nx">lis</span><span class="p">)</span>
 <span class="p">}</span>
-</pre></div>
+</code></pre></div>
 
 <p>The takeaway is that we are not doing any TLS configuration on the server (as we
 are terminating TLS at the ingress level, grpc traffic will travel unencrypted
 inside the cluster and arrive "insecure").</p>
 <p>For your own application you may or may not want to do this.  If you prefer to
 forward encrypted traffic to your POD and terminate TLS at the gRPC server
-itself, add the ingress annotation <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;GRPCS&quot;</code>.</p>
-<h3 id="step-2-the-kubernetes-service">Step 2: the kubernetes <code class="codehilite">Service</code><a class="headerlink" href="#step-2-the-kubernetes-service" title="Permanent link"> ¶</a></h3>
-<div class="codehilite"><pre><span></span>$ kubectl create -f svc.yaml
-</pre></div>
+itself, add the ingress annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/backend-protocol: &quot;GRPCS&quot;</span></code>.</p>
+<h3 id="step-2-the-kubernetes-service">Step 2: the kubernetes <code class="codehilite"><span class="err">Service</span></code><a class="headerlink" href="#step-2-the-kubernetes-service" title="Permanent link"> ¶</a></h3>
+<div class="codehilite"><pre><span></span><code>$ kubectl create -f svc.yaml
+</code></pre></div>
 
 <p>Here we have a typical service. Nothing special, just routing traffic to the
-backend application on port <code class="codehilite">50051</code>.</p>
-<h3 id="step-3-the-kubernetes-ingress">Step 3: the kubernetes <code class="codehilite">Ingress</code><a class="headerlink" href="#step-3-the-kubernetes-ingress" title="Permanent link"> ¶</a></h3>
-<div class="codehilite"><pre><span></span>$ kubectl create -f ingress.yaml
-</pre></div>
+backend application on port <code class="codehilite"><span class="err">50051</span></code>.</p>
+<h3 id="step-3-the-kubernetes-ingress">Step 3: the kubernetes <code class="codehilite"><span class="err">Ingress</span></code><a class="headerlink" href="#step-3-the-kubernetes-ingress" title="Permanent link"> ¶</a></h3>
+<div class="codehilite"><pre><span></span><code>$ kubectl create -f ingress.yaml
+</code></pre></div>
 
 <p>A few things to note:</p>
 <ol>
 <li>We've tagged the ingress with the annotation
-   <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;GRPC&quot;</code>.  This is the magic
+   <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/backend-protocol: &quot;GRPC&quot;</span></code>.  This is the magic
    ingredient that sets up the appropriate nginx configuration to route http/2
    traffic to our service.</li>
 <li>We're terminating TLS at the ingress and have configured an SSL certificate
-   <code class="codehilite">fortune-teller.stack.build</code>.  The ingress matches traffic arriving as
-   <code class="codehilite">https://fortune-teller.stack.build:443</code> and routes unencrypted messages to
+   <code class="codehilite"><span class="err">fortune-teller.stack.build</span></code>.  The ingress matches traffic arriving as
+   <code class="codehilite"><span class="c">https://fortune-teller.stack.build:443</span></code> and routes unencrypted messages to
    our kubernetes service.</li>
 </ol>
 <h3 id="step-4-test-the-connection">Step 4: test the connection<a class="headerlink" href="#step-4-test-the-connection" title="Permanent link"> ¶</a></h3>
 <p>Once we've applied our configuration to kubernetes, it's time to test that we
 can actually talk to the backend.  To do this, we'll use the
 <a href="https://github.com/fullstorydev/grpcurl">grpcurl</a> utility:</p>
-<div class="codehilite"><pre><span></span>$ grpcurl fortune-teller.stack.build:443 build.stack.fortune.FortuneTeller/Predict
+<div class="codehilite"><pre><span></span><code>$ grpcurl fortune-teller.stack.build:443 build.stack.fortune.FortuneTeller/Predict
 <span class="o">{</span>
   <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;Let us endeavor so to live that when we come to die even the undertaker will be sorry.\n\t\t-- Mark Twain, \&quot;Pudd&#39;nhead Wilson&#39;s Calendar\&quot;&quot;</span>
 <span class="o">}</span>
-</pre></div>
+</code></pre></div>
 
 <h3 id="debugging-hints">Debugging Hints<a class="headerlink" href="#debugging-hints" title="Permanent link"> ¶</a></h3>
 <ol>
@@ -1369,7 +1369,7 @@ can actually talk to the backend.  To do this, we'll use the
 <li>Watch the logs for the nginx-ingress-controller (increasing verbosity as
    needed).</li>
 <li>Double-check your address and ports.</li>
-<li>Set the <code class="codehilite">GODEBUG=http2debug=2</code> environment variable to get detailed http/2
+<li>Set the <code class="codehilite"><span class="err">GODEBUG=http2debug=2</span></code> environment variable to get detailed http/2
    logging on the client and/or server.</li>
 <li>Study RFC 7540 (http/2) <a href="https://tools.ietf.org/html/rfc7540">https://tools.ietf.org/html/rfc7540</a>.</li>
 </ol>
@@ -1381,17 +1381,18 @@ to help make it easier for your users to consume your API.</p>
 </blockquote>
 <h3 id="notes-on-using-responserequest-streams">Notes on using response/request streams<a class="headerlink" href="#notes-on-using-responserequest-streams" title="Permanent link"> ¶</a></h3>
 <ol>
-<li>If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the <code class="codehilite">grpc_read_timeout</code> to acommodate for this.</li>
+<li>If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the <code class="codehilite"><span class="err">grpc_read_timeout</span></code> to acommodate for this.</li>
 <li>If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the
-<code class="codehilite">grpc_send_timeout</code> and the <code class="codehilite">client_body_timeout</code>.</li>
-<li>If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: <code class="codehilite">grpc_read_timeout</code>, <code class="codehilite">grpc_send_timeout</code> and <code class="codehilite">client_body_timeout</code>.</li>
+<code class="codehilite"><span class="err">grpc_send_timeout</span></code> and the <code class="codehilite"><span class="err">client_body_timeout</span></code>.</li>
+<li>If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: <code class="codehilite"><span class="err">grpc_read_timeout</span></code>, <code class="codehilite"><span class="err">grpc_send_timeout</span></code> and <code class="codehilite"><span class="err">client_body_timeout</span></code>.</li>
 </ol>
-<p>Values for the timeouts must be specified as e.g. <code class="codehilite">&quot;1200s&quot;</code>.</p>
+<p>Values for the timeouts must be specified as e.g. <code class="codehilite"><span class="err">&quot;1200s&quot;</span></code>.</p>
 <blockquote>
-<p>On the most recent versions of nginx-ingress, changing these timeouts requires using the <code class="codehilite">nginx.ingress.kubernetes.io/server-snippet</code> annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout seperately.</p>
+<p>On the most recent versions of nginx-ingress, changing these timeouts requires using the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/server-snippet</span></code> annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout seperately.</p>
 </blockquote>
                 
                   
+                
                 
               
               
@@ -1447,9 +1448,9 @@ to help make it easier for your users to consume your API.</p>
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1459,7 +1460,7 @@ to help make it easier for your users to consume your API.</p>
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
       

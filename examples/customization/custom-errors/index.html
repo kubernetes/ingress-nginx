@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#custom-errors" tabindex="1" class="md-skip">
+      <a href="#custom-errors" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1226,49 +1226,49 @@
                 <h1 id="custom-errors">Custom Errors<a class="headerlink" href="#custom-errors" title="Permanent link"> ¶</a></h1>
 <p>This example demonstrates how to use a custom backend to render custom error pages.</p>
 <h2 id="customized-default-backend">Customized default backend<a class="headerlink" href="#customized-default-backend" title="Permanent link"> ¶</a></h2>
-<p>First, create the custom <code class="codehilite">default-backend</code>. It will be used by the Ingress controller later on.</p>
-<div class="codehilite"><pre><span></span>$ kubectl create -f custom-default-backend.yaml
+<p>First, create the custom <code class="codehilite"><span class="err">default-backend</span></code>. It will be used by the Ingress controller later on.</p>
+<div class="codehilite"><pre><span></span><code>$ kubectl create -f custom-default-backend.yaml
 service <span class="s2">&quot;nginx-errors&quot;</span> created
 deployment.apps <span class="s2">&quot;nginx-errors&quot;</span> created
-</pre></div>
+</code></pre></div>
 
-<p>This should have created a Deployment and a Service with the name <code class="codehilite">nginx-errors</code>.</p>
-<div class="codehilite"><pre><span></span>$ kubectl get deploy,svc
+<p>This should have created a Deployment and a Service with the name <code class="codehilite"><span class="err">nginx-errors</span></code>.</p>
+<div class="codehilite"><pre><span></span><code>$ kubectl get deploy,svc
 NAME                           DESIRED   CURRENT   READY     AGE
 deployment.apps/nginx-errors   <span class="m">1</span>         <span class="m">1</span>         <span class="m">1</span>         10s
 
 NAME                   TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>   AGE
 service/nginx-errors   ClusterIP   <span class="m">10</span>.0.0.12   &lt;none&gt;        <span class="m">80</span>/TCP    10s
-</pre></div>
+</code></pre></div>
 
 <h2 id="ingress-controller-configuration">Ingress controller configuration<a class="headerlink" href="#ingress-controller-configuration" title="Permanent link"> ¶</a></h2>
 <p>If you do not already have an instance of the NGINX Ingress controller running, deploy it according to the
 <a href="../../../deploy/">deployment guide</a>, then follow these steps:</p>
 <ol>
 <li>
-<p>Edit the <code class="codehilite">nginx-ingress-controller</code> Deployment and set the value of the <code class="codehilite">--default-backend</code> flag to the name of the
+<p>Edit the <code class="codehilite"><span class="err">nginx-ingress-controller</span></code> Deployment and set the value of the <code class="codehilite"><span class="err">--default-backend</span></code> flag to the name of the
    newly created error backend.</p>
 </li>
 <li>
-<p>Edit the <code class="codehilite">nginx-configuration</code> ConfigMap and create the key <code class="codehilite">custom-http-errors</code> with a value of <code class="codehilite">404,503</code>.</p>
+<p>Edit the <code class="codehilite"><span class="err">nginx-configuration</span></code> ConfigMap and create the key <code class="codehilite"><span class="err">custom-http-errors</span></code> with a value of <code class="codehilite"><span class="err">404,503</span></code>.</p>
 </li>
 <li>
 <p>Take note of the IP address assigned to the NGINX Ingress controller Service.
-    <div class="codehilite"><pre><span></span>$ kubectl get svc ingress-nginx
+    <div class="codehilite"><pre><span></span><code>$ kubectl get svc ingress-nginx
 NAME            TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>          AGE
 ingress-nginx   ClusterIP   <span class="m">10</span>.0.0.13   &lt;none&gt;        <span class="m">80</span>/TCP,443/TCP   10m
-</pre></div></p>
+</code></pre></div></p>
 </li>
 </ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <code class="codehilite">ingress-nginx</code> Service is of type <code class="codehilite">ClusterIP</code> in this example. This may vary depending on your environment.
+<p>The <code class="codehilite"><span class="err">ingress-nginx</span></code> Service is of type <code class="codehilite"><span class="err">ClusterIP</span></code> in this example. This may vary depending on your environment.
 Make sure you can use the Service to reach NGINX before proceeding with the rest of this example.</p>
 </div>
 <h2 id="testing-error-pages">Testing error pages<a class="headerlink" href="#testing-error-pages" title="Permanent link"> ¶</a></h2>
 <p>Let us send a couple of HTTP requests using cURL and validate everything is working as expected.</p>
 <p>A request to the default backend returns a 404 error with a custom message:</p>
-<div class="codehilite"><pre><span></span>$ curl -D- http://10.0.0.13/
+<div class="codehilite"><pre><span></span><code>$ curl -D- http://10.0.0.13/
 HTTP/1.1 404 Not Found
 Server: nginx/1.13.12
 Date: Tue, 12 Jun 2018 19:11:24 GMT
@@ -1277,10 +1277,10 @@ Transfer-Encoding: chunked
 Connection: keep-alive
 
 <span class="nt">&lt;span&gt;</span>The page you&#39;re looking for could not be found.<span class="nt">&lt;/span&gt;</span>
-</pre></div>
+</code></pre></div>
 
-<p>A request with a custom <code class="codehilite">Accept</code> header returns the corresponding document type (JSON):</p>
-<div class="codehilite"><pre><span></span>$ curl -D- -H <span class="s1">&#39;Accept: application/json&#39;</span> http://10.0.0.13/
+<p>A request with a custom <code class="codehilite"><span class="err">Accept</span></code> header returns the corresponding document type (JSON):</p>
+<div class="codehilite"><pre><span></span><code>$ curl -D- -H <span class="s1">&#39;Accept: application/json&#39;</span> http://10.0.0.13/
 HTTP/1.1 <span class="m">404</span> Not Found
 Server: nginx/1.13.12
 Date: Tue, <span class="m">12</span> Jun <span class="m">2018</span> <span class="m">19</span>:12:36 GMT
@@ -1290,12 +1290,13 @@ Connection: keep-alive
 Vary: Accept-Encoding
 
 <span class="o">{</span> <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;The page you&#39;re looking for could not be found&quot;</span> <span class="o">}</span>
-</pre></div>
+</code></pre></div>
 
 <p>To go further with this example, feel free to deploy your own applications and Ingress objects, and validate that the
 responses are still in the correct format when a backend returns 503 (eg. if you scale a Deployment down to 0 replica).</p>
                 
                   
+                
                 
               
               
@@ -1351,9 +1352,9 @@ responses are still in the correct format when a backend returns 503 (eg. if you
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1363,7 +1364,7 @@ responses are still in the correct format when a backend returns 503 (eg. if you
       
     </div>
     
-      <script src="../../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
       

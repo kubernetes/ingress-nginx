@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,12 +53,12 @@
       
     
     
-      <script src="../../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#sticky-sessions" tabindex="1" class="md-skip">
+      <a href="#sticky-sessions" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -1222,18 +1222,18 @@
 <tbody>
 <tr>
 <td>nginx.ingress.kubernetes.io/affinity</td>
-<td>Type of the affinity, set this to <code class="codehilite">cookie</code> to enable session affinity</td>
-<td>string (NGINX only supports <code class="codehilite">cookie</code>)</td>
+<td>Type of the affinity, set this to <code class="codehilite"><span class="err">cookie</span></code> to enable session affinity</td>
+<td>string (NGINX only supports <code class="codehilite"><span class="err">cookie</span></code>)</td>
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/affinity-mode</td>
-<td>The affinity mode defines how sticky a session is. Use <code class="codehilite">balanced</code> to redistribute some sessions when scaling pods or <code class="codehilite">persistent</code> for maximum stickyness.</td>
-<td><code class="codehilite">balanced</code> (default) or <code class="codehilite">persistent</code></td>
+<td>The affinity mode defines how sticky a session is. Use <code class="codehilite"><span class="err">balanced</span></code> to redistribute some sessions when scaling pods or <code class="codehilite"><span class="err">persistent</span></code> for maximum stickyness.</td>
+<td><code class="codehilite"><span class="err">balanced</span></code> (default) or <code class="codehilite"><span class="err">persistent</span></code></td>
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-name</td>
 <td>Name of the cookie that will be created</td>
-<td>string (defaults to <code class="codehilite">INGRESSCOOKIE</code>)</td>
+<td>string (defaults to <code class="codehilite"><span class="err">INGRESSCOOKIE</span></code>)</td>
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-path</td>
@@ -1243,37 +1243,37 @@
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-samesite</td>
 <td>SameSite attribute to apply to the cookie</td>
-<td>Browser accepted values are <code class="codehilite">None</code>, <code class="codehilite">Lax</code>, and <code class="codehilite">Strict</code></td>
+<td>Browser accepted values are <code class="codehilite"><span class="err">None</span></code>, <code class="codehilite"><span class="err">Lax</span></code>, and <code class="codehilite"><span class="err">Strict</span></code></td>
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none</td>
-<td>Will omit <code class="codehilite">SameSite=None</code> attribute for older browsers which reject the more-recently defined <code class="codehilite">SameSite=None</code> value</td>
-<td><code class="codehilite">&quot;true&quot;</code> or <code class="codehilite">&quot;false&quot;</code></td>
+<td>Will omit <code class="codehilite"><span class="err">SameSite=None</span></code> attribute for older browsers which reject the more-recently defined <code class="codehilite"><span class="err">SameSite=None</span></code> value</td>
+<td><code class="codehilite"><span class="err">&quot;true&quot;</span></code> or <code class="codehilite"><span class="err">&quot;false&quot;</span></code></td>
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-max-age</td>
-<td>Time until the cookie expires, corresponds to the <code class="codehilite">Max-Age</code> cookie directive</td>
+<td>Time until the cookie expires, corresponds to the <code class="codehilite"><span class="err">Max-Age</span></code> cookie directive</td>
 <td>number of seconds</td>
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-expires</td>
-<td>Legacy version of the previous annotation for compatibility with older browsers, generates an <code class="codehilite">Expires</code> cookie directive by adding the seconds to the current date</td>
+<td>Legacy version of the previous annotation for compatibility with older browsers, generates an <code class="codehilite"><span class="err">Expires</span></code> cookie directive by adding the seconds to the current date</td>
 <td>number of seconds</td>
 </tr>
 <tr>
 <td>nginx.ingress.kubernetes.io/session-cookie-change-on-failure</td>
-<td>When set to <code class="codehilite">false</code> nginx ingress will send request to upstream pointed by sticky cookie even if previous attempt failed. When set to <code class="codehilite">true</code> and previous attempt failed, sticky cookie will be changed to point to another upstream.</td>
-<td><code class="codehilite">true</code> or <code class="codehilite">false</code> (defaults to <code class="codehilite">false</code>)</td>
+<td>When set to <code class="codehilite"><span class="err">false</span></code> nginx ingress will send request to upstream pointed by sticky cookie even if previous attempt failed. When set to <code class="codehilite"><span class="err">true</span></code> and previous attempt failed, sticky cookie will be changed to point to another upstream.</td>
+<td><code class="codehilite"><span class="err">true</span></code> or <code class="codehilite"><span class="err">false</span></code> (defaults to <code class="codehilite"><span class="err">false</span></code>)</td>
 </tr>
 </tbody>
 </table>
 <p>You can create the <a href="ingress.yaml">example Ingress</a> to test this:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl create -f ingress.yaml</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="go">kubectl create -f ingress.yaml</span>
+</code></pre></div>
 
 <h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link"> ¶</a></h2>
 <p>You can confirm that the Ingress works:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe ing nginx-test
+<div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl describe ing nginx-test
 <span class="go">Name:           nginx-test</span>
 <span class="go">Namespace:      default</span>
 <span class="go">Address:</span>
@@ -1305,10 +1305,10 @@
 <span class="go">Last-Modified: Tue, 24 Jan 2017 14:02:19 GMT</span>
 <span class="go">ETag: &quot;58875e6b-264&quot;</span>
 <span class="go">Accept-Ranges: bytes</span>
-</pre></div>
+</code></pre></div>
 
-<p>In the example above, you can see that the response contains a <code class="codehilite">Set-Cookie</code> header with the settings we have defined.
-This cookie is created by NGINX, it contains a randomly generated key corresponding to the upstream used for that request (selected using <a href="https://en.wikipedia.org/wiki/Consistent_hashing">consistent hashing</a>) and has an <code class="codehilite">Expires</code> directive.
+<p>In the example above, you can see that the response contains a <code class="codehilite"><span class="err">Set-Cookie</span></code> header with the settings we have defined.
+This cookie is created by NGINX, it contains a randomly generated key corresponding to the upstream used for that request (selected using <a href="https://en.wikipedia.org/wiki/Consistent_hashing">consistent hashing</a>) and has an <code class="codehilite"><span class="err">Expires</span></code> directive.
 If the user changes this cookie, NGINX creates a new one and redirects the user to another upstream.</p>
 <p>If the backend pool grows NGINX will keep sending the requests through the same server of the first request, even if it's overloaded.</p>
 <p>When the backend server is removed, the requests are re-routed to another upstream server. This does not require the cookie to be updated because the key's <a href="https://en.wikipedia.org/wiki/Consistent_hashing">consistent hash</a> will change.</p>
@@ -1316,6 +1316,7 @@ If the user changes this cookie, NGINX creates a new one and redirects the user 
 This means that you can face the situation that you've configured session affinity on one Ingress and it doesn't work because the Service is pointing to another Ingress that doesn't configure this.</p>
                 
                   
+                
                 
               
               
@@ -1371,9 +1372,9 @@ This means that you can face the situation that you've configured session affini
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
@@ -1383,7 +1384,7 @@ This means that you can face the situation that you've configured session affini
       
     </div>
     
-      <script src="../../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../../assets/javascripts/application.c33a9706.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
       
