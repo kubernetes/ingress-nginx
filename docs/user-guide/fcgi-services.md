@@ -79,15 +79,13 @@ spec:
           servicePort: fastcgi
 ```
 
-## The FastCGI Ingress Annotations
+## FastCGI Ingress Annotations
 
-### The `nginx.ingress.kubernetes.io/backend-protocol` Annotation
-
-To enable FastCGI, the `backend-protocol` annotation needs to be set to `FCGI`, which overrides the default `HTTP` value.
+To enable FastCGI, the `nginx.ingress.kubernetes.io/backend-protocol` annotation needs to be set to `FCGI`, which overrides the default `HTTP` value.
 
 > `nginx.ingress.kubernetes.io/backend-protocol: "FCGI"`
 
-This enables the _FastCGI_ mode for the whole _Ingress_ object.
+**This enables the _FastCGI_ mode for all paths defined in the _Ingress_ object**
 
 ### The `nginx.ingress.kubernetes.io/fastcgi-index` Annotation
 

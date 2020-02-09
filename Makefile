@@ -236,7 +236,11 @@ dev-env: check-go-version ## Starts a local Kubernetes cluster using minikube, b
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
-	@docker build --pull -t ingress-nginx/mkdocs images/mkdocs
+	@docker buildx build \
+		--pull \
+		--load \
+		--progress plain \
+		-t ingress-nginx/mkdocs images/mkdocs
 	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
 
 .PHONY: build-docs

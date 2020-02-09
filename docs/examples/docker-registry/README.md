@@ -26,9 +26,9 @@ wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/exam
 ```
 
 !!! Important
-  Running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.
+    Running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.
 
-  Please check [deploy a plain http registry](https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry)
+Please check [deploy a plain http registry](https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry)
 
 ### With TLS
 
