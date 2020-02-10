@@ -31,6 +31,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/nginx"
 )
@@ -175,6 +176,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		streamPort = flags.Int("stream-port", 10247, "Port to use for the lua TCP/UDP endpoint configuration.")
 
 		profilerPort = flags.Int("profiler-port", 10245, "Port to use for expose the ingress controller Go profiler when it is enabled.")
+
+		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
 	)
 
 	flags.MarkDeprecated("force-namespace-isolation", `This flag doesn't do anything.`)
@@ -199,6 +202,13 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 
 	if *showVersion {
 		return true, nil, nil
+	}
+
+	if *statusUpdateInterval < 5 {
+		klog.Warningf("The defined time to update the Ingress status too low (%v seconds). Adjusting to 5 seconds", *statusUpdateInterval)
+		status.UpdateInterval = 5
+	} else {
+		status.UpdateInterval = *statusUpdateInterval
 	}
 
 	if *ingressClass != "" {
