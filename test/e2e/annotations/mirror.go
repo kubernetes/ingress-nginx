@@ -69,7 +69,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Mirror", func() {
 
 	It("should disable mirror-request-body", func() {
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/mirror-uri":          "http://localhost/mirror",
+			"nginx.ingress.kubernetes.io/mirror-target":       "http://localhost/mirror",
 			"nginx.ingress.kubernetes.io/mirror-request-body": "off",
 		}
 
