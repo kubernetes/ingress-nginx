@@ -535,18 +535,39 @@ func New(
 		AddFunc: func(obj interface{}) {
 			cm := obj.(*corev1.ConfigMap)
 			key := k8s.MetaNamespaceKey(cm)
+
+			triggerUpdate := false
+
 			// updates to configuration configmaps can trigger an update
 			if changeTriggerUpdate(key) {
 				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
-
+				triggerUpdate = true
 				if key == configmap {
 					store.setConfig(cm)
 				}
 			}
 
-			updateCh.In() <- Event{
-				Type: ConfigurationEvent,
-				Obj:  obj,
+			ings := store.listers.IngressWithAnnotation.List()
+			for _, ingKey := range ings {
+				key := k8s.MetaNamespaceKey(ingKey)
+				ing, err := store.getIngress(key)
+				if err != nil {
+					klog.Errorf("could not find Ingress %v in local store: %v", key, err)
+					continue
+				}
+
+				if parser.AnnotationsReferencesConfigmap(ing) {
+					recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
+					store.syncIngress(ing)
+					triggerUpdate = true
+				}
+			}
+
+			if triggerUpdate {
+				updateCh.In() <- Event{
+					Type: ConfigurationEvent,
+					Obj:  obj,
+				}
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
