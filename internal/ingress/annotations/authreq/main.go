@@ -218,8 +218,8 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 			return nil, ing_errors.NewLocationDenied(fmt.Sprintf("unable to find configMap %q", proxySetHeaderMap))
 		}
 
-		for header, value := range proxySetHeadersMapContents.Data {
-			if !ValidHeader(header) || !ValidHeader(value) {
+		for header := range proxySetHeadersMapContents.Data {
+			if !ValidHeader(header) {
 				return nil, ing_errors.NewLocationDenied("invalid proxy-set-headers in configmap")
 			}
 		}
