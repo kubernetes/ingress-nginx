@@ -45,13 +45,6 @@ FLAGS=$@
 PKG=k8s.io/ingress-nginx
 ARCH=$(go env GOARCH)
 
-MINIKUBE_PATH=${HOME}/.minikube
-MINIKUBE_VOLUME="-v ${MINIKUBE_PATH}:${MINIKUBE_PATH}"
-if [ ! -d "${MINIKUBE_PATH}" ]; then
-  echo "Minikube directory not found! Volume will be excluded from docker build."
-  MINIKUBE_VOLUME=""
-fi
-
 # create output directory as current user to avoid problem with docker.
 mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
@@ -67,7 +60,6 @@ docker run                                            \
   -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" \
   -v "/var/run/docker.sock:/var/run/docker.sock"      \
   -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
-  ${MINIKUBE_VOLUME}                                  \
   -w "/go/src/${PKG}"                                 \
   -u $(id -u ${USER}):$(id -g ${USER})                \
   ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
