@@ -30,12 +30,6 @@ import (
 var _ = framework.IngressNginxDescribe("Default backend", func() {
 	f := framework.NewDefaultFramework("default-backend")
 
-	BeforeEach(func() {
-	})
-
-	AfterEach(func() {
-	})
-
 	It("should return 404 sending requests when only a default backend is running", func() {
 		testCases := []struct {
 			Name   string

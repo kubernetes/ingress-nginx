@@ -36,9 +36,6 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should redirect from www HTTP to HTTP", func() {
 		By("setting up server for redirect from www")
 		host := "fromtowwwredirect.bar.com"

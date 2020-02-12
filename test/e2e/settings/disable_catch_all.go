@@ -49,9 +49,6 @@ var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment flags")
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should ignore catch all Ingress", func() {
 		host := "foo"
 

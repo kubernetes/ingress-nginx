@@ -37,9 +37,6 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should block CIDRs defined in the ConfigMap", func() {
 		f.UpdateNginxConfigMapData("block-cidrs", "172.16.0.0/12,192.168.0.0/16,10.0.0.0/8")
 

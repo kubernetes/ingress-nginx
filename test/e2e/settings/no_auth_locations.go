@@ -53,9 +53,6 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		f.EnsureIngress(bi)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should return status code 401 when accessing '/' unauthentication", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {

@@ -29,9 +29,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", fun
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It(`set snippet "more_set_headers "Request-Id: $req_id";" in all locations"`, func() {
 		host := "configurationsnippet.foo.com"
 		annotations := map[string]string{

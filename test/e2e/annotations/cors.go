@@ -33,9 +33,6 @@ var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should enable cors", func() {
 		host := "cors.foo.com"
 		annotations := map[string]string{

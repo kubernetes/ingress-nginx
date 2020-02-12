@@ -33,9 +33,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set proxy_redirect to off", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/proxy-redirect-from": "off",

@@ -34,9 +34,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should return status code 200 for host 'foo' and 404 for 'bar'", func() {
 		host := "foo"
 		annotations := map[string]string{}

@@ -35,9 +35,6 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set valid auth-tls-secret", func() {
 		host := "authtls.foo.com"
 		nameSpace := f.Namespace
