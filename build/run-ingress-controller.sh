@@ -94,11 +94,6 @@ until curl --output /dev/null -fsSL http://localhost:8001/; do
   sleep 5
 done
 
-MINIKUBE_VOLUME=
-if [[ -d "${HOME}/.minikube" ]]; then
-  MINIKUBE_VOLUME=" -v ${HOME}/.minikube:${HOME}/.minikube "
-fi
-
 # if we run as user we cannot bind to port 80 and 443
 docker run \
   --rm \
@@ -109,7 +104,6 @@ docker run \
   -e POD_NAME="${POD_NAME}" \
   -v "${SSL_VOLUME}:/etc/ingress-controller/ssl/" \
   -v "${HOME}/.kube:${HOME}/.kube:ro" \
-  ${MINIKUBE_VOLUME} \
   "${IMAGE}-${ARCH}:${TAG}" /nginx-ingress-controller \
   --update-status=false \
   --v=2 \
