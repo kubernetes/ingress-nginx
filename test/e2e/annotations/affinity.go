@@ -40,9 +40,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set sticky cookie SERVERID", func() {
 		host := "sticky.foo.com"
 		annotations := map[string]string{

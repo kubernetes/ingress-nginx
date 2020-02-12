@@ -36,9 +36,6 @@ var _ = framework.IngressNginxDescribe("Request smuggling", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should not return body content from error_page", func() {
 		host := "foo.bar.com"
 

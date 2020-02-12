@@ -37,9 +37,6 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should configure satisfy directive correctly", func() {
 		host := "satisfy"
 		annotationKey := "nginx.ingress.kubernetes.io/satisfy"

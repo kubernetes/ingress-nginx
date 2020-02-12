@@ -30,9 +30,6 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should enable modsecurity", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace

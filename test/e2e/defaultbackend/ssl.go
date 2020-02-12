@@ -29,12 +29,6 @@ import (
 var _ = framework.IngressNginxDescribe("Default backend - SSL", func() {
 	f := framework.NewDefaultFramework("default-backend")
 
-	BeforeEach(func() {
-	})
-
-	AfterEach(func() {
-	})
-
 	It("should return a self generated SSL certificate", func() {
 		By("checking SSL Certificate using the NGINX IP address")
 		resp, _, errs := gorequest.New().

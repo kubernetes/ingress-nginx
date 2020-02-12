@@ -37,12 +37,6 @@ func noRedirectPolicyFunc(gorequest.Request, []gorequest.Request) error {
 var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 	f := framework.NewDefaultFramework("redirect")
 
-	BeforeEach(func() {
-	})
-
-	AfterEach(func() {
-	})
-
 	It("should respond with a standard redirect code", func() {
 		By("setting permanent-redirect annotation")
 

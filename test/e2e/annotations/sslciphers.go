@@ -30,9 +30,6 @@ var _ = framework.IngressNginxDescribe("Annotations - SSL CIPHERS", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should change ssl ciphers", func() {
 		host := "ciphers.foo.com"
 		annotations := map[string]string{

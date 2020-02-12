@@ -33,9 +33,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should redirect to https", func() {
 		host := "forcesslredirect.bar.com"
 

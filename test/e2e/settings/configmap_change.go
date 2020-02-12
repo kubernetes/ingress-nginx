@@ -33,9 +33,6 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should reload after an update in the configuration", func() {
 		host := "configmap-change"
 

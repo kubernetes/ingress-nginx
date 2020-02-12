@@ -50,9 +50,6 @@ var _ = framework.IngressNginxDescribe("Global External Auth", func() {
 		f.NewHttpbinDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	Context("when global external authentication is configured", func() {
 
 		BeforeEach(func() {

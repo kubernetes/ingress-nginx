@@ -35,12 +35,6 @@ import (
 var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 	f := framework.NewDefaultFramework("service-backend")
 
-	BeforeEach(func() {
-	})
-
-	AfterEach(func() {
-	})
-
 	It("should return 503 when backend service does not exist", func() {
 		host := "nonexistent.svc.com"
 

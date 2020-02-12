@@ -38,9 +38,6 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 		f.UpdateNginxConfigMapData(setting, "false")
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should trust X-Forwarded headers when setting is true", func() {
 		host := "forwarded-headers"
 
