@@ -107,7 +107,6 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error
 			Logf("Unexpected error while creating namespace: %v", err)
 			return false, nil
 		}
-		Logf("Created namespace: %v", got.Name)
 		return true, nil
 	})
 	if err != nil {
