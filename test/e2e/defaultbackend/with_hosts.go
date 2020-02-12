@@ -38,9 +38,6 @@ var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should apply the annotation to the default backend", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/proxy-buffer-size": "8k",

@@ -32,9 +32,6 @@ var _ = framework.IngressNginxDescribe("Load Balance - Configmap value", func() 
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should apply the configmap load-balance setting", func() {
 		host := "load-balance.com"
 

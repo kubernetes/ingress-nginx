@@ -33,9 +33,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Approot", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should redirect to /foo", func() {
 		host := "approot.bar.com"
 

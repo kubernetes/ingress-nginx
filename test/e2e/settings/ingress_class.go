@@ -37,9 +37,6 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 
-	AfterEach(func() {
-	})
-
 	Context("Without a specific ingress-class", func() {
 
 		It("should ignore Ingress with class", func() {

@@ -38,9 +38,6 @@ var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func(
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("configures Nginx correctly", func() {
 		host := "customerrors.foo.com"
 

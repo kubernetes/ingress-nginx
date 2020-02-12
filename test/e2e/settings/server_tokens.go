@@ -35,9 +35,6 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should not exists Server header in the response", func() {
 		f.UpdateNginxConfigMapData(serverTokens, "false")
 

@@ -36,9 +36,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should write rewrite logs", func() {
 		By("setting enable-rewrite-log annotation")
 

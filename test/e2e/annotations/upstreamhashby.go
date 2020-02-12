@@ -79,9 +79,6 @@ var _ = framework.IngressNginxDescribe("Annotations - UpstreamHashBy", func() {
 		f.NewEchoDeploymentWithReplicas(6)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should connect to the same pod", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/upstream-hash-by": "$request_uri",
@@ -101,6 +98,5 @@ var _ = framework.IngressNginxDescribe("Annotations - UpstreamHashBy", func() {
 
 		podMap := startIngress(f, annotations)
 		Expect(len(podMap)).Should(Equal(3))
-
 	})
 })

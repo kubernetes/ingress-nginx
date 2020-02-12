@@ -31,9 +31,6 @@ var _ = framework.IngressNginxDescribe("LuaSharedDict", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("configures lua shared dicts", func() {
 		ingress := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ingress)

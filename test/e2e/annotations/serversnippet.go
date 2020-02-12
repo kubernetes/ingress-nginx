@@ -31,9 +31,6 @@ var _ = framework.IngressNginxDescribe("Annotations - ServerSnippet", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It(`add valid directives to server via server snippet"`, func() {
 		host := "serversnippet.foo.com"
 		annotations := map[string]string{
