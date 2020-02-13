@@ -19,6 +19,8 @@ cd ingress-nginx
 
 ### Initial developer environment build
 
+Ensure docker experimental features option is enabled for [buildx](https://docs.docker.com/buildx/working-with-buildx/)
+
 ```
 $ make dev-env
 ```
