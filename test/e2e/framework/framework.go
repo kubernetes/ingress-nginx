@@ -58,11 +58,6 @@ type Framework struct {
 	KubeConfig             *restclient.Config
 	APIExtensionsClientSet apiextcs.Interface
 
-	// To make sure that this framework cleans up after itself, no matter what,
-	// we install a Cleanup action before each test and clear it after. If we
-	// should abort, the AfterSuite hook should run all Cleanup actions.
-	cleanupHandle CleanupActionHandle
-
 	Namespace string
 }
 
@@ -81,8 +76,6 @@ func NewDefaultFramework(baseName string) *Framework {
 
 // BeforeEach gets a client and makes a namespace.
 func (f *Framework) BeforeEach() {
-	f.cleanupHandle = AddCleanupAction(f.AfterEach)
-
 	kubeConfig, err := restclient.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
@@ -110,8 +103,6 @@ func (f *Framework) BeforeEach() {
 
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
-	RemoveCleanupAction(f.cleanupHandle)
-
 	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
