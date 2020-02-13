@@ -42,7 +42,7 @@ endif
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 12
+E2E_NODES ?= 15
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
 # run e2e test suite with tests that check for memory leaks? (default is false)
@@ -232,7 +232,7 @@ dep-ensure: check-go-version ## Update and vendo go dependencies.
 
 .PHONY: dev-env
 dev-env: check-go-version ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
-	@DIND_TASKS=0 USE_DOCKER=false build/dev-env.sh
+	@build/dev-env.sh
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
@@ -258,7 +258,7 @@ misspell: check-go-version ## Check for spelling errors.
 
 .PHONY: kind-e2e-test
 kind-e2e-test: check-go-version ## Run e2e tests using kind.
-	@DIND_TASKS=0 test/e2e/run.sh
+	@test/e2e/run.sh
 
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
