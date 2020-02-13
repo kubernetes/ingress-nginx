@@ -39,11 +39,9 @@ import (
 var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc")
 
-	BeforeEach(func() {
-		f.NewGRPCFortuneTellerDeployment()
-	})
-
 	It("should use grpc_pass in the configuration file", func() {
+		f.NewGRPCFortuneTellerDeployment()
+
 		host := "grpc"
 
 		annotations := map[string]string{
@@ -67,8 +65,6 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	})
 
 	It("should return OK for service with backend protocol GRPC", func() {
-		Skip("GRPC test temporarily disabled")
-
 		f.NewGRPCBinDeployment()
 
 		host := "echo"
@@ -127,8 +123,6 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	})
 
 	It("should return OK for service with backend protocol GRPCS", func() {
-		Skip("GRPC test temporarily disabled")
-
 		f.NewGRPCBinDeployment()
 
 		host := "echo"
