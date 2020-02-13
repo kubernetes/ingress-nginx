@@ -51,3 +51,5 @@ cover.out
 # secret terraform variables
 build/images/nginx/aws.tfvars
 build/images/nginx/env.tfvars
+
+images/fastcgi-helloserver/rootfs/fastcgi-helloserver
