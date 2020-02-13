@@ -1335,8 +1335,7 @@ have been tested.</p>
 </code></pre></div></p>
 <p>All these options (including host) allow environment variables, such as <code class="codehilite"><span class="err">$HOSTNAME</span></code> or <code class="codehilite"><span class="err">$HOST_IP</span></code>. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like <code class="codehilite"><span class="err">$HOST_IP</span></code> (which can be 'mounted' with the <code class="codehilite"><span class="err">status.hostIP</span></code> fieldpath, as described <a href="https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api">here</a>) to make sure traces will be sent to the local agent.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link"> ¶</a></h2>
-<p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed
-using Minikube.</p>
+<p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed using Minikube.</p>
 <h3 id="zipkin">Zipkin<a class="headerlink" href="#zipkin" title="Permanent link"> ¶</a></h3>
 <p>In the <a href="https://github.com/rnburn/zipkin-date-server">rnburn/zipkin-date-server</a>
 GitHub repository is an example of a dockerized date service. To install the example and Zipkin collector run:</p>
