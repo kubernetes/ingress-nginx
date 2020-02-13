@@ -78,7 +78,6 @@ minikube addons disable ingress
 ```console
 $ kubectl get pods -n ingress-nginx
 NAME                                       READY     STATUS    RESTARTS   AGE
-default-http-backend-66b447d9cf-rrlf9      1/1       Running   0          12s
 nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
 ```
 

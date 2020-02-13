@@ -14,7 +14,7 @@ data:
   ssl-protocols: SSLv2
 ```
 
-!!! Important
+!!! important
     The key and values in a ConfigMap can only be strings.
     This means that we want a value with boolean values we need to quote the values, like "true" or "false".
     Same for numbers, like "100".
@@ -567,7 +567,7 @@ Since `0.27.0` and due to a [change in the MaxMind databases](https://blog.maxmi
 For this reason, it is required to define a new flag `--maxmind-license-key` in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
 Alternatively, it is possible to use a volume to mount the files `/etc/nginx/geoip/GeoLite2-City.mmdb` and `/etc/nginx/geoip/GeoLite2-ASN.mmdb`, avoiding the overhead of the download.
 
-!!! Important
+!!! important
     If the feature is enabled but the files are missing, GeoIP2 will not be enabled.
 
 _**default:**_ false

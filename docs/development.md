@@ -19,11 +19,6 @@ cd ingress-nginx
 
 ### Initial developer environment build
 
->**Prequisites**: Minikube must be installed.
-See [releases](https://github.com/kubernetes/minikube/releases) for installation instructions.
-
-If you are using **MacOS** and deploying to **minikube**, the following command will build the local nginx controller container image and deploy the ingress controller onto a minikube cluster with RBAC enabled in the namespace `ingress-nginx`:
-
 ```
 $ make dev-env
 ```

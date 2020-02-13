@@ -7,3 +7,5 @@ bases:
 images:
 - name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
   newTag: dev
+patchesStrategicMerge:
+- service-hostport.yaml

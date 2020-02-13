@@ -78,7 +78,6 @@ or per-Ingress with the `nginx.ingress.kubernetes.io/ssl-redirect: "false"`
 annotation in the particular resource.
 
 !!! tip
-
     When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a
     redirect to HTTPS even when there is no TLS certificate available.
     This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"`

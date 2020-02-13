@@ -47,7 +47,7 @@ func TestParse(t *testing.T) {
 			Target:      "https://test.env.com/$request_uri",
 		}},
 		{map[string]string{requestBody: "off"}, &Config{
-			Source:      ngxURI,
+			Source:      "",
 			RequestBody: "off",
 			Target:      "",
 		}},
