@@ -104,7 +104,7 @@ func (f *Framework) BeforeEach() {
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
 	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error deleting namespace %v", f.Namespace)
 
 	if ginkgo.CurrentGinkgoTestDescription().Failed {
 		log, err := f.NginxLogs()

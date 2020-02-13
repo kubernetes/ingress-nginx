@@ -39,9 +39,11 @@ import (
 var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc")
 
-	It("should use grpc_pass in the configuration file", func() {
+	BeforeEach(func() {
 		f.NewGRPCFortuneTellerDeployment()
+	})
 
+	It("should use grpc_pass in the configuration file", func() {
 		host := "grpc"
 
 		annotations := map[string]string{
@@ -65,15 +67,19 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	})
 
 	It("should return OK for service with backend protocol GRPC", func() {
+		Skip("GRPC test temporarily disabled")
+
+		f.NewGRPCBinDeployment()
+
 		host := "echo"
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grpcbin",
+				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "grpcb.in",
+				ExternalName: fmt.Sprintf("grpcbin.%v.svc.cluster.local", f.Namespace),
 				Type:         corev1.ServiceTypeExternalName,
 				Ports: []corev1.ServicePort{
 					{
@@ -91,7 +97,7 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin", 9000, annotations)
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin-test", 9000, annotations)
 
 		f.EnsureIngress(ing)
 
@@ -121,15 +127,19 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	})
 
 	It("should return OK for service with backend protocol GRPCS", func() {
+		Skip("GRPC test temporarily disabled")
+
+		f.NewGRPCBinDeployment()
+
 		host := "echo"
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grpcbin",
+				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "grpcb.in",
+				ExternalName: fmt.Sprintf("grpcbin.%v.svc.cluster.local", f.Namespace),
 				Type:         corev1.ServiceTypeExternalName,
 				Ports: []corev1.ServicePort{
 					{
@@ -153,7 +163,7 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 			`,
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin", 9001, annotations)
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin-test", 9001, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
