@@ -115,7 +115,7 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 			case res := <-result:
 				Expect(res.errs).Should(BeEmpty())
 				Expect(res.status).To(Equal(http.StatusOK), "expecting a valid response from HTTP request")
-				Expect(time.Since(startTime).Seconds()).To(BeNumerically(">", 70), "waiting shutdown")
+				Expect(time.Since(startTime).Seconds()).To(BeNumerically(">", 60), "waiting shutdown")
 				ticker.Stop()
 				return
 			case <-ticker.C:
