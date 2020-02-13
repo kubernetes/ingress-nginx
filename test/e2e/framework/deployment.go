@@ -219,10 +219,12 @@ func (f *Framework) NewGRPCBinDeployment() {
 								{
 									Name:          "insecure",
 									ContainerPort: 9000,
+									Protocol:      corev1.ProtocolTCP,
 								},
 								{
 									Name:          "secure",
 									ContainerPort: 9001,
+									Protocol:      corev1.ProtocolTCP,
 								},
 							},
 							ReadinessProbe: probe,
