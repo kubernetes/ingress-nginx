@@ -82,6 +82,7 @@ func (a mirror) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.Target, err = parser.GetStringAnnotation("mirror-target", ing)
 	if err != nil {
 		config.Target = ""
+		config.Source = ""
 	}
 
 	return config, nil

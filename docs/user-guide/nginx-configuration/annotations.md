@@ -171,7 +171,7 @@ If you use the ``cookie`` affinity type you can also specify the name of the coo
 
 The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.
 
-Use `nginx.ingress.kubernetes.io/session-cookie-samesite` to apply a `SameSite` attribute to the sticky cookie. Browser accepted values are `None`, `Lax`, and `Strict`. Some older browsers reject cookies with the more-recently-defined `SameSite=None`. To omit `SameSite=None` from these older browsers, add the annotation `nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true"`.
+Use `nginx.ingress.kubernetes.io/session-cookie-samesite` to apply a `SameSite` attribute to the sticky cookie. Browser accepted values are `None`, `Lax`, and `Strict`. Some browsers reject cookies with `SameSite=None`, including those created before the `SameSite=None` specification (e.g. Chrome 5X). Other browsers mistakenly treat `SameSite=None` cookies as `SameSite=Strict` (e.g. Safari running on OSX 14). To omit `SameSite=None` from browsers with these incompatibilities, add the annotation `nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true"`.
 
 ### Authentication
 
@@ -352,7 +352,7 @@ Enables automatic conversion of preload links specified in the “Link” respon
 Allows the definition of one or more aliases in the server definition of the NGINX configuration using the annotation `nginx.ingress.kubernetes.io/server-alias: "<alias 1>,<alias 2>"`.
 This will create a server with the same configuration, but adding new values to the `server_name` directive.
 
-!!! Note
+!!! note
 	  A server-alias name cannot conflict with the hostname of an existing server. If it does, the server-alias annotation will be ignored.
     If a server-alias is created and later a new server with the same hostname is created, the new server configuration will take
     place over the alias configuration.
@@ -446,7 +446,8 @@ By default the controller redirects all requests to an existing service that pro
 `nginx.ingress.kubernetes.io/enable-global-auth`:
    indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to `"true"`.
 
-!!! note For more information please see [global-auth-url](./configmap.md#global-auth-url).
+!!! note
+    For more information please see [global-auth-url](./configmap.md#global-auth-url).
 
 ### Rate limiting
 
@@ -837,7 +838,7 @@ nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 ### Use Regex
 
 !!! attention
-When using this annotation with the NGINX annotation `nginx.ingress.kubernetes.io/affinity` of type `cookie`,  `nginx.ingress.kubernetes.io/session-cookie-path` must be also set; Session cookie paths do not support regex.
+    When using this annotation with the NGINX annotation `nginx.ingress.kubernetes.io/affinity` of type `cookie`,  `nginx.ingress.kubernetes.io/session-cookie-path` must be also set; Session cookie paths do not support regex.
 
 Using the `nginx.ingress.kubernetes.io/use-regex` annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is `false`.
 
@@ -885,4 +886,4 @@ nginx.ingress.kubernetes.io/mirror-request-body: "off"
 
 The request sent to the mirror is linked to the orignial request. If you have a slow mirror backend, then the orignial request will throttle.
 
-For more information on the mirror module see https://nginx.org/en/docs/http/ngx_http_mirror_module.html
+For more information on the mirror module see [ngx_http_mirror_module](https://nginx.org/en/docs/http/ngx_http_mirror_module.html)

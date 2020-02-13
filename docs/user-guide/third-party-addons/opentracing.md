@@ -100,8 +100,7 @@ All these options (including host) allow environment variables, such as `$HOSTNA
 
 ## Examples
 
-The following examples show how to deploy and test different distributed tracing systems. These example can be performed
-using Minikube.
+The following examples show how to deploy and test different distributed tracing systems. These example can be performed using Minikube.
 
 ### Zipkin
 

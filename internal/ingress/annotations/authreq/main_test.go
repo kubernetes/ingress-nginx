@@ -276,8 +276,8 @@ func TestProxySetHeaders(t *testing.T) {
 	}{
 		{"single header", "http://goog.url", map[string]string{"header": "h1"}, false},
 		{"no header map", "http://goog.url", nil, true},
-		{"header with spaces", "http://goog.url", map[string]string{"header": "bad value"}, true},
-		{"header with other bad symbols", "http://goog.url", map[string]string{"header": "bad+value"}, true},
+		{"header with spaces", "http://goog.url", map[string]string{"header": "bad value"}, false},
+		{"header with other bad symbols", "http://goog.url", map[string]string{"header": "bad+value"}, false},
 	}
 
 	for _, test := range tests {

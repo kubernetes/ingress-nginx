@@ -123,6 +123,12 @@ function _M.rewrite(location_config)
     end
   end
 
+  if config.use_proxy_protocol then
+    if ngx.var.proxy_protocol_server_port == "443" then
+      ngx.var.pass_access_scheme = "https"
+    end
+  end
+
   ngx.var.pass_port = ngx.var.pass_server_port
   if config.is_ssl_passthrough_enabled then
     if ngx.var.pass_server_port == config.listen_ports.ssl_proxy then

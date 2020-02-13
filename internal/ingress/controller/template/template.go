@@ -275,6 +275,7 @@ func configForLua(input interface{}) string {
 
 	return fmt.Sprintf(`{
 		use_forwarded_headers = %t,
+		use_proxy_protocol = %t,
 		is_ssl_passthrough_enabled = %t,
 		http_redirect_code = %v,
 		listen_ports = { ssl_proxy = "%v", https = "%v" },
@@ -285,6 +286,7 @@ func configForLua(input interface{}) string {
 		hsts_preload = %t,
 	}`,
 		all.Cfg.UseForwardedHeaders,
+		all.Cfg.UseProxyProtocol,
 		all.IsSSLPassthroughEnabled,
 		all.Cfg.HTTPRedirectCode,
 		all.ListenPorts.SSLProxy,

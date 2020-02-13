@@ -22,10 +22,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-NAMESPACE="${NAMESPACE:-ingress-nginx}"
-echo "NAMESPACE is set to ${NAMESPACE}"
-
-kubectl config use-context minikube
+DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 
 export TAG=dev
 export ARCH=amd64
@@ -33,46 +30,77 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
-{ [ "$(minikube status | grep -c Running)" -ge 2 ] && minikube status | grep -qE ': Configured$|Correctly Configured'; } \
-  || minikube start \
-    --extra-config=kubelet.sync-frequency=1s \
-    --extra-config=apiserver.authorization-mode=RBAC
+if ! command -v kind &> /dev/null; then
+  echo "kind is not installed"
+  echo "Use a package manager or visit the official site https://kind.sigs.k8s.io"
+  exit 1
+fi
 
-# shellcheck disable=SC2046
-eval $(minikube docker-env --shell bash)
+if ! command -v kubectl &> /dev/null; then
+  echo "Please install kubectl 1.15 or higher"
+  exit 1
+fi
+
+KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
+if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
+  echo "Please update kubectl to 1.15 or higher"
+  exit 1
+fi
 
 echo "[dev-env] building container"
 make build container
 docker tag "${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG}" "${DEV_IMAGE}"
 
-# kubectl >= 1.14 includes Kustomize via "apply -k". Makes it easier to use on Linux as well, assuming kubectl installed
-KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
-if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
-  for tool in kubectl kustomize; do
-	echo "[dev-env] installing $tool"
-	$tool version || brew install $tool
-  done
-fi
+export K8S_VERSION=${K8S_VERSION:-v1.17.2@sha256:59df31fc61d1da5f46e8a61ef612fa53d3f9140f82419d1ef1a6b9656c6b737c}
 
-if ! kubectl get namespace "${NAMESPACE}"; then
-  kubectl create namespace "${NAMESPACE}"
-fi
+export DOCKER_CLI_EXPERIMENTAL=enabled
 
-kubectl get deploy nginx-ingress-controller -n "${NAMESPACE}" && kubectl delete deploy nginx-ingress-controller -n "${NAMESPACE}"
+KIND_CLUSTER_NAME="ingress-nginx-dev"
 
-ROOT=./deploy/minikube
-
-if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
-  pushd $ROOT
-  kustomize edit set namespace "${NAMESPACE}"
-  kustomize edit set image "quay.io/kubernetes-ingress-controller/nginx-ingress-controller=${DEV_IMAGE}"
-  popd
-
-  echo "[dev-env] deploying NGINX Ingress controller in namespace $NAMESPACE"
-  kustomize build $ROOT | kubectl apply -f -
+if ! kind get clusters -q | grep -q ${KIND_CLUSTER_NAME}; then
+echo "[dev-env] creating Kubernetes cluster with kind"
+cat <<EOF | kind create cluster --name ${KIND_CLUSTER_NAME} --config=-
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+        authorization-mode: "AlwaysAllow"
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 80
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 443
+    protocol: TCP
+EOF
 else
-  sed -i -e "s|^namespace: .*|namespace: ${NAMESPACE}|g" "${ROOT}/kustomization.yaml"
-
-  echo "[dev-env] deploying NGINX Ingress controller in namespace $NAMESPACE"
-  kubectl apply -k "${ROOT}"
+  echo "[dev-env] using existing Kubernetes kind cluster"
 fi
+
+echo "[dev-env] copying docker images to cluster..."
+kind load docker-image --name="${KIND_CLUSTER_NAME}" "${DEV_IMAGE}"
+
+echo "[dev-env] deploying NGINX Ingress controller..."
+kubectl create namespace ingress-nginx || true
+kubectl apply -k ${DIR}/../deploy/kind
+
+echo "[dev-env] deleting old ingress-nginx pods..."
+MINUTE_AGO=$(python -c "from datetime import datetime,timedelta; print((datetime.utcnow()-timedelta(seconds=60)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+kubectl get pods --namespace ingress-nginx -o go-template \
+  --template '{{range .items}}{{.metadata.name}} {{.metadata.creationTimestamp}}{{"\n"}}{{end}}' | \
+  awk -v MINUTE_AGO=$MINUTE_AGO '$2 <= MINUTE_AGO { print $1 }' | \
+  xargs kubectl delete pod --namespace ingress-nginx
+
+cat <<EOF
+
+Kubernetes cluster ready and ingress-nginx listening in localhost using ports 80 and 443
+
+To delete the dev cluster execute: 'kind delete cluster --name ingress-nginx-dev'
+
+EOF
