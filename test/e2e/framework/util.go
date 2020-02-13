@@ -117,7 +117,12 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error
 
 // DeleteKubeNamespace deletes a namespace and all the objects inside
 func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
-	return c.CoreV1().Namespaces().Delete(namespace, metav1.NewDeleteOptions(0))
+	grace := int64(0)
+	pb := metav1.DeletePropagationBackground
+	return c.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{
+		GracePeriodSeconds: &grace,
+		PropagationPolicy:  &pb,
+	})
 }
 
 // ExpectNoError tests whether an error occurred.

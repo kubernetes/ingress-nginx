@@ -174,6 +174,102 @@ server {
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
 }
 
+// NewGRPCBinDeployment creates a new deployment of the
+// moul/grpcbin image for GRPC tests
+func (f *Framework) NewGRPCBinDeployment() {
+	name := "grpcbin"
+
+	probe := &corev1.Probe{
+		InitialDelaySeconds: 5,
+		PeriodSeconds:       10,
+		SuccessThreshold:    2,
+		TimeoutSeconds:      1,
+		Handler: corev1.Handler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.FromInt(9000),
+			},
+		},
+	}
+
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: f.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: NewInt32(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": name,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": name,
+					},
+				},
+				Spec: corev1.PodSpec{
+					TerminationGracePeriodSeconds: NewInt64(0),
+					Containers: []corev1.Container{
+						{
+							Name:  name,
+							Image: "moul/grpcbin",
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "insecure",
+									ContainerPort: 9000,
+								},
+								{
+									Name:          "secure",
+									ContainerPort: 9001,
+								},
+							},
+							ReadinessProbe: probe,
+							LivenessProbe:  probe,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	d := f.EnsureDeployment(deployment)
+	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: f.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "insecure",
+					Port:       9000,
+					TargetPort: intstr.FromInt(9000),
+					Protocol:   corev1.ProtocolTCP,
+				},
+				{
+					Name:       "secure",
+					Port:       9001,
+					TargetPort: intstr.FromInt(9000),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+			Selector: map[string]string{
+				"app": name,
+			},
+		},
+	}
+
+	s := f.EnsureService(service)
+	Expect(s).NotTo(BeNil(), "expected a service but none returned")
+
+	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 1)
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
+}
+
 func newDeployment(name, namespace, image string, port int32, replicas int32, command []string,
 	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume) *appsv1.Deployment {
 	probe := &corev1.Probe{
