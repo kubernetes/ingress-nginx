@@ -91,10 +91,11 @@ kubectl create namespace ingress-nginx || true
 kubectl apply -k ${DIR}/../deploy/kind
 
 echo "[dev-env] deleting old ingress-nginx pods..."
+MINUTE_AGO=$(python -c "from datetime import datetime,timedelta; print((datetime.utcnow()-timedelta(seconds=60)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
 kubectl get pods --namespace ingress-nginx -o go-template \
   --template '{{range .items}}{{.metadata.name}} {{.metadata.creationTimestamp}}{{"\n"}}{{end}}' | \
-  awk '$2 <= $(python -c "from datetime import datetime,timedelta; print((datetime.now()-timedelta(seconds=60)).strftime(\"%Y-%m-%dT%H:%M:%S%Z\"))") { print $1 }' | \
-  xargs --no-run-if-empty kubectl delete pod --namespace ingress-nginx
+  awk -v MINUTE_AGO=$MINUTE_AGO '$2 <= MINUTE_AGO { print $1 }' | \
+  xargs kubectl delete pod --namespace ingress-nginx
 
 cat <<EOF
 
