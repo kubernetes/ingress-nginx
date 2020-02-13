@@ -30,11 +30,21 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
-kind --version || $(echo "Please install kind.";exit 1)
+if ! command -v kind &> /dev/null; then
+  echo "kind is not installed"
+  echo "Use a package manager or visit the official site https://kind.sigs.k8s.io"
+  exit 1
+fi
+
+if ! command -v kubectl &> /dev/null; then
+  echo "Please install kubectl 1.15 or higher"
+  exit 1
+fi
 
 KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
 if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
-  echo "[dev-env] Please update kubectl to 1.15 or higher"
+  echo "Please update kubectl to 1.15 or higher"
+  exit 1
 fi
 
 echo "[dev-env] building container"
@@ -83,7 +93,7 @@ kubectl apply -k ${DIR}/../deploy/kind
 echo "[dev-env] deleting old ingress-nginx pods..."
 kubectl get pods --namespace ingress-nginx -o go-template \
   --template '{{range .items}}{{.metadata.name}} {{.metadata.creationTimestamp}}{{"\n"}}{{end}}' | \
-  awk '$2 <= "'$(date -d'now-1 minute' -Ins --utc | sed 's/+0000/Z/')'" { print $1 }' | \
+  awk '$2 <= $(python -c "from datetime import datetime,timedelta; print((datetime.now()-timedelta(seconds=60)).strftime(\"%Y-%m-%dT%H:%M:%S%Z\"))") { print $1 }' | \
   xargs --no-run-if-empty kubectl delete pod --namespace ingress-nginx
 
 cat <<EOF

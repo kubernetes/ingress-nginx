@@ -47,6 +47,11 @@ if ! command -v parallel &> /dev/null; then
   exit 1
 fi
 
+if ! command -v kind --version &> /dev/null; then
+  echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
+  exit 1
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export TAG=dev
@@ -58,8 +63,6 @@ export K8S_VERSION=${K8S_VERSION:-v1.17.2@sha256:59df31fc61d1da5f46e8a61ef612fa5
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 KIND_CLUSTER_NAME="ingress-nginx-dev"
-
-kind --version || $(echo "Please install kind before running e2e tests";exit 1)
 
 echo "[dev-env] creating Kubernetes cluster with kind"
 
