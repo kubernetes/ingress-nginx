@@ -232,7 +232,7 @@ dep-ensure: check-go-version ## Update and vendo go dependencies.
 
 .PHONY: dev-env
 dev-env: check-go-version ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
-	@DIND_TASKS=0 USE_DOCKER=false build/dev-env.sh
+	@build/dev-env.sh
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
