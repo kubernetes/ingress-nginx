@@ -59,9 +59,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 
 		bi, bs := buildIngressWithUnavailableServiceEndpoints(host, f.Namespace, "/")
 
-		svc := f.EnsureService(bs)
-		Expect(svc).NotTo(BeNil())
-
+		f.EnsureService(bs)
 		f.EnsureIngress(bi)
 
 		f.WaitForNginxServer(host,
