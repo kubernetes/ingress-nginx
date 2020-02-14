@@ -200,7 +200,9 @@ type Server struct {
 	// SSLCiphers returns list of ciphers to be enabled
 	SSLCiphers string `json:"sslCiphers,omitempty"`
 	// AuthTLSError contains the reason why the access to a server should be denied
-	AuthTLSError  string          `json:"authTLSError,omitempty"`
+	AuthTLSError string `json:"authTLSError,omitempty"`
+	// HTTPListeners is the pair of a HTTP and a HTTPS port on which the server listens
+	// +optional
 	HTTPListeners httpport.Config `json:"httpListeners,omitempty"`
 }
 
