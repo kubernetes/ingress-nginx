@@ -19,11 +19,14 @@ package annotations
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/httpport"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -44,6 +47,8 @@ var (
 	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
 	annotationUpstreamHashBy       = parser.GetAnnotationWithPrefix("upstream-hash-by")
 	annotationCustomHTTPErrors     = parser.GetAnnotationWithPrefix("custom-http-errors")
+	annotationHTTPPort             = parser.GetAnnotationWithPrefix("http-port")
+	annotationHTTPSPort            = parser.GetAnnotationWithPrefix("https-port")
 )
 
 type mockCfg struct {
@@ -316,3 +321,75 @@ func TestMergeLocationAnnotations(t *testing.T) {
 	}
 }
 */
+
+func TestHTTPListeners(t *testing.T) {
+	ec := NewAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	testCases := map[string]struct {
+		annotations   map[string]string
+		expectedPorts httpport.Config
+	}{
+		"No annotations": {
+			expectedPorts: httpport.Config{
+				HTTPPort:  0,
+				HTTPSPort: 0,
+			},
+		},
+		"Default HTTP port": {
+			annotations: map[string]string{
+				annotationHTTPPort: "80",
+			},
+			expectedPorts: httpport.Config{
+				HTTPPort:  80,
+				HTTPSPort: 0,
+			},
+		},
+		"Default HTTPS port": {
+			annotations: map[string]string{
+				annotationHTTPSPort: "443",
+			},
+			expectedPorts: httpport.Config{
+				HTTPPort:  0,
+				HTTPSPort: 443,
+			},
+		},
+		"Non-default HTTP port": {
+			annotations: map[string]string{
+				annotationHTTPPort: "9980",
+			},
+			expectedPorts: httpport.Config{
+				HTTPPort:  9980,
+				HTTPSPort: 0,
+			},
+		},
+		"Non-default HTTPS port": {
+			annotations: map[string]string{
+				annotationHTTPSPort: "10443",
+			},
+			expectedPorts: httpport.Config{
+				HTTPPort:  0,
+				HTTPSPort: 10443,
+			},
+		},
+		"Non-default HTTP and HTTPS port": {
+			annotations: map[string]string{
+				annotationHTTPPort:  "22080",
+				annotationHTTPSPort: "44443",
+			},
+			expectedPorts: httpport.Config{
+				HTTPPort:  22080,
+				HTTPSPort: 44443,
+			},
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(*testing.T) {
+			ing.SetAnnotations(tc.annotations)
+			r := ec.Extract(ing).HTTPListeners
+			assert.Equal(t, tc.expectedPorts.HTTPPort, r.HTTPPort)
+			assert.Equal(t, tc.expectedPorts.HTTPSPort, r.HTTPSPort)
+
+		})
+	}
+}
