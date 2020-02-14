@@ -120,6 +120,8 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-target](#mirror)|string|
+|[nginx.ingress.kubernetes.io/http-port](#http-port)|number|
+|[nginx.ingress.kubernetes.io/https-port](#https-port)|number|
 
 ### Canary
 
@@ -887,3 +889,31 @@ nginx.ingress.kubernetes.io/mirror-request-body: "off"
 The request sent to the mirror is linked to the orignial request. If you have a slow mirror backend, then the orignial request will throttle.
 
 For more information on the mirror module see [ngx_http_mirror_module](https://nginx.org/en/docs/http/ngx_http_mirror_module.html)
+
+### http-port
+
+Configures the port on which the server should listen for incoming HTTP requests. 
+
+```yaml
+nginx.ingress.kubernetes.io/http-port: "8080"
+```
+
+If not configured then the HTTP port number configured with the `--http-port` [command line parameter](https://kubernetes.github.io/ingress-nginx/user-guide/cli-arguments/) is used by the server.
+
+If different port numbers are configured in different Ingresses for the same server only one of those port numbers is used in the nginx configuration.
+
+For more information on the listen directive see [ngx_http_core_module listen directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen)
+
+### https-port
+
+Configures the port on which the server should listen for incoming HTTPS requests. 
+
+```yaml
+nginx.ingress.kubernetes.io/https-port: "9443"
+```
+
+If not configured then the HTTPS port number configured with the `--https-port` [command line parameter](https://kubernetes.github.io/ingress-nginx/user-guide/cli-arguments/) is used by the server.
+
+If different port numbers are configured in different Ingresses for the same server only one of those port numbers is used in the nginx configuration.
+
+For more information on the listen directive see [ngx_http_core_module listen directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen)
