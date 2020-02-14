@@ -92,7 +92,7 @@ func (f *Framework) BeforeEach() {
 
 	f.Namespace = ingressNamespace
 
-	err = f.NewIngressController(f.Namespace, f.BaseName)
+	err = f.newIngressController(f.Namespace, f.BaseName)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
@@ -103,29 +103,44 @@ func (f *Framework) BeforeEach() {
 
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
-	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error deleting namespace %v", f.Namespace)
-
 	if ginkgo.CurrentGinkgoTestDescription().Failed {
-		log, err := f.NginxLogs()
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
-		ginkgo.By("Dumping NGINX logs after a failure running a test")
-		Logf("%v", log)
-
 		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
 		if err != nil {
+			Logf("Unexpected error searching for ingress controller pod: %v", err)
 			return
 		}
 
 		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf")
 		o, err := f.ExecCommand(pod, cmd)
 		if err != nil {
+			Logf("Unexpected error obtaining nginx.conf file: %v", err)
 			return
 		}
 
-		ginkgo.By("Dumping NGINX configuration after a failure running a test")
+		ginkgo.By("Dumping NGINX configuration after failure")
+		Logf("%v", o)
+
+		log, err := f.NginxLogs()
+		if err != nil {
+			Logf("Unexpected error obtaining NGINX logs: %v", err)
+			return
+		}
+
+		ginkgo.By("Dumping NGINX logs")
+		Logf("%v", log)
+
+		o, err = f.NamespaceContent()
+		if err != nil {
+			Logf("Unexpected error obtaining namespace information: %v", err)
+			return
+		}
+
+		ginkgo.By("Dumping namespace content")
 		Logf("%v", o)
 	}
+
+	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error deleting namespace %v", f.Namespace)
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.

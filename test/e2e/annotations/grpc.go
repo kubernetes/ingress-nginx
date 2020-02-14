@@ -123,6 +123,8 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	})
 
 	It("should return OK for service with backend protocol GRPCS", func() {
+		Skip("GRPCS test temporarily disabled")
+
 		f.NewGRPCBinDeployment()
 
 		host := "echo"
@@ -149,12 +151,12 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPCS",
-			"nginx.ingress.kubernetes.io/configuration-snippet": `
+			"nginx.ingress.kubernetes.io/configuration-snippet": fmt.Sprintf(`
 			   # without this setting NGINX sends echo instead
-			   grpc_ssl_name      		grpcb.in;
+			   grpc_ssl_name      		grpcbin.%v.svc.cluster.local;
 			   grpc_ssl_server_name		on;
 			   grpc_ssl_ciphers 		HIGH:!aNULL:!MD5;
-			`,
+			`, f.Namespace),
 		}
 
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin-test", 9001, annotations)

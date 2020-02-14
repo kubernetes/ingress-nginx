@@ -9,3 +9,4 @@ images:
   newTag: dev
 patchesStrategicMerge:
 - service-hostport.yaml
+- deployment.yaml
