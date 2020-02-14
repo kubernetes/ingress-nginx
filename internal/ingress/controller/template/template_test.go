@@ -1848,3 +1848,95 @@ func TestBuildHTTPSListener(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildRedirect(t *testing.T) {
+	redirectTo := "foo.com"
+
+	testCases := map[string]struct {
+		templateConfig   config.TemplateConfig
+		redirectTo       string
+		expectedRedirect string
+	}{
+		"Basic case": {
+			templateConfig: config.TemplateConfig{
+				Cfg: config.Configuration{
+					HTTPRedirectCode: 301,
+				},
+				ListenPorts: &config.ListenPorts{
+					HTTPS: 443,
+				},
+				Servers: []*ingress.Server{
+					&ingress.Server{
+						Hostname: redirectTo,
+					},
+				},
+			},
+			redirectTo:       redirectTo,
+			expectedRedirect: "301 $scheme://foo.com",
+		},
+		"HTTPS Port different than 443": {
+			templateConfig: config.TemplateConfig{
+				Cfg: config.Configuration{
+					HTTPRedirectCode: 301,
+				},
+				ListenPorts: &config.ListenPorts{
+					HTTPS: 15443,
+				},
+				Servers: []*ingress.Server{
+					&ingress.Server{
+						Hostname: redirectTo,
+					},
+				},
+			},
+			redirectTo:       redirectTo,
+			expectedRedirect: "301 $scheme://foo.com:15443",
+		},
+		"non-443 HTTPS Port configured via annotation": {
+			templateConfig: config.TemplateConfig{
+				Cfg: config.Configuration{
+					HTTPRedirectCode: 301,
+				},
+				ListenPorts: &config.ListenPorts{
+					HTTPS: 443,
+				},
+				Servers: []*ingress.Server{
+					&ingress.Server{
+						Hostname: redirectTo,
+						HTTPListeners: httpport.Config{
+							HTTPSPort: 20443,
+						},
+					},
+				},
+			},
+			redirectTo:       redirectTo,
+			expectedRedirect: "301 $scheme://foo.com:20443",
+		},
+		"443 HTTPS Port configured via annotation": {
+			templateConfig: config.TemplateConfig{
+				Cfg: config.Configuration{
+					HTTPRedirectCode: 301,
+				},
+				ListenPorts: &config.ListenPorts{
+					HTTPS: 15443,
+				},
+				Servers: []*ingress.Server{
+					&ingress.Server{
+						Hostname: redirectTo,
+						HTTPListeners: httpport.Config{
+							HTTPSPort: 443,
+						},
+					},
+				},
+			},
+			redirectTo:       redirectTo,
+			expectedRedirect: "301 $scheme://foo.com",
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(*testing.T) {
+			redirect := buildRedirect(tc.templateConfig, tc.redirectTo)
+			assert.Equal(t, tc.expectedRedirect, redirect)
+		})
+	}
+
+}

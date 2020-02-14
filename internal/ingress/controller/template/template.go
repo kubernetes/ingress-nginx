@@ -1472,20 +1472,20 @@ func buildRedirect(t interface{}, s interface{}) string {
 		if server.Hostname == redirectTo {
 			if server.HTTPListeners.HTTPSPort != 0 {
 				if server.HTTPListeners.HTTPSPort != 443 {
-					return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo + ":" + strconv.Itoa(server.HTTPListeners.HTTPSPort)
+					return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + " $scheme://" + redirectTo + ":" + strconv.Itoa(server.HTTPListeners.HTTPSPort)
 				} else {
-					return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo
+					return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + " $scheme://" + redirectTo
 				}
 			} else if tc.ListenPorts.HTTPS != 443 {
-				return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo + ":" + strconv.Itoa(tc.ListenPorts.HTTPS)
+				return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + " $scheme://" + redirectTo + ":" + strconv.Itoa(tc.ListenPorts.HTTPS)
 			} else {
-				return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo
+				return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + " $scheme://" + redirectTo
 			}
 		}
 	}
 	if tc.ListenPorts.HTTPS != 443 {
-		return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo + ":" + strconv.Itoa(tc.ListenPorts.HTTPS)
+		return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + " $scheme://" + redirectTo + ":" + strconv.Itoa(tc.ListenPorts.HTTPS)
 	} else {
-		return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + "$scheme://" + redirectTo
+		return strconv.Itoa(tc.Cfg.HTTPRedirectCode) + " $scheme://" + redirectTo
 	}
 }
