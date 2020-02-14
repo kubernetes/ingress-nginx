@@ -75,20 +75,20 @@ func (f *Framework) NewInfluxDBDeployment() {
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "influxdb-svc",
+			Name:      "influxdb",
 			Namespace: f.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: NewInt32(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "influxdb-svc",
+					"app": "influxdb",
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "influxdb-svc",
+						"app": "influxdb",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -107,7 +107,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 					},
 					Containers: []corev1.Container{
 						{
-							Name:    "influxdb-svc",
+							Name:    "influxdb",
 							Image:   "docker.io/influxdb:1.5",
 							Env:     []corev1.EnvVar{},
 							Command: []string{"influxd", "-config", "/influxdb-config/influxd.conf"},
@@ -136,7 +136,6 @@ func (f *Framework) NewInfluxDBDeployment() {
 	}
 
 	d := f.EnsureDeployment(deployment)
-	Expect(d).NotTo(BeNil(), "unexpected error creating deployment for influxdb")
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),

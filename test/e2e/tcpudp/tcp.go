@@ -37,12 +37,6 @@ import (
 var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 	f := framework.NewDefaultFramework("tcp")
 
-	BeforeEach(func() {
-	})
-
-	AfterEach(func() {
-	})
-
 	It("should expose a TCP service", func() {
 		f.NewEchoDeploymentWithReplicas(1)
 

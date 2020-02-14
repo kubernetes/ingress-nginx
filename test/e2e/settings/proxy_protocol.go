@@ -38,9 +38,6 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		f.UpdateNginxConfigMapData(setting, "false")
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should respect port passed by the PROXY Protocol", func() {
 		host := "proxy-protocol"
 

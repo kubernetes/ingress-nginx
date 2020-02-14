@@ -31,9 +31,6 @@ var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set valid ip whitelist range", func() {
 		host := "ipwhitelist.foo.com"
 		nameSpace := f.Namespace

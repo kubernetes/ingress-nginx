@@ -65,15 +65,17 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	})
 
 	It("should return OK for service with backend protocol GRPC", func() {
+		f.NewGRPCBinDeployment()
+
 		host := "echo"
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grpcbin",
+				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "grpcb.in",
+				ExternalName: fmt.Sprintf("grpcbin.%v.svc.cluster.local", f.Namespace),
 				Type:         corev1.ServiceTypeExternalName,
 				Ports: []corev1.ServicePort{
 					{
@@ -91,7 +93,7 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin", 9000, annotations)
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin-test", 9000, annotations)
 
 		f.EnsureIngress(ing)
 
@@ -121,15 +123,19 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 	})
 
 	It("should return OK for service with backend protocol GRPCS", func() {
+		Skip("GRPCS test temporarily disabled")
+
+		f.NewGRPCBinDeployment()
+
 		host := "echo"
 
 		svc := &core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "grpcbin",
+				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "grpcb.in",
+				ExternalName: fmt.Sprintf("grpcbin.%v.svc.cluster.local", f.Namespace),
 				Type:         corev1.ServiceTypeExternalName,
 				Ports: []corev1.ServicePort{
 					{
@@ -145,15 +151,15 @@ var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPCS",
-			"nginx.ingress.kubernetes.io/configuration-snippet": `
+			"nginx.ingress.kubernetes.io/configuration-snippet": fmt.Sprintf(`
 			   # without this setting NGINX sends echo instead
-			   grpc_ssl_name      		grpcb.in;
+			   grpc_ssl_name      		grpcbin.%v.svc.cluster.local;
 			   grpc_ssl_server_name		on;
 			   grpc_ssl_ciphers 		HIGH:!aNULL:!MD5;
-			`,
+			`, f.Namespace),
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin", 9001, annotations)
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin-test", 9001, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

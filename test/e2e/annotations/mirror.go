@@ -33,9 +33,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Mirror", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set mirror-target to http://localhost/mirror", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/mirror-target": "http://localhost/mirror",

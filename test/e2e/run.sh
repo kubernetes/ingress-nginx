@@ -100,7 +100,7 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/fastcgi-hellose
 kind load docker-image --name="${KIND_CLUSTER_NAME}" openresty/openresty:1.15.8.2-alpine
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/echo:${TAG}
-
+kind load docker-image --name="${KIND_CLUSTER_NAME}" moul/grpcbin
 " | parallel --joblog /tmp/log {} || cat /tmp/log
 
 echo "[dev-env] running e2e tests..."

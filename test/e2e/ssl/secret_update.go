@@ -39,9 +39,6 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should not appear references to secret updates not used in ingress rules", func() {
 		host := "ssl-update"
 

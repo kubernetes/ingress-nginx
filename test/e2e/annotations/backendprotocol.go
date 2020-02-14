@@ -29,9 +29,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set backend protocol to https:// and use proxy_pass", func() {
 		host := "backendprotocol.foo.com"
 		annotations := map[string]string{

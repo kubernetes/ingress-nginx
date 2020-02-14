@@ -40,9 +40,6 @@ var _ = framework.IngressNginxDescribe("DynamicCertificates", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	framework.MemoryLeakIt("should not leak memory from ingress SSL certificates or configuration updates", func() {
 		hostCount := 1000
 		iterations := 10

@@ -29,9 +29,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Upstreamvhost", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("set host to upstreamvhost.bar.com", func() {
 		host := "upstreamvhost.foo.com"
 		annotations := map[string]string{

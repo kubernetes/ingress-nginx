@@ -30,9 +30,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Log", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("set access_log off", func() {
 		host := "log.foo.com"
 		annotations := map[string]string{

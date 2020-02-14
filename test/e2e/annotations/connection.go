@@ -34,9 +34,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Connection", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("set connection header to keep-alive", func() {
 		host := "connection.foo.com"
 		annotations := map[string]string{

@@ -35,12 +35,6 @@ import (
 var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
 	f := framework.NewDefaultFramework("type-externalname")
 
-	BeforeEach(func() {
-	})
-
-	AfterEach(func() {
-	})
-
 	It("works with external name set to incomplete fdqn", func() {
 		f.NewEchoDeployment()
 
