@@ -41,6 +41,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/httpport"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -1344,6 +1345,454 @@ func TestGetBackendServers(t *testing.T) {
 				}
 				if len(upstreams[0].AlternativeBackends) != 1 || upstreams[0].AlternativeBackends[0] != "example-http-svc-2-80" {
 					t.Errorf("example-http-svc-2-80 should be alternative upstream for 'example-http-svc-1-80'")
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-1",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPPort: 120,
+						},
+					},
+				},
+			},
+			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 2, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+				if s.HTTPListeners.HTTPPort != 120 {
+					t.Errorf("server http listener port should be 120, got '%d'", s.HTTPListeners.HTTPPort)
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-1",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPPort: 120,
+						},
+					},
+				},
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example2.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-2",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPPort: 333,
+						},
+					},
+				},
+			},
+			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 3 {
+					t.Errorf("servers count should be 3, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+				if s.HTTPListeners.HTTPPort != 120 {
+					t.Errorf("server http listener port should be 120, got '%d'", s.HTTPListeners.HTTPPort)
+				}
+				s = servers[2]
+				if s.HTTPListeners.HTTPPort != 333 {
+					t.Errorf("server http listener port should be 333, got '%d'", s.HTTPListeners.HTTPPort)
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-1",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPPort: 120,
+						},
+					},
+				},
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/path1",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-2",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPPort: 333,
+						},
+					},
+				},
+			},
+			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 2, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+				if s.HTTPListeners.HTTPPort != 120 {
+					t.Errorf("server http listener port should be 120, got '%d'", s.HTTPListeners.HTTPPort)
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-1",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPSPort: 4443,
+						},
+					},
+				},
+			},
+			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 2, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+				if s.HTTPListeners.HTTPSPort != 4443 {
+					t.Errorf("server https listener port should be 4443, got '%d'", s.HTTPListeners.HTTPPort)
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-1",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPSPort: 5443,
+						},
+					},
+				},
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example2.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-2",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPSPort: 6443,
+						},
+					},
+				},
+			},
+			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 3 {
+					t.Errorf("servers count should be 3, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+				if s.HTTPListeners.HTTPSPort != 5443 {
+					t.Errorf("server http listener port should be 5443, got '%d'", s.HTTPListeners.HTTPPort)
+				}
+				s = servers[2]
+				if s.HTTPListeners.HTTPSPort != 6443 {
+					t.Errorf("server https listener port should be 6443, got '%d'", s.HTTPListeners.HTTPPort)
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-1",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPSPort: 8443,
+						},
+					},
+				},
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/path1",
+													Backend: networking.IngressBackend{
+														ServiceName: "http-svc-2",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						HTTPListeners: httpport.Config{
+							HTTPSPort: 9443,
+						},
+					},
+				},
+			},
+			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 2, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+				if s.HTTPListeners.HTTPSPort != 8443 {
+					t.Errorf("server https listener port should be 8443, got '%d'", s.HTTPListeners.HTTPPort)
 				}
 			},
 		},
