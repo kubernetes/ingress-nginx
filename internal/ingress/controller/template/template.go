@@ -283,7 +283,7 @@ func configForLua(input interface{}) string {
 		}
 	}
 
-	servers_https_ports = strings.TrimSuffix(servers_https_ports, ", ") + "}"
+	servers_https_ports = strings.TrimSuffix(servers_https_ports, ", ") + " }"
 
 	return fmt.Sprintf(`{
 		use_forwarded_headers = %t,

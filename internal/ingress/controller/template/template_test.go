@@ -1938,5 +1938,59 @@ func TestBuildRedirect(t *testing.T) {
 			assert.Equal(t, tc.expectedRedirect, redirect)
 		})
 	}
+}
 
+func TestConfigForLua(t *testing.T) {
+	testCases := map[string]struct {
+		templateConfig    config.TemplateConfig
+		expectedLuaConfig string
+	}{
+		"Basic case": {
+			templateConfig: config.TemplateConfig{
+				IsSSLPassthroughEnabled: true,
+				Cfg: config.Configuration{
+					UseProxyProtocol:      true,
+					HTTPRedirectCode:      301,
+					HSTS:                  true,
+					HSTSIncludeSubdomains: true,
+					HSTSMaxAge:            "60",
+					HSTSPreload:           true,
+				},
+				ListenPorts: &config.ListenPorts{
+					HTTP:  80,
+					HTTPS: 443,
+				},
+				Servers: []*ingress.Server{
+					&ingress.Server{
+						Hostname: "server1",
+						HTTPListeners: httpport.Config{
+							HTTPPort:  123,
+							HTTPSPort: 45443,
+						},
+					},
+					&ingress.Server{
+						Hostname: "server2",
+						HTTPListeners: httpport.Config{
+							HTTPPort:  444,
+							HTTPSPort: 9443,
+						},
+					},
+					&ingress.Server{
+						Hostname: "server3",
+						HTTPListeners: httpport.Config{
+							HTTPPort:  80,
+							HTTPSPort: 3333,
+						},
+					},
+				},
+			},
+			expectedLuaConfig: "{\n\t\tuse_forwarded_headers = false,\n\t\tuse_proxy_protocol = true,\n\t\tis_ssl_passthrough_enabled = true,\n\t\thttp_redirect_code = 301,\n\t\tlisten_ports = { ssl_proxy = \"0\", https = \"443\" },\n\t\tserver_https_ports = { server1 = 45443, server2 = 9443, server3 = 3333 },\n\n\t\thsts = true,\n\t\thsts_max_age = 60,\n\t\thsts_include_subdomains = true,\n\t\thsts_preload = true,\n\t}",
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(*testing.T) {
+			luaConfig := configForLua(tc.templateConfig)
+			assert.Equal(t, tc.expectedLuaConfig, luaConfig)
+		})
+	}
 }
