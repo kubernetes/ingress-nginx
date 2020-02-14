@@ -596,6 +596,10 @@ Enables or disables [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.ht
 
 Sets the gzip Compression Level that will be used. _**default:**_ 5
 
+## gzip-min-length
+
+Minimum length of responses to be returned to the client before it is eligible for gzip compression, in bytes. _**default:**_ 256
+
 ## gzip-types
 
 Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type. Responses with the "text/html" type are always compressed if `[use-gzip](#use-gzip)` is enabled.
