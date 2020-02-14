@@ -34,9 +34,6 @@ var _ = framework.IngressNginxDescribe("Debug Tool", func() {
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should list the backend servers", func() {
 		annotations := map[string]string{}
 

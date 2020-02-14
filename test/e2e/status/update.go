@@ -39,12 +39,6 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 	host := "status-update"
 	address := getHostIP()
 
-	BeforeEach(func() {
-	})
-
-	AfterEach(func() {
-	})
-
 	It("should update status field after client-go reconnection", func() {
 		port, cmd, err := f.KubectlProxy(0)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error starting kubectl proxy")

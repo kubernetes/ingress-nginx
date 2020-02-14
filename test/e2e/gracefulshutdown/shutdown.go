@@ -39,9 +39,6 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 		f.NewSlowEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should shutdown in less than 60 secons without pending connections", func() {
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.SlowEchoService, 80, nil))
 
@@ -118,7 +115,7 @@ var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
 			case res := <-result:
 				Expect(res.errs).Should(BeEmpty())
 				Expect(res.status).To(Equal(http.StatusOK), "expecting a valid response from HTTP request")
-				Expect(time.Since(startTime).Seconds()).To(BeNumerically(">", 70), "waiting shutdown")
+				Expect(time.Since(startTime).Seconds()).To(BeNumerically(">", 60), "waiting shutdown")
 				ticker.Stop()
 				return
 			case <-ticker.C:

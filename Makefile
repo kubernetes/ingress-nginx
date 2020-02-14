@@ -42,7 +42,7 @@ endif
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 12
+E2E_NODES ?= 15
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
 # run e2e test suite with tests that check for memory leaks? (default is false)
@@ -258,7 +258,7 @@ misspell: check-go-version ## Check for spelling errors.
 
 .PHONY: kind-e2e-test
 kind-e2e-test: check-go-version ## Run e2e tests using kind.
-	@DIND_TASKS=0 test/e2e/run.sh
+	@test/e2e/run.sh
 
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
@@ -272,7 +272,7 @@ check-go-version:
 init-docker-buildx:
 ifeq ($(DIND_TASKS),)
 ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
-	$(error "buildx not vailable. Docker 19.03 or higher is required")
+	$(error "buildx not available. Docker 19.03 or higher is required with experimental features enabled")
 endif
 	docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
 	docker buildx create --name ingress-nginx --use || true

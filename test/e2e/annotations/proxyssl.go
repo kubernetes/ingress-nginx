@@ -32,9 +32,6 @@ var _ = framework.IngressNginxDescribe("Annotations - ProxySSL", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set valid proxy-ssl-secret", func() {
 		host := "proxyssl.foo.com"
 		annotations := map[string]string{

@@ -31,8 +31,8 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 )
 
 // RequestScheme define a scheme used in a test request.
@@ -58,11 +58,6 @@ type Framework struct {
 	KubeConfig             *restclient.Config
 	APIExtensionsClientSet apiextcs.Interface
 
-	// To make sure that this framework cleans up after itself, no matter what,
-	// we install a Cleanup action before each test and clear it after. If we
-	// should abort, the AfterSuite hook should run all Cleanup actions.
-	cleanupHandle CleanupActionHandle
-
 	Namespace string
 }
 
@@ -73,82 +68,89 @@ func NewDefaultFramework(baseName string) *Framework {
 		BaseName: baseName,
 	}
 
-	BeforeEach(f.BeforeEach)
-	AfterEach(f.AfterEach)
+	ginkgo.BeforeEach(f.BeforeEach)
+	ginkgo.AfterEach(f.AfterEach)
 
 	return f
 }
 
 // BeforeEach gets a client and makes a namespace.
 func (f *Framework) BeforeEach() {
-	f.cleanupHandle = AddCleanupAction(f.AfterEach)
-
-	By("Creating a kubernetes client")
 	kubeConfig, err := restclient.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	f.KubeConfig = kubeConfig
 	f.KubeClientSet, err = kubernetes.NewForConfig(kubeConfig)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	By("Building a namespace api object")
 	ingressNamespace, err := CreateKubeNamespace(f.BaseName, f.KubeClientSet)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	f.Namespace = ingressNamespace
 
-	By("Starting new ingress controller")
-	err = f.NewIngressController(f.Namespace, f.BaseName)
-	Expect(err).NotTo(HaveOccurred())
+	err = f.newIngressController(f.Namespace, f.BaseName)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
-	RemoveCleanupAction(f.cleanupHandle)
-
-	By("Waiting for test namespace to no longer exist")
-	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
-	Expect(err).NotTo(HaveOccurred())
-
-	if CurrentGinkgoTestDescription().Failed {
-		log, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		By("Dumping NGINX logs after a failure running a test")
-		Logf("%v", log)
-
+	if ginkgo.CurrentGinkgoTestDescription().Failed {
 		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
 		if err != nil {
+			Logf("Unexpected error searching for ingress controller pod: %v", err)
 			return
 		}
 
 		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf")
 		o, err := f.ExecCommand(pod, cmd)
 		if err != nil {
+			Logf("Unexpected error obtaining nginx.conf file: %v", err)
 			return
 		}
 
-		By("Dumping NGINX configuration after a failure running a test")
+		ginkgo.By("Dumping NGINX configuration after failure")
+		Logf("%v", o)
+
+		log, err := f.NginxLogs()
+		if err != nil {
+			Logf("Unexpected error obtaining NGINX logs: %v", err)
+			return
+		}
+
+		ginkgo.By("Dumping NGINX logs")
+		Logf("%v", log)
+
+		o, err = f.NamespaceContent()
+		if err != nil {
+			Logf("Unexpected error obtaining namespace information: %v", err)
+			return
+		}
+
+		ginkgo.By("Dumping namespace content")
 		Logf("%v", o)
 	}
+
+	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error deleting namespace %v", f.Namespace)
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.
 func IngressNginxDescribe(text string, body func()) bool {
-	return Describe("[ingress-nginx] "+text, body)
+	return ginkgo.Describe("[ingress-nginx] "+text, body)
 }
 
 // MemoryLeakIt is wrapper function for ginkgo It.  Adds "[MemoryLeak]" tag and makes static analysis easier.
 func MemoryLeakIt(text string, body interface{}, timeout ...float64) bool {
-	return It(text+" [MemoryLeak]", body, timeout...)
+	return ginkgo.It(text+" [MemoryLeak]", body, timeout...)
 }
 
 // GetNginxIP returns the number of TCP port where NGINX is running
@@ -157,7 +159,7 @@ func (f *Framework) GetNginxIP() string {
 		CoreV1().
 		Services(f.Namespace).
 		Get("ingress-nginx", metav1.GetOptions{})
-	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaining NGINX IP address")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error obtaining NGINX IP address")
 	return s.Spec.ClusterIP
 }
 
@@ -167,7 +169,7 @@ func (f *Framework) GetNginxPodIP() []string {
 		CoreV1().
 		Endpoints(f.Namespace).
 		Get("ingress-nginx", metav1.GetOptions{})
-	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaining NGINX IP address")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error obtaining NGINX IP address")
 	eips := make([]string, 0)
 	for _, s := range e.Subsets {
 		for _, a := range s.Addresses {
@@ -187,14 +189,14 @@ func (f *Framework) GetURL(scheme RequestScheme) string {
 // WaitForNginxServer waits until the nginx configuration contains a particular server section
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
-	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error waiting for nginx server condition/s")
 	time.Sleep(5 * time.Second)
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
-	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error waiting for nginx server condition/s")
 	time.Sleep(5 * time.Second)
 }
 
@@ -236,7 +238,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		}
 
 		var match bool
-		errs := InterceptGomegaFailures(func() {
+		errs := gomega.InterceptGomegaFailures(func() {
 			if klog.V(10) && len(o) > 0 {
 				klog.Infof("nginx.conf:\n%v", o)
 			}
@@ -299,8 +301,8 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 
 func (f *Framework) SetConfigMapData(name string, cmData map[string]string) {
 	config, err := f.getConfigMap(name)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(config).NotTo(BeNil(), "expected a configmap but none returned")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	gomega.Expect(config).NotTo(gomega.BeNil(), "expected a configmap but none returned")
 
 	config.Data = cmData
 
@@ -308,7 +310,7 @@ func (f *Framework) SetConfigMapData(name string, cmData map[string]string) {
 		CoreV1().
 		ConfigMaps(f.Namespace).
 		Update(config)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	time.Sleep(5 * time.Second)
 }
@@ -321,13 +323,13 @@ func (f *Framework) CreateConfigMap(name string, data map[string]string) {
 		},
 		Data: data,
 	})
-	Expect(err).NotTo(HaveOccurred(), "failed to create configMap")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to create configMap")
 }
 
 // UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-configuration map data
 func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 	config, err := f.GetNginxConfigMapData()
-	Expect(err).NotTo(HaveOccurred(), "unexpected error reading configmap")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error reading configmap")
 
 	config[key] = value
 
@@ -340,10 +342,10 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 func (f *Framework) DeleteNGINXPod(grace int64) {
 	ns := f.Namespace
 	pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
-	Expect(err).NotTo(HaveOccurred(), "expected ingress nginx pod to be running")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "expected ingress nginx pod to be running")
 
 	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(pod.GetName(), metav1.NewDeleteOptions(grace))
-	Expect(err).NotTo(HaveOccurred(), "unexpected error deleting ingress nginx pod")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error deleting ingress nginx pod")
 
 	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
@@ -352,7 +354,7 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 		}
 		return pod.GetName() != "", nil
 	})
-	Expect(err).NotTo(HaveOccurred(), "unexpected error while waiting for ingress nginx pod to come up again")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error while waiting for ingress nginx pod to come up again")
 }
 
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated

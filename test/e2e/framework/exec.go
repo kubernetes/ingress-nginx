@@ -87,8 +87,34 @@ func (f *Framework) ExecCommand(pod *corev1.Pod, command string) (string, error)
 	return execOut.String(), nil
 }
 
-// NewIngressController deploys a new NGINX Ingress controller in a namespace
-func (f *Framework) NewIngressController(namespace string, namespaceOverlay string) error {
+// NamespaceContent executes a kubectl command that returns information about
+// pods, services, endpoint and deployments inside the current namespace
+func (f *Framework) NamespaceContent() (string, error) {
+	var (
+		execOut bytes.Buffer
+		execErr bytes.Buffer
+	)
+
+	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v get pods,services,endpoints,deployments --namespace %s", KubectlPath, f.Namespace))
+	cmd.Stdout = &execOut
+	cmd.Stderr = &execErr
+
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("could not execute '%s %s': %v", cmd.Path, cmd.Args, err)
+
+	}
+
+	eout := strings.TrimSpace(execErr.String())
+	if len(eout) > 0 {
+		return "", fmt.Errorf("stderr: %v", eout)
+	}
+
+	return execOut.String(), nil
+}
+
+// newIngressController deploys a new NGINX Ingress controller in a namespace
+func (f *Framework) newIngressController(namespace string, namespaceOverlay string) error {
 	// Creates an nginx deployment
 	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay)
 	out, err := cmd.CombinedOutput()

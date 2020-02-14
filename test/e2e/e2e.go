@@ -66,9 +66,3 @@ func RunE2ETests(t *testing.T) {
 	framework.Logf("Starting e2e run %q on Ginkgo node %d", framework.RunID, config.GinkgoConfig.ParallelNode)
 	ginkgo.RunSpecs(t, "nginx-ingress-controller e2e suite")
 }
-
-var _ = ginkgo.SynchronizedAfterSuite(func() {
-	// Run on all Ginkgo nodes
-	framework.Logf("Running AfterSuite actions on all nodes")
-	framework.RunCleanupActions()
-}, func() {})

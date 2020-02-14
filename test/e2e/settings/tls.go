@@ -43,9 +43,6 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		f.UpdateNginxConfigMapData("use-forwarded-headers", "false")
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should configure TLS protocol", func() {
 		sslCiphers := "ssl-ciphers"
 		sslProtocols := "ssl-protocols"

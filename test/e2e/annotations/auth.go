@@ -332,6 +332,52 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 	})
 
+	It("retains cookie set by external authentication server", func() {
+		Skip("Skipping test until refactoring")
+		// TODO: this test should look like https://gist.github.com/aledbf/250645d76c080677c695929273f8fd22
+
+		host := "auth"
+
+		f.NewHttpbinDeployment()
+
+		var httpbinIP string
+
+		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
+		Expect(err).NotTo(HaveOccurred())
+
+		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		httpbinIP = e.Subsets[0].Addresses[0].IP
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbinIP),
+			"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host, func(server string) bool {
+			return Expect(server).Should(ContainSubstring("server_name auth"))
+		})
+
+		resp, _, errs := gorequest.New().
+			Get(f.GetURL(framework.HTTP)).
+			Retry(10, 1*time.Second, http.StatusNotFound).
+			Set("Host", host).
+			Param("a", "b").
+			Param("c", "d").
+			End()
+
+		for _, err := range errs {
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		framework.Logf("Cookie: %v", resp.Header)
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("alma=armud"))
+	})
+
 	Context("when external authentication is configured", func() {
 		host := "auth"
 

@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 			Expect(len(errs)).Should(Equal(0))
 			Expect(res.StatusCode).Should(Equal(http.StatusOK))
 
-			time.Sleep(5 * time.Second)
+			time.Sleep(10 * time.Second)
 
 			var measurements string
 			var err error
@@ -89,7 +89,7 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var results map[string][]map[string]interface{}
-			jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(measurements), &results)
+			_ = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(measurements), &results)
 
 			Expect(len(measurements)).ShouldNot(Equal(0))
 			for _, elem := range results["results"] {
@@ -102,7 +102,7 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 func createInfluxDBService(f *framework.Framework) *corev1.Service {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "inflxudb-svc",
+			Name:      "inflxudb",
 			Namespace: f.Namespace,
 		},
 		Spec: corev1.ServiceSpec{Ports: []corev1.ServicePort{
@@ -114,7 +114,7 @@ func createInfluxDBService(f *framework.Framework) *corev1.Service {
 			},
 		},
 			Selector: map[string]string{
-				"app": "influxdb-svc",
+				"app": "influxdb",
 			},
 		},
 	}
@@ -134,7 +134,7 @@ func createInfluxDBIngress(f *framework.Framework, host, service string, port in
 
 func extractInfluxDBMeasurements(f *framework.Framework) (string, error) {
 	l, err := f.KubeClientSet.CoreV1().Pods(f.Namespace).List(metav1.ListOptions{
-		LabelSelector: "app=influxdb-svc",
+		LabelSelector: "app=influxdb",
 	})
 	if err != nil {
 		return "", err

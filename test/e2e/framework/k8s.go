@@ -26,9 +26,11 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	api "k8s.io/api/core/v1"
 	core "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
@@ -37,18 +39,10 @@ import (
 
 // EnsureSecret creates a Secret object or returns it if it already exists.
 func (f *Framework) EnsureSecret(secret *api.Secret) *api.Secret {
-	s, err := f.KubeClientSet.CoreV1().Secrets(secret.Namespace).Create(secret)
-	if err != nil {
-		if k8sErrors.IsAlreadyExists(err) {
-			s, err := f.KubeClientSet.CoreV1().Secrets(secret.Namespace).Update(secret)
-			Expect(err).NotTo(HaveOccurred(), "unexpected error updating secret")
+	err := createSecretWithRetries(f.KubeClientSet, f.Namespace, secret)
+	Expect(err).To(BeNil(), "unexpected error creating secret")
 
-			return s
-		}
-
-		Expect(err).NotTo(HaveOccurred(), "unexpected error creating secret")
-	}
-
+	s, err := f.KubeClientSet.CoreV1().Secrets(secret.Namespace).Get(secret.Name, metav1.GetOptions{})
 	Expect(s).NotTo(BeNil())
 	Expect(s.ObjectMeta).NotTo(BeNil())
 
@@ -57,10 +51,10 @@ func (f *Framework) EnsureSecret(secret *api.Secret) *api.Secret {
 
 // EnsureConfigMap creates a ConfigMap object or returns it if it already exists.
 func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, error) {
-	cm, err := f.KubeClientSet.CoreV1().ConfigMaps(configMap.Namespace).Create(configMap)
+	cm, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(configMap)
 	if err != nil {
 		if k8sErrors.IsAlreadyExists(err) {
-			return f.KubeClientSet.CoreV1().ConfigMaps(configMap.Namespace).Update(configMap)
+			return f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Update(configMap)
 		}
 		return nil, err
 	}
@@ -70,12 +64,12 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 
 // EnsureIngress creates an Ingress object or returns it if it already exists.
 func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingress {
-	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Create(ingress)
+	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(ingress)
 	if err != nil {
 		if k8sErrors.IsAlreadyExists(err) {
 			err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 				var err error
-				ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Update(ingress)
+				ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(ingress)
 				if err != nil {
 					return err
 				}
@@ -100,47 +94,28 @@ func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingre
 
 // EnsureService creates a Service object or returns it if it already exists.
 func (f *Framework) EnsureService(service *core.Service) *core.Service {
-	s, err := f.KubeClientSet.CoreV1().Services(service.Namespace).Create(service)
-	if err != nil {
-		if k8sErrors.IsAlreadyExists(err) {
-			err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				var err error
-				s, err = f.KubeClientSet.CoreV1().Services(service.Namespace).Update(service)
-				if err != nil {
-					return err
-				}
+	err := createServiceWithRetries(f.KubeClientSet, f.Namespace, service)
+	Expect(err).To(BeNil(), "unexpected error creating service")
 
-				return nil
-			})
+	s, err := f.KubeClientSet.CoreV1().Services(f.Namespace).Get(service.Name, metav1.GetOptions{})
+	Expect(err).To(BeNil(), "unexpected error searching service")
+	Expect(s).NotTo(BeNil())
+	Expect(s.ObjectMeta).NotTo(BeNil())
 
-			Expect(err).NotTo(HaveOccurred())
-		}
-	}
-
-	Expect(s).NotTo(BeNil(), "expected a service but none returned")
 	return s
 }
 
 // EnsureDeployment creates a Deployment object or returns it if it already exists.
 func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Deployment {
-	d, err := f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Create(deployment)
-	if err != nil {
-		if k8sErrors.IsAlreadyExists(err) {
-			err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				d, err = f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Update(deployment)
-				if err != nil {
-					return err
-				}
+	err := createDeploymentWithRetries(f.KubeClientSet, f.Namespace, deployment)
+	Expect(err).To(BeNil(), "unexpected error creating deployment")
 
-				return nil
-			})
+	s, err := f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Get(deployment.Name, metav1.GetOptions{})
+	Expect(err).To(BeNil(), "unexpected error searching deployment")
+	Expect(s).NotTo(BeNil())
+	Expect(s.ObjectMeta).NotTo(BeNil())
 
-			Expect(err).NotTo(HaveOccurred())
-		}
-	}
-
-	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
-	return d
+	return s
 }
 
 // WaitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
@@ -256,4 +231,89 @@ func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Po
 	}
 
 	return pod, nil
+}
+
+func createDeploymentWithRetries(c kubernetes.Interface, namespace string, obj *appsv1.Deployment) error {
+	if obj == nil {
+		return fmt.Errorf("Object provided to create is empty")
+	}
+	createFunc := func() (bool, error) {
+		_, err := c.AppsV1().Deployments(namespace).Create(obj)
+		if err == nil || k8sErrors.IsAlreadyExists(err) {
+			return true, nil
+		}
+		if isRetryableAPIError(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("Failed to create object with non-retriable error: %v", err)
+	}
+
+	return retryWithExponentialBackOff(createFunc)
+}
+
+func createSecretWithRetries(c kubernetes.Interface, namespace string, obj *v1.Secret) error {
+	if obj == nil {
+		return fmt.Errorf("Object provided to create is empty")
+	}
+	createFunc := func() (bool, error) {
+		_, err := c.CoreV1().Secrets(namespace).Create(obj)
+		if err == nil || k8sErrors.IsAlreadyExists(err) {
+			return true, nil
+		}
+		if isRetryableAPIError(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("Failed to create object with non-retriable error: %v", err)
+	}
+	return retryWithExponentialBackOff(createFunc)
+}
+
+func createServiceWithRetries(c kubernetes.Interface, namespace string, obj *v1.Service) error {
+	if obj == nil {
+		return fmt.Errorf("Object provided to create is empty")
+	}
+	createFunc := func() (bool, error) {
+		_, err := c.CoreV1().Services(namespace).Create(obj)
+		if err == nil || k8sErrors.IsAlreadyExists(err) {
+			return true, nil
+		}
+		if isRetryableAPIError(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("Failed to create object with non-retriable error: %v", err)
+	}
+
+	return retryWithExponentialBackOff(createFunc)
+}
+
+const (
+	// Parameters for retrying with exponential backoff.
+	retryBackoffInitialDuration = 100 * time.Millisecond
+	retryBackoffFactor          = 3
+	retryBackoffJitter          = 0
+	retryBackoffSteps           = 6
+)
+
+// Utility for retrying the given function with exponential backoff.
+func retryWithExponentialBackOff(fn wait.ConditionFunc) error {
+	backoff := wait.Backoff{
+		Duration: retryBackoffInitialDuration,
+		Factor:   retryBackoffFactor,
+		Jitter:   retryBackoffJitter,
+		Steps:    retryBackoffSteps,
+	}
+	return wait.ExponentialBackoff(backoff, fn)
+}
+
+func isRetryableAPIError(err error) bool {
+	// These errors may indicate a transient error that we can retry in tests.
+	if k8sErrors.IsInternalError(err) || k8sErrors.IsTimeout(err) || k8sErrors.IsServerTimeout(err) ||
+		k8sErrors.IsTooManyRequests(err) || utilnet.IsProbableEOF(err) || utilnet.IsConnectionReset(err) {
+		return true
+	}
+	// If the error sends the Retry-After header, we respect it as an explicit confirmation we should retry.
+	if _, shouldRetry := k8sErrors.SuggestsClientDelay(err); shouldRetry {
+		return true
+	}
+	return false
 }

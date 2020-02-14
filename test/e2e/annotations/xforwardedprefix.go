@@ -32,9 +32,6 @@ var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func(
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set the X-Forwarded-Prefix to the annotation value", func() {
 		host := "xfp.baz.com"
 		annotations := map[string]string{

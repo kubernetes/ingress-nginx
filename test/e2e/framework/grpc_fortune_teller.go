@@ -74,7 +74,6 @@ func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32
 	}
 
 	d := f.EnsureDeployment(deployment)
-	Expect(d).NotTo(BeNil(), "expected a fortune-teller deployment")
 
 	err := WaitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),

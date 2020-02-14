@@ -59,8 +59,7 @@ func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas i
 		[]corev1.Volume{},
 	)
 
-	d := f.EnsureDeployment(deployment)
-	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+	f.EnsureDeployment(deployment)
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -82,8 +81,7 @@ func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas i
 		},
 	}
 
-	s := f.EnsureService(service)
-	Expect(s).NotTo(BeNil(), "expected a service but none returned")
+	f.EnsureService(service)
 
 	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, replicas)
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
@@ -144,8 +142,7 @@ server {
 		},
 	)
 
-	d := f.EnsureDeployment(deployment)
-	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+	f.EnsureDeployment(deployment)
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -167,10 +164,102 @@ server {
 		},
 	}
 
-	s := f.EnsureService(service)
-	Expect(s).NotTo(BeNil(), "expected a service but none returned")
+	f.EnsureService(service)
 
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, SlowEchoService, f.Namespace, 1)
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
+}
+
+// NewGRPCBinDeployment creates a new deployment of the
+// moul/grpcbin image for GRPC tests
+func (f *Framework) NewGRPCBinDeployment() {
+	name := "grpcbin"
+
+	probe := &corev1.Probe{
+		InitialDelaySeconds: 5,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+		TimeoutSeconds:      1,
+		Handler: corev1.Handler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.FromInt(9000),
+			},
+		},
+	}
+
+	sel := map[string]string{
+		"app": name,
+	}
+
+	f.EnsureDeployment(&appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: f.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: NewInt32(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: sel,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: sel,
+				},
+				Spec: corev1.PodSpec{
+					TerminationGracePeriodSeconds: NewInt64(0),
+					Containers: []corev1.Container{
+						{
+							Name:  name,
+							Image: "moul/grpcbin",
+							Env:   []corev1.EnvVar{},
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "insecure",
+									ContainerPort: 9000,
+									Protocol:      corev1.ProtocolTCP,
+								},
+								{
+									Name:          "secure",
+									ContainerPort: 9001,
+									Protocol:      corev1.ProtocolTCP,
+								},
+							},
+							ReadinessProbe: probe,
+							LivenessProbe:  probe,
+						},
+					},
+				},
+			},
+		},
+	})
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: f.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "insecure",
+					Port:       9000,
+					TargetPort: intstr.FromInt(9000),
+					Protocol:   corev1.ProtocolTCP,
+				},
+				{
+					Name:       "secure",
+					Port:       9001,
+					TargetPort: intstr.FromInt(9000),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+			Selector: sel,
+		},
+	}
+
+	f.EnsureService(service)
+
+	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 1)
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
 }
 
@@ -247,8 +336,7 @@ func (f *Framework) NewHttpbinDeployment() {
 func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {
 	deployment := newDeployment(name, f.Namespace, image, port, replicas, nil, nil, nil)
 
-	d := f.EnsureDeployment(deployment)
-	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+	f.EnsureDeployment(deployment)
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -270,8 +358,7 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 		},
 	}
 
-	s := f.EnsureService(service)
-	Expect(s).NotTo(BeNil(), "expected a service but none returned")
+	f.EnsureService(service)
 
 	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, int(replicas))
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
@@ -295,7 +382,10 @@ func (f *Framework) ScaleDeploymentToZero(name string) {
 	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
 
 	d.Spec.Replicas = NewInt32(0)
-	f.EnsureDeployment(d)
+
+	d, err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(d)
+	Expect(err).NotTo(HaveOccurred(), "failed to get a deployment")
+	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
 
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 0)
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for no endpoints")

@@ -29,9 +29,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", 
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should set client_body_buffer_size to 1000", func() {
 		host := "proxy.foo.com"
 		annotations := map[string]string{

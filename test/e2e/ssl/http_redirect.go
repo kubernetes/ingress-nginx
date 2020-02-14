@@ -34,9 +34,6 @@ var _ = framework.IngressNginxDescribe("sslredirect", func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
 	It("should redirect from HTTP to HTTPS when secret is missing", func() {
 		host := "redirect.com"
 

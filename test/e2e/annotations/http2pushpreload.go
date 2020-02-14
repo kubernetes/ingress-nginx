@@ -29,9 +29,6 @@ var _ = framework.IngressNginxDescribe("Annotations - HTTP2 Push Preload", func(
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	AfterEach(func() {
-	})
-
 	It("enable the http2-push-preload directive", func() {
 		host := "http2pp.foo.com"
 		annotations := map[string]string{
