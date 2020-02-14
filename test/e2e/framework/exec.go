@@ -21,12 +21,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetLbAlgorithm returns algorithm identifier for the given backend
@@ -111,6 +113,40 @@ func (f *Framework) NamespaceContent() (string, error) {
 	}
 
 	return execOut.String(), nil
+}
+
+// DumpPodLogs executes a kubectl command that returns information about
+// pods, services, endpoint and deployments inside the current namespace
+func (f *Framework) DumpPodLogs() (string, error) {
+	var (
+		log bytes.Buffer
+	)
+
+	pods, err := f.KubeClientSet.CoreV1().Pods(f.Namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	log.WriteString("\n")
+	for _, pod := range pods.Items {
+		log.WriteString(fmt.Sprintf("Pod: %v", pod.Name))
+		log.WriteString("\n")
+
+		rc, err := f.KubeClientSet.CoreV1().Pods(f.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{}).Stream()
+		if err != nil {
+			return "", err
+		}
+
+		data, err := ioutil.ReadAll(rc)
+		if err != nil {
+			return "", err
+		}
+
+		log.Write(data)
+		log.WriteString("\n")
+	}
+
+	return log.String(), nil
 }
 
 // newIngressController deploys a new NGINX Ingress controller in a namespace

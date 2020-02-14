@@ -120,13 +120,13 @@ func (f *Framework) AfterEach() {
 		ginkgo.By("Dumping NGINX configuration after failure")
 		Logf("%v", o)
 
-		log, err := f.NginxLogs()
+		log, err := f.DumpPodLogs()
 		if err != nil {
-			Logf("Unexpected error obtaining NGINX logs: %v", err)
+			Logf("Unexpected error obtaining logs: %v", err)
 			return
 		}
 
-		ginkgo.By("Dumping NGINX logs")
+		ginkgo.By("Dumping logs of pods in the namespace")
 		Logf("%v", log)
 
 		o, err = f.NamespaceContent()

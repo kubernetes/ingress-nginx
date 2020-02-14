@@ -36,6 +36,9 @@ const SlowEchoService = "slow-echo"
 // HTTPBinService name of the deployment for the httpbin app
 const HTTPBinService = "httpbin"
 
+// ExternalAuthService name of the deployment for external authentication app
+const ExternalAuthService = "external-auth"
+
 // NewEchoDeployment creates a new single replica deployment of the echoserver image in a particular namespace
 func (f *Framework) NewEchoDeployment() {
 	f.NewEchoDeploymentWithReplicas(1)
@@ -167,6 +170,102 @@ server {
 	f.EnsureService(service)
 
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, SlowEchoService, f.Namespace, 1)
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
+}
+
+// NewLocalAuthDeployment creates a deployment to act as a source of external authentication.
+func (f *Framework) NewLocalAuthDeployment() {
+	data := map[string]string{}
+	data["default.conf"] = `#
+
+server {
+	server_name _;
+	listen 80;
+
+	location /check {
+		if ($cookie_authed = "yes") {
+			return 200;
+		}
+
+		if ($http_x_original_url ~ "authed=yes") {
+			add_header Set-Cookie "authed=yes" always;
+			return 401;
+		}
+
+		return 401;
+	}
+
+	location /sign-in {
+		rewrite_by_lua '
+			local args, err = ngx.req.get_uri_args()
+			uri = args.uri
+			ngx.log(ngx.ERR, "URI: " .. uri)
+			ngx.redirect(uri .. "&authed=yes");
+		';
+
+		content_by_lua 'return';
+	}
+}
+
+`
+
+	_, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(&corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ExternalAuthService,
+			Namespace: f.Namespace,
+		},
+		Data: data,
+	})
+	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
+
+	deployment := newDeployment(ExternalAuthService, f.Namespace, "openresty/openresty:1.15.8.2-alpine", 80, 1,
+		nil,
+		[]corev1.VolumeMount{
+			{
+				Name:      ExternalAuthService,
+				MountPath: "/etc/nginx/conf.d",
+				ReadOnly:  true,
+			},
+		},
+		[]corev1.Volume{
+			{
+				Name: ExternalAuthService,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: ExternalAuthService,
+						},
+					},
+				},
+			},
+		},
+	)
+
+	f.EnsureDeployment(deployment)
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ExternalAuthService,
+			Namespace: f.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       80,
+					TargetPort: intstr.FromInt(80),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+			Selector: map[string]string{
+				"app": ExternalAuthService,
+			},
+		},
+	}
+
+	f.EnsureService(service)
+
+	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, ExternalAuthService, f.Namespace, 1)
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
 }
 

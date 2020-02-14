@@ -333,26 +333,14 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	})
 
 	It("retains cookie set by external authentication server", func() {
-		Skip("Skipping test until refactoring")
-		// TODO: this test should look like https://gist.github.com/aledbf/250645d76c080677c695929273f8fd22
+		f.NewHttpbinDeployment()
+		f.NewLocalAuthDeployment()
 
 		host := "auth"
 
-		f.NewHttpbinDeployment()
-
-		var httpbinIP string
-
-		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
-		Expect(err).NotTo(HaveOccurred())
-
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
-		Expect(err).NotTo(HaveOccurred())
-
-		httpbinIP = e.Subsets[0].Addresses[0].IP
-
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbinIP),
-			"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
+			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%v.%v.svc.cluster.local/check?uri=$scheme://$host$request_uri", framework.ExternalAuthService, f.Namespace),
+			"nginx.ingress.kubernetes.io/auth-signin": fmt.Sprintf("http://%v.%v.svc.cluster.local/sign-in?uri=$scheme://$host$request_uri", framework.ExternalAuthService, f.Namespace),
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
@@ -366,8 +354,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
-			Param("a", "b").
-			Param("c", "d").
+			RedirectPolicy(func(req gorequest.Request, via []gorequest.Request) error {
+				return http.ErrUseLastResponse
+			}).
 			End()
 
 		for _, err := range errs {
