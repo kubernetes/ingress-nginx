@@ -1158,15 +1158,20 @@ func buildHTTPListener(t interface{}, s interface{}) string {
 	co := commonListenOptions(tc, hostname)
 
 	var httpPort int
+	var serverFound bool
 
 	for _, server := range tc.Servers {
 		if server.Hostname == hostname {
+			serverFound = true
 			if server.HTTPListeners.HTTPPort != 0 {
 				httpPort = server.HTTPListeners.HTTPPort
 			} else {
 				httpPort = tc.ListenPorts.HTTP
 			}
 		}
+	}
+	if !serverFound {
+		httpPort = tc.ListenPorts.HTTP
 	}
 
 	out = append(out, httpListener(addrV4, co, httpPort)...)
@@ -1208,15 +1213,20 @@ func buildHTTPSListener(t interface{}, s interface{}) string {
 	}
 
 	var httpsPort int
+	var serverFound bool
 
 	for _, server := range tc.Servers {
 		if server.Hostname == hostname {
+			serverFound = true
 			if server.HTTPListeners.HTTPSPort != 0 {
 				httpsPort = server.HTTPListeners.HTTPSPort
 			} else {
-				httpsPort = tc.ListenPorts.HTTP
+				httpsPort = tc.ListenPorts.HTTPS
 			}
 		}
+	}
+	if !serverFound {
+		httpsPort = tc.ListenPorts.HTTPS
 	}
 
 	out = append(out, httpsListener(addrV4, co, tc, httpsPort)...)
