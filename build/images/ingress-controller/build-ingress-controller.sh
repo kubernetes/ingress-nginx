@@ -80,19 +80,18 @@ git clone https://github.com/kubernetes/ingress-nginx
 
 cd ingress-nginx
 
-# disable docker in docker tasks
-export DIND_TASKS=0
-
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 make init-docker-buildx
 docker buildx use ingress-nginx --default --global
 
-echo "Building NGINX image..."
-make all-container
+# disable docker in docker tasks
+export DIND_TASKS=0
 
-echo "Publishing NGINX images..."
-make all-push
+echo "Building NGINX image..."
+ARCH=amd64 make build container push
+ARCH=arm   make build container push
+ARCH=arm64 make build container push
 
 # Requires https://github.com/kubernetes/ingress-nginx/pull/4271
 #echo "Creating multi-arch images..."
