@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+.DEFAULT_GOAL:=container
+
+# set default shell
+SHELL=/bin/bash -o pipefail
+
 # 0.0.0 shouldn't clobber any released builds
 TAG ?= 0.98
 REGISTRY ?= quay.io/kubernetes-ingress-controller
@@ -25,33 +30,25 @@ EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
 
-.PHONY: all
-all: container
-
 .PHONY: container
 container:
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
-		--no-cache \
 		--progress plain \
 		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
 		--tag $(IMAGE):$(TAG) rootfs
 
 	# https://github.com/docker/buildx/issues/59
 	$(foreach PLATFORM,$(PLATFORMS), \
-			DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
-			--load \
-			--progress plain \
-			--platform $(PLATFORM) \
-			--tag $(IMAGE)-$(PLATFORM):$(TAG) rootfs;)
+		DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
+		--load \
+		--progress plain \
+		--platform $(PLATFORM) \
+		--tag $(IMAGE)-$(PLATFORM):$(TAG) rootfs;)
 
 .PHONY: push
 push: container
 	$(foreach PLATFORM,$(PLATFORMS), \
 		docker push $(IMAGE)-$(PLATFORM):$(TAG);)
-
-ifeq ($(ARCH), amd64)
-	docker push $(IMAGE):$(TAG)
-endif
 
 .PHONY: release
 release: push
