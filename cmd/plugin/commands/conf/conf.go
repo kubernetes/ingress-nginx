@@ -32,7 +32,7 @@ import (
 
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
-	var pod, deployment *string
+	var pod, deployment, selector *string
 	cmd := &cobra.Command{
 		Use:   "conf",
 		Short: "Inspect the generated nginx.conf",
@@ -42,19 +42,20 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 				return err
 			}
 
-			util.PrintError(conf(flags, host, *pod, *deployment))
+			util.PrintError(conf(flags, host, *pod, *deployment, *selector))
 			return nil
 		},
 	}
 	cmd.Flags().String("host", "", "Print just the server block with this hostname")
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
+	selector = util.AddSelectorFlag(cmd)
 
 	return cmd
 }
 
-func conf(flags *genericclioptions.ConfigFlags, host string, podName string, deployment string) error {
-	pod, err := request.ChoosePod(flags, podName, deployment)
+func conf(flags *genericclioptions.ConfigFlags, host string, podName string, deployment string, selector string) error {
+	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err
 	}
