@@ -15,7 +15,7 @@
 ARG BASE_IMAGE
 ARG VERSION
 
-FROM --platform=$BUILDPLATFORM ${BASE_IMAGE}
+FROM ${BASE_IMAGE}
 
 LABEL org.opencontainers.image.title="NGINX Ingress Controller for Kubernetes"
 LABEL org.opencontainers.image.documentation="https://kubernetes.github.io/ingress-nginx/"
