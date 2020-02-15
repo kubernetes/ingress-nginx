@@ -30,10 +30,10 @@ var _ = framework.IngressNginxDescribe("Customize health check path", func() {
 	f := framework.NewDefaultFramework("custom-health-check-path")
 
 	Context("with a plain HTTP ingress", func() {
-		It("should return HTTP/1.1 200 OK on custom health check path and port", func() {
+		It("should return HTTP/1.1 200 OK on custom health port", func() {
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, "location /not-healthz")
+				return strings.Contains(server, "location /healthz")
 			})
 
 			err := framework.WaitForPodsReady(f.KubeClientSet, framework.DefaultTimeout, 1, f.Namespace, metav1.ListOptions{

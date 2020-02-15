@@ -24,7 +24,7 @@ set -o pipefail
 
 DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 
-export TAG=dev
+export TAG=0.0.0-dev
 export ARCH=amd64
 export REGISTRY=${REGISTRY:-ingress-controller}
 

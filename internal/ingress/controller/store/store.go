@@ -531,87 +531,58 @@ func New(
 		return name == configmap || name == tcp || name == udp
 	}
 
-	cmEventHandler := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			cm := obj.(*corev1.ConfigMap)
-			key := k8s.MetaNamespaceKey(cm)
+	handleCfgMapEvent := func(key string, cfgMap *corev1.ConfigMap, eventName string) {
+		// updates to configuration configmaps can trigger an update
+		triggerUpdate := false
+		if changeTriggerUpdate(key) {
+			triggerUpdate = true
+			recorder.Eventf(cfgMap, corev1.EventTypeNormal, eventName, fmt.Sprintf("ConfigMap %v", key))
+			if key == configmap {
+				store.setConfig(cfgMap)
+			}
+		}
 
-			triggerUpdate := false
-
-			// updates to configuration configmaps can trigger an update
-			if changeTriggerUpdate(key) {
-				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
-				triggerUpdate = true
-				if key == configmap {
-					store.setConfig(cm)
-				}
+		ings := store.listers.IngressWithAnnotation.List()
+		for _, ingKey := range ings {
+			key := k8s.MetaNamespaceKey(ingKey)
+			ing, err := store.getIngress(key)
+			if err != nil {
+				klog.Errorf("could not find Ingress %v in local store: %v", key, err)
+				continue
 			}
 
-			ings := store.listers.IngressWithAnnotation.List()
-			for _, ingKey := range ings {
-				key := k8s.MetaNamespaceKey(ingKey)
-				ing, err := store.getIngress(key)
-				if err != nil {
-					klog.Errorf("could not find Ingress %v in local store: %v", key, err)
-					continue
-				}
-
-				if parser.AnnotationsReferencesConfigmap(ing) {
-					recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
-					store.syncIngress(ing)
-					triggerUpdate = true
-				}
+			if parser.AnnotationsReferencesConfigmap(ing) {
+				store.syncIngress(ing)
+				continue
 			}
 
 			if triggerUpdate {
-				updateCh.In() <- Event{
-					Type: ConfigurationEvent,
-					Obj:  obj,
-				}
+				store.syncIngress(ing)
 			}
+		}
+
+		if triggerUpdate {
+			updateCh.In() <- Event{
+				Type: ConfigurationEvent,
+				Obj:  cfgMap,
+			}
+		}
+	}
+
+	cmEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			cfgMap := obj.(*corev1.ConfigMap)
+			key := k8s.MetaNamespaceKey(cfgMap)
+			handleCfgMapEvent(key, cfgMap, "CREATE")
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			if reflect.DeepEqual(old, cur) {
 				return
 			}
 
-			// used to limit the number of events
-			triggerUpdate := false
-
-			cm := cur.(*corev1.ConfigMap)
-			key := k8s.MetaNamespaceKey(cm)
-			// updates to configuration configmaps can trigger an update
-			if changeTriggerUpdate(key) {
-				recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
-				triggerUpdate = true
-			}
-
-			if key == configmap {
-				store.setConfig(cm)
-			}
-
-			ings := store.listers.IngressWithAnnotation.List()
-			for _, ingKey := range ings {
-				key := k8s.MetaNamespaceKey(ingKey)
-				ing, err := store.getIngress(key)
-				if err != nil {
-					klog.Errorf("could not find Ingress %v in local store: %v", key, err)
-					continue
-				}
-
-				if parser.AnnotationsReferencesConfigmap(ing) {
-					recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
-					store.syncIngress(ing)
-					triggerUpdate = true
-				}
-			}
-
-			if triggerUpdate {
-				updateCh.In() <- Event{
-					Type: ConfigurationEvent,
-					Obj:  cur,
-				}
-			}
+			cfgMap := cur.(*corev1.ConfigMap)
+			key := k8s.MetaNamespaceKey(cfgMap)
+			handleCfgMapEvent(key, cfgMap, "UPDATE")
 		},
 	}
 

@@ -1,3 +1,0 @@
-- op: add
-  path: /rules/1/resourceNames/-1
-  value: "ingress-controller-leader-testclass"

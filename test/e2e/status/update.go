@@ -45,20 +45,23 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 
 		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
-				args := deployment.Spec.Template.Spec.Containers[0].Args
+				args := []string{}
+				// flags --publish-service and --publish-status-address are mutually exclusive
+
+				for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
+					if strings.Contains(v, "--publish-service") {
+						continue
+					}
+
+					if strings.Contains(v, "--update-status") {
+						continue
+					}
+
+					args = append(args, v)
+				}
+
 				args = append(args, fmt.Sprintf("--apiserver-host=http://%s:%d", address.String(), port))
 				args = append(args, "--publish-status-address=1.1.0.0")
-				// flags --publish-service and --publish-status-address are mutually exclusive
-				var index int
-				for k, v := range args {
-					if strings.Contains(v, "--publish-service") {
-						index = k
-						break
-					}
-				}
-				if index > -1 {
-					args[index] = ""
-				}
 
 				deployment.Spec.Template.Spec.Containers[0].Args = args
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)

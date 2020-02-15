@@ -51,7 +51,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int) {
 // replicas is configurable and
 // name is configurable
 func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas int) {
-	deployment := newDeployment(name, f.Namespace, "ingress-controller/echo:dev", 80, int32(replicas),
+	deployment := newDeployment(name, f.Namespace, "ingress-controller/echo:1.0.0-dev", 80, int32(replicas),
 		[]string{
 			"openresty",
 		},
@@ -329,7 +329,7 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
 func (f *Framework) NewHttpbinDeployment() {
-	f.NewDeployment(HTTPBinService, "ingress-controller/httpbin:dev", 80, 1)
+	f.NewDeployment(HTTPBinService, "ingress-controller/httpbin:1.0.0-dev", 80, 1)
 }
 
 // NewDeployment creates a new deployment in a particular namespace.
