@@ -120,6 +120,13 @@ func AddDeploymentFlag(cmd *cobra.Command) *string {
 	return &v
 }
 
+// AddSelectorFlag adds a --selector flag to a cobra command
+func AddSelectorFlag(cmd *cobra.Command) *string {
+	v := ""
+	cmd.Flags().StringVarP(&v, "selector", "l", "", "Selector (label query) of the ingress-nginx pod")
+	return &v
+}
+
 // GetNamespace takes a set of kubectl flag values and returns the namespace we should be operating in
 func GetNamespace(flags *genericclioptions.ConfigFlags) string {
 	namespace, _, err := flags.ToRawKubeConfigLoader().Namespace()

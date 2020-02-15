@@ -32,9 +32,13 @@ import (
 )
 
 // ChoosePod finds a pod either by deployment or by name
-func ChoosePod(flags *genericclioptions.ConfigFlags, podName string, deployment string) (apiv1.Pod, error) {
+func ChoosePod(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string) (apiv1.Pod, error) {
 	if podName != "" {
 		return GetNamedPod(flags, podName)
+	}
+
+	if selector != "" {
+		return GetLabeledPod(flags, selector)
 	}
 
 	return GetDeploymentPod(flags, deployment)
@@ -65,6 +69,20 @@ func GetDeploymentPod(flags *genericclioptions.ConfigFlags, deployment string) (
 
 	if len(ings) == 0 {
 		return apiv1.Pod{}, fmt.Errorf("no pods for deployment %v found in namespace %v", deployment, util.GetNamespace(flags))
+	}
+
+	return ings[0], nil
+}
+
+// GetDeploymentPod finds a pod from a given deployment
+func GetLabeledPod(flags *genericclioptions.ConfigFlags, label string) (apiv1.Pod, error) {
+	ings, err := getLabeledPods(flags, label)
+	if err != nil {
+		return apiv1.Pod{}, err
+	}
+
+	if len(ings) == 0 {
+		return apiv1.Pod{}, fmt.Errorf("no pods for label selector %v found in namespace %v", label, util.GetNamespace(flags))
 	}
 
 	return ings[0], nil
@@ -239,6 +257,30 @@ func getPods(flags *genericclioptions.ConfigFlags) ([]apiv1.Pod, error) {
 	}
 
 	pods, err := api.Pods(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return make([]apiv1.Pod, 0), err
+	}
+
+	return pods.Items, nil
+}
+
+func getLabeledPods(flags *genericclioptions.ConfigFlags, label string) ([]apiv1.Pod, error) {
+	namespace := util.GetNamespace(flags)
+
+	rawConfig, err := flags.ToRESTConfig()
+	if err != nil {
+		return make([]apiv1.Pod, 0), err
+	}
+
+	api, err := corev1.NewForConfig(rawConfig)
+	if err != nil {
+		return make([]apiv1.Pod, 0), err
+	}
+
+	pods, err := api.Pods(namespace).List(metav1.ListOptions{
+		LabelSelector: label,
+	})
+
 	if err != nil {
 		return make([]apiv1.Pod, 0), err
 	}
