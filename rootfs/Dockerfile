@@ -13,9 +13,10 @@
 # limitations under the License.
 
 ARG BASE_IMAGE
-ARG VERSION
 
 FROM ${BASE_IMAGE}
+
+ARG VERSION
 
 LABEL org.opencontainers.image.title="NGINX Ingress Controller for Kubernetes"
 LABEL org.opencontainers.image.documentation="https://kubernetes.github.io/ingress-nginx/"
