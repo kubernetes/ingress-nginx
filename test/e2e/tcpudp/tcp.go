@@ -34,7 +34,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("TCP Feature", func() {
+var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 	f := framework.NewDefaultFramework("tcp")
 
 	It("should expose a TCP service", func() {

@@ -22,7 +22,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
+var _ = framework.DescribeAnnotation("backend-protocol", func() {
 	f := framework.NewDefaultFramework("backendprotocol")
 
 	BeforeEach(func() {

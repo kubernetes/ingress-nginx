@@ -25,7 +25,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func() {
+var _ = framework.DescribeAnnotation("x-forwarded-prefix", func() {
 	f := framework.NewDefaultFramework("xforwardedprefix")
 
 	BeforeEach(func() {

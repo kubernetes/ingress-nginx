@@ -23,7 +23,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - SSL CIPHERS", func() {
+var _ = framework.DescribeAnnotation("ssl-ciphers", func() {
 	f := framework.NewDefaultFramework("sslciphers")
 
 	BeforeEach(func() {

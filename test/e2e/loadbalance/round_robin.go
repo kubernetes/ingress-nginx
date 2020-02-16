@@ -29,16 +29,12 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Load Balance - Round Robin", func() {
+var _ = framework.DescribeSetting("[Load Balancer] round-robin", func() {
 	f := framework.NewDefaultFramework("round-robin")
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(3)
 		f.UpdateNginxConfigMapData("worker-processes", "1")
-	})
-
-	AfterEach(func() {
-		f.UpdateNginxConfigMapData("worker-processes", "")
 	})
 
 	It("should evenly distribute requests with round-robin (default algorithm)", func() {

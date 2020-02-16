@@ -31,7 +31,7 @@ const (
 	canaryService = "echo-canary"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
+var _ = framework.DescribeAnnotation("canary-*", func() {
 	f := framework.NewDefaultFramework("canary")
 
 	BeforeEach(func() {

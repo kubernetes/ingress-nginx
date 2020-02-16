@@ -26,7 +26,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Debug Tool", func() {
+var _ = framework.IngressNginxDescribe("Debug CLI", func() {
 	f := framework.NewDefaultFramework("debug-tool")
 	host := "foo.com"
 

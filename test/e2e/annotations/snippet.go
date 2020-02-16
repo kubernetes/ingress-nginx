@@ -22,7 +22,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", func() {
+var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 	f := framework.NewDefaultFramework("configurationsnippet")
 
 	BeforeEach(func() {

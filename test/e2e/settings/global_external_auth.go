@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Global External Auth", func() {
+var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 	f := framework.NewDefaultFramework("global-external-auth")
 
 	host := "global-external-auth"

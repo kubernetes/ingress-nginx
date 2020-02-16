@@ -26,7 +26,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Configmap change", func() {
+var _ = framework.DescribeSetting("Configmap change", func() {
 	f := framework.NewDefaultFramework("configmap-change")
 
 	BeforeEach(func() {
@@ -39,12 +39,9 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		wlKey := "whitelist-source-range"
-		wlValue := "1.1.1.1"
-
 		By("adding a whitelist-source-range")
 
-		f.UpdateNginxConfigMapData(wlKey, wlValue)
+		f.UpdateNginxConfigMapData("whitelist-source-range", "1.1.1.1")
 
 		checksumRegex := regexp.MustCompile(`Configuration checksum:\s+(\d+)`)
 		checksum := ""

@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Graceful Shutdown - Slow Requests", func() {
+var _ = framework.IngressNginxDescribe("[Shutdown] Graceful shutdown with pending request", func() {
 	f := framework.NewDefaultFramework("shutdown-slow-requests")
 
 	BeforeEach(func() {

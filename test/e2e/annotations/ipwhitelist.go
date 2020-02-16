@@ -24,7 +24,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
+var _ = framework.DescribeAnnotation("whitelist-source-range", func() {
 	f := framework.NewDefaultFramework("ipwhitelist")
 
 	BeforeEach(func() {

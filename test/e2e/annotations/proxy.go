@@ -25,7 +25,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
+var _ = framework.DescribeAnnotation("proxy-*", func() {
 	f := framework.NewDefaultFramework("proxy")
 	host := "proxy.foo.com"
 

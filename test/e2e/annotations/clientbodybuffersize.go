@@ -22,7 +22,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", func() {
+var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 	f := framework.NewDefaultFramework("clientbodybuffersize")
 
 	BeforeEach(func() {

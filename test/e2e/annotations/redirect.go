@@ -34,7 +34,7 @@ func noRedirectPolicyFunc(gorequest.Request, []gorequest.Request) error {
 	return http.ErrUseLastResponse
 }
 
-var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
+var _ = framework.DescribeAnnotation("permanen-redirect permanen-redirect-code", func() {
 	f := framework.NewDefaultFramework("redirect")
 
 	It("should respond with a standard redirect code", func() {

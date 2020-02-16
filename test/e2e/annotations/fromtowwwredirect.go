@@ -29,7 +29,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", func() {
+var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 	f := framework.NewDefaultFramework("fromtowwwredirect")
 
 	BeforeEach(func() {

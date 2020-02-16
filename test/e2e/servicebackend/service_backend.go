@@ -32,7 +32,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
+var _ = framework.IngressNginxDescribe("[Service] backend status code 503", func() {
 	f := framework.NewDefaultFramework("service-backend")
 
 	It("should return 503 when backend service does not exist", func() {

@@ -24,7 +24,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Main Snippet", func() {
+var _ = framework.DescribeSetting("main-snippet", func() {
 	f := framework.NewDefaultFramework("main-snippet")
 	mainSnippet := "main-snippet"
 

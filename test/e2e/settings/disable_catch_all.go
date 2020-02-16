@@ -31,7 +31,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
+var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 	f := framework.NewDefaultFramework("disabled-catch-all")
 
 	BeforeEach(func() {

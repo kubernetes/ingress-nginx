@@ -33,7 +33,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
+var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 	f := framework.NewDefaultFramework("dynamic-certificate")
 	host := "foo.com"
 
