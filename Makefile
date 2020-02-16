@@ -207,6 +207,11 @@ else
 	@ginkgo build ./test/e2e
 endif
 
+.PHONY: print-e2e-suite
+print-e2e-suite: e2e-test-binary ## Prints information about the suite of e2e tests.
+	@build/run-in-docker.sh \
+		hack/print-e2e-suite.sh
+
 .PHONY: cover
 cover: check-go-version ## Run go coverage unit tests.
 	@build/cover.sh
