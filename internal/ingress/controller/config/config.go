@@ -393,6 +393,10 @@ type Configuration struct {
 	// gzip Compression Level that will be used
 	GzipLevel int `json:"gzip-level,omitempty"`
 
+	// Minimum length of responses to be sent to the client before it is eligible
+	// for gzip compression, in bytes.
+	GzipMinLength int `json:"gzip-min-length,omitempty"`
+
 	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
 	// Responses with the “text/html” type are always compressed if UseGzip is enabled
 	GzipTypes string `json:"gzip-types,omitempty"`
@@ -695,6 +699,7 @@ func NewDefault() Configuration {
 		HSTSPreload:                      false,
 		IgnoreInvalidHeaders:             true,
 		GzipLevel:                        5,
+		GzipMinLength:                    256,
 		GzipTypes:                        gzipTypes,
 		KeepAlive:                        75,
 		KeepAliveRequests:                100,

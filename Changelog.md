@@ -1,5 +1,70 @@
 # Changelog
 
+### 0.29.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.29.0`
+
+_New Features:_
+
+- NGINX 1.17.8
+- Add SameSite support for [Cookie Affinity](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#cookie-affinity) https://www.chromium.org/updates/same-site
+- Refactor of [mirror](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#mirror) feature to remove additional annotations
+
+_Changes:_
+
+- [X] [#4949](https://github.com/kubernetes/ingress-nginx/pull/4949) Add SameSite support - omit None for old browsers
+- [X] [#4973](https://github.com/kubernetes/ingress-nginx/pull/4973) Fix release script
+- [X] [#4975](https://github.com/kubernetes/ingress-nginx/pull/4975) Fix docker installation in travis script
+- [X] [#4976](https://github.com/kubernetes/ingress-nginx/pull/4976) Fix travis
+- [X] [#4977](https://github.com/kubernetes/ingress-nginx/pull/4977) Fix image version
+- [X] [#4983](https://github.com/kubernetes/ingress-nginx/pull/4983) Fix enable opentracing per location
+- [X] [#4987](https://github.com/kubernetes/ingress-nginx/pull/4987) Dump kind logs after e2e tests
+- [X] [#4993](https://github.com/kubernetes/ingress-nginx/pull/4993) Calculation algorithm for server_names_hash_bucket_size should consid…
+- [X] [#4995](https://github.com/kubernetes/ingress-nginx/pull/4995) Cleanup main makefile and remove the need of sed
+- [X] [#4996](https://github.com/kubernetes/ingress-nginx/pull/4996) Fix status update for clusters where networking.k8s.io is not available
+- [X] [#4999](https://github.com/kubernetes/ingress-nginx/pull/4999) Fix limitrange definition
+- [X] [#5000](https://github.com/kubernetes/ingress-nginx/pull/5000) Update python syntax in OAuth2 example
+- [X] [#5003](https://github.com/kubernetes/ingress-nginx/pull/5003) Fix server aliases
+- [X] [#5008](https://github.com/kubernetes/ingress-nginx/pull/5008) Fix docker buildx check in Makefile
+- [X] [#5009](https://github.com/kubernetes/ingress-nginx/pull/5009) Move mod-security logic from template to go code
+- [X] [#5010](https://github.com/kubernetes/ingress-nginx/pull/5010) Update nginx image
+- [X] [#5011](https://github.com/kubernetes/ingress-nginx/pull/5011) Update nginx image, go to 1.13.7 and e2e image
+- [X] [#5015](https://github.com/kubernetes/ingress-nginx/pull/5015) Refactor mirror feature
+- [X] [#5016](https://github.com/kubernetes/ingress-nginx/pull/5016) Fix dep-ensure task
+- [X] [#5023](https://github.com/kubernetes/ingress-nginx/pull/5023) Update metric dependencies and restore default Objectives
+- [X] [#5028](https://github.com/kubernetes/ingress-nginx/pull/5028) Add echo image to avoid building and installing dependencies in each …
+- [X] [#5031](https://github.com/kubernetes/ingress-nginx/pull/5031) Update kindest/node version to v1.17.2
+- [X] [#5032](https://github.com/kubernetes/ingress-nginx/pull/5032) Fix fortune-teller app manifest
+- [X] [#5035](https://github.com/kubernetes/ingress-nginx/pull/5035) Update github.com/paultag/sniff dependency
+- [X] [#5036](https://github.com/kubernetes/ingress-nginx/pull/5036) Disable DIND in script run-in-docker.sh
+- [X] [#5038](https://github.com/kubernetes/ingress-nginx/pull/5038) Update code to use pault.ag/go/sniff package
+- [X] [#5042](https://github.com/kubernetes/ingress-nginx/pull/5042) Fix X-Forwarded-Proto based on proxy-protocol server port
+- [X] [#5050](https://github.com/kubernetes/ingress-nginx/pull/5050) Add flag to allow custom ingress status update intervals
+- [X] [#5052](https://github.com/kubernetes/ingress-nginx/pull/5052) Change the handling of ConfigMap creation
+- [X] [#5053](https://github.com/kubernetes/ingress-nginx/pull/5053) Validation of header in authreq should be done only in the key
+- [X] [#5055](https://github.com/kubernetes/ingress-nginx/pull/5055) Only set mirror source when a target is configured
+- [X] [#5059](https://github.com/kubernetes/ingress-nginx/pull/5059) Remove minikube and only use kind
+- [X] [#5060](https://github.com/kubernetes/ingress-nginx/pull/5060) Cleanup e2e tests
+- [X] [#5061](https://github.com/kubernetes/ingress-nginx/pull/5061) Fix scripts to run in osx
+- [X] [#5062](https://github.com/kubernetes/ingress-nginx/pull/5062) Ensure scripts and dev-env works in osx
+- [X] [#5067](https://github.com/kubernetes/ingress-nginx/pull/5067) Make sure set-cookie is retained from external auth endpoint
+- [X] [#5069](https://github.com/kubernetes/ingress-nginx/pull/5069) Enable grpc e2e tests
+- [X] [#5070](https://github.com/kubernetes/ingress-nginx/pull/5070) Update go to 1.13.8
+- [X] [#5071](https://github.com/kubernetes/ingress-nginx/pull/5071) Add gzip-min-length as a Configuration Option
+
+_Documentation:_
+
+- [X] [#4974](https://github.com/kubernetes/ingress-nginx/pull/4974) Add travis script for docs
+- [X] [#4991](https://github.com/kubernetes/ingress-nginx/pull/4991) doc: added hint why regular expressions might not be accepted
+- [X] [#5018](https://github.com/kubernetes/ingress-nginx/pull/5018) Update developer document on dependency updates
+- [X] [#5020](https://github.com/kubernetes/ingress-nginx/pull/5020) docs(deploy): fix helm install command for helm v3
+- [X] [#5037](https://github.com/kubernetes/ingress-nginx/pull/5037) Cleanup README.md
+- [X] [#5040](https://github.com/kubernetes/ingress-nginx/pull/5040) Update documentation and remove hack fixed by upstream cookie library
+- [X] [#5041](https://github.com/kubernetes/ingress-nginx/pull/5041) 36.94% size reduction of image assets using lossless compression from ImgBot
+- [X] [#5043](https://github.com/kubernetes/ingress-nginx/pull/5043) Cleanup docs
+- [X] [#5068](https://github.com/kubernetes/ingress-nginx/pull/5068) docs: reference buildx as a requirement for docker builds
+- [X] [#5073](https://github.com/kubernetes/ingress-nginx/pull/5073) oauth-external-auth: README.md: Link to oauth2-proxy, dashboard-ingress.yaml
+
 ### 0.28.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.28.0`
