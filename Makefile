@@ -154,7 +154,7 @@ endif
 
 .PHONY: clean
 clean: ## Remove .gocache directory.
-	rm -rf bin/ .gocache/
+	rm -rf bin/ .gocache/ .cache/
 
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint and lualint.
