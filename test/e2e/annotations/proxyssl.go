@@ -25,7 +25,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - ProxySSL", func() {
+var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 	f := framework.NewDefaultFramework("proxyssl")
 
 	BeforeEach(func() {

@@ -36,7 +36,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - GRPC", func() {
+var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc")
 
 	It("should use grpc_pass in the configuration file", func() {

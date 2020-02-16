@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Shutdown ingress controller", func() {
+var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 	f := framework.NewDefaultFramework("shutdown-ingress-controller")
 
 	host := "shutdown"

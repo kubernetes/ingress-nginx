@@ -34,7 +34,7 @@ func noRedirectPolicyFunc(gorequest.Request, []gorequest.Request) error {
 	return http.ErrUseLastResponse
 }
 
-var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
+var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", func() {
 	f := framework.NewDefaultFramework("settings-tls")
 	host := "settings-tls"
 

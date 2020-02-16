@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Global access block", func() {
+var _ = framework.DescribeSetting("[Security] block-*", func() {
 	f := framework.NewDefaultFramework("global-access-block")
 
 	host := "global-access-block"
@@ -47,8 +47,6 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 					strings.Contains(cfg, "deny 10.0.0.0/8;")
 			})
 
-		// This test works for minikube, but may have problems with real kubernetes clusters,
-		// especially if connection is done via Internet. In this case, the test should be disabled/removed.
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).

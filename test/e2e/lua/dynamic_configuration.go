@@ -43,7 +43,7 @@ const (
 	waitForLuaSync          = 5 * time.Second
 )
 
-var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
+var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 	f := framework.NewDefaultFramework("dynamic-configuration")
 
 	BeforeEach(func() {

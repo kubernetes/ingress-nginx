@@ -33,7 +33,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
+var _ = framework.DescribeAnnotation("auth-*", func() {
 	f := framework.NewDefaultFramework("auth")
 
 	BeforeEach(func() {

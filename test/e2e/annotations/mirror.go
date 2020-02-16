@@ -25,7 +25,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Mirror", func() {
+var _ = framework.DescribeAnnotation("mirror-*", func() {
 	f := framework.NewDefaultFramework("mirror")
 	host := "mirror.foo.com"
 

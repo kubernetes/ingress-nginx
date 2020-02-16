@@ -23,7 +23,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Log", func() {
+var _ = framework.DescribeAnnotation("enable-access-log enable-rewrite-log", func() {
 	f := framework.NewDefaultFramework("log")
 
 	BeforeEach(func() {

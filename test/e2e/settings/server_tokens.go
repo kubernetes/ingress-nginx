@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Server Tokens", func() {
+var _ = framework.DescribeSetting("server-tokens", func() {
 	f := framework.NewDefaultFramework("server-tokens")
 	serverTokens := "server-tokens"
 

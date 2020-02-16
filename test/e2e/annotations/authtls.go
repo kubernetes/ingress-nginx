@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
+var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 	f := framework.NewDefaultFramework("authtls")
 
 	BeforeEach(func() {

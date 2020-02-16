@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Geoip2", func() {
+var _ = framework.DescribeSetting("Geoip2", func() {
 	f := framework.NewDefaultFramework("geoip2")
 
 	host := "geoip2"

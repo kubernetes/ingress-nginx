@@ -38,7 +38,7 @@ const (
 	ingressControllerPSP = "ingress-controller-psp"
 )
 
-var _ = framework.IngressNginxDescribe("Pod Security Policies", func() {
+var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies", func() {
 	f := framework.NewDefaultFramework("pod-security-policies")
 
 	BeforeEach(func() {

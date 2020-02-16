@@ -32,7 +32,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("SSL", func() {
+var _ = framework.IngressNginxDescribe("[SSL] secret update", func() {
 	f := framework.NewDefaultFramework("ssl")
 
 	BeforeEach(func() {

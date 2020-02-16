@@ -25,7 +25,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Load Balance - Configmap value", func() {
+var _ = framework.DescribeSetting("[Load Balancer] load-balance", func() {
 	f := framework.NewDefaultFramework("lb-configmap")
 
 	BeforeEach(func() {

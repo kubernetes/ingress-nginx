@@ -29,7 +29,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Request smuggling", func() {
+var _ = framework.IngressNginxDescribe("[Security] request smuggling", func() {
 	f := framework.NewDefaultFramework("request-smuggling")
 
 	BeforeEach(func() {

@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Add custom header", func() {
+var _ = framework.DescribeSetting("Add custom headers", func() {
 	f := framework.NewDefaultFramework("custom-header")
 	host := "custom-header"
 

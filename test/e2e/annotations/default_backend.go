@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", func() {
+var _ = framework.DescribeAnnotation("default-backend", func() {
 	f := framework.NewDefaultFramework("default-backend")
 
 	BeforeEach(func() {

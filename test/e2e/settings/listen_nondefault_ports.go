@@ -30,7 +30,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Listen on nondefault ports", func() {
+var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", func() {
 
 	host := "forwarded-headers"
 

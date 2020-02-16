@@ -26,7 +26,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
+var _ = framework.DescribeAnnotation("cors-*", func() {
 	f := framework.NewDefaultFramework("cors")
 
 	BeforeEach(func() {

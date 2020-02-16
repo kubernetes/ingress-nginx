@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
+var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 	f := framework.NewDefaultFramework("proxy-protocol")
 
 	setting := "use-proxy-protocol"
