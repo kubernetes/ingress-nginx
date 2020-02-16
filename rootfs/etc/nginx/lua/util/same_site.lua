@@ -13,7 +13,9 @@ local _M = {}
 -- browsers which will reject SameSite=None cookies.
 -- reference: https://www.chromium.org/updates/same-site/incompatible-clients
 function _M.same_site_none_compatible(user_agent)
-  if string.match(user_agent, "Chrome/4") then
+  if not user_agent then
+    return true
+  elseif string.match(user_agent, "Chrome/4") then
     return false
   elseif string.match(user_agent, "Chrome/5") then
     return false

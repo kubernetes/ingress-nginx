@@ -1,4 +1,8 @@
 describe("same_site_compatible_test", function()
+  it("returns true for nil user agent", function()
+    local same_site = require("util.same_site")
+    assert.True(same_site.same_site_none_compatible(nil))
+  end)
   it("returns false for chrome 4", function()
     local same_site = require("util.same_site")
     assert.False(same_site.same_site_none_compatible("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2704.103 Safari/537.36"))
