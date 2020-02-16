@@ -15,7 +15,7 @@ spec:
       serviceAccountName: nginx-ingress-serviceaccount
       containers:
         - name: nginx-ingress-controller
-          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.28.0
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.29.0
           args:
             - /nginx-ingress-controller
             - --configmap=$(POD_NAMESPACE)/$(NGINX_CONFIGMAP_NAME)
