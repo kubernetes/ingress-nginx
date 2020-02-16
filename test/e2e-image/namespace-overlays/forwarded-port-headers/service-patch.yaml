@@ -1,6 +1,0 @@
-- op: replace
-  path: /spec/ports/0/targetPort
-  value: 1080
-- op: replace
-  path: /spec/ports/1/targetPort
-  value: 1443

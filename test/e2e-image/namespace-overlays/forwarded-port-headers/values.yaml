@@ -1,0 +1,34 @@
+controller:
+  image:
+    repository: ingress-controller/nginx-ingress-controller
+    tag: 1.0.0-dev
+  containerPort:
+    http: "1080"
+    https: "1443"
+
+  extraArgs:
+    http-port: "1080"
+    https-port: "1443"
+    # e2e tests do not require information about ingress status
+    update-status: "false"
+
+  scope:
+    enabled: true
+
+  config:
+    worker-processes: "1"
+  podLabels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+  service:
+    name: ingress-nginx
+    type: NodePort
+    labels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/part-of: ingress-nginx
+
+defaultBackend:
+  enabled: false
+
+rbac:
+  create: false

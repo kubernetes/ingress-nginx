@@ -1,0 +1,33 @@
+controller:
+  image:
+    repository: ingress-controller/nginx-ingress-controller
+    tag: 1.0.0-dev
+  extraArgs:
+    healthz-port: "9090"
+    # e2e tests do not require information about ingress status
+    update-status: "false"
+
+  scope:
+    enabled: true
+  config:
+    worker-processes: "1"
+  readinessProbe:
+    port: 9090
+    initialDelaySeconds: 1
+  livenessProbe:
+    port: 9090
+    initialDelaySeconds: 1
+  podLabels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+  service:
+    type: NodePort
+    labels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/part-of: ingress-nginx
+
+defaultBackend:
+  enabled: false
+
+rbac:
+  create: false

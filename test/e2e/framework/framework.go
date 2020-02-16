@@ -145,7 +145,7 @@ func (f *Framework) AfterEach() {
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.
 func IngressNginxDescribe(text string, body func()) bool {
-	return ginkgo.Describe("[ingress-nginx] "+text, body)
+	return ginkgo.Describe(text, body)
 }
 
 // MemoryLeakIt is wrapper function for ginkgo It.  Adds "[MemoryLeak]" tag and makes static analysis easier.
@@ -158,7 +158,7 @@ func (f *Framework) GetNginxIP() string {
 	s, err := f.KubeClientSet.
 		CoreV1().
 		Services(f.Namespace).
-		Get("ingress-nginx", metav1.GetOptions{})
+		Get("nginx-ingress-controller", metav1.GetOptions{})
 	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error obtaining NGINX IP address")
 	return s.Spec.ClusterIP
 }
@@ -168,7 +168,7 @@ func (f *Framework) GetNginxPodIP() []string {
 	e, err := f.KubeClientSet.
 		CoreV1().
 		Endpoints(f.Namespace).
-		Get("ingress-nginx", metav1.GetOptions{})
+		Get("nginx-ingress-controller", metav1.GetOptions{})
 	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error obtaining NGINX IP address")
 	eips := make([]string, 0)
 	for _, s := range e.Subsets {
@@ -262,7 +262,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 }
 
 func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
-	return f.getConfigMap("nginx-configuration")
+	return f.getConfigMap("nginx-ingress-controller")
 }
 
 func (f *Framework) getConfigMap(name string) (*v1.ConfigMap, error) {
@@ -281,36 +281,19 @@ func (f *Framework) getConfigMap(name string) (*v1.ConfigMap, error) {
 	return config, err
 }
 
-// GetNginxConfigMapData gets ingress-nginx's nginx-configuration map's data
-func (f *Framework) GetNginxConfigMapData() (map[string]string, error) {
-	config, err := f.getNginxConfigMap()
-	if err != nil {
-		return nil, err
-	}
-	if config.Data == nil {
-		config.Data = map[string]string{}
-	}
-
-	return config.Data, err
-}
-
-// SetNginxConfigMapData sets ingress-nginx's nginx-configuration configMap data
+// SetNginxConfigMapData sets ingress-nginx's nginx-ingress-controller configMap data
 func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
-	f.SetConfigMapData("nginx-configuration", cmData)
-}
-
-func (f *Framework) SetConfigMapData(name string, cmData map[string]string) {
-	config, err := f.getConfigMap(name)
+	cfgMap, err := f.getConfigMap("nginx-ingress-controller")
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-	gomega.Expect(config).NotTo(gomega.BeNil(), "expected a configmap but none returned")
+	gomega.Expect(cfgMap).NotTo(gomega.BeNil(), "expected a configmap but none returned")
 
-	config.Data = cmData
+	cfgMap.Data = cmData
 
 	_, err = f.KubeClientSet.
 		CoreV1().
 		ConfigMaps(f.Namespace).
-		Update(config)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		Update(cfgMap)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error updating configuration configmap")
 
 	time.Sleep(5 * time.Second)
 }
@@ -326,15 +309,20 @@ func (f *Framework) CreateConfigMap(name string, data map[string]string) {
 	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to create configMap")
 }
 
-// UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-configuration map data
+// UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-ingress-controller map data
 func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
-	config, err := f.GetNginxConfigMapData()
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error reading configmap")
+	config, err := f.getConfigMap("nginx-ingress-controller")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	gomega.Expect(config).NotTo(gomega.BeNil(), "expected a configmap but none returned")
 
-	config[key] = value
+	config.Data[key] = value
 
-	f.SetNginxConfigMapData(config)
-	time.Sleep(1 * time.Second)
+	_, err = f.KubeClientSet.
+		CoreV1().
+		ConfigMaps(f.Namespace).
+		Update(config)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error updating configuration configmap")
+	time.Sleep(5 * time.Second)
 }
 
 // DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.
