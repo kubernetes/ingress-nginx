@@ -29,13 +29,15 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Load Balance - EWMA", func() {
+var _ = framework.DescribeSetting("[Load Balancer] EWMA", func() {
 	f := framework.NewDefaultFramework("ewma")
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(3)
-		f.UpdateNginxConfigMapData("worker-processes", "2")
-		f.UpdateNginxConfigMapData("load-balance", "ewma")
+		f.SetNginxConfigMapData(map[string]string{
+			"worker-processes": "2",
+			"load-balance":     "ewma"},
+		)
 	})
 
 	It("does not fail requests", func() {

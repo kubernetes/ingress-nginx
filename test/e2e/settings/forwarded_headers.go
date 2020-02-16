@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
+var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 	f := framework.NewDefaultFramework("forwarded-headers")
 
 	setting := "use-forwarded-headers"

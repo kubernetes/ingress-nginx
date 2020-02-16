@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("sslredirect", func() {
+var _ = framework.IngressNginxDescribe("[SSL] redirect to HTTPS", func() {
 	f := framework.NewDefaultFramework("sslredirect")
 
 	BeforeEach(func() {

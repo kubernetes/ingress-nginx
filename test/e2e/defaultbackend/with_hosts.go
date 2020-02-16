@@ -30,7 +30,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
+var _ = framework.IngressNginxDescribe("[Default Backend] change default settings", func() {
 	f := framework.NewDefaultFramework("default-backend-hosts")
 	host := "foo.com"
 

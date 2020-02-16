@@ -24,7 +24,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Multi Accept", func() {
+var _ = framework.DescribeSetting("enable-multi-accept", func() {
 	multiAccept := "enable-multi-accept"
 	f := framework.NewDefaultFramework(multiAccept)
 

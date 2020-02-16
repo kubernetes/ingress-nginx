@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - FastCGI", func() {
+var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 	f := framework.NewDefaultFramework("fastcgi")
 
 	BeforeEach(func() {

@@ -23,7 +23,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func() {
+var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 	f := framework.NewDefaultFramework("modsecuritylocation")
 
 	BeforeEach(func() {

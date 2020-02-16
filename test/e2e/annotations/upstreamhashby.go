@@ -72,7 +72,7 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 	return podMap
 }
 
-var _ = framework.IngressNginxDescribe("Annotations - UpstreamHashBy", func() {
+var _ = framework.DescribeAnnotation("upstream-hash-by-*", func() {
 	f := framework.NewDefaultFramework("upstream-hash-by")
 
 	BeforeEach(func() {

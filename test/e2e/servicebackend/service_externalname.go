@@ -32,7 +32,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Service Type ExternalName", func() {
+var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	f := framework.NewDefaultFramework("type-externalname")
 
 	It("works with external name set to incomplete fdqn", func() {

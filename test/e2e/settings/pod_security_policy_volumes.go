@@ -34,7 +34,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Pod Security Policies with volumes", func() {
+var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with volumes", func() {
 	f := framework.NewDefaultFramework("pod-security-policies-volumes")
 
 	It("should be running with a Pod Security Policy", func() {

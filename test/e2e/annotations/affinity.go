@@ -33,7 +33,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions", func() {
+var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 	f := framework.NewDefaultFramework("affinity")
 
 	BeforeEach(func() {

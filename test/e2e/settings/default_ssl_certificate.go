@@ -29,7 +29,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("default-ssl-certificate", func() {
+var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", func() {
 	f := framework.NewDefaultFramework("default-ssl-certificate")
 	var tlsConfig *tls.Config
 	secretName := "my-custom-cert"

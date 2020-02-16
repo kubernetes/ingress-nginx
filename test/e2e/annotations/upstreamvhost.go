@@ -22,7 +22,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Upstreamvhost", func() {
+var _ = framework.DescribeAnnotation("upstream-vhost", func() {
 	f := framework.NewDefaultFramework("upstreamvhost")
 
 	BeforeEach(func() {

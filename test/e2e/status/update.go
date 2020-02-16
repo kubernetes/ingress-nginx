@@ -34,7 +34,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
+var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 	f := framework.NewDefaultFramework("status-update")
 	host := "status-update"
 	address := getHostIP()
@@ -106,7 +106,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 			}
 		}()
 
-		err = wait.Poll(10*time.Second, 4*time.Minute, func() (done bool, err error) {
+		err = wait.Poll(5*time.Second, 4*time.Minute, func() (done bool, err error) {
 			ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			if err != nil {
 				return false, nil

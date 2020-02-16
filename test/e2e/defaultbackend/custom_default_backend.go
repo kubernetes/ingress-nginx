@@ -32,7 +32,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Custom Default Backend", func() {
+var _ = framework.IngressNginxDescribe("[Default Backend] custom service", func() {
 	f := framework.NewDefaultFramework("custom-default-backend")
 
 	BeforeEach(func() {

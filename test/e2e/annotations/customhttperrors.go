@@ -31,7 +31,7 @@ func errorBlockName(upstreamName string, errorCode string) string {
 	return fmt.Sprintf("@custom_%s_%s", upstreamName, errorCode)
 }
 
-var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func() {
+var _ = framework.DescribeAnnotation("custom-http-errors", func() {
 	f := framework.NewDefaultFramework("custom-http-errors")
 
 	BeforeEach(func() {

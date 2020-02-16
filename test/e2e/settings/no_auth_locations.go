@@ -32,7 +32,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("No Auth locations", func() {
+var _ = framework.DescribeSetting("[Security] no-auth-locations", func() {
 	f := framework.NewDefaultFramework("no-auth-locations")
 
 	setting := "no-auth-locations"

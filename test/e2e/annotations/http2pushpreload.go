@@ -22,7 +22,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - HTTP2 Push Preload", func() {
+var _ = framework.DescribeAnnotation("http2-push-preload", func() {
 	f := framework.NewDefaultFramework("http2pushpreload")
 
 	BeforeEach(func() {

@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Default backend", func() {
+var _ = framework.IngressNginxDescribe("[Default Backend]", func() {
 	f := framework.NewDefaultFramework("default-backend")
 
 	It("should return 404 sending requests when only a default backend is running", func() {

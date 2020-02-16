@@ -30,7 +30,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Ingress class", func() {
+var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 	f := framework.NewDefaultFramework("ingress-class")
 
 	BeforeEach(func() {

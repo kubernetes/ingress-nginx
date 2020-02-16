@@ -33,7 +33,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("DynamicCertificates", func() {
+var _ = framework.IngressNginxDescribe("[Memory Leak] Dynamic Certificates", func() {
 	f := framework.NewDefaultFramework("lua-dynamic-certificates")
 
 	BeforeEach(func() {

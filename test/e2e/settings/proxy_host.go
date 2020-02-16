@@ -29,7 +29,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Proxy host variable", func() {
+var _ = framework.IngressNginxDescribe("Dynamic $proxy_host", func() {
 	test := "proxy-host"
 	f := framework.NewDefaultFramework(test)
 

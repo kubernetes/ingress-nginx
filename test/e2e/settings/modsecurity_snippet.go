@@ -24,7 +24,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Modsecurity Snippet", func() {
+var _ = framework.DescribeSetting("[Security] modsecurity-snippet", func() {
 	f := framework.NewDefaultFramework("modsecurity-snippet")
 
 	It("should add value of modsecurity-snippet setting to nginx config", func() {
