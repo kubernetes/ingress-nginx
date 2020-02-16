@@ -54,7 +54,8 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export TAG=dev
+# Use 1.0.0-dev to make sure we use the latest configuration in the helm template
+export TAG=1.0.0-dev
 export ARCH=amd64
 export REGISTRY=ingress-controller
 

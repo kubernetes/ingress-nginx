@@ -195,7 +195,7 @@ e2e-test: check-go-version ## Run e2e tests (expects access to a working Kuberne
 	@build/run-e2e-suite.sh
 
 .PHONY: e2e-test-image
-e2e-test-image: e2e-test-binary ## Build image for e2e tests.
+e2e-test-image: ## Build image for e2e tests.
 	@make -C test/e2e-image
 
 .PHONY: e2e-test-binary

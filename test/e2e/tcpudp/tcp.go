@@ -62,7 +62,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		svc, err := f.KubeClientSet.
 			CoreV1().
 			Services(f.Namespace).
-			Get("ingress-nginx", metav1.GetOptions{})
+			Get("nginx-ingress-controller", metav1.GetOptions{})
 		Expect(err).To(BeNil(), "unexpected error obtaining ingress-nginx service")
 		Expect(svc).NotTo(BeNil(), "expected a service but none returned")
 
@@ -121,7 +121,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		svc, err := f.KubeClientSet.
 			CoreV1().
 			Services(f.Namespace).
-			Get("ingress-nginx", metav1.GetOptions{})
+			Get("nginx-ingress-controller", metav1.GetOptions{})
 		Expect(err).To(BeNil(), "unexpected error obtaining ingress-nginx service")
 		Expect(svc).NotTo(BeNil(), "expected a service but none returned")
 
