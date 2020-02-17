@@ -24,7 +24,7 @@ set -o pipefail
 
 DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 
-export TAG=0.0.0-dev
+export TAG=1.0.0-dev
 export ARCH=amd64
 export REGISTRY=${REGISTRY:-ingress-controller}
 
@@ -88,14 +88,28 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" "${DEV_IMAGE}"
 
 echo "[dev-env] deploying NGINX Ingress controller..."
 kubectl create namespace ingress-nginx || true
-kubectl apply -k ${DIR}/../deploy/kind
 
-echo "[dev-env] deleting old ingress-nginx pods..."
-MINUTE_AGO=$(python -c "from datetime import datetime,timedelta; print((datetime.utcnow()-timedelta(seconds=60)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
-kubectl get pods --namespace ingress-nginx -o go-template \
-  --template '{{range .items}}{{.metadata.name}} {{.metadata.creationTimestamp}}{{"\n"}}{{end}}' | \
-  awk -v MINUTE_AGO=$MINUTE_AGO '$2 <= MINUTE_AGO { print $1 }' | \
-  xargs kubectl delete pod --namespace ingress-nginx
+cat << EOF | helm install --replace nginx-ingress stable/nginx-ingress --namespace=ingress-nginx --values -
+controller:
+  image:
+    repository: ${REGISTRY}/nginx-ingress-controller
+    tag: ${TAG}
+  config:
+    worker-processes: "1"
+  podLabels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+  service:
+    labels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/part-of: ingress-nginx
+
+defaultBackend:
+  enabled: false
+EOF
+
+kubectl patch deployments -n ingress-nginx nginx-ingress-controller -p \
+  '{"spec":{"template":{"spec":{"containers":[{"name":"nginx-ingress-controller","ports":[{"containerPort":80,"hostPort":80},{"containerPort":443,"hostPort":443}]}]}}}}'
 
 cat <<EOF
 
