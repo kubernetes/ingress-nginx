@@ -87,9 +87,9 @@ echo "[dev-env] copying docker images to cluster..."
 kind load docker-image --name="${KIND_CLUSTER_NAME}" "${DEV_IMAGE}"
 
 echo "[dev-env] deploying NGINX Ingress controller..."
-kubectl create namespace ingress-nginx || true
+kubectl create namespace ingress-nginx &> /dev/null || true
 
-cat << EOF | helm install --replace nginx-ingress stable/nginx-ingress --namespace=ingress-nginx --values -
+cat << EOF | helm upgrade --install nginx-ingress stable/nginx-ingress --namespace=ingress-nginx --values -
 controller:
   image:
     repository: ${REGISTRY}/nginx-ingress-controller
@@ -99,17 +99,24 @@ controller:
   podLabels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
+    deploy-date: "$(date +%s)"
   service:
     labels:
       app.kubernetes.io/name: ingress-nginx
       app.kubernetes.io/part-of: ingress-nginx
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  # change this when deployment supports hostPort without kubectl patch
+  kind: DaemonSet
+  daemonset:
+    useHostPort: true
+  terminationGracePeriodSeconds: 0
 
 defaultBackend:
   enabled: false
 EOF
-
-kubectl patch deployments -n ingress-nginx nginx-ingress-controller -p \
-  '{"spec":{"template":{"spec":{"containers":[{"name":"nginx-ingress-controller","ports":[{"containerPort":80,"hostPort":80},{"containerPort":443,"hostPort":443}]}]}}}}'
 
 cat <<EOF
 
