@@ -32,7 +32,7 @@ export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=0.4.2
 export MSGPACK_VERSION=3.2.0
-export DATADOG_CPP_VERSION=1.1.1
+export DATADOG_CPP_VERSION=1.1.3
 export MODSECURITY_VERSION=1.0.1
 export MODSECURITY_LIB_VERSION=6624a18a4e7fd9881a7a9b435db3e481e8e986a5
 export OWASP_MODSECURITY_CRS_VERSION=3.2.0
@@ -180,7 +180,7 @@ get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
 get_src 7df70318762f4150e6fe27dd1838b4b89a24ed9351c82d0b332d7d8457dd1b95 \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 
-get_src 052fd37cd698e24ab73ee18fc3fa55acd1d43153c12a0e65b0fba0447de1117e \
+get_src 6dc1088ab7f788b6c849fbaa6300517c8fdf88991a70b778be79c284c36857bf \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
 get_src 6faab57557bd9cc9fc38208f6bc304c1c13cf048640779f98812cf1f9567e202 \
