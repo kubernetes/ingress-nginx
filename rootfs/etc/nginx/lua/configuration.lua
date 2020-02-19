@@ -37,7 +37,7 @@ local function fetch_request_body()
   return body
 end
 
-function _M.get_pem_cert_key(hostname)
+local function get_pem_cert(hostname)
   local uid = certificate_servers:get(hostname)
   if not uid then
     return nil
@@ -143,7 +143,7 @@ local function handle_certs()
     return
   end
 
-  local key = _M.get_pem_cert_key(query["hostname"])
+  local key = get_pem_cert(query["hostname"])
   if key then
     ngx.status = ngx.HTTP_OK
     ngx.print(key)
