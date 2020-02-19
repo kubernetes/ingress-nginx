@@ -158,4 +158,4 @@ location ~* "^/foo/bar/bar" {
 }
 ```
 
-A request to `test.com/foo/bar/bar` would match the `^/foo/[A-Z0-9]{3}` location block instead of the longest EXACT matching path.
+A request to `test.com/foo/bar/bar` would match the `^/foo/bar/[A-Z0-9]{3}` location block instead of the longest EXACT matching path.
