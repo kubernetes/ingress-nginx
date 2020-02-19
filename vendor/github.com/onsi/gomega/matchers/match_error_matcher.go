@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/onsi/gomega/format"
-	"golang.org/x/xerrors"
 )
 
 type MatchErrorMatcher struct {
@@ -22,28 +21,25 @@ func (matcher *MatchErrorMatcher) Match(actual interface{}) (success bool, err e
 	}
 
 	actualErr := actual.(error)
-	expected := matcher.Expected
 
-	if isError(expected) {
-		return reflect.DeepEqual(actualErr, expected) || xerrors.Is(actualErr, expected.(error)), nil
+	if isError(matcher.Expected) {
+		return reflect.DeepEqual(actualErr, matcher.Expected), nil
 	}
 
-	if isString(expected) {
-		return actualErr.Error() == expected, nil
+	if isString(matcher.Expected) {
+		return actualErr.Error() == matcher.Expected, nil
 	}
 
 	var subMatcher omegaMatcher
 	var hasSubMatcher bool
-	if expected != nil {
-		subMatcher, hasSubMatcher = (expected).(omegaMatcher)
+	if matcher.Expected != nil {
+		subMatcher, hasSubMatcher = (matcher.Expected).(omegaMatcher)
 		if hasSubMatcher {
 			return subMatcher.Match(actualErr.Error())
 		}
 	}
 
-	return false, fmt.Errorf(
-		"MatchError must be passed an error, a string, or a Matcher that can match on strings. Got:\n%s",
-		format.Object(expected, 1))
+	return false, fmt.Errorf("MatchError must be passed an error, string, or Matcher that can match on strings.  Got:\n%s", format.Object(matcher.Expected, 1))
 }
 
 func (matcher *MatchErrorMatcher) FailureMessage(actual interface{}) (message string) {
