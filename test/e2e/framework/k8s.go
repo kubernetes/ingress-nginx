@@ -75,7 +75,7 @@ func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingre
 	}
 
 	// creating an ingress requires a reload.
-	time.Sleep(4 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	return ing
 }

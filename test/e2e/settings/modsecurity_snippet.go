@@ -19,7 +19,7 @@ package settings
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -27,12 +27,13 @@ import (
 var _ = framework.DescribeSetting("[Security] modsecurity-snippet", func() {
 	f := framework.NewDefaultFramework("modsecurity-snippet")
 
-	It("should add value of modsecurity-snippet setting to nginx config", func() {
-		modsecSnippet := "modsecurity-snippet"
+	ginkgo.It("should add value of modsecurity-snippet setting to nginx config", func() {
 		expectedComment := "# modsecurity snippet"
 
-		f.UpdateNginxConfigMapData("enable-modsecurity", "true")
-		f.UpdateNginxConfigMapData(modsecSnippet, expectedComment)
+		f.SetNginxConfigMapData(map[string]string{
+			"enable-modsecurity":  "true",
+			"modsecurity-snippet": expectedComment,
+		})
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {

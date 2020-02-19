@@ -22,9 +22,8 @@ import (
 	"regexp"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -41,32 +40,34 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 		})
 
 	err := wait.PollImmediate(framework.Poll, framework.DefaultTimeout, func() (bool, error) {
-		resp, _, _ := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
+
+		resp := f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().Raw()
+
 		if resp.StatusCode == http.StatusOK {
 			return true, nil
 		}
+
 		return false, nil
 	})
-	Expect(err).Should(BeNil())
+
+	assert.Nil(ginkgo.GinkgoT(), err)
 
 	re, _ := regexp.Compile(fmt.Sprintf(`Hostname: %v.*`, framework.EchoService))
 	podMap := map[string]bool{}
 
 	for i := 0; i < 100; i++ {
-		_, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
+		data := f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Body().Raw()
 
-		Expect(errs).Should(BeEmpty())
-
-		podName := re.FindString(body)
-		Expect(podName).ShouldNot(Equal(""))
+		podName := re.FindString(data)
+		assert.NotEmpty(ginkgo.GinkgoT(), podName, "expected a pod name")
 		podMap[podName] = true
-
 	}
 
 	return podMap
@@ -75,21 +76,20 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 var _ = framework.DescribeAnnotation("upstream-hash-by-*", func() {
 	f := framework.NewDefaultFramework("upstream-hash-by")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(6)
 	})
 
-	It("should connect to the same pod", func() {
+	ginkgo.It("should connect to the same pod", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/upstream-hash-by": "$request_uri",
 		}
 
 		podMap := startIngress(f, annotations)
-		Expect(len(podMap)).Should(Equal(1))
-
+		assert.Equal(ginkgo.GinkgoT(), len(podMap), 1)
 	})
 
-	It("should connect to the same subset of pods", func() {
+	ginkgo.It("should connect to the same subset of pods", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/upstream-hash-by":             "$request_uri",
 			"nginx.ingress.kubernetes.io/upstream-hash-by-subset":      "true",
@@ -97,6 +97,6 @@ var _ = framework.DescribeAnnotation("upstream-hash-by-*", func() {
 		}
 
 		podMap := startIngress(f, annotations)
-		Expect(len(podMap)).Should(Equal(3))
+		assert.Equal(ginkgo.GinkgoT(), len(podMap), 3)
 	})
 })

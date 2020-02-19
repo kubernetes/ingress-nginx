@@ -17,13 +17,10 @@ limitations under the License.
 package servicebackend
 
 import (
+	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	"github.com/parnurzeal/gorequest"
-
+	"github.com/onsi/ginkgo"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,7 +32,7 @@ import (
 var _ = framework.IngressNginxDescribe("[Service] backend status code 503", func() {
 	f := framework.NewDefaultFramework("service-backend")
 
-	It("should return 503 when backend service does not exist", func() {
+	ginkgo.It("should return 503 when backend service does not exist", func() {
 		host := "nonexistent.svc.com"
 
 		bi := buildIngressWithNonexistentService(host, f.Namespace, "/")
@@ -46,15 +43,14 @@ var _ = framework.IngressNginxDescribe("[Service] backend status code 503", func
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(503))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusServiceUnavailable)
 	})
 
-	It("should return 503 when all backend service endpoints are unavailable", func() {
+	ginkgo.It("should return 503 when all backend service endpoints are unavailable", func() {
 		host := "unavailable.svc.com"
 
 		bi, bs := buildIngressWithUnavailableServiceEndpoints(host, f.Namespace, "/")
@@ -67,14 +63,12 @@ var _ = framework.IngressNginxDescribe("[Service] backend status code 503", func
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(503))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusServiceUnavailable)
 	})
-
 })
 
 func buildIngressWithNonexistentService(host, namespace, path string) *networking.Ingress {

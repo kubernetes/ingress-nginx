@@ -17,19 +17,21 @@ limitations under the License.
 package annotations
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"strings"
+
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 	f := framework.NewDefaultFramework("clientbodybuffersize")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	It("should set client_body_buffer_size to 1000", func() {
+	ginkgo.It("should set client_body_buffer_size to 1000", func() {
 		host := "proxy.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1000",
@@ -40,11 +42,11 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1000;"))
+				return strings.Contains(server, "client_body_buffer_size 1000;")
 			})
 	})
 
-	It("should set client_body_buffer_size to 1K", func() {
+	ginkgo.It("should set client_body_buffer_size to 1K", func() {
 		host := "proxy.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1K",
@@ -55,11 +57,11 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1K;"))
+				return strings.Contains(server, "client_body_buffer_size 1K;")
 			})
 	})
 
-	It("should set client_body_buffer_size to 1k", func() {
+	ginkgo.It("should set client_body_buffer_size to 1k", func() {
 		host := "proxy.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1k",
@@ -70,11 +72,11 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1k;"))
+				return strings.Contains(server, "client_body_buffer_size 1k;")
 			})
 	})
 
-	It("should set client_body_buffer_size to 1m", func() {
+	ginkgo.It("should set client_body_buffer_size to 1m", func() {
 		host := "proxy.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1m",
@@ -85,11 +87,11 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1m;"))
+				return strings.Contains(server, "client_body_buffer_size 1m;")
 			})
 	})
 
-	It("should set client_body_buffer_size to 1M", func() {
+	ginkgo.It("should set client_body_buffer_size to 1M", func() {
 		host := "proxy.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1M",
@@ -100,11 +102,11 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1M;"))
+				return strings.Contains(server, "client_body_buffer_size 1M;")
 			})
 	})
 
-	It("should not set client_body_buffer_size to invalid 1b", func() {
+	ginkgo.It("should not set client_body_buffer_size to invalid 1b", func() {
 		host := "proxy.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1b",
@@ -115,7 +117,7 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).ShouldNot(ContainSubstring("client_body_buffer_size 1b;"))
+				return !strings.Contains(server, "client_body_buffer_size 1b;")
 			})
 	})
 })

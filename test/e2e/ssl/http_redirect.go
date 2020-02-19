@@ -20,9 +20,8 @@ import (
 	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -30,11 +29,11 @@ import (
 var _ = framework.IngressNginxDescribe("[SSL] redirect to HTTPS", func() {
 	f := framework.NewDefaultFramework("sslredirect")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	It("should redirect from HTTP to HTTPS when secret is missing", func() {
+	ginkgo.It("should redirect from HTTP to HTTPS when secret is missing", func() {
 		host := "redirect.com"
 
 		_ = f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
@@ -46,23 +45,15 @@ var _ = framework.IngressNginxDescribe("[SSL] redirect to HTTPS", func() {
 					strings.Contains(server, "listen 80")
 			})
 
-		log, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(log).ToNot(BeEmpty())
+		logs, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.NotEmpty(ginkgo.GinkgoT(), logs)
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			RedirectPolicy(func(_ gorequest.Request, _ []gorequest.Request) error {
-				return http.ErrUseLastResponse
-			}).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
-
-		location, err := (*http.Response)(resp).Location()
-		Expect(err).Should(BeNil())
-		Expect(location.String()).Should(Equal("https://redirect.com/"))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusPermanentRedirect).
+			Header("Location").Equal("https://redirect.com/")
 	})
 })

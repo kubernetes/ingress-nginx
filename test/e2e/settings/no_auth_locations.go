@@ -20,11 +20,10 @@ import (
 	"fmt"
 	"net/http"
 	"os/exec"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
-
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,7 +41,7 @@ var _ = framework.DescribeSetting("[Security] no-auth-locations", func() {
 	host := "no-auth-locations"
 	noAuthPath := "/noauth"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 
 		s := f.EnsureSecret(buildSecret(username, password, secretName, f.Namespace))
@@ -53,51 +52,46 @@ var _ = framework.DescribeSetting("[Security] no-auth-locations", func() {
 		f.EnsureIngress(bi)
 	})
 
-	It("should return status code 401 when accessing '/' unauthentication", func() {
+	ginkgo.It("should return status code 401 when accessing '/' unauthentication", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("test auth"))
+				return strings.Contains(server, "test auth")
 			})
 
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
-		Expect(body).Should(ContainSubstring("401 Authorization Required"))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusUnauthorized).
+			Body().Contains("401 Authorization Required")
 	})
 
-	It("should return status code 200 when accessing '/'  authentication", func() {
+	ginkgo.It("should return status code 200 when accessing '/'  authentication", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("test auth"))
+				return strings.Contains(server, "test auth")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			SetBasicAuth(username, password).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithBasicAuth(username, password).
+			Expect().
+			Status(http.StatusOK)
 	})
 
-	It("should return status code 200 when accessing '/noauth' unauthenticated", func() {
+	ginkgo.It("should return status code 200 when accessing '/noauth' unauthenticated", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("test auth"))
+				return strings.Contains(server, "test auth")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf("%s/noauth", f.GetURL(framework.HTTP))).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/noauth").
+			WithHeader("Host", host).
+			WithBasicAuth(username, password).
+			Expect().
+			Status(http.StatusOK)
 	})
 })
 
@@ -143,7 +137,7 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 
 func buildSecret(username, password, name, namespace string) *corev1.Secret {
 	out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
-	Expect(err).NotTo(HaveOccurred(), "creating password")
+	assert.Nil(ginkgo.GinkgoT(), err, "creating password")
 
 	encpass := fmt.Sprintf("%v:%s\n", username, out)
 

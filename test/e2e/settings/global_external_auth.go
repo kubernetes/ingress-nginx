@@ -19,12 +19,13 @@ package settings
 import (
 	"fmt"
 	"net/http"
-	"time"
+	"regexp"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -45,106 +46,107 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 
 	enableGlobalExternalAuthAnnotation := "nginx.ingress.kubernetes.io/enable-global-auth"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 		f.NewHttpbinDeployment()
 	})
 
-	Context("when global external authentication is configured", func() {
+	ginkgo.Context("when global external authentication is configured", func() {
 
-		BeforeEach(func() {
+		ginkgo.BeforeEach(func() {
 			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/401", framework.HTTPBinService, f.Namespace)
 
-			By("Adding an ingress rule for /foo")
+			ginkgo.By("Adding an ingress rule for /foo")
 			fooIng := framework.NewSingleIngress("foo-ingress", fooPath, host, f.Namespace, echoServiceName, 80, nil)
 			f.EnsureIngress(fooIng)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("location /foo"))
+					return strings.Contains(server, "location /foo")
 				})
 
-			By("Adding an ingress rule for /bar")
+			ginkgo.By("Adding an ingress rule for /bar")
 			barIng := framework.NewSingleIngress("bar-ingress", barPath, host, f.Namespace, echoServiceName, 80, nil)
 			f.EnsureIngress(barIng)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("location /bar"))
+					return strings.Contains(server, "location /bar")
 				})
 
-			By("Adding a global-auth-url to configMap")
+			ginkgo.By("Adding a global-auth-url to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthURLSetting, globalExternalAuthURL)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring(globalExternalAuthURL))
+					return strings.Contains(server, globalExternalAuthURL)
 				})
 		})
 
-		It("should return status code 401 when request any protected service", func() {
+		ginkgo.It("should return status code 401 when request any protected service", func() {
 
-			By("Sending a request to protected service /foo")
-			fooResp, _, _ := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+fooPath).
-				Set("Host", host).
-				End()
-			Expect(fooResp.StatusCode).Should(Equal(http.StatusUnauthorized))
+			ginkgo.By("Sending a request to protected service /foo")
+			f.HTTPTestClient().
+				GET(fooPath).
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusUnauthorized)
 
-			By("Sending a request to protected service /bar")
-			barResp, _, _ := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+barPath).
-				Set("Host", host).
-				End()
-			Expect(barResp.StatusCode).Should(Equal(http.StatusUnauthorized))
+			ginkgo.By("Sending a request to protected service /bar")
+			f.HTTPTestClient().
+				GET(barPath).
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusUnauthorized)
 		})
 
-		It("should return status code 200 when request whitelisted (via no-auth-locations) service and 401 when request protected service", func() {
+		ginkgo.It("should return status code 200 when request whitelisted (via no-auth-locations) service and 401 when request protected service", func() {
 
-			By("Adding a no-auth-locations for /bar to configMap")
+			ginkgo.By("Adding a no-auth-locations for /bar to configMap")
 			f.UpdateNginxConfigMapData(noAuthSetting, noAuthLocations)
 
-			By("Sending a request to protected service /foo")
-			fooResp, _, _ := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+fooPath).
-				Set("Host", host).
-				End()
-			Expect(fooResp.StatusCode).Should(Equal(http.StatusUnauthorized))
+			ginkgo.By("Sending a request to protected service /foo")
+			f.HTTPTestClient().
+				GET(fooPath).
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusUnauthorized)
 
-			By("Sending a request to whitelisted service /bar")
-			barResp, _, _ := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+barPath).
-				Set("Host", host).
-				End()
-			Expect(barResp.StatusCode).Should(Equal(http.StatusOK))
+			ginkgo.By("Sending a request to whitelisted service /bar")
+			f.HTTPTestClient().
+				GET(barPath).
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK)
 		})
 
-		It("should return status code 200 when request whitelisted (via ingress annotation) service and 401 when request protected service", func() {
+		ginkgo.It("should return status code 200 when request whitelisted (via ingress annotation) service and 401 when request protected service", func() {
 
-			By("Adding an ingress rule for /bar with annotation enable-global-auth = false")
-			annotations := map[string]string{
-				enableGlobalExternalAuthAnnotation: "false",
-			}
-			barIng := framework.NewSingleIngress("bar-ingress", barPath, host, f.Namespace, echoServiceName, 80, annotations)
-			f.EnsureIngress(barIng)
+			ginkgo.By("Adding an ingress rule for /bar with annotation enable-global-auth = false")
+			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, "bar-ingress", func(ingress *networking.Ingress) error {
+				ingress.ObjectMeta.Annotations[enableGlobalExternalAuthAnnotation] = "false"
+				return nil
+			})
+			assert.Nil(ginkgo.GinkgoT(), err)
+
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("location /bar"))
+					return strings.Contains(server, "location /bar")
 				})
 
-			By("Sending a request to protected service /foo")
-			fooResp, _, _ := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+fooPath).
-				Set("Host", host).
-				End()
-			Expect(fooResp.StatusCode).Should(Equal(http.StatusUnauthorized))
+			ginkgo.By("Sending a request to protected service /foo")
+			f.HTTPTestClient().
+				GET(fooPath).
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusUnauthorized)
 
-			By("Sending a request to whitelisted service /bar")
-			barResp, _, _ := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+barPath).
-				Set("Host", host).
-				End()
-			Expect(barResp.StatusCode).Should(Equal(http.StatusOK))
+			ginkgo.By("Sending a request to whitelisted service /bar")
+			f.HTTPTestClient().
+				GET(barPath).
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK)
 		})
 
-		It("should still return status code 200 after auth backend is deleted using cache ", func() {
+		ginkgo.It("should still return status code 200 after auth backend is deleted using cache ", func() {
 
 			globalExternalAuthCacheKeySetting := "global-auth-cache-key"
 			globalExternalAuthCacheKey := "foo"
@@ -152,107 +154,101 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 			globalExternalAuthCacheDuration := "200 201 401 30m"
 			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/200", framework.HTTPBinService, f.Namespace)
 
-			By("Adding a global-auth-cache-key to configMap")
-			f.UpdateNginxConfigMapData(globalExternalAuthCacheKeySetting, globalExternalAuthCacheKey)
-			f.UpdateNginxConfigMapData(globalExternalAuthCacheDurationSetting, globalExternalAuthCacheDuration)
-			f.UpdateNginxConfigMapData(globalExternalAuthURLSetting, globalExternalAuthURL)
+			ginkgo.By("Adding a global-auth-cache-key to configMap")
+			f.SetNginxConfigMapData(map[string]string{
+				globalExternalAuthCacheKeySetting:      globalExternalAuthCacheKey,
+				globalExternalAuthCacheDurationSetting: globalExternalAuthCacheDuration,
+				globalExternalAuthURLSetting:           globalExternalAuthURL,
+			})
+
+			cacheRegex := regexp.MustCompile(`\$cache_key.*foo`)
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(MatchRegexp(`\$cache_key.*foo`)) &&
-						Expect(server).Should(ContainSubstring(`proxy_cache_valid 200 201 401 30m;`))
+					return cacheRegex.MatchString(server) &&
+						strings.Contains(server, `proxy_cache_valid 200 201 401 30m;`)
 				})
 
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+barPath).
-				Retry(10, 1*time.Second, http.StatusNotFound).
-				Set("Host", host).
-				SetBasicAuth("user", "password").
-				End()
-
-			for _, err := range errs {
-				Expect(err).NotTo(HaveOccurred())
-			}
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET(barPath).
+				WithHeader("Host", host).
+				WithBasicAuth("user", "password").
+				Expect().
+				Status(http.StatusOK)
 
 			err := f.DeleteDeployment(framework.HTTPBinService)
-			Expect(err).NotTo(HaveOccurred())
+			assert.Nil(ginkgo.GinkgoT(), err)
 
-			_, _, errs = gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Retry(10, 1*time.Second, http.StatusNotFound).
-				Set("Host", host).
-				SetBasicAuth("user", "password").
-				End()
-
-			for _, err := range errs {
-				Expect(err).NotTo(HaveOccurred())
-			}
+			f.HTTPTestClient().
+				GET(barPath).
+				WithHeader("Host", host).
+				WithBasicAuth("user", "password").
+				Expect().
+				Status(http.StatusOK)
 		})
 
-		It(`should proxy_method method when global-auth-method is configured`, func() {
+		ginkgo.It(`should proxy_method method when global-auth-method is configured`, func() {
 
 			globalExternalAuthMethodSetting := "global-auth-method"
 			globalExternalAuthMethod := "GET"
 
-			By("Adding a global-auth-method to configMap")
+			ginkgo.By("Adding a global-auth-method to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthMethodSetting, globalExternalAuthMethod)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("proxy_method"))
+					return strings.Contains(server, "proxy_method")
 				})
 		})
 
-		It(`should add custom error page when global-auth-signin url is configured`, func() {
+		ginkgo.It(`should add custom error page when global-auth-signin url is configured`, func() {
 
 			globalExternalAuthSigninSetting := "global-auth-signin"
 			globalExternalAuthSignin := "http://foo.com/global-error-page"
 
-			By("Adding a global-auth-signin to configMap")
+			ginkgo.By("Adding a global-auth-signin to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthSigninSetting, globalExternalAuthSignin)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("error_page 401 = "))
+					return strings.Contains(server, "error_page 401 = ")
 				})
 		})
 
-		It(`should add auth headers when global-auth-response-headers is configured`, func() {
+		ginkgo.It(`should add auth headers when global-auth-response-headers is configured`, func() {
 
 			globalExternalAuthResponseHeadersSetting := "global-auth-response-headers"
 			globalExternalAuthResponseHeaders := "Foo, Bar"
 
-			By("Adding a global-auth-response-headers to configMap")
+			ginkgo.By("Adding a global-auth-response-headers to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthResponseHeadersSetting, globalExternalAuthResponseHeaders)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("auth_request_set $authHeader0 $upstream_http_foo;")) &&
-						Expect(server).Should(ContainSubstring("auth_request_set $authHeader1 $upstream_http_bar;"))
+					return strings.Contains(server, "auth_request_set $authHeader0 $upstream_http_foo;") &&
+						strings.Contains(server, "auth_request_set $authHeader1 $upstream_http_bar;")
 				})
 		})
 
-		It(`should set request-redirect when global-auth-request-redirect is configured`, func() {
+		ginkgo.It(`should set request-redirect when global-auth-request-redirect is configured`, func() {
 
 			globalExternalAuthRequestRedirectSetting := "global-auth-request-redirect"
 			globalExternalAuthRequestRedirect := "Foo-Redirect"
 
-			By("Adding a global-auth-request-redirect to configMap")
+			ginkgo.By("Adding a global-auth-request-redirect to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthRequestRedirectSetting, globalExternalAuthRequestRedirect)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring(globalExternalAuthRequestRedirect))
+					return strings.Contains(server, globalExternalAuthRequestRedirect)
 				})
 		})
 
-		It(`should set snippet when global external auth is configured`, func() {
-
+		ginkgo.It(`should set snippet when global external auth is configured`, func() {
 			globalExternalAuthSnippetSetting := "global-auth-snippet"
 			globalExternalAuthSnippet := "proxy_set_header My-Custom-Header 42;"
 
-			By("Adding a global-auth-snippet to configMap")
+			ginkgo.By("Adding a global-auth-snippet to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthSnippetSetting, globalExternalAuthSnippet)
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring(globalExternalAuthSnippet))
+					return strings.Contains(server, globalExternalAuthSnippet)
 				})
 		})
 

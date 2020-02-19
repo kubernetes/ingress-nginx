@@ -19,19 +19,18 @@ package annotations
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-
+	"github.com/onsi/ginkgo"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("whitelist-source-range", func() {
 	f := framework.NewDefaultFramework("ipwhitelist")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	It("should set valid ip whitelist range", func() {
+	ginkgo.It("should set valid ip whitelist range", func() {
 		host := "ipwhitelist.foo.com"
 		nameSpace := f.Namespace
 

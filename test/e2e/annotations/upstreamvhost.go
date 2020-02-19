@@ -17,19 +17,21 @@ limitations under the License.
 package annotations
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"strings"
+
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("upstream-vhost", func() {
 	f := framework.NewDefaultFramework("upstreamvhost")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	It("set host to upstreamvhost.bar.com", func() {
+	ginkgo.It("set host to upstreamvhost.bar.com", func() {
 		host := "upstreamvhost.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/upstream-vhost": "upstreamvhost.bar.com",
@@ -40,7 +42,7 @@ var _ = framework.DescribeAnnotation("upstream-vhost", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`proxy_set_header Host "upstreamvhost.bar.com";`))
+				return strings.Contains(server, `proxy_set_header Host "upstreamvhost.bar.com";`)
 			})
 	})
 })

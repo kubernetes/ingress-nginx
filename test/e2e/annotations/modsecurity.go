@@ -19,18 +19,18 @@ package annotations
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 	f := framework.NewDefaultFramework("modsecuritylocation")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	It("should enable modsecurity", func() {
+	ginkgo.It("should enable modsecurity", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 
@@ -48,7 +48,7 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 			})
 	})
 
-	It("should enable modsecurity with transaction ID and OWASP rules", func() {
+	ginkgo.It("should enable modsecurity with transaction ID and OWASP rules", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 
@@ -69,7 +69,7 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 			})
 	})
 
-	It("should disable modsecurity", func() {
+	ginkgo.It("should disable modsecurity", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 
@@ -86,7 +86,7 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 			})
 	})
 
-	It("should enable modsecurity with snippet", func() {
+	ginkgo.It("should enable modsecurity with snippet", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 

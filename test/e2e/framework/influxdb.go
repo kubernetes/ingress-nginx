@@ -139,5 +139,5 @@ func (f *Framework) NewInfluxDBDeployment() {
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
-	assert.NotNil(ginkgo.GinkgoT(), err, "failed to wait for influxdb to become ready")
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for influxdb pod to become ready")
 }

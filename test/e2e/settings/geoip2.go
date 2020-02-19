@@ -21,9 +21,8 @@ import (
 
 	"net/http"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -32,12 +31,12 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 
 	host := "geoip2"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	It("should only allow requests from specific countries", func() {
-		Skip("GeoIP test are temporarily disabled")
+	ginkgo.It("should only allow requests from specific countries", func() {
+		ginkgo.Skip("GeoIP test are temporarily disabled")
 
 		f.UpdateNginxConfigMapData("use-geoip2", "true")
 
@@ -72,22 +71,20 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 
 		// Should be blocked
 		usIP := "8.8.8.8"
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("X-Forwarded-For", usIP).
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("X-Forwarded-For", usIP).
+			Expect().
+			Status(http.StatusForbidden)
 
 		// Shouldn't be blocked
 		australianIP := "1.1.1.1"
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("X-Forwarded-For", australianIP).
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("X-Forwarded-For", australianIP).
+			Expect().
+			Status(http.StatusOK)
 	})
 })

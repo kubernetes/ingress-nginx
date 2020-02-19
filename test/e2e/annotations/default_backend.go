@@ -19,10 +19,9 @@ package annotations
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -30,12 +29,12 @@ import (
 var _ = framework.DescribeAnnotation("default-backend", func() {
 	f := framework.NewDefaultFramework("default-backend")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	Context("when default backend annotation is enabled", func() {
-		It("should use a custom default backend as upstream", func() {
+	ginkgo.Context("when default backend annotation is enabled", func() {
+		ginkgo.It("should use a custom default backend as upstream", func() {
 			host := "default-backend"
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/default-backend": framework.EchoService,
@@ -46,24 +45,21 @@ var _ = framework.DescribeAnnotation("default-backend", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host)))
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
-			uri := "/alma/armud"
 			requestId := "something-unique"
-			resp, body, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+uri).
-				Set("Host", host).
-				Set("x-request-id", requestId).
-				End()
 
-			Expect(errs).Should(BeEmpty())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-
-			Expect(body).To(ContainSubstring("x-code=503"))
-			Expect(body).To(ContainSubstring(fmt.Sprintf("x-ingress-name=%s", host)))
-			Expect(body).To(ContainSubstring("x-service-name=invalid"))
-			Expect(body).To(ContainSubstring(fmt.Sprintf("x-request-id=%s", requestId)))
+			f.HTTPTestClient().
+				GET("/alma/armud").
+				WithHeader("Host", host).
+				WithHeader("x-request-id", requestId).
+				Expect().
+				Status(http.StatusOK).
+				Body().Contains("x-code=503").
+				Contains(fmt.Sprintf("x-ingress-name=%s", host)).
+				Contains("x-service-name=invalid").
+				Contains(fmt.Sprintf("x-request-id=%s", requestId))
 		})
 	})
 })
