@@ -72,7 +72,7 @@ _Documentation:_
 Fix occasional prometheus `http: superfluous response.WriteHeader call...` error [#4943](https://github.com/kubernetes/ingress-nginx/pull/4943)
 Remove prometheus socket before the start of metrics collector [#4961](https://github.com/kubernetes/ingress-nginx/pull/4961)
 Reduce CPU utilization when the ingress controller is shutting down [#4959](https://github.com/kubernetes/ingress-nginx/pull/4959)
-Avoid overlap of configuration definitions [#4960](https://github.com/kubernetes/ingress-nginx/pull/4960)
+Fixes a flaw (CVE-2019-11251) when auth-type basic annotation is used [#4960](https://github.com/kubernetes/ingress-nginx/pull/4960)
 
 _Changes:_
 
