@@ -19,8 +19,8 @@ package framework
 import (
 	"time"
 
-	. "github.com/onsi/gomega"
-
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -84,7 +84,7 @@ func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas i
 	f.EnsureService(service)
 
 	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, replicas)
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
 // NewSlowEchoDeployment creates a new deployment of the slow echo server image in a particular namespace.
@@ -117,7 +117,7 @@ server {
 		},
 		Data: data,
 	})
-	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
+	assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
 
 	deployment := newDeployment(SlowEchoService, f.Namespace, "openresty/openresty:1.15.8.2-alpine", 80, 1,
 		nil,
@@ -167,7 +167,7 @@ server {
 	f.EnsureService(service)
 
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, SlowEchoService, f.Namespace, 1)
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
 // NewGRPCBinDeployment creates a new deployment of the
@@ -176,8 +176,8 @@ func (f *Framework) NewGRPCBinDeployment() {
 	name := "grpcbin"
 
 	probe := &corev1.Probe{
-		InitialDelaySeconds: 5,
-		PeriodSeconds:       10,
+		InitialDelaySeconds: 1,
+		PeriodSeconds:       1,
 		SuccessThreshold:    1,
 		TimeoutSeconds:      1,
 		Handler: corev1.Handler{
@@ -260,14 +260,14 @@ func (f *Framework) NewGRPCBinDeployment() {
 	f.EnsureService(service)
 
 	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 1)
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
 func newDeployment(name, namespace, image string, port int32, replicas int32, command []string,
 	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume) *appsv1.Deployment {
 	probe := &corev1.Probe{
 		InitialDelaySeconds: 1,
-		PeriodSeconds:       10,
+		PeriodSeconds:       1,
 		SuccessThreshold:    1,
 		TimeoutSeconds:      1,
 		Handler: corev1.Handler{
@@ -361,15 +361,15 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	f.EnsureService(service)
 
 	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, int(replicas))
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
 // DeleteDeployment deletes a deployment with a particular name and waits for the pods to be deleted
 func (f *Framework) DeleteDeployment(name string) error {
 	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(name, metav1.GetOptions{})
-	Expect(err).NotTo(HaveOccurred(), "failed to get a deployment")
+	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
 	err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Delete(name, &metav1.DeleteOptions{})
-	Expect(err).NotTo(HaveOccurred(), "failed to delete a deployment")
+	assert.Nil(ginkgo.GinkgoT(), err, "deleting deployment")
 	return WaitForPodsDeleted(f.KubeClientSet, time.Second*60, f.Namespace, metav1.ListOptions{
 		LabelSelector: labelSelectorToString(d.Spec.Selector.MatchLabels),
 	})
@@ -378,15 +378,15 @@ func (f *Framework) DeleteDeployment(name string) error {
 // ScaleDeploymentToZero scales a deployment with a particular name and waits for the pods to be deleted
 func (f *Framework) ScaleDeploymentToZero(name string) {
 	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(name, metav1.GetOptions{})
-	Expect(err).NotTo(HaveOccurred(), "failed to get a deployment")
-	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
+	assert.Nil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
 
 	d.Spec.Replicas = NewInt32(0)
 
 	d, err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(d)
-	Expect(err).NotTo(HaveOccurred(), "failed to get a deployment")
-	Expect(d).NotTo(BeNil(), "expected a deployment but none returned")
+	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
+	assert.Nil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
 
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 0)
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for no endpoints")
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for no endpoints")
 }

@@ -14,11 +14,15 @@ limitations under the License.
 package framework
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/gavv/httpexpect.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
@@ -32,7 +36,6 @@ import (
 	"k8s.io/klog"
 
 	"github.com/onsi/ginkgo"
-	"github.com/onsi/gomega"
 )
 
 // RequestScheme define a scheme used in a test request.
@@ -64,8 +67,21 @@ type Framework struct {
 // NewDefaultFramework makes a new framework and sets up a BeforeEach/AfterEach for
 // you (you can write additional before/after each functions).
 func NewDefaultFramework(baseName string) *Framework {
+	defer ginkgo.GinkgoRecover()
+
+	kubeConfig, err := restclient.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	assert.Nil(ginkgo.GinkgoT(), err, "creting kubernetes API client configuration")
+
+	kubeClient, err := kubernetes.NewForConfig(kubeConfig)
+	assert.Nil(ginkgo.GinkgoT(), err, "creating Kubernetes API client")
+
 	f := &Framework{
-		BaseName: baseName,
+		BaseName:      baseName,
+		KubeConfig:    kubeConfig,
+		KubeClientSet: kubeClient,
 	}
 
 	ginkgo.BeforeEach(f.BeforeEach)
@@ -76,29 +92,18 @@ func NewDefaultFramework(baseName string) *Framework {
 
 // BeforeEach gets a client and makes a namespace.
 func (f *Framework) BeforeEach() {
-	kubeConfig, err := restclient.InClusterConfig()
-	if err != nil {
-		panic(err.Error())
-	}
-
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-
-	f.KubeConfig = kubeConfig
-	f.KubeClientSet, err = kubernetes.NewForConfig(kubeConfig)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-
 	ingressNamespace, err := CreateKubeNamespace(f.BaseName, f.KubeClientSet)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	assert.Nil(ginkgo.GinkgoT(), err, "creating namespace")
 
 	f.Namespace = ingressNamespace
 
 	err = f.newIngressController(f.Namespace, f.BaseName)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	assert.Nil(ginkgo.GinkgoT(), err, "deploying the ingress controller")
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress pods to be ready")
 }
 
 // AfterEach deletes the namespace, after reading its events.
@@ -140,7 +145,7 @@ func (f *Framework) AfterEach() {
 	}
 
 	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error deleting namespace %v", f.Namespace)
+	assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.
@@ -169,7 +174,7 @@ func (f *Framework) GetNginxIP() string {
 		CoreV1().
 		Services(f.Namespace).
 		Get("nginx-ingress-controller", metav1.GetOptions{})
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error obtaining NGINX IP address")
+	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX IP address")
 	return s.Spec.ClusterIP
 }
 
@@ -179,7 +184,7 @@ func (f *Framework) GetNginxPodIP() []string {
 		CoreV1().
 		Endpoints(f.Namespace).
 		Get("nginx-ingress-controller", metav1.GetOptions{})
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error obtaining NGINX IP address")
+	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX IP address")
 	eips := make([]string, 0)
 	for _, s := range e.Subsets {
 		for _, a := range s.Addresses {
@@ -199,15 +204,14 @@ func (f *Framework) GetURL(scheme RequestScheme) string {
 // WaitForNginxServer waits until the nginx configuration contains a particular server section
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error waiting for nginx server condition/s")
-	time.Sleep(5 * time.Second)
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
+	time.Sleep(1 * time.Second)
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error waiting for nginx server condition/s")
-	time.Sleep(5 * time.Second)
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
 
 func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
@@ -247,24 +251,13 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			return false, nil
 		}
 
-		var match bool
-		errs := gomega.InterceptGomegaFailures(func() {
-			if klog.V(10) && len(o) > 0 {
-				klog.Infof("nginx.conf:\n%v", o)
-			}
-
-			// passes the nginx config to the passed function
-			if matcher(strings.Join(strings.Fields(o), " ")) {
-				match = true
-			}
-		})
-
-		if match {
-			return true, nil
+		if klog.V(10) && len(o) > 0 {
+			klog.Infof("nginx.conf:\n%v", o)
 		}
 
-		if len(errs) > 0 {
-			klog.V(2).Infof("Errors waiting for conditions: %v", errs)
+		// passes the nginx config to the passed function
+		if matcher(strings.Join(strings.Fields(o), " ")) {
+			return true, nil
 		}
 
 		return false, nil
@@ -294,8 +287,8 @@ func (f *Framework) getConfigMap(name string) (*v1.ConfigMap, error) {
 // SetNginxConfigMapData sets ingress-nginx's nginx-ingress-controller configMap data
 func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 	cfgMap, err := f.getConfigMap("nginx-ingress-controller")
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-	gomega.Expect(cfgMap).NotTo(gomega.BeNil(), "expected a configmap but none returned")
+	assert.Nil(ginkgo.GinkgoT(), err)
+	assert.NotNil(ginkgo.GinkgoT(), cfgMap, "expected a configmap but none returned")
 
 	cfgMap.Data = cmData
 
@@ -303,9 +296,9 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 		CoreV1().
 		ConfigMaps(f.Namespace).
 		Update(cfgMap)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error updating configuration configmap")
+	assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 }
 
 func (f *Framework) CreateConfigMap(name string, data map[string]string) {
@@ -316,14 +309,14 @@ func (f *Framework) CreateConfigMap(name string, data map[string]string) {
 		},
 		Data: data,
 	})
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to create configMap")
+	assert.Nil(ginkgo.GinkgoT(), err, "failed to create configMap")
 }
 
 // UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-ingress-controller map data
 func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 	config, err := f.getConfigMap("nginx-ingress-controller")
-	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-	gomega.Expect(config).NotTo(gomega.BeNil(), "expected a configmap but none returned")
+	assert.Nil(ginkgo.GinkgoT(), err)
+	assert.NotNil(ginkgo.GinkgoT(), config, "expected a configmap but none returned")
 
 	config.Data[key] = value
 
@@ -331,8 +324,9 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 		CoreV1().
 		ConfigMaps(f.Namespace).
 		Update(config)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error updating configuration configmap")
-	time.Sleep(5 * time.Second)
+	assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
+
+	time.Sleep(1 * time.Second)
 }
 
 // DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.
@@ -340,10 +334,10 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 func (f *Framework) DeleteNGINXPod(grace int64) {
 	ns := f.Namespace
 	pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "expected ingress nginx pod to be running")
+	assert.Nil(ginkgo.GinkgoT(), err, "expected ingress nginx pod to be running")
 
 	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(pod.GetName(), metav1.NewDeleteOptions(grace))
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error deleting ingress nginx pod")
+	assert.Nil(ginkgo.GinkgoT(), err, "deleting ingress nginx pod")
 
 	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
@@ -352,7 +346,42 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 		}
 		return pod.GetName() != "", nil
 	})
-	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "unexpected error while waiting for ingress nginx pod to come up again")
+	assert.Nil(ginkgo.GinkgoT(), err, "while waiting for ingress nginx pod to come up again")
+}
+
+func (f *Framework) HTTPTestClient() *httpexpect.Expect {
+	return f.newTestClient(nil)
+}
+
+func (f *Framework) HTTPTestClientWithTLSConfig(config *tls.Config) *httpexpect.Expect {
+	return f.newTestClient(config)
+}
+
+func (f *Framework) newTestClient(config *tls.Config) *httpexpect.Expect {
+	if config == nil {
+		config = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+
+	return httpexpect.WithConfig(httpexpect.Config{
+		BaseURL: f.GetURL(HTTP),
+		Client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: config,
+			},
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		},
+		Reporter: httpexpect.NewAssertReporter(
+			httpexpect.NewAssertReporter(ginkgo.GinkgoT()),
+		),
+		Printers: []httpexpect.Printer{
+			// TODO: enable conditionally?
+			// httpexpect.NewDebugPrinter(ginkgo.GinkgoT(), false),
+		},
+	})
 }
 
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
@@ -365,20 +394,6 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 	if updateFunc != nil {
 		if err := updateFunc(deployment); err != nil {
 			return err
-		}
-	}
-
-	if *deployment.Spec.Replicas != int32(replicas) {
-		klog.Infof("updating replica count from %v to %v...", *deployment.Spec.Replicas, replicas)
-		deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		deployment.Spec.Replicas = NewInt32(int32(replicas))
-		_, err = kubeClientSet.AppsV1().Deployments(namespace).Update(deployment)
-		if err != nil {
-			return errors.Wrapf(err, "scaling the number of replicas to %v", replicas)
 		}
 	}
 
@@ -444,7 +459,6 @@ func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, se
 }
 
 func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations map[string]string, tlsHosts []string) *networking.Ingress {
-
 	spec := networking.IngressSpec{
 		Rules: []networking.IngressRule{
 			{
@@ -524,10 +538,6 @@ func NewSingleCatchAllIngress(name, ns, service string, port int, annotations ma
 }
 
 func newSingleIngress(name, ns string, annotations map[string]string, spec networking.IngressSpec) *networking.Ingress {
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-
 	ing := &networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -535,6 +545,11 @@ func newSingleIngress(name, ns string, annotations map[string]string, spec netwo
 		},
 		Spec: spec,
 	}
+
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+
 	ing.SetAnnotations(annotations)
 
 	return ing
