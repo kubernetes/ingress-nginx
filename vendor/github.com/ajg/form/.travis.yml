@@ -1,0 +1,25 @@
+## Copyright 2014 Alvaro J. Genial. All rights reserved.
+## Use of this source code is governed by a BSD-style
+## license that can be found in the LICENSE file.
+
+language: go
+
+go:
+  - tip
+  - 1.6
+  - 1.5
+  - 1.4
+  - 1.3
+  # 1.2
+
+before_install:
+  # - go get -v golang.org/x/tools/cmd/cover
+  # - go get -v golang.org/x/tools/cmd/vet
+  # - go get -v golang.org/x/lint/golint
+  - export PATH=$PATH:/home/travis/gopath/bin
+
+script:
+  - go build -v ./...
+  - go test -v -cover ./...
+  - go vet ./...
+  # - golint .

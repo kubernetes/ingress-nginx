@@ -1,0 +1,9 @@
+linters-settings:
+  lll:
+    line-length: 90
+
+linters:
+  enable:
+    - golint
+    - lll
+    - misspell

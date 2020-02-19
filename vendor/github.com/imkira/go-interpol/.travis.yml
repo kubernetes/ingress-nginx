@@ -1,0 +1,21 @@
+language: go
+
+go:
+  - 1.2
+  - 1.3
+  - 1.4
+  - 1.5
+  - 1.6
+  - 1.7
+  - tip
+
+before_install:
+  if [[ $TRAVIS_GO_VERSION == 1.7* ]]; then make deps; fi
+
+script:
+  - if [[ $TRAVIS_GO_VERSION == 1.7* ]]; then make gometalinter; fi
+  - make test
+  - make cover
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
