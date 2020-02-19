@@ -6,20 +6,24 @@ local _M = {}
 
 local DEFAULT_CERT_HOSTNAME = "_"
 
-local function set_pem_cert_key(pem_cert_key)
+local function get_der_cert_and_priv_key(pem_cert_key)
   local der_cert, der_cert_err = ssl.cert_pem_to_der(pem_cert_key)
   if not der_cert then
-    return "failed to convert certificate chain from PEM to DER: " .. der_cert_err
-  end
-
-  local set_cert_ok, set_cert_err = ssl.set_der_cert(der_cert)
-  if not set_cert_ok then
-    return "failed to set DER cert: " .. set_cert_err
+    return nil, nil, "failed to convert certificate chain from PEM to DER: " .. der_cert_err
   end
 
   local der_priv_key, dev_priv_key_err = ssl.priv_key_pem_to_der(pem_cert_key)
   if not der_priv_key then
-    return "failed to convert private key from PEM to DER: " .. dev_priv_key_err
+    return nil, nil, "failed to convert private key from PEM to DER: " .. dev_priv_key_err
+  end
+
+  return der_cert, der_priv_key, nil
+end
+
+local function set_der_cert_and_key(der_cert, der_priv_key)
+  local set_cert_ok, set_cert_err = ssl.set_der_cert(der_cert)
+  if not set_cert_ok then
+    return "failed to set DER cert: " .. set_cert_err
   end
 
   local set_priv_key_ok, set_priv_key_err = ssl.set_der_priv_key(der_priv_key)
@@ -84,11 +88,21 @@ function _M.call()
     return ngx.exit(ngx.ERROR)
   end
 
-  local set_pem_cert_key_err = set_pem_cert_key(pem_cert_key)
-  if set_pem_cert_key_err then
-    ngx.log(ngx.ERR, set_pem_cert_key_err)
+  local der_cert, der_priv_key, der_err = get_der_cert_and_priv_key(pem_cert_key)
+  if der_err then
+    ngx.log(ngx.ERR, der_err)
     return ngx.exit(ngx.ERROR)
   end
+
+  local set_der_err = set_der_cert_and_key(der_cert, der_priv_key)
+  if set_der_err then
+    ngx.log(ngx.ERR, set_der_err)
+    return ngx.exit(ngx.ERROR)
+  end
+
+  -- TODO: based on `der_cert` find OCSP responder URL
+  -- make OCSP request and POST it there and get the response and staple it to
+  -- the current SSL connection if OCSP stapling is enabled
 end
 
 return _M
