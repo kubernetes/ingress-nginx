@@ -32,12 +32,22 @@ DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
 if ! command -v kind &> /dev/null; then
   echo "kind is not installed"
-  echo "Use a package manager or visit the official site https://kind.sigs.k8s.io"
+  echo "Use a package manager (i.e 'brew install kind') or visit the official site https://kind.sigs.k8s.io"
   exit 1
 fi
 
 if ! command -v kubectl &> /dev/null; then
   echo "Please install kubectl 1.15 or higher"
+  exit 1
+fi
+
+if ! docker buildx version &> /dev/null; then
+  echo "Make sure you have Docker 19.03 or higher and experimental features enabled"
+  exit 1
+fi
+
+if ! command -v helm &> /dev/null; then
+  echo "Please install helm"
   exit 1
 fi
 
