@@ -277,7 +277,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			modIng := framework.NewSingleIngress(host, "/", host, f.Namespace,
 				framework.EchoService, 80, modAnnotations)
 
-			f.EnsureIngress(modIng)
+			f.UpdateIngress(modIng)
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
