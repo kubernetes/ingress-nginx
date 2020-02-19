@@ -18,10 +18,9 @@ package annotations
 
 import (
 	"net/http"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -29,11 +28,11 @@ import (
 var _ = framework.DescribeAnnotation("cors-*", func() {
 	f := framework.NewDefaultFramework("cors")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	It("should enable cors", func() {
+	ginkgo.It("should enable cors", func() {
 		host := "cors.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors": "true",
@@ -44,39 +43,21 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Allow-Methods: GET, PUT, POST, DELETE, PATCH, OPTIONS';"))
+				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: GET, PUT, POST, DELETE, PATCH, OPTIONS';") &&
+					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Origin: *';") &&
+					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';") &&
+					strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 1728000';") &&
+					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Credentials: true';")
 			})
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Allow-Origin: *';"))
-			})
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Allow-Headers: DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';"))
-			})
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Max-Age: 1728000';"))
-			})
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Allow-Credentials: true';"))
-			})
-
-		uri := "/"
-		resp, _, errs := gorequest.New().
-			Options(f.GetURL(framework.HTTP)+uri).
-			Set("Host", host).
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusNoContent))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
-	It("should set cors methods to only allow POST, GET", func() {
+	ginkgo.It("should set cors methods to only allow POST, GET", func() {
 		host := "cors.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":        "true",
@@ -88,11 +69,11 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Allow-Methods: POST, GET';"))
+				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: POST, GET';")
 			})
 	})
 
-	It("should set cors max-age", func() {
+	ginkgo.It("should set cors max-age", func() {
 		host := "cors.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":  "true",
@@ -104,11 +85,11 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Max-Age: 200';"))
+				return strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 200';")
 			})
 	})
 
-	It("should disable cors allow credentials", func() {
+	ginkgo.It("should disable cors allow credentials", func() {
 		host := "cors.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":            "true",
@@ -120,11 +101,11 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).ShouldNot(ContainSubstring("more_set_headers 'Access-Control-Allow-Credentials: true';"))
+				return !strings.Contains(server, "more_set_headers 'Access-Control-Allow-Credentials: true';")
 			})
 	})
 
-	It("should allow origin for cors", func() {
+	ginkgo.It("should allow origin for cors", func() {
 		host := "cors.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":       "true",
@@ -136,11 +117,11 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Allow-Origin: https://origin.cors.com:8080';"))
+				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Origin: https://origin.cors.com:8080';")
 			})
 	})
 
-	It("should allow headers for cors", func() {
+	ginkgo.It("should allow headers for cors", func() {
 		host := "cors.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":        "true",
@@ -152,7 +133,7 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("more_set_headers 'Access-Control-Allow-Headers: DNT, User-Agent';"))
+				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT, User-Agent';")
 			})
 	})
 })

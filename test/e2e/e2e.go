@@ -22,7 +22,6 @@ import (
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
-	"github.com/onsi/gomega"
 	"k8s.io/component-base/logs"
 
 	// required
@@ -51,8 +50,6 @@ import (
 func RunE2ETests(t *testing.T) {
 	logs.InitLogs()
 	defer logs.FlushLogs()
-
-	gomega.RegisterFailHandler(ginkgo.Fail)
 
 	// Disable skipped tests unless they are explicitly requested.
 	if config.GinkgoConfig.FocusString == "" && config.GinkgoConfig.SkipString == "" {

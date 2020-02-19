@@ -28,7 +28,7 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 	f := framework.NewDefaultFramework("serversnippet")
 
 	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+		f.NewEchoDeployment()
 	})
 
 	It(`add valid directives to server via server snippet"`, func() {
@@ -44,7 +44,8 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `more_set_headers "Content-Length: $content_length`) && strings.Contains(server, `more_set_headers "Content-Type: $content_type";`)
+				return strings.Contains(server, `more_set_headers "Content-Length: $content_length`) &&
+					strings.Contains(server, `more_set_headers "Content-Type: $content_type";`)
 			})
 	})
 })

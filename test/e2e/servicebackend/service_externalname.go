@@ -17,13 +17,10 @@ limitations under the License.
 package servicebackend
 
 import (
+	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	"github.com/parnurzeal/gorequest"
-
+	"github.com/onsi/ginkgo"
 	core "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,7 +32,7 @@ import (
 var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	f := framework.NewDefaultFramework("type-externalname")
 
-	It("works with external name set to incomplete fdqn", func() {
+	ginkgo.It("works with external name set to incomplete fdqn", func() {
 		f.NewEchoDeployment()
 
 		host := "echo"
@@ -61,15 +58,14 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/get").
-			Set("Host", host).
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(200))
+		f.HTTPTestClient().
+			GET("/get").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
-	It("should return 200 for service type=ExternalName without a port defined", func() {
+	ginkgo.It("should return 200 for service type=ExternalName without a port defined", func() {
 		host := "echo"
 
 		svc := &core.Service{
@@ -93,15 +89,14 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/get").
-			Set("Host", host).
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(200))
+		f.HTTPTestClient().
+			GET("/get").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
-	It("should return 200 for service type=ExternalName with a port defined", func() {
+	ginkgo.It("should return 200 for service type=ExternalName with a port defined", func() {
 		host := "echo"
 
 		svc := &core.Service{
@@ -132,15 +127,14 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/get").
-			Set("Host", host).
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(200))
+		f.HTTPTestClient().
+			GET("/get").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
-	It("should return status 502 for service type=ExternalName with an invalid host", func() {
+	ginkgo.It("should return status 502 for service type=ExternalName with an invalid host", func() {
 		host := "echo"
 
 		svc := &core.Service{
@@ -164,15 +158,14 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/get").
-			Set("Host", host).
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(502))
+		f.HTTPTestClient().
+			GET("/get").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusBadGateway)
 	})
 
-	It("should return 200 for service type=ExternalName using a port name", func() {
+	ginkgo.It("should return 200 for service type=ExternalName using a port name", func() {
 		host := "echo"
 
 		svc := &core.Service{
@@ -204,12 +197,10 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/get").
-			Set("Host", host).
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(200))
+		f.HTTPTestClient().
+			GET("/get").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
-
 })

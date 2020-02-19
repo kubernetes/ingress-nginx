@@ -17,8 +17,9 @@ limitations under the License.
 package annotations
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"strings"
+
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -26,11 +27,11 @@ import (
 var _ = framework.DescribeAnnotation("ssl-ciphers", func() {
 	f := framework.NewDefaultFramework("sslciphers")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	It("should change ssl ciphers", func() {
+	ginkgo.It("should change ssl ciphers", func() {
 		host := "ciphers.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/ssl-ciphers": "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP",
@@ -41,7 +42,7 @@ var _ = framework.DescribeAnnotation("ssl-ciphers", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("ssl_ciphers ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;"))
+				return strings.Contains(server, "ssl_ciphers ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;")
 			})
 	})
 })

@@ -18,10 +18,10 @@ package annotations
 
 import (
 	"net/http"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,11 +31,11 @@ import (
 var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 	f := framework.NewDefaultFramework("fastcgi")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewFastCGIHelloServerDeployment()
 	})
 
-	It("should use fastcgi_pass in the configuration file", func() {
+	ginkgo.It("should use fastcgi_pass in the configuration file", func() {
 		host := "fastcgi"
 
 		annotations := map[string]string{
@@ -47,12 +47,12 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("include /etc/nginx/fastcgi_params;")) &&
-					Expect(server).Should(ContainSubstring("fastcgi_pass"))
+				return strings.Contains(server, "include /etc/nginx/fastcgi_params;") &&
+					strings.Contains(server, "fastcgi_pass")
 			})
 	})
 
-	It("should add fastcgi_index in the configuration file", func() {
+	ginkgo.It("should add fastcgi_index in the configuration file", func() {
 		host := "fastcgi-index"
 
 		annotations := map[string]string{
@@ -65,11 +65,11 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("fastcgi_index \"index.php\";"))
+				return strings.Contains(server, "fastcgi_index \"index.php\";")
 			})
 	})
 
-	It("should add fastcgi_param in the configuration file", func() {
+	ginkgo.It("should add fastcgi_param in the configuration file", func() {
 		configuration := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "fastcgi-configmap",
@@ -82,8 +82,8 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 		}
 
 		cm, err := f.EnsureConfigMap(configuration)
-		Expect(err).NotTo(HaveOccurred(), "failed to create an the configmap")
-		Expect(cm).NotTo(BeNil(), "expected a configmap but none returned")
+		assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
+		assert.NotNil(ginkgo.GinkgoT(), cm, "expected a configmap but none returned")
 
 		host := "fastcgi-params-configmap"
 
@@ -97,12 +97,12 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("fastcgi_param SCRIPT_FILENAME \"/home/www/scripts/php$fastcgi_script_name\";")) &&
-					Expect(server).Should(ContainSubstring("fastcgi_param REDIRECT_STATUS \"200\";"))
+				return strings.Contains(server, "fastcgi_param SCRIPT_FILENAME \"/home/www/scripts/php$fastcgi_script_name\";") &&
+					strings.Contains(server, "fastcgi_param REDIRECT_STATUS \"200\";")
 			})
 	})
 
-	It("should return OK for service with backend protocol FastCGI", func() {
+	ginkgo.It("should return OK for service with backend protocol FastCGI", func() {
 		host := "fastcgi-helloserver"
 		path := "/hello"
 
@@ -115,16 +115,14 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("fastcgi_pass"))
+				return strings.Contains(server, "fastcgi_pass")
 			})
 
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+path).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring("Hello world!"))
+		f.HTTPTestClient().
+			GET(path).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains("Hello world!")
 	})
 })

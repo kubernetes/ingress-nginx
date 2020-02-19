@@ -22,11 +22,8 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	"github.com/parnurzeal/gorequest"
-
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -35,8 +32,8 @@ import (
 var _ = framework.IngressNginxDescribe("[Default Backend] custom service", func() {
 	f := framework.NewDefaultFramework("custom-default-backend")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+	ginkgo.It("uses custom default backend that returns 200 as status code", func() {
+		f.NewEchoDeployment()
 
 		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
@@ -44,21 +41,21 @@ var _ = framework.IngressNginxDescribe("[Default Backend] custom service", func(
 				args = append(args, fmt.Sprintf("--default-backend-service=%v/%v", f.Namespace, framework.EchoService))
 				deployment.Spec.Template.Spec.Containers[0].Args = args
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
-
+				time.Sleep(5 * time.Second)
 				return err
 			})
-		Expect(err).NotTo(HaveOccurred())
+		assert.Nil(ginkgo.GinkgoT(), err, "updating deployment")
+
 		time.Sleep(5 * time.Second)
 
 		f.WaitForNginxServer("_",
 			func(server string) bool {
 				return strings.Contains(server, `set $proxy_upstream_name "upstream-default-backend"`)
 			})
-	})
 
-	It("uses custom default backend", func() {
-		resp, _, errs := gorequest.New().Get(f.GetURL(framework.HTTP)).End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/").
+			Expect().
+			Status(http.StatusOK)
 	})
 })

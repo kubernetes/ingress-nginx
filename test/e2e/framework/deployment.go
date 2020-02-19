@@ -379,13 +379,13 @@ func (f *Framework) DeleteDeployment(name string) error {
 func (f *Framework) ScaleDeploymentToZero(name string) {
 	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(name, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
-	assert.Nil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
+	assert.NotNil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
 
 	d.Spec.Replicas = NewInt32(0)
 
 	d, err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(d)
 	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
-	assert.Nil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
+	assert.NotNil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
 
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 0)
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for no endpoints")

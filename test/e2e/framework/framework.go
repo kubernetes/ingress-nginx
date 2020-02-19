@@ -205,7 +205,7 @@ func (f *Framework) GetURL(scheme RequestScheme) string {
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
@@ -298,7 +298,7 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 		Update(cfgMap)
 	assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 }
 
 func (f *Framework) CreateConfigMap(name string, data map[string]string) {
@@ -309,7 +309,7 @@ func (f *Framework) CreateConfigMap(name string, data map[string]string) {
 		},
 		Data: data,
 	})
-	assert.Nil(ginkgo.GinkgoT(), err, "failed to create configMap")
+	assert.Nil(ginkgo.GinkgoT(), err, "creating configMap")
 }
 
 // UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-ingress-controller map data
@@ -326,7 +326,7 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 		Update(config)
 	assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 }
 
 // DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.
@@ -397,6 +397,14 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		}
 	}
 
+	if *deployment.Spec.Replicas != int32(replicas) {
+		deployment.Spec.Replicas = NewInt32(int32(replicas))
+		_, err = kubeClientSet.AppsV1().Deployments(namespace).Update(deployment)
+		if err != nil {
+			return errors.Wrapf(err, "scaling the number of replicas to %v", replicas)
+		}
+	}
+
 	err = WaitForPodsReady(kubeClientSet, DefaultTimeout, replicas, namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
 	})
@@ -414,12 +422,25 @@ func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name st
 		return err
 	}
 
+	if ingress == nil {
+		return fmt.Errorf("there is no ingress with name %v in namespace %v", name, namespace)
+	}
+
+	if ingress.ObjectMeta.Annotations == nil {
+		ingress.ObjectMeta.Annotations = map[string]string{}
+	}
+
 	if err := updateFunc(ingress); err != nil {
 		return err
 	}
 
 	_, err = kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Update(ingress)
-	return err
+	if err != nil {
+		return err
+	}
+
+	time.Sleep(5 * time.Second)
+	return nil
 }
 
 // NewSingleIngressWithTLS creates a simple ingress rule with TLS spec included

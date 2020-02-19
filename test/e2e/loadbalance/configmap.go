@@ -19,8 +19,8 @@ package loadbalance
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -28,11 +28,11 @@ import (
 var _ = framework.DescribeSetting("[Load Balancer] load-balance", func() {
 	f := framework.NewDefaultFramework("lb-configmap")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	It("should apply the configmap load-balance setting", func() {
+	ginkgo.It("should apply the configmap load-balance setting", func() {
 		host := "load-balance.com"
 
 		f.UpdateNginxConfigMapData("load-balance", "ewma")
@@ -44,7 +44,7 @@ var _ = framework.DescribeSetting("[Load Balancer] load-balance", func() {
 			})
 
 		algorithm, err := f.GetLbAlgorithm(framework.EchoService, 80)
-		Expect(err).Should(BeNil())
-		Expect(algorithm).Should(Equal("ewma"))
+		assert.Nil(ginkgo.GinkgoT(), err)
+		assert.Equal(ginkgo.GinkgoT(), algorithm, "ewma")
 	})
 })

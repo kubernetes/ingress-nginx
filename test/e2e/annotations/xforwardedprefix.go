@@ -18,21 +18,21 @@ package annotations
 
 import (
 	"net/http"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("x-forwarded-prefix", func() {
 	f := framework.NewDefaultFramework("xforwardedprefix")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	It("should set the X-Forwarded-Prefix to the annotation value", func() {
+	ginkgo.It("should set the X-Forwarded-Prefix to the annotation value", func() {
 		host := "xfp.baz.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/x-forwarded-prefix": "/test/value",
@@ -42,21 +42,19 @@ var _ = framework.DescribeAnnotation("x-forwarded-prefix", func() {
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("proxy_set_header X-Forwarded-Prefix \"/test/value\";"))
+				return strings.Contains(server, host) &&
+					strings.Contains(server, "proxy_set_header X-Forwarded-Prefix \"/test/value\";")
 			})
 
-		uri := "/"
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+uri).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).To(ContainSubstring("x-forwarded-prefix=/test/value"))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains("x-forwarded-prefix=/test/value")
 	})
 
-	It("should not add X-Forwarded-Prefix if the annotation value is empty", func() {
+	ginkgo.It("should not add X-Forwarded-Prefix if the annotation value is empty", func() {
 		host := "noxfp.baz.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/x-forwarded-prefix": "",
@@ -66,17 +64,15 @@ var _ = framework.DescribeAnnotation("x-forwarded-prefix", func() {
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(And(ContainSubstring(host), Not(ContainSubstring("proxy_set_header X-Forwarded-Prefix"))))
+				return strings.Contains(server, host) &&
+					!strings.Contains(server, "proxy_set_header X-Forwarded-Prefix")
 			})
 
-		uri := "/"
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+uri).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).To(Not(ContainSubstring("x-forwarded-prefix")))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().NotContains("x-forwarded-prefix")
 	})
 })

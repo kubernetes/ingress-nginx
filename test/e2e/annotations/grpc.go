@@ -21,10 +21,9 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	pb "github.com/moul/pb/grpcbin/go-grpc"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -39,7 +38,7 @@ import (
 var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc")
 
-	It("should use grpc_pass in the configuration file", func() {
+	ginkgo.It("should use grpc_pass in the configuration file", func() {
 		f.NewGRPCFortuneTellerDeployment()
 
 		host := "grpc"
@@ -53,18 +52,18 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host)))
+				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 			})
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("grpc_pass")) &&
-					Expect(server).Should(ContainSubstring("grpc_set_header")) &&
-					Expect(server).ShouldNot(ContainSubstring("proxy_pass"))
+				return strings.Contains(server, "grpc_pass") &&
+					strings.Contains(server, "grpc_set_header") &&
+					!strings.Contains(server, "proxy_pass")
 			})
 	})
 
-	It("should return OK for service with backend protocol GRPC", func() {
+	ginkgo.It("should return OK for service with backend protocol GRPC", func() {
 		f.NewGRPCBinDeployment()
 
 		host := "echo"
@@ -116,14 +115,14 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		ctx := context.Background()
 
 		res, err := client.HeadersUnary(ctx, &pb.EmptyMessage{})
-		Expect(err).Should(BeNil())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		metadata := res.GetMetadata()
-		Expect(metadata["content-type"].Values[0]).Should(Equal("application/grpc"))
+		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"].Values[0], "application/grpc")
 	})
 
-	It("should return OK for service with backend protocol GRPCS", func() {
-		Skip("GRPCS test temporarily disabled")
+	ginkgo.It("should return OK for service with backend protocol GRPCS", func() {
+		ginkgo.Skip("GRPCS test temporarily disabled")
 
 		f.NewGRPCBinDeployment()
 
@@ -181,9 +180,9 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		ctx := context.Background()
 
 		res, err := client.HeadersUnary(ctx, &pb.EmptyMessage{})
-		Expect(err).Should(BeNil())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		metadata := res.GetMetadata()
-		Expect(metadata["content-type"].Values[0]).Should(Equal("application/grpc"))
+		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"].Values[0], "application/grpc")
 	})
 })
