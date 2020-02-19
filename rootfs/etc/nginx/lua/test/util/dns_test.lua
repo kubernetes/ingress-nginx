@@ -5,6 +5,8 @@ search ingress-nginx.svc.cluster.local svc.cluster.local cluster.local
 options ndots:5
 ]===]
 
+package.loaded["util.resolv_conf"] = nil
+
 helpers.with_resolv_conf(conf, function()
   require("util.resolv_conf")
 end)
