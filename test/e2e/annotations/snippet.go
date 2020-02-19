@@ -17,19 +17,21 @@ limitations under the License.
 package annotations
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"strings"
+
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 	f := framework.NewDefaultFramework("configurationsnippet")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	It(`set snippet "more_set_headers "Request-Id: $req_id";" in all locations"`, func() {
+	ginkgo.It(`set snippet "more_set_headers "Request-Id: $req_id";" in all locations"`, func() {
 		host := "configurationsnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `
@@ -41,7 +43,7 @@ var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`more_set_headers "Request-Id: $req_id";`))
+				return strings.Contains(server, `more_set_headers "Request-Id: $req_id";`)
 			})
 	})
 })

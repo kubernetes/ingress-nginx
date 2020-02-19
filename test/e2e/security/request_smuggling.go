@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -32,11 +32,11 @@ import (
 var _ = framework.IngressNginxDescribe("[Security] request smuggling", func() {
 	f := framework.NewDefaultFramework("request-smuggling")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	It("should not return body content from error_page", func() {
+	ginkgo.It("should not return body content from error_page", func() {
 		host := "foo.bar.com"
 
 		snippet := `
@@ -62,8 +62,8 @@ server {
 			})
 
 		out, err := smugglingRequest(host, f.GetNginxIP(), 80)
-		Expect(err).NotTo(HaveOccurred(), "obtaining response of request smuggling check")
-		Expect(out).ShouldNot(ContainSubstring("This should be hidden!"))
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining response of request smuggling check")
+		assert.NotContains(ginkgo.GinkgoT(), out, "This should be hidden!")
 	})
 })
 

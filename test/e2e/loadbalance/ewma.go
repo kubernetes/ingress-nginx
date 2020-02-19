@@ -18,13 +18,12 @@ package loadbalance
 
 import (
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
-	"github.com/parnurzeal/gorequest"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -32,7 +31,7 @@ import (
 var _ = framework.DescribeSetting("[Load Balancer] EWMA", func() {
 	f := framework.NewDefaultFramework("ewma")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(3)
 		f.SetNginxConfigMapData(map[string]string{
 			"worker-processes": "2",
@@ -40,7 +39,7 @@ var _ = framework.DescribeSetting("[Load Balancer] EWMA", func() {
 		)
 	})
 
-	It("does not fail requests", func() {
+	ginkgo.It("does not fail requests", func() {
 		host := "load-balance.com"
 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
@@ -50,21 +49,21 @@ var _ = framework.DescribeSetting("[Load Balancer] EWMA", func() {
 			})
 
 		algorithm, err := f.GetLbAlgorithm(framework.EchoService, 80)
-		Expect(err).Should(BeNil())
-		Expect(algorithm).Should(Equal("ewma"))
+		assert.Nil(ginkgo.GinkgoT(), err)
+		assert.Equal(ginkgo.GinkgoT(), algorithm, "ewma")
 
 		re, _ := regexp.Compile(fmt.Sprintf(`%v.*`, framework.EchoService))
 		replicaRequestCount := map[string]int{}
 
 		for i := 0; i < 30; i++ {
-			_, body, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				End()
-			Expect(errs).Should(BeEmpty())
+			body := f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK).Body().Raw()
 
 			replica := re.FindString(body)
-			Expect(replica).ShouldNot(Equal(""))
+			assert.NotEmpty(ginkgo.GinkgoT(), replica)
 
 			if _, ok := replicaRequestCount[replica]; !ok {
 				replicaRequestCount[replica] = 1
@@ -78,6 +77,6 @@ var _ = framework.DescribeSetting("[Load Balancer] EWMA", func() {
 		for _, v := range replicaRequestCount {
 			actualCount += v
 		}
-		Expect(actualCount).Should(Equal(30))
+		assert.Equal(ginkgo.GinkgoT(), actualCount, 30)
 	})
 })

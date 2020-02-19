@@ -17,45 +17,42 @@ limitations under the License.
 package settings
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
-
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeSetting("Settings - log format", func() {
+var _ = framework.DescribeSetting("log-format-*", func() {
 	f := framework.NewDefaultFramework("log-format")
 
 	host := "log-format"
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 	})
 
-	Context("Check log-format-escape-json", func() {
-		It("should disable the log-format-escape-json by default", func() {
+	ginkgo.Context("Check log-format-escape-json", func() {
+
+		ginkgo.It("should disable the log-format-escape-json by default", func() {
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
 					return !strings.Contains(cfg, "log_format upstreaminfo escape=json")
 				})
 		})
 
-		It("should enable the log-format-escape-json", func() {
+		ginkgo.It("should enable the log-format-escape-json", func() {
 			f.UpdateNginxConfigMapData("log-format-escape-json", "true")
-
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
 					return strings.Contains(cfg, "log_format upstreaminfo escape=json")
 				})
 		})
 
-		It("should disable the log-format-escape-json", func() {
+		ginkgo.It("should disable the log-format-escape-json", func() {
 			f.UpdateNginxConfigMapData("log-format-escape-json", "false")
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
@@ -63,9 +60,10 @@ var _ = framework.DescribeSetting("Settings - log format", func() {
 				})
 		})
 	})
-	Context("Check log-format-upstream with log-format-escape-json", func() {
 
-		It("check log format with log-format-escape-json enabled", func() {
+	ginkgo.Context("Check log-format-upstream with log-format-escape-json", func() {
+
+		ginkgo.It("log-format-escape-json enabled", func() {
 			f.SetNginxConfigMapData(map[string]string{
 				"log-format-escape-json": "true",
 				"log-format-upstream":    "\"{\"my_header1\":\"$http_header1\", \"my_header2\":\"$http_header2\"}\"",
@@ -73,24 +71,22 @@ var _ = framework.DescribeSetting("Settings - log format", func() {
 
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
-					fmt.Sprintln(cfg)
 					return strings.Contains(cfg, "log_format upstreaminfo escape=json")
 				})
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				AppendHeader("header1", "Here is \"header1\" with json escape").
-				End()
 
-			Expect(errs).Should(BeEmpty())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithHeader("header1", `Here is "header1" with json escape`).
+				Expect().
+				Status(http.StatusOK)
 
 			logs, err := f.NginxLogs()
-			Expect(err).ToNot(HaveOccurred())
-			Expect(logs).To(ContainSubstring(`{"my_header1":"Here is \"header1\" with json escape", "my_header2":""}`))
+			assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+			assert.Contains(ginkgo.GinkgoT(), logs, `{"my_header1":"Here is \"header1\" with json escape", "my_header2":""}`)
 		})
 
-		It("check log format with log-format-escape-json disabled", func() {
+		ginkgo.It("log-format-escape-json disabled", func() {
 			f.SetNginxConfigMapData(map[string]string{
 				"log-format-escape-json": "false",
 				"log-format-upstream":    "\"{\"my_header3\":\"$http_header3\", \"my_header4\":\"$http_header4\"}\"",
@@ -98,22 +94,19 @@ var _ = framework.DescribeSetting("Settings - log format", func() {
 
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
-					fmt.Sprintln(cfg)
 					return !strings.Contains(cfg, "log_format upstreaminfo escape=json")
 				})
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				AppendHeader("header3", "Here is \"header3\" with json escape").
-				End()
 
-			Expect(errs).Should(BeEmpty())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithHeader("header3", `Here is "header3" with json escape`).
+				Expect().
+				Status(http.StatusOK)
 
 			logs, err := f.NginxLogs()
-			Expect(err).ToNot(HaveOccurred())
-			Expect(logs).To(ContainSubstring(`{"my_header3":"Here is \x22header3\x22 with json escape", "my_header4":"-"}`))
+			assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+			assert.Contains(ginkgo.GinkgoT(), logs, `{"my_header3":"Here is \x22header3\x22 with json escape", "my_header4":"-"}`)
 		})
 	})
-
 })

@@ -21,9 +21,8 @@ import (
 	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -33,12 +32,12 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 
 	setting := "use-forwarded-headers"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 		f.UpdateNginxConfigMapData(setting, "false")
 	})
 
-	It("should trust X-Forwarded headers when setting is true", func() {
+	ginkgo.It("should trust X-Forwarded headers when setting is true", func() {
 		host := "forwarded-headers"
 
 		f.UpdateNginxConfigMapData(setting, "true")
@@ -51,41 +50,43 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 				return strings.Contains(server, "server_name forwarded-headers")
 			})
 
-		By("ensuring single values are parsed correctly")
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("X-Forwarded-Port", "1234").
-			Set("X-Forwarded-Proto", "myproto").
-			Set("X-Forwarded-For", "1.2.3.4").
-			Set("X-Forwarded-Host", "myhost").
-			End()
+		ginkgo.By("ensuring single values are parsed correctly")
+		body := f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("X-Forwarded-Port", "1234").
+			WithHeader("X-Forwarded-Proto", "myproto").
+			WithHeader("X-Forwarded-For", "1.2.3.4").
+			WithHeader("X-Forwarded-Host", "myhost").
+			Expect().
+			Status(http.StatusOK).
+			Body().
+			Raw()
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=myhost")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-host=myhost")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-proto=myproto")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=1234")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-for=1.2.3.4")))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=myhost"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=myhost"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=myproto"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=1.2.3.4"))
 
-		By("ensuring that first entry in X-Forwarded-Host is used as the best host")
-		resp, body, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("X-Forwarded-Port", "1234").
-			Set("X-Forwarded-Proto", "myproto").
-			Set("X-Forwarded-For", "1.2.3.4").
-			Set("X-Forwarded-Host", "myhost.com, another.host,example.net").
-			End()
+		ginkgo.By("ensuring that first entry in X-Forwarded-Host is used as the best host")
+		body = f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("X-Forwarded-Port", "1234").
+			WithHeader("X-Forwarded-Proto", "myproto").
+			WithHeader("X-Forwarded-For", "1.2.3.4").
+			WithHeader("X-Forwarded-Host", "myhost.com, another.host,example.net").
+			Expect().
+			Status(http.StatusOK).
+			Body().
+			Raw()
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=myhost.com")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-host=myhost.com")))
-
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=myhost.com"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=myhost.com"))
 	})
-	It("should not trust X-Forwarded headers when setting is false", func() {
+
+	ginkgo.It("should not trust X-Forwarded headers when setting is false", func() {
 		host := "forwarded-headers"
 
 		f.UpdateNginxConfigMapData(setting, "false")
@@ -97,25 +98,26 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 				return strings.Contains(server, "server_name forwarded-headers")
 			})
 
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("X-Forwarded-Port", "1234").
-			Set("X-Forwarded-Proto", "myproto").
-			Set("X-Forwarded-For", "1.2.3.4").
-			Set("X-Forwarded-Host", "myhost").
-			End()
+		body := f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("X-Forwarded-Port", "1234").
+			WithHeader("X-Forwarded-Proto", "myproto").
+			WithHeader("X-Forwarded-For", "1.2.3.4").
+			WithHeader("X-Forwarded-Host", "myhost").
+			Expect().
+			Status(http.StatusOK).
+			Body().
+			Raw()
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=forwarded-headers")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=80")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-proto=http")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-original-forwarded-for=1.2.3.4")))
-		Expect(body).ShouldNot(ContainSubstring(fmt.Sprintf("host=myhost")))
-		Expect(body).ShouldNot(ContainSubstring(fmt.Sprintf("x-forwarded-host=myhost")))
-		Expect(body).ShouldNot(ContainSubstring(fmt.Sprintf("x-forwarded-proto=myproto")))
-		Expect(body).ShouldNot(ContainSubstring(fmt.Sprintf("x-forwarded-port=1234")))
-		Expect(body).ShouldNot(ContainSubstring(fmt.Sprintf("x-forwarded-for=1.2.3.4")))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=forwarded-headers"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=80"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=http"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-original-forwarded-for=1.2.3.4"))
+		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=myhost"))
+		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=myhost"))
+		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=myproto"))
+		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
+		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=1.2.3.4"))
 	})
 })

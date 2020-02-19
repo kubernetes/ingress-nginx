@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -29,11 +29,11 @@ var _ = framework.DescribeAnnotation("mirror-*", func() {
 	f := framework.NewDefaultFramework("mirror")
 	host := "mirror.foo.com"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	It("should set mirror-target to http://localhost/mirror", func() {
+	ginkgo.It("should set mirror-target to http://localhost/mirror", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/mirror-target": "http://localhost/mirror",
 		}
@@ -48,7 +48,7 @@ var _ = framework.DescribeAnnotation("mirror-*", func() {
 			})
 	})
 
-	It("should set mirror-target to https://test.env.com/$request_uri", func() {
+	ginkgo.It("should set mirror-target to https://test.env.com/$request_uri", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/mirror-target": "https://test.env.com/$request_uri",
 		}
@@ -64,7 +64,7 @@ var _ = framework.DescribeAnnotation("mirror-*", func() {
 			})
 	})
 
-	It("should disable mirror-request-body", func() {
+	ginkgo.It("should disable mirror-request-body", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/mirror-target":       "http://localhost/mirror",
 			"nginx.ingress.kubernetes.io/mirror-request-body": "off",

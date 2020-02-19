@@ -21,21 +21,20 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.IngressNginxDescribe("[Shutdown] Graceful shutdown with pending request", func() {
 	f := framework.NewDefaultFramework("shutdown-slow-requests")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewSlowEchoDeployment()
 		f.UpdateNginxConfigMapData("worker-shutdown-timeout", "50s")
 	})
 
-	It("should let slow requests finish before shutting down", func() {
+	ginkgo.It("should let slow requests finish before shutting down", func() {
 		host := "graceful-shutdown"
 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.SlowEchoService, 80, nil))
@@ -47,13 +46,13 @@ var _ = framework.IngressNginxDescribe("[Shutdown] Graceful shutdown with pendin
 		done := make(chan bool)
 		go func() {
 			defer func() { done <- true }()
-			defer GinkgoRecover()
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)+"/sleep/30").
-				Set("Host", host).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			defer ginkgo.GinkgoRecover()
+
+			f.HTTPTestClient().
+				GET("/sleep/30").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK)
 		}()
 
 		time.Sleep(1 * time.Second)

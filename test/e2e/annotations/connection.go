@@ -19,22 +19,21 @@ package annotations
 import (
 	"fmt"
 	"net/http"
-	"time"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("connection-proxy-header", func() {
 	f := framework.NewDefaultFramework("connection")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	It("set connection header to keep-alive", func() {
+	ginkgo.It("set connection header to keep-alive", func() {
 		host := "connection.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/connection-proxy-header": "keep-alive",
@@ -45,17 +44,14 @@ var _ = framework.DescribeAnnotation("connection-proxy-header", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`proxy_set_header Connection keep-alive;`))
+				return strings.Contains(server, "proxy_set_header Connection keep-alive;")
 			})
 
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Retry(10, 1*time.Second, http.StatusNotFound).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("connection=keep-alive")))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains(fmt.Sprintf("connection=keep-alive"))
 	})
 })

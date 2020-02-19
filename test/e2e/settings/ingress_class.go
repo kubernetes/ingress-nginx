@@ -20,9 +20,8 @@ import (
 	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -33,13 +32,13 @@ import (
 var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 	f := framework.NewDefaultFramework("ingress-class")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 
-	Context("Without a specific ingress-class", func() {
+	ginkgo.Context("Without a specific ingress-class", func() {
 
-		It("should ignore Ingress with class", func() {
+		ginkgo.It("should ignore Ingress with class", func() {
 			invalidHost := "foo"
 			annotations := map[string]string{
 				class.IngressKey: "testclass",
@@ -56,24 +55,22 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 					strings.Contains(cfg, "server_name bar")
 			})
 
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", invalidHost).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", invalidHost).
+				Expect().
+				Status(http.StatusNotFound)
 
-			resp, _, errs = gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", validHost).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", validHost).
+				Expect().
+				Status(http.StatusOK)
 		})
 	})
 
-	Context("With a specific ingress-class", func() {
-		BeforeEach(func() {
+	ginkgo.Context("With a specific ingress-class", func() {
+		ginkgo.BeforeEach(func() {
 			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 				func(deployment *appsv1.Deployment) error {
 					args := deployment.Spec.Template.Spec.Containers[0].Args
@@ -83,10 +80,10 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 
 					return err
 				})
-			Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment flags")
+			assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 		})
 
-		It("should ignore Ingress with no class", func() {
+		ginkgo.It("should ignore Ingress with no class", func() {
 			invalidHost := "bar"
 
 			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, nil)
@@ -107,22 +104,20 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				return !strings.Contains(cfg, "server_name bar")
 			})
 
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", validHost).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", validHost).
+				Expect().
+				Status(http.StatusOK)
 
-			resp, _, errs = gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", invalidHost).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", invalidHost).
+				Expect().
+				Status(http.StatusNotFound)
 		})
 
-		It("should delete Ingress when class is removed", func() {
+		ginkgo.It("should delete Ingress when class is removed", func() {
 			host := "foo"
 			annotations := map[string]string{
 				class.IngressKey: "testclass",
@@ -134,30 +129,28 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				return strings.Contains(cfg, "server_name foo")
 			})
 
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK)
 
 			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
-			Expect(err).To(BeNil())
+			assert.Nil(ginkgo.GinkgoT(), err)
 
 			delete(ing.Annotations, class.IngressKey)
 			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ing.Namespace).Update(ing)
-			Expect(err).To(BeNil())
+			assert.Nil(ginkgo.GinkgoT(), err)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return !strings.Contains(cfg, "server_name foo")
 			})
 
-			resp, _, errs = gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusNotFound)
 		})
 	})
 })

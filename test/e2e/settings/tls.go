@@ -21,29 +21,23 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
-
-func noRedirectPolicyFunc(gorequest.Request, []gorequest.Request) error {
-	return http.ErrUseLastResponse
-}
 
 var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", func() {
 	f := framework.NewDefaultFramework("settings-tls")
 	host := "settings-tls"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 		f.UpdateNginxConfigMapData("use-forwarded-headers", "false")
 	})
 
-	It("should configure TLS protocol", func() {
+	ginkgo.It("should configure TLS protocol", func() {
 		sslCiphers := "ssl-ciphers"
 		sslProtocols := "ssl-protocols"
 
@@ -56,11 +50,11 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
 			ing.Namespace)
-		Expect(err).NotTo(HaveOccurred())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 
-		By("setting cipher suite")
+		ginkgo.By("setting cipher suite")
 		f.UpdateNginxConfigMapData(sslCiphers, testCiphers)
 
 		f.WaitForNginxConfiguration(
@@ -68,18 +62,18 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				return strings.Contains(cfg, fmt.Sprintf("ssl_ciphers '%s';", testCiphers))
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTPS)).
-			TLSClientConfig(tlsConfig).
-			Set("Host", host).
-			End()
+		resp := f.HTTPTestClientWithTLSConfig(tlsConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Raw()
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.TLS.Version).Should(BeNumerically("==", tls.VersionTLS12))
-		Expect(resp.TLS.CipherSuite).Should(BeNumerically("==", tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384))
+		assert.Equal(ginkgo.GinkgoT(), int(resp.TLS.Version), tls.VersionTLS12)
+		assert.Equal(ginkgo.GinkgoT(), resp.TLS.CipherSuite, tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384)
 
-		By("enforcing TLS v1.0")
+		ginkgo.By("enforcing TLS v1.0")
 		f.UpdateNginxConfigMapData(sslProtocols, "TLSv1")
 
 		f.WaitForNginxConfiguration(
@@ -87,19 +81,19 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				return strings.Contains(cfg, "ssl_protocols TLSv1;")
 			})
 
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTPS)).
-			TLSClientConfig(tlsConfig).
-			Set("Host", host).
-			End()
+		resp = f.HTTPTestClientWithTLSConfig(tlsConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Raw()
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.TLS.Version).Should(BeNumerically("==", tls.VersionTLS10))
-		Expect(resp.TLS.CipherSuite).Should(BeNumerically("==", tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA))
+		assert.Equal(ginkgo.GinkgoT(), int(resp.TLS.Version), tls.VersionTLS10)
+		assert.Equal(ginkgo.GinkgoT(), resp.TLS.CipherSuite, tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA)
 	})
 
-	It("should configure HSTS policy header", func() {
+	ginkgo.It("should configure HSTS policy header", func() {
 		hstsMaxAge := "hsts-max-age"
 		hstsIncludeSubdomains := "hsts-include-subdomains"
 		hstsPreload := "hsts-preload"
@@ -109,85 +103,75 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
 			ing.Namespace)
-		Expect(err).NotTo(HaveOccurred())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 
-		By("setting max-age parameter")
+		ginkgo.By("setting max-age parameter")
 		f.UpdateNginxConfigMapData(hstsMaxAge, "86400")
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTPS)).
-			TLSClientConfig(tlsConfig).
-			Set("Host", host).
-			End()
+		f.HTTPTestClientWithTLSConfig(tlsConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Strict-Transport-Security").Equal("max-age=86400; includeSubDomains")
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Strict-Transport-Security")).Should(Equal("max-age=86400; includeSubDomains"))
-
-		By("setting includeSubDomains parameter")
+		ginkgo.By("setting includeSubDomains parameter")
 		f.UpdateNginxConfigMapData(hstsIncludeSubdomains, "false")
 
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTPS)).
-			TLSClientConfig(tlsConfig).
-			Set("Host", host).
-			End()
+		f.HTTPTestClientWithTLSConfig(tlsConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Strict-Transport-Security").Equal("max-age=86400")
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Strict-Transport-Security")).Should(Equal("max-age=86400"))
-
-		By("setting preload parameter")
+		ginkgo.By("setting preload parameter")
 		f.UpdateNginxConfigMapData(hstsPreload, "true")
 
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTPS)).
-			TLSClientConfig(tlsConfig).
-			Set("Host", host).
-			End()
+		f.HTTPTestClientWithTLSConfig(tlsConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Strict-Transport-Security").Equal("max-age=86400; preload")
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Strict-Transport-Security")).Should(Equal("max-age=86400; preload"))
-
-		By("overriding what's set from the upstream")
+		ginkgo.By("overriding what's set from the upstream")
 
 		// we can not use gorequest here because it flattens the duplicate headers
 		// and specifically in case of Strict-Transport-Security it ignore extra headers
 		// intead of concatenating, rightfully. And I don't know of any API it provides for getting raw headers.
 		curlCmd := fmt.Sprintf("curl -I -k --fail --silent --resolve settings-tls:443:127.0.0.1 https://settings-tls/%v", "?hsts=true")
 		output, err := f.ExecIngressPod(curlCmd)
-		Expect(err).ToNot(HaveOccurred())
-		Expect(output).Should(ContainSubstring("strict-transport-security: max-age=86400; preload"))
+		assert.Nil(ginkgo.GinkgoT(), err)
+		assert.Contains(ginkgo.GinkgoT(), output, "strict-transport-security: max-age=86400; preload")
 		// this is what the upstream sets
-		Expect(output).ShouldNot(ContainSubstring("strict-transport-security: max-age=3600; preload"))
+		assert.NotContains(ginkgo.GinkgoT(), output, "strict-transport-security: max-age=3600; preload")
 	})
 
-	It("should not use ports during the HTTP to HTTPS redirection", func() {
+	ginkgo.It("should not use ports during the HTTP to HTTPS redirection", func() {
 		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
 			ing.Namespace)
-		Expect(err).NotTo(HaveOccurred())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Retry(10, 1*time.Second, http.StatusNotFound).
-			RedirectPolicy(noRedirectPolicyFunc).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
-		Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("https://%v/", host)))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusPermanentRedirect).
+			Header("Location").Equal(fmt.Sprintf("https://%v/", host))
 	})
 
-	It("should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection", func() {
+	ginkgo.It("should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection", func() {
 		f.UpdateNginxConfigMapData("use-forwarded-headers", "true")
 
 		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
@@ -195,20 +179,16 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
 			ing.Namespace)
-		Expect(err).NotTo(HaveOccurred())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Retry(10, 1*time.Second, http.StatusNotFound).
-			RedirectPolicy(noRedirectPolicyFunc).
-			Set("Host", host).
-			Set("X-Forwarded-Host", "example.com:80").
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
-		Expect(resp.Header.Get("Location")).Should(Equal("https://example.com/"))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("X-Forwarded-Host", "example.com:80").
+			Expect().
+			Status(http.StatusPermanentRedirect).
+			Header("Location").Equal("https://example.com/")
 	})
 })

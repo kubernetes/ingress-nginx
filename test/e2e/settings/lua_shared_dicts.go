@@ -17,34 +17,22 @@ limitations under the License.
 package settings
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"strings"
 
+	"github.com/onsi/ginkgo"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeSetting("[Lua] lua-shared-dicts", func() {
 	f := framework.NewDefaultFramework("lua-shared-dicts")
-	host := "lua-shared-dicts"
 
-	BeforeEach(func() {
-		f.NewEchoDeployment()
-	})
-
-	It("configures lua shared dicts", func() {
-		ingress := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
-		f.EnsureIngress(ingress)
-
+	ginkgo.It("configures lua shared dicts", func() {
 		f.UpdateNginxConfigMapData("lua-shared-dicts", "configuration_data:60,certificate_data:300, my_dict: 15 , invalid: 1a")
 
-		ngxCfg := ""
 		f.WaitForNginxConfiguration(func(cfg string) bool {
-			ngxCfg = cfg
-			return true
+			return strings.Contains(cfg, "lua_shared_dict configuration_data 60M;") &&
+				strings.Contains(cfg, "lua_shared_dict certificate_data 20M;") &&
+				strings.Contains(cfg, "lua_shared_dict my_dict 15M;")
 		})
-
-		Expect(ngxCfg).Should(ContainSubstring("lua_shared_dict configuration_data 60M;"))
-		Expect(ngxCfg).Should(ContainSubstring("lua_shared_dict certificate_data 20M;"))
-		Expect(ngxCfg).Should(ContainSubstring("lua_shared_dict my_dict 15M;"))
 	})
 })

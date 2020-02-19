@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -30,60 +30,59 @@ var _ = framework.IngressNginxDescribe("Debug CLI", func() {
 	f := framework.NewDefaultFramework("debug-tool")
 	host := "foo.com"
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	It("should list the backend servers", func() {
+	ginkgo.It("should list the backend servers", func() {
 		annotations := map[string]string{}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return Expect(cfg).Should(ContainSubstring(host))
+			return strings.Contains(cfg, host)
 		})
 
 		cmd := "/dbg backends list"
 		output, err := f.ExecIngressPod(cmd)
-		Expect(err).Should(BeNil())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		// Should be 2: the default and the echo deployment
 		numUpstreams := len(strings.Split(strings.Trim(string(output), "\n"), "\n"))
-		Expect(numUpstreams).Should(Equal(2))
-
+		assert.Equal(ginkgo.GinkgoT(), numUpstreams, 2)
 	})
 
-	It("should get information for a specific backend server", func() {
+	ginkgo.It("should get information for a specific backend server", func() {
 		annotations := map[string]string{}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return Expect(cfg).Should(ContainSubstring(host))
+			return strings.Contains(cfg, host)
 		})
 
 		cmd := "/dbg backends list"
 		output, err := f.ExecIngressPod(cmd)
-		Expect(err).Should(BeNil())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		backends := strings.Split(string(output), "\n")
-		Expect(len(backends)).Should(BeNumerically(">", 0))
+		assert.Greater(ginkgo.GinkgoT(), len(backends), 0)
 
 		getCmd := "/dbg backends get " + backends[0]
 		output, err = f.ExecIngressPod(getCmd)
-		Expect(err).Should(BeNil())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		var f map[string]interface{}
-		unmarshalErr := json.Unmarshal([]byte(output), &f)
-		Expect(unmarshalErr).Should(BeNil())
+		err = json.Unmarshal([]byte(output), &f)
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		// Check that the backend we've gotten has the same name as the one we requested
-		Expect(backends[0]).Should(Equal(f["name"].(string)))
+		assert.Equal(ginkgo.GinkgoT(), backends[0], f["name"].(string))
 	})
 
-	It("should produce valid JSON for /dbg general", func() {
+	ginkgo.It("should produce valid JSON for /dbg general", func() {
 		annotations := map[string]string{}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
@@ -91,10 +90,10 @@ var _ = framework.IngressNginxDescribe("Debug CLI", func() {
 
 		cmd := "/dbg general"
 		output, err := f.ExecIngressPod(cmd)
-		Expect(err).Should(BeNil())
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		var f interface{}
-		unmarshalErr := json.Unmarshal([]byte(output), &f)
-		Expect(unmarshalErr).Should(BeNil())
+		err = json.Unmarshal([]byte(output), &f)
+		assert.Nil(ginkgo.GinkgoT(), err)
 	})
 })

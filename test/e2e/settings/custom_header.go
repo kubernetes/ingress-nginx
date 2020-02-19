@@ -21,55 +21,48 @@ import (
 	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeSetting("Add custom headers", func() {
+var _ = framework.DescribeSetting("add-headers", func() {
 	f := framework.NewDefaultFramework("custom-header")
 	host := "custom-header"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 	})
 
-	AfterEach(func() {
-	})
-
-	It("Add a custom header", func() {
+	ginkgo.It("Add a custom header", func() {
 		customHeader := "X-A-Custom-Header"
 		customHeaderValue := "customHeaderValue"
 
 		h := make(map[string]string)
 		h[customHeader] = customHeaderValue
 
-		f.CreateConfigMap("add-headers-configmap", h)
+		cfgMap := "add-headers-configmap"
 
-		wlKey := "add-headers"
-		wlValue := f.Namespace + "/add-headers-configmap"
+		f.CreateConfigMap(cfgMap, h)
 
-		f.UpdateNginxConfigMapData(wlKey, wlValue)
+		f.UpdateNginxConfigMapData("add-headers", fmt.Sprintf("%v/%v", f.Namespace, cfgMap))
 
 		f.WaitForNginxConfiguration(func(server string) bool {
 			return strings.Contains(server, fmt.Sprintf("more_set_headers \"%s: %s\";", customHeader, customHeaderValue))
 		})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get(customHeader)).Should(ContainSubstring(customHeaderValue))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header(customHeader).Contains(customHeaderValue)
 	})
 
-	It("Add multiple custom headers", func() {
+	ginkgo.It("Add multiple custom headers", func() {
 		firstCustomHeader := "X-First"
 		firstCustomHeaderValue := "Prepare for trouble!"
 		secondCustomHeader := "X-Second"
@@ -79,25 +72,25 @@ var _ = framework.DescribeSetting("Add custom headers", func() {
 		h[firstCustomHeader] = firstCustomHeaderValue
 		h[secondCustomHeader] = secondCustomHeaderValue
 
-		f.CreateConfigMap("add-headers-configmap-two", h)
+		cfgMap := "add-headers-configmap-two"
 
-		wlKey := "add-headers"
-		wlValue := f.Namespace + "/add-headers-configmap-two"
+		f.CreateConfigMap(cfgMap, h)
 
-		f.UpdateNginxConfigMapData(wlKey, wlValue)
+		f.UpdateNginxConfigMapData("add-headers", fmt.Sprintf("%v/%v", f.Namespace, cfgMap))
 
 		f.WaitForNginxConfiguration(func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("more_set_headers \"%s: %s\";", firstCustomHeader, firstCustomHeaderValue)) && strings.Contains(server, fmt.Sprintf("more_set_headers \"%s: %s\";", secondCustomHeader, secondCustomHeaderValue))
+			return strings.Contains(server, fmt.Sprintf("more_set_headers \"%s: %s\";", firstCustomHeader, firstCustomHeaderValue)) &&
+				strings.Contains(server, fmt.Sprintf("more_set_headers \"%s: %s\";", secondCustomHeader, secondCustomHeaderValue))
 		})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
+		resp := f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Raw()
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get(firstCustomHeader)).Should(ContainSubstring(firstCustomHeaderValue))
-		Expect(resp.Header.Get(secondCustomHeader)).Should(ContainSubstring(secondCustomHeaderValue))
+		assert.Equal(ginkgo.GinkgoT(), resp.Header.Get(firstCustomHeader), firstCustomHeaderValue)
+		assert.Equal(ginkgo.GinkgoT(), resp.Header.Get(secondCustomHeader), secondCustomHeaderValue)
 	})
 })
