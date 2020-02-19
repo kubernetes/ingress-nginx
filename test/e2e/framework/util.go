@@ -22,7 +22,6 @@ import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -39,7 +38,7 @@ const (
 	Poll = 2 * time.Second
 
 	// DefaultTimeout time to wait for operations to complete
-	DefaultTimeout = 2 * time.Minute
+	DefaultTimeout = 90 * time.Second
 )
 
 func nowStamp() string {
@@ -123,14 +122,6 @@ func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
 		GracePeriodSeconds: &grace,
 		PropagationPolicy:  &pb,
 	})
-}
-
-// ExpectNoError tests whether an error occurred.
-func ExpectNoError(err error, explain ...interface{}) {
-	if err != nil {
-		Logf("Unexpected error occurred: %v", err)
-	}
-	ExpectWithOffset(1, err).NotTo(HaveOccurred(), explain...)
 }
 
 // WaitForKubeNamespaceNotExist waits until a namespaces is not present in the cluster

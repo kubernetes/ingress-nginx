@@ -32,8 +32,8 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/onsi/gomega"
-
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -144,7 +144,7 @@ func CreateIngressMASecret(client kubernetes.Interface, host string, secretName,
 // WaitForTLS waits until the TLS handshake with a given server completes successfully.
 func WaitForTLS(url string, tlsConfig *tls.Config) {
 	err := wait.Poll(Poll, DefaultTimeout, matchTLSServerName(url, tlsConfig))
-	Expect(err).NotTo(HaveOccurred(), "timeout waiting for TLS configuration in URL %s", url)
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for TLS configuration in URL %s", url)
 }
 
 // generateRSACert generates a basic self signed certificate using a key length
