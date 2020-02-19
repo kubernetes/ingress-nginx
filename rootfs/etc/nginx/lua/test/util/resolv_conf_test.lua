@@ -1,7 +1,7 @@
 local original_io_open = io.open
 
 describe("resolv_conf", function()
-  after_each(function()
+  before_each(function()
     package.loaded["util.resolv_conf"] = nil
     io.open = original_io_open
   end)
