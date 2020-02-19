@@ -236,8 +236,12 @@ dep-ensure: check-go-version ## Update and vendo go dependencies.
 	GO111MODULE=on go mod vendor
 
 .PHONY: dev-env
-dev-env: check-go-version ## Starts a local Kubernetes cluster using minikube, building and deploying the ingress controller.
+dev-env: check-go-version ## Starts a local Kubernetes cluster using kind, building and deploying the ingress controller.
 	@build/dev-env.sh
+
+.PHONY: dev-env-stop
+dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
+	@kind delete cluster --name ingress-nginx-dev
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000

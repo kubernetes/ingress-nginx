@@ -89,6 +89,9 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" "${DEV_IMAGE}"
 echo "[dev-env] deploying NGINX Ingress controller..."
 kubectl create namespace ingress-nginx &> /dev/null || true
 
+helm repo add stable https://kubernetes-charts.storage.googleapis.com &> /dev/null || true
+helm repo update &> /dev/null || true
+
 cat << EOF | helm upgrade --install nginx-ingress stable/nginx-ingress --namespace=ingress-nginx --values -
 controller:
   image:
