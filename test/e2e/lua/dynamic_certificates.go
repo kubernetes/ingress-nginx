@@ -183,6 +183,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 
 		ginkgo.It("falls back to using default certificate when secret gets deleted without reloading", func() {
 			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			assert.Nil(ginkgo.GinkgoT(), err)
 
 			ensureHTTPSRequest(f, fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.GetURL(framework.HTTPS)), host, host)
 

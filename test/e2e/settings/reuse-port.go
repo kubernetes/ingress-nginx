@@ -17,44 +17,43 @@ limitations under the License.
 package settings
 
 import (
-	"fmt"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeSetting("Settings - reuse port", func() {
+var _ = framework.DescribeSetting("reuse-port", func() {
 	f := framework.NewDefaultFramework("reuse-port")
 
 	host := "reuse-port"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 	})
 
-	It("reuse port should be enabled by default", func() {
+	ginkgo.It("reuse port should be enabled by default", func() {
 		f.WaitForNginxConfiguration(func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf(`reuseport`))
+			return strings.Contains(server, "reuseport")
 		})
 	})
 
-	It("reuse port should be disabled", func() {
+	ginkgo.It("reuse port should be disabled", func() {
 		f.UpdateNginxConfigMapData("reuse-port", "false")
 
 		f.WaitForNginxConfiguration(func(server string) bool {
-			return !strings.Contains(server, fmt.Sprintf(`reuseport`))
+			return !strings.Contains(server, "reuseport")
 		})
 	})
 
-	It("reuse port should be enabled", func() {
+	ginkgo.It("reuse port should be enabled", func() {
 		f.UpdateNginxConfigMapData("reuse-port", "true")
 
 		f.WaitForNginxConfiguration(func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf(`reuseport`))
+			return strings.Contains(server, "reuseport")
 		})
 	})
 })

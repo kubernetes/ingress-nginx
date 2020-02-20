@@ -21,8 +21,7 @@ import (
 	"os"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-
+	"github.com/onsi/ginkgo"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,7 +45,7 @@ func nowStamp() string {
 }
 
 func log(level string, format string, args ...interface{}) {
-	fmt.Fprintf(GinkgoWriter, nowStamp()+": "+level+": "+format+"\n", args...)
+	fmt.Fprintf(ginkgo.GinkgoWriter, nowStamp()+": "+level+": "+format+"\n", args...)
 }
 
 // Logf logs to the INFO logs.
@@ -58,14 +57,14 @@ func Logf(format string, args ...interface{}) {
 func Failf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	log("INFO", msg)
-	Fail(nowStamp()+": "+msg, 1)
+	ginkgo.Fail(nowStamp()+": "+msg, 1)
 }
 
 // Skipf logs to the INFO logs and skips the test.
 func Skipf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	log("INFO", msg)
-	Skip(nowStamp() + ": " + msg)
+	ginkgo.Skip(nowStamp() + ": " + msg)
 }
 
 // RestclientConfig deserializes the contents of a kubeconfig file into a Config object.
