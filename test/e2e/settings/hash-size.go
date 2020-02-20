@@ -17,83 +17,94 @@ limitations under the License.
 package settings
 
 import (
-	"fmt"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeSetting("Settings - hash size", func() {
+var _ = framework.DescribeSetting("hash size", func() {
 	f := framework.NewDefaultFramework("hash-size")
 
 	host := "hash-size"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 	})
-	Context("Check server names hash size", func() {
-		It("should set server_names_hash_bucket_size", func() {
+
+	ginkgo.Context("Check server names hash size", func() {
+
+		ginkgo.It("should set server_names_hash_bucket_size", func() {
 			f.UpdateNginxConfigMapData("server-name-hash-bucket-size", "512")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`server_names_hash_bucket_size 512;`))
+				return strings.Contains(server, "server_names_hash_bucket_size 512;")
 			})
 		})
 
-		It("should set server_names_hash_max_size", func() {
+		ginkgo.It("should set server_names_hash_max_size", func() {
 			f.UpdateNginxConfigMapData("server-name-hash-max-size", "4096")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`server_names_hash_max_size 4096;`))
+				return strings.Contains(server, "server_names_hash_max_size 4096;")
 			})
 		})
+
 	})
 
-	Context("Check proxy header hash size", func() {
-		It("should set proxy-headers-hash-bucket-size", func() {
+	ginkgo.Context("Check proxy header hash size", func() {
+
+		ginkgo.It("should set proxy-headers-hash-bucket-size", func() {
 			f.UpdateNginxConfigMapData("proxy-headers-hash-bucket-size", "512")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`proxy_headers_hash_bucket_size 512;`))
+				return strings.Contains(server, "proxy_headers_hash_bucket_size 512;")
 			})
 		})
-		It("should set proxy-headers-hash-max-size", func() {
+
+		ginkgo.It("should set proxy-headers-hash-max-size", func() {
 			f.UpdateNginxConfigMapData("proxy-headers-hash-max-size", "4096")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`proxy_headers_hash_max_size 4096;`))
+				return strings.Contains(server, "proxy_headers_hash_max_size 4096;")
 			})
 		})
+
 	})
-	Context("Check the variable hash size", func() {
-		It("should set variables-hash-bucket-size", func() {
+
+	ginkgo.Context("Check the variable hash size", func() {
+
+		ginkgo.It("should set variables-hash-bucket-size", func() {
 			f.UpdateNginxConfigMapData("variables-hash-bucket-size", "512")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`variables_hash_bucket_size 512;`))
+				return strings.Contains(server, "variables_hash_bucket_size 512;")
 			})
 		})
-		It("should set variables-hash-max-size", func() {
+
+		ginkgo.It("should set variables-hash-max-size", func() {
 			f.UpdateNginxConfigMapData("variables-hash-max-size", "512")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`variables_hash_max_size 512;`))
+				return strings.Contains(server, "variables_hash_max_size 512;")
 			})
 		})
+
 	})
 
-	Context("Check the map hash size", func() {
-		It("should set vmap-hash-bucket-size", func() {
+	ginkgo.Context("Check the map hash size", func() {
+
+		ginkgo.It("should set vmap-hash-bucket-size", func() {
 			f.UpdateNginxConfigMapData("map-hash-bucket-size", "512")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`map_hash_bucket_size 512;`))
+				return strings.Contains(server, "map_hash_bucket_size 512;")
 			})
 		})
+
 	})
 
 })
