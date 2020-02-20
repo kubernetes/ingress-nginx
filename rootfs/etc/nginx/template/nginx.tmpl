@@ -856,8 +856,10 @@ stream {
         location = {{ $authPath }} {
             internal;
 
+						{{ if $all.Cfg.EnableOpentracing }}
             opentracing on; 
             opentracing_propagate_context;
+            {{ end }}
 
             {{ if $externalAuth.AuthCacheKey }}
             set $tmp_cache_key '{{ $server.Hostname }}{{ $authPath }}{{ $externalAuth.AuthCacheKey }}';
