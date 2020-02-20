@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/onsi/ginkgo"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/gavv/httpexpect.v2"
@@ -34,8 +35,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog"
-
-	"github.com/onsi/ginkgo"
 )
 
 // RequestScheme define a scheme used in a test request.
@@ -301,6 +300,7 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 	time.Sleep(5 * time.Second)
 }
 
+// CreateConfigMap creates a new configmap in the current namespace
 func (f *Framework) CreateConfigMap(name string, data map[string]string) {
 	_, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -349,10 +349,13 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 	assert.Nil(ginkgo.GinkgoT(), err, "while waiting for ingress nginx pod to come up again")
 }
 
+// HTTPTestClient returns a new httpexpect client for end-to-end HTTP testing.
 func (f *Framework) HTTPTestClient() *httpexpect.Expect {
 	return f.newTestClient(nil)
 }
 
+// HTTPTestClientWithTLSConfig returns a new httpexpect client for end-to-end
+// HTTP testing with a custom TLS configuration.
 func (f *Framework) HTTPTestClientWithTLSConfig(config *tls.Config) *httpexpect.Expect {
 	return f.newTestClient(config)
 }

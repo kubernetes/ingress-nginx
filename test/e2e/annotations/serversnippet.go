@@ -19,7 +19,7 @@ package annotations
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -27,11 +27,11 @@ import (
 var _ = framework.DescribeAnnotation("server-snippet", func() {
 	f := framework.NewDefaultFramework("serversnippet")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	It(`add valid directives to server via server snippet"`, func() {
+	ginkgo.It(`add valid directives to server via server snippet"`, func() {
 		host := "serversnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-snippet": `

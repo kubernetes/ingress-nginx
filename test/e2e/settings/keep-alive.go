@@ -20,23 +20,22 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-
+	"github.com/onsi/ginkgo"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeSetting("Settings - keep alive", func() {
+var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 	f := framework.NewDefaultFramework("keep-alive")
 
 	host := "keep-alive"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 	})
 
-	It("should set keepalive_timeout", func() {
+	ginkgo.It("should set keepalive_timeout", func() {
 		f.UpdateNginxConfigMapData("keep-alive", "140")
 
 		f.WaitForNginxConfiguration(func(server string) bool {
@@ -44,12 +43,11 @@ var _ = framework.DescribeSetting("Settings - keep alive", func() {
 		})
 	})
 
-	It("should set keepalive_requests", func() {
+	ginkgo.It("should set keepalive_requests", func() {
 		f.UpdateNginxConfigMapData("keep-alive-requests", "200")
 
 		f.WaitForNginxConfiguration(func(server string) bool {
 			return strings.Contains(server, fmt.Sprintf(`keepalive_requests 200;`))
 		})
-
 	})
 })
