@@ -17,13 +17,17 @@ limitations under the License.
 package auth
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
@@ -83,7 +87,7 @@ func (m mockSecret) GetSecret(name string) (*api.Secret, error) {
 			Namespace: api.NamespaceDefault,
 			Name:      "demo-secret",
 		},
-		Data: map[string][]byte{"auth": []byte("foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0")},
+		Data: map[string][]byte{"auth": []byte("bXlsaXR0bGVzZWNyZXQK")},
 	}, nil
 }
 
@@ -242,5 +246,157 @@ func TestDumpSecretAuthMap(t *testing.T) {
 	err := dumpSecretAuthMap(tmpfile, s)
 	if err != nil {
 		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
+	}
+}
+
+func TestDumpSecretAuthBuffer(t *testing.T) {
+	buf := make([]byte, 0)
+	testBuf := bytes.NewBuffer(buf)
+	secret := &api.Secret{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Namespace: api.NamespaceDefault,
+			Name:      "demo-secret",
+		},
+		Data: map[string][]byte{"auth": []byte("bXlsaXR0bGVzZWNyZXQK")},
+	}
+	dumpSecretAuthBuffer(testBuf, secret)
+	var inputString string
+	for key, value := range secret.Data {
+		inputString = key + ":" + string(value) + "\n"
+	}
+	assert.Equal(t, inputString, testBuf.String())
+}
+
+func TestDumpCMAuthBuffer(t *testing.T) {
+	testCases := map[string]struct {
+		configMap      api.ConfigMap
+		expectedCMData string
+	}{
+		"Single key-value": {
+			configMap: api.ConfigMap{
+				ObjectMeta: meta_v1.ObjectMeta{
+					Namespace: api.NamespaceDefault,
+					Name:      "demo-config",
+				},
+				Data: map[string]string{
+					"bar": "default",
+				},
+			},
+			expectedCMData: "bar:ZGVmYXVsdA==\n",
+		},
+		"Single key-value with multiline value": {
+			configMap: api.ConfigMap{
+				ObjectMeta: meta_v1.ObjectMeta{
+					Namespace: api.NamespaceDefault,
+					Name:      "demo-config",
+				},
+				Data: map[string]string{
+					"bar": "first:default\nsecond:non-default\nthird:different",
+				},
+			},
+			expectedCMData: "bar:Zmlyc3Q6ZGVmYXVsdApzZWNvbmQ6bm9uLWRlZmF1bHQKdGhpcmQ6ZGlmZmVyZW50\n",
+		},
+		"Multiple key-value": {
+			configMap: api.ConfigMap{
+				ObjectMeta: meta_v1.ObjectMeta{
+					Namespace: api.NamespaceDefault,
+					Name:      "demo-config",
+				},
+				Data: map[string]string{
+					"bar": "default",
+					"foo": "non-default",
+				},
+			},
+			expectedCMData: "bar:ZGVmYXVsdA==\nfoo:bm9uLWRlZmF1bHQ=\n",
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(*testing.T) {
+			buf := make([]byte, 0)
+			testBuf := bytes.NewBuffer(buf)
+			dumpCMAuthBuffer(testBuf, &tc.configMap)
+			if len(tc.configMap.Data) == 1 {
+				assert.Equal(t, tc.expectedCMData, testBuf.String())
+			} else {
+				for key, inputData := range tc.configMap.Data {
+					base64InputData := base64.StdEncoding.EncodeToString([]byte(inputData))
+					assert.True(t, strings.Contains(tc.expectedCMData, key+":"+base64InputData+"\n"))
+				}
+
+			}
+		})
+
+	}
+
+}
+
+func (m mockSecret) GetConfigMap(name string) (*api.ConfigMap, error) {
+	if name != "default/demo-config" {
+		return nil, errors.Errorf("there is no configmap with name %v", name)
+	}
+
+	return &api.ConfigMap{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Namespace: api.NamespaceDefault,
+			Name:      "demo-config",
+		},
+		Data: map[string]string{
+			"bar":     "default",
+			"foo":     "non-default",
+			"whatnot": "",
+		},
+	}, nil
+}
+
+func TestOIDCPluginAuth(t *testing.T) {
+	testCases := map[string]struct {
+		annotations        map[string]string
+		expectedSecret     string
+		expectedSecretData string
+		expectedCMName     string
+		expectedCMData     []string
+	}{
+		"Basic case": {
+			annotations: map[string]string{
+				parser.GetAnnotationWithPrefix("auth-type"):   "oidc",
+				parser.GetAnnotationWithPrefix("auth-secret"): "demo-secret",
+				parser.GetAnnotationWithPrefix("auth-config"): "demo-config",
+			},
+			expectedSecret:     "default/demo-secret",
+			expectedSecretData: "auth:bXlsaXR0bGVzZWNyZXQK\n",
+			expectedCMName:     "default/demo-config",
+			expectedCMData: []string{
+				"whatnot:\n",
+				"bar:ZGVmYXVsdA==\n",
+				"foo:bm9uLWRlZmF1bHQ=\n",
+			},
+		},
+		"Only secret is defined": {
+			annotations: map[string]string{
+				parser.GetAnnotationWithPrefix("auth-type"):   "oidc",
+				parser.GetAnnotationWithPrefix("auth-secret"): "demo-secret",
+			},
+			expectedSecret:     "default/demo-secret",
+			expectedSecretData: "auth:bXlsaXR0bGVzZWNyZXQK\n",
+			expectedCMName:     "",
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(*testing.T) {
+			ing := buildIngress()
+			ing.SetAnnotations(tc.annotations)
+			config, err := NewParser("", &mockSecret{}).Parse(ing)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedCMName, config.(*Config).ConfigMap)
+			assert.Equal(t, tc.expectedSecret, config.(*Config).Secret)
+			assert.Equal(t, tc.expectedSecretData, config.(*Config).SecretData)
+			if len(tc.expectedCMData) != 0 {
+				for _, expectedCMData := range tc.expectedCMData {
+					assert.True(t, strings.Contains(config.(*Config).ConfigMapData, expectedCMData))
+				}
+			} else {
+				assert.Empty(t, config.(*Config).ConfigMapData)
+			}
+		})
 	}
 }

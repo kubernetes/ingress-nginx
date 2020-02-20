@@ -146,10 +146,12 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 		}
 	}
 
-	var realm, passFile, secretType, cmName string
+	var realm, passFile, secretType, cmName, fileSHA string
 	var configMap *api.ConfigMap
-	var cmBuffer, secretBuffer *bytes.Buffer
-
+	secretBufSlice := make([]byte, 0)
+	secretBuffer := bytes.NewBuffer(secretBufSlice)
+	cmBufSlice := make([]byte, 0)
+	cmBuffer := bytes.NewBuffer(cmBufSlice)
 	if at == "oidc" {
 		cm, err := parser.GetStringAnnotation("auth-config", ing)
 
@@ -204,6 +206,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 				Reason: errors.Wrap(err, "invalid auth-secret-type in annotation, must be 'auth-file' or 'auth-map'"),
 			}
 		}
+		fileSHA = file.SHA1(passFile)
 	}
 
 	return &Config{
@@ -211,7 +214,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 		Realm:         realm,
 		File:          passFile,
 		Secured:       true,
-		FileSHA:       file.SHA1(passFile),
+		FileSHA:       fileSHA,
 		Secret:        secretName,
 		SecretType:    secretType,
 		SecretData:    secretBuffer.String(),
