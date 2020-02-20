@@ -30,9 +30,11 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/stretchr/testify/assert"
 	apiv1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/nginx"
 )
 
@@ -69,83 +71,127 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 		Servers:  servers,
 	}
 
-	n := &NGINXController{
-		runningConfig: &ingress.Configuration{
-			Backends: backends,
-			Servers:  servers,
-		},
-		cfg: &Configuration{},
-	}
-
-	newConfig := commonConfig
-	if !n.IsDynamicConfigurationEnough(newConfig) {
-		t.Errorf("When new config is same as the running config it should be deemed as dynamically configurable")
-	}
-
-	newConfig = &ingress.Configuration{
-		Backends: []*ingress.Backend{{Name: "another-backend-8081"}},
-		Servers:  []*ingress.Server{{Hostname: "myapp1.fake"}},
-	}
-	if n.IsDynamicConfigurationEnough(newConfig) {
-		t.Errorf("Expected to not be dynamically configurable when there's more than just backends change")
-	}
-
-	newConfig = &ingress.Configuration{
-		Backends: []*ingress.Backend{{Name: "a-backend-8080"}},
-		Servers:  servers,
-	}
-
-	if !n.IsDynamicConfigurationEnough(newConfig) {
-		t.Errorf("Expected to be dynamically configurable when only backends change")
-	}
-
-	newServers := []*ingress.Server{{
-		Hostname: "myapp1.fake",
-		Locations: []*ingress.Location{
-			{
-				Path:    "/",
-				Backend: "fakenamespace-myapp-80",
+	testCases := map[string]struct {
+		newConfig      *ingress.Configuration
+		expectedResult bool
+	}{
+		"No change in the config": {
+			newConfig: &ingress.Configuration{
+				Backends: backends,
+				Servers:  servers,
 			},
+			expectedResult: true,
 		},
-		SSLCert: &ingress.SSLCert{
-			PemCertKey: "fake-certificate",
+		"More than only backends change": {
+			newConfig: &ingress.Configuration{
+				Backends: []*ingress.Backend{{Name: "another-backend-8081"}},
+				Servers:  []*ingress.Server{{Hostname: "myapp1.fake"}},
+			},
+			expectedResult: false,
 		},
-	}}
+		"Only backends change": {
+			newConfig: &ingress.Configuration{
+				Backends: []*ingress.Backend{{Name: "a-backend-8080"}},
+				Servers:  servers,
+			},
+			expectedResult: true,
+		},
+		"dynamic certificates is enabled and a non-certificate field in servers is updated": {
+			newConfig: &ingress.Configuration{
+				Backends: backends,
+				Servers: []*ingress.Server{{
+					Hostname: "myapp1.fake",
+					Locations: []*ingress.Location{
+						{
+							Path:    "/",
+							Backend: "fakenamespace-myapp-80",
+						},
+					},
+					SSLCert: &ingress.SSLCert{
+						PemCertKey: "fake-certificate",
+					},
+				}},
+			},
+			expectedResult: false,
+		},
+		"only OIDC plugin config changes": {
+			newConfig: &ingress.Configuration{
+				Backends: backends,
+				Servers: []*ingress.Server{{
+					Hostname: "myapp.fake",
+					Locations: []*ingress.Location{
+						{
+							Path:    "/",
+							Backend: "fakenamespace-myapp-80",
+							BasicDigestAuth: auth.Config{
+								Type:      "oidc",
+								Secret:    "default/mysecret",
+								ConfigMap: "default/mycm",
+							},
+						},
+					},
+					SSLCert: &ingress.SSLCert{
+						PemCertKey: "fake-certificate",
+					},
+				}},
+			},
+			expectedResult: true,
+		},
+		"only SSL cert changes": {
+			newConfig: &ingress.Configuration{
+				Backends: backends,
+				Servers: []*ingress.Server{{
+					Hostname: "myapp.fake",
+					Locations: []*ingress.Location{
+						{
+							Path:    "/",
+							Backend: "fakenamespace-myapp-80",
+						},
+					},
+					SSLCert: &ingress.SSLCert{
+						PemCertKey: "new-fake-certificate",
+					},
+				}},
+			},
+			expectedResult: true,
+		},
+		"backend and SSL cert changes": {
+			newConfig: &ingress.Configuration{
+				Backends: []*ingress.Backend{{Name: "a-backend-8080"}},
+				Servers: []*ingress.Server{{
+					Hostname: "myapp.fake",
+					Locations: []*ingress.Location{
+						{
+							Path:    "/",
+							Backend: "fakenamespace-myapp-80",
+						},
+					},
+					SSLCert: &ingress.SSLCert{
+						PemCertKey: "new-fake-certificate",
+					},
+				}},
+			},
+			expectedResult: true,
+		},
+	}
 
-	newConfig = &ingress.Configuration{
-		Backends: backends,
-		Servers:  newServers,
-	}
-	if n.IsDynamicConfigurationEnough(newConfig) {
-		t.Errorf("Expected to not be dynamically configurable when dynamic certificates is enabled and a non-certificate field in servers is updated")
+	for name, tc := range testCases {
+		t.Run(name, func(*testing.T) {
+			n := &NGINXController{
+				runningConfig: &ingress.Configuration{
+					Backends: backends,
+					Servers:  servers,
+				},
+				cfg: &Configuration{},
+			}
+			origNewConfig := tc.newConfig
+			assert.Equal(t, tc.expectedResult, n.IsDynamicConfigurationEnough(tc.newConfig))
+			assert.Equal(t, commonConfig, n.runningConfig)
+			assert.Equal(t, origNewConfig, tc.newConfig)
+		})
+
 	}
 
-	newServers[0].Hostname = "myapp.fake"
-	newServers[0].SSLCert.PemCertKey = "new-fake-certificate"
-
-	newConfig = &ingress.Configuration{
-		Backends: backends,
-		Servers:  newServers,
-	}
-	if !n.IsDynamicConfigurationEnough(newConfig) {
-		t.Errorf("Expected to be dynamically configurable when only SSLCert changes")
-	}
-
-	newConfig = &ingress.Configuration{
-		Backends: []*ingress.Backend{{Name: "a-backend-8080"}},
-		Servers:  newServers,
-	}
-	if !n.IsDynamicConfigurationEnough(newConfig) {
-		t.Errorf("Expected to be dynamically configurable when backend and SSLCert changes")
-	}
-
-	if !n.runningConfig.Equal(commonConfig) {
-		t.Errorf("Expected running config to not change")
-	}
-
-	if !newConfig.Equal(&ingress.Configuration{Backends: []*ingress.Backend{{Name: "a-backend-8080"}}, Servers: newServers}) {
-		t.Errorf("Expected new config to not change")
-	}
 }
 
 func TestConfigureDynamically(t *testing.T) {

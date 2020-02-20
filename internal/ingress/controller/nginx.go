@@ -901,6 +901,9 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 			return err
 		}
 		err = configureOIDCPlugin(pcfg.Servers)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
