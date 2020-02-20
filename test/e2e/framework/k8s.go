@@ -61,7 +61,7 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 	return cm, nil
 }
 
-// EnsureIngress creates an Ingress object or returns it if it already exists.
+// EnsureIngress creates an Ingress object and retunrs it, throws error if it already exists.
 func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingress {
 	err := createIngressWithRetries(f.KubeClientSet, f.Namespace, ingress)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
@@ -80,7 +80,26 @@ func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingre
 	return ing
 }
 
-// EnsureService creates a Service object or returns it if it already exists.
+// UpdateIngress updates an Ingress object and returns the updated object.
+func (f *Framework) UpdateIngress(ingress *networking.Ingress) *networking.Ingress {
+	err := updateIngressWithRetries(f.KubeClientSet, f.Namespace, ingress)
+	assert.Nil(ginkgo.GinkgoT(), err, "updating ingress")
+
+	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(ingress.Name, metav1.GetOptions{})
+	assert.Nil(ginkgo.GinkgoT(), err, "getting ingress")
+	assert.NotNil(ginkgo.GinkgoT(), ing, "expected an ingress but none returned")
+
+	if ing.Annotations == nil {
+		ing.Annotations = make(map[string]string)
+	}
+
+	// updating an ingress requires a reload.
+	time.Sleep(5 * time.Second)
+
+	return ing
+}
+
+// EnsureService creates a Service object and retunrs it, throws error if it already exists.
 func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	err := createServiceWithRetries(f.KubeClientSet, f.Namespace, service)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating service")
@@ -92,7 +111,7 @@ func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	return s
 }
 
-// EnsureDeployment creates a Deployment object or returns it if it already exists.
+// EnsureDeployment creates a Deployment object and retunrs it, throws error if it already exists.
 func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Deployment {
 	err := createDeploymentWithRetries(f.KubeClientSet, f.Namespace, deployment)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating deployment")
@@ -225,8 +244,11 @@ func createDeploymentWithRetries(c kubernetes.Interface, namespace string, obj *
 	}
 	createFunc := func() (bool, error) {
 		_, err := c.AppsV1().Deployments(namespace).Create(obj)
-		if err == nil || k8sErrors.IsAlreadyExists(err) {
+		if err == nil {
 			return true, nil
+		}
+		if k8sErrors.IsAlreadyExists(err) {
+			return false, err
 		}
 		if isRetryableAPIError(err) {
 			return false, nil
@@ -243,8 +265,11 @@ func createSecretWithRetries(c kubernetes.Interface, namespace string, obj *v1.S
 	}
 	createFunc := func() (bool, error) {
 		_, err := c.CoreV1().Secrets(namespace).Create(obj)
-		if err == nil || k8sErrors.IsAlreadyExists(err) {
+		if err == nil {
 			return true, nil
+		}
+		if k8sErrors.IsAlreadyExists(err) {
+			return false, err
 		}
 		if isRetryableAPIError(err) {
 			return false, nil
@@ -260,8 +285,11 @@ func createServiceWithRetries(c kubernetes.Interface, namespace string, obj *v1.
 	}
 	createFunc := func() (bool, error) {
 		_, err := c.CoreV1().Services(namespace).Create(obj)
-		if err == nil || k8sErrors.IsAlreadyExists(err) {
+		if err == nil {
 			return true, nil
+		}
+		if k8sErrors.IsAlreadyExists(err) {
+			return false, err
 		}
 		if isRetryableAPIError(err) {
 			return false, nil
@@ -278,8 +306,11 @@ func createIngressWithRetries(c kubernetes.Interface, namespace string, obj *net
 	}
 	createFunc := func() (bool, error) {
 		_, err := c.NetworkingV1beta1().Ingresses(namespace).Create(obj)
-		if err == nil || k8sErrors.IsAlreadyExists(err) {
+		if err == nil {
 			return true, nil
+		}
+		if k8sErrors.IsAlreadyExists(err) {
+			return false, err
 		}
 		if isRetryableAPIError(err) {
 			return false, nil
@@ -288,6 +319,24 @@ func createIngressWithRetries(c kubernetes.Interface, namespace string, obj *net
 	}
 
 	return retryWithExponentialBackOff(createFunc)
+}
+
+func updateIngressWithRetries(c kubernetes.Interface, namespace string, obj *networking.Ingress) error {
+	if obj == nil {
+		return fmt.Errorf("Object provided to create is empty")
+	}
+	updateFunc := func() (bool, error) {
+		_, err := c.NetworkingV1beta1().Ingresses(namespace).Update(obj)
+		if err == nil {
+			return true, nil
+		}
+		if isRetryableAPIError(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("Failed to update object with non-retriable error: %v", err)
+	}
+
+	return retryWithExponentialBackOff(updateFunc)
 }
 
 const (
