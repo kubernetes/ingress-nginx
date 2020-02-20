@@ -1,0 +1,2115 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+        <link rel="canonical" href="https://kubernetes.github.io/ingress-nginx/e2e-tests/">
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.3">
+    
+    
+      
+        <title>e2e test suite for [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx/tree/master/) - NGINX Ingress Controller</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/application.adb8469c.css">
+      
+        <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#009688">
+      
+    
+    
+      <script src="../assets/javascripts/modernizr.86422ebf.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../assets/fonts/material-icons.css">
+    
+    
+      <link rel="stylesheet" href="../extra.css">
+    
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-118407822-1", "kubernetes.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="teal" data-md-color-accent="green">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#e2e-test-suite-for-nginx-ingress-controller" tabindex="0" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon">public</i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              NGINX Ingress Controller
+            </span>
+            <span class="md-header-nav__topic">
+              
+                e2e test suite for [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx/tree/master/)
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    kubernetes/ingress-nginx
+  </div>
+</a>
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+        
+
+<nav class="md-tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href=".." class="md-tabs__link">
+          Welcome
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../deploy/" class="md-tabs__link">
+          Deployment
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    
+    
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../user-guide/nginx-configuration/" class="md-tabs__link">
+          User guide
+        </a>
+      
+    </li>
+  
+
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../examples/" class="md-tabs__link">
+          Examples
+        </a>
+      
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+      
+      <main class="md-main" role="main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo">
+      
+        <i class="md-icon">public</i>
+      
+    </a>
+    NGINX Ingress Controller
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    kubernetes/ingress-nginx
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
+    
+    <label class="md-nav__link" for="nav-1">
+      Welcome
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-1">
+        Welcome
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href=".." title="Welcome" class="md-nav__link">
+      Welcome
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../how-it-works/" title="How it works" class="md-nav__link">
+      How it works
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../troubleshooting/" title="Troubleshooting" class="md-nav__link">
+      Troubleshooting
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../kubectl-plugin/" title="kubectl plugin" class="md-nav__link">
+      kubectl plugin
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../development/" title="Development" class="md-nav__link">
+      Development
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+    
+    <label class="md-nav__link" for="nav-2">
+      Deployment
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        Deployment
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../deploy/" title="Installation Guide" class="md-nav__link">
+      Installation Guide
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
+      Role Based Access Control (RBAC)
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../deploy/validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
+      Validating Webhook (admission controller)
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../deploy/upgrade/" title="Upgrade" class="md-nav__link">
+      Upgrade
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+    
+    <label class="md-nav__link" for="nav-3">
+      User guide
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-3">
+        User guide
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1">
+    
+    <label class="md-nav__link" for="nav-3-1">
+      NGINX Configuration
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-3-1">
+        NGINX Configuration
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/" title="Introduction" class="md-nav__link">
+      Introduction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/basic-usage/" title="Basic usage" class="md-nav__link">
+      Basic usage
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/annotations/" title="Annotations" class="md-nav__link">
+      Annotations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/configmap/" title="ConfigMap" class="md-nav__link">
+      ConfigMap
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/custom-template/" title="Custom NGINX template" class="md-nav__link">
+      Custom NGINX template
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/log-format/" title="Log format" class="md-nav__link">
+      Log format
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/cli-arguments/" title="Command line arguments" class="md-nav__link">
+      Command line arguments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/custom-errors/" title="Custom errors" class="md-nav__link">
+      Custom errors
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/default-backend/" title="Default backend" class="md-nav__link">
+      Default backend
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
+      Exposing TCP and UDP services
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/fcgi-services/" title="Exposing FCGI services" class="md-nav__link">
+      Exposing FCGI services
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/external-articles/" title="External Articles" class="md-nav__link">
+      External Articles
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/miscellaneous/" title="Miscellaneous" class="md-nav__link">
+      Miscellaneous
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/monitoring/" title="Prometheus and Grafana installation" class="md-nav__link">
+      Prometheus and Grafana installation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/multiple-ingress/" title="Multiple Ingress controllers" class="md-nav__link">
+      Multiple Ingress controllers
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/tls/" title="TLS/HTTPS" class="md-nav__link">
+      TLS/HTTPS
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
+    
+    <label class="md-nav__link" for="nav-3-13">
+      Third party addons
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-3-13">
+        Third party addons
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/third-party-addons/modsecurity/" title="ModSecurity Web Application Firewall" class="md-nav__link">
+      ModSecurity Web Application Firewall
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/third-party-addons/opentracing/" title="OpenTracing" class="md-nav__link">
+      OpenTracing
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+    
+    <label class="md-nav__link" for="nav-4">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-4">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/" title="Introduction" class="md-nav__link">
+      Introduction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/PREREQUISITES/" title="Prerequisites" class="md-nav__link">
+      Prerequisites
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/affinity/cookie/" title="Sticky Sessions" class="md-nav__link">
+      Sticky Sessions
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
+    
+    <label class="md-nav__link" for="nav-4-4">
+      Auth
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-4-4">
+        Auth
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/auth/basic/" title="Basic Authentication" class="md-nav__link">
+      Basic Authentication
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/auth/client-certs/" title="Client Certificate Authentication" class="md-nav__link">
+      Client Certificate Authentication
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/auth/external-auth/" title="External Basic Authentication" class="md-nav__link">
+      External Basic Authentication
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/auth/oauth-external-auth/" title="External OAUTH Authentication" class="md-nav__link">
+      External OAUTH Authentication
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
+    
+    <label class="md-nav__link" for="nav-4-5">
+      Customization
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-4-5">
+        Customization
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/configuration-snippets/" title="Configuration Snippets" class="md-nav__link">
+      Configuration Snippets
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/custom-configuration/" title="Custom Configuration" class="md-nav__link">
+      Custom Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/custom-errors/" title="Custom Errors" class="md-nav__link">
+      Custom Errors
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/custom-headers/" title="Custom Headers" class="md-nav__link">
+      Custom Headers
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/external-auth-headers/" title="External authentication" class="md-nav__link">
+      External authentication
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/ssl-dh-param/" title="Custom DH parameters for perfect forward secrecy" class="md-nav__link">
+      Custom DH parameters for perfect forward secrecy
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/sysctl/" title="Sysctl tuning" class="md-nav__link">
+      Sysctl tuning
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/docker-registry/" title="Docker registry" class="md-nav__link">
+      Docker registry
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/grpc/" title="gRPC" class="md-nav__link">
+      gRPC
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/multi-tls/" title="Multi TLS certificate termination" class="md-nav__link">
+      Multi TLS certificate termination
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/rewrite/" title="Rewrite" class="md-nav__link">
+      Rewrite
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/static-ip/" title="Static IPs" class="md-nav__link">
+      Static IPs
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/tls-termination/" title="TLS termination" class="md-nav__link">
+      TLS termination
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/psp/" title="Pod Security Policy (PSP)" class="md-nav__link">
+      Pod Security Policy (PSP)
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#default-backend-change-default-settings" class="md-nav__link">
+    [Default Backend] change default settings
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-backend" class="md-nav__link">
+    [Default Backend]
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-backend-custom-service" class="md-nav__link">
+    [Default Backend] custom service
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-backend-ssl" class="md-nav__link">
+    [Default Backend] SSL
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tcp-tcp-services" class="md-nav__link">
+    [TCP] tcp-services
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auth-" class="md-nav__link">
+    auth-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-" class="md-nav__link">
+    proxy-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#affinity-session-cookie-name" class="md-nav__link">
+    affinity session-cookie-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mirror-" class="md-nav__link">
+    mirror-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#canary-" class="md-nav__link">
+    canary-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#force-ssl-redirect" class="md-nav__link">
+    force-ssl-redirect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http2-push-preload" class="md-nav__link">
+    http2-push-preload
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-ssl-" class="md-nav__link">
+    proxy-ssl-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modsecurity-owasp" class="md-nav__link">
+    modsecurity owasp
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backend-protocol-grpc" class="md-nav__link">
+    backend-protocol - GRPC
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cors-" class="md-nav__link">
+    cors-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#influxdb-" class="md-nav__link">
+    influxdb-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-body-buffer-size" class="md-nav__link">
+    client-body-buffer-size
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-backend_1" class="md-nav__link">
+    default-backend
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connection-proxy-header" class="md-nav__link">
+    connection-proxy-header
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upstream-vhost" class="md-nav__link">
+    upstream-vhost
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-http-errors" class="md-nav__link">
+    custom-http-errors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-snippet" class="md-nav__link">
+    server-snippet
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rewrite-target-use-regex-enable-rewrite-log" class="md-nav__link">
+    rewrite-target use-regex enable-rewrite-log
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app-root" class="md-nav__link">
+    app-root
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whitelist-source-range" class="md-nav__link">
+    whitelist-source-range
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enable-access-log-enable-rewrite-log" class="md-nav__link">
+    enable-access-log enable-rewrite-log
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#x-forwarded-prefix" class="md-nav__link">
+    x-forwarded-prefix
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-snippet" class="md-nav__link">
+    configuration-snippet
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backend-protocol-fastcgi" class="md-nav__link">
+    backend-protocol - FastCGI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-to-www-redirect" class="md-nav__link">
+    from-to-www-redirect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permanen-redirect-permanen-redirect-code" class="md-nav__link">
+    permanen-redirect permanen-redirect-code
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upstream-hash-by-" class="md-nav__link">
+    upstream-hash-by-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backend-protocol" class="md-nav__link">
+    backend-protocol
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#satisfy" class="md-nav__link">
+    satisfy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-alias" class="md-nav__link">
+    server-alias
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssl-ciphers" class="md-nav__link">
+    ssl-ciphers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auth-tls-" class="md-nav__link">
+    auth-tls-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status-status-update" class="md-nav__link">
+    [Status] status update
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debug-cli" class="md-nav__link">
+    Debug CLI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-leak-dynamic-certificates" class="md-nav__link">
+    [Memory Leak] Dynamic Certificates
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-request-smuggling" class="md-nav__link">
+    [Security] request smuggling
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssl-flag-default-ssl-certificate" class="md-nav__link">
+    [SSL] [Flag] default-ssl-certificate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lua-lua-shared-dicts" class="md-nav__link">
+    [Lua] lua-shared-dicts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-tokens" class="md-nav__link">
+    server-tokens
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-proxy-protocol" class="md-nav__link">
+    use-proxy-protocol
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flag-custom-http-and-https-ports" class="md-nav__link">
+    [Flag] custom HTTP and HTTPS ports
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-no-auth-locations" class="md-nav__link">
+    [Security] no-auth-locations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamic-proxy_host" class="md-nav__link">
+    Dynamic $proxy_host
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-pod-security-policies" class="md-nav__link">
+    [Security] Pod Security Policies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geoip2" class="md-nav__link">
+    Geoip2
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-pod-security-policies-with-volumes" class="md-nav__link">
+    [Security] Pod Security Policies with volumes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enable-multi-accept" class="md-nav__link">
+    enable-multi-accept
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#log-format-" class="md-nav__link">
+    log-format-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flag-ingress-class" class="md-nav__link">
+    [Flag] ingress-class
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-global-auth-url" class="md-nav__link">
+    [Security] global-auth-url
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-block-" class="md-nav__link">
+    [Security] block-*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-forwarded-headers" class="md-nav__link">
+    use-forwarded-headers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-headers" class="md-nav__link">
+    add-headers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hash-size" class="md-nav__link">
+    hash size
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keep-alive-keep-alive-requests" class="md-nav__link">
+    keep-alive keep-alive-requests
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flag-disable-catch-all" class="md-nav__link">
+    [Flag] disable-catch-all
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-snippet" class="md-nav__link">
+    main-snippet
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssl-tls-protocols-ciphers-and-headers" class="md-nav__link">
+    [SSL] TLS protocols, ciphers and headers)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configmap-change" class="md-nav__link">
+    Configmap change
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-modsecurity-snippet" class="md-nav__link">
+    [Security] modsecurity-snippet
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reuse-port" class="md-nav__link">
+    reuse-port
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shutdown-graceful-shutdown-with-pending-request" class="md-nav__link">
+    [Shutdown] Graceful shutdown with pending request
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shutdown-ingress-controller" class="md-nav__link">
+    [Shutdown] ingress controller
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#service-backend-status-code-503" class="md-nav__link">
+    [Service] backend status code 503
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#service-type-externalname" class="md-nav__link">
+    [Service] Type ExternalName
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/e2e-tests.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="e2e-test-suite-for-nginx-ingress-controller">e2e test suite for <a href="https://github.com/kubernetes/ingress-nginx/tree/master/">NGINX Ingress Controller</a><a class="headerlink" href="#e2e-test-suite-for-nginx-ingress-controller" title="Permanent link"> ¶</a></h1>
+<h3 id="default-backend-change-default-settings"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/with_hosts.go#L31">[Default Backend] change default settings</a><a class="headerlink" href="#default-backend-change-default-settings" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/with_hosts.go#L39">should apply the annotation to the default backend</a></li>
+</ul>
+<h3 id="default-backend"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L29">[Default Backend]</a><a class="headerlink" href="#default-backend" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L32">should return 404 sending requests when only a default backend is running</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L87">enables access logging for default backend</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L101">disables access logging for default backend</a></li>
+</ul>
+<h3 id="default-backend-custom-service"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/custom_default_backend.go#L32">[Default Backend] custom service</a><a class="headerlink" href="#default-backend-custom-service" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/custom_default_backend.go#L35">uses custom default backend that returns 200 as status code</a></li>
+</ul>
+<h3 id="default-backend-ssl"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/ssl.go#L26">[Default Backend] SSL</a><a class="headerlink" href="#default-backend-ssl" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/ssl.go#L29">should return a self generated SSL certificate</a></li>
+</ul>
+<h3 id="tcp-tcp-services"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/tcpudp/tcp.go#L35">[TCP] tcp-services</a><a class="headerlink" href="#tcp-tcp-services" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/tcpudp/tcp.go#L38">should expose a TCP service</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/tcpudp/tcp.go#L92">should expose an ExternalName TCP service</a></li>
+</ul>
+<h3 id="auth-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L36">auth-*</a><a class="headerlink" href="#auth-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L43">should return status code 200 when no authentication is configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L62">should return status code 503 when authentication is configured with an invalid secret</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L86">should return status code 401 when authentication is configured but Authorization header is not configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L113">should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L141">should return status code 200 when authentication is configured and Authorization header is sent</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L168">should return status code 200 when authentication is configured with a map and Authorization header is sent</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L196">should return status code 401 when authentication is configured with invalid content and Authorization header is sent</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L235">should set snippet 'proxy_set_header My-Custom-Header 42;' when external auth is configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L253">should not set snippet 'proxy_set_header My-Custom-Header 42;' when external auth is not configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L270">should set 'proxy_set_header My-Custom-Header 42;' when auth-headers are set</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L291">should set cache_key when external auth cache is configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L313">retains cookie set by external authentication server</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L382">should return status code 200 when signed in</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L391">should redirect to signin url when not signed in</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L447">should return status code 200 when signed in after auth backend is deleted </a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L466">should deny login for different location on same server</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L494">should deny login for different servers</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L522">should redirect to signin url when not signed in</a></li>
+</ul>
+<h3 id="proxy-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L27">proxy-*</a><a class="headerlink" href="#proxy-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L35">should set proxy_redirect to off</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L50">should set proxy_redirect to default</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L65">should set proxy_redirect to hello.com goodbye.com</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L80">should set proxy client-max-body-size to 8m</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L94">should not set proxy client-max-body-size to incorrect value</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L108">should set valid proxy timeouts</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L126">should not set invalid proxy timeouts</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L144">should turn on proxy-buffering</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L163">should turn off proxy-request-buffering</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L177">should build proxy next upstream</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L195">should build proxy next upstream using configmap values</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L214">should setup proxy cookies</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L230">should change the default proxy HTTP version</a></li>
+</ul>
+<h3 id="affinity-session-cookie-name"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L34">affinity session-cookie-name</a><a class="headerlink" href="#affinity-session-cookie-name" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L41">should set sticky cookie SERVERID</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L64">should change cookie name on ingress definition change</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L100">should set the path to /something on the generated cookie</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L123">does not set the path to / on the generated cookie if there's more than one rule referring to the same backend</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L185">should set cookie with expires</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L217">should work with use-regex annotation and session-cookie-path</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L242">should warn user when use-regex is true and session-cookie-path is not set</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L269">should not set affinity across all server locations when using separate ingresses</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L301">should set sticky cookie without host</a></li>
+</ul>
+<h3 id="mirror-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/mirror.go#L28">mirror-*</a><a class="headerlink" href="#mirror-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/mirror.go#L36">should set mirror-target to http://localhost/mirror</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/mirror.go#L51">should set mirror-target to https://test.env.com/$request_uri</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/mirror.go#L67">should disable mirror-request-body</a></li>
+</ul>
+<h3 id="canary-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L35">canary-*</a><a class="headerlink" href="#canary-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L47">should response with a 200 status from the mainline upstream when requests are made to the mainline ingress</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L79">should return 404 status for requests to the canary if no matching ingress is found</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L106">should return the correct status codes when endpoints are unavailable</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L160">should route requests to the correct upstream if mainline ingress is created before the canary ingress</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L205">should route requests to the correct upstream if mainline ingress is created after the canary ingress</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L249">should route requests to the correct upstream if the mainline ingress is modified</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L306">should route requests to the correct upstream if the canary ingress is modified</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L361">should route requests to the correct upstream</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L415">should route requests to the correct upstream</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L479">should route requests to the correct upstream</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L518">should route requests to the correct upstream</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L573">should route requests to the correct upstream</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L629">should not use canary as a catch-all server</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L657">should not use canary with domain as a server</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/canary.go#L681">does not crash when canary ingress has multiple paths to the same non-matching backend</a></li>
+</ul>
+<h3 id="force-ssl-redirect"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/forcesslredirect.go#L27">force-ssl-redirect</a><a class="headerlink" href="#force-ssl-redirect" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/forcesslredirect.go#L34">should redirect to https</a></li>
+</ul>
+<h3 id="http2-push-preload"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/http2pushpreload.go#L27">http2-push-preload</a><a class="headerlink" href="#http2-push-preload" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/http2pushpreload.go#L34">enable the http2-push-preload directive</a></li>
+</ul>
+<h3 id="proxy-ssl-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L29">proxy-ssl-*</a><a class="headerlink" href="#proxy-ssl-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L36">should set valid proxy-ssl-secret</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L51">should set valid proxy-ssl-secret, proxy-ssl-verify to on, and proxy-ssl-verify-depth to 2</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L68">should set valid proxy-ssl-secret, proxy-ssl-ciphers to HIGH:!AES</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L84">should set valid proxy-ssl-secret, proxy-ssl-protocols</a></li>
+</ul>
+<h3 id="modsecurity-owasp"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/modsecurity.go#L26">modsecurity owasp</a><a class="headerlink" href="#modsecurity-owasp" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/modsecurity.go#L33">should enable modsecurity</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/modsecurity.go#L51">should enable modsecurity with transaction ID and OWASP rules</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/modsecurity.go#L72">should disable modsecurity</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/modsecurity.go#L89">should enable modsecurity with snippet</a></li>
+</ul>
+<h3 id="backend-protocol-grpc"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/grpc.go#L38">backend-protocol - GRPC</a><a class="headerlink" href="#backend-protocol-grpc" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/grpc.go#L41">should use grpc_pass in the configuration file</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/grpc.go#L66">should return OK for service with backend protocol GRPC</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/grpc.go#L124">should return OK for service with backend protocol GRPCS</a></li>
+</ul>
+<h3 id="cors-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L28">cors-*</a><a class="headerlink" href="#cors-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L35">should enable cors</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L60">should set cors methods to only allow POST, GET</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L76">should set cors max-age</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L92">should disable cors allow credentials</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L108">should allow origin for cors</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L124">should allow headers for cors</a></li>
+</ul>
+<h3 id="influxdb-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/influxdb.go#L38">influxdb-*</a><a class="headerlink" href="#influxdb-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/influxdb.go#L47">should send the request metric to the influxdb server</a></li>
+</ul>
+<h3 id="client-body-buffer-size"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/clientbodybuffersize.go#L27">client-body-buffer-size</a><a class="headerlink" href="#client-body-buffer-size" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/clientbodybuffersize.go#L34">should set client_body_buffer_size to 1000</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/clientbodybuffersize.go#L49">should set client_body_buffer_size to 1K</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/clientbodybuffersize.go#L64">should set client_body_buffer_size to 1k</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/clientbodybuffersize.go#L79">should set client_body_buffer_size to 1m</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/clientbodybuffersize.go#L94">should set client_body_buffer_size to 1M</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/clientbodybuffersize.go#L109">should not set client_body_buffer_size to invalid 1b</a></li>
+</ul>
+<h3 id="default-backend_1"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/default_backend.go#L29">default-backend</a><a class="headerlink" href="#default-backend_1" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/default_backend.go#L37">should use a custom default backend as upstream</a></li>
+</ul>
+<h3 id="connection-proxy-header"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/connection.go#L29">connection-proxy-header</a><a class="headerlink" href="#connection-proxy-header" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/connection.go#L36">set connection header to keep-alive</a></li>
+</ul>
+<h3 id="upstream-vhost"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/upstreamvhost.go#L27">upstream-vhost</a><a class="headerlink" href="#upstream-vhost" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/upstreamvhost.go#L34">set host to upstreamvhost.bar.com</a></li>
+</ul>
+<h3 id="custom-http-errors"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/customhttperrors.go#L34">custom-http-errors</a><a class="headerlink" href="#custom-http-errors" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/customhttperrors.go#L41">configures Nginx correctly</a></li>
+</ul>
+<h3 id="server-snippet"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/serversnippet.go#L27">server-snippet</a><a class="headerlink" href="#server-snippet" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/serversnippet.go#L34">add valid directives to server via server snippet</a></li>
+</ul>
+<h3 id="rewrite-target-use-regex-enable-rewrite-log"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L30">rewrite-target use-regex enable-rewrite-log</a><a class="headerlink" href="#rewrite-target-use-regex-enable-rewrite-log" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L37">should write rewrite logs</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L66">should use correct longest path match</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L110">should use ~* location modifier if regex annotation is present</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L156">should fail to use longest match for documented warning</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L188">should allow for custom rewrite parameters</a></li>
+</ul>
+<h3 id="app-root"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/approot.go#L28">app-root</a><a class="headerlink" href="#app-root" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/approot.go#L35">should redirect to /foo</a></li>
+</ul>
+<h3 id="whitelist-source-range"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/ipwhitelist.go#L26">whitelist-source-range</a><a class="headerlink" href="#whitelist-source-range" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/ipwhitelist.go#L33">should set valid ip whitelist range</a></li>
+</ul>
+<h3 id="enable-access-log-enable-rewrite-log"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/log.go#L27">enable-access-log enable-rewrite-log</a><a class="headerlink" href="#enable-access-log-enable-rewrite-log" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/log.go#L34">set access_log off</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/log.go#L49">set rewrite_log on</a></li>
+</ul>
+<h3 id="x-forwarded-prefix"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/xforwardedprefix.go#L28">x-forwarded-prefix</a><a class="headerlink" href="#x-forwarded-prefix" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/xforwardedprefix.go#L35">should set the X-Forwarded-Prefix to the annotation value</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/xforwardedprefix.go#L57">should not add X-Forwarded-Prefix if the annotation value is empty</a></li>
+</ul>
+<h3 id="configuration-snippet"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/snippet.go#L27">configuration-snippet</a><a class="headerlink" href="#configuration-snippet" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/snippet.go#L34"> in all locations</a></li>
+</ul>
+<h3 id="backend-protocol-fastcgi"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fastcgi.go#L31">backend-protocol - FastCGI</a><a class="headerlink" href="#backend-protocol-fastcgi" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fastcgi.go#L38">should use fastcgi_pass in the configuration file</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fastcgi.go#L55">should add fastcgi_index in the configuration file</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fastcgi.go#L72">should add fastcgi_param in the configuration file</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fastcgi.go#L105">should return OK for service with backend protocol FastCGI</a></li>
+</ul>
+<h3 id="from-to-www-redirect"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L32">from-to-www-redirect</a><a class="headerlink" href="#from-to-www-redirect" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L39">should redirect from www HTTP to HTTP</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L65">should redirect from www HTTPS to HTTPS</a></li>
+</ul>
+<h3 id="permanen-redirect-permanen-redirect-code"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/redirect.go#L30">permanen-redirect permanen-redirect-code</a><a class="headerlink" href="#permanen-redirect-permanen-redirect-code" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/redirect.go#L33">should respond with a standard redirect code</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/redirect.go#L62">should respond with a custom redirect code</a></li>
+</ul>
+<h3 id="upstream-hash-by-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/upstreamhashby.go#L76">upstream-hash-by-*</a><a class="headerlink" href="#upstream-hash-by-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/upstreamhashby.go#L83">should connect to the same pod</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/upstreamhashby.go#L92">should connect to the same subset of pods</a></li>
+</ul>
+<h3 id="backend-protocol"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/backendprotocol.go#L27">backend-protocol</a><a class="headerlink" href="#backend-protocol" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/backendprotocol.go#L34">should set backend protocol to https:// and use proxy_pass</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/backendprotocol.go#L49">should set backend protocol to grpc:// and use grpc_pass</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/backendprotocol.go#L64">should set backend protocol to grpcs:// and use grpc_pass</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/backendprotocol.go#L79">should set backend protocol to '' and use fastcgi_pass</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/backendprotocol.go#L94">should set backend protocol to '' and use ajp_pass</a></li>
+</ul>
+<h3 id="satisfy"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/satisfy.go#L34">satisfy</a><a class="headerlink" href="#satisfy" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/satisfy.go#L41">should configure satisfy directive correctly</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/satisfy.go#L83">should allow multiple auth with satisfy any</a></li>
+</ul>
+<h3 id="server-alias"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/alias.go#L29">server-alias</a><a class="headerlink" href="#server-alias" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/alias.go#L36">should return status code 200 for host 'foo' and 404 for 'bar'</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/alias.go#L62">should return status code 200 for host 'foo' and 'bar'</a></li>
+</ul>
+<h3 id="ssl-ciphers"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/sslciphers.go#L27">ssl-ciphers</a><a class="headerlink" href="#ssl-ciphers" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/sslciphers.go#L34">should change ssl ciphers</a></li>
+</ul>
+<h3 id="auth-tls-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/authtls.go#L30">auth-tls-*</a><a class="headerlink" href="#auth-tls-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/authtls.go#L37">should set valid auth-tls-secret</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/authtls.go#L73">should set valid auth-tls-secret, sslVerify to off, and sslVerifyDepth to 2</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/authtls.go#L103">should set valid auth-tls-secret, pass certificate to upstream, and error page</a></li>
+</ul>
+<h3 id="status-status-update"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/status/update.go#L37">[Status] status update</a><a class="headerlink" href="#status-status-update" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/status/update.go#L42">should update status field after client-go reconnection</a></li>
+</ul>
+<h3 id="debug-cli"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/dbg/main.go#L29">Debug CLI</a><a class="headerlink" href="#debug-cli" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/dbg/main.go#L37">should list the backend servers</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/dbg/main.go#L56">should get information for a specific backend server</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/dbg/main.go#L85">should produce valid JSON for /dbg general</a></li>
+</ul>
+<h3 id="memory-leak-dynamic-certificates"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/leaks/lua_ssl.go#L34">[Memory Leak] Dynamic Certificates</a><a class="headerlink" href="#memory-leak-dynamic-certificates" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/leaks/lua_ssl.go#L41">should not leak memory from ingress SSL certificates or configuration updates</a></li>
+</ul>
+<h3 id="security-request-smuggling"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/security/request_smuggling.go#L32">[Security] request smuggling</a><a class="headerlink" href="#security-request-smuggling" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/security/request_smuggling.go#L39">should not return body content from error_page</a></li>
+</ul>
+<h3 id="ssl-flag-default-ssl-certificate"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/default_ssl_certificate.go#L31">[SSL] [Flag] default-ssl-certificate</a><a class="headerlink" href="#ssl-flag-default-ssl-certificate" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/default_ssl_certificate.go#L63">uses default ssl certificate for catch-all ingress</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/default_ssl_certificate.go#L79">uses default ssl certificate for host based ingress when configured certificate does not match host</a></li>
+</ul>
+<h3 id="lua-lua-shared-dicts"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/lua_shared_dicts.go#L26">[Lua] lua-shared-dicts</a><a class="headerlink" href="#lua-lua-shared-dicts" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/lua_shared_dicts.go#L29">configures lua shared dicts</a></li>
+</ul>
+<h3 id="server-tokens"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/server_tokens.go#L30">server-tokens</a><a class="headerlink" href="#server-tokens" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/server_tokens.go#L38">should not exists Server header in the response</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/server_tokens.go#L50">should exists Server header in the response when is enabled</a></li>
+</ul>
+<h3 id="use-proxy-protocol"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L31">use-proxy-protocol</a><a class="headerlink" href="#use-proxy-protocol" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L41">should respect port passed by the PROXY Protocol</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L74">should respect proto passed by the PROXY Protocol server port</a></li>
+</ul>
+<h3 id="flag-custom-http-and-https-ports"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/listen_nondefault_ports.go#L31">[Flag] custom HTTP and HTTPS ports</a><a class="headerlink" href="#flag-custom-http-and-https-ports" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/listen_nondefault_ports.go#L47">should set X-Forwarded-Port headers accordingly when listening on a non-default HTTP port</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/listen_nondefault_ports.go#L69">should set X-Forwarded-Port header to 443</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/listen_nondefault_ports.go#L99">should set the X-Forwarded-Port header to 443</a></li>
+</ul>
+<h3 id="security-no-auth-locations"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/no_auth_locations.go#L34">[Security] no-auth-locations</a><a class="headerlink" href="#security-no-auth-locations" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/no_auth_locations.go#L55">should return status code 401 when accessing '/' unauthentication</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/no_auth_locations.go#L69">should return status code 200 when accessing '/' authentication</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/no_auth_locations.go#L83">should return status code 200 when accessing '/noauth' unauthenticated</a></li>
+</ul>
+<h3 id="dynamic-proxy_host"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_host.go#L28">Dynamic $proxy_host</a><a class="headerlink" href="#dynamic-proxy_host" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_host.go#L36">should exist a proxy_host</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_host.go#L57">should exist a proxy_host using the upstream-vhost annotation value</a></li>
+</ul>
+<h3 id="security-pod-security-policies"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/pod_security_policy.go#L39">[Security] Pod Security Policies</a><a class="headerlink" href="#security-pod-security-policies" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/pod_security_policy.go#L78">should be running with a Pod Security Policy</a></li>
+</ul>
+<h3 id="geoip2"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/geoip2.go#L29">Geoip2</a><a class="headerlink" href="#geoip2" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/geoip2.go#L38">should only allow requests from specific countries</a></li>
+</ul>
+<h3 id="security-pod-security-policies-with-volumes"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/pod_security_policy_volumes.go#L35">[Security] Pod Security Policies with volumes</a><a class="headerlink" href="#security-pod-security-policies-with-volumes" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/pod_security_policy_volumes.go#L38">should be running with a Pod Security Policy</a></li>
+</ul>
+<h3 id="enable-multi-accept"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/multi_accept.go#L27">enable-multi-accept</a><a class="headerlink" href="#enable-multi-accept" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/multi_accept.go#L31">should be enabled by default</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/multi_accept.go#L39">should be enabled when set to true</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/multi_accept.go#L49">should be disabled when set to false</a></li>
+</ul>
+<h3 id="log-format-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/log-format.go#L28">log-format-*</a><a class="headerlink" href="#log-format-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/log-format.go#L40">should disable the log-format-escape-json by default</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/log-format.go#L47">should enable the log-format-escape-json</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/log-format.go#L55">should disable the log-format-escape-json</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/log-format.go#L66">log-format-escape-json enabled</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/log-format.go#L89">log-format-escape-json disabled</a></li>
+</ul>
+<h3 id="flag-ingress-class"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L32">[Flag] ingress-class</a><a class="headerlink" href="#flag-ingress-class" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L41">should ignore Ingress with class</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L86">should ignore Ingress with no class</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L120">should delete Ingress when class is removed</a></li>
+</ul>
+<h3 id="security-global-auth-url"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L32">[Security] global-auth-url</a><a class="headerlink" href="#security-global-auth-url" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L83">should return status code 401 when request any protected service</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L100">should return status code 200 when request whitelisted (via no-auth-locations) service and 401 when request protected service</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L120">should return status code 200 when request whitelisted (via ingress annotation) service and 401 when request protected service</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L149">should still return status code 200 after auth backend is deleted using cache </a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L190">should proxy_method method when global-auth-method is configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L203">should add custom error page when global-auth-signin url is configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L216">should add auth headers when global-auth-response-headers is configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L230">should set request-redirect when global-auth-request-redirect is configured</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L243">should set snippet when global external auth is configured</a></li>
+</ul>
+<h3 id="security-block-"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_access_block.go#L28">[Security] block-*</a><a class="headerlink" href="#security-block-" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_access_block.go#L38">should block CIDRs defined in the ConfigMap</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_access_block.go#L55">should block User-Agents defined in the ConfigMap</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_access_block.go#L88">should block Referers defined in the ConfigMap</a></li>
+</ul>
+<h3 id="use-forwarded-headers"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/forwarded_headers.go#L30">use-forwarded-headers</a><a class="headerlink" href="#use-forwarded-headers" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/forwarded_headers.go#L40">should trust X-Forwarded headers when setting is true</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/forwarded_headers.go#L89">should not trust X-Forwarded headers when setting is false</a></li>
+</ul>
+<h3 id="add-headers"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/custom_header.go#L30">add-headers</a><a class="headerlink" href="#add-headers" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/custom_header.go#L40">Add a custom header</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/custom_header.go#L65">Add multiple custom headers</a></li>
+</ul>
+<h3 id="hash-size"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/hash-size.go#L27">hash size</a><a class="headerlink" href="#hash-size" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/hash-size.go#L40">should set server_names_hash_bucket_size</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/hash-size.go#L48">should set server_names_hash_max_size</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/hash-size.go#L60">should set proxy-headers-hash-bucket-size</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/hash-size.go#L68">should set proxy-headers-hash-max-size</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/hash-size.go#L80">should set variables-hash-bucket-size</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/hash-size.go#L88">should set variables-hash-max-size</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/hash-size.go#L100">should set vmap-hash-bucket-size</a></li>
+</ul>
+<h3 id="keep-alive-keep-alive-requests"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/keep-alive.go#L27">keep-alive keep-alive-requests</a><a class="headerlink" href="#keep-alive-keep-alive-requests" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/keep-alive.go#L38">should set keepalive_timeout</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/keep-alive.go#L46">should set keepalive_requests</a></li>
+</ul>
+<h3 id="flag-disable-catch-all"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L32">[Flag] disable-catch-all</a><a class="headerlink" href="#flag-disable-catch-all" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L50">should ignore catch all Ingress</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L69">should delete Ingress updated to catch-all</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L107">should allow Ingress with both a default backend and rules</a></li>
+</ul>
+<h3 id="main-snippet"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/main_snippet.go#L27">main-snippet</a><a class="headerlink" href="#main-snippet" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/main_snippet.go#L31">should add value of main-snippet setting to nginx config</a></li>
+</ul>
+<h3 id="ssl-tls-protocols-ciphers-and-headers"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L31">[SSL] TLS protocols, ciphers and headers)</a><a class="headerlink" href="#ssl-tls-protocols-ciphers-and-headers" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L40">should configure TLS protocol</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L96">should configure HSTS policy header</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L156">should not use ports during the HTTP to HTTPS redirection</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L174">should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection</a></li>
+</ul>
+<h3 id="configmap-change"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/configmap_change.go#L29">Configmap change</a><a class="headerlink" href="#configmap-change" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/configmap_change.go#L36">should reload after an update in the configuration</a></li>
+</ul>
+<h3 id="security-modsecurity-snippet"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/modsecurity_snippet.go#L27">[Security] modsecurity-snippet</a><a class="headerlink" href="#security-modsecurity-snippet" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/modsecurity_snippet.go#L30">should add value of modsecurity-snippet setting to nginx config</a></li>
+</ul>
+<h3 id="reuse-port"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/reuse-port.go#L27">reuse-port</a><a class="headerlink" href="#reuse-port" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/reuse-port.go#L38">reuse port should be enabled by default</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/reuse-port.go#L44">reuse port should be disabled</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/reuse-port.go#L52">reuse port should be enabled</a></li>
+</ul>
+<h3 id="shutdown-graceful-shutdown-with-pending-request"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/slow_requests.go#L29">[Shutdown] Graceful shutdown with pending request</a><a class="headerlink" href="#shutdown-graceful-shutdown-with-pending-request" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/slow_requests.go#L37">should let slow requests finish before shutting down</a></li>
+</ul>
+<h3 id="shutdown-ingress-controller"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L31">[Shutdown] ingress controller</a><a class="headerlink" href="#shutdown-ingress-controller" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L42">should shutdown in less than 60 secons without pending connections</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L69">should shutdown after waiting 60 seconds for pending connections to be closed</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L133">should shutdown after waiting 150 seconds for pending connections to be closed</a></li>
+</ul>
+<h3 id="service-backend-status-code-503"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_backend.go#L32">[Service] backend status code 503</a><a class="headerlink" href="#service-backend-status-code-503" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_backend.go#L35">should return 503 when backend service does not exist</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_backend.go#L53">should return 503 when all backend service endpoints are unavailable</a></li>
+</ul>
+<h3 id="service-type-externalname"><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L32">[Service] Type ExternalName</a><a class="headerlink" href="#service-type-externalname" title="Permanent link"> ¶</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L35">works with external name set to incomplete fdqn</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L68">should return 200 for service type=ExternalName without a port defined</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L99">should return 200 for service type=ExternalName with a port defined</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L137">should return status 502 for service type=ExternalName with an invalid host</a></li>
+<li><a href="https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L168">should return 200 for service type=ExternalName using a port name</a></li>
+</ul>
+                
+                  
+                
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs</a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../assets/javascripts/application.c33a9706.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
+      
+    
+  </body>
+</html>
