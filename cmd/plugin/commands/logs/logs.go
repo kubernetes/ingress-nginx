@@ -31,18 +31,19 @@ import (
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	o := logsFlags{}
-	var pod, deployment *string
+	var pod, deployment, selector *string
 
 	cmd := &cobra.Command{
 		Use:   "logs",
 		Short: "Get the kubernetes logs for an ingress-nginx pod",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			util.PrintError(logs(flags, *pod, *deployment, o))
+			util.PrintError(logs(flags, *pod, *deployment, *selector, o))
 			return nil
 		},
 	}
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
+	selector = util.AddSelectorFlag(cmd)
 
 	cmd.Flags().BoolVarP(&o.Follow, "follow", "f", o.Follow, "Specify if the logs should be streamed.")
 	cmd.Flags().BoolVar(&o.Timestamps, "timestamps", o.Timestamps, "Include timestamps on each line in the log output")
@@ -51,7 +52,6 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd.Flags().Int64Var(&o.Tail, "tail", o.Tail, "Lines of recent log file to display. Defaults to -1 with no selector, showing all log lines otherwise 10, if a selector is provided.")
 	cmd.Flags().StringVar(&o.SinceTime, "since-time", o.SinceTime, "Only return logs after a specific date (RFC3339). Defaults to all logs. Only one of since-time / since may be used.")
 	cmd.Flags().StringVar(&o.SinceSeconds, "since", o.SinceSeconds, "Only return logs newer than a relative duration like 5s, 2m, or 3h. Defaults to all logs. Only one of since-time / since may be used.")
-	cmd.Flags().StringVarP(&o.Selector, "selector", "l", o.Selector, "Selector (label query) to filter on.")
 
 	return cmd
 }
@@ -90,15 +90,12 @@ func (o *logsFlags) toStrings() []string {
 	if o.Tail != 0 {
 		r = append(r, "--tail", fmt.Sprintf("%v", o.Tail))
 	}
-	if o.Selector != "" {
-		r = append(r, "--selector", o.Selector)
-	}
 
 	return r
 }
 
-func logs(flags *genericclioptions.ConfigFlags, podName string, deployment string, opts logsFlags) error {
-	pod, err := request.ChoosePod(flags, podName, deployment)
+func logs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, opts logsFlags) error {
+	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err
 	}

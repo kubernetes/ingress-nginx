@@ -30,7 +30,7 @@ import (
 
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
-	var pod, deployment *string
+	var pod, deployment, selector *string
 	cmd := &cobra.Command{
 		Use:   "backends",
 		Short: "Inspect the dynamic backend information of an ingress-nginx instance",
@@ -47,20 +47,22 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 				return fmt.Errorf("--list and --backend cannot both be specified")
 			}
 
-			util.PrintError(backends(flags, *pod, *deployment, backend, onlyList))
+			util.PrintError(backends(flags, *pod, *deployment, *selector, backend, onlyList))
 			return nil
 		},
 	}
 
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
+	selector = util.AddSelectorFlag(cmd)
+
 	cmd.Flags().String("backend", "", "Output only the information for the given backend")
 	cmd.Flags().Bool("list", false, "Output a newline-separated list of backend names")
 
 	return cmd
 }
 
-func backends(flags *genericclioptions.ConfigFlags, podName string, deployment string, backend string, onlyList bool) error {
+func backends(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, backend string, onlyList bool) error {
 	var command []string
 	if onlyList {
 		command = []string{"/dbg", "backends", "list"}
@@ -70,7 +72,7 @@ func backends(flags *genericclioptions.ConfigFlags, podName string, deployment s
 		command = []string{"/dbg", "backends", "all"}
 	}
 
-	pod, err := request.ChoosePod(flags, podName, deployment)
+	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err
 	}

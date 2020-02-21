@@ -30,7 +30,7 @@ import (
 
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
-	var pod, deployment *string
+	var pod, deployment, selector *string
 	cmd := &cobra.Command{
 		Use:   "certs",
 		Short: "Output the certificate data stored in an ingress-nginx pod",
@@ -40,7 +40,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 				return err
 			}
 
-			util.PrintError(certs(flags, *pod, *deployment, host))
+			util.PrintError(certs(flags, *pod, *deployment, *selector, host))
 			return nil
 		},
 	}
@@ -49,14 +49,15 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cobra.MarkFlagRequired(cmd.Flags(), "host")
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
+	selector = util.AddSelectorFlag(cmd)
 
 	return cmd
 }
 
-func certs(flags *genericclioptions.ConfigFlags, podName string, deployment string, host string) error {
+func certs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, host string) error {
 	command := []string{"/dbg", "certs", "get", host}
 
-	pod, err := request.ChoosePod(flags, podName, deployment)
+	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err
 	}
