@@ -1,4 +1,4 @@
-FROM quay.io/kubernetes-ingress-controller/e2e:v02132020-0e2ca1cc0 AS BASE
+FROM quay.io/kubernetes-ingress-controller/e2e:v02212020-07686f894 AS BASE
 
 FROM alpine:3.11
 
