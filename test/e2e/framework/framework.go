@@ -177,7 +177,7 @@ func (f *Framework) GetNginxIP() string {
 	return s.Spec.ClusterIP
 }
 
-// GetNginxPodIP returns the IP addres/es of the running pods
+// GetNginxPodIP returns the IP addresses of the running pods
 func (f *Framework) GetNginxPodIP() []string {
 	e, err := f.KubeClientSet.
 		CoreV1().
