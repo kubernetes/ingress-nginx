@@ -102,7 +102,7 @@ kubectl create namespace ingress-nginx &> /dev/null || true
 helm repo add stable https://kubernetes-charts.storage.googleapis.com &> /dev/null || true
 helm repo update &> /dev/null || true
 
-cat << EOF | helm upgrade --install nginx-ingress stable/nginx-ingress --namespace=ingress-nginx --values -
+cat << EOF | helm template nginx-ingress stable/nginx-ingress --namespace=ingress-nginx --values - | kubectl apply -n ingress-nginx -f -
 controller:
   image:
     repository: ${REGISTRY}/nginx-ingress-controller
