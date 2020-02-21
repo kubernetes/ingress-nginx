@@ -6,6 +6,7 @@ local configuration = require("configuration")
 local round_robin = require("balancer.round_robin")
 local chash = require("balancer.chash")
 local chashsubset = require("balancer.chashsubset")
+local fake = require("balancer.fake")
 local sticky_balanced = require("balancer.sticky_balanced")
 local sticky_persistent = require("balancer.sticky_persistent")
 local ewma = require("balancer.ewma")
@@ -32,6 +33,7 @@ local IMPLEMENTATIONS = {
   sticky_balanced = sticky_balanced,
   sticky_persistent = sticky_persistent,
   ewma = ewma,
+  fake = fake,
 }
 
 local _M = {}
@@ -55,6 +57,10 @@ local function get_implementation(backend)
     else
       name = "chash"
     end
+  end
+
+  if not backend.endpoints or #backend.endpoints == 0 then
+    name = "fake"
   end
 
   local implementation = IMPLEMENTATIONS[name]
@@ -94,9 +100,13 @@ end
 
 local function sync_backend(backend)
   if not backend.endpoints or #backend.endpoints == 0 then
-    ngx.log(ngx.INFO, "there is no endpoint for backend ", backend.name,
-            ". Removing...")
-    balancers[backend.name] = nil
+    if not backend.alternativeBackends or #backend.alternativeBackends == 0 then
+      ngx.log(ngx.INFO, string.format("there is no endpoint for backend %s. Removing...", backend.name))
+      balancers[backend.name] = nil
+    else
+      local implementation = get_implementation(backend)
+      balancers[backend.name] = implementation:new(backend)
+    end
     return
   end
 
@@ -236,12 +246,16 @@ local function get_balancer()
   if not balancer then
     return
   end
-
   if route_to_alternative_balancer(balancer) then
     local alternative_backend_name = balancer.alternative_backends[1]
     ngx.var.proxy_alternative_upstream_name = alternative_backend_name
 
     balancer = balancers[alternative_backend_name]
+  end
+
+  -- TODO: when the balancer is unavailable, should forward the traffic to alternative backend or return nil directly?
+  if balancer.fake then
+    return
   end
 
   ngx.ctx.balancer = balancer

@@ -25,7 +25,8 @@ local function reset_expected_implementations()
     ["my-dummy-app-2"] = package.loaded["balancer.chash"],
     ["my-dummy-app-3"] = package.loaded["balancer.sticky_persistent"],
     ["my-dummy-app-4"] = package.loaded["balancer.ewma"],
-    ["my-dummy-app-5"] = package.loaded["balancer.sticky_balanced"]
+    ["my-dummy-app-5"] = package.loaded["balancer.sticky_balanced"],
+    ["my-dummy-app-6"] = package.loaded["balancer.fake"]
   }
 end
 
@@ -47,20 +48,40 @@ local function reset_backends()
         cookie = ""
       },
     },
-    { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
+    {
+      name = "my-dummy-app-1", ["load-balance"] = "round_robin",
+      endpoints = {
+        { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+      },
+    },
     {
       name = "my-dummy-app-2", ["load-balance"] = "chash",
       upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri", },
+      endpoints = {
+        { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+      },
     },
     {
       name = "my-dummy-app-3", ["load-balance"] = "ewma",
-      sessionAffinityConfig = { name = "cookie", mode = 'persistent', cookieSessionAffinity = { name = "route" } }
+      sessionAffinityConfig = { name = "cookie", mode = 'persistent', cookieSessionAffinity = { name = "route" } },
+      endpoints = {
+        { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+      },
     },
-    { name = "my-dummy-app-4", ["load-balance"] = "ewma", },
+    {
+      name = "my-dummy-app-4", ["load-balance"] = "ewma",
+      endpoints = {
+        { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+      },
+    },
     {
       name = "my-dummy-app-5", ["load-balance"] = "ewma", ["upstream-hash-by"] = "$request_uri",
-      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route" } }
+      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route" } },
+      endpoints = {
+        { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+      },
     },
+    { name = "my-dummy-app-6", ["load-balance"] = "round_robin" },
   }
 end
 
@@ -80,7 +101,7 @@ describe("Balancer", function()
       for _, backend in pairs(backends) do
         local expected_implementation = expected_implementations[backend.name]
         local implementation = balancer.get_implementation(backend)
-        assert.equal(expected_implementation, balancer.get_implementation(backend))
+        assert.equal(expected_implementation, implementation)
       end
     end)
   end)
