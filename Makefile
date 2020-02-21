@@ -60,7 +60,7 @@ ARCH ?= $(shell go env GOARCH)
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx
-BASE_TAG ?= 6ab10fa68ddea57fa51b37284b2678ac073ae74b
+BASE_TAG ?= c5db20ace43ada5b4c191df24c480fddceb5d482
 
 GOARCH=$(ARCH)
 GOBUILD_FLAGS := -v

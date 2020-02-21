@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:6ab10fa68ddea57fa51b37284b2678ac073ae74b
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:c5db20ace43ada5b4c191df24c480fddceb5d482
 
 ARG GOLANG_VERSION
 ARG GOLANG_SHA
