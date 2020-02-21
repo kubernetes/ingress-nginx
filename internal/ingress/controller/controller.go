@@ -877,30 +877,8 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 
 	// Ingress with an ExternalName Service and no port defined for that Service
 	if svc.Spec.Type == apiv1.ServiceTypeExternalName {
-		externalPort, err := strconv.Atoi(backendPort)
-		if err != nil {
-			// check if the service ports have one with backendPort as name
-			found := false
-			for _, port := range svc.Spec.Ports {
-				if port.Name == backendPort {
-					externalPort = int(port.Port)
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				klog.Errorf("service %v/%v does not have a port with name %v", svc.Namespace, svc.Namespace, backendPort)
-				return upstreams, nil
-			}
-		}
-
-		servicePort := apiv1.ServicePort{
-			Protocol:   "TCP",
-			Port:       int32(externalPort),
-			TargetPort: intstr.FromInt(externalPort),
-		}
-		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
+		servicePort := externalNamePorts(backendPort, svc)
+		endps := getEndpoints(svc, servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 		if len(endps) == 0 {
 			klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			return upstreams, nil
@@ -1447,4 +1425,51 @@ func shouldCreateUpstreamForLocationDefaultBackend(upstream *ingress.Backend, lo
 	return (upstream.Name == location.Backend) &&
 		(len(upstream.Endpoints) == 0 || len(location.CustomHTTPErrors) != 0) &&
 		location.DefaultBackend != nil
+}
+
+func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
+	port, err := strconv.Atoi(name)
+	if err != nil {
+		// not a number. check port names.
+		for _, svcPort := range svc.Spec.Ports {
+			if svcPort.Name != name {
+				continue
+			}
+
+			tp := svcPort.TargetPort
+			if tp.IntValue() == 0 {
+				tp = intstr.FromInt(int(svcPort.Port))
+			}
+
+			return &apiv1.ServicePort{
+				Protocol:   "TCP",
+				Port:       svcPort.Port,
+				TargetPort: tp,
+			}
+		}
+	}
+
+	for _, svcPort := range svc.Spec.Ports {
+		if svcPort.Port != int32(port) {
+			continue
+		}
+
+		tp := svcPort.TargetPort
+		if tp.IntValue() == 0 {
+			tp = intstr.FromInt(port)
+		}
+
+		return &apiv1.ServicePort{
+			Protocol:   "TCP",
+			Port:       svcPort.Port,
+			TargetPort: svcPort.TargetPort,
+		}
+	}
+
+	// ExternalName without port
+	return &apiv1.ServicePort{
+		Protocol:   "TCP",
+		Port:       int32(port),
+		TargetPort: intstr.FromInt(port),
+	}
 }
