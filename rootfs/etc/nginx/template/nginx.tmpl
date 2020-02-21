@@ -856,8 +856,8 @@ stream {
         location = {{ $authPath }} {
             internal;
 
-						{{ if $all.Cfg.EnableOpentracing }}
-            opentracing on; 
+            {{ if $all.Cfg.EnableOpentracing }}
+            opentracing on;
             opentracing_propagate_context;
             {{ end }}
 
