@@ -696,7 +696,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				return err
 			}
 
-			diffOutput, err := exec.Command("diff", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
+			diffOutput, err := exec.Command("diff", "-I", "'# Configuration.*'", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
 			if err != nil {
 				if exitError, ok := err.(*exec.ExitError); ok {
 					ws := exitError.Sys().(syscall.WaitStatus)
