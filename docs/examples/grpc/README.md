@@ -13,7 +13,7 @@ nginx controller.
    for the ingress).
 3. You have the nginx-ingress controller installed in typical fashion (must be
    at least
-   [quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.29.0](https://quay.io/kubernetes-ingress-controller/nginx-ingress-controller)
+   [quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0](https://quay.io/kubernetes-ingress-controller/nginx-ingress-controller)
    for grpc support.
 4. You have a backend application running a gRPC server and listening for TCP
    traffic.  If you prefer, you can use the

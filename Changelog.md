@@ -1,5 +1,64 @@
 # Changelog
 
+### 0.30.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0`
+
+- Allow service type ExternalName with different port and targetPort
+- Update datadog tracer to v1.1.3
+- Update default variables_hash_bucket_size value to 256
+- Enable Opentracing for authentication subrequests (auth_request)
+
+_Changes:_
+
+- [X] [#5080](https://github.com/kubernetes/ingress-nginx/pull/5080) Add label selector for plugin
+- [X] [#5083](https://github.com/kubernetes/ingress-nginx/pull/5083) Cleanup docker build
+- [X] [#5084](https://github.com/kubernetes/ingress-nginx/pull/5084) Cleanup docker build
+- [X] [#5085](https://github.com/kubernetes/ingress-nginx/pull/5085) Cleanup build of nginx image
+- [X] [#5086](https://github.com/kubernetes/ingress-nginx/pull/5086) Migration e2e installation to helm
+- [X] [#5087](https://github.com/kubernetes/ingress-nginx/pull/5087) Fox docker opencontainers version label
+- [X] [#5088](https://github.com/kubernetes/ingress-nginx/pull/5088) Remove .cache directory with make clean.
+- [X] [#5089](https://github.com/kubernetes/ingress-nginx/pull/5089) Abort any task in case of errors running shell commands
+- [X] [#5090](https://github.com/kubernetes/ingress-nginx/pull/5090) Cleanup and standardization of e2e test definitions
+- [X] [#5091](https://github.com/kubernetes/ingress-nginx/pull/5091) Add case for when user agent is nil
+- [X] [#5092](https://github.com/kubernetes/ingress-nginx/pull/5092) Print information about e2e suite tests
+- [X] [#5094](https://github.com/kubernetes/ingress-nginx/pull/5094) Remove comment from e2e_test.go
+- [X] [#5095](https://github.com/kubernetes/ingress-nginx/pull/5095) Update datadog tracer to v1.1.3
+- [X] [#5097](https://github.com/kubernetes/ingress-nginx/pull/5097) New e2e test: log-format-escape-json and log-format-upstream
+- [X] [#5098](https://github.com/kubernetes/ingress-nginx/pull/5098) Fix make dev-env
+- [X] [#5100](https://github.com/kubernetes/ingress-nginx/pull/5100) Ensure make dev-env support rolling updates
+- [X] [#5101](https://github.com/kubernetes/ingress-nginx/pull/5101) Add keep-alive config check test
+- [X] [#5102](https://github.com/kubernetes/ingress-nginx/pull/5102) Migrate e2e libaries
+- [X] [#5103](https://github.com/kubernetes/ingress-nginx/pull/5103) Added configmap test for no-tls-redirect-locations
+- [X] [#5105](https://github.com/kubernetes/ingress-nginx/pull/5105) Reuse-port check e2e tc (config check only)
+- [X] [#5109](https://github.com/kubernetes/ingress-nginx/pull/5109) Added basic limit-rate configmap test.
+- [X] [#5111](https://github.com/kubernetes/ingress-nginx/pull/5111) ingress-path-matching: doc typo
+- [X] [#5117](https://github.com/kubernetes/ingress-nginx/pull/5117) Hash size e2e check test case
+- [X] [#5122](https://github.com/kubernetes/ingress-nginx/pull/5122) refactor ssl handling in preparation of OCSP stapling
+- [X] [#5123](https://github.com/kubernetes/ingress-nginx/pull/5123) Ensure helm repository and charts are available
+- [X] [#5124](https://github.com/kubernetes/ingress-nginx/pull/5124) make dev-env improvements
+- [X] [#5125](https://github.com/kubernetes/ingress-nginx/pull/5125) Added tc for limit-connection annotation
+- [X] [#5131](https://github.com/kubernetes/ingress-nginx/pull/5131) Add request handling performance dashboard
+- [X] [#5132](https://github.com/kubernetes/ingress-nginx/pull/5132) Lint go code
+- [X] [#5134](https://github.com/kubernetes/ingress-nginx/pull/5134) Update list of e2e tests
+- [X] [#5136](https://github.com/kubernetes/ingress-nginx/pull/5136) Add upstream keep alive tests
+- [X] [#5139](https://github.com/kubernetes/ingress-nginx/pull/5139) Fixes https://github.com/kubernetes/ingress-nginx/issues/5120
+- [X] [#5140](https://github.com/kubernetes/ingress-nginx/pull/5140) Added configmap test for ssl-ciphers.
+- [X] [#5141](https://github.com/kubernetes/ingress-nginx/pull/5141) Allow service type ExternalName with different port and targetPort
+- [X] [#5145](https://github.com/kubernetes/ingress-nginx/pull/5145) Refactor the HSTS related test file and add config check to the HSTS tests
+- [X] [#5149](https://github.com/kubernetes/ingress-nginx/pull/5149) Use helm template instead of update to install dev cluster
+- [X] [#5150](https://github.com/kubernetes/ingress-nginx/pull/5150) Update default VariablesHashBucketSize value to 256
+- [X] [#5151](https://github.com/kubernetes/ingress-nginx/pull/5151) Check there is a difference in the template besides the checksum
+- [X] [#5152](https://github.com/kubernetes/ingress-nginx/pull/5152) Clean template
+- [X] [#5153](https://github.com/kubernetes/ingress-nginx/pull/5153) Update nginx and e2e images
+
+_Documentation:_
+
+- [X] [#5018](https://github.com/kubernetes/ingress-nginx/pull/5018) Update developer document on dependency updates
+- [X] [#5081](https://github.com/kubernetes/ingress-nginx/pull/5081) Fixed incorrect documentation of cli flag --default-backend-service
+- [X] [#5093](https://github.com/kubernetes/ingress-nginx/pull/5093) Generate doc with list of e2e tests
+- [X] [#5135](https://github.com/kubernetes/ingress-nginx/pull/5135) Correct spelling of the word "Original" in annotations documentation
+
 ### 0.29.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.29.0`
