@@ -252,11 +252,6 @@ live-docs: ## Build and launch a local copy of the documentation website in http
 		-t ingress-nginx/mkdocs images/mkdocs
 	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
 
-.PHONY: build-docs
-build-docs: ## Build documentation (output in ./site directory).
-	@docker build --pull -t ingress-nginx/mkdocs images/mkdocs
-	@docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
-
 .PHONY: misspell
 misspell: check-go-version ## Check for spelling errors.
 	@go get github.com/client9/misspell/cmd/misspell

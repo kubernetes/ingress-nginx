@@ -12,29 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.11
+FROM squidfunk/mkdocs-material:4.6.3
 
-RUN apk add --no-cache \
-  bash \
-  git \
-  git-fast-import \
-  openssh \
-  python3 \
-  python3-dev \
-  curl \
-  && python3 -m ensurepip \
-  && rm -r /usr/lib/python*/ensurepip \
-  && pip3 install --upgrade pip setuptools \
-  && rm -r /root/.cache \
-  && rm -rf /var/cache/apk/*
-
-RUN curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/requirements-docs.txt -o requirements.txt \
+RUN apk add --no-cache curl \
+  && curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/requirements-docs.txt -o requirements.txt \
   && pip install -U -r requirements.txt
 
 WORKDIR /docs
 
 EXPOSE 3000
 
-COPY entrypoint.sh /
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["mkdocs", "serve", "--dev-addr=0.0.0.0:3000", "--livereload"]
