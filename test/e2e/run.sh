@@ -79,21 +79,34 @@ echo "Kubernetes cluster:"
 kubectl get nodes -o wide
 
 echo "[dev-env] building container"
+export EXIT_CODE=-1
 echo "
 make -C ${DIR}/../../ build container
 make -C ${DIR}/../../ e2e-test-image
-make -C ${DIR}/../../images/fastcgi-helloserver/ build container
+make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build container
 make -C ${DIR}/../../images/echo/ container
 make -C ${DIR}/../../images/httpbin/ container
-" | parallel --joblog /tmp/log {} || cat /tmp/log
+" | parallel --joblog /tmp/log {} || EXIT_CODE=$?
+if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ]; 
+then
+  echo "Image builds were ok! Log:"
+  cat /tmp/log
+  unset EXIT_CODE
+else
+  echo "Image builds were not ok! Log:"
+  cat /tmp/log
+  exit
+fi
 
 # Remove after https://github.com/kubernetes/ingress-nginx/pull/4271 is merged
 docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
 
 # Preload images used in e2e tests
 docker pull openresty/openresty:1.15.8.2-alpine
+docker pull moul/grpcbin
 
 echo "[dev-env] copying docker images to cluster..."
+export EXIT_CODE=-1
 echo "
 kind load docker-image --name="${KIND_CLUSTER_NAME}" nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-controller:${TAG}
@@ -102,7 +115,17 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" openresty/openresty:1.15.8.
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/echo:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" moul/grpcbin
-" | parallel --joblog /tmp/log {} || cat /tmp/log
+" | parallel --joblog /tmp/log {} || EXIT_CODE=$?
+if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ]; 
+then
+  echo "Image loads were ok! Log:"
+  cat /tmp/log
+  unset EXIT_CODE
+else
+  echo "Image loads were not ok! Log:"
+  cat /tmp/log
+  exit
+fi
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
