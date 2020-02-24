@@ -178,6 +178,7 @@ The following table shows a configuration option's name, type, and the default v
 |[block-cidrs](#block-cidrs)|[]string|""|
 |[block-user-agents](#block-user-agents)|[]string|""|
 |[block-referers](#block-referers)|[]string|""|
+|[proxy-ssl-location-only](#proxy-ssl-location-only)|bool|"false"|
 
 ## add-headers
 
@@ -1049,3 +1050,9 @@ It's possible to use here full strings and regular expressions. More details abo
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_map_module.html#map](http://nginx.org/en/docs/http/ngx_http_map_module.html#map)
+
+## proxy-ssl-location-only
+
+Set if proxy-ssl parameters should be applied onyl on locations and not on servers.
+_**default:**_ is disabled
+

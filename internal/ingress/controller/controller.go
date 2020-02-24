@@ -494,15 +494,17 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					server.Hostname, ingKey)
 			}
 
-			if server.ProxySSL.CAFileName == "" {
-				server.ProxySSL = anns.ProxySSL
-				if server.ProxySSL.Secret != "" && server.ProxySSL.CAFileName == "" {
-					klog.V(3).Infof("Secret %q has no 'ca.crt' key, client cert authentication disabled for Ingress %q",
-						server.ProxySSL.Secret, ingKey)
+			if !n.store.GetBackendConfiguration().ProxySSLLocationOnly {
+				if server.ProxySSL.CAFileName == "" {
+					server.ProxySSL = anns.ProxySSL
+					if server.ProxySSL.Secret != "" && server.ProxySSL.CAFileName == "" {
+						klog.V(3).Infof("Secret %q has no 'ca.crt' key, client cert authentication disabled for Ingress %q",
+							server.ProxySSL.Secret, ingKey)
+					}
+				} else {
+					klog.V(3).Infof("Server %q is already configured for client cert authentication (Ingress %q)",
+						server.Hostname, ingKey)
 				}
-			} else {
-				klog.V(3).Infof("Server %q is already configured for client cert authentication (Ingress %q)",
-					server.Hostname, ingKey)
 			}
 
 			if rule.HTTP == nil {
