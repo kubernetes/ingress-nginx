@@ -15,7 +15,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 ```
 
 Now that the pod security policy is applied, we can continue as usual by applying the
-[mandatory.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.29.0/deploy/static/mandatory.yaml)
+[mandatory.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml)
 according to the [Installation Guide](../../deploy/index.md).
 
 Note: PSP permissions must be granted before to the creation of the Deployment and the ReplicaSet.
