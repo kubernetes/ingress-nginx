@@ -120,7 +120,7 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 # internal task
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
-	docker push $(BASE_IMAGE)-$(ARCH):$(TAG)
+	docker push $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG)
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
