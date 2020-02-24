@@ -1,0 +1,4 @@
+controller:
+  kind: DaemonSet
+  metrics:
+    enabled: true

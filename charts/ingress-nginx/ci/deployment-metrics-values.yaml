@@ -1,0 +1,3 @@
+controller:
+  metrics:
+    enabled: true
