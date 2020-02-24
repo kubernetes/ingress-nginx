@@ -648,6 +648,11 @@ type Configuration struct {
 	// DefaultSSLCertificate holds the default SSL certificate to use in the configuration
 	// It can be the fake certificate or the one behind the flag --default-ssl-certificate
 	DefaultSSLCertificate *ingress.SSLCert `json:"-"`
+
+	// ProxySSLLocationOnly controls whether the proxy-ssl parameters defined in the
+	// proxy-ssl-* annotations are applied on on location level only in the nginx.conf file
+	// Default is that those are applied on server level, too
+	ProxySSLLocationOnly bool `json:"proxy-ssl-location-only"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -791,6 +796,7 @@ func NewDefault() Configuration {
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",
 		GlobalExternalAuth:           defGlobalExternalAuth,
+		ProxySSLLocationOnly:         false,
 	}
 
 	if klog.V(5) {

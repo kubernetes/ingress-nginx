@@ -41,6 +41,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -814,11 +815,11 @@ func TestExtractTLSSecretName(t *testing.T) {
 }
 
 func TestGetBackendServers(t *testing.T) {
-	ctl := newNGINXController(t)
 
 	testCases := []struct {
-		Ingresses []*ingress.Ingress
-		Validate  func(upstreams []*ingress.Backend, servers []*ingress.Server)
+		Ingresses    []*ingress.Ingress
+		Validate     func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server)
+		SetConfigMap func(namespace string) *v1.ConfigMap
 	}{
 		{
 			Ingresses: []*ingress.Ingress{
@@ -843,7 +844,7 @@ func TestGetBackendServers(t *testing.T) {
 					},
 				},
 			},
-			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
 				if len(servers) != 1 {
 					t.Errorf("servers count should be 1, got %d", len(servers))
 					return
@@ -861,6 +862,7 @@ func TestGetBackendServers(t *testing.T) {
 					t.Errorf("location backend should be '%s', got '%s'", defUpstreamName, s.Locations[0].Backend)
 				}
 			},
+			SetConfigMap: testConfigMap,
 		},
 		{
 			Ingresses: []*ingress.Ingress{
@@ -905,7 +907,7 @@ func TestGetBackendServers(t *testing.T) {
 					},
 				},
 			},
-			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
 				if len(servers) != 1 {
 					t.Errorf("servers count should be 1, got %d", len(servers))
 					return
@@ -923,6 +925,7 @@ func TestGetBackendServers(t *testing.T) {
 					t.Errorf("location backend should be 'example-http-svc-80', got '%s'", s.Locations[0].Backend)
 				}
 			},
+			SetConfigMap: testConfigMap,
 		},
 		{
 			Ingresses: []*ingress.Ingress{
@@ -962,7 +965,7 @@ func TestGetBackendServers(t *testing.T) {
 					},
 				},
 			},
-			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
 				if len(servers) != 1 {
 					t.Errorf("servers count should be 1, got %d", len(servers))
 					return
@@ -980,6 +983,7 @@ func TestGetBackendServers(t *testing.T) {
 					t.Errorf("location backend should be '%s', got '%s'", defUpstreamName, s.Locations[0].Backend)
 				}
 			},
+			SetConfigMap: testConfigMap,
 		},
 		{
 			Ingresses: []*ingress.Ingress{
@@ -1056,7 +1060,7 @@ func TestGetBackendServers(t *testing.T) {
 					},
 				},
 			},
-			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
 				if len(servers) != 2 {
 					t.Errorf("servers count should be 2, got %d", len(servers))
 					return
@@ -1083,6 +1087,7 @@ func TestGetBackendServers(t *testing.T) {
 					t.Errorf("location backend should be 'example-http-svc-80', got '%s'", s.Locations[0].Backend)
 				}
 			},
+			SetConfigMap: testConfigMap,
 		},
 		{
 			Ingresses: []*ingress.Ingress{
@@ -1303,7 +1308,7 @@ func TestGetBackendServers(t *testing.T) {
 					},
 				},
 			},
-			Validate: func(upstreams []*ingress.Backend, servers []*ingress.Server) {
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
 				if len(servers) != 2 {
 					t.Errorf("servers count should be 2, got %d", len(servers))
 					return
@@ -1346,12 +1351,239 @@ func TestGetBackendServers(t *testing.T) {
 					t.Errorf("example-http-svc-2-80 should be alternative upstream for 'example-http-svc-1-80'")
 				}
 			},
+			SetConfigMap: testConfigMap,
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "proxy-ssl-1",
+							Namespace: "proxyssl",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/path1",
+													Backend: networking.IngressBackend{
+														ServiceName: "path1-svc",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						ProxySSL: proxyssl.Config{
+							AuthSSLCert: resolver.AuthSSLCert{
+								CAFileName: "cafile1.crt",
+								Secret:     "secret1",
+							},
+						},
+					},
+				},
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "proxy-ssl-2",
+							Namespace: "proxyssl",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/path2",
+													Backend: networking.IngressBackend{
+														ServiceName: "path2-svc",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						ProxySSL: proxyssl.Config{
+							AuthSSLCert: resolver.AuthSSLCert{
+								CAFileName: "cafile1.crt",
+								Secret:     "secret1",
+							},
+						},
+					},
+				},
+			},
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 2, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+
+				if s.ProxySSL.CAFileName != ingresses[0].ParsedAnnotations.ProxySSL.CAFileName {
+					t.Errorf("server cafilename should be '%s', got '%s'", ingresses[0].ParsedAnnotations.ProxySSL.CAFileName, s.ProxySSL.CAFileName)
+				}
+
+				if s.Locations[0].ProxySSL.CAFileName != ingresses[0].ParsedAnnotations.ProxySSL.CAFileName {
+					t.Errorf("location cafilename should be '%s', got '%s'", ingresses[0].ParsedAnnotations.ProxySSL.CAFileName, s.Locations[0].ProxySSL.CAFileName)
+				}
+
+				if s.Locations[1].ProxySSL.CAFileName != ingresses[1].ParsedAnnotations.ProxySSL.CAFileName {
+					t.Errorf("location cafilename should be '%s', got '%s'", ingresses[1].ParsedAnnotations.ProxySSL.CAFileName, s.Locations[0].ProxySSL.CAFileName)
+				}
+			},
+			SetConfigMap: testConfigMap,
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "proxy-ssl-1",
+							Namespace: "proxyssl",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/path1",
+													Backend: networking.IngressBackend{
+														ServiceName: "path1-svc",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						ProxySSL: proxyssl.Config{
+							AuthSSLCert: resolver.AuthSSLCert{
+								CAFileName: "cafile1.crt",
+								Secret:     "secret1",
+							},
+						},
+					},
+				},
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "proxy-ssl-2",
+							Namespace: "proxyssl",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path: "/path2",
+													Backend: networking.IngressBackend{
+														ServiceName: "path2-svc",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						ProxySSL: proxyssl.Config{
+							AuthSSLCert: resolver.AuthSSLCert{
+								CAFileName: "cafile1.crt",
+								Secret:     "secret1",
+							},
+						},
+					},
+				},
+			},
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 2, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+
+				if s.ProxySSL.CAFileName != "" {
+					t.Errorf("server cafilename should be empty, got '%s'", s.ProxySSL.CAFileName)
+				}
+
+				if s.Locations[0].ProxySSL.CAFileName != ingresses[0].ParsedAnnotations.ProxySSL.CAFileName {
+					t.Errorf("location cafilename should be '%s', got '%s'", ingresses[0].ParsedAnnotations.ProxySSL.CAFileName, s.Locations[0].ProxySSL.CAFileName)
+				}
+
+				if s.Locations[1].ProxySSL.CAFileName != ingresses[1].ParsedAnnotations.ProxySSL.CAFileName {
+					t.Errorf("location cafilename should be '%s', got '%s'", ingresses[1].ParsedAnnotations.ProxySSL.CAFileName, s.Locations[0].ProxySSL.CAFileName)
+				}
+			},
+			SetConfigMap: func(ns string) *v1.ConfigMap {
+				return &v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:     "config",
+						SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
+					},
+					Data: map[string]string{
+						"proxy-ssl-location-only": "true",
+					},
+				}
+			},
 		},
 	}
 
 	for _, testCase := range testCases {
-		upstreams, servers := ctl.getBackendServers(testCase.Ingresses)
-		testCase.Validate(upstreams, servers)
+		nginxController := newDynamicNginxController(t, testCase.SetConfigMap)
+		upstreams, servers := nginxController.getBackendServers(testCase.Ingresses)
+		testCase.Validate(testCase.Ingresses, upstreams, servers)
+	}
+}
+
+func testConfigMap(ns string) *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:     "config",
+			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
+		},
 	}
 }
 
@@ -1366,12 +1598,14 @@ func newNGINXController(t *testing.T) *NGINXController {
 	}
 
 	clientSet := fake.NewSimpleClientset()
+
 	configMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:     "config",
 			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
 		},
 	}
+
 	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
 	if err != nil {
 		t.Fatalf("error creating the configuration map: %v", err)
@@ -1412,5 +1646,50 @@ func fakeX509Cert(dnsNames []string) *x509.Certificate {
 		Extensions: []pkix.Extension{
 			{Id: oidExtensionSubjectAltName},
 		},
+	}
+}
+
+func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.ConfigMap) *NGINXController {
+	ns := v1.NamespaceDefault
+	pod := &k8s.PodInfo{
+		Name:      "testpod",
+		Namespace: ns,
+		Labels: map[string]string{
+			"pod-template-hash": "1234",
+		},
+	}
+
+	clientSet := fake.NewSimpleClientset()
+	configMap := setConfigMap(ns)
+
+	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
+	if err != nil {
+		t.Fatalf("error creating the configuration map: %v", err)
+	}
+
+	storer := store.New(
+		ns,
+		fmt.Sprintf("%v/config", ns),
+		fmt.Sprintf("%v/tcp", ns),
+		fmt.Sprintf("%v/udp", ns),
+		"",
+		10*time.Minute,
+		clientSet,
+		channels.NewRingChannel(10),
+		pod,
+		false)
+
+	sslCert := ssl.GetFakeSSLCert()
+	config := &Configuration{
+		FakeCertificate: sslCert,
+		ListenPorts: &ngx_config.ListenPorts{
+			Default: 80,
+		},
+	}
+
+	return &NGINXController{
+		store:   storer,
+		cfg:     config,
+		command: NewNginxCommand(),
 	}
 }
