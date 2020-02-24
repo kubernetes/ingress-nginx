@@ -1,0 +1,23 @@
+name: docs and Helm chart
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v1
+
+      #- name: Run chart-releaser
+      #  uses: helm/chart-releaser-action@v1.0.0-alpha.2
+      #  env:
+      #    CR_TOKEN: "${{ secrets.PERSONAL_TOKEN }}"
+
+      - name: Deploy docs
+        uses: ./.github/actions/mkdocs
+        env:
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
