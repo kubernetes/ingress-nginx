@@ -1,0 +1,22 @@
+{{- if or .Values.controller.config (or (or .Values.controller.proxySetHeaders .Values.controller.headers) .Values.controller.addHeaders) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ template "nginx-ingress.name" . }}
+    chart: {{ template "nginx-ingress.chart" . }}
+    component: "{{ .Values.controller.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "nginx-ingress.controller.fullname" . }}
+data:
+{{- if .Values.controller.addHeaders }}
+  add-headers: {{ .Release.Namespace }}/{{ template "nginx-ingress.fullname" . }}-custom-add-headers
+{{- end }}
+{{- if or .Values.controller.proxySetHeaders .Values.controller.headers }}
+  proxy-set-headers: {{ .Release.Namespace }}/{{ template "nginx-ingress.fullname" . }}-custom-proxy-headers
+{{- end }}
+{{- if .Values.controller.config }}
+{{ toYaml .Values.controller.config | indent 2 }}
+{{- end }}
+{{- end }}

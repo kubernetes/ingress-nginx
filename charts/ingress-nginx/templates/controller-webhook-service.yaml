@@ -1,0 +1,44 @@
+{{- if .Values.controller.admissionWebhooks.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.controller.admissionWebhooks.service.annotations }}
+  annotations:
+  {{- range $key, $value := .Values.controller.admissionWebhooks.service.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}
+  labels:
+    app: {{ template "nginx-ingress.name" . }}
+    chart: {{ template "nginx-ingress.chart" . }}
+    component: "{{ .Values.controller.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "nginx-ingress.controller.fullname" . }}-admission
+spec:
+{{- if not .Values.controller.admissionWebhooks.service.omitClusterIP }}
+  {{- with .Values.controller.admissionWebhooks.service.clusterIP }}
+  clusterIP: {{ if eq "-" . }}""{{ else }}{{ . | quote }}{{ end }}
+  {{- end }}
+{{- end }}
+{{- if .Values.controller.admissionWebhooks.service.externalIPs }}
+  externalIPs:
+{{ toYaml .Values.controller.admissionWebhooks.service.externalIPs | indent 4 }}
+{{- end }}
+{{- if .Values.controller.admissionWebhooks.service.loadBalancerIP }}
+  loadBalancerIP: "{{ .Values.controller.admissionWebhooks.service.loadBalancerIP }}"
+{{- end }}
+{{- if .Values.controller.admissionWebhooks.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.controller.admissionWebhooks.service.loadBalancerSourceRanges | indent 4 }}
+{{- end }}
+  ports:
+    - name: https-webhook
+      port: 443
+      targetPort: webhook
+  selector:
+    app: {{ template "nginx-ingress.name" . }}
+    component: "{{ .Values.controller.name }}"
+    release: {{ .Release.Name }}
+  type: "{{ .Values.controller.admissionWebhooks.service.type }}"
+{{- end }}

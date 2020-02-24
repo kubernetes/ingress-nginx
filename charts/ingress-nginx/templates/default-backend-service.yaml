@@ -1,0 +1,45 @@
+{{- if .Values.defaultBackend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.defaultBackend.service.annotations }}
+  annotations:
+  {{- range $key, $value := .Values.defaultBackend.service.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}
+  labels:
+    app: {{ template "nginx-ingress.name" . }}
+    chart: {{ template "nginx-ingress.chart" . }}
+    component: "{{ .Values.defaultBackend.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "nginx-ingress.defaultBackend.fullname" . }}
+spec:
+{{- if not .Values.defaultBackend.service.omitClusterIP }}
+  {{- with .Values.defaultBackend.service.clusterIP }}
+  clusterIP: {{ if eq "-" . }}""{{ else }}{{ . | quote }}{{ end }}
+  {{- end }}
+{{- end }}
+{{- if .Values.defaultBackend.service.externalIPs }}
+  externalIPs:
+{{ toYaml .Values.defaultBackend.service.externalIPs | indent 4 }}
+{{- end }}
+{{- if .Values.defaultBackend.service.loadBalancerIP }}
+  loadBalancerIP: "{{ .Values.defaultBackend.service.loadBalancerIP }}"
+{{- end }}
+{{- if .Values.defaultBackend.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.defaultBackend.service.loadBalancerSourceRanges | indent 4 }}
+{{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.defaultBackend.service.servicePort }}
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: {{ template "nginx-ingress.name" . }}
+    component: "{{ .Values.defaultBackend.name }}"
+    release: {{ .Release.Name }}
+  type: "{{ .Values.defaultBackend.service.type }}"
+{{- end }}
