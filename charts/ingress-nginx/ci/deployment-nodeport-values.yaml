@@ -1,0 +1,3 @@
+controller:
+  service:
+    type: NodePort

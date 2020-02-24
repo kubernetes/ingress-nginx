@@ -1,0 +1,24 @@
+{{- if and .Values.controller.metrics.enabled .Values.controller.metrics.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ template "nginx-ingress.controller.fullname" . }}
+  {{- if .Values.controller.metrics.prometheusRule.namespace }}
+  namespace: {{ .Values.controller.metrics.prometheusRule.namespace }}
+  {{- end }}
+  labels:
+    app: {{ template "nginx-ingress.name" . }}
+    chart: {{ template "nginx-ingress.chart" . }}
+    component: "{{ .Values.controller.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    {{- if .Values.controller.metrics.prometheusRule.additionalLabels }}
+{{ toYaml .Values.controller.metrics.prometheusRule.additionalLabels | indent 4 }}
+    {{- end }}
+spec:
+  {{- with .Values.controller.metrics.prometheusRule.rules }}
+  groups:
+  - name: {{ template "nginx-ingress.name" $ }}
+    rules: {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

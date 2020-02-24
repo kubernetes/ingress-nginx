@@ -1,0 +1,14 @@
+{{- if .Values.controller.addHeaders }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ template "nginx-ingress.name" . }}
+    chart: {{ template "nginx-ingress.chart" . }}
+    component: "{{ .Values.controller.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "nginx-ingress.fullname" . }}-custom-add-headers
+data:
+{{ toYaml .Values.controller.addHeaders | indent 2 }}
+{{- end }}

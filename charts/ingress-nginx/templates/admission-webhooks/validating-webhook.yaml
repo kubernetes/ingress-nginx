@@ -1,0 +1,31 @@
+{{- if .Values.controller.admissionWebhooks.enabled }}
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    app: {{ template "nginx-ingress.name" . }}-admission
+    chart: {{ template "nginx-ingress.chart" . }}
+    component: "admission-webhook"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "nginx-ingress.fullname" . }}-admission
+webhooks:
+  - name: validate.nginx.ingress.kubernetes.io
+    rules:
+      - apiGroups:
+          - extensions
+          - networking.k8s.io
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - ingresses
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ template "nginx-ingress.controller.fullname" . }}-admission
+        path: /extensions/v1beta1/ingresses
+{{- end }}
