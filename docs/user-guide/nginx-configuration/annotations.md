@@ -73,6 +73,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-http-version](#proxy-http-version)|"1.0" or "1.1"|
 |[nginx.ingress.kubernetes.io/proxy-ssl-secret](#backend-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/proxy-ssl-ciphers](#backend-certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/proxy-ssl-name](#backend-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/proxy-ssl-protocols](#backend-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/proxy-ssl-verify](#backend-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/proxy-ssl-verify-depth](#backend-certificate-authentication)|number|
@@ -274,6 +275,8 @@ It is possible to authenticate to a proxied HTTPS backend with certificate using
   Sets the verification depth in the proxied HTTPS server certificates chain. (default: 1)
 * `nginx.ingress.kubernetes.io/proxy-ssl-ciphers`:
   Specifies the enabled [ciphers](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_ciphers) for requests to a proxied HTTPS server. The ciphers are specified in the format understood by the OpenSSL library.
+* `nginx.ingress.kubernetes.io/proxy-ssl-name`:
+  Allows to set [proxy_ssl_name](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_name). This allows overriding the server name used to verify the certificate of the proxied HTTPS server. This value is also passed through SNI when a connection is established to the proxied HTTPS server.
 * `nginx.ingress.kubernetes.io/proxy-ssl-protocols`:
   Enables the specified [protocols](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_protocols) for requests to a proxied HTTPS server.
 

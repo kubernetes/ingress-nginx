@@ -128,6 +128,10 @@ func TestAnnotations(t *testing.T) {
 	if u.VerifyDepth != 3 {
 		t.Errorf("expected %v but got %v", 3, u.VerifyDepth)
 	}
+	if u.ProxySSLName != "$host" {
+		t.Errorf("expected %v but got %v", "$host", u.ProxySSLName)
+	}
+
 }
 
 func TestInvalidAnnotations(t *testing.T) {
