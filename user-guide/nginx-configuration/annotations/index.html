@@ -2071,6 +2071,10 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#canary">nginx.ingress.kubernetes.io/canary-by-header-pattern</a></td>
+<td>string</td>
+</tr>
+<tr>
 <td><a href="#canary">nginx.ingress.kubernetes.io/canary-by-cookie</a></td>
 <td>string</td>
 </tr>
@@ -2412,6 +2416,9 @@ table below.</p>
 </li>
 <li>
 <p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header-value</span></code>: The header value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to this value, it will be routed to the canary. For any other header value, the header will be ignored and the request compared against the other canary rules by precedence. This annotation has to be used together with . The annotation is an extension of the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header</span></code> to allow customizing the header value instead of using hardcoded values. It doesn't have any effect if the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header</span></code> annotation is not defined.</p>
+</li>
+<li>
+<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header-pattern</span></code>: This works the same way as <code class="codehilite"><span class="err">canary-by-header-value</span></code> except it does PCRE Regex matching. Note that when <code class="codehilite"><span class="err">canary-by-header-value</span></code> is set this annotation will be ignored. When the given Regex causes error during request processing, the request will be considered as not matching.</p>
 </li>
 <li>
 <p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-cookie</span></code>: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to <code class="codehilite"><span class="err">always</span></code>, it will be routed to the canary. When the cookie is set to <code class="codehilite"><span class="err">never</span></code>, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence.</p>
