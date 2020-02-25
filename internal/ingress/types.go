@@ -119,6 +119,8 @@ type TrafficShapingPolicy struct {
 	Header string `json:"header"`
 	// HeaderValue on which to redirect requests to this backend
 	HeaderValue string `json:"headerValue"`
+	// HeaderPattern the header value match pattern, support exact, regex.
+	HeaderPattern string `json:"headerPattern"`
 	// Cookie on which to redirect requests to this backend
 	Cookie string `json:"cookie"`
 }

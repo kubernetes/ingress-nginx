@@ -187,14 +187,22 @@ local function route_to_alternative_balancer(balancer)
   local header = ngx.var["http_" .. target_header]
   if header then
     if traffic_shaping_policy.headerValue
-       and #traffic_shaping_policy.headerValue > 0 then
+	   and #traffic_shaping_policy.headerValue > 0 then
       if traffic_shaping_policy.headerValue == header then
         return true
       end
-
+    elseif traffic_shaping_policy.headerPattern
+       and #traffic_shaping_policy.headerPattern > 0 then
+      local m, err = ngx.re.match(header, traffic_shaping_policy.headerPattern)
+      if m then
+        return true
+      elseif  err then
+          ngx.log(ngx.ERR, "error when matching canary-by-header-pattern: '",
+                  traffic_shaping_policy.headerPattern, "', error: ", err)
+          return false
+      end
     elseif header == "always" then
       return true
-
     elseif header == "never" then
       return false
     end
