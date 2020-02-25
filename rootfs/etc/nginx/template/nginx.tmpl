@@ -1237,6 +1237,10 @@ stream {
             proxy_ssl_verify_depth                  {{ $location.ProxySSL.VerifyDepth }};
             {{ end }}
 
+            {{ if not (empty $location.ProxySSL.ProxySSLName) }}
+            proxy_ssl_name                           {{ $location.ProxySSL.ProxySSLName }};
+            {{ end }}
+
             {{ if not (empty $location.ProxySSL.PemFileName) }}
             proxy_ssl_certificate                   {{ $location.ProxySSL.PemFileName }};
             proxy_ssl_certificate_key               {{ $location.ProxySSL.PemFileName }};
