@@ -23,4 +23,6 @@ COPY namespace-overlays /namespace-overlays
 COPY wait-for-nginx.sh  /
 COPY e2e.test           /
 
+COPY charts /charts
+
 CMD [ "/e2e.sh" ]

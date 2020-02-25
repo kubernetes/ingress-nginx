@@ -186,6 +186,8 @@ controller:
     # e2e tests do not require information about ingress status
     update-status: "false"
   terminationGracePeriodSeconds: 1
+  admissionWebhooks:
+    enabled: false
 
 defaultBackend:
   enabled: false
