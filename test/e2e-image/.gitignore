@@ -1,4 +1,4 @@
 e2e.test
 ginkgo
 kubectl
-charts
+charts/*
