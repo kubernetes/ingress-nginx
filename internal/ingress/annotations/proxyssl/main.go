@@ -45,10 +45,11 @@ var (
 // and the configured VerifyDepth
 type Config struct {
 	resolver.AuthSSLCert
-	Ciphers     string `json:"ciphers"`
-	Protocols   string `json:"protocols"`
-	Verify      string `json:"verify"`
-	VerifyDepth int    `json:"verifyDepth"`
+	Ciphers      string `json:"ciphers"`
+	Protocols    string `json:"protocols"`
+	ProxySSLName string `json:"proxySSLName"`
+	Verify       string `json:"verify"`
+	VerifyDepth  int    `json:"verifyDepth"`
 }
 
 // Equal tests for equality between two Config types
@@ -141,6 +142,11 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.Protocols = defaultProxySSLProtocols
 	} else {
 		config.Protocols = sortProtocols(config.Protocols)
+	}
+
+	config.ProxySSLName, err = parser.GetStringAnnotation("proxy-ssl-name", ing)
+	if err != nil {
+		config.ProxySSLName = ""
 	}
 
 	config.Verify, err = parser.GetStringAnnotation("proxy-ssl-verify", ing)

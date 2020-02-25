@@ -813,6 +813,9 @@ stream {
         proxy_ssl_protocols                     {{ $server.ProxySSL.Protocols }};
         proxy_ssl_verify                        {{ $server.ProxySSL.Verify }};
         proxy_ssl_verify_depth                  {{ $server.ProxySSL.VerifyDepth }};
+        {{ if not (empty $server.ProxySSL.ProxySSLName) }}
+        proxy_ssl_name                           {{ $server.ProxySSL.ProxySSLName }};
+        {{ end }}        
         {{ end }}
 
         {{ if not (empty $server.ProxySSL.PemFileName) }}
@@ -1232,6 +1235,10 @@ stream {
             proxy_ssl_protocols                     {{ $location.ProxySSL.Protocols }};
             proxy_ssl_verify                        {{ $location.ProxySSL.Verify }};
             proxy_ssl_verify_depth                  {{ $location.ProxySSL.VerifyDepth }};
+            {{ end }}
+
+            {{ if not (empty $location.ProxySSL.ProxySSLName) }}
+            proxy_ssl_name                           {{ $location.ProxySSL.ProxySSLName }};
             {{ end }}
 
             {{ if not (empty $location.ProxySSL.PemFileName) }}
