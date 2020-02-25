@@ -220,6 +220,7 @@ Parameter | Description | Default
 `defaultBackend.serviceAccount.name` | The name of the backend service account to use. If not set and `create` is `true`, a name is generated using the fullname template. Only useful if you need a pod security policy to run the backend. | ``
 `imagePullSecrets` | name of Secret resource containing private registry credentials | `nil`
 `rbac.create` | if `true`, create & use RBAC resources | `true`
+`rbac.scope` | if `true`, do not create & use clusterrole and -binding. Set to `true` in combination with `controller.scope.enabled=true` to disable load-balancer status updates and scope the ingress entirely. | `false`
 `podSecurityPolicy.enabled` | if `true`, create & use Pod Security Policy resources | `false`
 `serviceAccount.create` | if `true`, create a service account for the controller | `true`
 `serviceAccount.name` | The name of the controller service account to use. If not set and `create` is `true`, a name is generated using the fullname template. | ``
