@@ -15,13 +15,14 @@ endif
 .PHONY: container
 container:
 ifeq ($(USE_DOCKER), true)
-	@${DIR}/../../build/run-in-docker.sh make e2e-test-binary
+	@$(DIR)/../../build/run-in-docker.sh make e2e-test-binary
 else
-	@make -C ${DIR}/../../ e2e-test-binary
+	@make -C $(DIR)/../../ e2e-test-binary
 endif
 
-	cp ../e2e/e2e.test .
-	cp ../e2e/wait-for-nginx.sh .
+	cp $(DIR)/../e2e/e2e.test .
+	cp $(DIR)/../e2e/wait-for-nginx.sh .
+	cp -R $(DIR)/../../charts .
 
 	docker buildx build \
 		--load \
