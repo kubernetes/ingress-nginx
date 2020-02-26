@@ -1,6 +1,6 @@
 module k8s.io/ingress-nginx
 
-go 1.13
+go 1.14
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
@@ -43,7 +43,6 @@ require (
 	gopkg.in/gavv/httpexpect.v2 v2.0.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
-
 	k8s.io/api v0.17.3
 	k8s.io/apiextensions-apiserver v0.17.3
 	k8s.io/apimachinery v0.17.3
