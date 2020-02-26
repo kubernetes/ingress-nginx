@@ -74,7 +74,7 @@ func GetDeploymentPod(flags *genericclioptions.ConfigFlags, deployment string) (
 	return ings[0], nil
 }
 
-// GetDeploymentPod finds a pod from a given deployment
+// GetLabeledPod finds a pod from a given label
 func GetLabeledPod(flags *genericclioptions.ConfigFlags, label string) (apiv1.Pod, error) {
 	ings, err := getLabeledPods(flags, label)
 	if err != nil {
