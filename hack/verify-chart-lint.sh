@@ -20,4 +20,4 @@ set -o pipefail
 
 KUBE_ROOT="$( cd "$(dirname "$0")../" >/dev/null 2>&1 ; pwd -P )"
 
-ct lint --charts ${KUBE_ROOT}/charts/ingress-nginx
+ct lint --charts ${KUBE_ROOT}/charts/ingress-nginx --validate-maintainers=false
