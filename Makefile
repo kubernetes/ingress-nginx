@@ -157,12 +157,12 @@ clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
 
 .PHONY: static-check
-static-check: ## Run verification script for boilerplate, codegen, gofmt, golint and lualint.
+static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.
 ifeq ($(USE_DOCKER), true)
 	@build/run-in-docker.sh \
-		build/static-check.sh
+		hack/verify-all.sh
 else
-	@build/static-check.sh
+	@hack/verify-all.sh
 endif
 
 .PHONY: test
