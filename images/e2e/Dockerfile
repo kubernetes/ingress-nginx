@@ -22,6 +22,7 @@ ARG RESTY_CLI_SHA
 
 ARG K8S_RELEASE
 ARG ETCD_VERSION
+ARG CHART_TESTING_VERSION
 
 ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
@@ -40,6 +41,8 @@ RUN apk add --no-cache \
   musl-dev \
   perl \
   python \
+  py-crcmod \
+  py-pip \
   openssl
 
 RUN set -eux; \
@@ -115,5 +118,24 @@ RUN wget https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERSION
   && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 \
   && cp /tmp/etcd-download/etcd /usr/local/bin \
   && rm -rf /tmp/etcd-download
+
+# Install a YAML Linter
+ARG YAML_LINT_VERSION
+RUN pip install "yamllint==$YAML_LINT_VERSION"
+
+# Install Yamale YAML schema validator
+ARG YAMALE_VERSION
+RUN pip install "yamale==$YAMALE_VERSION"
+
+RUN wget https://github.com/helm/chart-testing/releases/download/v${CHART_TESTING_VERSION}/chart-testing_${CHART_TESTING_VERSION}_linux_amd64.tar.gz \
+    -O /tmp/ct-${CHART_TESTING_VERSION}-linux-amd64.tar.gz \
+  && mkdir -p /tmp/ct-download \
+  && tar xzvf /tmp/ct-${CHART_TESTING_VERSION}-linux-amd64.tar.gz -C /tmp/ct-download \
+  && cp /tmp/ct-download/ct /usr/local/bin \
+  && mkdir -p /etc/ct \
+  && cp -R /tmp/ct-download/etc/* /etc/ct \
+  && rm -rf /tmp/ct-download
+
+RUN curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
 WORKDIR $GOPATH
