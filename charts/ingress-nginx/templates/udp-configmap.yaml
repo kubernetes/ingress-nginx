@@ -8,6 +8,8 @@ metadata:
     component: "{{ .Values.controller.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+  annotations:
+{{ toYaml .Values.controller.udp.annotations | indent 4}}
   name: {{ template "nginx-ingress.fullname" . }}-udp
 data:
 {{ tpl (toYaml .Values.udp) . | indent 2 }}
