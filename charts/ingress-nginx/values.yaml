@@ -19,6 +19,10 @@ controller:
   # Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}
 
+  ## Annotations to be added to the controller config configuration configmap
+  ##
+  configAnnotations: {}
+
   # Will add custom headers before sending traffic to backends according to https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers
   proxySetHeaders: {}
 
@@ -92,15 +96,19 @@ controller:
   ##
   configMapNamespace: ""   # defaults to .Release.Namespace
 
-  ## Allows customization of the tcp-services-configmap namespace
+  ## Allows customization of the tcp-services-configmap
   ##
   tcp:
     configMapNamespace: ""   # defaults to .Release.Namespace
+    ## Annotations to be added to the tcp config configmap
+    annotations: {}
 
-  ## Allows customization of the udp-services-configmap namespace
+  ## Allows customization of the udp-services-configmap
   ##
   udp:
     configMapNamespace: ""   # defaults to .Release.Namespace
+    ## Annotations to be added to the udp config configmap
+    annotations: {}
 
   ## Additional command line arguments to pass to nginx-ingress-controller
   ## E.g. to specify the default SSL certificate you can use
