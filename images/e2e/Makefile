@@ -26,10 +26,13 @@ docker-build:
 		--progress plain \
 		--build-arg K8S_RELEASE=v1.15.7 \
 		--build-arg ETCD_VERSION=v3.3.18 \
-		--build-arg GOLANG_VERSION=1.13.8 \
-		--build-arg GOLANG_SHA=b13bf04633d4d8cf53226ebeaace8d4d2fd07ae6fa676d0844a688339debec34 \
+		--build-arg GOLANG_VERSION=1.14 \
+		--build-arg GOLANG_SHA=6d643e46ad565058c7a39dac01144172ef9bd476521f42148be59249e4b74389 \
 		--build-arg RESTY_CLI_VERSION=0.25rc2 \
 		--build-arg RESTY_CLI_SHA=a38d850441384fa037a5922ca012dcce8708d0e4abe34ad2fe4164a01b28bdfb \
+		--build-arg CHART_TESTING_VERSION=3.0.0-beta.1 \
+		--build-arg YAML_LINT_VERSION=1.13.0 \
+		--build-arg YAMALE_VERSION=1.8.0 \
 		-t $(IMAGE):$(TAG) .
 
 docker-push:

@@ -62,7 +62,7 @@ RUN curl -sSL https://github.com/kubernetes-sigs/kind/releases/download/${KIND_V
     && chmod +x /usr/local/bin/kind
 
 # install go
-ENV GO_VERSION 1.13.8
+ENV GO_VERSION 1.14
 ENV GO_TARBALL "go${GO_VERSION}.linux-amd64.tar.gz"
 RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" \
     && tar xzf "${GO_TARBALL}" -C /usr/local \
