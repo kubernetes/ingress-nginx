@@ -8,6 +8,8 @@ metadata:
     component: "{{ .Values.controller.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+  annotations:
+{{ toYaml .Values.controller.configAnnotations | indent 4}}
   name: {{ template "nginx-ingress.controller.fullname" . }}
 data:
 {{- if .Values.controller.addHeaders }}
