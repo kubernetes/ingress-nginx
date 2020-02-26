@@ -67,7 +67,7 @@ echo ${docker_password} | docker login -u ${docker_username} --password-stdin qu
 curl -sL -o /usr/local/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 chmod +x /usr/local/bin/gimme
 
-eval "$(gimme 1.13.8)"
+eval "$(gimme 1.14)"
 
 export GOPATH="/tmp/go"
 
