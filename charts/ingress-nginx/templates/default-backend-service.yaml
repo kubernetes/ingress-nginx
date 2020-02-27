@@ -9,12 +9,12 @@ metadata:
   {{- end }}
 {{- end }}
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}
+    chart: {{ template "ingress-nginx.chart" . }}
     component: "{{ .Values.defaultBackend.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "nginx-ingress.defaultBackend.fullname" . }}
+  name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
 spec:
 {{- if not .Values.defaultBackend.service.omitClusterIP }}
   {{- with .Values.defaultBackend.service.clusterIP }}
@@ -38,7 +38,7 @@ spec:
       protocol: TCP
       targetPort: http
   selector:
-    app: {{ template "nginx-ingress.name" . }}
+    app: {{ template "ingress-nginx.name" . }}
     component: "{{ .Values.defaultBackend.name }}"
     release: {{ .Release.Name }}
   type: "{{ .Values.defaultBackend.service.type }}"

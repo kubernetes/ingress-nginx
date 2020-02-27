@@ -4,17 +4,17 @@ apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}
+    chart: {{ template "ingress-nginx.chart" . }}
     component: "{{ .Values.controller.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "nginx-ingress.controller.fullname" . }}
+  name: {{ template "ingress-nginx.controller.fullname" . }}
 spec:
   scaleTargetRef:
     apiVersion: {{ template "deployment.apiVersion" . }}
     kind: Deployment
-    name: {{ template "nginx-ingress.controller.fullname" . }}
+    name: {{ template "ingress-nginx.controller.fullname" . }}
   minReplicas: {{ .Values.controller.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.controller.autoscaling.maxReplicas }}
   metrics:

@@ -3,16 +3,16 @@ apiVersion: {{ template "deployment.apiVersion" . }}
 kind: Deployment
 metadata:
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}
+    chart: {{ template "ingress-nginx.chart" . }}
     component: "{{ .Values.defaultBackend.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "nginx-ingress.defaultBackend.fullname" . }}
+  name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
 spec:
   selector:
     matchLabels:
-      app: {{ template "nginx-ingress.name" . }}
+      app: {{ template "ingress-nginx.name" . }}
       release: {{ .Release.Name }}
   replicas: {{ .Values.defaultBackend.replicaCount }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
@@ -25,7 +25,7 @@ spec:
       {{- end }}
     {{- end }}
       labels:
-        app: {{ template "nginx-ingress.name" . }}
+        app: {{ template "ingress-nginx.name" . }}
         component: "{{ .Values.defaultBackend.name }}"
         release: {{ .Release.Name }}
         {{- if .Values.defaultBackend.podLabels }}
@@ -44,7 +44,7 @@ spec:
 {{ toYaml .Values.defaultBackend.podSecurityContext | indent 8 }}
       {{- end }}
       containers:
-        - name: {{ template "nginx-ingress.name" . }}-{{ .Values.defaultBackend.name }}
+        - name: {{ template "ingress-nginx.name" . }}-{{ .Values.defaultBackend.name }}
           image: "{{ .Values.defaultBackend.image.repository }}:{{ .Values.defaultBackend.image.tag }}"
           imagePullPolicy: "{{ .Values.defaultBackend.image.pullPolicy }}"
           args:
@@ -91,7 +91,7 @@ spec:
       nodeSelector:
 {{ toYaml .Values.defaultBackend.nodeSelector | indent 8 }}
     {{- end }}
-      serviceAccountName: {{ template "nginx-ingress.defaultBackend.serviceAccountName" . }}
+      serviceAccountName: {{ template "ingress-nginx.defaultBackend.serviceAccountName" . }}
     {{- if .Values.defaultBackend.tolerations }}
       tolerations:
 {{ toYaml .Values.defaultBackend.tolerations | indent 8 }}

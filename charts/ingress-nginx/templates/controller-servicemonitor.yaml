@@ -2,13 +2,13 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ template "nginx-ingress.controller.fullname" . }}
+  name: {{ template "ingress-nginx.controller.fullname" . }}
   {{- if .Values.controller.metrics.serviceMonitor.namespace }}
   namespace: {{ .Values.controller.metrics.serviceMonitor.namespace }}
   {{- end }}
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}
+    chart: {{ template "ingress-nginx.chart" . }}
     component: "{{ .Values.controller.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
@@ -32,7 +32,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      app: {{ template "nginx-ingress.name" . }}
+      app: {{ template "ingress-nginx.name" . }}
       component: "{{ .Values.controller.name }}"
       release: {{ .Release.Name }}
 {{- end }}

@@ -4,7 +4,7 @@
 controller:
   name: controller
   image:
-    repository: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
+    repository: quay.io/kubernetes-ingress-controller/ingress-nginx-controller
     tag: "0.30.0"
     pullPolicy: IfNotPresent
     # www-data -> uid 101
@@ -110,7 +110,7 @@ controller:
     ## Annotations to be added to the udp config configmap
     annotations: {}
 
-  ## Additional command line arguments to pass to nginx-ingress-controller
+  ## Additional command line arguments to pass to ingress-nginx-controller
   ## E.g. to specify the default SSL certificate you can use
   ## extraArgs:
   ##   default-ssl-certificate: "<namespace>/<secret_name>"
@@ -168,7 +168,7 @@ controller:
     #         - key: app
     #           operator: In
     #           values:
-    #           - nginx-ingress
+    #           - ingress-nginx
     #       topologyKey: kubernetes.io/hostname
 
     # # An example of required pod anti-affinity
@@ -179,7 +179,7 @@ controller:
     #       - key: app
     #         operator: In
     #         values:
-    #         - nginx-ingress
+    #         - ingress-nginx
     #     topologyKey: "kubernetes.io/hostname"
 
   ## terminationGracePeriodSeconds

@@ -3,16 +3,16 @@ apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}
+    chart: {{ template "ingress-nginx.chart" . }}
     component: "{{ .Values.controller.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "nginx-ingress.controller.fullname" . }}
+  name: {{ template "ingress-nginx.controller.fullname" . }}
 spec:
   selector:
     matchLabels:
-      app: {{ template "nginx-ingress.name" . }}
+      app: {{ template "ingress-nginx.name" . }}
       release: {{ .Release.Name }}
       component: "{{ .Values.controller.name }}"
   minAvailable: {{ .Values.controller.minAvailable }}

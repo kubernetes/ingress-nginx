@@ -3,17 +3,17 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}
+    chart: {{ template "ingress-nginx.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "nginx-ingress.fullname" . }}
+  name: {{ template "ingress-nginx.fullname" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ template "nginx-ingress.fullname" . }}
+  name: {{ template "ingress-nginx.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ template "nginx-ingress.serviceAccountName" . }}
+    name: {{ template "ingress-nginx.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end -}}

@@ -3,14 +3,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}
+    chart: {{ template "ingress-nginx.chart" . }}
     component: "{{ .Values.controller.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
   annotations:
 {{ toYaml .Values.controller.tcp.annotations | indent 4}}
-  name: {{ template "nginx-ingress.fullname" . }}-tcp
+  name: {{ template "ingress-nginx.fullname" . }}-tcp
 data:
 {{ tpl (toYaml .Values.tcp) . | indent 2 }}
 {{- end }}

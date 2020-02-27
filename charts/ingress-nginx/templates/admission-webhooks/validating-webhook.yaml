@@ -3,12 +3,12 @@ apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
   labels:
-    app: {{ template "nginx-ingress.name" . }}-admission
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}-admission
+    chart: {{ template "ingress-nginx.chart" . }}
     component: "admission-webhook"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "nginx-ingress.fullname" . }}-admission
+  name: {{ template "ingress-nginx.fullname" . }}-admission
 webhooks:
   - name: validate.nginx.ingress.kubernetes.io
     rules:
@@ -26,6 +26,6 @@ webhooks:
     clientConfig:
       service:
         namespace: {{ .Release.Namespace }}
-        name: {{ template "nginx-ingress.controller.fullname" . }}-admission
+        name: {{ template "ingress-nginx.controller.fullname" . }}-admission
         path: /extensions/v1beta1/ingresses
 {{- end }}

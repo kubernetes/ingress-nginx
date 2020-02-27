@@ -12,12 +12,12 @@ metadata:
 {{- if .Values.controller.service.labels }}
 {{ toYaml .Values.controller.service.labels | indent 4 }}
 {{- end }}
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
+    app: {{ template "ingress-nginx.name" . }}
+    chart: {{ template "ingress-nginx.chart" . }}
     component: "{{ .Values.controller.name }}"
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "nginx-ingress.controller.fullname" . }}
+  name: {{ template "ingress-nginx.controller.fullname" . }}
 spec:
 {{- if not .Values.controller.service.omitClusterIP }}
   {{- with .Values.controller.service.clusterIP }}
@@ -87,7 +87,7 @@ spec:
      {{- end }}
   {{- end }}
   selector:
-    app: {{ template "nginx-ingress.name" . }}
+    app: {{ template "ingress-nginx.name" . }}
     component: "{{ .Values.controller.name }}"
     release: {{ .Release.Name }}
   type: "{{ .Values.controller.service.type }}"

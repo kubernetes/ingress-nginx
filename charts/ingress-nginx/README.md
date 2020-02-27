@@ -51,7 +51,7 @@ The following table lists the configurable parameters of the ingress-nginx chart
 Parameter | Description | Default
 --- | --- | ---
 `controller.name` | name of the controller component | `controller`
-`controller.image.repository` | controller container image repository | `quay.io/kubernetes-ingress-controller/nginx-ingress-controller`
+`controller.image.repository` | controller container image repository | `quay.io/kubernetes-ingress-controller/ingress-nginx-controller`
 `controller.image.tag` | controller container image tag | `0.30.0`
 `controller.image.pullPolicy` | controller container image pull policy | `IfNotPresent`
 `controller.image.runAsUser` | User ID of the controller process. Value depends on the Linux distribution used inside of the container image. | `101`
@@ -272,7 +272,7 @@ You can add Prometheus annotations to the metrics service using `controller.metr
 Previous versions of this chart had a `controller.stats.*` configuration block, which is now obsolete due to the following changes in nginx ingress controller:
 * in [0.16.1](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md#0161), the vts (virtual host traffic status) dashboard was removed
 * in [0.23.0](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md#0230), the status page at port 18080 is now a unix socket webserver only available at localhost.
-  You can use `curl --unix-socket /tmp/nginx-status-server.sock http://localhost/nginx_status` inside the controller container to access it locally, or use the snippet from [nginx-ingress changelog](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md#0230) to re-enable the http server
+  You can use `curl --unix-socket /tmp/nginx-status-server.sock http://localhost/nginx_status` inside the controller container to access it locally, or use the snippet from [ingress-nginx changelog](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md#0230) to re-enable the http server
 
 ## ExternalDNS Service configuration
 
@@ -287,7 +287,7 @@ controller:
 
 ## AWS L7 ELB with SSL Termination
 
-Annotate the controller as shown in the [nginx-ingress l7 patch](https://github.com/kubernetes/ingress-nginx/blob/master/deploy/aws/l7/service-l7.yaml):
+Annotate the controller as shown in the [ingress-nginx l7 patch](https://github.com/kubernetes/ingress-nginx/blob/master/deploy/aws/l7/service-l7.yaml):
 
 ```yaml
 controller:
@@ -317,9 +317,9 @@ controller:
 
 ## Ingress Admission Webhooks
 
-With nginx-ingress-controller version 0.25+, the nginx ingress controller pod exposes an endpoint that will integrate with the `validatingwebhookconfiguration` Kubernetes feature to prevent bad ingress from being added to the cluster.
+With ingress-nginx-controller version 0.25+, the nginx ingress controller pod exposes an endpoint that will integrate with the `validatingwebhookconfiguration` Kubernetes feature to prevent bad ingress from being added to the cluster.
 
-With nginx-ingress-controller in 0.25.* work only with kubernetes 1.14+, 0.26 fix [this issue](https://github.com/kubernetes/ingress-nginx/pull/4521)
+With ingress-nginx-controller in 0.25.* work only with kubernetes 1.14+, 0.26 fix [this issue](https://github.com/kubernetes/ingress-nginx/pull/4521)
 
 ## Helm error when upgrading: spec.clusterIP: Invalid value: ""
 
