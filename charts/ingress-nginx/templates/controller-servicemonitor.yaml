@@ -7,11 +7,8 @@ metadata:
   namespace: {{ .Values.controller.metrics.serviceMonitor.namespace }}
   {{- end }}
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
-    component: "{{ .Values.controller.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
     {{- if .Values.controller.metrics.serviceMonitor.additionalLabels }}
 {{ toYaml .Values.controller.metrics.serviceMonitor.additionalLabels | indent 4 }}
     {{- end }}
@@ -32,7 +29,6 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      app: {{ template "nginx-ingress.name" . }}
-      component: "{{ .Values.controller.name }}"
-      release: {{ .Release.Name }}
+      {{- include "nginx-ingress.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: {{ .Values.controller.name | quote }}
 {{- end }}
