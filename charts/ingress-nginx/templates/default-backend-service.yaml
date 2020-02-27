@@ -9,11 +9,8 @@ metadata:
   {{- end }}
 {{- end }}
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
-    component: "{{ .Values.defaultBackend.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
   name: {{ template "nginx-ingress.defaultBackend.fullname" . }}
 spec:
 {{- if not .Values.defaultBackend.service.omitClusterIP }}
@@ -38,8 +35,7 @@ spec:
       protocol: TCP
       targetPort: http
   selector:
-    app: {{ template "nginx-ingress.name" . }}
-    component: "{{ .Values.defaultBackend.name }}"
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
   type: "{{ .Values.defaultBackend.service.type }}"
 {{- end }}

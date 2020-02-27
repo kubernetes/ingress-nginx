@@ -9,11 +9,8 @@ metadata:
   {{- end }}
 {{- end }}
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
-    component: "{{ .Values.controller.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
   name: {{ template "nginx-ingress.controller.fullname" . }}-admission
 spec:
 {{- if not .Values.controller.admissionWebhooks.service.omitClusterIP }}
@@ -37,8 +34,7 @@ spec:
       port: 443
       targetPort: webhook
   selector:
-    app: {{ template "nginx-ingress.name" . }}
-    component: "{{ .Values.controller.name }}"
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
   type: "{{ .Values.controller.admissionWebhooks.service.type }}"
 {{- end }}

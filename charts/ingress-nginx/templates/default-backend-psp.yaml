@@ -2,12 +2,10 @@
 apiVersion: {{ template "podSecurityPolicy.apiVersion" . }}
 kind: PodSecurityPolicy
 metadata:
-  name: {{ template "nginx-ingress.fullname" . }}-backend
+  name: {{ include "nginx-ingress.fullname" . }}-backend
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
 spec:
   allowPrivilegeEscalation: false
   fsGroup:
