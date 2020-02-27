@@ -2649,7 +2649,7 @@ _New Features:_
 - Custom log formats using `log-format-upstream` directive in the configuration configmap.
 - Force redirect to SSL using the annotation `ingress.kubernetes.io/force-ssl-redirect`
 - Prometheus metric for VTS status module (transparent, just enable vts stats)
-- Improved external authentication adding `ingress.kubernetes.io/auth-signin` annotation. Please check this [example](https://github.com/kubernetes/ingress/tree/master/examples/external-auth/nginx)
+- Improved external authentication adding `ingress.kubernetes.io/auth-signin` annotation. Please check this [example](https://github.com/kubernetes/ingress-nginx/tree/nginx-0.9.0-beta.15/examples/external-auth/nginx)
 
 _Breaking changes:_
 
