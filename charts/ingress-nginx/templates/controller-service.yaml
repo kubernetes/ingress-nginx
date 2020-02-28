@@ -12,11 +12,8 @@ metadata:
 {{- if .Values.controller.service.labels }}
 {{ toYaml .Values.controller.service.labels | indent 4 }}
 {{- end }}
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
-    component: "{{ .Values.controller.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
   name: {{ template "nginx-ingress.controller.fullname" . }}
 spec:
 {{- if not .Values.controller.service.omitClusterIP }}
@@ -87,8 +84,7 @@ spec:
      {{- end }}
   {{- end }}
   selector:
-    app: {{ template "nginx-ingress.name" . }}
-    component: "{{ .Values.controller.name }}"
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
   type: "{{ .Values.controller.service.type }}"
 {{- end }}
