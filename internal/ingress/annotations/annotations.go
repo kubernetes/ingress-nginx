@@ -19,6 +19,7 @@ package annotations
 import (
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/http2insecureport"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
@@ -113,6 +114,7 @@ type Ingress struct {
 	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
 	Mirror             mirror.Config
+	HTTP2InsecurePort  bool
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -162,6 +164,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
 			"ModSecurity":          modsecurity.NewParser(cfg),
 			"Mirror":               mirror.NewParser(cfg),
+			"HTTP2InsecurePort":    http2insecureport.NewParser(cfg),
 		},
 	}
 }
