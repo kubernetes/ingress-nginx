@@ -3,13 +3,13 @@ apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   labels:
-    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
-  name: {{ template "nginx-ingress.defaultBackend.fullname" . }}
+  name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
 spec:
   selector:
     matchLabels:
-      {{- include "nginx-ingress.selectorLabels" . | nindent 6 }}
+      {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
   minAvailable: {{ .Values.defaultBackend.minAvailable }}
 {{- end }}

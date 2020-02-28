@@ -3,8 +3,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    {{- include "nginx-ingress.labels" . | nindent 4 }}
-  name: {{ include "nginx-ingress.fullname" . }}
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+  name: {{ include "ingress-nginx.fullname" . }}
 rules:
   - apiGroups:
       - ""
