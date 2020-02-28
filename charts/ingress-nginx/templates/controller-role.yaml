@@ -3,9 +3,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
-    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ include "nginx-ingress.fullname" . }}
+  name: {{ include "ingress-nginx.fullname" . }}
 rules:
   - apiGroups:
       - ""
@@ -83,7 +83,7 @@ rules:
   - apiGroups:      ['{{ template "podSecurityPolicy.apiGroup" . }}']
     resources:      ['podsecuritypolicies']
     verbs:          ['use']
-    resourceNames:  [{{ include "nginx-ingress.fullname" . }}]
+    resourceNames:  [{{ include "ingress-nginx.fullname" . }}]
 {{- end }}
 
 {{- end -}}

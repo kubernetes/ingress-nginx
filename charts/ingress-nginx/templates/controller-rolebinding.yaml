@@ -3,15 +3,15 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
-    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ include "nginx-ingress.fullname" . }}
+  name: {{ include "ingress-nginx.fullname" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "nginx-ingress.fullname" . }}
+  name: {{ include "ingress-nginx.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ template "nginx-ingress.serviceAccountName" . }}
+    name: {{ template "ingress-nginx.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end -}}

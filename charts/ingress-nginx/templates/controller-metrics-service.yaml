@@ -12,9 +12,9 @@ metadata:
 {{- if .Values.controller.metrics.service.labels }}
 {{ toYaml .Values.controller.metrics.service.labels | indent 4 }}
 {{- end }}
-    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ template "nginx-ingress.controller.fullname" . }}-metrics
+  name: {{ template "ingress-nginx.controller.fullname" . }}-metrics
 spec:
 {{- if not .Values.controller.metrics.service.omitClusterIP }}
   {{- with .Values.controller.metrics.service.clusterIP }}
@@ -37,7 +37,7 @@ spec:
       port: {{ .Values.controller.metrics.service.servicePort }}
       targetPort: metrics
   selector:
-    {{- include "nginx-ingress.selectorLabels" . | nindent 4 }}
+    {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
   type: "{{ .Values.controller.metrics.service.type }}"
 {{- end }}
