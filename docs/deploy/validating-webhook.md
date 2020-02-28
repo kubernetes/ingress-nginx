@@ -122,7 +122,7 @@ To check that your kube API server runs with the required flags, please refer to
 
 ### Additional kubernetes objects
 
-Once both the ingress controller and the kube API server are configured to serve the webhook, add the you can configure the webhook with the following objects:
+Once both the ingress controller and the kube API server are configured to serve the webhook, you can configure the webhook with the following objects:
 
 ```yaml
 apiVersion: v1
