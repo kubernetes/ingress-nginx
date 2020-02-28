@@ -7,11 +7,8 @@ metadata:
   namespace: {{ .Values.controller.metrics.prometheusRule.namespace }}
   {{- end }}
   labels:
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ template "nginx-ingress.chart" . }}
-    component: "{{ .Values.controller.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
     {{- if .Values.controller.metrics.prometheusRule.additionalLabels }}
 {{ toYaml .Values.controller.metrics.prometheusRule.additionalLabels | indent 4 }}
     {{- end }}
