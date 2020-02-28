@@ -149,8 +149,8 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return !strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout)) &&
-					!strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout)) &&
-					!strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout))
+					!strings.Contains(server, fmt.Sprintf("proxy_send_timeout %ss;", proxySendTimeout)) &&
+					!strings.Contains(server, fmt.Sprintf("proxy_read_timeout %ss;", proxyReadtimeout))
 			})
 	})
 
