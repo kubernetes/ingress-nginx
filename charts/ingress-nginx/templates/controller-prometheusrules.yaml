@@ -2,12 +2,12 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ template "nginx-ingress.controller.fullname" . }}
+  name: {{ template "ingress-nginx.controller.fullname" . }}
   {{- if .Values.controller.metrics.prometheusRule.namespace }}
   namespace: {{ .Values.controller.metrics.prometheusRule.namespace }}
   {{- end }}
   labels:
-    {{- include "nginx-ingress.labels" . | nindent 4 }}
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
     {{- if .Values.controller.metrics.prometheusRule.additionalLabels }}
 {{ toYaml .Values.controller.metrics.prometheusRule.additionalLabels | indent 4 }}
@@ -15,7 +15,7 @@ metadata:
 spec:
   {{- with .Values.controller.metrics.prometheusRule.rules }}
   groups:
-  - name: {{ template "nginx-ingress.name" $ }}
+  - name: {{ template "ingress-nginx.name" $ }}
     rules: {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
