@@ -1053,6 +1053,6 @@ _References:_
 
 ## proxy-ssl-location-only
 
-Set if proxy-ssl parameters should be applied onyl on locations and not on servers.
+Set if proxy-ssl parameters should be applied only on locations and not on servers.
 _**default:**_ is disabled
 
