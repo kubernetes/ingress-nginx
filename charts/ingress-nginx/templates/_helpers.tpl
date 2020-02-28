@@ -2,14 +2,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "nginx-ingress.name" -}}
+{{- define "ingress-nginx.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "nginx-ingress.chart" -}}
+{{- define "ingress-nginx.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -17,7 +17,7 @@ Create chart name and version as used by the chart label.
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
-{{- define "nginx-ingress.fullname" -}}
+{{- define "ingress-nginx.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -34,8 +34,8 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 Create a default fully qualified controller name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
-{{- define "nginx-ingress.controller.fullname" -}}
-{{- printf "%s-%s" (include "nginx-ingress.fullname" .) .Values.controller.name | trunc 63 | trimSuffix "-" -}}
+{{- define "ingress-nginx.controller.fullname" -}}
+{{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.controller.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -47,8 +47,8 @@ service generated.
 Users can provide an override for an explicit service they want bound via `.Values.controller.publishService.pathOverride`
 
 */}}
-{{- define "nginx-ingress.controller.publishServicePath" -}}
-{{- $defServiceName := printf "%s/%s" .Release.Namespace (include "nginx-ingress.controller.fullname" .) -}}
+{{- define "ingress-nginx.controller.publishServicePath" -}}
+{{- $defServiceName := printf "%s/%s" .Release.Namespace (include "ingress-nginx.controller.fullname" .) -}}
 {{- $servicePath := default $defServiceName .Values.controller.publishService.pathOverride }}
 {{- print $servicePath | trimSuffix "-" -}}
 {{- end -}}
@@ -57,16 +57,16 @@ Users can provide an override for an explicit service they want bound via `.Valu
 Create a default fully qualified default backend name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
-{{- define "nginx-ingress.defaultBackend.fullname" -}}
-{{- printf "%s-%s" (include "nginx-ingress.fullname" .) .Values.defaultBackend.name | trunc 63 | trimSuffix "-" -}}
+{{- define "ingress-nginx.defaultBackend.fullname" -}}
+{{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.defaultBackend.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Common labels
 */}}
-{{- define "nginx-ingress.labels" -}}
-helm.sh/chart: {{ include "nginx-ingress.chart" . }}
-{{ include "nginx-ingress.selectorLabels" . }}
+{{- define "ingress-nginx.labels" -}}
+helm.sh/chart: {{ include "ingress-nginx.chart" . }}
+{{ include "ingress-nginx.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -76,17 +76,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "nginx-ingress.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "nginx-ingress.name" . }}
+{{- define "ingress-nginx.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ingress-nginx.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
 Create the name of the controller service account to use
 */}}
-{{- define "nginx-ingress.serviceAccountName" -}}
+{{- define "ingress-nginx.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{ default (include "nginx-ingress.fullname" .) .Values.serviceAccount.name }}
+    {{ default (include "ingress-nginx.fullname" .) .Values.serviceAccount.name }}
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
@@ -95,9 +95,9 @@ Create the name of the controller service account to use
 {{/*
 Create the name of the backend service account to use - only used when podsecuritypolicy is also enabled
 */}}
-{{- define "nginx-ingress.defaultBackend.serviceAccountName" -}}
+{{- define "ingress-nginx.defaultBackend.serviceAccountName" -}}
 {{- if .Values.defaultBackend.serviceAccount.create -}}
-    {{ default (printf "%s-backend" (include "nginx-ingress.fullname" .)) .Values.defaultBackend.serviceAccount.name }}
+    {{ default (printf "%s-backend" (include "ingress-nginx.fullname" .)) .Values.defaultBackend.serviceAccount.name }}
 {{- else -}}
     {{ default "default-backend" .Values.defaultBackend.serviceAccount.name }}
 {{- end -}}

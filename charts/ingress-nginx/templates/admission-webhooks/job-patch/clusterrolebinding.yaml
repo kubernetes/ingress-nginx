@@ -2,19 +2,19 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name:  {{ include "nginx-ingress.fullname" . }}-admission
+  name:  {{ include "ingress-nginx.fullname" . }}-admission
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
   labels:
-    {{- include "nginx-ingress.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: admission-webhook
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "nginx-ingress.fullname" . }}-admission
+  name: {{ include "ingress-nginx.fullname" . }}-admission
 subjects:
   - kind: ServiceAccount
-    name: {{ include "nginx-ingress.fullname" . }}-admission
+    name: {{ include "ingress-nginx.fullname" . }}-admission
     namespace: {{ .Release.Namespace }}
 {{- end }}

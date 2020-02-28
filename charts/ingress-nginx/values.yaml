@@ -168,7 +168,7 @@ controller:
     #         - key: app
     #           operator: In
     #           values:
-    #           - nginx-ingress
+    #           - ingress-nginx
     #       topologyKey: kubernetes.io/hostname
 
     # # An example of required pod anti-affinity
@@ -179,7 +179,7 @@ controller:
     #       - key: app
     #         operator: In
     #         values:
-    #         - nginx-ingress
+    #         - ingress-nginx
     #     topologyKey: "kubernetes.io/hostname"
 
   ## terminationGracePeriodSeconds
