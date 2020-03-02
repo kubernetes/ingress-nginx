@@ -1,8 +1,8 @@
-{{- if .Values.podSecurityPolicy.enabled}}
+{{- if .Values.podSecurityPolicy.enabled -}}
 apiVersion: {{ template "podSecurityPolicy.apiVersion" . }}
 kind: PodSecurityPolicy
 metadata:
-  name: {{ include "ingress-nginx.fullname" . }}
+  name: {{ template "ingress-nginx.fullname" . }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
@@ -18,7 +18,9 @@ spec:
     #- 'projected'
     - 'secret'
     #- 'downwardAPI'
+{{- if .Values.controller.hostNetwork }}
   hostNetwork: {{ .Values.controller.hostNetwork }}
+{{- end }}
 {{- if or .Values.controller.hostNetwork .Values.controller.daemonset.useHostPort }}
   hostPorts:
 {{- if .Values.controller.hostNetwork }}

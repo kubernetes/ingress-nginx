@@ -1,8 +1,8 @@
-{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled .Values.podSecurityPolicy.enabled }}
+{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled .Values.podSecurityPolicy.enabled -}}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: {{ include "ingress-nginx.fullname" . }}-admission
+  name: {{ template "ingress-nginx.fullname" . }}-admission
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded

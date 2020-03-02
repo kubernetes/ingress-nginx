@@ -1,8 +1,8 @@
-{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled }}
+{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "ingress-nginx.fullname" . }}-admission-patch
+  name: {{ template "ingress-nginx.fullname" . }}-admission-patch
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -10,41 +10,39 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: admission-webhook
 spec:
-  {{- if .Capabilities.APIVersions.Has "batch/v1alpha1" }}
+{{- if .Capabilities.APIVersions.Has "batch/v1alpha1" }}
   # Alpha feature since k8s 1.12
   ttlSecondsAfterFinished: 0
-  {{- end }}
+{{- end }}
   template:
     metadata:
-      name:   {{ include "ingress-nginx.fullname" . }}-admission-patch
-{{- with .Values.controller.admissionWebhooks.patch.podAnnotations }}
-      annotations:
-{{ toYaml .  | indent 8 }}
-{{- end }}
+      name: {{ template "ingress-nginx.fullname" . }}-admission-patch
+    {{- if .Values.controller.admissionWebhooks.patch.podAnnotations }}
+      annotations: {{ toYaml .Values.controller.admissionWebhooks.patch.podAnnotations | nindent 8 }}
+    {{- end }}
       labels:
         {{- include "ingress-nginx.labels" . | nindent 8 }}
         app.kubernetes.io/component: admission-webhook
     spec:
-      {{- if .Values.controller.admissionWebhooks.patch.priorityClassName }}
+    {{- if .Values.controller.admissionWebhooks.patch.priorityClassName }}
       priorityClassName: {{ .Values.controller.admissionWebhooks.patch.priorityClassName }}
-      {{- end }}
+    {{- end }}
       containers:
         - name: patch
           image: {{ .Values.controller.admissionWebhooks.patch.image.repository }}:{{ .Values.controller.admissionWebhooks.patch.image.tag }}
           imagePullPolicy: {{ .Values.controller.admissionWebhooks.patch.pullPolicy }}
           args:
             - patch
-            - --webhook-name={{ include "ingress-nginx.fullname" . }}-admission
+            - --webhook-name={{ template "ingress-nginx.fullname" . }}-admission
             - --namespace={{ .Release.Namespace }}
             - --patch-mutating=false
             - --secret-name={{ template "ingress-nginx.fullname". }}-admission
             - --patch-failure-policy={{ .Values.controller.admissionWebhooks.failurePolicy }}
       restartPolicy: OnFailure
-      serviceAccountName: {{ include "ingress-nginx.fullname" . }}-admission
-      {{- with .Values.controller.admissionWebhooks.patch.nodeSelector }}
-      nodeSelector:
-{{ toYaml . | indent 8 }}
-      {{- end }}
+      serviceAccountName: {{ template "ingress-nginx.fullname" . }}-admission
+    {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.controller.admissionWebhooks.patch.nodeSelector | nindent 8 }}
+    {{- end }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 2000

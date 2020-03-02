@@ -1,33 +1,27 @@
-{{- if .Values.controller.admissionWebhooks.enabled }}
+{{- if .Values.controller.admissionWebhooks.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
 {{- if .Values.controller.admissionWebhooks.service.annotations }}
-  annotations:
-  {{- range $key, $value := .Values.controller.admissionWebhooks.service.annotations }}
-    {{ $key }}: {{ $value | quote }}
-  {{- end }}
+  annotations: {{ toYaml .Values.controller.admissionWebhooks.service.annotations | nindent 4 }}
 {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
   name: {{ template "ingress-nginx.controller.fullname" . }}-admission
 spec:
-{{- if not .Values.controller.admissionWebhooks.service.omitClusterIP }}
-  {{- with .Values.controller.admissionWebhooks.service.clusterIP }}
-  clusterIP: {{ if eq "-" . }}""{{ else }}{{ . | quote }}{{ end }}
-  {{- end }}
+  type: {{ .Values.controller.admissionWebhooks.service.type }}
+{{- if .Values.controller.admissionWebhooks.service.clusterIP }}
+  clusterIP: {{ .Values.controller.admissionWebhooks.service.clusterIP }}
 {{- end }}
 {{- if .Values.controller.admissionWebhooks.service.externalIPs }}
-  externalIPs:
-{{ toYaml .Values.controller.admissionWebhooks.service.externalIPs | indent 4 }}
+  externalIPs: {{ toYaml .Values.controller.admissionWebhooks.service.externalIPs | nindent 4 }}
 {{- end }}
 {{- if .Values.controller.admissionWebhooks.service.loadBalancerIP }}
-  loadBalancerIP: "{{ .Values.controller.admissionWebhooks.service.loadBalancerIP }}"
+  loadBalancerIP: {{ .Values.controller.admissionWebhooks.service.loadBalancerIP }}
 {{- end }}
 {{- if .Values.controller.admissionWebhooks.service.loadBalancerSourceRanges }}
-  loadBalancerSourceRanges:
-{{ toYaml .Values.controller.admissionWebhooks.service.loadBalancerSourceRanges | indent 4 }}
+  loadBalancerSourceRanges: {{ toYaml .Values.controller.admissionWebhooks.service.loadBalancerSourceRanges | nindent 4 }}
 {{- end }}
   ports:
     - name: https-webhook
@@ -36,5 +30,4 @@ spec:
   selector:
     {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  type: "{{ .Values.controller.admissionWebhooks.service.type }}"
 {{- end }}

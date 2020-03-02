@@ -1,32 +1,31 @@
-{{- if and .Values.controller.metrics.enabled .Values.controller.metrics.serviceMonitor.enabled }}
+{{- if and .Values.controller.metrics.enabled .Values.controller.metrics.serviceMonitor.enabled -}}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ template "ingress-nginx.controller.fullname" . }}
-  {{- if .Values.controller.metrics.serviceMonitor.namespace }}
+{{- if .Values.controller.metrics.serviceMonitor.namespace }}
   namespace: {{ .Values.controller.metrics.serviceMonitor.namespace }}
-  {{- end }}
+{{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-    {{- if .Values.controller.metrics.serviceMonitor.additionalLabels }}
-{{ toYaml .Values.controller.metrics.serviceMonitor.additionalLabels | indent 4 }}
-    {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.additionalLabels }}
+    {{- toYaml .Values.controller.metrics.serviceMonitor.additionalLabels | nindent 4 }}
+  {{- end }}
 spec:
   endpoints:
     - port: metrics
       interval: {{ .Values.controller.metrics.serviceMonitor.scrapeInterval }}
-      {{- if .Values.controller.metrics.serviceMonitor.honorLabels }}
+    {{- if .Values.controller.metrics.serviceMonitor.honorLabels }}
       honorLabels: true
-      {{- end }}
-  {{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
-  namespaceSelector:
-{{ toYaml .Values.controller.metrics.serviceMonitor.namespaceSelector | indent 4 -}}
-  {{ else }}
+    {{- end }}
+{{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
+  namespaceSelector: {{ toYaml .Values.controller.metrics.serviceMonitor.namespaceSelector | nindent 4 }}
+{{ else }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}
-  {{- end }}
+{{- end }}
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}

@@ -1,5 +1,4 @@
-{{- if or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both") }}
-{{- if .Values.controller.autoscaling.enabled }}
+{{- if and .Values.controller.autoscaling.enabled (or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both")) -}}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -15,17 +14,16 @@ spec:
   minReplicas: {{ .Values.controller.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.controller.autoscaling.maxReplicas }}
   metrics:
-{{- with .Values.controller.autoscaling.targetCPUUtilizationPercentage }}
+  {{- with .Values.controller.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: cpu
         targetAverageUtilization: {{ . }}
-{{- end }}
-{{- with .Values.controller.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+  {{- with .Values.controller.autoscaling.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
         targetAverageUtilization: {{ . }}
-{{- end }}
-{{- end }}
+  {{- end }}
 {{- end }}
