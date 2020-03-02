@@ -2,7 +2,7 @@
 apiVersion: {{ template "podSecurityPolicy.apiVersion" . }}
 kind: PodSecurityPolicy
 metadata:
-  name: {{ include "ingress-nginx.fullname" . }}-backend
+  name: {{ template "ingress-nginx.fullname" . }}-backend
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
@@ -30,4 +30,4 @@ spec:
   - projected
   - secret
   - downwardAPI
-{{- end -}}
+{{- end }}

@@ -1,4 +1,4 @@
-{{- if .Values.controller.addHeaders }}
+{{- if .Values.controller.addHeaders -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,6 +6,5 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
   name: {{ include "ingress-nginx.fullname" . }}-custom-add-headers
-data:
-{{ toYaml .Values.controller.addHeaders | indent 2 }}
+data: {{ toYaml .Values.controller.addHeaders | nindent 2 }}
 {{- end }}

@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ include "ingress-nginx.fullname" . }}
+  name: {{ template "ingress-nginx.fullname" . }}
 rules:
   - apiGroups:
       - ""
@@ -80,10 +80,9 @@ rules:
       - create
       - patch
 {{- if .Values.podSecurityPolicy.enabled }}
-  - apiGroups:      ['{{ template "podSecurityPolicy.apiGroup" . }}']
+  - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']
     verbs:          ['use']
-    resourceNames:  [{{ include "ingress-nginx.fullname" . }}]
+    resourceNames:  [{{ template "ingress-nginx.fullname" . }}]
 {{- end }}
-
-{{- end -}}
+{{- end }}

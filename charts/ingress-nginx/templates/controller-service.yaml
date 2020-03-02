@@ -1,90 +1,83 @@
-{{- if .Values.controller.service.enabled }}
+{{- if .Values.controller.service.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
 {{- if .Values.controller.service.annotations }}
-  annotations:
-  {{- range $key, $value := .Values.controller.service.annotations }}
-    {{ $key }}: {{ $value | quote }}
-  {{- end }}
+  annotations: {{ toYaml .Values.controller.service.annotations | nindent 4 }}
 {{- end }}
   labels:
-{{- if .Values.controller.service.labels }}
-{{ toYaml .Values.controller.service.labels | indent 4 }}
-{{- end }}
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+  {{- if .Values.controller.service.labels }}
+    {{- toYaml .Values.controller.service.labels | nindent 4 }}
+  {{- end }}
   name: {{ template "ingress-nginx.controller.fullname" . }}
 spec:
-{{- if not .Values.controller.service.omitClusterIP }}
-  {{- with .Values.controller.service.clusterIP }}
-  clusterIP: {{ if eq "-" . }}""{{ else }}{{ . | quote }}{{ end }}
-  {{- end }}
+  type: {{ .Values.controller.service.type }}
+{{- if .Values.controller.service.clusterIP }}
+  clusterIP: {{ .Values.controller.service.clusterIP }}
 {{- end }}
 {{- if .Values.controller.service.externalIPs }}
-  externalIPs:
-{{ toYaml .Values.controller.service.externalIPs | indent 4 }}
+  externalIPs: {{ toYaml .Values.controller.service.externalIPs | nindent 4 }}
 {{- end }}
 {{- if .Values.controller.service.loadBalancerIP }}
-  loadBalancerIP: "{{ .Values.controller.service.loadBalancerIP }}"
+  loadBalancerIP: {{ .Values.controller.service.loadBalancerIP }}
 {{- end }}
 {{- if .Values.controller.service.loadBalancerSourceRanges }}
-  loadBalancerSourceRanges:
-{{ toYaml .Values.controller.service.loadBalancerSourceRanges | indent 4 }}
+  loadBalancerSourceRanges: {{ toYaml .Values.controller.service.loadBalancerSourceRanges | nindent 4 }}
 {{- end }}
-{{- if and (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) (.Values.controller.service.externalTrafficPolicy) }}
-  externalTrafficPolicy: "{{ .Values.controller.service.externalTrafficPolicy }}"
+{{- if and .Values.controller.service.externalTrafficPolicy (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) }}
+  externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
 {{- end }}
 {{- if .Values.controller.service.sessionAffinity }}
-  sessionAffinity: "{{ .Values.controller.service.sessionAffinity }}"
+  sessionAffinity: {{ .Values.controller.service.sessionAffinity }}
 {{- end }}
-{{- if and (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) (.Values.controller.service.healthCheckNodePort) }}
+{{- if and .Values.controller.service.healthCheckNodePort (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) }}
   healthCheckNodePort: {{ .Values.controller.service.healthCheckNodePort }}
 {{- end }}
   ports:
-    {{- $setNodePorts := (or (eq .Values.controller.service.type "NodePort") (eq .Values.controller.service.type "LoadBalancer")) }}
-    {{- if .Values.controller.service.enableHttp }}
+  {{- $setNodePorts := (or (eq .Values.controller.service.type "NodePort") (eq .Values.controller.service.type "LoadBalancer")) }}
+  {{- if .Values.controller.service.enableHttp }}
     - name: http
       port: {{ .Values.controller.service.ports.http }}
       protocol: TCP
       targetPort: {{ .Values.controller.service.targetPorts.http }}
-      {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.http))) }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.http))) }}
       nodePort: {{ .Values.controller.service.nodePorts.http }}
-      {{- end }}
     {{- end }}
-    {{- if .Values.controller.service.enableHttps }}
+  {{- end }}
+  {{- if .Values.controller.service.enableHttps }}
     - name: https
       port: {{ .Values.controller.service.ports.https }}
       protocol: TCP
       targetPort: {{ .Values.controller.service.targetPorts.https }}
-      {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}
       nodePort: {{ .Values.controller.service.nodePorts.https }}
-      {{- end }}
     {{- end }}
+  {{- end }}
   {{- range $key, $value := .Values.tcp }}
-    - name: "{{ $key }}-tcp"
+    - name: {{ $key }}-tcp
       port: {{ $key }}
       protocol: TCP
-      targetPort: "{{ $key }}-tcp"
-     {{- if $.Values.controller.service.nodePorts.tcp }}
-      {{- if index $.Values.controller.service.nodePorts.tcp $key }}
+      targetPort: {{ $key }}-tcp
+    {{- if $.Values.controller.service.nodePorts.tcp }}
+    {{- if index $.Values.controller.service.nodePorts.tcp $key }}
       nodePort: {{ index $.Values.controller.service.nodePorts.tcp $key }}
-      {{- end }}
-     {{- end }}
+    {{- end }}
+    {{- end }}
   {{- end }}
   {{- range $key, $value := .Values.udp }}
-    - name: "{{ $key }}-udp"
+    - name: {{ $key }}-udp
       port: {{ $key }}
       protocol: UDP
-      targetPort: "{{ $key }}-udp"
-     {{- if $.Values.controller.service.nodePorts.udp }}
-      {{- if index $.Values.controller.service.nodePorts.udp $key }}
+      targetPort: {{ $key }}-udp
+    {{- if $.Values.controller.service.nodePorts.udp }}
+    {{- if index $.Values.controller.service.nodePorts.udp $key }}
       nodePort: {{ index $.Values.controller.service.nodePorts.udp $key }}
-      {{- end }}
-     {{- end }}
+    {{- end }}
+    {{- end }}
   {{- end }}
   selector:
     {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  type: "{{ .Values.controller.service.type }}"
 {{- end }}
