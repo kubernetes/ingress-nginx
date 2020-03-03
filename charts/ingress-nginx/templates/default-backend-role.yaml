@@ -5,10 +5,10 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
-  name: {{ include "ingress-nginx.fullname" . }}-backend
+  name: {{ template "ingress-nginx.fullname" . }}-backend
 rules:
-  - apiGroups:      ['{{ template "podSecurityPolicy.apiGroup" . }}']
+  - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']
     verbs:          ['use']
-    resourceNames:  [{{ include "ingress-nginx.fullname" . }}-backend]
-{{- end -}}
+    resourceNames:  [{{ template "ingress-nginx.fullname" . }}-backend]
+{{- end }}

@@ -1,11 +1,11 @@
-{{- if .Values.controller.admissionWebhooks.enabled }}
+{{- if .Values.controller.admissionWebhooks.enabled -}}
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: admission-webhook
-  name: {{ include "ingress-nginx.fullname" . }}-admission
+  name: {{ template "ingress-nginx.fullname" . }}-admission
 webhooks:
   - name: validate.nginx.ingress.kubernetes.io
     rules:

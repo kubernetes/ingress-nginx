@@ -115,6 +115,17 @@ Return the appropriate apiVersion for deployment.
 {{- end -}}
 
 {{/*
+Return the appropriate apiVersion for daemonset.
+*/}}
+{{- define "daemonset.apiVersion" -}}
+{{- if semverCompare ">=1.9-0" .Capabilities.KubeVersion.GitVersion -}}
+{{- print "apps/v1" -}}
+{{- else -}}
+{{- print "v1/beta2" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Return the appropriate apiGroup for PodSecurityPolicy.
 */}}
 {{- define "podSecurityPolicy.apiGroup" -}}

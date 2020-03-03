@@ -1,4 +1,4 @@
-{{- if and (.Values.rbac.create) (not .Values.rbac.scope) -}}
+{{- if and .Values.rbac.create (not .Values.rbac.scope) -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -65,4 +65,4 @@ rules:
       - ingresses/status
     verbs:
       - update
-{{- end -}}
+{{- end }}
