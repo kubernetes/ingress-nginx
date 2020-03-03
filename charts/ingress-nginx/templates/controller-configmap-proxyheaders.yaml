@@ -1,4 +1,4 @@
-{{- if or .Values.controller.proxySetHeaders .Values.controller.headers }}
+{{- if or .Values.controller.proxySetHeaders .Values.controller.headers -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:

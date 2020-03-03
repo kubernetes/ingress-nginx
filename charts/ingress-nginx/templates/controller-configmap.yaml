@@ -1,12 +1,13 @@
-{{- if or .Values.controller.config (or (or .Values.controller.proxySetHeaders .Values.controller.headers) .Values.controller.addHeaders) }}
+{{- if or .Values.controller.config (or (or .Values.controller.proxySetHeaders .Values.controller.headers) .Values.controller.addHeaders) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  annotations:
-{{ toYaml .Values.controller.configAnnotations | indent 4}}
+{{- if .Values.controller.configAnnotations }}
+  annotations: {{ toYaml .Values.controller.configAnnotations | nindent 4 }}
+{{- end }}
   name: {{ template "ingress-nginx.controller.fullname" . }}
 data:
 {{- if .Values.controller.addHeaders }}
@@ -16,6 +17,6 @@ data:
   proxy-set-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
 {{- end }}
 {{- if .Values.controller.config }}
-{{ toYaml .Values.controller.config | indent 2 }}
+  {{ toYaml .Values.controller.config | nindent 2 }}
 {{- end }}
 {{- end }}
