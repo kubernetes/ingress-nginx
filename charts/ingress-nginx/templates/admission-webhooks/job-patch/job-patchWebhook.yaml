@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ template "ingress-nginx.fullname" . }}-admission-patch
+  name: {{ include "ingress-nginx.fullname" . }}-admission-patch
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -16,7 +16,7 @@ spec:
 {{- end }}
   template:
     metadata:
-      name: {{ template "ingress-nginx.fullname" . }}-admission-patch
+      name: {{ include "ingress-nginx.fullname" . }}-admission-patch
     {{- if .Values.controller.admissionWebhooks.patch.podAnnotations }}
       annotations: {{ toYaml .Values.controller.admissionWebhooks.patch.podAnnotations | nindent 8 }}
     {{- end }}
@@ -33,13 +33,13 @@ spec:
           imagePullPolicy: {{ .Values.controller.admissionWebhooks.patch.pullPolicy }}
           args:
             - patch
-            - --webhook-name={{ template "ingress-nginx.fullname" . }}-admission
+            - --webhook-name={{ include "ingress-nginx.fullname" . }}-admission
             - --namespace={{ .Release.Namespace }}
             - --patch-mutating=false
-            - --secret-name={{ template "ingress-nginx.fullname". }}-admission
+            - --secret-name={{ include "ingress-nginx.fullname" . }}-admission
             - --patch-failure-policy={{ .Values.controller.admissionWebhooks.failurePolicy }}
       restartPolicy: OnFailure
-      serviceAccountName: {{ template "ingress-nginx.fullname" . }}-admission
+      serviceAccountName: {{ include "ingress-nginx.fullname" . }}-admission
     {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
       nodeSelector: {{ toYaml .Values.controller.admissionWebhooks.patch.nodeSelector | nindent 8 }}
     {{- end }}

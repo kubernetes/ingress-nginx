@@ -7,8 +7,8 @@ metadata:
 {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ template "ingress-nginx.controller.fullname" . }}-admission
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.controller.fullname" . }}-admission
 spec:
   type: {{ .Values.controller.admissionWebhooks.service.type }}
 {{- if .Values.controller.admissionWebhooks.service.clusterIP }}
@@ -29,5 +29,5 @@ spec:
       targetPort: webhook
   selector:
     {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+    app.kubernetes.io/component: controller
 {{- end }}

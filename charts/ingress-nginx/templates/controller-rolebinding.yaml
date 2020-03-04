@@ -4,12 +4,12 @@ kind: RoleBinding
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ template "ingress-nginx.fullname" . }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.fullname" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ template "ingress-nginx.fullname" . }}
+  name: {{ include "ingress-nginx.fullname" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ template "ingress-nginx.serviceAccountName" . }}

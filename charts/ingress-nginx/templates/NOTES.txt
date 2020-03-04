@@ -6,12 +6,12 @@ Get the application URL by running these commands:
 {{- if (not (empty .Values.controller.service.nodePorts.http)) }}
   export HTTP_NODE_PORT={{ .Values.controller.service.nodePorts.http }}
 {{- else }}
-  export HTTP_NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[0].nodePort}" {{ template "ingress-nginx.controller.fullname" . }})
+  export HTTP_NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[0].nodePort}" {{ include "ingress-nginx.controller.fullname" . }})
 {{- end }}
 {{- if (not (empty .Values.controller.service.nodePorts.https)) }}
   export HTTPS_NODE_PORT={{ .Values.controller.service.nodePorts.https }}
 {{- else }}
-  export HTTPS_NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[1].nodePort}" {{ template "ingress-nginx.controller.fullname" . }})
+  export HTTPS_NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[1].nodePort}" {{ include "ingress-nginx.controller.fullname" . }})
 {{- end }}
   export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }} get nodes -o jsonpath="{.items[0].status.addresses[1].address}")
 
@@ -19,7 +19,7 @@ Get the application URL by running these commands:
   echo "Visit https://$NODE_IP:$HTTPS_NODE_PORT to access your application via HTTPS."
 {{- else if contains "LoadBalancer" .Values.controller.service.type }}
 It may take a few minutes for the LoadBalancer IP to be available.
-You can watch the status by running 'kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ template "ingress-nginx.controller.fullname" . }}'
+You can watch the status by running 'kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ include "ingress-nginx.controller.fullname" . }}'
 {{- else if contains "ClusterIP"  .Values.controller.service.type }}
 Get the application URL by running these commands:
   export POD_NAME=$(kubectl --namespace {{ .Release.Namespace }} get pods -o jsonpath="{.items[0].metadata.name}" -l "app={{ template "ingress-nginx.name" . }},component={{ .Values.controller.name }},release={{ .Release.Name }}")

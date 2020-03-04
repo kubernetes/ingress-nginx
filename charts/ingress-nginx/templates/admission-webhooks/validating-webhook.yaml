@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: admission-webhook
-  name: {{ template "ingress-nginx.fullname" . }}-admission
+  name: {{ include "ingress-nginx.fullname" . }}-admission
 webhooks:
   - name: validate.nginx.ingress.kubernetes.io
     rules:
@@ -23,6 +23,6 @@ webhooks:
     clientConfig:
       service:
         namespace: {{ .Release.Namespace }}
-        name: {{ template "ingress-nginx.controller.fullname" . }}-admission
+        name: {{ include "ingress-nginx.controller.fullname" . }}-admission
         path: /extensions/v1beta1/ingresses
 {{- end }}

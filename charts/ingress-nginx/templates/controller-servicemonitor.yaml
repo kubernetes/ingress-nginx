@@ -2,13 +2,13 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ template "ingress-nginx.controller.fullname" . }}
+  name: {{ include "ingress-nginx.controller.fullname" . }}
 {{- if .Values.controller.metrics.serviceMonitor.namespace }}
   namespace: {{ .Values.controller.metrics.serviceMonitor.namespace }}
 {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+    app.kubernetes.io/component: controller
   {{- if .Values.controller.metrics.serviceMonitor.additionalLabels }}
     {{- toYaml .Values.controller.metrics.serviceMonitor.additionalLabels | nindent 4 }}
   {{- end }}
@@ -29,5 +29,5 @@ spec:
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+      app.kubernetes.io/component: controller
 {{- end }}
