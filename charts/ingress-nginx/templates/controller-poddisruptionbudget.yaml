@@ -4,12 +4,12 @@ kind: PodDisruptionBudget
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ template "ingress-nginx.controller.fullname" . }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.controller.fullname" . }}
 spec:
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+      app.kubernetes.io/component: controller
   minAvailable: {{ .Values.controller.minAvailable }}
 {{- end }}
