@@ -219,6 +219,8 @@ func quote(input interface{}) string {
 		inputStr = input
 	case fmt.Stringer:
 		inputStr = input.String()
+	case *string:
+		inputStr = *input
 	default:
 		inputStr = fmt.Sprintf("%v", input)
 	}
