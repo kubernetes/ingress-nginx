@@ -256,10 +256,12 @@ func TestFormatIP(t *testing.T) {
 }
 
 func TestQuote(t *testing.T) {
+	foo := "foo"
 	cases := map[interface{}]string{
 		"foo":      `"foo"`,
 		"\"foo\"":  `"\"foo\""`,
 		"foo\nbar": `"foo\nbar"`,
+		&foo:       `"foo"`,
 		10:         `"10"`,
 	}
 	for input, output := range cases {
