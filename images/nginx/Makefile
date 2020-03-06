@@ -18,7 +18,7 @@
 SHELL=/bin/bash -o pipefail
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.98
+TAG ?= 0.99
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 IMGNAME = nginx
