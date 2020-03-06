@@ -61,14 +61,20 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 	return cm, nil
 }
 
+// GetIngress gets an Ingress object from the given namespace, name and retunrs it, throws error if it does not exists.
+func (f *Framework) GetIngress(namespace string, name string) *networking.Ingress {
+	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+	assert.Nil(ginkgo.GinkgoT(), err, "getting ingress")
+	assert.NotNil(ginkgo.GinkgoT(), ing, "expected an ingress but none returned")
+	return ing
+}
+
 // EnsureIngress creates an Ingress object and retunrs it, throws error if it already exists.
 func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingress {
 	err := createIngressWithRetries(f.KubeClientSet, f.Namespace, ingress)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
 
-	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(ingress.Name, metav1.GetOptions{})
-	assert.Nil(ginkgo.GinkgoT(), err, "getting ingress")
-	assert.NotNil(ginkgo.GinkgoT(), ing, "expected an ingress but none returned")
+	ing := f.GetIngress(f.Namespace, ingress.Name)
 
 	if ing.Annotations == nil {
 		ing.Annotations = make(map[string]string)
@@ -85,9 +91,7 @@ func (f *Framework) UpdateIngress(ingress *networking.Ingress) *networking.Ingre
 	err := updateIngressWithRetries(f.KubeClientSet, f.Namespace, ingress)
 	assert.Nil(ginkgo.GinkgoT(), err, "updating ingress")
 
-	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(ingress.Name, metav1.GetOptions{})
-	assert.Nil(ginkgo.GinkgoT(), err, "getting ingress")
-	assert.NotNil(ginkgo.GinkgoT(), ing, "expected an ingress but none returned")
+	ing := f.GetIngress(f.Namespace, ingress.Name)
 
 	if ing.Annotations == nil {
 		ing.Annotations = make(map[string]string)
