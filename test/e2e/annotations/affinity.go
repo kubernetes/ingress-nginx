@@ -40,10 +40,9 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 	ginkgo.It("should set sticky cookie SERVERID", func() {
 		host := "sticky.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -63,10 +62,9 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 	ginkgo.It("should change cookie name on ingress definition change", func() {
 		host := "change.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -99,10 +97,9 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 	ginkgo.It("should set the path to /something on the generated cookie", func() {
 		host := "path.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
 
 		ing := framework.NewSingleIngress(host, "/something", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -122,10 +119,9 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 	ginkgo.It("does not set the path to / on the generated cookie if there's more than one rule referring to the same backend", func() {
 		host := "morethanonerule.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
 
 		f.EnsureIngress(&networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -184,12 +180,11 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 	ginkgo.It("should set cookie with expires", func() {
 		host := "cookieexpires.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":               "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name":    "ExpiresCookie",
-			"nginx.ingress.kubernetes.io/session-cookie-expires": "172800",
-			"nginx.ingress.kubernetes.io/session-cookie-max-age": "259200",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "ExpiresCookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-expires"] = "172800"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-max-age"] = "259200"
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -216,12 +211,11 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 	ginkgo.It("should work with use-regex annotation and session-cookie-path", func() {
 		host := "useregex.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-			"nginx.ingress.kubernetes.io/use-regex":           "true",
-			"nginx.ingress.kubernetes.io/session-cookie-path": "/foo/bar",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
+		annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-path"] = "/foo/bar"
 
 		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -241,11 +235,10 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 	ginkgo.It("should warn user when use-regex is true and session-cookie-path is not set", func() {
 		host := "useregexwarn.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-			"nginx.ingress.kubernetes.io/use-regex":           "true",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
+		annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 
 		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -269,9 +262,9 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 	ginkgo.It("should not set affinity across all server locations when using separate ingresses", func() {
 		host := "separate.foo.com"
 
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity": "cookie",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+
 		ing1 := framework.NewSingleIngress("ingress1", "/foo/bar", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing1)
 
@@ -299,10 +292,9 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 	})
 
 	ginkgo.It("should set sticky cookie without host", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
 
 		ing := framework.NewSingleIngress("default-no-host", "/", "", f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
