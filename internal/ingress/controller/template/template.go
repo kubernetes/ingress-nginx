@@ -868,7 +868,7 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 			continue
 		}
 
-		if hostname != "" && hostname != rule.Host {
+		if hostname != "_" && rule.Host == "" {
 			continue
 		}
 
