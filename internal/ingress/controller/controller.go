@@ -1111,6 +1111,13 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				continue
 			}
 
+			if cert.Certificate == nil {
+				klog.Warningf("SSL certificate %q does not contain a valid SSL certificate for server %q", secrKey, host)
+				klog.Warningf("Using default certificate")
+				servers[host].SSLCert = n.getDefaultSSLCertificate()
+				continue
+			}
+
 			err = cert.Certificate.VerifyHostname(host)
 			if err != nil {
 				klog.Warningf("Unexpected error validating SSL certificate %q for server %q: %v", secrKey, host, err)
