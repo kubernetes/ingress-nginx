@@ -4,13 +4,13 @@ kind: Deployment
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
-  name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
+    app.kubernetes.io/component: default-backend
+  name: {{ include "ingress-nginx.defaultBackend.fullname" . }}
 spec:
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
+      app.kubernetes.io/component: default-backend
   replicas: {{ .Values.defaultBackend.replicaCount }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   template:
@@ -20,7 +20,7 @@ spec:
     {{- end }}
       labels:
         {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
+        app.kubernetes.io/component: default-backend
       {{- if .Values.defaultBackend.podLabels }}
         {{- toYaml .Values.defaultBackend.podLabels | nindent 8 }}
       {{- end }}

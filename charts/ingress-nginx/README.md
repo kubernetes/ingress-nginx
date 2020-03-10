@@ -50,7 +50,6 @@ The following table lists the configurable parameters of the ingress-nginx chart
 
 Parameter | Description | Default
 --- | --- | ---
-`controller.name` | name of the controller component | `controller`
 `controller.image.repository` | controller container image repository | `quay.io/kubernetes-ingress-controller/nginx-ingress-controller`
 `controller.image.tag` | controller container image tag | `0.30.0`
 `controller.image.pullPolicy` | controller container image pull policy | `IfNotPresent`
@@ -184,7 +183,6 @@ Parameter | Description | Default
 `controller.udp.configMapNamespace` | The udp-services-configmap namespace name | `""`
 `controller.udp.annotations` | annotations to be added to udp configmap | `{}`
 `defaultBackend.enabled` | Use default backend component | `true`
-`defaultBackend.name` | name of the default backend component | `default-backend`
 `defaultBackend.image.repository` | default backend container image repository | `k8s.gcr.io/defaultbackend-amd64`
 `defaultBackend.image.tag` | default backend container image tag | `1.5`
 `defaultBackend.image.pullPolicy` | default backend container image pull policy | `IfNotPresent`

@@ -2,10 +2,10 @@
 apiVersion: {{ template "podSecurityPolicy.apiVersion" . }}
 kind: PodSecurityPolicy
 metadata:
-  name: {{ template "ingress-nginx.fullname" . }}
+  name: {{ include "ingress-nginx.fullname" . }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+    app.kubernetes.io/component: controller
 spec:
   allowedCapabilities:
     - NET_BIND_SERVICE

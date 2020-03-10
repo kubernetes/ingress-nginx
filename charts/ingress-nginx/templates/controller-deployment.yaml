@@ -4,8 +4,8 @@ kind: Deployment
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ template "ingress-nginx.controller.fullname" . }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.controller.fullname" . }}
 {{- if .Values.controller.deploymentAnnotations }}
   annotations: {{ toYaml .Values.controller.deploymentAnnotations | nindent 4 }}
 {{- end }}
@@ -13,7 +13,7 @@ spec:
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+      app.kubernetes.io/component: controller
 {{- if not .Values.controller.autoscaling.enabled }}
   replicas: {{ .Values.controller.replicaCount }}
 {{- end }}
@@ -29,7 +29,7 @@ spec:
     {{- end }}
       labels:
         {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+        app.kubernetes.io/component: controller
       {{- if .Values.controller.podLabels }}
         {{- toYaml .Values.controller.podLabels | nindent 8 }}
       {{- end }}
@@ -57,7 +57,7 @@ spec:
           args:
             - /nginx-ingress-controller
           {{- if .Values.defaultBackend.enabled }}
-            - --default-backend-service={{ .Release.Namespace }}/{{ template "ingress-nginx.defaultBackend.fullname" . }}
+            - --default-backend-service={{ .Release.Namespace }}/{{ include "ingress-nginx.defaultBackend.fullname" . }}
           {{- else }}
             {{- if (semverCompare "<0.21.0" .Values.controller.image.tag) }}
             - --default-backend-service={{ required ".Values.controller.defaultBackendService is required if .Values.defaultBackend.enabled=false and .Values.controller.image.tag < 0.21.0" .Values.controller.defaultBackendService }}
@@ -75,9 +75,9 @@ spec:
             - --ingress-class={{ .Values.controller.ingressClass }}
           {{- end }}
           {{- if (semverCompare ">=0.9.0-beta.1" .Values.controller.image.tag) }}
-            - --configmap={{ default .Release.Namespace .Values.controller.configMapNamespace }}/{{ template "ingress-nginx.controller.fullname" . }}
+            - --configmap={{ default .Release.Namespace .Values.controller.configMapNamespace }}/{{ include "ingress-nginx.controller.fullname" . }}
           {{- else }}
-            - --nginx-configmap={{ default .Release.Namespace .Values.controller.configMapNamespace }}/{{ template "ingress-nginx.controller.fullname" . }}
+            - --nginx-configmap={{ default .Release.Namespace .Values.controller.configMapNamespace }}/{{ include "ingress-nginx.controller.fullname" . }}
           {{- end }}
           {{- if .Values.tcp }}
             - --tcp-services-configmap={{ default .Release.Namespace .Values.controller.tcp.configMapNamespace }}/{{ include "ingress-nginx.fullname" . }}-tcp
@@ -226,7 +226,7 @@ spec:
       {{- if .Values.controller.admissionWebhooks.enabled }}
         - name: webhook-cert
           secret:
-            secretName: {{ template "ingress-nginx.fullname". }}-admission
+            secretName: {{ include "ingress-nginx.fullname" . }}-admission
       {{- end }}
       {{- if .Values.controller.extraVolumes }}
         {{ toYaml .Values.controller.extraVolumes | nindent 8 }}

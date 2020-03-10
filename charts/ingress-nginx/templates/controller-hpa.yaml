@@ -4,13 +4,13 @@ kind: HorizontalPodAutoscaler
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
-  name: {{ template "ingress-nginx.controller.fullname" . }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.controller.fullname" . }}
 spec:
   scaleTargetRef:
     apiVersion: {{ template "deployment.apiVersion" . }}
     kind: Deployment
-    name: {{ template "ingress-nginx.controller.fullname" . }}
+    name: {{ include "ingress-nginx.controller.fullname" . }}
   minReplicas: {{ .Values.controller.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.controller.autoscaling.maxReplicas }}
   metrics:
