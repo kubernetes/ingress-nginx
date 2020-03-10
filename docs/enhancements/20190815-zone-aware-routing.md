@@ -32,10 +32,10 @@ Teach ingress-nginx about availability zones where endpoints are running in. Thi
 
 ## Motivation
 
-When users run their services across multiple availability zones they usually pay for egress traffic between zones. Providers such as GCP, Amazon EC2 charge money for that.
+When users run their services across multiple availability zones they usually pay for egress traffic between zones. Providers such as GCP, and Amazon EC2 usually charge extra for this feature.
 ingress-nginx when picking an endpoint to route request to does not consider whether the endpoint is in a different zone or the same one. That means it's at least equally likely
-that it will pick an endpoint from another zone and proxy the request to it. In this situation response from the endpoint to the ingress-nginx pod is considered as
-inter-zone traffic and costs money.
+that it will pick an endpoint from another zone and proxy the request to it. In this situation response from the endpoint to the ingress-nginx pod is considered
+inter-zone traffic and usually costs extra money.
 
 
 At the time of this writing, GCP charges $0.01 per GB of inter-zone egress traffic according to https://cloud.google.com/compute/network-pricing.
@@ -62,16 +62,16 @@ The idea here is to have the controller part of ingress-nginx
 (1) detect what zone its current pod is running in and
 (2) detect the zone for every endpoint it knows about.
 After that, it will post that data as part of endpoints to Lua land.
-Then Lua balancer when picking an endpoint will try to pick zone-local endpoint first and
+When picking an endpoint, the Lua balancer will try to pick zone-local endpoint first and
 if there is no zone-local endpoint then it will fall back to current behaviour.
 
-This feature at least, in the beginning, should be optional since it is going to make it harder to reason about the load balancing and not everyone might want that.
+Initially, this feature should be optional since it is going to make it harder to reason about the load balancing and not everyone might want that.
 
 **How does controller know what zone it runs in?**
 We can have the pod spec pass the node name using downward API as an environment variable.
-Then on start controller can get node details from the API based on the node name.
+Upon startup, the controller can get node details from the API based on the node name.
 Once the node details are obtained
-we can extract the zone from `failure-domain.beta.kubernetes.io/zone` annotation.
+we can extract the zone from the `failure-domain.beta.kubernetes.io/zone` annotation.
 Then we can pass that value to Lua land through Nginx configuration
 when loading `lua_ingress.lua` module in `init_by_lua` phase.
 
@@ -84,7 +84,7 @@ watch update events as well on the nodes and that'll add even more overhead.
 
 Alternatively, we can get the list of nodes only when there's no node in the memory for the given node name. This is probably a better solution
 because then we would avoid watching for API changes on node resources. We can eagerly fetch all the nodes and build node name to zone mapping on start.
-And from thereon sync it during endpoint building in the main event loop IFF there's no existing entry for the node of an endpoint.
+From there on,  it will sync during endpoint building in the main event loop if there's no existing entry for the node of an endpoint.
 This means an extra API call in case cluster has expanded.
 
 **How do we make sure we do our best to choose zone-local endpoint?**
