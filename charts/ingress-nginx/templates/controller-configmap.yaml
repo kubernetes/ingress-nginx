@@ -4,11 +4,11 @@ kind: ConfigMap
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.controller.name | quote }}
+    app.kubernetes.io/component: controller
 {{- if .Values.controller.configAnnotations }}
   annotations: {{ toYaml .Values.controller.configAnnotations | nindent 4 }}
 {{- end }}
-  name: {{ template "ingress-nginx.controller.fullname" . }}
+  name: {{ include "ingress-nginx.controller.fullname" . }}
 data:
 {{- if .Values.controller.addHeaders }}
   add-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers

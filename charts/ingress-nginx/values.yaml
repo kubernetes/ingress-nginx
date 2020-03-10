@@ -2,7 +2,6 @@
 ## Ref: https://github.com/kubernetes/ingress/blob/master/controllers/nginx/configuration.md
 ##
 controller:
-  name: controller
   image:
     repository: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
     tag: "0.30.0"
@@ -435,7 +434,6 @@ defaultBackend:
   ##
   enabled: false
 
-  name: default-backend
   image:
     repository: k8s.gcr.io/defaultbackend-amd64
     tag: "1.5"

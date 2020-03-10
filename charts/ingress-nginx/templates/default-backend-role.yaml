@@ -4,11 +4,11 @@ kind: Role
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ .Values.defaultBackend.name | quote }}
-  name: {{ template "ingress-nginx.fullname" . }}-backend
+    app.kubernetes.io/component: default-backend
+  name: {{ include "ingress-nginx.fullname" . }}-backend
 rules:
   - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']
     verbs:          ['use']
-    resourceNames:  [{{ template "ingress-nginx.fullname" . }}-backend]
+    resourceNames:  [{{ include "ingress-nginx.fullname" . }}-backend]
 {{- end }}
