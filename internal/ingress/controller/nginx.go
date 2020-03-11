@@ -384,6 +384,11 @@ func (n *NGINXController) Stop() error {
 	n.stopLock.Lock()
 	defer n.stopLock.Unlock()
 
+	if n.cfg.WaitBeforeShutdown > 0 {
+		klog.Infof("Waiting for %d seconds before stopping NGINX", n.cfg.WaitBeforeShutdown)
+		time.Sleep(time.Duration(n.cfg.WaitBeforeShutdown) * time.Second)
+	}
+
 	if n.syncQueue.IsShuttingDown() {
 		return fmt.Errorf("shutdown already in progress")
 	}

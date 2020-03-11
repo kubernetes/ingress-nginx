@@ -78,6 +78,7 @@ type Configuration struct {
 	UseNodeInternalIP      bool
 	ElectionID             string
 	UpdateStatusOnShutdown bool
+	WaitBeforeShutdown     int
 
 	ListenPorts *ngx_config.ListenPorts
 

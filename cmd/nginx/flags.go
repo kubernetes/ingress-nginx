@@ -121,6 +121,10 @@ different namespace than their own. May be used together with watch-namespace.`)
 			`Update the load-balancer status of Ingress objects when the controller shuts down.
 Requires the update-status parameter.`)
 
+		waitBeforeShutdown = flags.Int("wait-before-shutdown", 0,
+			`Delay shutting down nginx after a termination signal is received, to give time for 
+external load balancers to to update their statuses before the shutdown.`)
+
 		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", false,
 			`Set the load-balancer status of Ingress objects to internal Node addresses instead of external.
 Requires the update-status parameter.`)
@@ -291,6 +295,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		PublishService:         *publishSvc,
 		PublishStatusAddress:   *publishStatusAddress,
 		UpdateStatusOnShutdown: *updateStatusOnShutdown,
+		WaitBeforeShutdown:     *waitBeforeShutdown,
 		UseNodeInternalIP:      *useNodeInternalIP,
 		SyncRateLimit:          *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
