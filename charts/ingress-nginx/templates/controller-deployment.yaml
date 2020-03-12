@@ -48,7 +48,7 @@ spec:
       securityContext: {{ toYaml .Values.controller.podSecurityContext | nindent 8 }}
     {{- end }}
       containers:
-        - name: {{ template "ingress-nginx.name" . }}-{{ .Values.controller.name }}
+        - name: controller
           image: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
         {{- if .Values.controller.lifecycle }}
