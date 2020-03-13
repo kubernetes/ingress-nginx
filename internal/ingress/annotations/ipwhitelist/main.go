@@ -22,7 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/ingress-nginx/internal/net"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -45,12 +45,7 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 		return false
 	}
 
-	match := sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
-	if !match {
-		return false
-	}
-
-	return true
+	return sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
 }
 
 type ipwhitelist struct {
@@ -66,7 +61,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to limit access to certain client addresses or networks.
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`
-func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a ipwhitelist) Parse(ing *networking.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
 	sort.Strings(defBackend.WhitelistSourceRange)
 

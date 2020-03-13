@@ -17,8 +17,8 @@ limitations under the License.
 package framework
 
 import (
-	. "github.com/onsi/gomega"
-
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,26 +69,25 @@ func (f *Framework) NewInfluxDBDeployment() {
 	}
 
 	cm, err := f.EnsureConfigMap(configuration)
-	Expect(err).NotTo(HaveOccurred(), "failed to create an Influxdb deployment")
-
-	Expect(cm).NotTo(BeNil(), "expected a configmap but none returned")
+	assert.Nil(ginkgo.GinkgoT(), err, "creating an Influxdb deployment")
+	assert.NotNil(ginkgo.GinkgoT(), cm, "expected a configmap but none returned")
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "influxdb-svc",
+			Name:      "influxdb",
 			Namespace: f.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: NewInt32(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "influxdb-svc",
+					"app": "influxdb",
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "influxdb-svc",
+						"app": "influxdb",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -107,7 +106,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 					},
 					Containers: []corev1.Container{
 						{
-							Name:    "influxdb-svc",
+							Name:    "influxdb",
 							Image:   "docker.io/influxdb:1.5",
 							Env:     []corev1.EnvVar{},
 							Command: []string{"influxd", "-config", "/influxdb-config/influxd.conf"},
@@ -135,13 +134,10 @@ func (f *Framework) NewInfluxDBDeployment() {
 		},
 	}
 
-	d, err := f.EnsureDeployment(deployment)
-	Expect(err).NotTo(HaveOccurred(), "failed to create an Influxdb deployment")
-
-	Expect(d).NotTo(BeNil(), "unexpected error creating deployment for influxdb")
+	d := f.EnsureDeployment(deployment)
 
 	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for influxdb to become ready")
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for influxdb pod to become ready")
 }

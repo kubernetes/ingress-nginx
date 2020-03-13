@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -95,12 +95,7 @@ func (rt1 *Config) Equal(rt2 *Config) bool {
 		return false
 	}
 
-	match := sets.StringElementsMatch(rt1.Whitelist, rt2.Whitelist)
-	if !match {
-		return false
-	}
-
-	return true
+	return sets.StringElementsMatch(rt1.Whitelist, rt2.Whitelist)
 }
 
 // Zone returns information about the NGINX rate limit (limit_req_zone)
@@ -148,7 +143,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
 	lr, err := parser.GetIntAnnotation("limit-rate", ing)
 	if err != nil {
@@ -180,7 +175,7 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}, nil
 	}
 
-	zoneName := fmt.Sprintf("%v_%v", ing.GetNamespace(), ing.GetName())
+	zoneName := fmt.Sprintf("%v_%v_%v", ing.GetNamespace(), ing.GetName(), ing.UID)
 
 	return &Config{
 		Connections: Zone{

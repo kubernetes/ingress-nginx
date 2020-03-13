@@ -19,79 +19,68 @@ package annotations
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
+var _ = framework.DescribeAnnotation("server-alias", func() {
 	f := framework.NewDefaultFramework("alias")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should return status code 200 for host 'foo' and 404 for 'bar'", func() {
+	ginkgo.It("should return status code 200 for host 'foo' and 404 for 'bar'", func() {
 		host := "foo"
-		annotations := map[string]string{}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name foo"))
+				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 			})
 
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains(fmt.Sprintf("host=%v", host))
 
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
-
-		resp, body, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", "bar").
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
-		Expect(body).Should(ContainSubstring("404 Not Found"))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", "bar").
+			Expect().
+			Status(http.StatusNotFound).
+			Body().Contains("404 Not Found")
 	})
 
-	It("should return status code 200 for host 'foo' and 'bar'", func() {
+	ginkgo.It("should return status code 200 for host 'foo' and 'bar'", func() {
 		host := "foo"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-alias": "bar",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name foo"))
+				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 			})
 
 		hosts := []string{"foo", "bar"}
 		for _, host := range hosts {
-			resp, body, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				End()
-
-			Expect(errs).Should(BeEmpty())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK).
+				Body().Contains(fmt.Sprintf("host=%v", host))
 		}
 	})
 })

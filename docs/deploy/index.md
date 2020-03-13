@@ -16,37 +16,33 @@
 
 ## Prerequisite Generic Deployment Command
 
-The following **Mandatory Command** is required for all deployments.
-
 !!! attention
-    These commands depend on having kubectl version 1.14 or newer.
-
-!!! attention
-    The default configuration watches Ingress object from all the namespaces.
+    The default configuration watches Ingress object from *all the namespaces*.
     To change this behavior use the flag `--watch-namespace` to limit the scope to a particular namespace.
 
 !!! warning
     If multiple Ingresses define different paths for the same host, the ingress controller will merge the definitions.
-    
+
+!!! attention
+    If you're using GKE you need to initialize your user as a cluster-admin with the following command:
+    ```console
+    kubectl create clusterrolebinding cluster-admin-binding \
+      --clusterrole cluster-admin \
+      --user $(gcloud config get-value account)
+    ```
+
+The following **Mandatory Command** is required for all deployments.
 
 ```console
-kubectl create namespace ingress-nginx
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
 ```
 
-```console
-cat << EOF > kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: ingress-nginx
-bases:
-- github.com/kubernetes/ingress-nginx/deploy/cluster-wide
-- # provider-specific, see below
-EOF
-```
+!!! tip
+    If you are using a Kubernetes version previous to 1.14, you need to change `kubernetes.io/os` to `beta.kubernetes.io/os` at line 217 of [mandatory.yaml](https://github.com/kubernetes/ingress-nginx/blob/master/deploy/static/mandatory.yaml#L217), see [Labels details](https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/).
 
 ### Provider Specific Steps
 
-There are cloud provider specific kustomize bases.
+There are cloud provider specific yaml files.
 
 #### Docker for Mac
 
@@ -54,7 +50,11 @@ Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://doc
 
 [enable]: https://docs.docker.com/docker-for-mac/#kubernetes
 
-Add `github.com/kubernetes/ingress-nginx/deploy/cloud-generic` to the `bases` list in `kustomization.yaml` and run `kubectl apply --kustomize .`.
+Create a service
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
+```
 
 #### minikube
 
@@ -69,16 +69,15 @@ For development:
 1. Disable the ingress addon:
 
 ```console
-$ minikube addons disable ingress
+minikube addons disable ingress
 ```
 
 2. Execute `make dev-env`
 3. Confirm the `nginx-ingress-controller` deployment exists:
 
 ```console
-$ kubectl get pods -n ingress-nginx 
+$ kubectl get pods -n ingress-nginx
 NAME                                       READY     STATUS    RESTARTS   AGE
-default-http-backend-66b447d9cf-rrlf9      1/1       Running   0          12s
 nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
 ```
 
@@ -95,56 +94,29 @@ This setup requires to choose in which layer (L4 or L7) we want to configure the
 - [Layer 4](https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer): use TCP as the listener protocol for ports 80 and 443.
 - [Layer 7](https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer): use HTTP as the listener protocol for port 80 and terminate TLS in the ELB
 
-
-Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the [ELB Idle Timeouts section](#elb-idle-timeouts) for additional information. If a change is required, users will need to override the value of the annotation `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` on the service object.
-
-To do this, create a patch file which will replace the annotation.
-
-```
-cat << EOF > elb-timeout.yaml
-kind: Service
-apiVersion: v1
-metadata:
-  name: ingress-nginx
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "3600" # Recommended value for WebSockets
-EOF
-```
-
-After creating the patch file, reference it in your `kustomization.yaml`:
-```yaml
-patchesStrategicMerge:
-- elb-timeout.yaml
-```
-
 For L4:
 
-To deploy the default example, add the base ` github.com/kubernetes/ingress-nginx/deploy/aws/l4` and then run `kubectl apply --kustomize .`
+Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the [ELB Idle Timeouts section](#elb-idle-timeouts) for additional information. If a change is required, users will need to update the value of `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` in `provider/aws/service-l4.yaml`
+
+Then execute:
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-l4.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/patch-configmap-l4.yaml
+```
 
 For L7:
 
-Create a a patch that will annotate the ingress-controller's service with your ssl certificate id.
+Change line of the file `provider/aws/service-l7.yaml` replacing the dummy id with a valid one `"arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"`
+
+Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the [ELB Idle Timeouts section](#elb-idle-timeouts) for additional information. If a change is required, users will need to update the value of `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` in `provider/aws/service-l7.yaml`
+
+Then execute:
 
 ```console
-cat << EOF > elb-ssl.yaml
-kind: Service
-apiVersion: v1
-metadata:
-  name: ingress-nginx
-  annotations:
-    # replace with the correct value of the generated certificate in the AWS console
-    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"
-EOF
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-l7.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/patch-configmap-l7.yaml
 ```
-
-Reference this patch in your `kustomization.yaml`:
-
-```yaml
-patchesStrategicMerge:
-- elb-ssl.yaml
-```
-
-Then add the l7 base, `github.com/kubernetes/ingress-nginx/deploy/aws/l7` and execute `kubectl apply --kustomize .`
 
 This example creates an ELB with just two listeners, one in port 80 and another in port 443
 
@@ -161,31 +133,33 @@ More information with regards to idle timeouts for your Load Balancer can be fou
 
 ##### Network Load Balancer (NLB)
 
-This type of load balancer is supported since v1.10.0 as an ALPHA feature.  Use the base `github.com/kubernetes/ingress-nginx/deploy/aws/nlb` and execute `kubectl apply --kustomize .`
+This type of load balancer is supported since v1.10.0 as an ALPHA feature.
 
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-nlb.yaml
+```
 
 #### GCE-GKE
 
-!!! attention
-    If you're using GKE you need to initialize your user as a cluster-admin with the following command: 
-    ```kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)```
-
-Use the base `github.com/kubernetes/ingress-nginx/deploy/cloud-generic` and execute `kubectl apply --kustomize .`
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
+```
 
 **Important Note:** proxy protocol is not supported in GCE/GKE
 
-
 #### Azure
 
-Use the base `github.com/kubernetes/ingress-nginx/deploy/cloud-generic` and execute `kubectl apply --kustomize .`
-
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
+```
 
 #### Bare-metal
 
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
-
-Use the base `github.com/kubernetes/ingress-nginx/deploy/baremetal` and execute `kubectl apply --kustomize .`
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/baremetal/service-nodeport.yaml
+```
 
 !!! tip
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
@@ -208,20 +182,31 @@ To detect which version of the ingress controller is running, exec into the pod 
 ```console
 POD_NAMESPACE=ingress-nginx
 POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
+
 kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
 ```
 
 ## Using Helm
 
-NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart [stable/nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress) from the official charts repository. 
+NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart [stable/nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress) from the official charts repository.
 To install the chart with the release name `my-nginx`:
 
 ```console
-helm install stable/nginx-ingress --name my-nginx
+helm install my-nginx stable/nginx-ingress
 ```
 
 If the kubernetes cluster has RBAC enabled, then run:
 
+```console
+helm install my-nginx stable/nginx-ingress --set rbac.create=true
+```
+
+If you are using [Helm 2](https://v2.helm.sh/) then specify release name using `--name` flag
+
+```console
+helm install stable/nginx-ingress --name my-nginx
+```
+or
 ```console
 helm install stable/nginx-ingress --name my-nginx --set rbac.create=true
 ```
@@ -232,4 +217,3 @@ Detect installed version:
 POD_NAME=$(kubectl get pods -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -it $POD_NAME -- /nginx-ingress-controller --version
 ```
-

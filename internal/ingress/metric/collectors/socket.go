@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"syscall"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -93,10 +94,17 @@ var (
 	}
 )
 
+// DefObjectives was removed in https://github.com/prometheus/client_golang/pull/262
+// updating the library to latest version changed the output of the metrics
+var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
+
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
 func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
+	// unix sockets must be unlink()ed before being used
+	_ = syscall.Unlink(socket)
+
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
 		return nil, err
@@ -169,7 +177,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
-			[]string{"ingress", "namespace", "status"},
+			[]string{"ingress", "namespace", "status", "service"},
 		),
 
 		bytesSent: prometheus.NewHistogramVec(
@@ -189,6 +197,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Help:        "Upstream service latency per Ingress",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
+				Objectives:  defObjectives,
 			},
 			[]string{"ingress", "namespace", "service"},
 		),
@@ -243,6 +252,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"namespace": stats.Namespace,
 			"ingress":   stats.Ingress,
 			"status":    stats.Status,
+			"service":   stats.Service,
 		}
 
 		latencyLabels := prometheus.Labels{

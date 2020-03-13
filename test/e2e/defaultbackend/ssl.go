@@ -17,52 +17,40 @@ limitations under the License.
 package defaultbackend
 
 import (
-	"crypto/tls"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Default backend - SSL", func() {
+var _ = framework.IngressNginxDescribe("[Default Backend] SSL", func() {
 	f := framework.NewDefaultFramework("default-backend")
 
-	BeforeEach(func() {
-	})
+	ginkgo.It("should return a self generated SSL certificate", func() {
+		ginkgo.By("checking SSL Certificate using the NGINX IP address")
+		resp := f.HTTPTestClient().
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			Expect().
+			Raw()
 
-	AfterEach(func() {
-	})
-
-	It("should return a self generated SSL certificate", func() {
-		By("checking SSL Certificate using the NGINX IP address")
-		resp, _, errs := gorequest.New().
-			Post(f.GetURL(framework.HTTPS)).
-			TLSClientConfig(&tls.Config{
-				// the default backend uses a self generated certificate
-				InsecureSkipVerify: true,
-			}).End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
+		assert.Equal(ginkgo.GinkgoT(), len(resp.TLS.PeerCertificates), 1)
 
 		for _, pc := range resp.TLS.PeerCertificates {
-			Expect(pc.Issuer.CommonName).Should(Equal("Kubernetes Ingress Controller Fake Certificate"))
+			assert.Equal(ginkgo.GinkgoT(), pc.Issuer.CommonName, "Kubernetes Ingress Controller Fake Certificate")
 		}
 
-		By("checking SSL Certificate using the NGINX catch all server")
-		resp, _, errs = gorequest.New().
-			Post(f.GetURL(framework.HTTPS)).
-			TLSClientConfig(&tls.Config{
-				// the default backend uses a self generated certificate
-				InsecureSkipVerify: true,
-			}).
-			Set("Host", "foo.bar.com").End()
-		Expect(errs).Should(BeEmpty())
-		Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
+		ginkgo.By("checking SSL Certificate using the NGINX catch all server")
+		resp = f.HTTPTestClient().
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", "foo.bar.com").
+			Expect().
+			Raw()
+
+		assert.Equal(ginkgo.GinkgoT(), len(resp.TLS.PeerCertificates), 1)
 		for _, pc := range resp.TLS.PeerCertificates {
-			Expect(pc.Issuer.CommonName).Should(Equal("Kubernetes Ingress Controller Fake Certificate"))
+			assert.Equal(ginkgo.GinkgoT(), pc.Issuer.CommonName, "Kubernetes Ingress Controller Fake Certificate")
 		}
 	})
 })

@@ -3,7 +3,7 @@ pkgs          = $(shell go list ./... | grep -v /vendor/)
 PREFIX                  ?= $(shell pwd)
 BIN_DIR                 ?= $(shell pwd)
 DOCKER_IMAGE_NAME       ?= ncabatoff/process-exporter
-DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
+TAG_VERSION        ?= $(shell git describe --tags --abbrev=0)
 SMOKE_TEST = -config.path packaging/conf/all.yaml -once-to-stdout-delay 1s |grep -q 'namedprocess_namegroup_memory_bytes{groupname="process-exporte",memtype="virtual"}'
 
 all: format vet test build smoke
@@ -26,7 +26,7 @@ vet:
 
 build:
 	@echo ">> building code"
-	cd cmd/process-exporter; CGO_ENABLED=0 go build -o ../../process-exporter -a -tags netgo
+	cd cmd/process-exporter; CGO_ENABLED=0 go build -ldflags "-X main.version=$(TAG_VERSION)" -o ../../process-exporter -a -tags netgo
 
 smoke:
 	@echo ">> smoke testing process-exporter"
@@ -44,7 +44,16 @@ install:
 
 docker:
 	@echo ">> building docker image"
-	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
-	docker run --rm -v `pwd`/packaging:/packaging "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" $(SMOKE_TEST)
+	docker build -t "$(DOCKER_IMAGE_NAME):$(TAG_VERSION)" .
+	docker rm configs
+	docker create -v /packaging --name configs alpine:3.4 /bin/true
+	docker cp packaging/conf configs:/packaging/conf
+	docker run --rm --volumes-from configs "$(DOCKER_IMAGE_NAME):$(TAG_VERSION)" $(SMOKE_TEST)
+
+dockertest:
+	docker run --rm -it -v `pwd`:/go/src/github.com/ncabatoff/process-exporter golang:1.12  make -C /go/src/github.com/ncabatoff/process-exporter test
+
+dockerinteg:
+	docker run --rm -it -v `pwd`:/go/src/github.com/ncabatoff/process-exporter golang:1.12  make -C /go/src/github.com/ncabatoff/process-exporter build integ
 
 .PHONY: all style format test vet build integ docker

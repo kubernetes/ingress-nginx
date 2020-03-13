@@ -1,0 +1,16 @@
+apiVersion: v1
+name: ingress-nginx
+version: 2.0.0
+appVersion: 0.30.0
+home: https://github.com/kubernetes/ingress-nginx
+description: An nginx Ingress controller that uses ConfigMap to store the nginx configuration.
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+keywords:
+  - ingress
+  - nginx
+sources:
+  - https://github.com/kubernetes/ingress-nginx
+maintainers:
+  - name: ChiefAlexander
+engine: gotpl
+kubeVersion: ">=1.10.0-0"

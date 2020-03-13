@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -28,14 +28,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func buildIngress() *extensions.Ingress {
-	return &extensions.Ingress{
+func buildIngress() *networking.Ingress {
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
@@ -61,7 +61,7 @@ func TestParseAnnotations(t *testing.T) {
 	}
 
 	// test with a valid host
-	ing.Spec.TLS = []extensions.IngressTLS{
+	ing.Spec.TLS = []networking.IngressTLS{
 		{
 			Hosts: []string{"foo.bar.com"},
 		},

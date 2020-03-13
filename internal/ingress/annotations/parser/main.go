@@ -18,10 +18,12 @@ package parser
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 )
@@ -33,7 +35,7 @@ var (
 
 // IngressAnnotation has a method to parse annotations located in Ingress
 type IngressAnnotation interface {
-	Parse(ing *extensions.Ingress) (interface{}, error)
+	Parse(ing *networking.Ingress) (interface{}, error)
 }
 
 type ingAnnotations map[string]string
@@ -75,7 +77,7 @@ func (a ingAnnotations) parseInt(name string) (int, error) {
 	return 0, errors.ErrMissingAnnotations
 }
 
-func checkAnnotation(name string, ing *extensions.Ingress) error {
+func checkAnnotation(name string, ing *networking.Ingress) error {
 	if ing == nil || len(ing.GetAnnotations()) == 0 {
 		return errors.ErrMissingAnnotations
 	}
@@ -87,7 +89,7 @@ func checkAnnotation(name string, ing *extensions.Ingress) error {
 }
 
 // GetBoolAnnotation extracts a boolean from an Ingress annotation
-func GetBoolAnnotation(name string, ing *extensions.Ingress) (bool, error) {
+func GetBoolAnnotation(name string, ing *networking.Ingress) (bool, error) {
 	v := GetAnnotationWithPrefix(name)
 	err := checkAnnotation(v, ing)
 	if err != nil {
@@ -97,7 +99,7 @@ func GetBoolAnnotation(name string, ing *extensions.Ingress) (bool, error) {
 }
 
 // GetStringAnnotation extracts a string from an Ingress annotation
-func GetStringAnnotation(name string, ing *extensions.Ingress) (string, error) {
+func GetStringAnnotation(name string, ing *networking.Ingress) (string, error) {
 	v := GetAnnotationWithPrefix(name)
 	err := checkAnnotation(v, ing)
 	if err != nil {
@@ -108,7 +110,7 @@ func GetStringAnnotation(name string, ing *extensions.Ingress) (string, error) {
 }
 
 // GetIntAnnotation extracts an int from an Ingress annotation
-func GetIntAnnotation(name string, ing *extensions.Ingress) (int, error) {
+func GetIntAnnotation(name string, ing *networking.Ingress) (int, error) {
 	v := GetAnnotationWithPrefix(name)
 	err := checkAnnotation(v, ing)
 	if err != nil {
@@ -129,4 +131,44 @@ func normalizeString(input string) string {
 	}
 
 	return strings.Join(trimmedContent, "\n")
+}
+
+var configmapAnnotations = sets.NewString(
+	"auth-proxy-set-header",
+	"fastcgi-params-configmap",
+)
+
+// AnnotationsReferencesConfigmap checks if at least one annotation in the Ingress rule
+// references a configmap.
+func AnnotationsReferencesConfigmap(ing *networking.Ingress) bool {
+	if ing == nil || len(ing.GetAnnotations()) == 0 {
+		return false
+	}
+
+	for name := range ing.GetAnnotations() {
+		if configmapAnnotations.Has(name) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// StringToURL parses the provided string into URL and returns error
+// message in case of failure
+func StringToURL(input string) (*url.URL, error) {
+	parsedURL, err := url.Parse(input)
+	if err != nil {
+		return nil, fmt.Errorf("%v is not a valid URL: %v", input, err)
+	}
+
+	if parsedURL.Scheme == "" {
+		return nil, fmt.Errorf("url scheme is empty")
+	} else if parsedURL.Host == "" {
+		return nil, fmt.Errorf("url host is empty")
+	} else if strings.Contains(parsedURL.Host, "..") {
+		return nil, fmt.Errorf("invalid url host")
+	}
+
+	return parsedURL, nil
 }

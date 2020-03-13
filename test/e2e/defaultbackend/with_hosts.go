@@ -17,45 +17,42 @@ limitations under the License.
 package defaultbackend
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
-	extensions "k8s.io/api/extensions/v1beta1"
+	"net/http"
+	"strings"
+
+	"github.com/onsi/ginkgo"
+
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
-	"net/http"
-	"strings"
 )
 
-var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
+var _ = framework.IngressNginxDescribe("[Default Backend] change default settings", func() {
 	f := framework.NewDefaultFramework("default-backend-hosts")
 	host := "foo.com"
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should apply the annotation to the default backend", func() {
+	ginkgo.It("should apply the annotation to the default backend", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/proxy-buffer-size": "8k",
 		}
 
-		ing := &extensions.Ingress{
+		ing := &networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        "default-backend-annotations",
 				Namespace:   f.Namespace,
 				Annotations: annotations,
 			},
-			Spec: extensions.IngressSpec{
-				Backend: &extensions.IngressBackend{
-					ServiceName: "http-svc",
-					ServicePort: intstr.FromInt(8080),
+			Spec: networking.IngressSpec{
+				Backend: &networking.IngressBackend{
+					ServiceName: framework.EchoService,
+					ServicePort: intstr.FromInt(80),
 				},
-				Rules: []extensions.IngressRule{
+				Rules: []networking.IngressRule{
 					{
 						Host: host,
 					},
@@ -70,13 +67,10 @@ var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
 				return strings.Contains(server, "proxy_buffer_size 8k;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", "foo.com").
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", "foo.com").
+			Expect().
+			Status(http.StatusOK)
 	})
-
 })

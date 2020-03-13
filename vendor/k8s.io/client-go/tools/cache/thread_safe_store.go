@@ -185,7 +185,7 @@ func (c *threadSafeMap) ByIndex(indexName, indexKey string) ([]interface{}, erro
 
 	set := index[indexKey]
 	list := make([]interface{}, 0, set.Len())
-	for _, key := range set.List() {
+	for key := range set {
 		list = append(list, c.items[key])
 	}
 
@@ -292,6 +292,13 @@ func (c *threadSafeMap) deleteFromIndices(obj interface{}, key string) {
 			set := index[indexValue]
 			if set != nil {
 				set.Delete(key)
+
+				// If we don't delete the set when zero, indices with high cardinality
+				// short lived resources can cause memory to increase over time from
+				// unused empty sets. See `kubernetes/kubernetes/issues/84959`.
+				if len(set) == 0 {
+					delete(index, indexValue)
+				}
 			}
 		}
 	}
@@ -302,6 +309,7 @@ func (c *threadSafeMap) Resync() error {
 	return nil
 }
 
+// NewThreadSafeStore creates a new instance of ThreadSafeStore.
 func NewThreadSafeStore(indexers Indexers, indices Indices) ThreadSafeStore {
 	return &threadSafeMap{
 		items:    map[string]interface{}{},

@@ -1,0 +1,13 @@
+{{- if .Values.udp -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+{{- if .Values.controller.udp.annotations }}
+  annotations: {{ toYaml .Values.controller.udp.annotations | nindent 4 }}
+{{- end }}
+  name: {{ include "ingress-nginx.fullname" . }}-udp
+data: {{ tpl (toYaml .Values.udp) . | nindent 2 }}
+{{- end }}

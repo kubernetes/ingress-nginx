@@ -22,37 +22,26 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-func noRedirectPolicyFunc(gorequest.Request, []gorequest.Request) error {
-	return http.ErrUseLastResponse
-}
-
-var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
+var _ = framework.DescribeAnnotation("permanen-redirect permanen-redirect-code", func() {
 	f := framework.NewDefaultFramework("redirect")
 
-	BeforeEach(func() {
-	})
-
-	AfterEach(func() {
-	})
-
-	It("should respond with a standard redirect code", func() {
-		By("setting permanent-redirect annotation")
+	ginkgo.It("should respond with a standard redirect code", func() {
+		ginkgo.By("setting permanent-redirect annotation")
 
 		host := "redirect"
 		redirectPath := "/something"
 		redirectURL := "http://redirect.example.com"
 
-		annotations := map[string]string{"nginx.ingress.kubernetes.io/permanent-redirect": redirectURL}
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/permanent-redirect": redirectURL,
+		}
 
-		ing := framework.NewSingleIngress(host, redirectPath, host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, redirectPath, host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -61,22 +50,17 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 					strings.Contains(server, fmt.Sprintf("return 301 %s;", redirectURL))
 			})
 
-		By("sending request to redirected URL path")
-
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+redirectPath).
-			Set("Host", host).
-			RedirectPolicy(noRedirectPolicyFunc).
-			End()
-
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(BeNumerically("==", http.StatusMovedPermanently))
-		Expect(resp.Header.Get("Location")).Should(Equal(redirectURL))
-		Expect(body).Should(ContainSubstring("nginx/"))
+		ginkgo.By("sending request to redirected URL path")
+		f.HTTPTestClient().
+			GET(redirectPath).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusMovedPermanently).
+			Header("Location").Equal(redirectURL)
 	})
 
-	It("should respond with a custom redirect code", func() {
-		By("setting permanent-redirect-code annotation")
+	ginkgo.It("should respond with a custom redirect code", func() {
+		ginkgo.By("setting permanent-redirect-code annotation")
 
 		host := "redirect"
 		redirectPath := "/something"
@@ -88,7 +72,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 			"nginx.ingress.kubernetes.io/permanent-redirect-code": strconv.Itoa(redirectCode),
 		}
 
-		ing := framework.NewSingleIngress(host, redirectPath, host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, redirectPath, host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -97,17 +81,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 					strings.Contains(server, fmt.Sprintf("return %d %s;", redirectCode, redirectURL))
 			})
 
-		By("sending request to redirected URL path")
-
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+redirectPath).
-			Set("Host", host).
-			RedirectPolicy(noRedirectPolicyFunc).
-			End()
-
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(BeNumerically("==", redirectCode))
-		Expect(resp.Header.Get("Location")).Should(Equal(redirectURL))
-		Expect(body).Should(ContainSubstring("nginx/"))
+		ginkgo.By("sending request to redirected URL path")
+		f.HTTPTestClient().
+			GET(redirectPath).
+			WithHeader("Host", host).
+			Expect().
+			Status(redirectCode).
+			Header("Location").Equal(redirectURL)
 	})
 })

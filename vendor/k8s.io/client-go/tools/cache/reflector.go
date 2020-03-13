@@ -17,40 +17,48 @@ limitations under the License.
 package cache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"math/rand"
-	"net"
-	"net/url"
 	"reflect"
-	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/naming"
+	utilnet "k8s.io/apimachinery/pkg/util/net"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/tools/pager"
 	"k8s.io/klog"
 	"k8s.io/utils/trace"
 )
+
+const defaultExpectedTypeName = "<unspecified>"
 
 // Reflector watches a specified resource and causes all changes to be reflected in the given store.
 type Reflector struct {
 	// name identifies this reflector. By default it will be a file:line if possible.
 	name string
-	// metrics tracks basic metric information about the reflector
-	metrics *reflectorMetrics
 
+	// The name of the type we expect to place in the store. The name
+	// will be the stringification of expectedGVK if provided, and the
+	// stringification of expectedType otherwise. It is for display
+	// only, and should not be used for parsing or comparison.
+	expectedTypeName string
 	// The type of object we expect to place in the store.
 	expectedType reflect.Type
+	// The GVK of the object we expect to place in the store if unstructured.
+	expectedGVK *schema.GroupVersionKind
 	// The destination to sync up with the watch source
 	store Store
 	// listerWatcher is used to perform lists and watches.
@@ -68,6 +76,9 @@ type Reflector struct {
 	lastSyncResourceVersion string
 	// lastSyncResourceVersionMutex guards read/write access to lastSyncResourceVersion
 	lastSyncResourceVersionMutex sync.RWMutex
+	// WatchListPageSize is the requested chunk size of initial and resync watch lists.
+	// Defaults to pager.PageSize.
+	WatchListPageSize int64
 }
 
 var (
@@ -79,7 +90,7 @@ var (
 // NewNamespaceKeyedIndexerAndReflector creates an Indexer and a Reflector
 // The indexer is configured to key on namespace
 func NewNamespaceKeyedIndexerAndReflector(lw ListerWatcher, expectedType interface{}, resyncPeriod time.Duration) (indexer Indexer, reflector *Reflector) {
-	indexer = NewIndexer(MetaNamespaceKeyFunc, Indexers{"namespace": MetaNamespaceIndexFunc})
+	indexer = NewIndexer(MetaNamespaceKeyFunc, Indexers{NamespaceIndex: MetaNamespaceIndexFunc})
 	reflector = NewReflector(lw, expectedType, indexer, resyncPeriod)
 	return indexer, reflector
 }
@@ -100,17 +111,33 @@ func NewNamedReflector(name string, lw ListerWatcher, expectedType interface{}, 
 		name:          name,
 		listerWatcher: lw,
 		store:         store,
-		expectedType:  reflect.TypeOf(expectedType),
 		period:        time.Second,
 		resyncPeriod:  resyncPeriod,
 		clock:         &clock.RealClock{},
 	}
+	r.setExpectedType(expectedType)
 	return r
 }
 
-func makeValidPrometheusMetricLabel(in string) string {
-	// this isn't perfect, but it removes our common characters
-	return strings.NewReplacer("/", "_", ".", "_", "-", "_", ":", "_").Replace(in)
+func (r *Reflector) setExpectedType(expectedType interface{}) {
+	r.expectedType = reflect.TypeOf(expectedType)
+	if r.expectedType == nil {
+		r.expectedTypeName = defaultExpectedTypeName
+		return
+	}
+
+	r.expectedTypeName = r.expectedType.String()
+
+	if obj, ok := expectedType.(*unstructured.Unstructured); ok {
+		// Use gvk to check that watch event objects are of the desired type.
+		gvk := obj.GroupVersionKind()
+		if gvk.Empty() {
+			klog.V(4).Infof("Reflector from %s configured with expectedType of *unstructured.Unstructured with empty GroupVersionKind.", r.name)
+			return
+		}
+		r.expectedGVK = &gvk
+		r.expectedTypeName = gvk.String()
+	}
 }
 
 // internalPackages are packages that ignored when creating a default reflector name. These packages are in the common
@@ -120,7 +147,7 @@ var internalPackages = []string{"client-go/tools/cache/"}
 // Run starts a watch and handles watch events. Will restart the watch if it is closed.
 // Run will exit when stopCh is closed.
 func (r *Reflector) Run(stopCh <-chan struct{}) {
-	klog.V(3).Infof("Starting reflector %v (%s) from %s", r.expectedType, r.resyncPeriod, r.name)
+	klog.V(3).Infof("Starting reflector %v (%s) from %s", r.expectedTypeName, r.resyncPeriod, r.name)
 	wait.Until(func() {
 		if err := r.ListAndWatch(stopCh); err != nil {
 			utilruntime.HandleError(err)
@@ -131,9 +158,6 @@ func (r *Reflector) Run(stopCh <-chan struct{}) {
 var (
 	// nothing will ever be sent down this channel
 	neverExitWatch <-chan time.Time = make(chan time.Time)
-
-	// Used to indicate that watching stopped so that a resync could happen.
-	errorResyncRequested = errors.New("resync channel fired")
 
 	// Used to indicate that watching stopped because of a signal from the stop
 	// channel passed in from a client of the reflector.
@@ -158,7 +182,7 @@ func (r *Reflector) resyncChan() (<-chan time.Time, func() bool) {
 // and then use the resource version to watch.
 // It returns error if ListAndWatch didn't even try to initialize watch.
 func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
-	klog.V(3).Infof("Listing and watching %v from %s", r.expectedType, r.name)
+	klog.V(3).Infof("Listing and watching %v from %s", r.expectedTypeName, r.name)
 	var resourceVersion string
 
 	// Explicitly set "0" as resource version - it's fine for the List()
@@ -167,7 +191,7 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 	options := metav1.ListOptions{ResourceVersion: "0"}
 
 	if err := func() error {
-		initTrace := trace.New("Reflector " + r.name + " ListAndWatch")
+		initTrace := trace.New("Reflector ListAndWatch", trace.Field{"name", r.name})
 		defer initTrace.LogIfLong(10 * time.Second)
 		var list runtime.Object
 		var err error
@@ -179,7 +203,16 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 					panicCh <- r
 				}
 			}()
-			list, err = r.listerWatcher.List(options)
+			// Attempt to gather list in chunks, if supported by listerWatcher, if not, the first
+			// list request will return the full response.
+			pager := pager.New(pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
+				return r.listerWatcher.List(opts)
+			}))
+			if r.WatchListPageSize != 0 {
+				pager.PageSize = r.WatchListPageSize
+			}
+			// Pager falls back to full list if paginated list calls fail due to an "Expired" error.
+			list, err = pager.List(context.Background(), options)
 			close(listCh)
 		}()
 		select {
@@ -190,7 +223,7 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 		case <-listCh:
 		}
 		if err != nil {
-			return fmt.Errorf("%s: Failed to list %v: %v", r.name, r.expectedType, err)
+			return fmt.Errorf("%s: Failed to list %v: %v", r.name, r.expectedTypeName, err)
 		}
 		initTrace.Step("Objects listed")
 		listMetaInterface, err := meta.ListAccessor(list)
@@ -257,6 +290,10 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 			// We want to avoid situations of hanging watchers. Stop any wachers that do not
 			// receive any events within the timeout window.
 			TimeoutSeconds: &timeoutSeconds,
+			// To reduce load on kube-apiserver on watch restarts, you may enable watch bookmarks.
+			// Reflector doesn't assume bookmarks are returned at all (if the server do not support
+			// watch bookmarks, it will ignore this field).
+			AllowWatchBookmarks: true,
 		}
 
 		w, err := r.listerWatcher.Watch(options)
@@ -265,28 +302,29 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 			case io.EOF:
 				// watch closed normally
 			case io.ErrUnexpectedEOF:
-				klog.V(1).Infof("%s: Watch for %v closed with unexpected EOF: %v", r.name, r.expectedType, err)
+				klog.V(1).Infof("%s: Watch for %v closed with unexpected EOF: %v", r.name, r.expectedTypeName, err)
 			default:
-				utilruntime.HandleError(fmt.Errorf("%s: Failed to watch %v: %v", r.name, r.expectedType, err))
+				utilruntime.HandleError(fmt.Errorf("%s: Failed to watch %v: %v", r.name, r.expectedTypeName, err))
 			}
 			// If this is "connection refused" error, it means that most likely apiserver is not responsive.
 			// It doesn't make sense to re-list all objects because most likely we will be able to restart
 			// watch where we ended.
 			// If that's the case wait and resend watch request.
-			if urlError, ok := err.(*url.Error); ok {
-				if opError, ok := urlError.Err.(*net.OpError); ok {
-					if errno, ok := opError.Err.(syscall.Errno); ok && errno == syscall.ECONNREFUSED {
-						time.Sleep(time.Second)
-						continue
-					}
-				}
+			if utilnet.IsConnectionRefused(err) {
+				time.Sleep(time.Second)
+				continue
 			}
 			return nil
 		}
 
 		if err := r.watchHandler(w, &resourceVersion, resyncerrc, stopCh); err != nil {
 			if err != errorStopRequested {
-				klog.Warningf("%s: watch of %v ended with: %v", r.name, r.expectedType, err)
+				switch {
+				case apierrs.IsResourceExpired(err):
+					klog.V(4).Infof("%s: watch of %v ended with: %v", r.name, r.expectedTypeName, err)
+				default:
+					klog.Warningf("%s: watch of %v ended with: %v", r.name, r.expectedTypeName, err)
+				}
 			}
 			return nil
 		}
@@ -325,9 +363,17 @@ loop:
 			if event.Type == watch.Error {
 				return apierrs.FromObject(event.Object)
 			}
-			if e, a := r.expectedType, reflect.TypeOf(event.Object); e != nil && e != a {
-				utilruntime.HandleError(fmt.Errorf("%s: expected type %v, but watch event object had type %v", r.name, e, a))
-				continue
+			if r.expectedType != nil {
+				if e, a := r.expectedType, reflect.TypeOf(event.Object); e != a {
+					utilruntime.HandleError(fmt.Errorf("%s: expected type %v, but watch event object had type %v", r.name, e, a))
+					continue
+				}
+			}
+			if r.expectedGVK != nil {
+				if e, a := *r.expectedGVK, event.Object.GetObjectKind().GroupVersionKind(); e != a {
+					utilruntime.HandleError(fmt.Errorf("%s: expected gvk %v, but watch event object had gvk %v", r.name, e, a))
+					continue
+				}
 			}
 			meta, err := meta.Accessor(event.Object)
 			if err != nil {
@@ -354,6 +400,8 @@ loop:
 				if err != nil {
 					utilruntime.HandleError(fmt.Errorf("%s: unable to delete watch event object (%#v) from store: %v", r.name, event.Object, err))
 				}
+			case watch.Bookmark:
+				// A `Bookmark` means watch has synced here, just update the resourceVersion
 			default:
 				utilruntime.HandleError(fmt.Errorf("%s: unable to understand watch event %#v", r.name, event))
 			}
@@ -363,11 +411,11 @@ loop:
 		}
 	}
 
-	watchDuration := r.clock.Now().Sub(start)
+	watchDuration := r.clock.Since(start)
 	if watchDuration < 1*time.Second && eventCount == 0 {
 		return fmt.Errorf("very short watch: %s: Unexpected watch close - watch lasted less than a second and no items received", r.name)
 	}
-	klog.V(4).Infof("%s: Watch close - %v total %v items received", r.name, r.expectedType, eventCount)
+	klog.V(4).Infof("%s: Watch close - %v total %v items received", r.name, r.expectedTypeName, eventCount)
 	return nil
 }
 

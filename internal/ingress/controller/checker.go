@@ -18,13 +18,13 @@ package controller
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/ncabatoff/process-exporter/proc"
 	"github.com/pkg/errors"
-	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/nginx"
 )
@@ -36,41 +36,48 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n *NGINXController) Check(_ *http.Request) error {
-	statusCode, _, err := nginx.NewGetStatusRequest(nginx.HealthPath)
-	if err != nil {
-		klog.Errorf("healthcheck error: %v", err)
-		return err
-	}
-
-	if statusCode != 200 {
-		klog.Errorf("healthcheck error: %v", statusCode)
-		return fmt.Errorf("ingress controller is not healthy")
-	}
-
-	statusCode, _, err = nginx.NewGetStatusRequest("/is-dynamic-lb-initialized")
-	if err != nil {
-		klog.Errorf("healthcheck error: %v", err)
-		return err
-	}
-
-	if statusCode != 200 {
-		klog.Errorf("healthcheck error: %v", statusCode)
-		return fmt.Errorf("dynamic load balancer not started")
+	if n.isShuttingDown {
+		return fmt.Errorf("the ingress controller is shutting down")
 	}
 
 	// check the nginx master process is running
 	fs, err := proc.NewFS("/proc", false)
 	if err != nil {
-		return errors.Wrap(err, "unexpected error reading /proc directory")
+		return errors.Wrap(err, "reading /proc directory")
 	}
-	f, err := n.fileSystem.ReadFile(nginx.PID)
+
+	f, err := ioutil.ReadFile(nginx.PID)
 	if err != nil {
-		return errors.Wrapf(err, "unexpected error reading %v", nginx.PID)
+		return errors.Wrapf(err, "reading %v", nginx.PID)
 	}
+
 	pid, err := strconv.Atoi(strings.TrimRight(string(f), "\r\n"))
 	if err != nil {
-		return errors.Wrapf(err, "unexpected error reading the nginx PID from %v", nginx.PID)
+		return errors.Wrapf(err, "reading NGINX PID from file %v", nginx.PID)
 	}
+
 	_, err = fs.NewProc(pid)
-	return err
+	if err != nil {
+		return errors.Wrapf(err, "checking for NGINX process with PID %v", pid)
+	}
+
+	statusCode, _, err := nginx.NewGetStatusRequest(nginx.HealthPath)
+	if err != nil {
+		return errors.Wrapf(err, "checking if NGINX is running")
+	}
+
+	if statusCode != 200 {
+		return fmt.Errorf("ingress controller is not healthy (%v)", statusCode)
+	}
+
+	statusCode, _, err = nginx.NewGetStatusRequest("/is-dynamic-lb-initialized")
+	if err != nil {
+		return errors.Wrapf(err, "checking if the dynamic load balancer started")
+	}
+
+	if statusCode != 200 {
+		return fmt.Errorf("dynamic load balancer not started")
+	}
+
+	return nil
 }

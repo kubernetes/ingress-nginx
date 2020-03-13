@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ! [ -z $DEBUG ]; then
+if [ -n "$DEBUG" ]; then
 	set -x
 fi
 
@@ -44,6 +44,8 @@ if [ "$missing" = true ]; then
 fi
 
 export CGO_ENABLED=0
+# use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
+export GO111MODULE=off
 
 release=cmd/plugin/release
 
@@ -52,24 +54,24 @@ function build_for_arch(){
   arch=$2
   extension=$3
 
-  env GOOS=${os} GOARCH=${arch} go build \
-    ${GOBUILD_FLAGS} \
+  env GOOS="${os}" GOARCH="${arch}" go build \
+    "${GOBUILD_FLAGS}" \
     -ldflags "-s -w \
-        -X ${PKG}/version.RELEASE=${TAG} \
-        -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
-        -X ${PKG}/version.REPO=${REPO_INFO}" \
-    -o ${release}/kubectl-ingress_nginx${extension} ${PKG}/cmd/plugin
+      -X ${PKG}/version.RELEASE=${TAG} \
+      -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
+      -X ${PKG}/version.REPO=${REPO_INFO}" \
+    -o "${release}/kubectl-ingress_nginx${extension}" "${PKG}/cmd/plugin"
 
-    tar -C ${release} -zcvf ${release}/kubectl-ingress_nginx-${os}-${arch}.tar.gz kubectl-ingress_nginx${extension}
-    rm ${release}/kubectl-ingress_nginx${extension}
-    hash=`sha256sum ${release}/kubectl-ingress_nginx-${os}-${arch}.tar.gz | awk '{ print $1 }'`
-    sed -i "s/%%%shasum_${os}_${arch}%%%/${hash}/g" ${release}/ingress-nginx.yaml
+    tar -C "${release}" -zcvf "${release}/kubectl-ingress_nginx-${os}-${arch}.tar.gz" "kubectl-ingress_nginx${extension}"
+    rm "${release}/kubectl-ingress_nginx${extension}"
+    hash=$(sha256sum "${release}/kubectl-ingress_nginx-${os}-${arch}.tar.gz" | awk '{ print $1 }')
+    sed -i "s/%%%shasum_${os}_${arch}%%%/${hash}/g" "${release}/ingress-nginx.yaml"
 }
 
-rm -rf ${release}
-mkdir ${release}
+rm -rf "${release}"
+mkdir "${release}"
 
-cp cmd/plugin/ingress-nginx.yaml.tmpl ${release}/ingress-nginx.yaml
+cp cmd/plugin/ingress-nginx.yaml.tmpl "${release}/ingress-nginx.yaml"
 
 sed -i "s/%%%tag%%%/${TAG}/g" ${release}/ingress-nginx.yaml
 

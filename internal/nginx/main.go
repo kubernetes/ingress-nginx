@@ -23,36 +23,47 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
-	"github.com/tv42/httpunix"
+	ps "github.com/mitchellh/go-ps"
+	"k8s.io/klog"
 )
+
+// TODO: Check https://github.com/kubernetes/kubernetes/blob/master/pkg/master/ports/ports.go for ports already being used
+
+// ProfilerPort port used by the ingress controller to expose the Go Profiler when it is enabled.
+var ProfilerPort = 10245
+
+// TemplatePath path of the NGINX template
+var TemplatePath = "/etc/nginx/template/nginx.tmpl"
 
 // PID defines the location of the pid file used by NGINX
 var PID = "/tmp/nginx.pid"
 
-// StatusSocket defines the location of the unix socket used by NGINX for the status server
-var StatusSocket = "/tmp/nginx-status-server.sock"
+// StatusPort port used by NGINX for the status server
+var StatusPort = 10246
 
 // HealthPath defines the path used to define the health check location in NGINX
 var HealthPath = "/healthz"
+
+// HealthCheckTimeout defines the time limit in seconds for a probe to health-check-path to succeed
+var HealthCheckTimeout = 10 * time.Second
 
 // StatusPath defines the path used to expose the NGINX status page
 // http://nginx.org/en/docs/http/ngx_http_stub_status_module.html
 var StatusPath = "/nginx_status"
 
-// StreamSocket defines the location of the unix socket used by NGINX for the NGINX stream configuration socket
-var StreamSocket = "/tmp/ingress-stream.sock"
-
-var statusLocation = "nginx-status"
-
-var socketClient = buildUnixSocketClient()
+// StreamPort defines the port used by NGINX for the NGINX stream configuration socket
+var StreamPort = 10247
 
 // NewGetStatusRequest creates a new GET request to the internal NGINX status server
 func NewGetStatusRequest(path string) (int, []byte, error) {
-	url := fmt.Sprintf("http+unix://%v%v", statusLocation, path)
-	res, err := socketClient.Get(url)
+	url := fmt.Sprintf("http://127.0.0.1:%v%v", StatusPort, path)
+
+	client := http.Client{}
+	res, err := client.Get(url)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -68,14 +79,15 @@ func NewGetStatusRequest(path string) (int, []byte, error) {
 
 // NewPostStatusRequest creates a new POST request to the internal NGINX status server
 func NewPostStatusRequest(path, contentType string, data interface{}) (int, []byte, error) {
-	url := fmt.Sprintf("http+unix://%v%v", statusLocation, path)
+	url := fmt.Sprintf("http://127.0.0.1:%v%v", StatusPort, path)
 
 	buf, err := json.Marshal(data)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	res, err := socketClient.Post(url, contentType, bytes.NewReader(buf))
+	client := http.Client{}
+	res, err := client.Post(url, contentType, bytes.NewReader(buf))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -96,13 +108,13 @@ func GetServerBlock(conf string, host string) (string, error) {
 
 	blockStart := strings.Index(conf, startMsg)
 	if blockStart < 0 {
-		return "", fmt.Errorf("Host %v was not found in the controller's nginx.conf", host)
+		return "", fmt.Errorf("host %v was not found in the controller's nginx.conf", host)
 	}
 	blockStart = blockStart + len(startMsg)
 
 	blockEnd := strings.Index(conf, endMsg)
 	if blockEnd < 0 {
-		return "", fmt.Errorf("The end of the host server block could not be found, but the beginning was")
+		return "", fmt.Errorf("the end of the host server block could not be found, but the beginning was")
 	}
 
 	return conf[blockStart:blockEnd], nil
@@ -110,11 +122,11 @@ func GetServerBlock(conf string, host string) (string, error) {
 
 // ReadNginxConf reads the nginx configuration file into a string
 func ReadNginxConf() (string, error) {
-	return ReadFileToString("/etc/nginx/nginx.conf")
+	return readFileToString("/etc/nginx/nginx.conf")
 }
 
-// ReadFileToString reads any file into a string
-func ReadFileToString(path string) (string, error) {
+// readFileToString reads any file into a string
+func readFileToString(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return "", err
@@ -128,15 +140,32 @@ func ReadFileToString(path string) (string, error) {
 	return string(contents), nil
 }
 
-func buildUnixSocketClient() *http.Client {
-	u := &httpunix.Transport{
-		DialTimeout:           1 * time.Second,
-		RequestTimeout:        10 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
-	}
-	u.RegisterLocation(statusLocation, StatusSocket)
+// Version return details about NGINX
+func Version() string {
+	flag := "-v"
 
-	return &http.Client{
-		Transport: u,
+	if klog.V(2) {
+		flag = "-V"
 	}
+
+	cmd := exec.Command("nginx", flag)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		klog.Errorf("unexpected error obtaining NGINX version: %v", err)
+		return "N/A"
+	}
+
+	return string(out)
+}
+
+// IsRunning returns true if a process with the name 'nginx' is found
+func IsRunning() bool {
+	processes, _ := ps.Processes()
+	for _, p := range processes {
+		if p.Executable() == "nginx" {
+			return true
+		}
+	}
+
+	return false
 }

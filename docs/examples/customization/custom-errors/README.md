@@ -28,7 +28,7 @@ service/nginx-errors   ClusterIP   10.0.0.12   <none>        80/TCP    10s
 If you do not already have an instance of the NGINX Ingress controller running, deploy it according to the
 [deployment guide][deploy], then follow these steps:
 
-1. Edit the `nginx-ingress-controller` Deployment and set the value of the `--default-backend` flag to the name of the
+1. Edit the `nginx-ingress-controller` Deployment and set the value of the `--default-backend-service` flag to the name of the
    newly created error backend.
 
 2. Edit the `nginx-configuration` ConfigMap and create the key `custom-http-errors` with a value of `404,503`.
@@ -40,7 +40,7 @@ If you do not already have an instance of the NGINX Ingress controller running, 
     ingress-nginx   ClusterIP   10.0.0.13   <none>        80/TCP,443/TCP   10m
     ```
 
-!!! Note
+!!! note
     The `ingress-nginx` Service is of type `ClusterIP` in this example. This may vary depending on your environment.
     Make sure you can use the Service to reach NGINX before proceeding with the rest of this example.
 

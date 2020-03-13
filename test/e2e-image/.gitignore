@@ -1,5 +1,4 @@
 e2e.test
 ginkgo
 kubectl
-/cloud-generic/
-/cluster-wide/
+charts/*

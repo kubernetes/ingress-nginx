@@ -23,11 +23,8 @@ import (
 )
 
 func init() {
+	testing.Init()
 	framework.RegisterParseFlags()
-
-	//	if "" == framework.TestContext.KubeConfig {
-	//		klog.Fatalf("environment variable %v must be set", clientcmd.RecommendedConfigPathEnvVar)
-	//	}
 }
 func TestE2E(t *testing.T) {
 	RunE2ETests(t)

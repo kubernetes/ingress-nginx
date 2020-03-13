@@ -33,9 +33,7 @@ MetalLB can be deployed either with a simple Kubernetes manifest or with Helm. T
 was deployed following the [Installation][metallb-install] instructions.
 
 MetalLB requires a pool of IP addresses in order to be able to take ownership of the `ingress-nginx` Service. This pool
-can be defined in a ConfigMap named `config` located in the same namespace as the MetalLB controller. In the simplest
-possible scenario, the pool is composed of the IP addresses of Kubernetes nodes, but IP addresses can also be handed out
-by a DHCP server.
+can be defined in a ConfigMap named `config` located in the same namespace as the MetalLB controller. This pool of IPs **must** be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.
 
 !!! example
     Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
@@ -64,14 +62,14 @@ by a DHCP server.
         - name: default
           protocol: layer2
           addresses:
-          - 203.0.113.2-203.0.113.3
+          - 203.0.113.10-203.0.113.15
     ```
 
     ```console
     $ kubectl -n ingress-nginx get svc
     NAME                   TYPE          CLUSTER-IP     EXTERNAL-IP  PORT(S)
     default-http-backend   ClusterIP     10.0.64.249    <none>       80/TCP
-    ingress-nginx          LoadBalancer  10.0.220.217   203.0.113.3  80:30100/TCP,443:30101/TCP
+    ingress-nginx          LoadBalancer  10.0.220.217   203.0.113.10  80:30100/TCP,443:30101/TCP
     ```
 
 As soon as MetalLB sets the external IP address of the `ingress-nginx` LoadBalancer Service, the corresponding entries
@@ -367,7 +365,7 @@ address of all nodes running the NGINX Ingress controller.
 [taints]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 [daemonset]: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
 [dnspolicy]: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
-[cli-args]: ../../user-guide/cli-arguments/
+[cli-args]: ../user-guide/cli-arguments.md
 
 ## Using a self-provisioned edge
 

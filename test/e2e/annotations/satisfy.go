@@ -20,27 +20,25 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
-	extensions "k8s.io/api/extensions/v1beta1"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
+
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
+var _ = framework.DescribeAnnotation("satisfy", func() {
 	f := framework.NewDefaultFramework("satisfy")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should configure satisfy directive correctly", func() {
+	ginkgo.It("should configure satisfy directive correctly", func() {
 		host := "satisfy"
 		annotationKey := "nginx.ingress.kubernetes.io/satisfy"
 
@@ -58,44 +56,41 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			annotationKey: "all",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &initAnnotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, initAnnotations)
 		f.EnsureIngress(ing)
 
 		for key, result := range results {
-			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *extensions.Ingress) error {
+			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *networking.Ingress) error {
 				ingress.ObjectMeta.Annotations[annotationKey] = annotations[key]
 				return nil
 			})
-			Expect(err).ToNot(HaveOccurred())
+			assert.Nil(ginkgo.GinkgoT(), err)
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring(result))
+					return strings.Contains(server, result)
 				})
 
-			resp, body, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Retry(10, 1*time.Second, http.StatusNotFound).
-				Set("Host", host).
-				End()
-
-			Expect(errs).Should(BeEmpty())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-			Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK).
+				Body().Contains(fmt.Sprintf("host=%v", host))
 		}
 	})
 
-	It("should allow multiple auth with satisfy any", func() {
+	ginkgo.It("should allow multiple auth with satisfy any", func() {
 		host := "auth"
 
 		// setup external auth
 		f.NewHttpbinDeployment()
 
-		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.Namespace, 1)
-		Expect(err).NotTo(HaveOccurred())
+		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
+		assert.Nil(ginkgo.GinkgoT(), err)
 
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get("httpbin", metav1.GetOptions{})
-		Expect(err).NotTo(HaveOccurred())
+		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err)
 
 		httpbinIP := e.Subsets[0].Addresses[0].IP
 
@@ -116,34 +111,29 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			"nginx.ingress.kubernetes.io/satisfy": "any",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(server string) bool {
-			return Expect(server).Should(ContainSubstring("server_name auth"))
+			return strings.Contains(server, "server_name auth")
 		})
 
 		// with basic auth cred
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Retry(10, 1*time.Second, http.StatusNotFound).
-			Set("Host", host).
-			SetBasicAuth("uname", "pwd").End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithBasicAuth("uname", "pwd").
+			Expect().
+			Status(http.StatusOK)
 
 		// reroute to signin if without basic cred
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Retry(10, 1*time.Second, http.StatusNotFound).
-			Set("Host", host).
-			RedirectPolicy(func(req gorequest.Request, via []gorequest.Request) error {
-				return http.ErrUseLastResponse
-			}).Param("a", "b").Param("c", "d").
-			End()
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusFound))
-		Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d"))))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithQuery("a", "b").
+			WithQuery("c", "d").
+			Expect().
+			Status(http.StatusFound).
+			Header("Location").Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d")))
 	})
 })

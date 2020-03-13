@@ -19,16 +19,16 @@ package settings
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Multi Accept", func() {
+var _ = framework.DescribeSetting("enable-multi-accept", func() {
 	multiAccept := "enable-multi-accept"
 	f := framework.NewDefaultFramework(multiAccept)
 
-	It("should be enabled by default", func() {
+	ginkgo.It("should be enabled by default", func() {
 		expectedDirective := "multi_accept on;"
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
@@ -36,7 +36,7 @@ var _ = framework.IngressNginxDescribe("Multi Accept", func() {
 			})
 	})
 
-	It("should be enabled when set to true", func() {
+	ginkgo.It("should be enabled when set to true", func() {
 		expectedDirective := "multi_accept on;"
 		f.UpdateNginxConfigMapData(multiAccept, "true")
 
@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("Multi Accept", func() {
 			})
 	})
 
-	It("should be disabled when set to false", func() {
+	ginkgo.It("should be disabled when set to false", func() {
 		expectedDirective := "multi_accept off;"
 		f.UpdateNginxConfigMapData(multiAccept, "false")
 

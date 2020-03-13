@@ -21,12 +21,6 @@ Running the following command deploys prometheus in Kubernetes:
 
 ```console
 kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/
-serviceaccount/prometheus-server created
-role.rbac.authorization.k8s.io/prometheus-server created
-rolebinding.rbac.authorization.k8s.io/prometheus-server created
-configmap/prometheus-configuration-bc6bcg7b65 created
-service/prometheus-server created
-deployment.apps/prometheus-server created
 ```
 
 ### Prometheus Dashboard

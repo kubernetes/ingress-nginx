@@ -20,11 +20,12 @@ import (
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/alias"
@@ -38,12 +39,14 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/customhttperrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/http2pushpreload"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/portinredirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -71,7 +74,7 @@ const DeniedKeyName = "Denied"
 type Ingress struct {
 	metav1.ObjectMeta
 	BackendProtocol      string
-	Alias                string
+	Aliases              []string
 	BasicDigestAuth      auth.Config
 	Canary               canary.Config
 	CertificateAuth      authtls.Config
@@ -82,11 +85,14 @@ type Ingress struct {
 	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
+	FastCGI            fastcgi.Config
 	Denied             *string
 	ExternalAuth       authreq.Config
 	EnableGlobalAuth   bool
 	HTTP2PushPreload   bool
+	Opentracing        opentracing.Config
 	Proxy              proxy.Config
+	ProxySSL           proxyssl.Config
 	RateLimit          ratelimit.Config
 	Redirect           redirect.Config
 	Rewrite            rewrite.Config
@@ -104,9 +110,9 @@ type Ingress struct {
 	XForwardedPrefix   string
 	SSLCiphers         string
 	Logs               log.Config
-	LuaRestyWAF        luarestywaf.Config
 	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
+	Mirror             mirror.Config
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -118,7 +124,7 @@ type Extractor struct {
 func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 	return Extractor{
 		map[string]parser.IngressAnnotation{
-			"Alias":                alias.NewParser(cfg),
+			"Aliases":              alias.NewParser(cfg),
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
 			"Canary":               canary.NewParser(cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),
@@ -128,10 +134,13 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"CorsConfig":           cors.NewParser(cfg),
 			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
+			"FastCGI":              fastcgi.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
 			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
 			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
+			"Opentracing":          opentracing.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
+			"ProxySSL":             proxyssl.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
@@ -149,16 +158,16 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),
-			"LuaRestyWAF":          luarestywaf.NewParser(cfg),
 			"InfluxDB":             influxdb.NewParser(cfg),
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
 			"ModSecurity":          modsecurity.NewParser(cfg),
+			"Mirror":               mirror.NewParser(cfg),
 		},
 	}
 }
 
 // Extract extracts the annotations from an Ingress
-func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
+func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 	pia := &Ingress{
 		ObjectMeta: ing.ObjectMeta,
 	}

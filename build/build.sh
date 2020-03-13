@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ! [ -z $DEBUG ]; then
+if [ -n "$DEBUG" ]; then
 	set -x
 fi
 
@@ -44,19 +44,29 @@ if [ "$missing" = true ]; then
 fi
 
 export CGO_ENABLED=0
+export GOARCH=${ARCH}
 
 go build \
-    ${GOBUILD_FLAGS} \
-    -ldflags "-s -w \
-        -X ${PKG}/version.RELEASE=${TAG} \
-        -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
-        -X ${PKG}/version.REPO=${REPO_INFO}" \
-    -o bin/${ARCH}/nginx-ingress-controller ${PKG}/cmd/nginx
+  "${GOBUILD_FLAGS}" \
+  -ldflags "-s -w \
+    -X ${PKG}/version.RELEASE=${TAG} \
+    -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
+    -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -o "bin/${ARCH}/nginx-ingress-controller" "${PKG}/cmd/nginx"
 
 go build \
-    ${GOBUILD_FLAGS} \
-    -ldflags "-s -w \
-        -X ${PKG}/version.RELEASE=${TAG} \
-        -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
-        -X ${PKG}/version.REPO=${REPO_INFO}" \
-    -o bin/${ARCH}/dbg ${PKG}/cmd/dbg
+  "${GOBUILD_FLAGS}" \
+  -ldflags "-s -w \
+    -X ${PKG}/version.RELEASE=${TAG} \
+    -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
+    -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -o "bin/${ARCH}/dbg" "${PKG}/cmd/dbg"
+
+
+go build \
+  "${GOBUILD_FLAGS}" \
+  -ldflags "-s -w \
+    -X ${PKG}/version.RELEASE=${TAG} \
+    -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
+    -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -o "bin/${ARCH}/wait-shutdown" "${PKG}/cmd/waitshutdown"

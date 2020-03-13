@@ -4,18 +4,16 @@ The default configuration uses a custom logging format to add additional informa
 
 ```
 log_format upstreaminfo
-    '{{ if $cfg.useProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
-    '[$the_real_ip] - $remote_user [$time_local] "$request" '
+    '$remote_addr - $remote_user [$time_local] "$request" '
     '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
-    '$request_length $request_time [$proxy_upstream_name] $upstream_addr '
+    '$request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr '
     '$upstream_response_length $upstream_response_time $upstream_status $req_id';
 ```
 
 | Placeholder | Description |
 |-------------|-------------|
 | `$proxy_protocol_addr` | remote address if proxy protocol is enabled |
-| `$remote_addr` | remote address if proxy protocol is disabled (default) |
-| `$the_real_ip` | the source IP address of the client |
+| `$remote_addr` | the source IP address of the client |
 | `$remote_user` | user name supplied with the Basic authentication |
 | `$time_local` | local time in the Common Log Format |
 | `$request` | full original request line |
@@ -26,6 +24,7 @@ log_format upstreaminfo
 | `$request_length` | request length (including request line, header, and request body) |
 | `$request_time` | time elapsed since the first bytes were read from the client |
 | `$proxy_upstream_name` | name of the upstream. The format is `upstream-<namespace>-<service name>-<service port>` |
+| `$proxy_alternative_upstream_name` | name of the alternative upstream. The format is `upstream-<namespace>-<service name>-<service port>` |
 | `$upstream_addr` | the IP address and port (or the path to the domain socket) of the upstream server. If several servers were contacted during request processing, their addresses are separated by commas. |
 | `$upstream_response_length` | the length of the response obtained from the upstream server |
 | `$upstream_response_time` | time spent on receiving the response from the upstream server as seconds with millisecond resolution |

@@ -45,27 +45,12 @@ func PrintError(e error) {
 	}
 }
 
-func printWithError(s string, e error) {
-	if e != nil {
-		fmt.Println(e)
-	}
-	fmt.Print(s)
-}
-
-func printOrError(s string, e error) error {
-	if e != nil {
-		return e
-	}
-	fmt.Print(s)
-	return nil
-}
-
-// ParseVersionString returns the major, minor, and patch numbers of a verison string
+// ParseVersionString returns the major, minor, and patch numbers of a version string
 func ParseVersionString(v string) (int, int, int, error) {
 	parts := versionRegex.FindStringSubmatch(v)
 
 	if len(parts) != 4 {
-		return 0, 0, 0, fmt.Errorf("Could not parse %v as a version string (like 0.20.3)", v)
+		return 0, 0, 0, fmt.Errorf("could not parse %v as a version string (like 0.20.3)", v)
 	}
 
 	major, _ := strconv.Atoi(parts[1])
@@ -132,6 +117,13 @@ func AddPodFlag(cmd *cobra.Command) *string {
 func AddDeploymentFlag(cmd *cobra.Command) *string {
 	v := ""
 	cmd.Flags().StringVar(&v, "deployment", DefaultIngressDeploymentName, "The name of the ingress-nginx deployment")
+	return &v
+}
+
+// AddSelectorFlag adds a --selector flag to a cobra command
+func AddSelectorFlag(cmd *cobra.Command) *string {
+	v := ""
+	cmd.Flags().StringVarP(&v, "selector", "l", "", "Selector (label query) of the ingress-nginx pod")
 	return &v
 }
 

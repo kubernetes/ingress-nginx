@@ -19,22 +19,18 @@ package annotations
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-
+	"github.com/onsi/ginkgo"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
+var _ = framework.DescribeAnnotation("whitelist-source-range", func() {
 	f := framework.NewDefaultFramework("ipwhitelist")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should set valid ip whitelist range", func() {
+	ginkgo.It("should set valid ip whitelist range", func() {
 		host := "ipwhitelist.foo.com"
 		nameSpace := f.Namespace
 
@@ -42,7 +38,7 @@ var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
 			"nginx.ingress.kubernetes.io/whitelist-source-range": "18.0.0.0/8, 56.0.0.0/8",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

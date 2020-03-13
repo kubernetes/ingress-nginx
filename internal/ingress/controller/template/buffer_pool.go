@@ -31,8 +31,7 @@ func NewBufferPool(s int) *BufferPool {
 	return &BufferPool{
 		Pool: sync.Pool{
 			New: func() interface{} {
-				b := bytes.NewBuffer(make([]byte, s))
-				b.Reset()
+				b := bytes.NewBuffer(make([]byte, 0, s))
 				return b
 			},
 		},

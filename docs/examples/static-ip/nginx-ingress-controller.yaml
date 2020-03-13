@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-ingress-controller
@@ -24,7 +24,7 @@ spec:
       # hostNetwork: true
       terminationGracePeriodSeconds: 60
       containers:
-      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.18.0
+      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0
         name: nginx-ingress-controller
         readinessProbe:
           httpGet:

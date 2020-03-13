@@ -1,0 +1,8 @@
+# MacOSX
+.DS_Store
+
+# vim
+*.swp
+
+# test
+coverage.*

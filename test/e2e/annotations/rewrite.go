@@ -18,28 +18,24 @@ package annotations
 
 import (
 	"fmt"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"net/http"
 	"strings"
 
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
+var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-log", func() {
 	f := framework.NewDefaultFramework("rewrite")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should write rewrite logs", func() {
-		By("setting enable-rewrite-log annotation")
+	ginkgo.It("should write rewrite logs", func() {
+		ginkgo.By("setting enable-rewrite-log annotation")
 
 		host := "rewrite.bar.com"
 		annotations := map[string]string{
@@ -47,7 +43,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 			"nginx.ingress.kubernetes.io/enable-rewrite-log": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/something", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/something", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -55,25 +51,23 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 				return strings.Contains(server, "rewrite_log on;")
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/something").
-			Set("Host", host).
-			End()
-
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/something").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 
 		logs, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(logs).To(ContainSubstring(`"(?i)/something" matches "/something", client:`))
-		Expect(logs).To(ContainSubstring(`rewritten data: "/", args: "",`))
+		assert.Nil(ginkgo.GinkgoT(), err)
+		assert.Contains(ginkgo.GinkgoT(), logs, `"(?i)/something" matches "/something", client:`)
+		assert.Contains(ginkgo.GinkgoT(), logs, `rewritten data: "/", args: "",`)
 	})
 
-	It("should use correct longest path match", func() {
+	ginkgo.It("should use correct longest path match", func() {
 		host := "rewrite.bar.com"
 
-		By("creating a regular ingress definition")
-		ing := framework.NewSingleIngress("kube-lego", "/.well-known/acme/challenge", host, f.Namespace, "http-svc", 80, &map[string]string{})
+		ginkgo.By("creating a regular ingress definition")
+		ing := framework.NewSingleIngress("kube-lego", "/.well-known/acme/challenge", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -81,21 +75,21 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 				return strings.Contains(server, "/.well-known/acme/challenge")
 			})
 
-		By("making a request to the non-rewritten location")
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/.well-known/acme/challenge").
-			Set("Host", host).
-			End()
-		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:8080/.well-known/acme/challenge", host)
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+		ginkgo.By("making a request to the non-rewritten location")
+		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:80/.well-known/acme/challenge", host)
 
-		By(`creating an ingress definition with the rewrite-target annotation set on the "/" location`)
+		f.HTTPTestClient().
+			GET("/.well-known/acme/challenge").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains(expectBodyRequestURI)
+
+		ginkgo.By(`creating an ingress definition with the rewrite-target annotation set on the "/" location`)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
-		rewriteIng := framework.NewSingleIngress("rewrite-index", "/", host, f.Namespace, "http-svc", 80, &annotations)
+		rewriteIng := framework.NewSingleIngress("rewrite-index", "/", host, f.Namespace, framework.EchoService, 80, annotations)
 
 		f.EnsureIngress(rewriteIng)
 
@@ -104,21 +98,20 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 				return strings.Contains(server, `location ~* "^/" {`) && strings.Contains(server, `location ~* "^/.well-known/acme/challenge" {`)
 			})
 
-		By("making a second request to the non-rewritten location")
-		resp, body, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/.well-known/acme/challenge").
-			Set("Host", host).
-			End()
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+		ginkgo.By("making a second request to the non-rewritten location")
+		f.HTTPTestClient().
+			GET("/.well-known/acme/challenge").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains(expectBodyRequestURI)
 	})
 
-	It("should use ~* location modifier if regex annotation is present", func() {
+	ginkgo.It("should use ~* location modifier if regex annotation is present", func() {
 		host := "rewrite.bar.com"
 
-		By("creating a regular ingress definition")
-		ing := framework.NewSingleIngress("foo", "/foo", host, f.Namespace, "http-svc", 80, &map[string]string{})
+		ginkgo.By("creating a regular ingress definition")
+		ing := framework.NewSingleIngress("foo", "/foo", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -126,12 +119,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 				return strings.Contains(server, "location /foo {")
 			})
 
-		By(`creating an ingress definition with the use-regex amd rewrite-target annotation`)
+		ginkgo.By(`creating an ingress definition with the use-regex amd rewrite-target annotation`)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/use-regex":      "true",
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
-		ing = framework.NewSingleIngress("regex", "/foo.+", host, f.Namespace, "http-svc", 80, &annotations)
+		ing = framework.NewSingleIngress("regex", "/foo.+", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -139,67 +132,68 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 				return strings.Contains(server, `location ~* "^/foo" {`) && strings.Contains(server, `location ~* "^/foo.+" {`)
 			})
 
-		By("ensuring '/foo' matches '~* ^/foo'")
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/foo").
-			Set("Host", host).
-			End()
-		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:8080/foo", host)
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+		ginkgo.By("ensuring '/foo' matches '~* ^/foo'")
+		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:80/foo", host)
 
-		By("ensuring '/foo/bar' matches '~* ^/foo.+'")
-		resp, body, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/foo/bar").
-			Set("Host", host).
-			End()
-		expectBodyRequestURI = fmt.Sprintf("request_uri=http://%v:8080/new/backend", host)
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+		f.HTTPTestClient().
+			GET("/foo").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains(expectBodyRequestURI)
+
+		ginkgo.By("ensuring '/foo/bar' matches '~* ^/foo.+'")
+		expectBodyRequestURI = fmt.Sprintf("request_uri=http://%v:80/new/backend", host)
+
+		f.HTTPTestClient().
+			GET("/foo/bar").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains(expectBodyRequestURI)
 	})
 
-	It("should fail to use longest match for documented warning", func() {
+	ginkgo.It("should fail to use longest match for documented warning", func() {
 		host := "rewrite.bar.com"
 
-		By("creating a regular ingress definition")
-		ing := framework.NewSingleIngress("foo", "/foo/bar/bar", host, f.Namespace, "http-svc", 80, &map[string]string{})
+		ginkgo.By("creating a regular ingress definition")
+		ing := framework.NewSingleIngress("foo", "/foo/bar/bar", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		By(`creating an ingress definition with the use-regex annotation`)
+		ginkgo.By(`creating an ingress definition with the use-regex annotation`)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/use-regex":      "true",
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
-		ing = framework.NewSingleIngress("regex", "/foo/bar/[a-z]{3}", host, f.Namespace, "http-svc", 80, &annotations)
+		ing = framework.NewSingleIngress("regex", "/foo/bar/[a-z]{3}", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `location ~* "^/foo/bar/bar" {`) && strings.Contains(server, `location ~* "^/foo/bar/[a-z]{3}" {`)
+				return strings.Contains(server, `location ~* "^/foo/bar/bar" {`) &&
+					strings.Contains(server, `location ~* "^/foo/bar/[a-z]{3}" {`)
 			})
 
-		By("check that '/foo/bar/bar' does not match the longest exact path")
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/foo/bar/bar").
-			Set("Host", host).
-			End()
-		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:8080/new/backend", host)
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+		ginkgo.By("check that '/foo/bar/bar' does not match the longest exact path")
+		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:80/new/backend", host)
+
+		f.HTTPTestClient().
+			GET("/foo/bar/bar").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains(expectBodyRequestURI)
 	})
 
-	It("should allow for custom rewrite parameters", func() {
+	ginkgo.It("should allow for custom rewrite parameters", func() {
 		host := "rewrite.bar.com"
 
-		By(`creating an ingress definition with the use-regex annotation`)
+		ginkgo.By(`creating an ingress definition with the use-regex annotation`)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/use-regex":      "true",
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend/$1",
 		}
-		ing := framework.NewSingleIngress("regex", "/foo/bar/(.+)", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress("regex", "/foo/bar/(.+)", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -207,15 +201,14 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 				return strings.Contains(server, `location ~* "^/foo/bar/(.+)" {`)
 			})
 
-		By("check that '/foo/bar/bar' redirects to cusotm rewrite")
-		resp, body, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)+"/foo/bar/bar").
-			Set("Host", host).
-			End()
-		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:8080/new/backend/bar", host)
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
-	})
+		ginkgo.By("check that '/foo/bar/bar' redirects to custom rewrite")
+		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:80/new/backend/bar", host)
 
+		f.HTTPTestClient().
+			GET("/foo/bar/bar").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains(expectBodyRequestURI)
+	})
 })

@@ -19,22 +19,19 @@ package annotations
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - ServerSnippet", func() {
+var _ = framework.DescribeAnnotation("server-snippet", func() {
 	f := framework.NewDefaultFramework("serversnippet")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It(`add valid directives to server via server snippet"`, func() {
+	ginkgo.It(`add valid directives to server via server snippet"`, func() {
 		host := "serversnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-snippet": `
@@ -42,12 +39,13 @@ var _ = framework.IngressNginxDescribe("Annotations - ServerSnippet", func() {
 				more_set_headers "Content-Type: $content_type";`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `more_set_headers "Content-Length: $content_length`) && strings.Contains(server, `more_set_headers "Content-Type: $content_type";`)
+				return strings.Contains(server, `more_set_headers "Content-Length: $content_length`) &&
+					strings.Contains(server, `more_set_headers "Content-Type: $content_type";`)
 			})
 	})
 })

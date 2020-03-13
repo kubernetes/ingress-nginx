@@ -3,10 +3,11 @@ local cjson = require("cjson.safe")
 -- this is the Lua representation of Configuration struct in internal/ingress/types.go
 local configuration_data = ngx.shared.configuration_data
 local certificate_data = ngx.shared.certificate_data
+local certificate_servers = ngx.shared.certificate_servers
 
-local _M = {
-  nameservers = {}
-}
+local EMPTY_UID = "-1"
+
+local _M = {}
 
 function _M.get_backends_data()
   return configuration_data:get("backends")
@@ -36,8 +37,13 @@ local function fetch_request_body()
   return body
 end
 
-function _M.get_pem_cert_key(hostname)
-  return certificate_data:get(hostname)
+local function get_pem_cert(hostname)
+  local uid = certificate_servers:get(hostname)
+  if not uid then
+    return nil
+  end
+
+  return certificate_data:get(uid)
 end
 
 local function handle_servers()
@@ -47,32 +53,45 @@ local function handle_servers()
     return
   end
 
-  local raw_servers = fetch_request_body()
+  local raw_configuration = fetch_request_body()
 
-  local servers, err = cjson.decode(raw_servers)
-  if not servers then
-    ngx.log(ngx.ERR, "could not parse servers: ", err)
+  local configuration, err = cjson.decode(raw_configuration)
+  if not configuration then
+    ngx.log(ngx.ERR, "could not parse configuration: ", err)
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
 
   local err_buf = {}
-  for _, server in ipairs(servers) do
-    if server.hostname and server.sslCert.pemCertKey then
-      local success
-      success, err = certificate_data:safe_set(server.hostname, server.sslCert.pemCertKey)
-      if not success then
-        if err == "no memory" then
-          ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-          ngx.log(ngx.ERR, "no memory in certificate_data dictionary")
-          return
-        end
 
-        local err_msg = string.format("error setting certificate for %s: %s\n", server.hostname, tostring(err))
+  for server, uid in pairs(configuration.servers) do
+    if uid == EMPTY_UID then
+      -- notice that we do not delete certificate corresponding to this server
+      -- this is becase a certificate can be used by multiple servers/hostnames
+      certificate_servers:delete(server)
+    else
+      local success, set_err, forcible = certificate_servers:set(server, uid)
+      if not success then
+        local err_msg = string.format("error setting certificate for %s: %s\n", server, tostring(set_err))
         table.insert(err_buf, err_msg)
       end
-    else
-      ngx.log(ngx.WARN, "hostname or pemCertKey are not present")
+      if forcible then
+        local msg = string.format("certificate_servers dictionary is full, LRU entry has been removed to store %s",
+          server)
+        ngx.log(ngx.WARN, msg)
+      end
+    end
+  end
+
+  for uid, cert in pairs(configuration.certificates) do
+    local success, set_err, forcible = certificate_data:set(uid, cert)
+    if not success then
+      local err_msg = string.format("error setting certificate for %s: %s\n", uid, tostring(set_err))
+      table.insert(err_buf, err_msg)
+    end
+    if forcible then
+      local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s", uid)
+      ngx.log(ngx.WARN, msg)
     end
   end
 
@@ -124,7 +143,7 @@ local function handle_certs()
     return
   end
 
-  local key = _M.get_pem_cert_key(query["hostname"])
+  local key = get_pem_cert(query["hostname"])
   if key then
     ngx.status = ngx.HTTP_OK
     ngx.print(key)
@@ -134,6 +153,31 @@ local function handle_certs()
     ngx.print("No key associated with this hostname.")
     return
   end
+end
+
+
+local function handle_backends()
+  if ngx.var.request_method == "GET" then
+    ngx.status = ngx.HTTP_OK
+    ngx.print(_M.get_backends_data())
+    return
+  end
+
+  local backends = fetch_request_body()
+  if not backends then
+    ngx.log(ngx.ERR, "dynamic-configuration: unable to read valid request body")
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+
+  local success, err = configuration_data:set("backends", backends)
+  if not success then
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+
+  ngx.status = ngx.HTTP_CREATED
 end
 
 function _M.call()
@@ -158,33 +202,13 @@ function _M.call()
     return
   end
 
-  if ngx.var.request_uri ~= "/configuration/backends" then
-    ngx.status = ngx.HTTP_NOT_FOUND
-    ngx.print("Not found!")
+  if ngx.var.request_uri == "/configuration/backends" then
+    handle_backends()
     return
   end
 
-  if ngx.var.request_method == "GET" then
-    ngx.status = ngx.HTTP_OK
-    ngx.print(_M.get_backends_data())
-    return
-  end
-
-  local backends = fetch_request_body()
-  if not backends then
-    ngx.log(ngx.ERR, "dynamic-configuration: unable to read valid request body")
-    ngx.status = ngx.HTTP_BAD_REQUEST
-    return
-  end
-
-  local success, err = configuration_data:set("backends", backends)
-  if not success then
-    ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
-    ngx.status = ngx.HTTP_BAD_REQUEST
-    return
-  end
-
-  ngx.status = ngx.HTTP_CREATED
+  ngx.status = ngx.HTTP_NOT_FOUND
+  ngx.print("Not found!")
 end
 
 if _TEST then

@@ -1,0 +1,6 @@
+controller:
+  kind: DaemonSet
+  addHeaders:
+    X-Frame-Options: deny
+  proxySetHeaders:
+    X-Forwarded-Proto: https

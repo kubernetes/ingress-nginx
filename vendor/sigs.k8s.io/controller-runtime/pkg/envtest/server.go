@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -27,19 +28,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/testing_frameworks/integration"
 
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/internal/log"
 )
 
-var log = logf.KBLog.WithName("test-env")
+var log = logf.RuntimeLog.WithName("test-env")
 
-// Default binary path for test framework
+/*
+It's possible to override some defaults, by setting the following environment variables:
+	USE_EXISTING_CLUSTER (boolean): if set to true, envtest will use an existing cluster
+	TEST_ASSET_KUBE_APISERVER (string): path to the api-server binary to use
+	TEST_ASSET_ETCD (string): path to the etcd binary to use
+	TEST_ASSET_KUBECTL (string): path to the kubectl binary to use
+	KUBEBUILDER_ASSETS (string): directory containing the binaries to use (api-server, etcd and kubectl). Defaults to /usr/local/kubebuilder/bin.
+	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT (string supported by time.ParseDuration): timeout for test control plane to start. Defaults to 20s.
+	KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT (string supported by time.ParseDuration): timeout for test control plane to start. Defaults to 20s.
+	KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT (boolean): if set to true, the control plane's stdout and stderr are attached to os.Stdout and os.Stderr
+
+*/
 const (
+	envUseExistingCluster  = "USE_EXISTING_CLUSTER"
 	envKubeAPIServerBin    = "TEST_ASSET_KUBE_APISERVER"
 	envEtcdBin             = "TEST_ASSET_ETCD"
 	envKubectlBin          = "TEST_ASSET_KUBECTL"
 	envKubebuilderPath     = "KUBEBUILDER_ASSETS"
 	envStartTimeout        = "KUBEBUILDER_CONTROLPLANE_START_TIMEOUT"
 	envStopTimeout         = "KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT"
+	envAttachOutput        = "KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT"
 	defaultKubebuilderPath = "/usr/local/kubebuilder/bin"
 	StartTimeout           = 60
 	StopTimeout            = 60
@@ -48,6 +62,7 @@ const (
 	defaultKubebuilderControlPlaneStopTimeout  = 20 * time.Second
 )
 
+// Default binary path for test framework
 func defaultAssetPath(binary string) string {
 	assetPath := os.Getenv(envKubebuilderPath)
 	if assetPath == "" {
@@ -59,12 +74,16 @@ func defaultAssetPath(binary string) string {
 
 // DefaultKubeAPIServerFlags are default flags necessary to bring up apiserver.
 var DefaultKubeAPIServerFlags = []string{
+	// Allow tests to run offline, by preventing API server from attempting to
+	// use default route to determine its --advertise-address
+	"--advertise-address=127.0.0.1",
 	"--etcd-servers={{ if .EtcdURL }}{{ .EtcdURL.String }}{{ end }}",
 	"--cert-dir={{ .CertDir }}",
 	"--insecure-port={{ if .URL }}{{ .URL.Port }}{{ end }}",
 	"--insecure-bind-address={{ if .URL }}{{ .URL.Hostname }}{{ end }}",
 	"--secure-port={{ if .SecurePort }}{{ .SecurePort }}{{ end }}",
 	"--admission-control=AlwaysAdmit",
+	"--service-cluster-ip-range=10.0.0.0/24",
 }
 
 // Environment creates a Kubernetes test environment that will start / stop the Kubernetes control plane and
@@ -73,19 +92,28 @@ type Environment struct {
 	// ControlPlane is the ControlPlane including the apiserver and etcd
 	ControlPlane integration.ControlPlane
 
-	// Config can be used to talk to the apiserver
+	// Config can be used to talk to the apiserver.  It's automatically
+	// populated if not set using the standard controller-runtime config
+	// loading.
 	Config *rest.Config
 
-	// CRDs is a list of CRDs to install
+	// CRDInstallOptions are the options for installing CRDs.
+	CRDInstallOptions CRDInstallOptions
+
+	// CRDs is a list of CRDs to install.
+	// If both this field and CRDs field in CRDInstallOptions are specified, the
+	// values are merged.
 	CRDs []*apiextensionsv1beta1.CustomResourceDefinition
 
 	// CRDDirectoryPaths is a list of paths containing CRD yaml or json configs.
+	// If both this field and Paths field in CRDInstallOptions are specified, the
+	// values are merged.
 	CRDDirectoryPaths []string
 
 	// UseExisting indicates that this environments should use an
 	// existing kubeconfig, instead of trying to stand up a new control plane.
 	// This is useful in cases that need aggregated API servers and the like.
-	UseExistingCluster bool
+	UseExistingCluster *bool
 
 	// ControlPlaneStartTimeout is the maximum duration each controlplane component
 	// may take to start. It defaults to the KUBEBUILDER_CONTROLPLANE_START_TIMEOUT
@@ -99,11 +127,17 @@ type Environment struct {
 
 	// KubeAPIServerFlags is the set of flags passed while starting the api server.
 	KubeAPIServerFlags []string
+
+	// AttachControlPlaneOutput indicates if control plane output will be attached to os.Stdout and os.Stderr.
+	// Enable this to get more visibility of the testing control plane.
+	// It respect KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT environment variable.
+	AttachControlPlaneOutput bool
 }
 
-// Stop stops a running server
+// Stop stops a running server.
+// If USE_EXISTING_CLUSTER is set to true, this method is a no-op.
 func (te *Environment) Stop() error {
-	if te.UseExistingCluster {
+	if te.useExistingCluster() {
 		return nil
 	}
 	return te.ControlPlane.Stop()
@@ -115,12 +149,23 @@ func (te Environment) getAPIServerFlags() []string {
 	if len(te.KubeAPIServerFlags) == 0 {
 		return DefaultKubeAPIServerFlags
 	}
+	// Check KubeAPIServerFlags contains service-cluster-ip-range, if not, set default value to service-cluster-ip-range
+	containServiceClusterIPRange := false
+	for _, flag := range te.KubeAPIServerFlags {
+		if strings.Contains(flag, "service-cluster-ip-range") {
+			containServiceClusterIPRange = true
+			break
+		}
+	}
+	if !containServiceClusterIPRange {
+		te.KubeAPIServerFlags = append(te.KubeAPIServerFlags, "--service-cluster-ip-range=10.0.0.0/24")
+	}
 	return te.KubeAPIServerFlags
 }
 
 // Start starts a local Kubernetes server and updates te.ApiserverPort with the port it is listening on
 func (te *Environment) Start() (*rest.Config, error) {
-	if te.UseExistingCluster {
+	if te.useExistingCluster() {
 		log.V(1).Info("using existing cluster")
 		if te.Config == nil {
 			// we want to allow people to pass in their own config, so
@@ -134,9 +179,28 @@ func (te *Environment) Start() (*rest.Config, error) {
 			}
 		}
 	} else {
-		te.ControlPlane = integration.ControlPlane{}
-		te.ControlPlane.APIServer = &integration.APIServer{Args: te.getAPIServerFlags()}
-		te.ControlPlane.Etcd = &integration.Etcd{}
+		if te.ControlPlane.APIServer == nil {
+			te.ControlPlane.APIServer = &integration.APIServer{Args: te.getAPIServerFlags()}
+		}
+		if te.ControlPlane.Etcd == nil {
+			te.ControlPlane.Etcd = &integration.Etcd{}
+		}
+
+		if os.Getenv(envAttachOutput) == "true" {
+			te.AttachControlPlaneOutput = true
+		}
+		if te.ControlPlane.APIServer.Out == nil && te.AttachControlPlaneOutput {
+			te.ControlPlane.APIServer.Out = os.Stdout
+		}
+		if te.ControlPlane.APIServer.Err == nil && te.AttachControlPlaneOutput {
+			te.ControlPlane.APIServer.Err = os.Stderr
+		}
+		if te.ControlPlane.Etcd.Out == nil && te.AttachControlPlaneOutput {
+			te.ControlPlane.Etcd.Out = os.Stdout
+		}
+		if te.ControlPlane.Etcd.Err == nil && te.AttachControlPlaneOutput {
+			te.ControlPlane.Etcd.Err = os.Stderr
+		}
 
 		if os.Getenv(envKubeAPIServerBin) == "" {
 			te.ControlPlane.APIServer.Path = defaultAssetPath("kube-apiserver")
@@ -167,14 +231,16 @@ func (te *Environment) Start() (*rest.Config, error) {
 		// Create the *rest.Config for creating new clients
 		te.Config = &rest.Config{
 			Host: te.ControlPlane.APIURL().Host,
+			// gotta go fast during tests -- we don't really care about overwhelming our test API server
+			QPS:   1000.0,
+			Burst: 2000.0,
 		}
 	}
 
 	log.V(1).Info("installing CRDs")
-	_, err := InstallCRDs(te.Config, CRDInstallOptions{
-		Paths: te.CRDDirectoryPaths,
-		CRDs:  te.CRDs,
-	})
+	te.CRDInstallOptions.CRDs = mergeCRDs(te.CRDInstallOptions.CRDs, te.CRDs)
+	te.CRDInstallOptions.Paths = mergePaths(te.CRDInstallOptions.Paths, te.CRDDirectoryPaths)
+	_, err := InstallCRDs(te.Config, te.CRDInstallOptions)
 	return te.Config, err
 }
 
@@ -219,4 +285,11 @@ func (te *Environment) defaultTimeouts() error {
 		}
 	}
 	return nil
+}
+
+func (te *Environment) useExistingCluster() bool {
+	if te.UseExistingCluster == nil {
+		return strings.ToLower(os.Getenv(envUseExistingCluster)) == "true"
+	}
+	return *te.UseExistingCluster
 }

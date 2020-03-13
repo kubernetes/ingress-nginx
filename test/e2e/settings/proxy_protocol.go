@@ -22,31 +22,28 @@ import (
 	"net"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
+var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 	f := framework.NewDefaultFramework("proxy-protocol")
 
 	setting := "use-proxy-protocol"
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 		f.UpdateNginxConfigMapData(setting, "false")
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should respect port passed by the PROXY Protocol", func() {
+	ginkgo.It("should respect port passed by the PROXY Protocol", func() {
 		host := "proxy-protocol"
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -57,7 +54,7 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		ip := f.GetNginxIP()
 
 		conn, err := net.Dial("tcp", net.JoinHostPort(ip, "80"))
-		Expect(err).NotTo(HaveOccurred(), "unexpected error creating connection to %s:80", ip)
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error creating connection to %s:80", ip)
 		defer conn.Close()
 
 		header := "PROXY TCP4 192.168.0.1 192.168.0.11 56324 1234\r\n"
@@ -65,10 +62,45 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
 
 		data, err := ioutil.ReadAll(conn)
-		Expect(err).NotTo(HaveOccurred(), "unexpected error reading connection data")
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
+
 		body := string(data)
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", "proxy-protocol")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=80")))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-for=192.168.0.1")))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=http"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=192.168.0.1"))
+	})
+
+	ginkgo.It("should respect proto passed by the PROXY Protocol server port", func() {
+		host := "proxy-protocol"
+
+		f.UpdateNginxConfigMapData(setting, "true")
+
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "server_name proxy-protocol") &&
+					strings.Contains(server, "listen 80 proxy_protocol")
+			})
+
+		ip := f.GetNginxIP()
+
+		conn, err := net.Dial("tcp", net.JoinHostPort(ip, "80"))
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error creating connection to %s:80", ip)
+		defer conn.Close()
+
+		header := "PROXY TCP4 192.168.0.1 192.168.0.11 56324 443\r\n"
+		conn.Write([]byte(header))
+		conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
+
+		data, err := ioutil.ReadAll(conn)
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
+
+		body := string(data)
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=443"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=https"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=192.168.0.1"))
 	})
 })

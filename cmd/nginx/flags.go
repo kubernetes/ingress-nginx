@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/pflag"
 
@@ -30,6 +31,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/nginx"
 )
@@ -42,6 +44,10 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			`Address of the Kubernetes API server.
 Takes the form "protocol://address:port". If not specified, it is assumed the
 program runs inside a Kubernetes cluster and local discovery is attempted.`)
+
+		rootCAFile = flags.String("certificate-authority", "",
+			`Path to a cert file for the certificate authority. This certificate is used
+only when the flag --apiserver-host is specified.`)
 
 		kubeConfigFile = flags.String("kubeconfig", "",
 			`Path to a kubeconfig file containing authorization and API server information.`)
@@ -97,7 +103,7 @@ Takes the form "namespace/name".`)
 Configured inside the NGINX status server. All requests received on the port
 defined by the healthz-port parameter are forwarded internally to this path.`)
 
-		healthCheckTimeout = flags.Duration("health-check-timeout", 10, `Time limit, in seconds, for a probe to health-check-path to succeed.`)
+		defHealthCheckTimeout = flags.Int("health-check-timeout", 10, `Time limit, in seconds, for a probe to health-check-path to succeed.`)
 
 		updateStatus = flags.Bool("update-status", true,
 			`Update the load-balancer status of Ingress objects this controller satisfies.
@@ -130,8 +136,7 @@ Requires the update-status parameter.`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
-A valid certificate chain is required to enable OCSP stapling. Certificates
-uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
+Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
 extension for this to succeed.`)
 
 		syncRateLimit = flags.Float32("sync-rate-limit", 0.3,
@@ -141,18 +146,17 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", true,
-			`Dynamically update SSL certificates instead of reloading NGINX.
-Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
+		_ = flags.Bool("enable-dynamic-certificates", true,
+			`Dynamically update SSL certificates instead of reloading NGINX. Feature backed by OpenResty Lua libraries.`)
 
 		enableMetrics = flags.Bool("enable-metrics", true,
 			`Enables the collection of NGINX metrics`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host`)
 
-		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
-		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
-		_             = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
+		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
+		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
+
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
@@ -167,10 +171,21 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 			`The path of the validating webhook certificate PEM.`)
 		validationWebhookKey = flags.String("validating-webhook-key", "",
 			`The path of the validating webhook key PEM.`)
+
+		statusPort = flags.Int("status-port", 10246, `Port to use for the lua HTTP endpoint configuration.`)
+		streamPort = flags.Int("stream-port", 10247, "Port to use for the lua TCP/UDP endpoint configuration.")
+
+		profilerPort = flags.Int("profiler-port", 10245, "Port to use for expose the ingress controller Go profiler when it is enabled.")
+
+		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
 	)
 
-	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
 	flags.MarkDeprecated("force-namespace-isolation", `This flag doesn't do anything.`)
+
+	flags.MarkDeprecated("enable-dynamic-certificates", `Only dynamic mode is supported`)
+
+	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
+https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases`)
 
 	flag.Set("logtostderr", "true")
 
@@ -189,6 +204,13 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		return true, nil, nil
 	}
 
+	if *statusUpdateInterval < 5 {
+		klog.Warningf("The defined time to update the Ingress status too low (%v seconds). Adjusting to 5 seconds", *statusUpdateInterval)
+		status.UpdateInterval = 5
+	} else {
+		status.UpdateInterval = *statusUpdateInterval
+	}
+
 	if *ingressClass != "" {
 		klog.Infof("Watching for Ingress class: %s", *ingressClass)
 
@@ -203,59 +225,74 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --http-port", *httpPort)
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --http-port", *httpPort)
 	}
 
 	if !ing_net.IsPortAvailable(*httpsPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --https-port", *httpsPort)
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --https-port", *httpsPort)
 	}
 
 	if !ing_net.IsPortAvailable(*defServerPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --default-server-port", *defServerPort)
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --default-server-port", *defServerPort)
 	}
 
+	if !ing_net.IsPortAvailable(*statusPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --status-port", *statusPort)
+	}
+
+	if !ing_net.IsPortAvailable(*streamPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --stream-port", *streamPort)
+	}
+
+	if !ing_net.IsPortAvailable(*profilerPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --profiler-port", *profilerPort)
+	}
+
+	nginx.StatusPort = *statusPort
+	nginx.StreamPort = *streamPort
+	nginx.ProfilerPort = *profilerPort
+
 	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)
 	}
 
 	if !*enableSSLChainCompletion {
 		klog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}
 
-	if *enableSSLChainCompletion && *dynamicCertificatesEnabled {
-		return false, nil, fmt.Errorf(`SSL certificate chain completion cannot be enabled when dynamic certificates functionality is enabled. Please check the flags --enable-ssl-chain-completion`)
-	}
-
 	if *publishSvc != "" && *publishStatusAddress != "" {
-		return false, nil, fmt.Errorf("Flags --publish-service and --publish-status-address are mutually exclusive")
+		return false, nil, fmt.Errorf("flags --publish-service and --publish-status-address are mutually exclusive")
 	}
 
 	nginx.HealthPath = *defHealthzURL
 
+	if *defHealthCheckTimeout > 0 {
+		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
+	}
+
+	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
+
 	config := &controller.Configuration{
-		APIServerHost:              *apiserverHost,
-		KubeConfigFile:             *kubeConfigFile,
-		UpdateStatus:               *updateStatus,
-		ElectionID:                 *electionID,
-		EnableProfiling:            *profiling,
-		EnableMetrics:              *enableMetrics,
-		MetricsPerHost:             *metricsPerHost,
-		EnableSSLPassthrough:       *enableSSLPassthrough,
-		EnableSSLChainCompletion:   *enableSSLChainCompletion,
-		ResyncPeriod:               *resyncPeriod,
-		DefaultService:             *defaultSvc,
-		Namespace:                  *watchNamespace,
-		ConfigMapName:              *configMap,
-		TCPConfigMapName:           *tcpConfigMapName,
-		UDPConfigMapName:           *udpConfigMapName,
-		DefaultSSLCertificate:      *defSSLCertificate,
-		HealthCheckTimeout:         *healthCheckTimeout,
-		PublishService:             *publishSvc,
-		PublishStatusAddress:       *publishStatusAddress,
-		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
-		UseNodeInternalIP:          *useNodeInternalIP,
-		SyncRateLimit:              *syncRateLimit,
-		DynamicCertificatesEnabled: *dynamicCertificatesEnabled,
+		APIServerHost:          *apiserverHost,
+		KubeConfigFile:         *kubeConfigFile,
+		UpdateStatus:           *updateStatus,
+		ElectionID:             *electionID,
+		EnableProfiling:        *profiling,
+		EnableMetrics:          *enableMetrics,
+		MetricsPerHost:         *metricsPerHost,
+		EnableSSLPassthrough:   *enableSSLPassthrough,
+		ResyncPeriod:           *resyncPeriod,
+		DefaultService:         *defaultSvc,
+		Namespace:              *watchNamespace,
+		ConfigMapName:          *configMap,
+		TCPConfigMapName:       *tcpConfigMapName,
+		UDPConfigMapName:       *udpConfigMapName,
+		DefaultSSLCertificate:  *defSSLCertificate,
+		PublishService:         *publishSvc,
+		PublishStatusAddress:   *publishStatusAddress,
+		UpdateStatusOnShutdown: *updateStatusOnShutdown,
+		UseNodeInternalIP:      *useNodeInternalIP,
+		SyncRateLimit:          *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
@@ -267,6 +304,18 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		ValidationWebhook:         *validationWebhook,
 		ValidationWebhookCertPath: *validationWebhookCert,
 		ValidationWebhookKeyPath:  *validationWebhookKey,
+	}
+
+	if *apiserverHost != "" {
+		config.RootCAFile = *rootCAFile
+	}
+
+	if nginx.MaxmindLicenseKey != "" {
+		klog.Info("downloading maxmind GeoIP2 databases...")
+		err := nginx.DownloadGeoLite2DB()
+		if err != nil {
+			klog.Errorf("unexpected error downloading GeoIP2 database: %v", err)
+		}
 	}
 
 	return false, config, nil
