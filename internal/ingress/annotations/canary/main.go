@@ -17,7 +17,7 @@ limitations under the License.
 package canary
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
@@ -30,11 +30,12 @@ type canary struct {
 
 // Config returns the configuration rules for setting up the Canary
 type Config struct {
-	Enabled     bool
-	Weight      int
-	Header      string
-	HeaderValue string
-	Cookie      string
+	Enabled       bool
+	Weight        int
+	Header        string
+	HeaderValue   string
+	HeaderPattern string
+	Cookie        string
 }
 
 // NewParser parses the ingress for canary related annotations
@@ -44,7 +45,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the canary should be enabled and with what config
-func (c canary) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 	config := &Config{}
 	var err error
 
@@ -68,12 +69,18 @@ func (c canary) Parse(ing *extensions.Ingress) (interface{}, error) {
 		config.HeaderValue = ""
 	}
 
+	config.HeaderPattern, err = parser.GetStringAnnotation("canary-by-header-pattern", ing)
+	if err != nil {
+		config.HeaderPattern = ""
+	}
+
 	config.Cookie, err = parser.GetStringAnnotation("canary-by-cookie", ing)
 	if err != nil {
 		config.Cookie = ""
 	}
 
-	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0) {
+	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0 ||
+		len(config.HeaderPattern) > 0) {
 		return nil, errors.NewInvalidAnnotationConfiguration("canary", "configured but not enabled")
 	}
 

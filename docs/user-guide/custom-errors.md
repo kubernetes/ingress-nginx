@@ -28,4 +28,4 @@ See also the [Custom errors][example-custom-errors] example.
 
 [cm-custom-http-errors]: ./nginx-configuration/configmap.md#custom-http-errors
 [img-custom-error-pages]: https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages
-[example-custom-errors]: ../examples/customization/custom-errors
+[example-custom-errors]: ../../examples/customization/custom-errors

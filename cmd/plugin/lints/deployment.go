@@ -58,7 +58,7 @@ func (lint DeploymentLint) Link() string {
 	return ""
 }
 
-// GetDeploymentLints retuns all of the lints for ingresses
+// GetDeploymentLints returns all of the lints for ingresses
 func GetDeploymentLints() []DeploymentLint {
 	return []DeploymentLint{
 		removedFlag("sort-backends", 3655, "0.22.0"),

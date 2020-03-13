@@ -19,10 +19,7 @@ cd ingress-nginx
 
 ### Initial developer environment build
 
->**Prequisites**: Minikube must be installed.
-See [releases](https://github.com/kubernetes/minikube/releases) for installation instructions. 
-
-If you are using **MacOS** and deploying to **minikube**, the following command will build the local nginx controller container image and deploy the ingress controller onto a minikube cluster with RBAC enabled in the namespace `ingress-nginx`:
+Ensure docker experimental features option is enabled for [buildx](https://docs.docker.com/buildx/working-with-buildx/)
 
 ```
 $ make dev-env
@@ -47,34 +44,13 @@ The build uses dependencies in the `vendor` directory, which
 must be installed before building a binary/image. Occasionally, you
 might need to update the dependencies.
 
-This guide requires you to install the [dep](https://github.com/golang/dep) dependency tool.
-
-Check the version of `dep` you are using and make sure it is up to date.
-
-```console
-$ dep version
-dep:
- version     : devel
- build date  : 
- git hash    : 
- go version  : go1.9
- go compiler : gc
- platform    : linux/amd64
-```
-
-If you have an older version of `dep`, you can update it as follows:
-
-```console
-$ go get -u github.com/golang/dep
-```
+This guide requires you to install go 1.13 or newer.
 
 This will automatically save the dependencies to the `vendor/` directory.
 
 ```console
-$ cd $GOPATH/src/k8s.io/ingress-nginx
-$ dep ensure
-$ dep ensure -update
-$ dep prune
+$ go get
+$ make dep-ensure
 ```
 
 ## Building
@@ -95,6 +71,21 @@ $ export REGISTRY=<your-docker-registry>
 
 To find the registry simply run: `docker system info | grep Registry`
 
+### Building the e2e test image
+
+The e2e test image can also be built through the Makefile.
+
+```console
+$ make e2e-test-image
+```
+
+You can then make this image available on your minikube host by exporting the image and loading it with the minikube docker context:
+
+```console
+$ docker save nginx-ingress-controller:e2e |  (eval $(minikube docker-env) && docker load)
+```
+
+
 ### Nginx Controller
 
 Build a raw server binary
@@ -107,19 +98,19 @@ $ make build
 Build a local container image
 
 ```console
-$ TAG=<tag> REGISTRY=$USER/ingress-controller make docker-build
+$ TAG=<tag> REGISTRY=$USER/ingress-controller make container
 ```
 
 Push the container image to a remote repository
 
 ```console
-$ TAG=<tag> REGISTRY=$USER/ingress-controller make docker-push
+$ TAG=<tag> REGISTRY=$USER/ingress-controller make push
 ```
 
 ## Deploying
 
 There are several ways to deploy the ingress controller onto a cluster.
-Please check the [deployment guide](./deploy)
+Please check the [deployment guide](../deploy/)
 
 ## Testing
 
@@ -137,6 +128,8 @@ $ cd $GOPATH/src/k8s.io/ingress-nginx
 $ make e2e-test
 ```
 
+NOTE: if your e2e pod keeps hanging in an ImagePullBackoff, make sure you've made your e2e nginx-ingress-controller image available to minikube as explained in the **Building the e2e test image** section
+
 To run unit-tests for lua code locally, run:
 
 ```console
@@ -145,7 +138,7 @@ $ ./rootfs/etc/nginx/lua/test/up.sh
 $ make lua-test
 ```
 
-Lua tests are located in `$GOPATH/src/k8s.io/ingress-nginx/rootfs/etc/nginx/lua/test`. When creating a new test file it must follow the naming convention `<mytest>_test.lua` or it will be ignored. 
+Lua tests are located in `$GOPATH/src/k8s.io/ingress-nginx/rootfs/etc/nginx/lua/test`. When creating a new test file it must follow the naming convention `<mytest>_test.lua` or it will be ignored.
 
 ## Releasing
 

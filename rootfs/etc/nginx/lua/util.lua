@@ -1,5 +1,14 @@
-local string_len = string.len
-local string_sub = string.sub
+local string        = string
+local string_len    = string.len
+local string_sub    = string.sub
+local string_format = string.format
+local pairs         = pairs
+local tonumber      = tonumber
+local getmetatable  = getmetatable
+local type          = type
+local next          = next
+local table         = table
+
 
 local _M = {}
 
@@ -24,6 +33,45 @@ function _M.lua_ngx_var(ngx_var)
   end
 
   return ngx.var[var_name]
+end
+
+-- normalize_endpoints takes endpoints as an array of endpoint objects
+-- and returns a table where keys are string that's
+-- endpoint.address .. ":" .. endpoint.port and values are all true
+local function normalize_endpoints(endpoints)
+  local normalized_endpoints = {}
+
+  for _, endpoint in pairs(endpoints) do
+    local endpoint_string = string_format("%s:%s", endpoint.address, endpoint.port)
+    normalized_endpoints[endpoint_string] = true
+  end
+
+  return normalized_endpoints
+end
+
+-- diff_endpoints compares old and new
+-- and as a first argument returns what endpoints are in new
+-- but are not in old, and as a second argument it returns
+-- what endpoints are in old but are in new.
+-- Both return values are normalized (ip:port).
+function _M.diff_endpoints(old, new)
+  local endpoints_added, endpoints_removed = {}, {}
+  local normalized_old = normalize_endpoints(old)
+  local normalized_new = normalize_endpoints(new)
+
+  for endpoint_string, _ in pairs(normalized_old) do
+    if not normalized_new[endpoint_string] then
+      table.insert(endpoints_removed, endpoint_string)
+    end
+  end
+
+  for endpoint_string, _ in pairs(normalized_new) do
+    if not normalized_old[endpoint_string] then
+      table.insert(endpoints_added, endpoint_string)
+    end
+  end
+
+  return endpoints_added, endpoints_removed
 end
 
 -- this implementation is taken from
@@ -81,7 +129,8 @@ local function tablelength(T)
 end
 _M.tablelength = tablelength
 
--- replaces special character value a with value b for all occurences in a string
+-- replaces special character value a with value b for all occurences in a
+-- string
 local function replace_special_char(str, a, b)
   return string.gsub(str, "%" .. a, b)
 end

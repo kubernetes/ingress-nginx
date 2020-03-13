@@ -6,7 +6,7 @@ This example demonstrates how to use the Rewrite annotations
 
 You will need to make sure your Ingress targets exactly one Ingress
 controller by specifying the [ingress.class annotation](../../user-guide/multiple-ingress.md),
-and that you have an ingress controller [running](../../deploy) in your cluster.
+and that you have an ingress controller [running](../../deploy/) in your cluster.
 
 ## Deployment
 
@@ -26,15 +26,15 @@ Rewriting can be controlled using the following annotations:
 
 !!! attention
     Starting in Version 0.22.0, ingress definitions using the annotation `nginx.ingress.kubernetes.io/rewrite-target` are not backwards compatible with previous versions. In Version 0.22.0 and beyond, any substrings within the request URI that need to be passed to the rewritten path must explicitly be defined in a [capture group](https://www.regular-expressions.info/refcapture.html).
-    
+
 !!! note
-    [Captured groups](https://www.regular-expressions.info/refcapture.html) are saved in numbered placeholders, chronologically, in the form `$1`, `$2` ... `$n`. These placeholders can be used as parameters in the `rewrite-target` annotation. 
+    [Captured groups](https://www.regular-expressions.info/refcapture.html) are saved in numbered placeholders, chronologically, in the form `$1`, `$2` ... `$n`. These placeholders can be used as parameters in the `rewrite-target` annotation.
 
 Create an Ingress rule with a rewrite annotation:
 
 ```console
 $ echo '
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   annotations:
@@ -53,9 +53,10 @@ spec:
 ' | kubectl create -f -
 ```
 
-In this ingress definition, any characters captured by `(.*)` will be assigned to the placeholder `$2`, which is then used as a parameter in the `rewrite-target` annotation. 
+In this ingress definition, any characters captured by `(.*)` will be assigned to the placeholder `$2`, which is then used as a parameter in the `rewrite-target` annotation.
 
 For example, the ingress definition above will result in the following rewrites:
+
 - `rewrite.bar.com/something` rewrites to `rewrite.bar.com/`
 - `rewrite.bar.com/something/` rewrites to `rewrite.bar.com/`
 - `rewrite.bar.com/something/new` rewrites to `rewrite.bar.com/new`
@@ -65,7 +66,7 @@ For example, the ingress definition above will result in the following rewrites:
 Create an Ingress rule with a app-root annotation:
 ```
 $ echo "
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   annotations:

@@ -17,11 +17,10 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/google/uuid"
 	"k8s.io/api/admission/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	networking "k8s.io/api/networking/v1beta1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/klog"
 )
@@ -29,7 +28,7 @@ import (
 // Checker must return an error if the ingress provided as argument
 // contains invalid instructions
 type Checker interface {
-	CheckIngress(ing *extensions.Ingress) error
+	CheckIngress(ing *networking.Ingress) error
 }
 
 // IngressAdmission implements the AdmissionController interface
@@ -45,21 +44,22 @@ func (ia *IngressAdmission) HandleAdmission(ar *v1beta1.AdmissionReview) error {
 	if ar.Request == nil {
 		klog.Infof("rejecting nil request")
 		ar.Response = &v1beta1.AdmissionResponse{
-			UID:     types.UID(uuid.New().String()),
 			Allowed: false,
 		}
 		return nil
 	}
 	klog.V(3).Infof("handling ingress admission webhook request for {%s}  %s in namespace %s", ar.Request.Resource.String(), ar.Request.Name, ar.Request.Namespace)
 
-	ingressResource := v1.GroupVersionResource{Group: extensions.SchemeGroupVersion.Group, Version: extensions.SchemeGroupVersion.Version, Resource: "ingresses"}
+	ingressResource := v1.GroupVersionResource{Group: networking.SchemeGroupVersion.Group, Version: networking.SchemeGroupVersion.Version, Resource: "ingresses"}
 
-	if ar.Request.Resource == ingressResource {
+	oldIngressResource := v1.GroupVersionResource{Group: extensions.SchemeGroupVersion.Group, Version: extensions.SchemeGroupVersion.Version, Resource: "ingresses"}
+
+	if ar.Request.Resource == ingressResource || ar.Request.Resource == oldIngressResource {
 		ar.Response = &v1beta1.AdmissionResponse{
-			UID:     types.UID(uuid.New().String()),
+			UID:     ar.Request.UID,
 			Allowed: false,
 		}
-		ingress := extensions.Ingress{}
+		ingress := networking.Ingress{}
 		deserializer := codecs.UniversalDeserializer()
 		if _, _, err := deserializer.Decode(ar.Request.Object.Raw, nil, &ingress); err != nil {
 			ar.Response.Result = &v1.Status{Message: err.Error()}
@@ -86,7 +86,7 @@ func (ia *IngressAdmission) HandleAdmission(ar *v1beta1.AdmissionReview) error {
 
 	klog.Infof("accepting non ingress %s in namespace %s %s", ar.Request.Name, ar.Request.Namespace, ar.Request.Resource.String())
 	ar.Response = &v1beta1.AdmissionResponse{
-		UID:     types.UID(uuid.New().String()),
+		UID:     ar.Request.UID,
 		Allowed: true,
 	}
 	return nil

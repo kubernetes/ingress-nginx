@@ -113,9 +113,6 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	if b1.Port != b2.Port {
 		return false
 	}
-	if !(&b1.SecureCACert).Equal(&b2.SecureCACert) {
-		return false
-	}
 	if b1.SSLPassthrough != b2.SSLPassthrough {
 		return false
 	}
@@ -138,12 +135,7 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		return false
 	}
 
-	match = sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
-	if !match {
-		return false
-	}
-
-	return true
+	return sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
 }
 
 // Equal tests for equality between two SessionAffinityConfig types
@@ -155,6 +147,9 @@ func (sac1 *SessionAffinityConfig) Equal(sac2 *SessionAffinityConfig) bool {
 		return false
 	}
 	if sac1.AffinityType != sac2.AffinityType {
+		return false
+	}
+	if sac1.AffinityMode != sac2.AffinityMode {
 		return false
 	}
 	if !(&sac1.CookieSessionAffinity).Equal(&sac2.CookieSessionAffinity) {
@@ -182,6 +177,12 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 		return false
 	}
 	if csa1.MaxAge != csa2.MaxAge {
+		return false
+	}
+	if csa1.SameSite != csa2.SameSite {
+		return false
+	}
+	if csa1.ConditionalSameSiteNone != csa2.ConditionalSameSiteNone {
 		return false
 	}
 
@@ -250,6 +251,9 @@ func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
 	if tsp1.HeaderValue != tsp2.HeaderValue {
 		return false
 	}
+	if tsp1.HeaderPattern != tsp2.HeaderPattern {
+		return false
+	}
 	if tsp1.Cookie != tsp2.Cookie {
 		return false
 	}
@@ -271,12 +275,27 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.SSLPassthrough != s2.SSLPassthrough {
 		return false
 	}
-	if !(&s1.SSLCert).Equal(&s2.SSLCert) {
+	if !(s1.SSLCert).Equal(s2.SSLCert) {
 		return false
 	}
-	if s1.Alias != s2.Alias {
+
+	if len(s1.Aliases) != len(s2.Aliases) {
 		return false
 	}
+
+	for _, a1 := range s1.Aliases {
+		found := false
+		for _, a2 := range s2.Aliases {
+			if a1 == a2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
 	if s1.RedirectFromToWWW != s2.RedirectFromToWWW {
 		return false
 	}
@@ -337,7 +356,7 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		}
 	}
 
-	if l1.Port.StrVal != l2.Port.StrVal {
+	if l1.Port.String() != l2.Port.String() {
 		return false
 	}
 	if !(&l1.BasicDigestAuth).Equal(&l2.BasicDigestAuth) {
@@ -394,15 +413,16 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.Logs).Equal(&l2.Logs) {
 		return false
 	}
-	if !(&l1.LuaRestyWAF).Equal(&l2.LuaRestyWAF) {
-		return false
-	}
 
 	if !(&l1.InfluxDB).Equal(&l2.InfluxDB) {
 		return false
 	}
 
 	if l1.BackendProtocol != l2.BackendProtocol {
+		return false
+	}
+
+	if !(&l1.FastCGI).Equal(&l2.FastCGI) {
 		return false
 	}
 
@@ -420,6 +440,14 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	}
 
 	if l1.DefaultBackendUpstreamName != l2.DefaultBackendUpstreamName {
+		return false
+	}
+
+	if !l1.Opentracing.Equal(&l2.Opentracing) {
+		return false
+	}
+
+	if !l1.Mirror.Equal(&l2.Mirror) {
 		return false
 	}
 
@@ -474,12 +502,7 @@ func (e1 *L4Service) Equal(e2 *L4Service) bool {
 		return false
 	}
 
-	match := compareEndpoints(e1.Endpoints, e2.Endpoints)
-	if !match {
-		return false
-	}
-
-	return true
+	return compareEndpoints(e1.Endpoints, e2.Endpoints)
 }
 
 // Equal tests for equality between two L4Backend types
@@ -514,7 +537,7 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if s1 == nil || s2 == nil {
 		return false
 	}
-	if s1.PemFileName != s2.PemFileName {
+	if s1.CASHA != s2.CASHA {
 		return false
 	}
 	if s1.PemSHA != s2.PemSHA {
@@ -523,19 +546,14 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if !s1.ExpireTime.Equal(s2.ExpireTime) {
 		return false
 	}
-	if s1.FullChainPemFileName != s2.FullChainPemFileName {
-		return false
-	}
 	if s1.PemCertKey != s2.PemCertKey {
 		return false
 	}
-
-	match := sets.StringElementsMatch(s1.CN, s2.CN)
-	if !match {
+	if s1.UID != s2.UID {
 		return false
 	}
 
-	return true
+	return sets.StringElementsMatch(s1.CN, s2.CN)
 }
 
 var compareEndpointsFunc = func(e1, e2 interface{}) bool {

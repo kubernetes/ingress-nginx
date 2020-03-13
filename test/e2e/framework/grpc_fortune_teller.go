@@ -17,8 +17,8 @@ limitations under the License.
 package framework
 
 import (
-	. "github.com/onsi/gomega"
-
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -73,14 +73,12 @@ func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32
 		},
 	}
 
-	d, err := f.EnsureDeployment(deployment)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(d).NotTo(BeNil(), "expected a fortune-teller deployment")
+	d := f.EnsureDeployment(deployment)
 
-	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
+	err := WaitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for to become ready")
+	assert.Nil(ginkgo.GinkgoT(), err, "failed to wait for to become ready")
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{

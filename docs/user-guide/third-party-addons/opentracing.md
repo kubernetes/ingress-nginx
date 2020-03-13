@@ -13,6 +13,15 @@ data:
   enable-opentracing: "true"
 ```
 
+To enable or disable instrumentation for a single Ingress, use
+the `enable-opentracing` annotation:
+```
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/enable-opentracing: "true"
+```
+
 We must also set the host to use when uploading traces:
 
 ```
@@ -20,7 +29,7 @@ zipkin-collector-host: zipkin.default.svc.cluster.local
 jaeger-collector-host: jaeger-agent.default.svc.cluster.local
 datadog-collector-host: datadog-agent.default.svc.cluster.local
 ```
-NOTE: While the option is called `jaeger-collector-host`, you will need to point this to a `jaeger-agent`, and not the `jaeger-collector` component.  
+NOTE: While the option is called `jaeger-collector-host`, you will need to point this to a `jaeger-agent`, and not the `jaeger-collector` component.
 
 Next you will need to deploy a distributed tracing system which uses OpenTracing.
 [Zipkin](https://github.com/openzipkin/zipkin) and
@@ -59,6 +68,18 @@ jaeger-sampler-host
 # Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. Default: 5778
 jaeger-sampler-port
 
+# Specifies the header name used for passing trace context. Must be a string. Default: uber-trace-id
+jaeger-trace-context-header-name
+
+# Specifies the header name used for force sampling. Must be a string. Default: jaeger-debug-id
+jaeger-debug-header
+
+# Specifies the header name used to submit baggage if there is no root span. Must be a string. Default: jaeger-baggage
+jaeger-baggage-header
+
+# Specifies the header prefix used to propagate baggage. Must be a string. Default: uberctx-
+jaeger-tracer-baggage-header-prefix
+
 # specifies the port to use when uploading traces, Default 8126
 datadog-collector-port
 
@@ -67,14 +88,19 @@ datadog-service-name
 
 # specifies the operation name to use for any traces collected, Default: nginx.handle
 datadog-operation-name-override
+
+# Specifies to use client-side sampling for distributed priority sampling and ignore sample rate, Default: true
+datadog-priority-sampling
+
+# specifies sample rate for any traces created, Default: 1.0
+datadog-sample-rate
 ```
 
 All these options (including host) allow environment variables, such as `$HOSTNAME` or `$HOST_IP`. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like `$HOST_IP` (which can be 'mounted' with the `status.hostIP` fieldpath, as described [here](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api)) to make sure traces will be sent to the local agent.
 
 ## Examples
 
-The following examples show how to deploy and test different distributed tracing systems. These example can be performed
-using Minikube.
+The following examples show how to deploy and test different distributed tracing systems. These example can be performed using Minikube.
 
 ### Zipkin
 
@@ -126,7 +152,7 @@ In the Zipkin interface we can see the details:
 
     # Apply the Ingress Resource
     $ echo '
-      apiVersion: extensions/v1beta1
+      apiVersion: networking.k8s.io/v1beta1
       kind: Ingress
       metadata:
         name: echo-ingress

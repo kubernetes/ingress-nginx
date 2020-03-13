@@ -17,7 +17,7 @@ limitations under the License.
 package proxy
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -25,21 +25,23 @@ import (
 
 // Config returns the proxy timeout to use in the upstream server/s
 type Config struct {
-	BodySize            string `json:"bodySize"`
-	ConnectTimeout      int    `json:"connectTimeout"`
-	SendTimeout         int    `json:"sendTimeout"`
-	ReadTimeout         int    `json:"readTimeout"`
-	BuffersNumber       int    `json:"buffersNumber"`
-	BufferSize          string `json:"bufferSize"`
-	CookieDomain        string `json:"cookieDomain"`
-	CookiePath          string `json:"cookiePath"`
-	NextUpstream        string `json:"nextUpstream"`
-	NextUpstreamTimeout int    `json:"nextUpstreamTimeout"`
-	NextUpstreamTries   int    `json:"nextUpstreamTries"`
-	ProxyRedirectFrom   string `json:"proxyRedirectFrom"`
-	ProxyRedirectTo     string `json:"proxyRedirectTo"`
-	RequestBuffering    string `json:"requestBuffering"`
-	ProxyBuffering      string `json:"proxyBuffering"`
+	BodySize             string `json:"bodySize"`
+	ConnectTimeout       int    `json:"connectTimeout"`
+	SendTimeout          int    `json:"sendTimeout"`
+	ReadTimeout          int    `json:"readTimeout"`
+	BuffersNumber        int    `json:"buffersNumber"`
+	BufferSize           string `json:"bufferSize"`
+	CookieDomain         string `json:"cookieDomain"`
+	CookiePath           string `json:"cookiePath"`
+	NextUpstream         string `json:"nextUpstream"`
+	NextUpstreamTimeout  int    `json:"nextUpstreamTimeout"`
+	NextUpstreamTries    int    `json:"nextUpstreamTries"`
+	ProxyRedirectFrom    string `json:"proxyRedirectFrom"`
+	ProxyRedirectTo      string `json:"proxyRedirectTo"`
+	RequestBuffering     string `json:"requestBuffering"`
+	ProxyBuffering       string `json:"proxyBuffering"`
+	ProxyHTTPVersion     string `json:"proxyHTTPVersion"`
+	ProxyMaxTempFileSize string `json:"proxyMaxTempFileSize"`
 }
 
 // Equal tests for equality between two Configuration types
@@ -95,6 +97,13 @@ func (l1 *Config) Equal(l2 *Config) bool {
 	if l1.ProxyBuffering != l2.ProxyBuffering {
 		return false
 	}
+	if l1.ProxyHTTPVersion != l2.ProxyHTTPVersion {
+		return false
+	}
+
+	if l1.ProxyMaxTempFileSize != l2.ProxyMaxTempFileSize {
+		return false
+	}
 
 	return true
 }
@@ -110,7 +119,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
-func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
 	config := &Config{}
 
@@ -189,6 +198,16 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 	config.ProxyBuffering, err = parser.GetStringAnnotation("proxy-buffering", ing)
 	if err != nil {
 		config.ProxyBuffering = defBackend.ProxyBuffering
+	}
+
+	config.ProxyHTTPVersion, err = parser.GetStringAnnotation("proxy-http-version", ing)
+	if err != nil {
+		config.ProxyHTTPVersion = defBackend.ProxyHTTPVersion
+	}
+
+	config.ProxyMaxTempFileSize, err = parser.GetStringAnnotation("proxy-max-temp-file-size", ing)
+	if err != nil {
+		config.ProxyMaxTempFileSize = defBackend.ProxyMaxTempFileSize
 	}
 
 	return config, nil

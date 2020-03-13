@@ -17,7 +17,7 @@ limitations under the License.
 package http2pushpreload
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -34,6 +34,6 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress rule
 // used to add http2 push preload to the server
-func (h2pp http2PushPreload) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (h2pp http2PushPreload) Parse(ing *networking.Ingress) (interface{}, error) {
 	return parser.GetBoolAnnotation("http2-push-preload", ing)
 }

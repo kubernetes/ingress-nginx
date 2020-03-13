@@ -1,0 +1,14 @@
+{{- if and .Values.rbac.create .Values.podSecurityPolicy.enabled .Values.defaultBackend.enabled -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: default-backend
+  name: {{ include "ingress-nginx.fullname" . }}-backend
+rules:
+  - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
+    resources:      ['podsecuritypolicies']
+    verbs:          ['use']
+    resourceNames:  [{{ include "ingress-nginx.fullname" . }}-backend]
+{{- end }}

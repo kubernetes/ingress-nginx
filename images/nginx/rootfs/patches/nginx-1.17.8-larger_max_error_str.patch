@@ -1,0 +1,13 @@
+--- nginx-1.17.8/src/core/ngx_log.h	2013-10-08 05:07:14.000000000 -0700
++++ nginx-1.17.8-patched/src/core/ngx_log.h	2013-12-05 20:35:35.996236720 -0800
+@@ -64,7 +64,9 @@ struct ngx_log_s {
+ };
+ 
+ 
+-#define NGX_MAX_ERROR_STR   2048
++#ifndef NGX_MAX_ERROR_STR
++#define NGX_MAX_ERROR_STR   4096
++#endif
+ 
+ 
+ /*********************************/

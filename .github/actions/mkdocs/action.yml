@@ -1,0 +1,9 @@
+# action.yml
+name: 'Deploy MkDocs'
+description: 'Deploys MkDocs site'
+branding:
+  icon: 'arrow-up-circle'
+  color: 'orange'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

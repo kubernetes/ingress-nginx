@@ -18,49 +18,41 @@ package annotations
 
 import (
 	"net/http"
-	"time"
+	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Approot", func() {
+var _ = framework.DescribeAnnotation("app-root", func() {
 	f := framework.NewDefaultFramework("approot")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should redirect to /foo", func() {
+	ginkgo.It("should redirect to /foo", func() {
 		host := "approot.bar.com"
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/app-root": "/foo",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`if ($uri = /) {`)) &&
-					Expect(server).Should(ContainSubstring(`return 302 /foo;`))
+				return strings.Contains(server, `if ($uri = /) {`) &&
+					strings.Contains(server, `return 302 /foo;`)
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Retry(10, 1*time.Second, http.StatusNotFound).
-			RedirectPolicy(noRedirectPolicyFunc).
-			Set("Host", host).
-			End()
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusFound))
-		Expect(resp.Header.Get("Location")).Should(Equal("http://approot.bar.com/foo"))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusFound).
+			Header("Location").Equal("http://approot.bar.com/foo")
 	})
 })

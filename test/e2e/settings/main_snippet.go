@@ -19,16 +19,16 @@ package settings
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Main Snippet", func() {
+var _ = framework.DescribeSetting("main-snippet", func() {
 	f := framework.NewDefaultFramework("main-snippet")
 	mainSnippet := "main-snippet"
 
-	It("should add value of main-snippet setting to nginx config", func() {
+	ginkgo.It("should add value of main-snippet setting to nginx config", func() {
 		expectedComment := "# main snippet"
 		f.UpdateNginxConfigMapData(mainSnippet, expectedComment)
 

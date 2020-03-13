@@ -29,7 +29,7 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page
 	// By default this is disabled
-	CustomHTTPErrors []int `json:"custom-http-errors,-"`
+	CustomHTTPErrors []int `json:"custom-http-errors"`
 
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
@@ -102,7 +102,7 @@ type Backend struct {
 	// SkipAccessLogURLs sets a list of URLs that should not appear in the NGINX access log
 	// This is useful with urls like `/health` or `health-check` that make "complex" reading the logs
 	// By default this list is empty
-	SkipAccessLogURLs []string `json:"skip-access-log-urls,-"`
+	SkipAccessLogURLs []string `json:"skip-access-log-urls"`
 
 	// Enables or disables the redirect (301) to the HTTPS port
 	SSLRedirect bool `json:"ssl-redirect"`
@@ -134,7 +134,7 @@ type Backend struct {
 
 	// WhitelistSourceRange allows limiting access to certain client addresses
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
-	WhitelistSourceRange []string `json:"whitelist-source-range,-"`
+	WhitelistSourceRange []string `json:"whitelist-source-range"`
 
 	// Limits the rate of response transmission to a client.
 	// The rate is specified in bytes per second. The zero value disables rate limiting.
@@ -150,4 +150,12 @@ type Backend struct {
 	// Enables or disables buffering of responses from the proxied server.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering
 	ProxyBuffering string `json:"proxy-buffering"`
+
+	// Modifies the HTTP version the proxy uses to interact with the backend.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
+	ProxyHTTPVersion string `json:"proxy-http-version"`
+
+	// Sets the maximum temp file size when proxy-buffers capacity is exceeded.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_max_temp_file_size
+	ProxyMaxTempFileSize string `json:"proxy-max-temp-file-size"`
 }

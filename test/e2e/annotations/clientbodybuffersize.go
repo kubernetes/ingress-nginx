@@ -17,108 +17,114 @@ limitations under the License.
 package annotations
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"fmt"
+	"strings"
+
+	"github.com/onsi/ginkgo"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", func() {
+var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 	f := framework.NewDefaultFramework("clientbodybuffersize")
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
+	ginkgo.It("should set client_body_buffer_size to 1000", func() {
+		host := "client-body-buffer-size.com"
 
-	It("should set client_body_buffer_size to 1000", func() {
-		host := "proxy.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1000",
-		}
+		clientBodyBufferSize := "1000"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/client-body-buffer-size"] = clientBodyBufferSize
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1000;"))
+				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
 	})
 
-	It("should set client_body_buffer_size to 1K", func() {
-		host := "proxy.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1K",
-		}
+	ginkgo.It("should set client_body_buffer_size to 1K", func() {
+		host := "client-body-buffer-size.com"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		clientBodyBufferSize := "1K"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/client-body-buffer-size"] = clientBodyBufferSize
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1K;"))
+				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
 	})
 
-	It("should set client_body_buffer_size to 1k", func() {
-		host := "proxy.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1k",
-		}
+	ginkgo.It("should set client_body_buffer_size to 1k", func() {
+		host := "client-body-buffer-size.com"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		clientBodyBufferSize := "1k"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/client-body-buffer-size"] = clientBodyBufferSize
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1k;"))
+				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
 	})
 
-	It("should set client_body_buffer_size to 1m", func() {
-		host := "proxy.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1m",
-		}
+	ginkgo.It("should set client_body_buffer_size to 1m", func() {
+		host := "client-body-buffer-size.com"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		clientBodyBufferSize := "1m"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/client-body-buffer-size"] = clientBodyBufferSize
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1m;"))
+				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
 	})
 
-	It("should set client_body_buffer_size to 1M", func() {
-		host := "proxy.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1M",
-		}
+	ginkgo.It("should set client_body_buffer_size to 1M", func() {
+		host := "client-body-buffer-size.com"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		clientBodyBufferSize := "1M"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/client-body-buffer-size"] = clientBodyBufferSize
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1M;"))
+				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
 	})
 
-	It("should not set client_body_buffer_size to invalid 1b", func() {
-		host := "proxy.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/client-body-buffer-size": "1b",
-		}
+	ginkgo.It("should not set client_body_buffer_size to invalid 1b", func() {
+		host := "client-body-buffer-size.com"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		clientBodyBufferSize := "1b"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/client-body-buffer-size"] = clientBodyBufferSize
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).ShouldNot(ContainSubstring("client_body_buffer_size 1b;"))
+				return !strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
 	})
 })

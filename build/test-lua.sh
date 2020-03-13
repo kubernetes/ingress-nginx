@@ -15,7 +15,7 @@
 # limitations under the License.
 
 
-if ! [ -z $DEBUG ]; then
+if [ -n "$DEBUG" ]; then
 	set -x
 fi
 
@@ -25,10 +25,10 @@ set -o pipefail
 
 resty \
   -I ./rootfs/etc/nginx/lua \
-  -I /usr/local/lib/lua \
-  -I /usr/lib/lua-platform-path/lua/5.1 \
   --shdict "configuration_data 5M" \
   --shdict "certificate_data 16M" \
+  --shdict "certificate_servers 1M" \
   --shdict "balancer_ewma 1M" \
   --shdict "balancer_ewma_last_touched_at 1M" \
-  ./rootfs/etc/nginx/lua/test/run.lua ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test/
+  --shdict "balancer_ewma_locks 512k" \
+  ./rootfs/etc/nginx/lua/test/run.lua ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test/ ./rootfs/etc/nginx/lua/plugins/**/test

@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -29,28 +29,28 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
+func buildIngress() *networking.Ingress {
+	defaultBackend := networking.IngressBackend{
 		ServiceName: "default-backend",
 		ServicePort: intstr.FromInt(80),
 	}
 
-	return &extensions.Ingress{
+	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
+		Spec: networking.IngressSpec{
+			Backend: &networking.IngressBackend{
 				ServiceName: "default-backend",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []extensions.IngressRule{
+			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path:    "/foo",
 									Backend: defaultBackend,
@@ -81,6 +81,8 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyNextUpstreamTries:   3,
 		ProxyRequestBuffering:    "on",
 		ProxyBuffering:           "off",
+		ProxyHTTPVersion:         "1.1",
+		ProxyMaxTempFileSize:     "1024m",
 	}
 }
 
@@ -99,6 +101,8 @@ func TestProxy(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream-tries")] = "3"
 	data[parser.GetAnnotationWithPrefix("proxy-request-buffering")] = "off"
 	data[parser.GetAnnotationWithPrefix("proxy-buffering")] = "on"
+	data[parser.GetAnnotationWithPrefix("proxy-http-version")] = "1.0"
+	data[parser.GetAnnotationWithPrefix("proxy-max-temp-file-size")] = "128k"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -141,6 +145,12 @@ func TestProxy(t *testing.T) {
 	}
 	if p.ProxyBuffering != "on" {
 		t.Errorf("expected on as proxy-buffering but returned %v", p.ProxyBuffering)
+	}
+	if p.ProxyHTTPVersion != "1.0" {
+		t.Errorf("expected 1.0 as proxy-http-version but returned %v", p.ProxyHTTPVersion)
+	}
+	if p.ProxyMaxTempFileSize != "128k" {
+		t.Errorf("expected 128k as proxy-max-temp-file-size but returned %v", p.ProxyMaxTempFileSize)
 	}
 }
 
@@ -187,5 +197,11 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 	if p.RequestBuffering != "on" {
 		t.Errorf("expected on as request-buffering but returned %v", p.RequestBuffering)
+	}
+	if p.ProxyHTTPVersion != "1.1" {
+		t.Errorf("expected 1.1 as proxy-http-version but returned %v", p.ProxyHTTPVersion)
+	}
+	if p.ProxyMaxTempFileSize != "1024m" {
+		t.Errorf("expected 1024m as proxy-max-temp-file-size but returned %v", p.ProxyMaxTempFileSize)
 	}
 }

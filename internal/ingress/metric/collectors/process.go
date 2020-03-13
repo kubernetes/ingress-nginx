@@ -38,6 +38,13 @@ type Stopable interface {
 	Stop()
 }
 
+func newBinaryNameMatcher(name, binary string) common.MatchNamer {
+	return BinaryNameMatcher{
+		Name:   name,
+		Binary: binary,
+	}
+}
+
 // BinaryNameMatcher define a namer using the binary name
 type BinaryNameMatcher struct {
 	Name   string
@@ -97,14 +104,11 @@ func NewNGINXProcess(pod, namespace, ingressClass string) (NGINXProcessCollector
 		return nil, err
 	}
 
-	nm := BinaryNameMatcher{
-		Name:   name,
-		Binary: binary,
-	}
+	nm := newBinaryNameMatcher(name, binary)
 
 	p := namedProcess{
 		scrapeChan: make(chan scrapeRequest),
-		Grouper:    proc.NewGrouper(nm, true, false, false),
+		Grouper:    proc.NewGrouper(nm, true, false, false, false),
 		fs:         fs,
 	}
 

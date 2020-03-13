@@ -20,9 +20,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 	"k8s.io/ingress-nginx/internal/nginx"
-	"os"
 )
 
 const (
@@ -132,7 +133,7 @@ func backendsAll() {
 		return
 	}
 
-	fmt.Println(string(prettyBuffer.Bytes()))
+	fmt.Println(prettyBuffer.String())
 }
 
 func backendsList() {
@@ -227,7 +228,7 @@ func general() {
 		return
 	}
 
-	fmt.Println(string(prettyBuffer.Bytes()))
+	fmt.Println(prettyBuffer.String())
 }
 
 func readNginxConf() {

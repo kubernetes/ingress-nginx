@@ -17,217 +17,232 @@ limitations under the License.
 package annotations
 
 import (
+	"fmt"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
+var _ = framework.DescribeAnnotation("proxy-*", func() {
 	f := framework.NewDefaultFramework("proxy")
 	host := "proxy.foo.com"
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
+	ginkgo.It("should set proxy_redirect to off", func() {
+		proxyRedirectFrom := "off"
 
-	It("should set proxy_redirect to off", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-redirect-from": "off",
-			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
-		}
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-from"] = proxyRedirectFrom
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-to"] = "goodbye.com"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("proxy_redirect off;"))
+				return strings.Contains(server, fmt.Sprintf("proxy_redirect %s;", proxyRedirectFrom))
 			})
 	})
 
-	It("should set proxy_redirect to default", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-redirect-from": "default",
-			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
-		}
+	ginkgo.It("should set proxy_redirect to default", func() {
+		proxyRedirectFrom := "default"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-from"] = proxyRedirectFrom
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-to"] = "goodbye.com"
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("proxy_redirect default;"))
+				return strings.Contains(server, fmt.Sprintf("proxy_redirect %s;", proxyRedirectFrom))
 			})
 	})
 
-	It("should set proxy_redirect to hello.com goodbye.com", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-redirect-from": "hello.com",
-			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
-		}
+	ginkgo.It("should set proxy_redirect to hello.com goodbye.com", func() {
+		proxyRedirectFrom := "hello.com"
+		proxyRedirectTo := "goodbye.com"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-from"] = proxyRedirectFrom
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-to"] = proxyRedirectTo
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("proxy_redirect hello.com goodbye.com;"))
+				return strings.Contains(server, fmt.Sprintf("proxy_redirect %s %s;", proxyRedirectFrom, proxyRedirectTo))
 			})
 	})
 
-	It("should set proxy client-max-body-size to 8m", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-body-size": "8m",
-		}
+	ginkgo.It("should set proxy client-max-body-size to 8m", func() {
+		proxyBodySize := "8m"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-body-size"] = proxyBodySize
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("client_max_body_size 8m;"))
+				return strings.Contains(server, fmt.Sprintf("client_max_body_size %s;", proxyBodySize))
 			})
 	})
 
-	It("should not set proxy client-max-body-size to incorrect value", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-body-size": "15r",
-		}
+	ginkgo.It("should not set proxy client-max-body-size to incorrect value", func() {
+		proxyBodySize := "15r"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-body-size"] = proxyBodySize
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).ShouldNot(ContainSubstring("client_max_body_size 15r;"))
+				return !strings.Contains(server, fmt.Sprintf("client_max_body_size %s;", proxyBodySize))
 			})
 	})
 
-	It("should set valid proxy timeouts", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-connect-timeout": "50",
-			"nginx.ingress.kubernetes.io/proxy-send-timeout":    "20",
-			"nginx.ingress.kubernetes.io/proxy-read-timeout":    "20",
-		}
+	ginkgo.It("should set valid proxy timeouts", func() {
+		proxyConnectTimeout := "50"
+		proxySendTimeout := "20"
+		proxyReadtimeout := "20"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyConnectTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxySendTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyReadtimeout
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_connect_timeout 50s;") &&
-					strings.Contains(server, "proxy_send_timeout 20s;") &&
-					strings.Contains(server, "proxy_read_timeout 20s;")
+				return strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_send_timeout %ss;", proxySendTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_read_timeout %ss;", proxyReadtimeout))
 			})
 	})
 
-	It("should not set invalid proxy timeouts", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-connect-timeout": "50k",
-			"nginx.ingress.kubernetes.io/proxy-send-timeout":    "20k",
-			"nginx.ingress.kubernetes.io/proxy-read-timeout":    "20k",
-		}
+	ginkgo.It("should not set invalid proxy timeouts", func() {
+		proxyConnectTimeout := "50k"
+		proxySendTimeout := "20k"
+		proxyReadtimeout := "20k"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyConnectTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxySendTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyReadtimeout
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, "proxy_connect_timeout 50ks;") &&
-					!strings.Contains(server, "proxy_send_timeout 20ks;") &&
-					!strings.Contains(server, "proxy_read_timeout 20ks;")
+				return !strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout)) &&
+					!strings.Contains(server, fmt.Sprintf("proxy_send_timeout %ss;", proxySendTimeout)) &&
+					!strings.Contains(server, fmt.Sprintf("proxy_read_timeout %ss;", proxyReadtimeout))
 			})
 	})
 
-	It("should turn on proxy-buffering", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-buffering":      "on",
-			"nginx.ingress.kubernetes.io/proxy-buffers-number": "8",
-			"nginx.ingress.kubernetes.io/proxy-buffer-size":    "8k",
-		}
+	ginkgo.It("should turn on proxy-buffering", func() {
+		proxyBuffering := "on"
+		proxyBufersNumber := "8"
+		proxyBufferSize := "8k"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-buffering"] = proxyBuffering
+		annotations["nginx.ingress.kubernetes.io/proxy-buffers-number"] = proxyBufersNumber
+		annotations["nginx.ingress.kubernetes.io/proxy-buffer-size"] = proxyBufferSize
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_buffering on;") &&
-					strings.Contains(server, "proxy_buffer_size 8k;") &&
-					strings.Contains(server, "proxy_buffers 8 8k;") &&
-					strings.Contains(server, "proxy_request_buffering on;")
+				return strings.Contains(server, fmt.Sprintf("proxy_buffering %s;", proxyBuffering)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_buffer_size %s;", proxyBufferSize)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_buffers %s %s;", proxyBufersNumber, proxyBufferSize)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_request_buffering %s;", proxyBuffering))
 			})
 	})
 
-	It("should turn off proxy-request-buffering", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-request-buffering": "off",
-		}
+	ginkgo.It("should turn off proxy-request-buffering", func() {
+		proxyRequestBuffering := "off"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-request-buffering"] = proxyRequestBuffering
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("proxy_request_buffering off;"))
+				return strings.Contains(server, fmt.Sprintf("proxy_request_buffering %s;", proxyRequestBuffering))
 			})
 	})
 
-	It("should build proxy next upstream", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-next-upstream":         "error timeout http_502",
-			"nginx.ingress.kubernetes.io/proxy-next-upstream-timeout": "10",
-			"nginx.ingress.kubernetes.io/proxy-next-upstream-tries":   "5",
-		}
+	ginkgo.It("should build proxy next upstream", func() {
+		proxyNextUpstream := "error timeout http_502"
+		proxyNextUpstreamTimeout := "999999"
+		proxyNextUpstreamTries := "888888"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-next-upstream"] = proxyNextUpstream
+		annotations["nginx.ingress.kubernetes.io/proxy-next-upstream-timeout"] = proxyNextUpstreamTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-next-upstream-tries"] = proxyNextUpstreamTries
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_next_upstream error timeout http_502;") &&
-					strings.Contains(server, "proxy_next_upstream_timeout 10;") &&
-					strings.Contains(server, "proxy_next_upstream_tries 5;")
+				return strings.Contains(server, fmt.Sprintf("proxy_next_upstream %s;", proxyNextUpstream)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_next_upstream_timeout %s;", proxyNextUpstreamTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_next_upstream_tries %s;", proxyNextUpstreamTries))
 			})
 	})
 
-	It("should build proxy next upstream using configmap values", func() {
-		annotations := map[string]string{}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
-		f.EnsureIngress(ing)
+	ginkgo.It("should setup proxy cookies", func() {
+		proxyCookieDomain := "localhost example.org"
+		proxyCookiePath := "/one/ /"
 
-		f.SetNginxConfigMapData(map[string]string{
-			"proxy-next-upstream":         "timeout http_502",
-			"proxy-next-upstream-timeout": "53",
-			"proxy-next-upstream-tries":   "44",
-		})
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-cookie-domain"] = proxyCookieDomain
+		annotations["nginx.ingress.kubernetes.io/proxy-cookie-path"] = proxyCookiePath
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "proxy_next_upstream timeout http_502;") &&
-					strings.Contains(server, "proxy_next_upstream_timeout 53;") &&
-					strings.Contains(server, "proxy_next_upstream_tries 44;")
-			})
-	})
-
-	It("should setup proxy cookies", func() {
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-cookie-domain": "localhost example.org",
-			"nginx.ingress.kubernetes.io/proxy-cookie-path":   "/one/ /",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_cookie_domain localhost example.org;") &&
-					strings.Contains(server, "proxy_cookie_path /one/ /;")
+				return strings.Contains(server, fmt.Sprintf("proxy_cookie_domain %s;", proxyCookieDomain)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_cookie_path %s;", proxyCookiePath))
 			})
 	})
+
+	ginkgo.It("should change the default proxy HTTP version", func() {
+		proxyHTTPVersion := "1.0"
+
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-http-version"] = proxyHTTPVersion
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("proxy_http_version %s;", proxyHTTPVersion))
+			})
+	})
+
 })

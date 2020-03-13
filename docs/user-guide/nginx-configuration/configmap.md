@@ -14,7 +14,7 @@ data:
   ssl-protocols: SSLv2
 ```
 
-!!! Important
+!!! important
     The key and values in a ConfigMap can only be strings.
     This means that we want a value with boolean values we need to quote the values, like "true" or "false".
     Same for numbers, like "100".
@@ -34,8 +34,8 @@ The following table shows a configuration option's name, type, and the default v
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
 |[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"|
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
-|[enable-dynamic-tls-records](#enable-dynamic-tls-records)|bool|"true"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
+|[modsecurity-snippet](#modsecurity-snippet)|string|""|
 |[enable-owasp-modsecurity-crs](#enable-owasp-modsecurity-crs)|bool|"false"|
 |[client-header-buffer-size](#client-header-buffer-size)|string|"1k"|
 |[client-header-timeout](#client-header-timeout)|int|60|
@@ -51,6 +51,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
 |[http2-max-header-size](#http2-max-header-size)|string|"16k"|
 |[http2-max-requests](#http2-max-requests)|int|1000|
+|[http2-max-concurrent-streams](#http2-max-concurrent-streams)|int|1000|
 |[hsts](#hsts)|bool|"true"|
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"|
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
@@ -59,8 +60,8 @@ The following table shows a configuration option's name, type, and the default v
 |[keep-alive-requests](#keep-alive-requests)|int|100|
 |[large-client-header-buffers](#large-client-header-buffers)|string|"4 8k"|
 |[log-format-escape-json](#log-format-escape-json)|bool|"false"|
-|[log-format-upstream](#log-format-upstream)|string|`%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`|
-|[log-format-stream](#log-format-stream)|string|`[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
+|[log-format-upstream](#log-format-upstream)|string|`$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`|
+|[log-format-stream](#log-format-stream)|string|`[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
 |[enable-multi-accept](#enable-multi-accept)|bool|"true"|
 |[max-worker-connections](#max-worker-connections)|int|16384|
 |[max-worker-open-files](#max-worker-open-files)|int|0|
@@ -92,13 +93,13 @@ The following table shows a configuration option's name, type, and the default v
 |[use-geoip2](#use-geoip2)|bool|"false"|
 |[enable-brotli](#enable-brotli)|bool|"false"|
 |[brotli-level](#brotli-level)|int|4|
-|[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
+|[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
 |[gzip-level](#gzip-level)|int|5|
-|[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
+|[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
-|[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"10s"|
+|[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"240s"|
 |[load-balance](#load-balance)|string|"round_robin"|
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128|
 |[variables-hash-max-size](#variables-hash-max-size)|int|2048|
@@ -112,7 +113,7 @@ The following table shows a configuration option's name, type, and the default v
 |[use-forwarded-headers](#use-forwarded-headers)|bool|"false"|
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
-|[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"true"|
+|[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"false"|
 |[generate-request-id](#generate-request-id)|bool|"true"|
 |[enable-opentracing](#enable-opentracing)|bool|"false"|
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
@@ -126,6 +127,16 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
 |[jaeger-sampler-host](#jaeger-sampler-host)|string|"http://127.0.0.1"|
 |[jaeger-sampler-port](#jaeger-sampler-port)|int|5778|
+|[jaeger-trace-context-header-name](#jaeger-trace-context-header-name)|string|uber-trace-id|
+|[jaeger-debug-header](#jaeger-debug-header)|string|uber-debug-id|
+|[jaeger-baggage-header](#jaeger-baggage-header)|string|jaeger-baggage|
+|[jaeger-trace-baggage-header-prefix](#jaeger-trace-baggage-header-prefix)|string|uberctx-|
+|[datadog-collector-host](#datadog-collector-host)|string|""|
+|[datadog-collector-port](#datadog-collector-port)|int|8126|
+|[datadog-service-name](#datadog-service-name)|service|"nginx"|
+|[datadog-operation-name-override](#datadog-operation-name-override)|service|"nginx.handle"|
+|[datadog-priority-sampling](#datadog-priority-sampling)|bool|"true"|
+|[datadog-sample-rate](#datadog-sample-rate)|float|1.0|
 |[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
@@ -149,6 +160,7 @@ The following table shows a configuration option's name, type, and the default v
 |[skip-access-log-urls](#skip-access-log-urls)|[]string|[]string{}|
 |[limit-rate](#limit-rate)|int|0|
 |[limit-rate-after](#limit-rate-after)|int|0|
+|[lua-shared-dicts](#lua-shared-dicts)|string|""|
 |[http-redirect-code](#http-redirect-code)|int|308|
 |[proxy-buffering](#proxy-buffering)|string|"off"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
@@ -160,10 +172,13 @@ The following table shows a configuration option's name, type, and the default v
 |[global-auth-response-headers](#global-auth-response-headers)|string|""|
 |[global-auth-request-redirect](#global-auth-request-redirect)|string|""|
 |[global-auth-snippet](#global-auth-snippet)|string|""|
+|[global-auth-cache-key](#global-auth-cache-key)|string|""|
+|[global-auth-cache-duration](#global-auth-cache-duration)|string|"200 202 401 5m"|
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
 |[block-cidrs](#block-cidrs)|[]string|""|
 |[block-user-agents](#block-user-agents)|[]string|""|
 |[block-referers](#block-referers)|[]string|""|
+|[proxy-ssl-location-only](#proxy-ssl-location-only)|bool|"false"|
 
 ## add-headers
 
@@ -196,7 +211,7 @@ __Note:__ the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
 
 ## enable-access-log-for-default-backend
 
-Enables logging access to default backend. _**default:**_ is disabled. 
+Enables logging access to default backend. _**default:**_ is disabled.
 
 ## error-log-path
 
@@ -207,13 +222,6 @@ __Note:__ the file `/var/log/nginx/error.log` is a symlink to `/dev/stderr`
 _References:_
 [http://nginx.org/en/docs/ngx_core_module.html#error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log)
 
-## enable-dynamic-tls-records
-
-Enables dynamically sized TLS records to improve time-to-first-byte. _**default:**_ is enabled
-
-_References:_
-[https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency)
-
 ## enable-modsecurity
 
 Enables the modsecurity module for NGINX. _**default:**_ is disabled
@@ -221,6 +229,10 @@ Enables the modsecurity module for NGINX. _**default:**_ is disabled
 ## enable-owasp-modsecurity-crs
 
 Enables the OWASP ModSecurity Core Rule Set (CRS). _**default:**_ is disabled
+
+## modsecurity-snippet
+
+Adds custom rules to modsecurity section of nginx configration
 
 ## client-header-buffer-size
 
@@ -306,6 +318,13 @@ Sets the maximum number of requests (including push requests) that can be served
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests)
 
+## http2-max-concurrent-streams
+
+Sets the maximum number of concurrent HTTP/2 streams in a connection.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams)
+
 ## hsts
 
 Enables or disables the header HSTS in servers running SSL.
@@ -358,15 +377,13 @@ Sets if the escape parameter allows JSON ("true") or default characters escaping
 Sets the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).
 Example for json output:
 
-```console
-log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr",
-    "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$req_id", "remote_user":
-    "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":
-    $status, "vhost": "$host", "request_proto": "$server_protocol", "path": "$uri",
-    "request_query": "$args", "request_length": $request_length, "duration": $request_time,
-    "method": "$request_method", "http_referrer": "$http_referer", "http_user_agent":
-    "$http_user_agent" }'
-  ```
+```json
+
+log-format-upstream: '{"time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$req_id",
+  "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":$status, "vhost": "$host", "request_proto": "$server_protocol",
+  "path": "$uri", "request_query": "$args", "request_length": $request_length, "duration": $request_time,"method": "$request_method", "http_referrer": "$http_referer",
+  "http_user_agent": "$http_user_agent" }'
+```
 
 Please check the [log-format](log-format.md) for definition of each field.
 
@@ -439,7 +456,7 @@ _References:_
 Instructs NGINX to create an individual listening socket for each worker process (using the SO_REUSEPORT socket option), allowing a kernel to distribute incoming connections between worker processes
 _**default:**_ true
 
-## proxy-headers-hash-bucket-size 
+## proxy-headers-hash-bucket-size
 
 Sets the size of the bucket for the proxy headers hash tables.
 
@@ -486,6 +503,14 @@ Sets the [SSL protocols](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#
 
 Please check the result of the configuration using `https://ssllabs.com/ssltest/analyze.html` or `https://testssl.sh`.
 
+## ssl-early-data
+
+Enables or disables TLS 1.3 [early data](https://tools.ietf.org/html/rfc8446#section-2.3)
+
+This requires `ssl-protocols` to have `TLSv1.3` enabled.
+
+[ssl_early_data](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data). The default is: `false`.
+
 ## ssl-session-cache
 
 Enables or disables the use of shared [SSL cache](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache) among worker processes.
@@ -503,7 +528,7 @@ Enables or disables session resumption through [TLS session tickets](http://ngin
 Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
 To create a ticket: `openssl rand 80 | openssl enc -A -base64`
 
-[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used. 
+[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used.
 
 ## ssl-session-timeout
 
@@ -539,6 +564,13 @@ _**default:**_ true
 ## use-geoip2
 
 Enables the [geoip2 module](https://github.com/leev/ngx_http_geoip2_module) for NGINX.
+Since `0.27.0` and due to a [change in the MaxMind databases](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases) a license is required to have access to the databases.
+For this reason, it is required to define a new flag `--maxmind-license-key` in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
+Alternatively, it is possible to use a volume to mount the files `/etc/nginx/geoip/GeoLite2-City.mmdb` and `/etc/nginx/geoip/GeoLite2-ASN.mmdb`, avoiding the overhead of the download.
+
+!!! important
+    If the feature is enabled but the files are missing, GeoIP2 will not be enabled.
+
 _**default:**_ false
 
 ## enable-brotli
@@ -565,6 +597,10 @@ Enables or disables [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.ht
 
 Sets the gzip Compression Level that will be used. _**default:**_ 5
 
+## gzip-min-length
+
+Minimum length of responses to be returned to the client before it is eligible for gzip compression, in bytes. _**default:**_ 256
+
 ## gzip-types
 
 Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type. Responses with the "text/html" type are always compressed if `[use-gzip](#use-gzip)` is enabled.
@@ -586,7 +622,7 @@ By default worker processes are not bound to any specific CPUs. The value can be
 
 ## worker-shutdown-timeout
 
-Sets a timeout for Nginx to [wait for worker to gracefully shutdown](http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout). _**default:**_ "10s"
+Sets a timeout for Nginx to [wait for worker to gracefully shutdown](http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout). _**default:**_ "240s"
 
 ## load-balance
 
@@ -622,7 +658,7 @@ _References:_
 
 Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle
 keepalive connections to upstream servers that are preserved in the cache of each worker process. When this number is
-exceeded, the least recently used connections are closed. 
+exceeded, the least recently used connections are closed.
 _**default:**_ 32
 
 _References:_
@@ -643,7 +679,7 @@ _References:_
 Sets the maximum number of requests that can be served through one keepalive connection. After the maximum number of
 requests is made, the connection is closed.
 _**default:**_ 100
-	
+
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests)
@@ -745,6 +781,48 @@ Leave blank to use default value (localhost). _**default:**_ http://127.0.0.1
 ## jaeger-sampler-port
 
 Specifies the custom remote sampler port to be passed to the sampler constructor. Must be a number. _**default:**_ 5778
+
+## jaeger-trace-context-header-name
+
+Specifies the header name used for passing trace context. _**default:**_ uber-trace-id
+
+## jaeger-debug-header
+
+Specifies the header name used for force sampling. _**default:**_ jaeger-debug-id
+
+## jaeger-baggage-header
+
+Specifies the header name used to submit baggage if there is no root span. _**default:**_ jaeger-baggage
+
+## jaeger-tracer-baggage-header-prefix
+
+Specifies the header prefix used to propagate baggage. _**default:**_ uberctx-
+
+## datadog-collector-host
+
+Specifies the datadog agent host to use when uploading traces. It must be a valid URL.
+
+## datadog-collector-port
+
+Specifies the port to use when uploading traces. _**default:**_ 8126
+
+## datadog-service-name
+
+Specifies the service name to use for any traces created. _**default:**_ nginx
+
+## datadog-operation-name-override
+
+Overrides the operation naem to use for any traces crated. _**default:**_ nginx.handle
+
+## datadog-priority-sampling
+
+Specifies to use client-side sampling.
+If true disables client-side sampling (thus ignoring `sample_rate`) and enables distributed priority sampling, where traces are sampled based on a combination of user-assigned priorities and configuration from the agent. _**default:**_ true
+
+## datadog-sample-rate
+
+Specifies sample rate for any traces created.
+This is effective only when `datadog-priority-sampling` is `false` _**default:**_ 1.0
 
 ## main-snippet
 
@@ -853,6 +931,21 @@ _References:_
 
 Sets the initial amount after which the further transmission of a response to a client will be rate limited.
 
+## lua-shared-dicts
+
+Customize default Lua shared dictionaries or define more. You can use the following syntax to do so:
+
+```
+lua-shared-dicts: "<my dict name>: <my dict size>, [<my dict name>: <my dict size>], ..."
+```
+
+For example following will set default `certificate_data` dictionary to `100M` and will introduce a new dictionary called
+`my_custom_plugin`:
+
+```
+lua-shared-dicts: "certificate_data: 100, my_custom_plugin: 5"
+```
+
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)
 
@@ -864,7 +957,7 @@ _**default:**_ 308
 
 > __Why the default code is 308?__
 
-> [RFC 7238](https://tools.ietf.org/html/rfc7238) was created to define the 308 (Permanent Redirect) status code that is similar to 301 (Moved Permanently) but it keeps the payload in the redirect. This is important if the we send a redirect in methods like POST.
+> [RFC 7238](https://tools.ietf.org/html/rfc7238) was created to define the 308 (Permanent Redirect) status code that is similar to 301 (Moved Permanently) but it keeps the payload in the redirect. This is important if we send a redirect in methods like POST.
 
 ## proxy-buffering
 
@@ -922,6 +1015,14 @@ Sets a custom snippet to use with external authentication. Applied to all the lo
 Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-request-redirect`.
 _**default:**_ ""
 
+## global-auth-cache-key
+
+Enables caching for global auth requests. Specify a lookup key for auth responses, e.g. `$remote_user$http_authorization`.
+
+## global-auth-cache-duration
+
+Set a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
+
 ## no-auth-locations
 
 A comma-separated list of locations that should not get authenticated.
@@ -949,3 +1050,9 @@ It's possible to use here full strings and regular expressions. More details abo
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_map_module.html#map](http://nginx.org/en/docs/http/ngx_http_map_module.html#map)
+
+## proxy-ssl-location-only
+
+Set if proxy-ssl parameters should be applied only on locations and not on servers.
+_**default:**_ is disabled
+

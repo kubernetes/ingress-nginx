@@ -2,15 +2,20 @@
 
 ## Regular Expression Support
 
-!!! important 
-    Regular expressions and wild cards are not supported in the `spec.rules.host` field. Full hostnames must be used. 
+!!! important
+    Regular expressions and wild cards are not supported in the `spec.rules.host` field. Full hostnames must be used.
 
 The ingress controller supports **case insensitive** regular expressions in the `spec.rules.http.paths.path` field.
+This can be enabled by setting the `nginx.ingress.kubernetes.io/use-regex` annotation to `true` (the default is false).
+
+!!! hint
+    Kubernetes only accept expressions that comply with the RE2 engine syntax. It is possible that valid expressions accepted by NGINX cannot be used with ingress-nginx, because the PCRE library (used in NGINX) supports a wider syntax than RE2.
+    See the [RE2 Syntax](https://github.com/google/re2/wiki/Syntax) documentation for differences.
 
 See the [description](./nginx-configuration/annotations.md#use-regex) of the `use-regex` annotation for more details.
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: test-ingress
@@ -46,7 +51,7 @@ In NGINX, regular expressions follow a **first match** policy. In order to enabl
 Let the following two ingress definitions be created:
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: test-ingress-1
@@ -66,7 +71,7 @@ spec:
 ```
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: test-ingress-2
@@ -120,7 +125,7 @@ This case is expected and a result of NGINX's a first match policy for paths tha
 Let the following ingress be defined:
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: test-ingress-3
@@ -153,4 +158,4 @@ location ~* "^/foo/bar/bar" {
 }
 ```
 
-A request to `test.com/foo/bar/bar` would match the `^/foo/[A-Z0-9]{3}` location block instead of the longest EXACT matching path.
+A request to `test.com/foo/bar/bar` would match the `^/foo/bar/[A-Z0-9]{3}` location block instead of the longest EXACT matching path.

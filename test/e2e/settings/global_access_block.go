@@ -20,27 +20,22 @@ import (
 	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Global access block", func() {
+var _ = framework.DescribeSetting("[Security] block-*", func() {
 	f := framework.NewDefaultFramework("global-access-block")
 
 	host := "global-access-block"
 
-	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should block CIDRs defined in the ConfigMap", func() {
+	ginkgo.It("should block CIDRs defined in the ConfigMap", func() {
 		f.UpdateNginxConfigMapData("block-cidrs", "172.16.0.0/12,192.168.0.0/16,10.0.0.0/8")
 
 		f.WaitForNginxConfiguration(
@@ -50,17 +45,14 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 					strings.Contains(cfg, "deny 10.0.0.0/8;")
 			})
 
-		// This test works for minikube, but may have problems with real kubernetes clusters,
-		// especially if connection is done via Internet. In this case, the test should be disabled/removed.
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusForbidden)
 	})
 
-	It("should block User-Agents defined in the ConfigMap", func() {
+	ginkgo.It("should block User-Agents defined in the ConfigMap", func() {
 		f.UpdateNginxConfigMapData("block-user-agents", "~*chrome\\/68\\.0\\.3440\\.106\\ safari\\/537\\.36,AlphaBot")
 
 		f.WaitForNginxConfiguration(
@@ -70,33 +62,30 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 			})
 
 		// Should be blocked
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36").
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36").
+			Expect().
+			Status(http.StatusForbidden)
 
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("User-Agent", "AlphaBot").
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("User-Agent", "AlphaBot").
+			Expect().
+			Status(http.StatusForbidden)
 
 		// Shouldn't be blocked
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1").
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1").
+			Expect().
+			Status(http.StatusOK)
 	})
 
-	It("should block Referers defined in the ConfigMap", func() {
+	ginkgo.It("should block Referers defined in the ConfigMap", func() {
 		f.UpdateNginxConfigMapData("block-referers", "~*example\\.com,qwerty")
 
 		f.WaitForNginxConfiguration(
@@ -106,29 +95,26 @@ var _ = framework.IngressNginxDescribe("Global access block", func() {
 			})
 
 		// Should be blocked
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("Referer", "example.com").
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Referer", "example.com").
+			Expect().
+			Status(http.StatusForbidden)
 
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("Referer", "qwerty").
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Referer", "qwerty").
+			Expect().
+			Status(http.StatusForbidden)
 
 		// Shouldn't be blocked
-		resp, _, errs = gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			Set("Referer", "qwerty123").
-			End()
-		Expect(errs).To(BeNil())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Referer", "qwerty123").
+			Expect().
+			Status(http.StatusOK)
 	})
 })

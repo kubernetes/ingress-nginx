@@ -26,6 +26,8 @@ type (
 		// trackChildren makes Tracker track descendants of procs the
 		// namer wanted tracked.
 		trackChildren bool
+		// trackThreads makes Tracker track per-thread metrics.
+		trackThreads bool
 		// never ignore processes, i.e. always re-check untracked processes in case comm has changed
 		alwaysRecheck bool
 		username      map[int]string
@@ -85,7 +87,8 @@ type (
 		States
 		// Wchans is how many threads are in each non-zero wchan.
 		Wchans map[string]int
-		// Threads are the thread updates for this process.
+		// Threads are the thread updates for this process, if the Tracker
+		// has trackThreads==true.
 		Threads []ThreadUpdate
 	}
 
@@ -135,12 +138,13 @@ func (tp *trackedProc) getUpdate() Update {
 }
 
 // NewTracker creates a Tracker.
-func NewTracker(namer common.MatchNamer, trackChildren, alwaysRecheck, debug bool) *Tracker {
+func NewTracker(namer common.MatchNamer, trackChildren, trackThreads, alwaysRecheck, debug bool) *Tracker {
 	return &Tracker{
 		namer:         namer,
 		tracked:       make(map[ID]*trackedProc),
 		procIds:       make(map[int]ID),
 		trackChildren: trackChildren,
+		trackThreads:  trackThreads,
 		alwaysRecheck: alwaysRecheck,
 		username:      make(map[int]string),
 		debug:         debug,
@@ -206,6 +210,9 @@ func (t *Tracker) handleProc(proc Proc, updateTime time.Time) (*IDInfo, CollectE
 	var cerrs CollectErrors
 	procID, err := proc.GetProcID()
 	if err != nil {
+		if t.debug {
+			log.Printf("error getting proc ID for pid %+v: %v", proc.GetPid(), err)
+		}
 		return nil, cerrs
 	}
 
@@ -231,6 +238,9 @@ func (t *Tracker) handleProc(proc Proc, updateTime time.Time) (*IDInfo, CollectE
 	var threads []Thread
 	threads, err = proc.GetThreads()
 	if err != nil {
+		if t.debug {
+			log.Printf("can't read thread metrics for %+v: %v", procID, err)
+		}
 		softerrors |= 1
 	}
 	cerrs.Partial += softerrors
@@ -396,9 +406,11 @@ func (t *Tracker) Update(iter Iter) (CollectErrors, []Update, error) {
 	untracked := make(map[ID]IDInfo)
 	for _, idinfo := range newProcs {
 		nacl := common.ProcAttributes{
-			Name:     idinfo.Name,
-			Cmdline:  idinfo.Cmdline,
-			Username: t.lookupUid(idinfo.EffectiveUID),
+			Name:      idinfo.Name,
+			Cmdline:   idinfo.Cmdline,
+			Username:  t.lookupUid(idinfo.EffectiveUID),
+			PID:       idinfo.Pid,
+			StartTime: idinfo.StartTime,
 		}
 		wanted, gname := t.namer.MatchAndName(nacl)
 		if wanted {

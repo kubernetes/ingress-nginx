@@ -1,11 +1,11 @@
 #  Basic usage - host based routing
 
-ingress-nginx can be used for many use cases, inside various cloud provider and supports a lot of configurations. In this section you can find a common usage scenario where a single load balancer powerd by ingress-nginx will route traffic to 2 different HTTP backend services based on the host name.
+ingress-nginx can be used for many use cases, inside various cloud provider and supports a lot of configurations. In this section you can find a common usage scenario where a single load balancer powered by ingress-nginx will route traffic to 2 different HTTP backend services based on the host name.
 
 First of all follow the instructions to install ingress-nginx. Then imagine that you need to expose 2 HTTP services already installed: `myServiceA`, `myServiceB`. Let's say that you want to expose the first at `myServiceA.foo.org` and the second at `myServiceB.foo.org`. One possible solution is to create two **ingress** resources:
 
 ```
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: ingress-myServiceA
@@ -22,7 +22,7 @@ spec:
           serviceName: myServiceA
           servicePort: 80
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: ingress-myServiceB

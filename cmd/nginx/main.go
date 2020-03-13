@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -36,7 +35,9 @@ import (
 	discovery "k8s.io/apimachinery/pkg/version"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/file"
@@ -44,16 +45,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
+	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/version"
-)
-
-const (
-	// High enough QPS to fit all expected use cases. QPS=0 is not set here, because
-	// client code is overriding it.
-	defaultQPS = 1e6
-	// High enough Burst to fit all expected use cases. Burst=0 is not set here, because
-	// client code is overriding it.
-	defaultBurst = 1e6
 )
 
 func main() {
@@ -72,14 +65,12 @@ func main() {
 		klog.Fatal(err)
 	}
 
-	nginxVersion()
-
-	fs, err := file.NewLocalFS()
+	err = file.CreateRequiredDirectories()
 	if err != nil {
 		klog.Fatal(err)
 	}
 
-	kubeClient, err := createApiserverClient(conf.APIServerHost, conf.KubeConfigFile)
+	kubeClient, err := createApiserverClient(conf.APIServerHost, conf.RootCAFile, conf.KubeConfigFile)
 	if err != nil {
 		handleFatalInitError(err)
 	}
@@ -107,8 +98,13 @@ func main() {
 		}
 	}
 
-	conf.FakeCertificate = ssl.GetFakeSSLCert(fs)
-	klog.Infof("Created fake certificate with PemFileName: %v", conf.FakeCertificate.PemFileName)
+	conf.FakeCertificate = ssl.GetFakeSSLCert()
+	klog.Infof("SSL fake certificate created %v", conf.FakeCertificate.PemFileName)
+
+	k8s.IsNetworkingIngressAvailable = k8s.NetworkingIngressAvailable(kubeClient)
+	if !k8s.IsNetworkingIngressAvailable {
+		klog.Warningf("Using deprecated \"k8s.io/api/extensions/v1beta1\" package because Kubernetes version is < v1.14.0")
+	}
 
 	conf.Client = kubeClient
 
@@ -129,24 +125,22 @@ func main() {
 	}
 	mc.Start()
 
-	ngx := controller.NewNGINXController(conf, mc, fs)
-	go handleSigterm(ngx, func(code int) {
-		os.Exit(code)
-	})
-
-	mux := http.NewServeMux()
-
 	if conf.EnableProfiling {
-		registerProfiler(mux)
+		go registerProfiler()
 	}
 
-	registerHealthz(ngx, mux)
+	ngx := controller.NewNGINXController(conf, mc)
+
+	mux := http.NewServeMux()
+	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
-	registerHandlers(mux)
 
 	go startHTTPServer(conf.ListenPorts.Health, mux)
+	go ngx.Start()
 
-	ngx.Start()
+	handleSigterm(ngx, func(code int) {
+		os.Exit(code)
+	})
 }
 
 type exiter func(code int)
@@ -178,15 +172,23 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 // If neither apiserverHost nor kubeConfig is passed in, we assume the
 // controller runs inside Kubernetes and fallback to the in-cluster config. If
 // the in-cluster config is missing or fails, we fallback to the default config.
-func createApiserverClient(apiserverHost, kubeConfig string) (*kubernetes.Clientset, error) {
+func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kubernetes.Clientset, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags(apiserverHost, kubeConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg.QPS = defaultQPS
-	cfg.Burst = defaultBurst
-	cfg.ContentType = "application/vnd.kubernetes.protobuf"
+	if apiserverHost != "" && rootCAFile != "" {
+		tlsClientConfig := rest.TLSClientConfig{}
+
+		if _, err := certutil.NewPool(rootCAFile); err != nil {
+			klog.Errorf("Expected to load root CA config from %s, but got err: %v", rootCAFile, err)
+		} else {
+			tlsClientConfig.CAFile = rootCAFile
+		}
+
+		cfg.TLSClientConfig = tlsClientConfig
+	}
 
 	klog.Infof("Creating API client for %s", cfg.Host)
 
@@ -248,17 +250,10 @@ func handleFatalInitError(err error) {
 		err)
 }
 
-func registerHandlers(mux *http.ServeMux) {
-	mux.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		b, _ := json.Marshal(version.String())
-		w.Write(b)
-	})
-}
-
-func registerHealthz(ic *controller.NGINXController, mux *http.ServeMux) {
+func registerHealthz(healthPath string, ic *controller.NGINXController, mux *http.ServeMux) {
 	// expose health check endpoint (/healthz)
-	healthz.InstallHandler(mux,
+	healthz.InstallPathHandler(mux,
+		healthPath,
 		healthz.PingHealthz,
 		ic,
 	)
@@ -275,7 +270,9 @@ func registerMetrics(reg *prometheus.Registry, mux *http.ServeMux) {
 
 }
 
-func registerProfiler(mux *http.ServeMux) {
+func registerProfiler() {
+	mux := http.NewServeMux()
+
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/heap", pprof.Index)
 	mux.HandleFunc("/debug/pprof/mutex", pprof.Index)
@@ -286,6 +283,12 @@ func registerProfiler(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf("127.0.0.1:%v", nginx.ProfilerPort),
+		Handler: mux,
+	}
+	klog.Fatal(server.ListenAndServe())
 }
 
 func startHTTPServer(port int, mux *http.ServeMux) {

@@ -40,9 +40,9 @@ import (
 	"k8s.io/ingress-nginx/internal/task"
 )
 
-const (
-	updateInterval = 60 * time.Second
-)
+// UpdateInterval defines the time interval, in seconds, in
+// which the status should check if an update is required.
+var UpdateInterval = 60
 
 // Syncer ...
 type Syncer interface {
@@ -98,7 +98,7 @@ func (s statusSync) Run(stopCh chan struct{}) {
 
 	// when this instance is the leader we need to enqueue
 	// an item to trigger the update of the Ingress status.
-	wait.PollUntil(updateInterval, func() (bool, error) {
+	wait.PollUntil(time.Duration(UpdateInterval)*time.Second, func() (bool, error) {
 		s.syncQueue.EnqueueTask(task.GetDummyObject("sync status"))
 		return false, nil
 	}, stopCh)
@@ -171,35 +171,12 @@ func NewStatusSyncer(podInfo *k8s.PodInfo, config Config) Syncer {
 // runningAddresses returns a list of IP addresses and/or FQDN where the
 // ingress controller is currently running
 func (s *statusSync) runningAddresses() ([]string, error) {
-	addrs := []string{}
-
-	if s.PublishService != "" {
-		ns, name, _ := k8s.ParseNameNS(s.PublishService)
-		svc, err := s.Client.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
-
-		if svc.Spec.Type == apiv1.ServiceTypeExternalName {
-			addrs = append(addrs, svc.Spec.ExternalName)
-			return addrs, nil
-		}
-
-		for _, ip := range svc.Status.LoadBalancer.Ingress {
-			if ip.IP == "" {
-				addrs = append(addrs, ip.Hostname)
-			} else {
-				addrs = append(addrs, ip.IP)
-			}
-		}
-
-		addrs = append(addrs, svc.Spec.ExternalIPs...)
-		return addrs, nil
+	if s.PublishStatusAddress != "" {
+		return []string{s.PublishStatusAddress}, nil
 	}
 
-	if s.PublishStatusAddress != "" {
-		addrs = append(addrs, s.PublishStatusAddress)
-		return addrs, nil
+	if s.PublishService != "" {
+		return statusAddressFromService(s.PublishService, s.Client)
 	}
 
 	// get information about all the pods running the ingress controller
@@ -210,6 +187,7 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		return nil, err
 	}
 
+	addrs := make([]string, 0)
 	for _, pod := range pods.Items {
 		// only Running pods are valid
 		if pod.Status.Phase != apiv1.PodRunning {
@@ -286,18 +264,32 @@ func runUpdate(ing *ingress.Ingress, status []apiv1.LoadBalancerIngress,
 			return nil, nil
 		}
 
-		ingClient := client.ExtensionsV1beta1().Ingresses(ing.Namespace)
+		if k8s.IsNetworkingIngressAvailable {
+			ingClient := client.NetworkingV1beta1().Ingresses(ing.Namespace)
+			currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
+			}
 
-		currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
-		}
+			klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
+			currIng.Status.LoadBalancer.Ingress = status
+			_, err = ingClient.UpdateStatus(currIng)
+			if err != nil {
+				klog.Warningf("error updating ingress rule: %v", err)
+			}
+		} else {
+			ingClient := client.ExtensionsV1beta1().Ingresses(ing.Namespace)
+			currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
+			}
 
-		klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
-		currIng.Status.LoadBalancer.Ingress = status
-		_, err = ingClient.UpdateStatus(currIng)
-		if err != nil {
-			klog.Warningf("error updating ingress rule: %v", err)
+			klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
+			currIng.Status.LoadBalancer.Ingress = status
+			_, err = ingClient.UpdateStatus(currIng)
+			if err != nil {
+				klog.Warningf("error updating ingress rule: %v", err)
+			}
 		}
 
 		return true, nil
@@ -331,4 +323,42 @@ func ingressSliceEqual(lhs, rhs []apiv1.LoadBalancerIngress) bool {
 	}
 
 	return true
+}
+
+func statusAddressFromService(service string, kubeClient clientset.Interface) ([]string, error) {
+	ns, name, _ := k8s.ParseNameNS(service)
+	svc, err := kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	switch svc.Spec.Type {
+	case apiv1.ServiceTypeExternalName:
+		return []string{svc.Spec.ExternalName}, nil
+	case apiv1.ServiceTypeClusterIP:
+		return []string{svc.Spec.ClusterIP}, nil
+	case apiv1.ServiceTypeNodePort:
+		addresses := []string{}
+		if svc.Spec.ExternalIPs != nil {
+			addresses = append(addresses, svc.Spec.ExternalIPs...)
+		} else {
+			addresses = append(addresses, svc.Spec.ClusterIP)
+		}
+		return addresses, nil
+	case apiv1.ServiceTypeLoadBalancer:
+		addresses := []string{}
+		for _, ip := range svc.Status.LoadBalancer.Ingress {
+			if ip.IP == "" {
+				addresses = append(addresses, ip.Hostname)
+			} else {
+				addresses = append(addresses, ip.IP)
+			}
+		}
+
+		addresses = append(addresses, svc.Spec.ExternalIPs...)
+
+		return addresses, nil
+	}
+
+	return nil, fmt.Errorf("unable to extract IP address/es from service %v", service)
 }

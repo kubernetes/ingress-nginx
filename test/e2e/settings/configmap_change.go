@@ -20,36 +20,30 @@ import (
 	"regexp"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Configmap change", func() {
+var _ = framework.DescribeSetting("Configmap change", func() {
 	f := framework.NewDefaultFramework("configmap-change")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should reload after an update in the configuration", func() {
+	ginkgo.It("should reload after an update in the configuration", func() {
 		host := "configmap-change"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		wlKey := "whitelist-source-range"
-		wlValue := "1.1.1.1"
+		ginkgo.By("adding a whitelist-source-range")
 
-		By("adding a whitelist-source-range")
+		f.UpdateNginxConfigMapData("whitelist-source-range", "1.1.1.1")
 
-		f.UpdateNginxConfigMapData(wlKey, wlValue)
-
-		checksumRegex := regexp.MustCompile("Configuration checksum:\\s+(\\d+)")
+		checksumRegex := regexp.MustCompile(`Configuration checksum:\s+(\d+)`)
 		checksum := ""
 
 		f.WaitForNginxConfiguration(
@@ -62,9 +56,9 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 
 				return strings.Contains(cfg, "allow 1.1.1.1;")
 			})
-		Expect(checksum).NotTo(BeEmpty())
+		assert.NotEmpty(ginkgo.GinkgoT(), checksum)
 
-		By("changing error-log-level")
+		ginkgo.By("changing error-log-level")
 
 		f.UpdateNginxConfigMapData("error-log-level", "debug")
 
@@ -78,6 +72,6 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 
 				return strings.ContainsAny(cfg, "error_log  /var/log/nginx/error.log debug;")
 			})
-		Expect(checksum).NotTo(BeEquivalentTo(newChecksum))
+		assert.NotEqual(ginkgo.GinkgoT(), checksum, newChecksum)
 	})
 })

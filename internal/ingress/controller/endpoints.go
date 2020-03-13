@@ -21,9 +21,8 @@ import (
 	"net"
 	"reflect"
 	"strconv"
-	"time"
 
-	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/klog"
 
 	corev1 "k8s.io/api/core/v1"
@@ -51,35 +50,11 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 	// ExternalName services
 	if s.Spec.Type == corev1.ServiceTypeExternalName {
 		klog.V(3).Infof("Ingress using Service %q of type ExternalName.", svcKey)
-
 		targetPort := port.TargetPort.IntValue()
-		if targetPort <= 0 {
-			klog.Errorf("ExternalName Service %q has an invalid port (%v)", svcKey, targetPort)
-			return upsServers
-		}
-
 		// if the externalName is not an IP address we need to validate is a valid FQDN
 		if net.ParseIP(s.Spec.ExternalName) == nil {
-			defaultRetry := wait.Backoff{
-				Steps:    2,
-				Duration: 1 * time.Second,
-				Factor:   1.5,
-				Jitter:   0.2,
-			}
-
-			var lastErr error
-			err := wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
-				_, err := net.LookupHost(s.Spec.ExternalName)
-				if err == nil {
-					return true, nil
-				}
-
-				lastErr = err
-				return false, nil
-			})
-
-			if err != nil {
-				klog.Errorf("Error resolving host %q: %v", s.Spec.ExternalName, lastErr)
+			if errs := validation.IsDNS1123Subdomain(s.Spec.ExternalName); len(errs) > 0 {
+				klog.Errorf("Invalid DNS name %s: %v", s.Spec.ExternalName, errs)
 				return upsServers
 			}
 		}

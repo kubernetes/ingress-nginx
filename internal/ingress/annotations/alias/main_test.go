@@ -17,10 +17,11 @@ limitations under the License.
 package alias
 
 import (
+	"reflect"
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -36,28 +37,29 @@ func TestParse(t *testing.T) {
 
 	testCases := []struct {
 		annotations map[string]string
-		expected    string
+		expected    []string
 	}{
-		{map[string]string{annotation: "www.example.com"}, "www.example.com"},
-		{map[string]string{annotation: "*.example.com www.example.*"}, "*.example.com www.example.*"},
-		{map[string]string{annotation: `~^www\d+\.example\.com$`}, `~^www\d+\.example\.com$`},
-		{map[string]string{annotation: ""}, ""},
-		{map[string]string{}, ""},
-		{nil, ""},
+		{map[string]string{annotation: "a.com, b.com, ,    c.com"}, []string{"a.com", "b.com", "c.com"}},
+		{map[string]string{annotation: "www.example.com"}, []string{"www.example.com"}},
+		{map[string]string{annotation: "*.example.com,www.example.*"}, []string{"*.example.com", "www.example.*"}},
+		{map[string]string{annotation: `~^www\d+\.example\.com$`}, []string{`~^www\d+\.example\.com$`}},
+		{map[string]string{annotation: ""}, []string{}},
+		{map[string]string{}, []string{}},
+		{nil, []string{}},
 	}
 
-	ing := &extensions.Ingress{
+	ing := &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{},
+		Spec: networking.IngressSpec{},
 	}
 
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		result, _ := ap.Parse(ing)
-		if result != testCase.expected {
+		if !reflect.DeepEqual(result, testCase.expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
 	}

@@ -22,7 +22,6 @@ import (
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
-	"github.com/onsi/gomega"
 	"k8s.io/component-base/logs"
 
 	// required
@@ -35,8 +34,10 @@ import (
 	_ "k8s.io/ingress-nginx/test/e2e/dbg"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
 	_ "k8s.io/ingress-nginx/test/e2e/gracefulshutdown"
+	_ "k8s.io/ingress-nginx/test/e2e/leaks"
 	_ "k8s.io/ingress-nginx/test/e2e/loadbalance"
 	_ "k8s.io/ingress-nginx/test/e2e/lua"
+	_ "k8s.io/ingress-nginx/test/e2e/security"
 	_ "k8s.io/ingress-nginx/test/e2e/servicebackend"
 	_ "k8s.io/ingress-nginx/test/e2e/settings"
 	_ "k8s.io/ingress-nginx/test/e2e/ssl"
@@ -50,7 +51,6 @@ func RunE2ETests(t *testing.T) {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	gomega.RegisterFailHandler(ginkgo.Fail)
 	// Disable skipped tests unless they are explicitly requested.
 	if config.GinkgoConfig.FocusString == "" && config.GinkgoConfig.SkipString == "" {
 		config.GinkgoConfig.SkipString = `\[Flaky\]|\[Feature:.+\]`
@@ -64,9 +64,3 @@ func RunE2ETests(t *testing.T) {
 	framework.Logf("Starting e2e run %q on Ginkgo node %d", framework.RunID, config.GinkgoConfig.ParallelNode)
 	ginkgo.RunSpecs(t, "nginx-ingress-controller e2e suite")
 }
-
-var _ = ginkgo.SynchronizedAfterSuite(func() {
-	// Run on all Ginkgo nodes
-	framework.Logf("Running AfterSuite actions on all nodes")
-	framework.RunCleanupActions()
-}, func() {})

@@ -19,21 +19,18 @@ package annotations
 import (
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func() {
+var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 	f := framework.NewDefaultFramework("modsecuritylocation")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	AfterEach(func() {
-	})
-
-	It("should enable modsecurity", func() {
+	ginkgo.It("should enable modsecurity", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 
@@ -41,7 +38,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/enable-modsecurity": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -51,7 +48,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			})
 	})
 
-	It("should enable modsecurity with transaction ID and OWASP rules", func() {
+	ginkgo.It("should enable modsecurity with transaction ID and OWASP rules", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 
@@ -61,7 +58,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/modsecurity-transaction-id": "modsecurity-$request_id",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -72,7 +69,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			})
 	})
 
-	It("should disable modsecurity", func() {
+	ginkgo.It("should disable modsecurity", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 
@@ -80,7 +77,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/enable-modsecurity": "false",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -89,7 +86,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			})
 	})
 
-	It("should enable modsecurity with snippet", func() {
+	ginkgo.It("should enable modsecurity with snippet", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 
@@ -98,7 +95,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/modsecurity-snippet": "SecRuleEngine On",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
