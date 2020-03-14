@@ -134,8 +134,8 @@ spec:
             - name: {{ $key }}
               containerPort: {{ $value }}
               protocol: TCP
-              {{- if $.Values.controller.daemonset.useHostPort }}
-              hostPort: {{ index $.Values.controller.daemonset.hostPorts $key | default $value }}
+              {{- if $.Values.controller.useHostPort }}
+              hostPort: {{ index $.Values.controller.hostPorts $key | default $value }}
               {{- end }}
           {{- end }}
           {{- if .Values.controller.metrics.enabled }}
@@ -152,7 +152,7 @@ spec:
             - name: {{ $key }}-tcp
               containerPort: {{ $key }}
               protocol: TCP
-              {{- if $.Values.controller.daemonset.useHostPort }}
+              {{- if $.Values.controller.useHostPort }}
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
@@ -160,7 +160,7 @@ spec:
             - name: {{ $key }}-udp
               containerPort: {{ $key }}
               protocol: UDP
-              {{- if $.Values.controller.daemonset.useHostPort }}
+              {{- if $.Values.controller.useHostPort }}
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
