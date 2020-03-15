@@ -69,6 +69,7 @@ Parameter | Description | Default
 `controller.extraVolumeMounts` | Additional volumeMounts to the controller main container | `{}`
 `controller.extraVolumes` | Additional volumes to the controller pod | `{}`
 `controller.extraInitContainers` | Containers, which are run before the app containers are started | `[]`
+`controller.healthCheckPath` | Path of the health check endpoint. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. | `/healthz"`
 `controller.ingressClass` | name of the ingress class to route through this controller | `nginx`
 `controller.maxmindLicenseKey` | Maxmind license key to download GeoLite2 Databases. See [Accessing and using GeoLite2 database](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) | `""`
 `controller.scope.enabled` | limit the scope of the ingress controller | `false` (watch all namespaces)
