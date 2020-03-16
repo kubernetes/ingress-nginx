@@ -826,6 +826,7 @@ type TemplateConfig struct {
 	ListenPorts              *ListenPorts
 	PublishService           *apiv1.Service
 	EnableMetrics            bool
+	MaxmindEditionFiles      []string
 
 	PID        string
 	StatusPath string
