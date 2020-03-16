@@ -85,6 +85,9 @@ spec:
           {{- if .Values.controller.maxmindLicenseKey }}
             - --maxmind-license-key={{ .Values.controller.maxmindLicenseKey }}
           {{- end }}
+          {{- if not (eq .Values.controller.healthCheckPath "/healthz") }}
+            - --health-check-path={{ .Values.controller.healthCheckPath }}
+          {{- end }}
           {{- range $key, $value := .Values.controller.extraArgs }}
             {{- if $value }}
             - --{{ $key }}={{ $value }}
@@ -114,7 +117,7 @@ spec:
           {{- end }}
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: {{ .Values.controller.healthCheckPath }}
               port: {{ .Values.controller.livenessProbe.port }}
               scheme: HTTP
             initialDelaySeconds: {{ .Values.controller.livenessProbe.initialDelaySeconds }}
@@ -124,7 +127,7 @@ spec:
             failureThreshold: {{ .Values.controller.livenessProbe.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: {{ .Values.controller.healthCheckPath }}
               port: {{ .Values.controller.readinessProbe.port }}
               scheme: HTTP
             initialDelaySeconds: {{ .Values.controller.readinessProbe.initialDelaySeconds }}
