@@ -118,10 +118,7 @@ controller:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
-  # change this when deployment supports hostPort without kubectl patch
-  kind: DaemonSet
-  daemonset:
-    useHostPort: true
+  useHostPort: true
   terminationGracePeriodSeconds: 0
 
 defaultBackend:
