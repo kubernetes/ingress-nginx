@@ -30,12 +30,14 @@ import (
 // MaxmindLicenseKey maxmind license key to download databases
 var MaxmindLicenseKey = ""
 
+// MaxmindEditionIDs maxmind editions (GeoLite2-City, GeoLite2-Country, GeoIP2-ISP, etc)
+var MaxmindEditionIDs = ""
+
+// MaxmindEditionFiles maxmind databases on disk
+var MaxmindEditionFiles []string
+
 const (
-	geoIPPath = "/etc/nginx/geoip"
-
-	geoLiteCityDB = "GeoLite2-City"
-	geoLiteASNDB  = "GeoLite2-ASN"
-
+	geoIPPath   = "/etc/nginx/geoip"
 	dbExtension = ".mmdb"
 
 	maxmindURL = "https://download.maxmind.com/app/geoip_download?license_key=%v&edition_id=%v&suffix=tar.gz"
@@ -44,12 +46,10 @@ const (
 // GeoLite2DBExists checks if the required databases for
 // the GeoIP2 NGINX module are present in the filesystem
 func GeoLite2DBExists() bool {
-	if !fileExists(path.Join(geoIPPath, geoLiteASNDB+dbExtension)) {
-		return false
-	}
-
-	if !fileExists(path.Join(geoIPPath, geoLiteCityDB+dbExtension)) {
-		return false
+	for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
+		if !fileExists(path.Join(geoIPPath, dbName+dbExtension)) {
+			return false
+		}
 	}
 
 	return true
@@ -58,16 +58,13 @@ func GeoLite2DBExists() bool {
 // DownloadGeoLite2DB downloads the required databases by the
 // GeoIP2 NGINX module using a license key from MaxMind.
 func DownloadGeoLite2DB() error {
-	err := downloadDatabase(geoLiteCityDB)
-	if err != nil {
-		return err
+	for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
+		err := downloadDatabase(dbName)
+		if err != nil {
+			return err
+		}
+		MaxmindEditionFiles = append(MaxmindEditionFiles, dbName+dbExtension)
 	}
-
-	err = downloadDatabase(geoLiteASNDB)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -131,6 +128,29 @@ func downloadDatabase(dbName string) error {
 
 	return fmt.Errorf("the URL %v does not contains the database %v",
 		fmt.Sprintf(maxmindURL, "XXXXXXX", dbName), mmdbFile)
+}
+
+// ValidateGeoLite2DBEditions check provided Maxmind database editions names
+func ValidateGeoLite2DBEditions() error {
+	allowedEditions := map[string]bool{
+		"GeoIP2-Anonymous-IP":    true,
+		"GeoIP2-Country":         true,
+		"GeoIP2-City":            true,
+		"GeoIP2-Connection-Type": true,
+		"GeoIP2-Domain":          true,
+		"GeoIP2-ISP":             true,
+		"GeoIP2-ASN":             true,
+		"GeoLite2-ASN":           true,
+		"GeoLite2-Country":       true,
+		"GeoLite2-City":          true,
+	}
+
+	for _, edition := range strings.Split(MaxmindEditionIDs, ",") {
+		if !allowedEditions[edition] {
+			return fmt.Errorf("unknown Maxmind GeoIP2 edition name: '%s'", edition)
+		}
+	}
+	return nil
 }
 
 func fileExists(filePath string) bool {

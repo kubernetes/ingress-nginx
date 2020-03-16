@@ -98,7 +98,8 @@ type Configuration struct {
 	ValidationWebhookCertPath string
 	ValidationWebhookKeyPath  string
 
-	GlobalExternalAuth *ngx_config.GlobalExternalAuth
+	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
+	MaxmindEditionFiles []string
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
