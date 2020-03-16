@@ -49,9 +49,9 @@ controller:
   daemonset:
     useHostPort: false
 
-    hostPorts:
-      http: 80
-      https: 443
+  hostPorts:
+    http: 80
+    https: 443
 
   ## Required only if defaultBackend.enabled = false
   ## Must be <namespace>/<service_name>
