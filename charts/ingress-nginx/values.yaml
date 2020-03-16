@@ -212,6 +212,10 @@ controller:
     timeoutSeconds: 1
     port: 10254
 
+  # Path of the health check endpoint. All requests received on the port defined by
+  # the healthz-port parameter are forwarded internally to this path.
+  healthCheckPath: "/healthz"
+
   ## Annotations to be added to controller pods
   ##
   podAnnotations: {}
