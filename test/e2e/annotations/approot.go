@@ -45,7 +45,7 @@ var _ = framework.DescribeAnnotation("app-root", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, `if ($uri = /) {`) &&
-					strings.Contains(server, `return 302 /foo;`)
+					strings.Contains(server, `return 302 $scheme://$http_host/foo;`)
 			})
 
 		f.HTTPTestClient().
