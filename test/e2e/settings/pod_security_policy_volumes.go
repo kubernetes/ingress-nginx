@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with vo
 			assert.Nil(ginkgo.GinkgoT(), err, "creating Pod Security Policy")
 		}
 
-		role, err := f.KubeClientSet.RbacV1().Roles(f.Namespace).Get("nginx-ingress-controller", metav1.GetOptions{})
+		role, err := f.KubeClientSet.RbacV1().Roles(f.Namespace).Get("nginx-ingress", metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "getting ingress controller cluster role")
 		assert.NotNil(ginkgo.GinkgoT(), role)
 
