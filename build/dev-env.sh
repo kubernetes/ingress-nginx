@@ -107,13 +107,7 @@ controller:
   config:
     worker-processes: "1"
   podLabels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
     deploy-date: "$(date +%s)"
-  service:
-    labels:
-      app.kubernetes.io/name: ingress-nginx
-      app.kubernetes.io/part-of: ingress-nginx
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:

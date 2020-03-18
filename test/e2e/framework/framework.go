@@ -72,7 +72,7 @@ func NewDefaultFramework(baseName string) *Framework {
 	if err != nil {
 		panic(err.Error())
 	}
-	assert.Nil(ginkgo.GinkgoT(), err, "creting kubernetes API client configuration")
+	assert.Nil(ginkgo.GinkgoT(), err, "creating kubernetes API client configuration")
 
 	kubeClient, err := kubernetes.NewForConfig(kubeConfig)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating Kubernetes API client")

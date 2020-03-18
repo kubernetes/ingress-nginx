@@ -36,15 +36,27 @@ function on_exit {
 }
 trap on_exit EXIT
 
+cat << EOF | kubectl apply --namespace=$NAMESPACE -f -
+# Required for e2e tcp tests
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tcp-services
+  namespace: $NAMESPACE
+
+EOF
+
 # Use the namespace overlay if it was requested
 if [[ ! -z "$NAMESPACE_OVERLAY" && -d "$DIR/namespace-overlays/$NAMESPACE_OVERLAY" ]]; then
     echo "Namespace overlay $NAMESPACE_OVERLAY is being used for namespace $NAMESPACE"
-    helm install nginx-ingress stable/nginx-ingress \
+    helm install nginx-ingress ${DIR}/charts/ingress-nginx \
         --namespace=$NAMESPACE \
         --wait \
         --values "$DIR/namespace-overlays/$NAMESPACE_OVERLAY/values.yaml"
 else
-    cat << EOF | helm install nginx-ingress stable/nginx-ingress --namespace=$NAMESPACE --wait --values -
+    cat << EOF | helm install nginx-ingress ${DIR}/charts/ingress-nginx --namespace=$NAMESPACE --wait --values -
+# TODO: remove the need to use fullnameOverride
+fullnameOverride: nginx-ingress
 controller:
   image:
     repository: ingress-controller/nginx-ingress-controller
@@ -59,14 +71,8 @@ controller:
   livenessProbe:
     initialDelaySeconds: 3
     periodSeconds: 1
-  podLabels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
   service:
     type: NodePort
-    labels:
-      app.kubernetes.io/name: ingress-nginx
-      app.kubernetes.io/part-of: ingress-nginx
   extraArgs:
     tcp-services-configmap: $NAMESPACE/tcp-services
     # e2e tests do not require information about ingress status
