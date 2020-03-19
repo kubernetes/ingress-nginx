@@ -43,7 +43,10 @@ KUBE_ROOT=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 FLAGS=$@
 
 PKG=k8s.io/ingress-nginx
-ARCH=$(go env GOARCH)
+ARCH=${ARCH:-}
+if [[ -z "$ARCH" ]]; then
+  ARCH=$(go env GOARCH)
+fi
 
 # create output directory as current user to avoid problem with docker.
 mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"

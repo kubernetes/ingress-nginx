@@ -15,10 +15,6 @@
 # Add the following 'help' target to your Makefile
 # And add help text after each target name starting with '\#\#'
 
-ifeq ($(shell which go >/dev/null 2>&1; echo $$?), 1)
-    $(error Can't find 'go' in PATH, please fix and retry. See http://golang.org/doc/install for installation instructions.)
-endif
-
 .DEFAULT_GOAL:=help
 
 .EXPORT_ALL_VARIABLES:
@@ -274,7 +270,12 @@ run-ingress-controller: ## Run the ingress controller locally using a kubectl pr
 
 .PHONY: check-go-version
 check-go-version:
+ifeq ($(USE_DOCKER), true)
+	@build/run-in-docker.sh \
+		hack/check-go-version.sh
+else
 	@hack/check-go-version.sh
+endif
 
 .PHONY: init-docker-buildx
 init-docker-buildx:
