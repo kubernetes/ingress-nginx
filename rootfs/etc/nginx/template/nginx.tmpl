@@ -862,7 +862,7 @@ stream {
         proxy_ssl_verify_depth                  {{ $server.ProxySSL.VerifyDepth }};
         {{ if not (empty $server.ProxySSL.ProxySSLName) }}
         proxy_ssl_name                           {{ $server.ProxySSL.ProxySSLName }};
-        {{ end }}        
+        {{ end }}
         {{ end }}
 
         {{ if not (empty $server.ProxySSL.PemFileName) }}
@@ -896,9 +896,9 @@ stream {
         {{ $externalAuth = $all.Cfg.GlobalExternalAuth }}
         {{ end }}
 
-        {{ if not (empty $location.Rewrite.AppRoot)}}
+        {{ if not (empty $location.Rewrite.AppRoot) }}
         if ($uri = /) {
-            return 302 {{ $location.Rewrite.AppRoot }};
+            return 302 $scheme://$http_host{{ $location.Rewrite.AppRoot }};
         }
         {{ end }}
 
