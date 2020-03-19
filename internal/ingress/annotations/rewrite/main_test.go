@@ -41,8 +41,9 @@ func buildIngress() *networking.Ingress {
 
 	return &networking.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Name:      "foo",
-			Namespace: api.NamespaceDefault,
+			Name:        "foo",
+			Namespace:   api.NamespaceDefault,
+			Annotations: map[string]string{},
 		},
 		Spec: networking.IngressSpec{
 			Backend: &networking.IngressBackend{
@@ -163,19 +164,42 @@ func TestForceSSLRedirect(t *testing.T) {
 	}
 }
 func TestAppRoot(t *testing.T) {
-	ing := buildIngress()
+	ap := NewParser(mockBackend{redirect: true})
 
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("app-root")] = "/app1"
-	ing.SetAnnotations(data)
-
-	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
-	redirect, ok := i.(*Config)
-	if !ok {
-		t.Errorf("expected a App Context")
+	testCases := []struct {
+		title       string
+		path        string
+		expected    string
+		errExpected bool
+	}{
+		{"Empty path should return an error", "", "", true},
+		{"Relative paths are not allowed", "demo", "", true},
+		{"Path / should pass", "/", "/", false},
+		{"Path /demo should pass", "/demo", "/demo", false},
 	}
-	if redirect.AppRoot != "/app1" {
-		t.Errorf("Unexpected value got in AppRoot")
+
+	for _, testCase := range testCases {
+		t.Run(testCase.title, func(t *testing.T) {
+			ing := buildIngress()
+			ing.Annotations[parser.GetAnnotationWithPrefix("app-root")] = testCase.path
+			i, err := ap.Parse(ing)
+			if err != nil {
+				if testCase.errExpected {
+					return
+				}
+
+				t.Fatalf("%v: unexpected error obtaining running address/es: %v", testCase.title, err)
+			}
+
+			rewrite, ok := i.(*Config)
+			if !ok {
+				t.Fatalf("expected a rewrite Config")
+			}
+
+			if testCase.expected != rewrite.AppRoot {
+				t.Fatalf("%v: expected AppRoot with value %v but was returned: %v", testCase.title, testCase.expected, rewrite.AppRoot)
+			}
+		})
 	}
 }
 
