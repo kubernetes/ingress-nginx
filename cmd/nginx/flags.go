@@ -186,6 +186,7 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
 https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases`)
+	flags.StringVar(&nginx.MaxmindEditionIDs, "maxmind-edition-ids", "GeoLite2-City,GeoLite2-ASN", `Maxmind edition ids to download GeoLite2 Databases.`)
 
 	flag.Set("logtostderr", "true")
 
@@ -310,12 +311,15 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		config.RootCAFile = *rootCAFile
 	}
 
-	if nginx.MaxmindLicenseKey != "" {
+	if nginx.MaxmindLicenseKey != "" && nginx.MaxmindEditionIDs != "" {
+		if err := nginx.ValidateGeoLite2DBEditions(); err != nil {
+			return false, nil, err
+		}
 		klog.Info("downloading maxmind GeoIP2 databases...")
-		err := nginx.DownloadGeoLite2DB()
-		if err != nil {
+		if err := nginx.DownloadGeoLite2DB(); err != nil {
 			klog.Errorf("unexpected error downloading GeoIP2 database: %v", err)
 		}
+		config.MaxmindEditionFiles = nginx.MaxmindEditionFiles
 	}
 
 	return false, config, nil

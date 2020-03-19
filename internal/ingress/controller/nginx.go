@@ -615,12 +615,12 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		ListenPorts:              n.cfg.ListenPorts,
 		PublishService:           n.GetPublishService(),
 		EnableMetrics:            n.cfg.EnableMetrics,
-
-		HealthzURI: nginx.HealthPath,
-		PID:        nginx.PID,
-		StatusPath: nginx.StatusPath,
-		StatusPort: nginx.StatusPort,
-		StreamPort: nginx.StreamPort,
+		MaxmindEditionFiles:      n.cfg.MaxmindEditionFiles,
+		HealthzURI:               nginx.HealthPath,
+		PID:                      nginx.PID,
+		StatusPath:               nginx.StatusPath,
+		StatusPort:               nginx.StatusPort,
+		StreamPort:               nginx.StreamPort,
 	}
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
