@@ -31,7 +31,7 @@
       --user $(gcloud config get-value account)
     ```
 
-The following **Mandatory Command** is required for all deployments.
+The following **Mandatory Command** is required for all deployments except [minikube](#minikube).
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
