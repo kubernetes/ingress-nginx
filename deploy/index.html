@@ -1460,7 +1460,7 @@ To change this behavior use the flag <code class="codehilite"><span class="err">
 <span class="go">  --user $(gcloud config get-value account)</span>
 </code></pre></div></p>
 </div>
-<p>The following <strong>Mandatory Command</strong> is required for all deployments.</p>
+<p>The following <strong>Mandatory Command</strong> is required for all deployments except <a href="#minikube">minikube</a>.</p>
 <div class="codehilite"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml</span>
 </code></pre></div>
 
