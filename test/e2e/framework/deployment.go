@@ -368,9 +368,14 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 func (f *Framework) DeleteDeployment(name string) error {
 	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(name, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
-	err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Delete(name, &metav1.DeleteOptions{})
+
+	grace := int64(0)
+	err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Delete(name, &metav1.DeleteOptions{
+		GracePeriodSeconds: &grace,
+	})
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting deployment")
-	return WaitForPodsDeleted(f.KubeClientSet, time.Second*60, f.Namespace, metav1.ListOptions{
+
+	return WaitForPodsDeleted(f.KubeClientSet, 2*time.Minute, f.Namespace, metav1.ListOptions{
 		LabelSelector: labelSelectorToString(d.Spec.Selector.MatchLabels),
 	})
 }
