@@ -732,6 +732,9 @@ stream {
         proxy_pass              upstream_balancer;
         {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
         proxy_protocol          on;
+        # In case of errors try the next upstream server before returning an error
+        proxy_next_upstream_timeout             {{ $cfg.Backend.ProxyNextUpstreamTimeout }};
+        proxy_next_upstream_tries               {{ $cfg.Backend.ProxyNextUpstreamTries }};
         {{ end }}
     }
     {{ end }}
@@ -758,6 +761,9 @@ stream {
         proxy_responses         {{ $cfg.ProxyStreamResponses }};
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
         proxy_pass              upstream_balancer;
+        # In case of errors try the next upstream server before returning an error
+        proxy_next_upstream_timeout             {{ $cfg.Backend.ProxyNextUpstreamTimeout }};
+        proxy_next_upstream_tries               {{ $cfg.Backend.ProxyNextUpstreamTries }};
     }
     {{ end }}
 }
