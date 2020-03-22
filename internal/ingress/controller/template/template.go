@@ -1345,14 +1345,15 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 
 func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Location) string {
 	isMSEnabledInLoc := location.ModSecurity.Enable
+	isMSEnableSetInLoc := location.ModSecurity.EnableSet
 	isMSEnabled := cfg.EnableModsecurity
 
 	if !isMSEnabled && !isMSEnabledInLoc {
 		return ""
 	}
 
-	if !isMSEnabledInLoc {
-		return ""
+	if isMSEnableSetInLoc && !isMSEnabledInLoc {
+		return "modsecurity off;"
 	}
 
 	var buffer bytes.Buffer
