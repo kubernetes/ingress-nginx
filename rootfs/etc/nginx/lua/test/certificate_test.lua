@@ -135,7 +135,7 @@ describe("Certificate", function()
       local _ngx = { var = { host = "hostname" } }
       setmetatable(_ngx, {__index = _G.ngx})
       _G.ngx = _ngx
-      ngx.ctx.configured_for_current_request = nil
+      ngx.ctx.cert_configured_for_current_request = nil
 
       set_certificate("hostname", EXAMPLE_CERT, UUID)
     end)
@@ -150,7 +150,7 @@ describe("Certificate", function()
     end)
 
     it("returns cached value from ngx.ctx", function()
-      ngx.ctx.configured_for_current_request = false
+      ngx.ctx.cert_configured_for_current_request = false
       assert.is_false(certificate.configured_for_current_request())
     end)
   end)
