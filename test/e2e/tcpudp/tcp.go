@@ -77,9 +77,13 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 			Update(svc)
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
 
+		// wait for update and nginx reload and new endpoint is available
+		time.Sleep(5 * time.Second)
+
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-%v-80"`, f.Namespace, framework.EchoService))
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-%v-80"`,
+					f.Namespace, framework.EchoService))
 			})
 
 		ip := f.GetNginxIP()
