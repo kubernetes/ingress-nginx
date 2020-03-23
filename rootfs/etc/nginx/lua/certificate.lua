@@ -56,13 +56,11 @@ local function get_pem_cert_uid(raw_hostname)
 end
 
 function _M.configured_for_current_request()
-  if ngx.ctx.configured_for_current_request ~= nil then
-    return ngx.ctx.configured_for_current_request
+  if ngx.ctx.cert_configured_for_current_request == nil then
+    ngx.ctx.cert_configured_for_current_request = get_pem_cert_uid(ngx.var.host) ~= nil
   end
 
-  ngx.ctx.configured_for_current_request = get_pem_cert_uid(ngx.var.host) ~= nil
-
-  return ngx.ctx.configured_for_current_request
+  return ngx.ctx.cert_configured_for_current_request
 end
 
 function _M.call()
