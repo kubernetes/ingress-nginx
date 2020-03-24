@@ -17,6 +17,7 @@ limitations under the License.
 package gracefulshutdown
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -73,7 +75,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 			func(deployment *appsv1.Deployment) error {
 				grace := int64(3600)
 				deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 				return err
 			})
 
@@ -135,7 +137,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 			func(deployment *appsv1.Deployment) error {
 				grace := int64(3600)
 				deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 				return err
 			})
 		assert.Nil(ginkgo.GinkgoT(), err)

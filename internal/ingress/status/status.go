@@ -17,6 +17,7 @@ limitations under the License.
 package status
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"sort"
@@ -180,7 +181,7 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 	}
 
 	// get information about all the pods running the ingress controller
-	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(metav1.ListOptions{
+	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
 	})
 	if err != nil {
@@ -204,7 +205,7 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 }
 
 func (s *statusSync) isRunningMultiplePods() bool {
-	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(metav1.ListOptions{
+	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
 	})
 	if err != nil {
@@ -266,27 +267,27 @@ func runUpdate(ing *ingress.Ingress, status []apiv1.LoadBalancerIngress,
 
 		if k8s.IsNetworkingIngressAvailable {
 			ingClient := client.NetworkingV1beta1().Ingresses(ing.Namespace)
-			currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
+			currIng, err := ingClient.Get(context.TODO(), ing.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
 			}
 
 			klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
 			currIng.Status.LoadBalancer.Ingress = status
-			_, err = ingClient.UpdateStatus(currIng)
+			_, err = ingClient.UpdateStatus(context.TODO(), currIng, metav1.UpdateOptions{})
 			if err != nil {
 				klog.Warningf("error updating ingress rule: %v", err)
 			}
 		} else {
 			ingClient := client.ExtensionsV1beta1().Ingresses(ing.Namespace)
-			currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
+			currIng, err := ingClient.Get(context.TODO(), ing.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
 			}
 
 			klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
 			currIng.Status.LoadBalancer.Ingress = status
-			_, err = ingClient.UpdateStatus(currIng)
+			_, err = ingClient.UpdateStatus(context.TODO(), currIng, metav1.UpdateOptions{})
 			if err != nil {
 				klog.Warningf("error updating ingress rule: %v", err)
 			}
@@ -327,7 +328,7 @@ func ingressSliceEqual(lhs, rhs []apiv1.LoadBalancerIngress) bool {
 
 func statusAddressFromService(service string, kubeClient clientset.Interface) ([]string, error) {
 	ns, name, _ := k8s.ParseNameNS(service)
-	svc, err := kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
+	svc, err := kubeClient.CoreV1().Services(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

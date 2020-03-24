@@ -17,6 +17,7 @@ limitations under the License.
 package settings
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -76,7 +77,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 					args := deployment.Spec.Template.Spec.Containers[0].Args
 					args = append(args, "--ingress-class=testclass")
 					deployment.Spec.Template.Spec.Containers[0].Args = args
-					_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
+					_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 
 					return err
 				})
@@ -135,11 +136,11 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				Expect().
 				Status(http.StatusOK)
 
-			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			delete(ing.Annotations, class.IngressKey)
-			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ing.Namespace).Update(ing)
+			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ing.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {

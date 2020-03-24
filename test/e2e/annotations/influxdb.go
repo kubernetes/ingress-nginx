@@ -18,6 +18,7 @@ package annotations
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"os/exec"
@@ -130,7 +131,7 @@ func createInfluxDBIngress(f *framework.Framework, host, service string, port in
 }
 
 func extractInfluxDBMeasurements(f *framework.Framework) (string, error) {
-	l, err := f.KubeClientSet.CoreV1().Pods(f.Namespace).List(metav1.ListOptions{
+	l, err := f.KubeClientSet.CoreV1().Pods(f.Namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: "app=influxdb",
 	})
 	if err != nil {
