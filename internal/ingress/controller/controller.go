@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/dynamic"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
@@ -54,7 +55,8 @@ type Configuration struct {
 
 	KubeConfigFile string
 
-	Client clientset.Interface
+	Client        clientset.Interface
+	DynamicClient dynamic.Interface
 
 	ResyncPeriod time.Duration
 

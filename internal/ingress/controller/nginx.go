@@ -132,9 +132,11 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		config.DefaultSSLCertificate,
 		config.ResyncPeriod,
 		config.Client,
+		config.DynamicClient,
 		n.updateCh,
 		pod,
-		config.DisableCatchAll)
+		config.DisableCatchAll,
+		n.stopCh)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -261,9 +263,6 @@ type NGINXController struct {
 // Start starts a new NGINX master process running in the foreground.
 func (n *NGINXController) Start() {
 	klog.Info("Starting NGINX Ingress controller")
-
-	n.store.Run(n.stopCh)
-
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
 	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.DefaultClass)

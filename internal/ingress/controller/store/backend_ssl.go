@@ -23,7 +23,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/pkg/errors"
-	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -73,13 +73,15 @@ func (s *k8sStore) syncSecret(key string) {
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
 // It parses the secret and verifies if it's a keypair, or a 'ca.crt' secret only.
 func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
-	secret, err := s.listers.Secret.ByKey(secretName)
+	obj, err := s.informers.Secret.Lister().Get(secretName)
 	if err != nil {
 		return nil, err
 	}
 
-	cert, okcert := secret.Data[apiv1.TLSCertKey]
-	key, okkey := secret.Data[apiv1.TLSPrivateKeyKey]
+	secret := obj.(*corev1.Secret)
+
+	cert, okcert := secret.Data[corev1.TLSCertKey]
+	key, okkey := secret.Data[corev1.TLSPrivateKeyKey]
 	ca := secret.Data["ca.crt"]
 
 	crl := secret.Data["ca.crl"]

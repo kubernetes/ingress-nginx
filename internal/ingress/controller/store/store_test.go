@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -34,8 +33,8 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -48,29 +47,8 @@ import (
 func TestStore(t *testing.T) {
 	k8s.IsNetworkingIngressAvailable = true
 
-	pod := &k8s.PodInfo{
-		Name:      "testpod",
-		Namespace: v1.NamespaceDefault,
-		Labels: map[string]string{
-			"pod-template-hash": "1234",
-		},
-	}
-
-	//TODO: move env definition to docker image?
-	os.Setenv("KUBEBUILDER_ASSETS", "/usr/local/bin")
-
-	te := &envtest.Environment{}
-	cfg, err := te.Start()
-	if err != nil {
-		t.Fatalf("error: %v", err)
-	}
-
-	defer te.Stop()
-
-	clientSet, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		t.Fatalf("error: %v", err)
-	}
+	pod, clientSet, dynamicClient, environment := newTest(t)
+	defer environment.Stop()
 
 	t.Run("should return an error searching for non existing objects", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
@@ -94,11 +72,11 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
+			dynamicClient,
 			updateCh,
 			pod,
-			false)
-
-		storer.Run(stopCh)
+			false,
+			stopCh)
 
 		key := fmt.Sprintf("%v/anything", ns)
 		ls, err := storer.GetLocalSSLCert(key)
@@ -164,7 +142,7 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		storer := New(
+		_ = New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -172,11 +150,12 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
+			dynamicClient,
 			updateCh,
 			pod,
-			false)
-
-		storer.Run(stopCh)
+			false,
+			stopCh,
+		)
 
 		ing := ensureIngress(&networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -312,7 +291,7 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		storer := New(
+		_ = New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -320,11 +299,12 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
+			dynamicClient,
 			updateCh,
 			pod,
-			false)
-
-		storer.Run(stopCh)
+			false,
+			stopCh,
+		)
 
 		// create an invalid ingress (different class)
 		invalidIngress := ensureIngress(&networking.Ingress{
@@ -416,7 +396,7 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		storer := New(
+		_ = New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -424,11 +404,12 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
+			dynamicClient,
 			updateCh,
 			pod,
-			false)
-
-		storer.Run(stopCh)
+			false,
+			stopCh,
+		)
 
 		secretName := "not-referenced"
 		_, err := framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns)
@@ -503,7 +484,7 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		storer := New(
+		_ = New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -511,11 +492,12 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
+			dynamicClient,
 			updateCh,
 			pod,
-			false)
-
-		storer.Run(stopCh)
+			false,
+			stopCh,
+		)
 
 		ingressName := "ingress-with-secret"
 		secretName := "referenced"
@@ -612,7 +594,7 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		storer := New(
+		_ = New(
 			ns,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
@@ -620,11 +602,12 @@ func TestStore(t *testing.T) {
 			"",
 			10*time.Minute,
 			clientSet,
+			dynamicClient,
 			updateCh,
 			pod,
-			false)
-
-		storer.Run(stopCh)
+			false,
+			stopCh,
+		)
 
 		name := "ingress-with-secret"
 		secretHosts := []string{name}
@@ -777,8 +760,10 @@ func deleteIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, 
 
 // newStore creates a new mock object store for tests which do not require the
 // use of Informers.
-func newStore(t *testing.T) *k8sStore {
-	pod := &k8s.PodInfo{
+func newStore(clientSet kubernetes.Interface,
+	dynamicClient dynamic.Interface,
+	stopCh chan struct{}, t *testing.T) *k8sStore {
+	podInfo := &k8s.PodInfo{
 		Name:      "ingress-1",
 		Namespace: v1.NamespaceDefault,
 		Labels: map[string]string{
@@ -786,24 +771,28 @@ func newStore(t *testing.T) *k8sStore {
 		},
 	}
 
-	return &k8sStore{
-		listers: &Lister{
-			// add more listers if needed
-			Ingress:               IngressLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
-			IngressWithAnnotation: IngressWithAnnotationsLister{cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)},
-			Pod:                   PodLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
-		},
-		sslStore:         NewSSLCertTracker(),
-		updateCh:         channels.NewRingChannel(10),
-		syncSecretMu:     new(sync.Mutex),
-		backendConfigMu:  new(sync.RWMutex),
-		secretIngressMap: NewObjectRefMap(),
-		pod:              pod,
-	}
+	return New(
+		"", "config", "tcp", "udp", "",
+		10*time.Minute,
+		clientSet,
+		dynamicClient,
+		channels.NewRingChannel(10),
+		podInfo,
+		false,
+		stopCh,
+	).(*k8sStore)
 }
 
 func TestUpdateSecretIngressMap(t *testing.T) {
-	s := newStore(t)
+	_, clientSet, dynamicClient, environment := newTest(t)
+	defer environment.Stop()
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
+	s := newStore(clientSet, dynamicClient, stopCh, t)
+
+	ingresses := clientSet.NetworkingV1beta1().Ingresses("testns")
 
 	ingTpl := &networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
@@ -811,14 +800,14 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 			Namespace: "testns",
 		},
 	}
-	s.listers.Ingress.Add(ingTpl)
+	ingresses.Create(ingTpl)
 
 	t.Run("with TLS secret", func(t *testing.T) {
 		ing := ingTpl.DeepCopy()
 		ing.Spec = networking.IngressSpec{
 			TLS: []networking.IngressTLS{{SecretName: "tls"}},
 		}
-		s.listers.Ingress.Update(ing)
+		ingresses.Update(ing)
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/tls")) {
@@ -831,7 +820,7 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "auth",
 		})
-		s.listers.Ingress.Update(ing)
+		ingresses.Update(ing)
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/auth")) {
@@ -844,7 +833,7 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "otherns/auth",
 		})
-		s.listers.Ingress.Update(ing)
+		ingresses.Update(ing)
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("otherns/auth")) {
@@ -857,7 +846,7 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "ns/name/garbage",
 		})
-		s.listers.Ingress.Update(ing)
+		ingresses.Update(ing)
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); l != 0 {
@@ -867,7 +856,13 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 }
 
 func TestListIngresses(t *testing.T) {
-	s := newStore(t)
+	_, clientSet, dynamicClient, environment := newTest(t)
+	defer environment.Stop()
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
+	s := newStore(clientSet, dynamicClient, stopCh, t)
 
 	ingressToIgnore := &ingress.Ingress{
 		Ingress: networking.Ingress{
@@ -887,7 +882,7 @@ func TestListIngresses(t *testing.T) {
 			},
 		},
 	}
-	s.listers.IngressWithAnnotation.Add(ingressToIgnore)
+	s.informers.IngressWithAnnotation.Add(ingressToIgnore)
 
 	ingressWithoutPath := &ingress.Ingress{
 		Ingress: networking.Ingress{
@@ -917,7 +912,7 @@ func TestListIngresses(t *testing.T) {
 			},
 		},
 	}
-	s.listers.IngressWithAnnotation.Add(ingressWithoutPath)
+	s.informers.IngressWithAnnotation.Add(ingressWithoutPath)
 
 	ingressWithNginxClass := &ingress.Ingress{
 		Ingress: networking.Ingress{
@@ -951,7 +946,7 @@ func TestListIngresses(t *testing.T) {
 			},
 		},
 	}
-	s.listers.IngressWithAnnotation.Add(ingressWithNginxClass)
+	s.informers.IngressWithAnnotation.Add(ingressWithNginxClass)
 
 	ingresses := s.ListIngresses(nil)
 
@@ -978,9 +973,8 @@ func TestWriteSSLSessionTicketKey(t *testing.T) {
 		"9SvN1C9AB5DvNde5fMKoJwAwICpqdjiMyxR+cv6NpAWv22rFd3gKt4wMyGxCm7l9Wh6BQPG0+csyBZSHHr2NOWj52Wx8xCegXf4NsSMBUqA=",
 	}
 
+	s := &k8sStore{}
 	for _, test := range tests {
-		s := newStore(t)
-
 		cmap := &v1.ConfigMap{
 			Data: map[string]string{
 				"ssl-session-ticket-key": test,
@@ -1012,7 +1006,16 @@ func TestGetRunningControllerPodsCount(t *testing.T) {
 	os.Setenv("POD_NAMESPACE", "testns")
 	os.Setenv("POD_NAME", "ingress-1")
 
-	s := newStore(t)
+	_, clientSet, dynamicClient, environment := newTest(t)
+	defer environment.Stop()
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
+	s := newStore(clientSet, dynamicClient, stopCh, t)
+
+	pods := clientSet.CoreV1().Pods("testns")
+
 	s.pod = &k8s.PodInfo{
 		Name:      "ingress-1",
 		Namespace: "testns",
@@ -1033,7 +1036,7 @@ func TestGetRunningControllerPodsCount(t *testing.T) {
 			Phase: v1.PodRunning,
 		},
 	}
-	s.listers.Pod.Add(pod)
+	pods.Create(pod)
 
 	pod = &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1047,7 +1050,7 @@ func TestGetRunningControllerPodsCount(t *testing.T) {
 			Phase: v1.PodRunning,
 		},
 	}
-	s.listers.Pod.Add(pod)
+	pods.Create(pod)
 
 	pod = &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1061,7 +1064,7 @@ func TestGetRunningControllerPodsCount(t *testing.T) {
 			Phase: v1.PodFailed,
 		},
 	}
-	s.listers.Pod.Add(pod)
+	pods.Create(pod)
 
 	podsCount := s.GetRunningControllerPodsCount()
 	if podsCount != 2 {
@@ -1115,4 +1118,37 @@ func TestIngressConversion(t *testing.T) {
 	if !bytes.Equal(m1, m2) {
 		t.Fatalf("Expected marshalling of types should be equal")
 	}
+}
+
+func newTest(t *testing.T) (*k8s.PodInfo, kubernetes.Interface, dynamic.Interface, *envtest.Environment) {
+	t.Helper()
+
+	pod := &k8s.PodInfo{
+		Name:      "testpod",
+		Namespace: v1.NamespaceDefault,
+		Labels: map[string]string{
+			"pod-template-hash": "1234",
+		},
+	}
+
+	//TODO: move env definition to docker image?
+	os.Setenv("KUBEBUILDER_ASSETS", "/usr/local/bin")
+
+	te := &envtest.Environment{}
+	cfg, err := te.Start()
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+
+	clientSet, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+
+	dynamicClient, err := dynamic.NewForConfig(cfg)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+
+	return pod, clientSet, dynamicClient, te
 }

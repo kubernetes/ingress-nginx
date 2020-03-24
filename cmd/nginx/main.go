@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	discovery "k8s.io/apimachinery/pkg/version"
 	"k8s.io/apiserver/pkg/server/healthz"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -70,7 +71,7 @@ func main() {
 		klog.Fatal(err)
 	}
 
-	kubeClient, err := createApiserverClient(conf.APIServerHost, conf.RootCAFile, conf.KubeConfigFile)
+	kubeClient, dynamicClient, err := createApiserverClient(conf.APIServerHost, conf.RootCAFile, conf.KubeConfigFile)
 	if err != nil {
 		handleFatalInitError(err)
 	}
@@ -107,6 +108,7 @@ func main() {
 	}
 
 	conf.Client = kubeClient
+	conf.DynamicClient = dynamicClient
 
 	reg := prometheus.NewRegistry()
 
@@ -172,10 +174,10 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 // If neither apiserverHost nor kubeConfig is passed in, we assume the
 // controller runs inside Kubernetes and fallback to the in-cluster config. If
 // the in-cluster config is missing or fails, we fallback to the default config.
-func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kubernetes.Clientset, error) {
+func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kubernetes.Clientset, dynamic.Interface, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags(apiserverHost, kubeConfig)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if apiserverHost != "" && rootCAFile != "" {
@@ -194,7 +196,12 @@ func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kuber
 
 	client, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+
+	dynamicClient, err := dynamic.NewForConfig(cfg)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	var v *discovery.Info
@@ -226,7 +233,7 @@ func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kuber
 
 	// err is returned in case of timeout in the exponential backoff (ErrWaitTimeout)
 	if err != nil {
-		return nil, lastErr
+		return nil, nil, lastErr
 	}
 
 	// this should not happen, warn the user
@@ -237,7 +244,7 @@ func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kuber
 	klog.Infof("Running in Kubernetes cluster version v%v.%v (%v) - git (%v) commit %v - platform %v",
 		v.Major, v.Minor, v.GitVersion, v.GitTreeState, v.GitCommit, v.Platform)
 
-	return client, nil
+	return client, dynamicClient, nil
 }
 
 // Handler for fatal init errors. Prints a verbose error message and exits.

@@ -34,7 +34,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	dynamicfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"k8s.io/ingress-nginx/internal/file"
@@ -1611,6 +1613,13 @@ func newNGINXController(t *testing.T) *NGINXController {
 		t.Fatalf("error creating the configuration map: %v", err)
 	}
 
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
+	scheme := runtime.NewScheme()
+	objs := []runtime.Object{}
+	dynamicClient := dynamicfake.NewSimpleDynamicClient(scheme, objs...)
+
 	storer := store.New(
 		ns,
 		fmt.Sprintf("%v/config", ns),
@@ -1619,9 +1628,12 @@ func newNGINXController(t *testing.T) *NGINXController {
 		"",
 		10*time.Minute,
 		clientSet,
+		dynamicClient,
 		channels.NewRingChannel(10),
 		pod,
-		false)
+		false,
+		stopCh,
+	)
 
 	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{
@@ -1659,7 +1671,15 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		},
 	}
 
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
 	clientSet := fake.NewSimpleClientset()
+
+	scheme := runtime.NewScheme()
+	objs := []runtime.Object{}
+	dynamicClient := dynamicfake.NewSimpleDynamicClient(scheme, objs...)
+
 	configMap := setConfigMap(ns)
 
 	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
@@ -1675,9 +1695,12 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		"",
 		10*time.Minute,
 		clientSet,
+		dynamicClient,
 		channels.NewRingChannel(10),
 		pod,
-		false)
+		false,
+		stopCh,
+	)
 
 	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{

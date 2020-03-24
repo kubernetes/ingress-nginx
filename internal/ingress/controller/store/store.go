@@ -32,10 +32,13 @@ import (
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -97,9 +100,6 @@ type Storer interface {
 
 	// GetDefaultBackend returns the default backend configuration
 	GetDefaultBackend() defaults.Backend
-
-	// Run initiates the synchronization of the controllers
-	Run(stopCh chan struct{})
 }
 
 // EventType type of event associated with an informer
@@ -124,23 +124,14 @@ type Event struct {
 
 // Informer defines the required SharedIndexInformers that interact with the API server.
 type Informer struct {
-	Ingress   cache.SharedIndexInformer
-	Endpoint  cache.SharedIndexInformer
-	Service   cache.SharedIndexInformer
-	Secret    cache.SharedIndexInformer
-	ConfigMap cache.SharedIndexInformer
-	Pod       cache.SharedIndexInformer
-}
+	ConfigMap informers.GenericInformer
+	Endpoint  informers.GenericInformer
+	Ingress   informers.GenericInformer
+	Pod       informers.GenericInformer
+	Secret    informers.GenericInformer
+	Service   informers.GenericInformer
 
-// Lister contains object listers (stores).
-type Lister struct {
-	Ingress               IngressLister
-	Service               ServiceLister
-	Endpoint              EndpointLister
-	Secret                SecretLister
-	ConfigMap             ConfigMapLister
-	IngressWithAnnotation IngressWithAnnotationsLister
-	Pod                   PodLister
+	IngressWithAnnotation *IngressWithAnnotationsLister
 }
 
 // NotExistsError is returned when an object does not exist in a local store.
@@ -149,41 +140,6 @@ type NotExistsError string
 // Error implements the error interface.
 func (e NotExistsError) Error() string {
 	return fmt.Sprintf("no object matching key %q in local store", string(e))
-}
-
-// Run initiates the synchronization of the informers against the API server.
-func (i *Informer) Run(stopCh chan struct{}) {
-	go i.Secret.Run(stopCh)
-	go i.Endpoint.Run(stopCh)
-	go i.Service.Run(stopCh)
-	go i.ConfigMap.Run(stopCh)
-	go i.Pod.Run(stopCh)
-
-	// wait for all involved caches to be synced before processing items
-	// from the queue
-	if !cache.WaitForCacheSync(stopCh,
-		i.Endpoint.HasSynced,
-		i.Service.HasSynced,
-		i.Secret.HasSynced,
-		i.ConfigMap.HasSynced,
-		i.Pod.HasSynced,
-	) {
-		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
-	}
-
-	// in big clusters, deltas can keep arriving even after HasSynced
-	// functions have returned 'true'
-	time.Sleep(1 * time.Second)
-
-	// we can start syncing ingress objects only after other caches are
-	// ready, because ingress rules require content from other listers, and
-	// 'add' events get triggered in the handlers during caches population.
-	go i.Ingress.Run(stopCh)
-	if !cache.WaitForCacheSync(stopCh,
-		i.Ingress.HasSynced,
-	) {
-		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
-	}
 }
 
 // k8sStore internal Storer implementation using informers and thread safe stores
@@ -195,9 +151,6 @@ type k8sStore struct {
 
 	// informer contains the cache Informers
 	informers *Informer
-
-	// listers contains the cache.Store interfaces used in the ingress controller
-	listers *Lister
 
 	// sslStore local store of SSL certificates (certificates used in ingress)
 	// this is required because the certificates must be present in the
@@ -229,13 +182,18 @@ func New(
 	namespace, configmap, tcp, udp, defaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
+	dynamicClient dynamic.Interface,
 	updateCh *channels.RingChannel,
 	pod *k8s.PodInfo,
-	disableCatchAll bool) Storer {
+	disableCatchAll bool,
+	stopCh chan struct{}) Storer {
 
 	store := &k8sStore{
-		informers:             &Informer{},
-		listers:               &Lister{},
+		informers: &Informer{
+			IngressWithAnnotation: &IngressWithAnnotationsLister{
+				cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc),
+			},
+		},
 		sslStore:              NewSSLCertTracker(),
 		updateCh:              updateCh,
 		backendConfig:         ngx_config.NewDefault(),
@@ -258,50 +216,83 @@ func New(
 	// k8sStore fulfills resolver.Resolver interface
 	store.annotations = annotations.NewAnnotationExtractor(store)
 
-	store.listers.IngressWithAnnotation.Store = cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)
-
 	// create informers factory, enable and assign required informers
-	infFactory := informers.NewSharedInformerFactoryWithOptions(client, resyncPeriod,
-		informers.WithNamespace(namespace),
-		informers.WithTweakListOptions(func(*metav1.ListOptions) {}))
+	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynamicClient,
+		resyncPeriod,
+		namespace,
+		dynamicinformer.TweakListOptionsFunc(func(*metav1.ListOptions) {}))
 
 	if k8s.IsNetworkingIngressAvailable {
-		store.informers.Ingress = infFactory.Networking().V1beta1().Ingresses().Informer()
+		store.informers.Ingress = factory.ForResource(
+			schema.GroupVersionResource{
+				Group:    "networking.k8s.io",
+				Version:  "v1beta1",
+				Resource: "ingresses",
+			},
+		)
 	} else {
-		store.informers.Ingress = infFactory.Extensions().V1beta1().Ingresses().Informer()
+		store.informers.Ingress = factory.ForResource(
+			schema.GroupVersionResource{
+				Group:    "extensions",
+				Version:  "v1beta1",
+				Resource: "ingresses",
+			},
+		)
 	}
 
-	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
-
-	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
-	store.listers.Endpoint.Store = store.informers.Endpoint.GetStore()
-
-	store.informers.Secret = infFactory.Core().V1().Secrets().Informer()
-	store.listers.Secret.Store = store.informers.Secret.GetStore()
-
-	store.informers.ConfigMap = infFactory.Core().V1().ConfigMaps().Informer()
-	store.listers.ConfigMap.Store = store.informers.ConfigMap.GetStore()
-
-	store.informers.Service = infFactory.Core().V1().Services().Informer()
-	store.listers.Service.Store = store.informers.Service.GetStore()
-
-	labelSelector := labels.SelectorFromSet(store.pod.Labels)
-	store.informers.Pod = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (k8sruntime.Object, error) {
-				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(store.pod.Namespace).List(options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(store.pod.Namespace).Watch(options)
-			},
+	store.informers.Endpoint = factory.ForResource(
+		schema.GroupVersionResource{
+			Group:    "",
+			Version:  "v1",
+			Resource: "endpoints",
 		},
-		&corev1.Pod{},
-		resyncPeriod,
-		cache.Indexers{},
 	)
-	store.listers.Pod.Store = store.informers.Pod.GetStore()
+
+	store.informers.Secret = factory.ForResource(
+		schema.GroupVersionResource{
+			Group:    "",
+			Version:  "v1",
+			Resource: "secrets",
+		},
+	)
+
+	store.informers.ConfigMap = factory.ForResource(
+		schema.GroupVersionResource{
+			Group:    "",
+			Version:  "v1",
+			Resource: "configmaps",
+		},
+	)
+
+	store.informers.Service = factory.ForResource(
+		schema.GroupVersionResource{
+			Group:    "",
+			Version:  "v1",
+			Resource: "services",
+		},
+	)
+
+	factory.WaitForCacheSync(stopCh)
+	factory.Start(stopCh)
+
+	podFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynamicClient,
+		resyncPeriod,
+		store.pod.Namespace,
+		dynamicinformer.TweakListOptionsFunc(func(opts *metav1.ListOptions) {
+			opts.LabelSelector = labels.SelectorFromSet(store.pod.Labels).String()
+		}),
+	)
+
+	store.informers.Pod = factory.ForResource(
+		schema.GroupVersionResource{
+			Group:    "",
+			Version:  "v1",
+			Resource: "pods",
+		},
+	)
+
+	podFactory.WaitForCacheSync(stopCh)
+	podFactory.Start(stopCh)
 
 	ingDeleteHandler := func(obj interface{}) {
 		ing, ok := toIngress(obj)
@@ -329,7 +320,7 @@ func New(
 		}
 		recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 
-		store.listers.IngressWithAnnotation.Delete(ing)
+		store.informers.IngressWithAnnotation.Delete(ing)
 
 		key := k8s.MetaNamespaceKey(ing)
 		store.secretIngressMap.Delete(key)
@@ -542,7 +533,7 @@ func New(
 			}
 		}
 
-		ings := store.listers.IngressWithAnnotation.List()
+		ings := store.informers.IngressWithAnnotation.List()
 		for _, ingKey := range ings {
 			key := k8s.MetaNamespaceKey(ingKey)
 			ing, err := store.getIngress(key)
@@ -571,7 +562,11 @@ func New(
 
 	cmEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			cfgMap := obj.(*corev1.ConfigMap)
+			cfgMap := &corev1.ConfigMap{}
+			if conversionErr := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).Object, cfgMap); conversionErr != nil {
+				return
+			}
+
 			key := k8s.MetaNamespaceKey(cfgMap)
 			handleCfgMapEvent(key, cfgMap, "CREATE")
 		},
@@ -614,12 +609,12 @@ func New(
 		},
 	}
 
-	store.informers.Ingress.AddEventHandler(ingEventHandler)
-	store.informers.Endpoint.AddEventHandler(epEventHandler)
-	store.informers.Secret.AddEventHandler(secrEventHandler)
-	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
-	store.informers.Service.AddEventHandler(cache.ResourceEventHandlerFuncs{})
-	store.informers.Pod.AddEventHandler(podEventHandler)
+	store.informers.Ingress.Informer().AddEventHandler(ingEventHandler)
+	store.informers.Endpoint.Informer().AddEventHandler(epEventHandler)
+	store.informers.Secret.Informer().AddEventHandler(secrEventHandler)
+	store.informers.ConfigMap.Informer().AddEventHandler(cmEventHandler)
+	store.informers.Service.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{})
+	store.informers.Pod.Informer().AddEventHandler(podEventHandler)
 
 	// do not wait for informers to read the configmap configuration
 	ns, name, _ := k8s.ParseNameNS(configmap)
@@ -629,6 +624,7 @@ func New(
 	}
 
 	store.setConfig(cm)
+
 	return store
 }
 
@@ -661,7 +657,7 @@ func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
 		}
 	}
 
-	err := s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
+	err := s.informers.IngressWithAnnotation.Update(&ingress.Ingress{
 		Ingress:           *copyIng,
 		ParsedAnnotations: s.annotations.Extract(ing),
 	})
@@ -744,7 +740,17 @@ func (s *k8sStore) syncSecrets(ing *networkingv1beta1.Ingress) {
 
 // GetSecret returns the Secret matching key.
 func (s *k8sStore) GetSecret(key string) (*corev1.Secret, error) {
-	return s.listers.Secret.ByKey(key)
+	obj, err := s.informers.Secret.Lister().Get(key)
+	if err != nil {
+		return nil, err
+	}
+
+	sec, ok := obj.(*corev1.Secret)
+	if !ok {
+		return nil, fmt.Errorf("expected a Secret but returned %T", obj)
+	}
+
+	return sec, nil
 }
 
 // ListLocalSSLCerts returns the list of local SSLCerts
@@ -761,12 +767,22 @@ func (s *k8sStore) ListLocalSSLCerts() []*ingress.SSLCert {
 
 // GetService returns the Service matching key.
 func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
-	return s.listers.Service.ByKey(key)
+	obj, err := s.informers.Service.Lister().Get(key)
+	if err != nil {
+		return nil, err
+	}
+
+	svc, ok := obj.(*corev1.Service)
+	if !ok {
+		return nil, fmt.Errorf("expected a Service but returned %T", obj)
+	}
+
+	return svc, nil
 }
 
 // getIngress returns the Ingress matching key.
 func (s *k8sStore) getIngress(key string) (*networkingv1beta1.Ingress, error) {
-	ing, err := s.listers.IngressWithAnnotation.ByKey(key)
+	ing, err := s.informers.IngressWithAnnotation.ByKey(key)
 	if err != nil {
 		return nil, err
 	}
@@ -778,7 +794,7 @@ func (s *k8sStore) getIngress(key string) (*networkingv1beta1.Ingress, error) {
 func (s *k8sStore) ListIngresses(filter IngressFilterFunc) []*ingress.Ingress {
 	// filter ingress rules
 	ingresses := make([]*ingress.Ingress, 0)
-	for _, item := range s.listers.IngressWithAnnotation.List() {
+	for _, item := range s.informers.IngressWithAnnotation.List() {
 		ing := item.(*ingress.Ingress)
 
 		if filter != nil && filter(ing) {
@@ -811,12 +827,32 @@ func (s *k8sStore) GetLocalSSLCert(key string) (*ingress.SSLCert, error) {
 
 // GetConfigMap returns the ConfigMap matching key.
 func (s *k8sStore) GetConfigMap(key string) (*corev1.ConfigMap, error) {
-	return s.listers.ConfigMap.ByKey(key)
+	obj, err := s.informers.ConfigMap.Lister().Get(key)
+	if err != nil {
+		return nil, err
+	}
+
+	cmap, ok := obj.(*corev1.ConfigMap)
+	if !ok {
+		return nil, fmt.Errorf("expected a ConfigMap but returned %T", obj)
+	}
+
+	return cmap, nil
 }
 
 // GetServiceEndpoints returns the Endpoints of a Service matching key.
 func (s *k8sStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
-	return s.listers.Endpoint.ByKey(key)
+	obj, err := s.informers.Endpoint.Lister().Get(key)
+	if err != nil {
+		return nil, err
+	}
+
+	eps, ok := obj.(*corev1.Endpoints)
+	if !ok {
+		return nil, fmt.Errorf("expected Endpoints but returned %T", obj)
+	}
+
+	return eps, nil
 }
 
 // GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
@@ -897,20 +933,18 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }
 
-// Run initiates the synchronization of the informers and the initial
-// synchronization of the secrets.
-func (s *k8sStore) Run(stopCh chan struct{}) {
-	// start informers
-	s.informers.Run(stopCh)
-}
-
 // GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods
 func (s k8sStore) GetRunningControllerPodsCount() int {
 	count := 0
 
-	for _, i := range s.listers.Pod.List() {
-		pod := i.(*corev1.Pod)
+	selector := labels.Set(map[string]string{}).AsSelector()
+	pods, err := s.informers.Pod.Lister().List(selector)
+	if err != nil {
+		return 0
+	}
 
+	for _, i := range pods {
+		pod := i.(*corev1.Pod)
 		if pod.Status.Phase != corev1.PodRunning {
 			continue
 		}
