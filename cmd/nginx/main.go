@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -81,7 +82,7 @@ func main() {
 			klog.Fatal(err)
 		}
 
-		_, err = kubeClient.CoreV1().Services(defSvcNs).Get(defSvcName, metav1.GetOptions{})
+		_, err = kubeClient.CoreV1().Services(defSvcNs).Get(context.TODO(), defSvcName, metav1.GetOptions{})
 		if err != nil {
 			if errors.IsUnauthorized(err) || errors.IsForbidden(err) {
 				klog.Fatal("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
@@ -92,7 +93,7 @@ func main() {
 	}
 
 	if conf.Namespace != "" {
-		_, err = kubeClient.CoreV1().Namespaces().Get(conf.Namespace, metav1.GetOptions{})
+		_, err = kubeClient.CoreV1().Namespaces().Get(context.TODO(), conf.Namespace, metav1.GetOptions{})
 		if err != nil {
 			klog.Fatalf("No namespace with name %v found: %v", conf.Namespace, err)
 		}

@@ -17,6 +17,7 @@ limitations under the License.
 package ssl
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -73,7 +74,7 @@ var _ = framework.IngressNginxDescribe("[SSL] secret update", func() {
 
 		dummySecret.Data["some-key"] = []byte("some value")
 
-		f.KubeClientSet.CoreV1().Secrets(f.Namespace).Update(dummySecret)
+		f.KubeClientSet.CoreV1().Secrets(f.Namespace).Update(context.TODO(), dummySecret, metav1.UpdateOptions{})
 
 		assert.NotContains(ginkgo.GinkgoT(), log, fmt.Sprintf("starting syncing of secret %v/dummy", f.Namespace))
 		assert.NotContains(ginkgo.GinkgoT(), log, fmt.Sprintf("error obtaining PEM from secret %v/dummy", f.Namespace))

@@ -17,6 +17,7 @@ limitations under the License.
 package settings
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"strings"
@@ -24,6 +25,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -50,7 +52,7 @@ var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", f
 				args := deployment.Spec.Template.Spec.Containers[0].Args
 				args = append(args, "--default-ssl-certificate=$(POD_NAMESPACE)/"+secretName)
 				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 
 				return err
 			})

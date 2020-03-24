@@ -18,6 +18,7 @@ package framework
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -74,12 +75,12 @@ func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretN
 	}
 
 	var apierr error
-	curSecret, err := client.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	curSecret, err := client.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err == nil && curSecret != nil {
 		curSecret.Data = newSecret.Data
-		_, apierr = client.CoreV1().Secrets(namespace).Update(curSecret)
+		_, apierr = client.CoreV1().Secrets(namespace).Update(context.TODO(), curSecret, metav1.UpdateOptions{})
 	} else {
-		_, apierr = client.CoreV1().Secrets(namespace).Create(newSecret)
+		_, apierr = client.CoreV1().Secrets(namespace).Create(context.TODO(), newSecret, metav1.CreateOptions{})
 	}
 	if apierr != nil {
 		return nil, apierr
@@ -118,12 +119,12 @@ func CreateIngressMASecret(client kubernetes.Interface, host string, secretName,
 	}
 
 	var apierr error
-	curSecret, err := client.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	curSecret, err := client.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err == nil && curSecret != nil {
 		curSecret.Data = newSecret.Data
-		_, apierr = client.CoreV1().Secrets(namespace).Update(curSecret)
+		_, apierr = client.CoreV1().Secrets(namespace).Update(context.TODO(), curSecret, metav1.UpdateOptions{})
 	} else {
-		_, apierr = client.CoreV1().Secrets(namespace).Create(newSecret)
+		_, apierr = client.CoreV1().Secrets(namespace).Create(context.TODO(), newSecret, metav1.CreateOptions{})
 	}
 	if apierr != nil {
 		return nil, apierr
