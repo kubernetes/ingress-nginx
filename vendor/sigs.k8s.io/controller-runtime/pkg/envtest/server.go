@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/testing_frameworks/integration"
+	"sigs.k8s.io/controller-runtime/pkg/internal/testing/integration"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/internal/log"
 )
@@ -72,20 +72,6 @@ func defaultAssetPath(binary string) string {
 
 }
 
-// DefaultKubeAPIServerFlags are default flags necessary to bring up apiserver.
-var DefaultKubeAPIServerFlags = []string{
-	// Allow tests to run offline, by preventing API server from attempting to
-	// use default route to determine its --advertise-address
-	"--advertise-address=127.0.0.1",
-	"--etcd-servers={{ if .EtcdURL }}{{ .EtcdURL.String }}{{ end }}",
-	"--cert-dir={{ .CertDir }}",
-	"--insecure-port={{ if .URL }}{{ .URL.Port }}{{ end }}",
-	"--insecure-bind-address={{ if .URL }}{{ .URL.Hostname }}{{ end }}",
-	"--secure-port={{ if .SecurePort }}{{ .SecurePort }}{{ end }}",
-	"--admission-control=AlwaysAdmit",
-	"--service-cluster-ip-range=10.0.0.0/24",
-}
-
 // Environment creates a Kubernetes test environment that will start / stop the Kubernetes control plane and
 // install extension APIs
 type Environment struct {
@@ -100,10 +86,18 @@ type Environment struct {
 	// CRDInstallOptions are the options for installing CRDs.
 	CRDInstallOptions CRDInstallOptions
 
+	// CRDInstallOptions are the options for installing webhooks.
+	WebhookInstallOptions WebhookInstallOptions
+
+	// ErrorIfCRDPathMissing provides an interface for the underlying
+	// CRDInstallOptions.ErrorIfPathMissing. It prevents silent failures
+	// for missing CRD paths.
+	ErrorIfCRDPathMissing bool
+
 	// CRDs is a list of CRDs to install.
 	// If both this field and CRDs field in CRDInstallOptions are specified, the
 	// values are merged.
-	CRDs []*apiextensionsv1beta1.CustomResourceDefinition
+	CRDs []runtime.Object
 
 	// CRDDirectoryPaths is a list of paths containing CRD yaml or json configs.
 	// If both this field and Paths field in CRDInstallOptions are specified, the
@@ -135,19 +129,30 @@ type Environment struct {
 }
 
 // Stop stops a running server.
-// If USE_EXISTING_CLUSTER is set to true, this method is a no-op.
+// Previously installed CRDs, as listed in CRDInstallOptions.CRDs, will be uninstalled
+// if CRDInstallOptions.CleanUpAfterUse are set to true.
 func (te *Environment) Stop() error {
+	if te.CRDInstallOptions.CleanUpAfterUse {
+		if err := UninstallCRDs(te.Config, te.CRDInstallOptions); err != nil {
+			return err
+		}
+	}
 	if te.useExistingCluster() {
 		return nil
+	}
+	err := te.WebhookInstallOptions.Cleanup()
+	if err != nil {
+		return err
 	}
 	return te.ControlPlane.Stop()
 }
 
 // getAPIServerFlags returns flags to be used with the Kubernetes API server.
+// it returns empty slice for api server defined defaults to be applied if no args specified
 func (te Environment) getAPIServerFlags() []string {
 	// Set default API server flags if not set.
 	if len(te.KubeAPIServerFlags) == 0 {
-		return DefaultKubeAPIServerFlags
+		return []string{}
 	}
 	// Check KubeAPIServerFlags contains service-cluster-ip-range, if not, set default value to service-cluster-ip-range
 	containServiceClusterIPRange := false
@@ -216,7 +221,7 @@ func (te *Environment) Start() (*rest.Config, error) {
 		}
 
 		if err := te.defaultTimeouts(); err != nil {
-			return nil, fmt.Errorf("failed to default controlplane timeouts: %v", err)
+			return nil, fmt.Errorf("failed to default controlplane timeouts: %w", err)
 		}
 		te.ControlPlane.Etcd.StartTimeout = te.ControlPlaneStartTimeout
 		te.ControlPlane.Etcd.StopTimeout = te.ControlPlaneStopTimeout
@@ -240,7 +245,16 @@ func (te *Environment) Start() (*rest.Config, error) {
 	log.V(1).Info("installing CRDs")
 	te.CRDInstallOptions.CRDs = mergeCRDs(te.CRDInstallOptions.CRDs, te.CRDs)
 	te.CRDInstallOptions.Paths = mergePaths(te.CRDInstallOptions.Paths, te.CRDDirectoryPaths)
-	_, err := InstallCRDs(te.Config, te.CRDInstallOptions)
+	te.CRDInstallOptions.ErrorIfPathMissing = te.ErrorIfCRDPathMissing
+	crds, err := InstallCRDs(te.Config, te.CRDInstallOptions)
+	if err != nil {
+		return te.Config, err
+	}
+	te.CRDs = crds
+
+	log.V(1).Info("installing webhooks")
+	err = te.WebhookInstallOptions.Install(te.Config)
+
 	return te.Config, err
 }
 
@@ -256,7 +270,7 @@ func (te *Environment) startControlPlane() error {
 		log.Error(err, "unable to start the controlplane", "tries", numTries)
 	}
 	if numTries == maxRetries {
-		return fmt.Errorf("failed to start the controlplane. retried %d times: %v", numTries, err)
+		return fmt.Errorf("failed to start the controlplane. retried %d times: %w", numTries, err)
 	}
 	return nil
 }
@@ -293,3 +307,7 @@ func (te *Environment) useExistingCluster() bool {
 	}
 	return *te.UseExistingCluster
 }
+
+// DefaultKubeAPIServerFlags exposes the default args for the APIServer so that
+// you can use those to append your own additional arguments.
+var DefaultKubeAPIServerFlags = integration.APIServerDefaultArgs

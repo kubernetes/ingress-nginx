@@ -1,6 +1,23 @@
 package envtest
 
-import apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+import (
+	"reflect"
+
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+var (
+	crdScheme = runtime.NewScheme()
+)
+
+// init is required to correctly initialize the crdScheme package variable.
+func init() {
+	_ = apiextensionsv1.AddToScheme(crdScheme)
+	_ = apiextensionsv1beta1.AddToScheme(crdScheme)
+}
 
 // mergePaths merges two string slices containing paths.
 // This function makes no guarantees about order of the merged slice.
@@ -23,19 +40,52 @@ func mergePaths(s1, s2 []string) []string {
 
 // mergeCRDs merges two CRD slices using their names.
 // This function makes no guarantees about order of the merged slice.
-func mergeCRDs(s1, s2 []*apiextensionsv1beta1.CustomResourceDefinition) []*apiextensionsv1beta1.CustomResourceDefinition {
-	m := make(map[string]*apiextensionsv1beta1.CustomResourceDefinition)
-	for _, crd := range s1 {
-		m[crd.Name] = crd
+func mergeCRDs(s1, s2 []runtime.Object) []runtime.Object {
+	m := make(map[string]*unstructured.Unstructured)
+	for _, obj := range runtimeCRDListToUnstructured(s1) {
+		m[obj.GetName()] = obj
 	}
-	for _, crd := range s2 {
-		m[crd.Name] = crd
+	for _, obj := range runtimeCRDListToUnstructured(s2) {
+		m[obj.GetName()] = obj
 	}
-	merged := make([]*apiextensionsv1beta1.CustomResourceDefinition, len(m))
+	merged := make([]runtime.Object, len(m))
 	i := 0
-	for _, crd := range m {
-		merged[i] = crd
+	for _, obj := range m {
+		merged[i] = obj
 		i++
 	}
 	return merged
+}
+
+// existsUnstructured verify if a any item is common between two lists.
+func existsUnstructured(s1, s2 []*unstructured.Unstructured) bool {
+	for _, s1obj := range s1 {
+		for _, s2obj := range s2 {
+			if reflect.DeepEqual(s1obj, s2obj) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func runtimeCRDListToUnstructured(l []runtime.Object) []*unstructured.Unstructured {
+	res := []*unstructured.Unstructured{}
+	for _, obj := range l {
+		u := &unstructured.Unstructured{}
+		if err := crdScheme.Convert(obj, u, nil); err != nil {
+			log.Error(err, "error converting to unstructured object", "object-kind", obj.GetObjectKind())
+			continue
+		}
+		res = append(res, u)
+	}
+	return res
+}
+
+func unstructuredCRDListToRuntime(l []*unstructured.Unstructured) []runtime.Object {
+	res := []runtime.Object{}
+	for _, obj := range l {
+		res = append(res, obj.DeepCopy())
+	}
+	return res
 }
