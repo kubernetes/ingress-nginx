@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -1606,7 +1607,7 @@ func newNGINXController(t *testing.T) *NGINXController {
 		},
 	}
 
-	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
+	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("error creating the configuration map: %v", err)
 	}
@@ -1662,7 +1663,7 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 	clientSet := fake.NewSimpleClientset()
 	configMap := setConfigMap(ns)
 
-	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
+	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("error creating the configuration map: %v", err)
 	}

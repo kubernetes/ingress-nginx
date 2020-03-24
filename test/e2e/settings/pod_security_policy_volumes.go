@@ -17,6 +17,7 @@ limitations under the License.
 package settings
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -37,12 +38,12 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with vo
 
 	ginkgo.It("should be running with a Pod Security Policy", func() {
 		psp := createPodSecurityPolicy()
-		_, err := f.KubeClientSet.PolicyV1beta1().PodSecurityPolicies().Create(psp)
+		_, err := f.KubeClientSet.PolicyV1beta1().PodSecurityPolicies().Create(context.TODO(), psp, metav1.CreateOptions{})
 		if !k8sErrors.IsAlreadyExists(err) {
 			assert.Nil(ginkgo.GinkgoT(), err, "creating Pod Security Policy")
 		}
 
-		role, err := f.KubeClientSet.RbacV1().Roles(f.Namespace).Get("nginx-ingress", metav1.GetOptions{})
+		role, err := f.KubeClientSet.RbacV1().Roles(f.Namespace).Get(context.TODO(), "nginx-ingress", metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "getting ingress controller cluster role")
 		assert.NotNil(ginkgo.GinkgoT(), role)
 
@@ -53,7 +54,7 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with vo
 			Verbs:         []string{"use"},
 		})
 
-		_, err = f.KubeClientSet.RbacV1().Roles(f.Namespace).Update(role)
+		_, err = f.KubeClientSet.RbacV1().Roles(f.Namespace).Update(context.TODO(), role, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller cluster role to use a pod security policy")
 
 		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
@@ -89,7 +90,7 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with vo
 					},
 				}
 
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 
 				return err
 			})

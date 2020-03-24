@@ -17,6 +17,7 @@ limitations under the License.
 package store
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -290,11 +291,11 @@ func New(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (k8sruntime.Object, error) {
 				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(store.pod.Namespace).List(options)
+				return client.CoreV1().Pods(store.pod.Namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(store.pod.Namespace).Watch(options)
+				return client.CoreV1().Pods(store.pod.Namespace).Watch(context.TODO(), options)
 			},
 		},
 		&corev1.Pod{},
@@ -623,7 +624,7 @@ func New(
 
 	// do not wait for informers to read the configmap configuration
 	ns, name, _ := k8s.ParseNameNS(configmap)
-	cm, err := client.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
+	cm, err := client.CoreV1().ConfigMaps(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		klog.Warningf("Unexpected error reading configuration configmap: %v", err)
 	}

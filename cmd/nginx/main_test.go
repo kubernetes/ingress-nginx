@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -66,7 +67,7 @@ func TestHandleSigterm(t *testing.T) {
 		},
 	}
 
-	_, err := clientSet.CoreV1().Pods(namespace).Create(&pod)
+	_, err := clientSet.CoreV1().Pods(namespace).Create(context.TODO(), &pod, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("error creating pod %v: %v", pod, err)
 	}
@@ -118,7 +119,7 @@ func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) st
 		},
 	}
 
-	cm, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
+	cm, err := clientSet.CoreV1().ConfigMaps(ns).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		t.Errorf("error creating the configuration map: %v", err)
 	}
