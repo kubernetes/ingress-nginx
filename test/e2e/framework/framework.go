@@ -213,6 +213,12 @@ func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
 
+// WaitForNginxCustomConfiguration waits until the nginx configuration given part (from, to) contains a particular configuration
+func (f *Framework) WaitForNginxCustomConfiguration(from string, to string, matcher func(cfg string) bool) {
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxCustomConditions(from, to, matcher))
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
+}
+
 func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
 	pod, err := getIngressNGINXPod(namespace, client)
 	if err != nil {
@@ -244,6 +250,33 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		} else {
 			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
 		}
+
+		o, err := f.ExecCommand(pod, cmd)
+		if err != nil {
+			return false, nil
+		}
+
+		if klog.V(10) && len(o) > 0 {
+			klog.Infof("nginx.conf:\n%v", o)
+		}
+
+		// passes the nginx config to the passed function
+		if matcher(strings.Join(strings.Fields(o), " ")) {
+			return true, nil
+		}
+
+		return false, nil
+	}
+}
+
+func (f *Framework) matchNginxCustomConditions(from string, to string, matcher func(cfg string) bool) wait.ConditionFunc {
+	return func() (bool, error) {
+		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
+		if err != nil {
+			return false, nil
+		}
+
+		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf| awk '/%v/,/%v/'", from, to)
 
 		o, err := f.ExecCommand(pod, cmd)
 		if err != nil {
