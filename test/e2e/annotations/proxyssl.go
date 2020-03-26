@@ -145,10 +145,73 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
+
+	ginkgo.It("proxy-ssl-location-only flag should change the nginx config server part", func() {
+		host := "proxyssl.com"
+
+		f.NewEchoDeploymentWithNameAndReplicas("echodeployment", 1)
+
+		secretName := "secretone"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + secretName
+		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "HTTPS"
+		annotations["nginx.ingress.kubernetes.io/proxy-ssl-verify"] = "on"
+		tlsConfig, err := framework.CreateIngressMASecret(f.KubeClientSet, host, secretName, f.Namespace)
+
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		ing := framework.NewSingleIngressWithTLS(host, "/bar", host, []string{tlsConfig.ServerName}, f.Namespace, "echodeployment", 80, annotations)
+		f.EnsureIngress(ing)
+
+		wlKey := "proxy-ssl-location-only"
+		wlValue := "true"
+		f.UpdateNginxConfigMapData(wlKey, wlValue)
+
+		assertProxySSLName(f, host, secretName, "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 1)
+
+		f.WaitForNginxCustomConfiguration("## start server proxyssl.com", "location ", func(server string) bool {
+			return (!strings.Contains(server, "proxy_ssl_trusted_certificate") &&
+				!strings.Contains(server, "proxy_ssl_ciphers") &&
+				!strings.Contains(server, "proxy_ssl_protocols") &&
+				!strings.Contains(server, "proxy_ssl_verify") &&
+				!strings.Contains(server, "proxy_ssl_verify_depth") &&
+				!strings.Contains(server, "proxy_ssl_certificate") &&
+				!strings.Contains(server, "proxy_ssl_certificate_key"))
+		})
+
+		wlKey = "proxy-ssl-location-only"
+		wlValue = "false"
+		f.UpdateNginxConfigMapData(wlKey, wlValue)
+
+		f.WaitForNginxCustomConfiguration("## start server proxyssl.com", "location ", func(server string) bool {
+			return (strings.Contains(server, "proxy_ssl_trusted_certificate") &&
+				strings.Contains(server, "proxy_ssl_ciphers") &&
+				strings.Contains(server, "proxy_ssl_protocols") &&
+				strings.Contains(server, "proxy_ssl_verify") &&
+				strings.Contains(server, "proxy_ssl_verify_depth") &&
+				strings.Contains(server, "proxy_ssl_certificate") &&
+				strings.Contains(server, "proxy_ssl_certificate_key"))
+		})
+	})
+
 })
 
 func assertProxySSL(f *framework.Framework, host, ciphers, protocols, verify string, depth int) {
 	certFile := fmt.Sprintf("/etc/ingress-controller/ssl/%s-%s.pem", f.Namespace, host)
+	f.WaitForNginxServer(host,
+		func(server string) bool {
+			return strings.Contains(server, fmt.Sprintf("proxy_ssl_certificate %s;", certFile)) &&
+				strings.Contains(server, fmt.Sprintf("proxy_ssl_certificate_key %s;", certFile)) &&
+				strings.Contains(server, fmt.Sprintf("proxy_ssl_trusted_certificate %s;", certFile)) &&
+				strings.Contains(server, fmt.Sprintf("proxy_ssl_ciphers %s;", ciphers)) &&
+				strings.Contains(server, fmt.Sprintf("proxy_ssl_protocols %s;", protocols)) &&
+				strings.Contains(server, fmt.Sprintf("proxy_ssl_verify %s;", verify)) &&
+				strings.Contains(server, fmt.Sprintf("proxy_ssl_verify_depth %d;", depth))
+		})
+}
+
+func assertProxySSLName(f *framework.Framework, host, sslName, ciphers, protocols, verify string, depth int) {
+	certFile := fmt.Sprintf("/etc/ingress-controller/ssl/%s-%s.pem", f.Namespace, sslName)
 	f.WaitForNginxServer(host,
 		func(server string) bool {
 			return strings.Contains(server, fmt.Sprintf("proxy_ssl_certificate %s;", certFile)) &&
