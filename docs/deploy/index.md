@@ -31,15 +31,6 @@
       --user $(gcloud config get-value account)
     ```
 
-The following **Mandatory Command** is required for all deployments except [minikube](#minikube).
-
-```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
-```
-
-!!! tip
-    If you are using a Kubernetes version previous to 1.14, you need to change `kubernetes.io/os` to `beta.kubernetes.io/os` at line 217 of [mandatory.yaml](https://github.com/kubernetes/ingress-nginx/blob/master/deploy/static/mandatory.yaml#L217), see [Labels details](https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/).
-
 ### Provider Specific Steps
 
 There are cloud provider specific yaml files.
@@ -53,7 +44,7 @@ Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://doc
 Create a service
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
 ```
 
 #### minikube
@@ -83,66 +74,51 @@ nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
 
 #### AWS
 
-In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
-Since Kubernetes v1.9.0 it is possible to use a classic load balancer (ELB) or network load balancer (NLB)
-Please check the [elastic load balancing AWS details page](https://aws.amazon.com/elasticloadbalancing/details/)
-
-##### Elastic Load Balancer - ELB
-
-This setup requires to choose in which layer (L4 or L7) we want to configure the ELB:
-
-- [Layer 4](https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer): use TCP as the listener protocol for ports 80 and 443.
-- [Layer 7](https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer): use HTTP as the listener protocol for port 80 and terminate TLS in the ELB
-
-For L4:
-
-Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the [ELB Idle Timeouts section](#elb-idle-timeouts) for additional information. If a change is required, users will need to update the value of `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` in `provider/aws/service-l4.yaml`
-
-Then execute:
-
-```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-l4.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/patch-configmap-l4.yaml
-```
-
-For L7:
-
-Change line of the file `provider/aws/service-l7.yaml` replacing the dummy id with a valid one `"arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"`
-
-Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the [ELB Idle Timeouts section](#elb-idle-timeouts) for additional information. If a change is required, users will need to update the value of `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` in `provider/aws/service-l7.yaml`
-
-Then execute:
-
-```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-l7.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/patch-configmap-l7.yaml
-```
-
-This example creates an ELB with just two listeners, one in port 80 and another in port 443
-
-![Listeners](../images/elb-l7-listener.png)
-
-##### ELB Idle Timeouts
-In some scenarios users will need to modify the value of the ELB idle timeout. Users need to ensure the idle timeout is less than the [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) that is configured for NGINX. By default NGINX `keepalive_timeout` is set to `75s`.
-
-The default ELB idle timeout will work for most scenarios, unless the NGINX [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) has been modified, in which case `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` will need to be modified to ensure it is less than the `keepalive_timeout` the user has configured.
-
-_Please Note: An idle timeout of `3600s` is recommended when using WebSockets._
-
-More information with regards to idle timeouts for your Load Balancer can be found in the [official AWS documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/config-idle-timeout.html).
+In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
 
 ##### Network Load Balancer (NLB)
 
-This type of load balancer is supported since v1.10.0 as an ALPHA feature.
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/deploy.yaml
+```
+
+##### TLS termination in the Load Balancer (ELB)
+
+In some scenarios is not possible to terminate TLS in the ingress controller but in the Load Balancer.
+For this purpose we provide a template:
+
+1. Download [deploy-tls-termination.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/204739fb6650c48fd41dc9505f8fd9ef6bc768e1/deploy/static/provider/aws/deploy-tls-termination.yaml)
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-nlb.yaml
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/204739fb6650c48fd41dc9505f8fd9ef6bc768e1/deploy/static/provider/aws/deploy-tls-termination.yaml
 ```
+
+2. Change:
+
+- Set the VPC CIDR: `proxy-real-ip-cidr: XXX.XXX.XXX/XX`
+- Change the AWS Certificate Manager (ACM) ID `service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX`
+
+3. Deploy the manifests:
+
+```console
+kubectl apply -f deploy-tls-termination.yaml
+```
+
+##### NLB Idle Timeouts
+
+In some scenarios users will need to modify the value of the NLB idle timeout. Users need to ensure the idle timeout is less than the [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) that is configured for NGINX.
+By default NGINX `keepalive_timeout` is set to `75s`.
+
+The default NLB idle timeout will work for most scenarios, unless the NGINX [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) has been modified, in which case `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` will need to be modified to ensure it is less than the `keepalive_timeout` the user has configured.
+
+_Please Note: An idle timeout of `3600s` is recommended when using WebSockets._
+
+More information with regards to idle timeouts for your Load Balancer can be found in the [official AWS documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout).
 
 #### GCE-GKE
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
 ```
 
 **Important Note:** proxy protocol is not supported in GCE/GKE
@@ -150,7 +126,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/ngin
 #### Azure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
 ```
 
 #### Bare-metal
@@ -158,7 +134,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/ngin
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/baremetal/service-nodeport.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/deploy.yaml
 ```
 
 !!! tip
@@ -188,30 +164,22 @@ kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --vers
 
 ## Using Helm
 
-NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart [stable/nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress) from the official charts repository.
-To install the chart with the release name `my-nginx`:
+NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart from the project repository.
+To install the chart with the release name `ingress-nginx`:
 
 ```console
-helm install my-nginx stable/nginx-ingress
-```
-
-If the kubernetes cluster has RBAC enabled, then run:
-
-```console
-helm install my-nginx stable/nginx-ingress --set rbac.create=true
+helm repo add k8s-ingress-nginx https://kubernetes.github.io/ingress-nginx/
+helm install ingress-nginx k8s-ingress-nginx
 ```
 
 If you are using [Helm 2](https://v2.helm.sh/) then specify release name using `--name` flag
 
 ```console
-helm install stable/nginx-ingress --name my-nginx
-```
-or
-```console
-helm install stable/nginx-ingress --name my-nginx --set rbac.create=true
+helm repo add k8s-ingress-nginx https://kubernetes.github.io/ingress-nginx/
+helm install k8s-ingress-nginx --name ingress-nginx
 ```
 
-Detect installed version:
+### Detect installed version:
 
 ```console
 POD_NAME=$(kubectl get pods -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
