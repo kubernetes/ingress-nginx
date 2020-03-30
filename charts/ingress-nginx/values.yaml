@@ -76,10 +76,12 @@ controller:
   ##
   podSecurityContext: {}
 
-  ## Allows customization of the external service
-  ## the ingress will be bound to via DNS
+  ## Allows customization of the source of the IP address or FQDN to report
+  ## in the ingress status field. By default, it reads the information provided
+  ## by the service. If disable, the status field reports the IP address of the
+  ## node or nodes where an ingress controller pod is running.
   publishService:
-    enabled: false
+    enabled: true
     ## Allows overriding of the publish service to bind to
     ## Must be <namespace>/<service_name>
     ##
