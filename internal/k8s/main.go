@@ -118,26 +118,26 @@ func MetaNamespaceKey(obj interface{}) string {
 // IsNetworkingIngressAvailable indicates if package "k8s.io/api/networking/v1beta1" is available or not
 var IsNetworkingIngressAvailable bool
 
-// NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1beta1" is available or not
-func NetworkingIngressAvailable(client clientset.Interface) bool {
+// IsIngressV1Ready indicates if the running Kubernetes version is at least v1.18.0
+var IsIngressV1Ready bool
+
+// NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1beta1"
+// is available or not and if Ingress V1 is supported (k8s >= v1.18.0)
+func NetworkingIngressAvailable(client clientset.Interface) (bool, bool) {
 	// check kubernetes version to use new ingress package or not
-	version114, err := version.ParseGeneric("v1.14.0")
-	if err != nil {
-		klog.Errorf("unexpected error parsing version: %v", err)
-		return false
-	}
+	version114, _ := version.ParseGeneric("v1.14.0")
+	version118, _ := version.ParseGeneric("v1.18.0")
 
 	serverVersion, err := client.Discovery().ServerVersion()
 	if err != nil {
-		klog.Errorf("unexpected error parsing Kubernetes version: %v", err)
-		return false
+		return false, false
 	}
 
 	runningVersion, err := version.ParseGeneric(serverVersion.String())
 	if err != nil {
 		klog.Errorf("unexpected error parsing running Kubernetes version: %v", err)
-		return false
+		return false, false
 	}
 
-	return runningVersion.AtLeast(version114)
+	return runningVersion.AtLeast(version114), runningVersion.AtLeast(version118)
 }

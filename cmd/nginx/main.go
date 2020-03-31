@@ -102,9 +102,13 @@ func main() {
 	conf.FakeCertificate = ssl.GetFakeSSLCert()
 	klog.Infof("SSL fake certificate created %v", conf.FakeCertificate.PemFileName)
 
-	k8s.IsNetworkingIngressAvailable = k8s.NetworkingIngressAvailable(kubeClient)
+	k8s.IsNetworkingIngressAvailable, k8s.IsIngressV1Ready = k8s.NetworkingIngressAvailable(kubeClient)
 	if !k8s.IsNetworkingIngressAvailable {
 		klog.Warningf("Using deprecated \"k8s.io/api/extensions/v1beta1\" package because Kubernetes version is < v1.14.0")
+	}
+
+	if !k8s.IsIngressV1Ready {
+		klog.Infof("Enabling new Ingress features availables since v1.18.0")
 	}
 
 	conf.Client = kubeClient
