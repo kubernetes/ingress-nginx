@@ -17,8 +17,6 @@ limitations under the License.
 package class
 
 import (
-	"k8s.io/klog"
-
 	networking "k8s.io/api/networking/v1beta1"
 )
 
@@ -43,10 +41,7 @@ var (
 // the ingress.class annotation, or it's set to the configured in the
 // ingress controller.
 func IsValid(ing *networking.Ingress) bool {
-	ingress, ok := ing.GetAnnotations()[IngressKey]
-	if !ok {
-		klog.V(3).Infof("annotation %v is not present in ingress %v/%v", IngressKey, ing.Namespace, ing.Name)
-	}
+	className := ing.Spec.IngressClassName
 
 	// we have 2 valid combinations
 	// 1 - ingress with default class | blank annotation on ingress
@@ -55,9 +50,17 @@ func IsValid(ing *networking.Ingress) bool {
 	// and 2 invalid combinations
 	// 3 - ingress with default class | fixed annotation on ingress
 	// 4 - ingress with specific class | different annotation on ingress
-	if ingress == "" && IngressClass == DefaultClass {
+	if className != nil {
+		return *className == IngressClass
+	}
+
+	if IngressClass == DefaultClass {
 		return true
 	}
 
-	return ingress == IngressClass
+	if IngressClass == "" {
+		return true
+	}
+
+	return false
 }
