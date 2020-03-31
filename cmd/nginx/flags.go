@@ -59,8 +59,8 @@ requests to the first port of this Service.`)
 
 		ingressClass = flags.String("ingress-class", "",
 			`Name of the ingress class this controller satisfies.
-The class of an Ingress object is set using the annotation "kubernetes.io/ingress.class".
-All ingress classes are satisfied if this parameter is left empty.`)
+The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.18.0 or higher or the annotation "kubernetes.io/ingress.class" (deprecated).
+All ingress classes are satisfied if this parameter is not set.`)
 
 		configMap = flags.String("configmap", "",
 			`Name of the ConfigMap containing custom global configurations for the controller.`)
