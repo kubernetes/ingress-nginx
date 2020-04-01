@@ -1066,7 +1066,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 			if len(servers[host].Aliases) == 0 {
 				servers[host].Aliases = anns.Aliases
-				if _, ok := allAliases[host]; !ok {
+				if aliases := allAliases[host]; len(aliases) == 0 {
 					allAliases[host] = anns.Aliases
 				}
 			} else {

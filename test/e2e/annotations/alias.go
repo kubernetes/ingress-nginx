@@ -83,4 +83,32 @@ var _ = framework.DescribeAnnotation("server-alias", func() {
 				Body().Contains(fmt.Sprintf("host=%v", host))
 		}
 	})
+
+	ginkgo.It("should return status code 200 for hosts defined in two ingresses, different path with one alias", func() {
+		host := "foo"
+
+		ing := framework.NewSingleIngress("app-a", "/app-a", host, f.Namespace, framework.EchoService, 80, nil)
+		f.EnsureIngress(ing)
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/server-alias": "bar",
+		}
+		ing = framework.NewSingleIngress("app-b", "/app-b", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %v bar", host))
+			})
+
+		hosts := []string{"foo", "bar"}
+		for _, host := range hosts {
+			f.HTTPTestClient().
+				GET("/app-a").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK).
+				Body().Contains(fmt.Sprintf("host=%v", host))
+		}
+	})
 })
