@@ -61,12 +61,12 @@ local function redirect_to_https(location_config)
     return false
   end
 
-  if ngx.var.pass_access_scheme ~= "http" then
-    return false
+  if location_config.force_ssl_redirect and ngx.var.pass_access_scheme == "http" then
+    return true
   end
 
-  if location_config.force_ssl_redirect then
-    return true
+  if ngx.var.pass_access_scheme ~= "http" then
+    return false
   end
 
   return location_config.ssl_redirect and certificate_configured_for_current_request()
@@ -105,6 +105,7 @@ end
 -- phases or redirection
 function _M.rewrite(location_config)
   ngx.var.pass_access_scheme = ngx.var.scheme
+
   ngx.var.best_http_host = ngx.var.http_host or ngx.var.host
 
   if config.use_forwarded_headers then
