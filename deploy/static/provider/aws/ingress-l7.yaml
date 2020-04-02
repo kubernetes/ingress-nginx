@@ -2,8 +2,10 @@ apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: ingress-nginx
+  namespace: ingress-nginx
   annotations:
     kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
     # replace with the correct value of the generated certificate in the AWS console
     alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"
     # specifies the ports that ALB used to listen on
