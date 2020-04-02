@@ -1373,7 +1373,9 @@ func TestShouldLoadOpentracingModule(t *testing.T) {
 
 func TestModSecurityForLocation(t *testing.T) {
 	loadModule := `modsecurity on;
-modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+`
+
+	modSecCfg := `modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
 `
 
 	modsecOff := "modsecurity off;"
@@ -1411,12 +1413,12 @@ modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
 		{"configmap enabled, configmap OWASP disabled, annotation enabled, OWASP enabled, no snippet and no transaction ID", true, false, true, true, true, "", "", owaspRules},
 		{"configmap enabled, configmap OWASP disabled, annotation disabled, OWASP disabled, no snippet and no transaction ID", true, false, false, true, false, "", "", modsecOff},
 		{"configmap enabled, configmap OWASP disabled, annotation enabled, OWASP enabled, with snippet and no transaction ID", true, false, true, true, true, "", "", owaspRules},
-		{"configmap enabled, configmap OWASP disabled, annotation enabled, OWASP enabled, with snippet and transaction ID", true, false, true, true, true, "", transactionID, fmt.Sprintf("%v%v", owaspRules, transactionCfg)},
+		{"configmap enabled, configmap OWASP disabled, annotation enabled, OWASP enabled, with snippet and transaction ID", true, false, true, true, true, "", transactionID, fmt.Sprintf("%v%v", transactionCfg, owaspRules)},
 		{"configmap enabled, configmap OWASP enabled, annotation enabled, OWASP disabled", true, true, true, true, false, "", "", ""},
-		{"configmap disabled, annotation enabled, OWASP disabled", false, false, true, true, false, "", "", loadModule},
+		{"configmap disabled, annotation enabled, OWASP disabled", false, false, true, true, false, "", "", fmt.Sprintf("%v%v", loadModule, modSecCfg)},
 		{"configmap disabled, annotation disabled, OWASP disabled", false, false, false, true, false, "", "", ""},
-		{"configmap disabled, annotation enabled, OWASP disabled", false, false, true, true, false, testRule, "", fmt.Sprintf("%v%v", loadModule, modsecRule)},
-		{"configmap disabled, annotation enabled, OWASP enabled", false, false, true, true, false, testRule, "", fmt.Sprintf("%v%v", loadModule, modsecRule)},
+		{"configmap disabled, annotation enabled, OWASP disabled", false, false, true, true, false, testRule, "", fmt.Sprintf("%v%v%v", loadModule, modsecRule, modSecCfg)},
+		{"configmap disabled, annotation enabled, OWASP enabled", false, false, true, true, false, testRule, "", fmt.Sprintf("%v%v%v", loadModule, modsecRule, modSecCfg)},
 	}
 
 	for _, testCase := range testCases {
