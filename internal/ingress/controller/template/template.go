@@ -1360,12 +1360,6 @@ func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Loc
 
 	if !isMSEnabled {
 		buffer.WriteString(`modsecurity on;
-modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-`)
-	}
-
-	if !cfg.EnableOWASPCoreRules && location.ModSecurity.OWASPRules {
-		buffer.WriteString(`modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
 `)
 	}
 
@@ -1379,6 +1373,16 @@ modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
 	if location.ModSecurity.TransactionID != "" {
 		buffer.WriteString(fmt.Sprintf(`modsecurity_transaction_id "%v";
 `, location.ModSecurity.TransactionID))
+	}
+
+	if !isMSEnabled {
+		buffer.WriteString(`modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+`)
+	}
+
+	if !cfg.EnableOWASPCoreRules && location.ModSecurity.OWASPRules {
+		buffer.WriteString(`modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+`)
 	}
 
 	return buffer.String()
