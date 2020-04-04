@@ -59,7 +59,7 @@ export TAG=1.0.0-dev
 export ARCH=amd64
 export REGISTRY=ingress-controller
 
-export K8S_VERSION=${K8S_VERSION:-v1.17.2@sha256:59df31fc61d1da5f46e8a61ef612fa53d3f9140f82419d1ef1a6b9656c6b737c}
+export K8S_VERSION=${K8S_VERSION:-v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694}
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
@@ -87,7 +87,7 @@ make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build contai
 make -C ${DIR}/../../images/echo/ container
 make -C ${DIR}/../../images/httpbin/ container
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?
-if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ]; 
+if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
 then
   echo "Image builds were ok! Log:"
   cat /tmp/log
@@ -116,7 +116,7 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/echo:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" moul/grpcbin
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?
-if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ]; 
+if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
 then
   echo "Image loads were ok! Log:"
   cat /tmp/log
