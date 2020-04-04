@@ -69,7 +69,7 @@ KIND_CLUSTER_NAME="ingress-nginx-dev"
 
 if ! kind get clusters -q | grep -q ${KIND_CLUSTER_NAME}; then
 echo "[dev-env] creating Kubernetes cluster with kind"
-cat <<EOF | kind create cluster --name ${KIND_CLUSTER_NAME} --config=-
+cat <<EOF | kind create cluster --name ${KIND_CLUSTER_NAME} --image "kindest/node:${K8S_VERSION}" --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
