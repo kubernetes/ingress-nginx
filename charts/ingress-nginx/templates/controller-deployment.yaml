@@ -1,27 +1,27 @@
 {{- if or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both") -}}
 {{- include  "isControllerTagValid" . -}}
-apiVersion: {{ template "deployment.apiVersion" . }}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
   name: {{ include "ingress-nginx.controller.fullname" . }}
-{{- if .Values.controller.deploymentAnnotations }}
-  annotations: {{ toYaml .Values.controller.deploymentAnnotations | nindent 4 }}
-{{- end }}
+  {{- if .Values.controller.annotations }}
+  annotations: {{ toYaml .Values.controller.annotations | nindent 4 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: controller
-{{- if not .Values.controller.autoscaling.enabled }}
+  {{- if not .Values.controller.autoscaling.enabled }}
   replicas: {{ .Values.controller.replicaCount }}
-{{- end }}
+  {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
-{{- if .Values.controller.updateStrategy }}
-  strategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
-{{- end }}
+  {{- if .Values.controller.updateStrategy }}
+  updateStrategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
+  {{- end }}
   minReadySeconds: {{ .Values.controller.minReadySeconds }}
   template:
     metadata:
@@ -145,8 +145,8 @@ spec:
             - name: {{ $key }}
               containerPort: {{ $value }}
               protocol: TCP
-              {{- if $.Values.controller.useHostPort }}
-              hostPort: {{ index $.Values.controller.hostPorts $key | default $value }}
+              {{- if $.Values.controller.hostPort.enabled }}
+              hostPort: {{ index $.Values.controller.hostPort.ports $key | default $value }}
               {{- end }}
           {{- end }}
           {{- if .Values.controller.metrics.enabled }}
@@ -163,11 +163,17 @@ spec:
             - name: {{ $key }}-tcp
               containerPort: {{ $key }}
               protocol: TCP
+              {{- if $.Values.controller.hostPort.enabled }}
+              hostPort: {{ $key }}
+              {{- end }}
           {{- end }}
           {{- range $key, $value := .Values.udp }}
             - name: {{ $key }}-udp
               containerPort: {{ $key }}
               protocol: UDP
+              {{- if $.Values.controller.hostPort.enabled }}
+              hostPort: {{ $key }}
+              {{- end }}
           {{- end }}
         {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled) }}
           volumeMounts:

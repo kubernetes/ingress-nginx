@@ -21,7 +21,7 @@ spec:
 {{- if .Values.controller.hostNetwork }}
   hostNetwork: {{ .Values.controller.hostNetwork }}
 {{- end }}
-{{- if or .Values.controller.hostNetwork .Values.controller.daemonset.useHostPort }}
+{{- if or .Values.controller.hostNetwork .Values.controller.hostPort.enabled }}
   hostPorts:
 {{- if .Values.controller.hostNetwork }}
 {{- range $key, $value := .Values.controller.containerPort }}
@@ -29,8 +29,8 @@ spec:
   - min: {{ $value }}
     max: {{ $value }}
 {{- end }}
-{{- else if .Values.controller.daemonset.useHostPort }}
-{{- range $key, $value := .Values.controller.daemonset.hostPorts }}
+{{- else if .Values.controller.hostPort.enabled }}
+{{- range $key, $value := .Values.controller.hostPort.ports }}
   # {{ $key }}
   - min: {{ $value }}
     max: {{ $value }}
