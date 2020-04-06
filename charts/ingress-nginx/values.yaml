@@ -188,8 +188,9 @@ controller:
     #     topologyKey: "kubernetes.io/hostname"
 
   ## terminationGracePeriodSeconds
+  ## wait up to five minutes for the drain of connections
   ##
-  terminationGracePeriodSeconds: 60
+  terminationGracePeriodSeconds: 300
 
   ## Node labels for controller pod assignment
   ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
@@ -244,6 +245,11 @@ controller:
     maxReplicas: 11
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
+
+  ## Enable mimalloc as a drop-in replacement for malloc.
+  ## ref: https://github.com/microsoft/mimalloc
+  ##
+  enableMimalloc: false
 
   ## Override NGINX template
   customTemplate:
@@ -427,8 +433,18 @@ controller:
         #     description: Too many 4XXs
         #     summary: More than 5% of the all requests did return 4XX, this require your attention
 
-
-  lifecycle: {}
+  ## Improve connection draining when ingress controller pod is deleted using a lifecycle hook:
+  ## With this new hook, we increased the default terminationGracePeriodSeconds from 30 seconds
+  ## to 300, allowing the draining of connections up to five minutes.
+  ## If the active connections end before that, the pod will terminate gracefully at that time.
+  ## To efectively take advantage of this feature, the Configmap feature
+  ## worker-shutdown-timeout new value is 240s instead of 10s.
+  ##
+  lifecycle:
+    preStop:
+      exec:
+        command:
+          - /wait-shutdown
 
   priorityClassName: ""
 
