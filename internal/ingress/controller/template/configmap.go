@@ -61,6 +61,7 @@ const (
 	globalAuthCacheKey        = "global-auth-cache-key"
 	globalAuthCacheDuration   = "global-auth-cache-duration"
 	luaSharedDictsKey         = "lua-shared-dicts"
+	plugins                   = "plugins"
 )
 
 var (
@@ -339,6 +340,15 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 
 		delete(conf, workerProcesses)
+	}
+
+	if val, ok := conf[plugins]; ok {
+		to.Plugins = strings.Split(val, ",")
+		for i := range to.Plugins {
+			to.Plugins[i] = strings.TrimSpace(to.Plugins[i])
+		}
+
+		delete(conf, plugins)
 	}
 
 	to.CustomHTTPErrors = filterErrors(errors)
