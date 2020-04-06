@@ -322,6 +322,11 @@ spec:
         - name: controller
           image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0
           imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /wait-shutdown
           args:
             - /nginx-ingress-controller
             - --publish-service=ingress-nginx/ingress-nginx-controller
@@ -387,7 +392,7 @@ spec:
               cpu: 100m
               memory: 90Mi
       serviceAccountName: ingress-nginx
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 300
       volumes:
         - name: webhook-cert
           secret:
