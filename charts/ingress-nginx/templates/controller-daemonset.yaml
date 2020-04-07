@@ -1,24 +1,24 @@
 {{- if or (eq .Values.controller.kind "DaemonSet") (eq .Values.controller.kind "Both") -}}
 {{- include  "isControllerTagValid" . -}}
-apiVersion: {{ template "daemonset.apiVersion" . }}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
   name: {{ include "ingress-nginx.controller.fullname" . }}
-{{- if .Values.controller.daemonsetAnnotations }}
-  annotations: {{ toYaml .Values.controller.daemonsetAnnotations | nindent 4 }}
-{{- end }}
+  {{- if .Values.controller.annotations }}
+  annotations: {{ toYaml .Values.controller.annotations | nindent 4 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: controller
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
-{{- if .Values.controller.updateStrategy }}
+  {{- if .Values.controller.updateStrategy }}
   updateStrategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
-{{- end }}
+  {{- end }}
   minReadySeconds: {{ .Values.controller.minReadySeconds }}
   template:
     metadata:
@@ -142,8 +142,8 @@ spec:
             - name: {{ $key }}
               containerPort: {{ $value }}
               protocol: TCP
-              {{- if $.Values.controller.useHostPort }}
-              hostPort: {{ index $.Values.controller.hostPorts $key | default $value }}
+              {{- if $.Values.controller.hostPort.enabled }}
+              hostPort: {{ index $.Values.controller.hostPort.ports $key | default $value }}
               {{- end }}
           {{- end }}
           {{- if .Values.controller.metrics.enabled }}
@@ -160,7 +160,7 @@ spec:
             - name: {{ $key }}-tcp
               containerPort: {{ $key }}
               protocol: TCP
-              {{- if $.Values.controller.useHostPort }}
+              {{- if $.Values.controller.hostPort.enabled }}
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
@@ -168,7 +168,7 @@ spec:
             - name: {{ $key }}-udp
               containerPort: {{ $key }}
               protocol: UDP
-              {{- if $.Values.controller.useHostPort }}
+              {{- if $.Values.controller.hostPort.enabled }}
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
