@@ -23,6 +23,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+BUSTED_ARGS="-v --pattern=_test"
+
 resty \
   -I ./rootfs/etc/nginx/lua \
   --shdict "configuration_data 5M" \

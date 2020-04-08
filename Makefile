@@ -53,8 +53,6 @@ GIT_COMMIT ?= git-$(shell git rev-parse --short HEAD)
 
 PKG = k8s.io/ingress-nginx
 
-BUSTED_ARGS =-v --pattern=_test
-
 HOST_ARCH = $(shell which go >/dev/null 2>&1 && go env GOARCH)
 ARCH ?= $(HOST_ARCH)
 ifeq ($(ARCH),)
