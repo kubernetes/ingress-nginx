@@ -171,7 +171,6 @@ var (
 		"proxySetHeader":                     proxySetHeader,
 		"buildInfluxDB":                      buildInfluxDB,
 		"enforceRegexModifier":               enforceRegexModifier,
-		"stripLocationModifer":               stripLocationModifer,
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
@@ -371,10 +370,6 @@ func needsRewrite(location *ingress.Location) bool {
 		return true
 	}
 	return false
-}
-
-func stripLocationModifer(path string) string {
-	return strings.TrimLeft(path, "~* ")
 }
 
 // enforceRegexModifier checks if the "rewrite-target" or "use-regex" annotation
