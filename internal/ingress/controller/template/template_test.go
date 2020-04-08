@@ -1221,15 +1221,6 @@ func TestEnforceRegexModifier(t *testing.T) {
 	}
 }
 
-func TestStripLocationModifer(t *testing.T) {
-	expected := "ok.com"
-	actual := stripLocationModifer("~*ok.com")
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-}
-
 func TestShouldLoadModSecurityModule(t *testing.T) {
 	// ### Invalid argument type tests ###
 	// The first tests should return false.
