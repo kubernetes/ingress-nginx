@@ -17,11 +17,13 @@ limitations under the License.
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
+	"github.com/onsi/ginkgo/reporters"
 	"k8s.io/component-base/logs"
 
 	// required
@@ -62,5 +64,6 @@ func RunE2ETests(t *testing.T) {
 	}
 
 	framework.Logf("Starting e2e run %q on Ginkgo node %d", framework.RunID, config.GinkgoConfig.ParallelNode)
-	ginkgo.RunSpecs(t, "nginx-ingress-controller e2e suite")
+	junitReporter := reporters.NewJUnitReporter(fmt.Sprintf("junit_%d.xml", config.GinkgoConfig.ParallelNode))
+	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, "nginx-ingress-controller e2e suite", []ginkgo.Reporter{junitReporter})
 }
