@@ -1136,12 +1136,6 @@ stream {
 
             {{ buildInfluxDB $location.InfluxDB }}
 
-            {{ if not (empty $location.Redirect.URL) }}
-            if ($uri ~* {{ stripLocationModifer $path }}) {
-                return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
-            }
-            {{ end }}
-
             {{ if isValidByteSize $location.Proxy.BodySize true }}
             client_max_body_size                    {{ $location.Proxy.BodySize }};
             {{ end }}
@@ -1265,6 +1259,10 @@ stream {
             {{- end -}}
             {{ range $k, $v := $location.FastCGI.Params }}
             fastcgi_param {{ $k }} {{ $v | quote }};
+            {{ end }}
+
+            {{ if not (empty $location.Redirect.URL) }}
+            return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
             {{ end }}
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
