@@ -46,8 +46,7 @@ var _ = framework.DescribeAnnotation("permanen-redirect permanen-redirect-code",
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("if ($uri ~* %s) {", redirectPath)) &&
-					strings.Contains(server, fmt.Sprintf("return 301 %s;", redirectURL))
+				return strings.Contains(server, fmt.Sprintf("return 301 %s;", redirectURL))
 			})
 
 		ginkgo.By("sending request to redirected URL path")
@@ -77,8 +76,7 @@ var _ = framework.DescribeAnnotation("permanen-redirect permanen-redirect-code",
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("if ($uri ~* %s) {", redirectPath)) &&
-					strings.Contains(server, fmt.Sprintf("return %d %s;", redirectCode, redirectURL))
+				return strings.Contains(server, fmt.Sprintf("return %d %s;", redirectCode, redirectURL))
 			})
 
 		ginkgo.By("sending request to redirected URL path")
