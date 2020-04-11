@@ -4369,7 +4369,7 @@ The default mime type list to compress is: <code class="codehilite"><span class=
 <h2 id="gzip-min-length">gzip-min-length<a class="headerlink" href="#gzip-min-length" title="Permanent link"> ¶</a></h2>
 <p>Minimum length of responses to be returned to the client before it is eligible for gzip compression, in bytes. <em><strong>default:</strong></em> 256</p>
 <h2 id="gzip-types">gzip-types<a class="headerlink" href="#gzip-types" title="Permanent link"> ¶</a></h2>
-<p>Sets the MIME types in addition to "text/html" to compress. The special value "*" matches any MIME type. Responses with the "text/html" type are always compressed if <code class="codehilite"><span class="err">[use-gzip](#use-gzip)</span></code> is enabled.
+<p>Sets the MIME types in addition to "text/html" to compress. The special value "*" matches any MIME type. Responses with the "text/html" type are always compressed if <a href="#use-gzip"><code class="codehilite"><span class="err">use-gzip</span></code></a> is enabled.
 <em><strong>default:</strong></em> <code class="codehilite"><span class="err">application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</span></code>.</p>
 <h2 id="worker-processes">worker-processes<a class="headerlink" href="#worker-processes" title="Permanent link"> ¶</a></h2>
 <p>Sets the number of <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_processes">worker processes</a>.
