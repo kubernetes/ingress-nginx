@@ -93,18 +93,6 @@ Kubernetes also provides primitives to sign a certificate request. Here is an ex
         --from-file=cert.pem=${TEMP_DIRECTORY}/server-cert.pem \
         -n ${NAMESPACE}
     ```
-
-#### Using helm
-
-To generate the certificate using helm, you can use the following snippet
-
-!!! example
-    ```
-    {{- $cn := printf "%s.%s.svc" ( include "nginx-ingress.validatingWebhook.fullname" . ) .Release.Namespace }}
-    {{- $ca := genCA (printf "%s-ca" ( include "nginx-ingress.validatingWebhook.fullname" . )) .Values.validatingWebhook.certificateValidity -}}
-    {{- $cert := genSignedCert $cn nil nil .Values.validatingWebhook.certificateValidity $ca -}}
-    ```
-
 ### Ingress controller flags
 
 To enable the feature in the ingress controller, you _need_ to provide 3 flags to the command line.
@@ -166,3 +154,11 @@ webhooks:
 ```
 
 [1]: https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook
+
+
+### Using Helm
+
+On nginx-ingress helm chart, set `controller.admissionWebhooks.enable` to `true` (default to `false`) to enabled Validating webhook.
+
+With `controller.admissionWebhooks.patch.enabled` set to `true` (default value) a certificate will be automatically created and the CA added to ValidatingWebhookConfiguration.
+For more details check [here](https://github.com/helm/charts/tree/master/stable/nginx-ingress/templates/admission-webhooks/job-patch).
