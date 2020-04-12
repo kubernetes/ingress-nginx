@@ -531,13 +531,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#using-helm" class="md-nav__link">
-    Using helm
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -560,6 +553,13 @@
           <li class="md-nav__item">
   <a href="#additional-kubernetes-objects" class="md-nav__link">
     Additional kubernetes objects
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-helm" class="md-nav__link">
+    Using Helm
   </a>
   
 </li>
@@ -1284,13 +1284,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#using-helm" class="md-nav__link">
-    Using helm
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1313,6 +1306,13 @@
           <li class="md-nav__item">
   <a href="#additional-kubernetes-objects" class="md-nav__link">
     Additional kubernetes objects
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-helm" class="md-nav__link">
+    Using Helm
   </a>
   
 </li>
@@ -1426,16 +1426,6 @@ kubectl create secret generic ingress-nginx.svc <span class="se">\</span>
 </code></pre></div>
 
 </div>
-<h4 id="using-helm">Using helm<a class="headerlink" href="#using-helm" title="Permanent link"> ¶</a></h4>
-<p>To generate the certificate using helm, you can use the following snippet</p>
-<div class="admonition example">
-<p class="admonition-title">Example</p>
-<div class="codehilite"><pre><span></span><code><span class="cp">{{</span><span class="o">-</span> <span class="err">$</span><span class="nv">cn</span> <span class="o">:=</span> <span class="nv">printf</span> <span class="s2">&quot;%s.%s.svc&quot;</span> <span class="o">(</span> <span class="nv">include</span> <span class="s2">&quot;nginx-ingress.validatingWebhook.fullname&quot;</span> <span class="err">.</span> <span class="o">)</span> <span class="nv">.Release.Namespace</span> <span class="cp">}}</span><span class="x"></span>
-<span class="cp">{{</span><span class="o">-</span> <span class="err">$</span><span class="nv">ca</span> <span class="o">:=</span> <span class="nv">genCA</span> <span class="o">(</span><span class="nv">printf</span> <span class="s2">&quot;%s-ca&quot;</span> <span class="o">(</span> <span class="nv">include</span> <span class="s2">&quot;nginx-ingress.validatingWebhook.fullname&quot;</span> <span class="err">.</span> <span class="o">))</span> <span class="nv">.Values.validatingWebhook.certificateValidity</span> -<span class="cp">}}</span><span class="x"></span>
-<span class="cp">{{</span><span class="o">-</span> <span class="err">$</span><span class="nv">cert</span> <span class="o">:=</span> <span class="nv">genSignedCert</span> <span class="err">$</span><span class="nv">cn</span> <span class="nv">nil</span> <span class="nv">nil</span> <span class="nv">.Values.validatingWebhook.certificateValidity</span> <span class="err">$</span><span class="nv">ca</span> -<span class="cp">}}</span><span class="x"></span>
-</code></pre></div>
-
-</div>
 <h3 id="ingress-controller-flags">Ingress controller flags<a class="headerlink" href="#ingress-controller-flags" title="Permanent link"> ¶</a></h3>
 <p>To enable the feature in the ingress controller, you <em>need</em> to provide 3 flags to the command line.</p>
 <table>
@@ -1508,6 +1498,11 @@ To check that your kube API server runs with the required flags, please refer to
       <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/networking.k8s.io/v1beta1/ingress</span>
     <span class="nt">caBundle</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;pem encoded ca cert that signs the server cert used by the webhook&gt;</span>
 </code></pre></div>
+
+<h3 id="using-helm">Using Helm<a class="headerlink" href="#using-helm" title="Permanent link"> ¶</a></h3>
+<p>On nginx-ingress helm chart, set <code class="codehilite"><span class="err">controller.admissionWebhooks.enable</span></code> to <code class="codehilite"><span class="err">true</span></code> (default to <code class="codehilite"><span class="err">false</span></code>) to enabled Validating webhook.</p>
+<p>With <code class="codehilite"><span class="err">controller.admissionWebhooks.patch.enabled</span></code> set to <code class="codehilite"><span class="err">true</span></code> (default value) a certificate will be automatically created and the CA added to ValidatingWebhookConfiguration.
+For more details check <a href="https://github.com/helm/charts/tree/master/stable/nginx-ingress/templates/admission-webhooks/job-patch">here</a>.</p>
                 
                   
                 
