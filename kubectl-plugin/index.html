@@ -1517,7 +1517,7 @@ Do not move it without providing redirects.
 
 <p>Add the <code class="codehilite"><span class="err">--list</span></code> option to show only the backend names. Add the <code class="codehilite"><span class="err">--backend &lt;backend&gt;</span></code> option to show only the backend with the given name.</p>
 <h3 id="certs">certs<a class="headerlink" href="#certs" title="Permanent link"> ¶</a></h3>
-<p>Use <code class="codehilite"><span class="err">kubectl ingress-nginx certs --host &lt;hostname&gt;</span></code> to dump the SSL cert/key information for a given host. Requires that <code class="codehilite"><span class="err">--enable-dynamic-certificates</span></code> is <code class="codehilite"><span class="err">true</span></code> (this is the default as of version <code class="codehilite"><span class="err">0.24.0</span></code>).</p>
+<p>Use <code class="codehilite"><span class="err">kubectl ingress-nginx certs --host &lt;hostname&gt;</span></code> to dump the SSL cert/key information for a given host.</p>
 <p><strong>WARNING:</strong> This command will dump sensitive private key information. Don't blindly share the output, and certainly don't log it anywhere.</p>
 <div class="codehilite"><pre><span></span><code><span class="gp">$</span> kubectl ingress-nginx certs -n ingress-nginx --host testaddr.local
 <span class="go">-----BEGIN CERTIFICATE-----</span>
