@@ -160,7 +160,7 @@ Add the `--list` option to show only the backend names. Add the `--backend <back
 
 ### certs
 
-Use `kubectl ingress-nginx certs --host <hostname>` to dump the SSL cert/key information for a given host. Requires that `--enable-dynamic-certificates` is `true` (this is the default as of version `0.24.0`).
+Use `kubectl ingress-nginx certs --host <hostname>` to dump the SSL cert/key information for a given host.
 
 **WARNING:** This command will dump sensitive private key information. Don't blindly share the output, and certainly don't log it anywhere.
 

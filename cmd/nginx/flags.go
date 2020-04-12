@@ -112,11 +112,6 @@ Requires setting the publish-service parameter to a valid Service reference.`)
 		electionID = flags.String("election-id", "ingress-controller-leader",
 			`Election id to use for Ingress status updates.`)
 
-		_ = flags.Bool("force-namespace-isolation", false,
-			`Force namespace isolation.
-Prevents Ingress objects from referencing Secrets and ConfigMaps located in a
-different namespace than their own. May be used together with watch-namespace.`)
-
 		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true,
 			`Update the load-balancer status of Ingress objects when the controller shuts down.
 Requires the update-status parameter.`)
@@ -145,9 +140,6 @@ extension for this to succeed.`)
 		publishStatusAddress = flags.String("publish-status-address", "",
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
-
-		_ = flags.Bool("enable-dynamic-certificates", true,
-			`Dynamically update SSL certificates instead of reloading NGINX. Feature backed by OpenResty Lua libraries.`)
 
 		enableMetrics = flags.Bool("enable-metrics", true,
 			`Enables the collection of NGINX metrics`)
@@ -179,10 +171,6 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
 	)
-
-	flags.MarkDeprecated("force-namespace-isolation", `This flag doesn't do anything.`)
-
-	flags.MarkDeprecated("enable-dynamic-certificates", `Only dynamic mode is supported`)
 
 	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
 https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases`)
