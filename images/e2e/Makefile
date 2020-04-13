@@ -26,8 +26,8 @@ docker-build:
 		--progress plain \
 		--build-arg K8S_RELEASE=v1.15.7 \
 		--build-arg ETCD_VERSION=v3.3.18 \
-		--build-arg GOLANG_VERSION=1.14.1 \
-		--build-arg GOLANG_SHA=2ad2572115b0d1b4cb4c138e6b3a31cee6294cb48af75ee86bec3dca04507676 \
+		--build-arg GOLANG_VERSION=1.14.2 \
+		--build-arg GOLANG_SHA=98de84e69726a66da7b4e58eac41b99cbe274d7e8906eeb8a5b7eb0aadee7f7c \
 		--build-arg RESTY_CLI_VERSION=0.25rc2 \
 		--build-arg RESTY_CLI_SHA=a38d850441384fa037a5922ca012dcce8708d0e4abe34ad2fe4164a01b28bdfb \
 		--build-arg CHART_TESTING_VERSION=3.0.0-beta.1 \
