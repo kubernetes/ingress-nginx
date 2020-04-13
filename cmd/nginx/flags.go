@@ -200,14 +200,11 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		status.UpdateInterval = *statusUpdateInterval
 	}
 
-	if *ingressClass != "" {
-		klog.Infof("Watching for Ingress class: %s", *ingressClass)
-
-		if *ingressClass != class.DefaultClass {
-			klog.Warningf("Only Ingresses with class %q will be processed by this Ingress controller", *ingressClass)
-		}
-
-		class.IngressClass = *ingressClass
+	class.IngressClass = *ingressClass
+	if *class.IngressClass == "" {
+		klog.Infof("Watching for all ingresses, regardless of Ingress class")
+	} else {
+		klog.Infof("Watching for ingresses with Ingress class: %s", *ingressClass)
 	}
 
 	parser.AnnotationsPrefix = *annotationsPrefix

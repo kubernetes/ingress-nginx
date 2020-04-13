@@ -25,26 +25,23 @@ import (
 )
 
 func TestIsValidClass(t *testing.T) {
-	dc := DefaultClass
+	// restore original value after the tests
 	ic := IngressClass
-	// restore original values after the tests
 	defer func() {
-		DefaultClass = dc
 		IngressClass = ic
 	}()
 
 	tests := []struct {
-		ingress    string
-		controller string
-		defClass   string
-		isValid    bool
+		className    string
+		ingressClass string
+		isValid      bool
 	}{
-		{"", "", "nginx", true},
-		{"", "nginx", "nginx", true},
-		{"nginx", "nginx", "nginx", true},
-		{"custom", "custom", "nginx", true},
-		{"", "killer", "nginx", false},
-		{"custom", "nginx", "nginx", false},
+		{"", "", true},
+		{"", "nginx", true},
+		{"nginx", "nginx", true},
+		{"custom", "custom", true},
+		{"", "killer", false},
+		{"custom", "nginx", false},
 	}
 
 	ing := &networking.Ingress{
@@ -55,12 +52,11 @@ func TestIsValidClass(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if test.ingress != "" {
-			ing.Spec.IngressClassName = &test.ingress
+		if test.className != "" {
+			ing.Spec.IngressClassName = &test.className
 		}
 
-		IngressClass = test.controller
-		DefaultClass = test.defClass
+		IngressClass = test.ingressClass
 
 		b := IsValid(ing)
 		if b != test.isValid {

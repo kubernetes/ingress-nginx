@@ -28,39 +28,22 @@ const (
 )
 
 var (
-	// DefaultClass defines the default class used in the nginx ingres controller
-	DefaultClass = "nginx"
-
-	// IngressClass sets the runtime ingress class to use
-	// An empty string means accept all ingresses without
-	// annotation and the ones configured with class nginx
-	IngressClass = "nginx"
+	// IngressClass sets the runtime ingress class to use.
+	// An empty string means accept all ingresses regardless of their Ingress class.
+	// The value of this is set based on `ingress-class` command line argument when controller starts.
+	IngressClass string
 )
 
-// IsValid returns true if the given Ingress either doesn't specify
-// the ingress.class annotation, or it's set to the configured in the
-// ingress controller.
+// IsValid decides whether given Ingress should be processed by the running instance of controller.
 func IsValid(ing *networking.Ingress) bool {
-	className := ing.Spec.IngressClassName
-
-	// we have 2 valid combinations
-	// 1 - ingress with default class | blank annotation on ingress
-	// 2 - ingress with specific class | same annotation on ingress
-	//
-	// and 2 invalid combinations
-	// 3 - ingress with default class | fixed annotation on ingress
-	// 4 - ingress with specific class | different annotation on ingress
-	if className != nil {
-		return *className == IngressClass
-	}
-
-	if IngressClass == DefaultClass {
-		return true
-	}
-
 	if IngressClass == "" {
 		return true
 	}
 
-	return false
+	className := ing.Spec.IngressClassName
+	if className == nil {
+		return true
+	}
+
+	return *className == IngressClass
 }

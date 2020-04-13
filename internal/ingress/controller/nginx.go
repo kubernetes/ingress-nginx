@@ -266,7 +266,7 @@ func (n *NGINXController) Start() {
 
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
-	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.DefaultClass)
+	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, "default")
 	if class.IngressClass != "" {
 		electionID = fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.IngressClass)
 	}
