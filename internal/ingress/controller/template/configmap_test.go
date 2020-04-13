@@ -358,3 +358,39 @@ func TestLuaSharedDictsParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestSplitAndTrimSpace(t *testing.T) {
+	testsCases := []struct {
+		name   string
+		input  string
+		expect []string
+	}{
+		{
+			name:   "empty string",
+			input:  "",
+			expect: []string{},
+		},
+		{
+			name:   "two elements",
+			input:  "el1,el2",
+			expect: []string{"el1", "el2"},
+		},
+		{
+			name:   "two elements with spaces",
+			input:  " el1, el2",
+			expect: []string{"el1", "el2"},
+		},
+		{
+			name:   "empty elements with spaces",
+			input:  " el1, el2,el3,,",
+			expect: []string{"el1", "el2", "el3"},
+		},
+	}
+
+	for _, tc := range testsCases {
+		data := splitAndTrimSpace(tc.input, ",")
+		if !reflect.DeepEqual(data, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, data)
+		}
+	}
+}
