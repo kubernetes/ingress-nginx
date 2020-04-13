@@ -468,8 +468,7 @@ _References:_
 
 ## plugins
 
-Configures plugins to use placed in the directory /etc/nginx/lua/plugins. Every plugin has to have main.lua in the root.
-Every plugin has to bundle all of its dependencies. The execution order follows the definition.
+Activates plugins installed in `/etc/nginx/lua/plugins`. Refer to [ingress-nginx plugins README](../../../rootfs/etc/nginx/lua/plugins/README.md) for more information on how to write and install a plugin.
 
 ## server-tokens
 
