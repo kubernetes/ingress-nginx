@@ -103,7 +103,7 @@ http {
           plugins = res
         end
         -- load all plugins that'll be used here
-        plugins.init({})
+        plugins.init({ {{ range  $idx, $plugin := $cfg.Plugins }}{{ if $idx }},{{ end }}{{ $plugin | quote }}{{ end }} })
     }
 
     init_worker_by_lua_block {

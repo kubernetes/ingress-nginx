@@ -74,6 +74,7 @@ The following table shows a configuration option's name, type, and the default v
 |[server-name-hash-bucket-size](#server-name-hash-bucket-size)|int|`<size of the processor’s cache line>`
 |[proxy-headers-hash-max-size](#proxy-headers-hash-max-size)|int|512|
 |[proxy-headers-hash-bucket-size](#proxy-headers-hash-bucket-size)|int|64|
+|[plugins](#plugins)|[]string| |
 |[reuse-port](#reuse-port)|bool|"true"|
 |[server-tokens](#server-tokens)|bool|"true"|
 |[ssl-ciphers](#ssl-ciphers)|string|"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"|
@@ -464,6 +465,11 @@ _References:_
 
 - [http://nginx.org/en/docs/hash.html](http://nginx.org/en/docs/hash.html)
 - [https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size)
+
+## plugins
+
+Configures plugins to use placed in the directory /etc/nginx/lua/plugins. Every plugin has to have main.lua in the root.
+Every plugin has to bundle all of its dependencies. The execution order follows the definition.
 
 ## server-tokens
 
