@@ -149,6 +149,8 @@ Requires the update-status parameter.`)
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
 
+		http2HTPSPort = flags.Int("http-to-https-port", 2443, `Port to use for plain redirection of HTTP port to HTTPS.`)
+
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
@@ -221,6 +223,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --https-port", *httpsPort)
 	}
 
+	if !ing_net.IsPortAvailable(*http2HTPSPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --http-to-https-port", *http2HTPSPort)
+	}
+
 	if !ing_net.IsPortAvailable(*defServerPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --default-server-port", *defServerPort)
 	}
@@ -283,11 +289,12 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		UseNodeInternalIP:      *useNodeInternalIP,
 		SyncRateLimit:          *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
-			Default:  *defServerPort,
-			Health:   *healthzPort,
-			HTTP:     *httpPort,
-			HTTPS:    *httpsPort,
-			SSLProxy: *sslProxyPort,
+			Default:    *defServerPort,
+			Health:     *healthzPort,
+			HTTP:       *httpPort,
+			HTTPS:      *httpsPort,
+			HTTP2HTTPS: *http2HTPSPort,
+			SSLProxy:   *sslProxyPort,
 		},
 		DisableCatchAll:           *disableCatchAll,
 		ValidationWebhook:         *validationWebhook,

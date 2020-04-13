@@ -375,6 +375,9 @@ spec:
             - name: https
               containerPort: 443
               protocol: TCP
+            - name: tohttps
+              containerPort: 2443
+              protocol: TCP
             - name: webhook
               containerPort: 8443
               protocol: TCP

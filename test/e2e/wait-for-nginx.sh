@@ -73,6 +73,8 @@ controller:
     periodSeconds: 1
   service:
     type: NodePort
+    enableHttpToHttps: true
+
   extraArgs:
     tcp-services-configmap: $NAMESPACE/tcp-services
     # e2e tests do not require information about ingress status

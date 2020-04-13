@@ -79,10 +79,17 @@ var _ = framework.DescribeAnnotation("permanen-redirect permanen-redirect-code",
 				return strings.Contains(server, fmt.Sprintf("return %d %s;", redirectCode, redirectURL))
 			})
 
-		ginkgo.By("sending request to redirected URL path")
 		f.HTTPTestClient().
 			GET(redirectPath).
 			WithHeader("Host", host).
+			Expect().
+			Status(redirectCode).
+			Header("Location").Equal(redirectURL)
+
+		f.HTTPTestClient().
+			GET(redirectPath).
+			WithHeader("Host", host).
+			WithURL(fmt.Sprintf("http://%v:2443", f.GetNginxIP())).
 			Expect().
 			Status(redirectCode).
 			Header("Location").Equal(redirectURL)

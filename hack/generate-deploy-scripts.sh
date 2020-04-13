@@ -103,11 +103,12 @@ controller:
   service:
     type: LoadBalancer
     externalTrafficPolicy: Local
+    enableHttpToHttps: true
 
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
       service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
-      service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+      service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "tohttps"
       service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"
       service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
       service.beta.kubernetes.io/aws-load-balancer-type: elb
@@ -116,14 +117,8 @@ controller:
       # increased to '3600' to avoid any potential issues.
       service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
 
-    targetPorts:
-      http: http
-      https: http
-
   config:
-    # Force 80 -> 443
-    force-ssl-redirect: "true"
-    # use-forwarded-headers: "true"
+    use-forwarded-headers: "true"
 
     # Obtain IP ranges from AWS and configure the defaults
     # curl https://ip-ranges.amazonaws.com/ip-ranges.json | cat ip-ranges.json | jq -r '.prefixes[] .ip_prefix'| paste -sd "," -

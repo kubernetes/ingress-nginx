@@ -36,7 +36,7 @@ metadata:
   name: ingress-nginx-controller
   namespace: ingress-nginx
 data:
-  force-ssl-redirect: 'true'
+  use-forwarded-headers: 'true'
 ---
 # Source: ingress-nginx/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -265,7 +265,7 @@ metadata:
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
     service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
     service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX
-    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: '443'
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: tohttps
     service.beta.kubernetes.io/aws-load-balancer-type: elb
   labels:
     helm.sh/chart: ingress-nginx-2.0.0
@@ -287,7 +287,11 @@ spec:
     - name: https
       port: 443
       protocol: TCP
-      targetPort: http
+      targetPort: https
+    - name: https
+      port: 2443
+      protocol: TCP
+      targetPort: tohttps
   selector:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/instance: ingress-nginx
@@ -383,6 +387,9 @@ spec:
               protocol: TCP
             - name: https
               containerPort: 443
+              protocol: TCP
+            - name: tohttps
+              containerPort: 2443
               protocol: TCP
             - name: webhook
               containerPort: 8443

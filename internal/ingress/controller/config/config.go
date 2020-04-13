@@ -842,11 +842,12 @@ type TemplateConfig struct {
 // ListenPorts describe the ports required to run the
 // NGINX Ingress controller
 type ListenPorts struct {
-	HTTP     int
-	HTTPS    int
-	Health   int
-	Default  int
-	SSLProxy int
+	HTTP       int
+	HTTPS      int
+	HTTP2HTTPS int
+	Health     int
+	Default    int
+	SSLProxy   int
 }
 
 // GlobalExternalAuth describe external authentication configuration for the

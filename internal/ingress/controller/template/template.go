@@ -176,6 +176,7 @@ var (
 		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
 		"buildHTTPListener":                  buildHTTPListener,
 		"buildHTTPSListener":                 buildHTTPSListener,
+		"buildRedirectToHTTPSListener":       buildRedirectToHTTPSListener,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
@@ -319,11 +320,13 @@ func locationConfigForLua(l interface{}, a interface{}) string {
 		ssl_redirect = %t,
 		force_no_ssl_redirect = %t,
 		use_port_in_redirects = %t,
+		redirect_to_http_port = %v,
 	}`,
 		location.Rewrite.ForceSSLRedirect,
 		location.Rewrite.SSLRedirect,
 		isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations),
 		location.UsePortInRedirects,
+		all.ListenPorts.HTTP2HTTPS,
 	)
 }
 
@@ -402,6 +405,7 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	if enforceRegex {
 		return fmt.Sprintf(`~* "^%s"`, path)
 	}
+
 	return path
 }
 
@@ -1194,6 +1198,44 @@ func buildHTTPSListener(t interface{}, s interface{}) string {
 	return strings.Join(out, "\n")
 }
 
+func buildRedirectToHTTPSListener(t interface{}, s interface{}) string {
+	var out []string
+
+	tc, ok := t.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was returned", t)
+		return ""
+	}
+
+	hostname, ok := s.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", s)
+		return ""
+	}
+
+	addrV4 := []string{""}
+	if len(tc.Cfg.BindAddressIpv4) > 0 {
+		addrV4 = tc.Cfg.BindAddressIpv4
+	}
+
+	co := commonListenOptions(tc, hostname)
+
+	out = append(out, http2HTTPSListener(addrV4, co, tc)...)
+
+	if !tc.IsIPV6Enabled {
+		return strings.Join(out, "\n")
+	}
+
+	addrV6 := []string{"[::]"}
+	if len(tc.Cfg.BindAddressIpv6) > 0 {
+		addrV6 = tc.Cfg.BindAddressIpv6
+	}
+
+	out = append(out, http2HTTPSListener(addrV6, co, tc)...)
+
+	return strings.Join(out, "\n")
+}
+
 func commonListenOptions(template config.TemplateConfig, hostname string) string {
 	var out []string
 
@@ -1228,6 +1270,26 @@ func httpListener(addresses []string, co string, tc config.TemplateConfig) []str
 			l = append(l, fmt.Sprintf("%v", tc.ListenPorts.HTTP))
 		} else {
 			l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTP))
+		}
+
+		l = append(l, co)
+		l = append(l, ";")
+		out = append(out, strings.Join(l, " "))
+	}
+
+	return out
+}
+
+func http2HTTPSListener(addresses []string, co string, tc config.TemplateConfig) []string {
+	out := make([]string, 0)
+	for _, address := range addresses {
+		l := make([]string, 0)
+		l = append(l, "listen")
+
+		if address == "" {
+			l = append(l, fmt.Sprintf("%v", tc.ListenPorts.HTTP2HTTPS))
+		} else {
+			l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTP2HTTPS))
 		}
 
 		l = append(l, co)

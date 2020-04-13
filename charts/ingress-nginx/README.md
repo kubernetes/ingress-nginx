@@ -113,8 +113,10 @@ Parameter | Description | Default
 `controller.service.loadBalancerSourceRanges` | list of IP CIDRs allowed access to load balancer (if supported) | `[]`
 `controller.service.enableHttp` | if port 80 should be opened for service | `true`
 `controller.service.enableHttps` | if port 443 should be opened for service | `true`
+`controller.service.enableHttpToHttps` | if port that redirects http to https (2443) should be opened for service | `false`
 `controller.service.targetPorts.http` | Sets the targetPort that maps to the Ingress' port 80 | `80`
 `controller.service.targetPorts.https` | Sets the targetPort that maps to the Ingress' port 443 | `443`
+`controller.service.targetPorts.tohttps` | Sets the targetPort that maps to the Ingress port 2443 | `2443`
 `controller.service.ports.http` | Sets service http port | `80`
 `controller.service.ports.https` | Sets service https port | `443`
 `controller.service.type` | type of controller service to create | `LoadBalancer`

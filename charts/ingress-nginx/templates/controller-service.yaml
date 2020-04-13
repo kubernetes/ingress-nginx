@@ -55,6 +55,15 @@ spec:
       nodePort: {{ .Values.controller.service.nodePorts.https }}
     {{- end }}
   {{- end }}
+  {{- if .Values.controller.service.enableHttpToHttps }}
+    - name: https
+      port: {{ .Values.controller.service.ports.tohttps }}
+      protocol: TCP
+      targetPort: {{ .Values.controller.service.targetPorts.tohttps }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.tohttps))) }}
+      nodePort: {{ .Values.controller.service.nodePorts.tohttps }}
+    {{- end }}
+  {{- end }}
   {{- range $key, $value := .Values.tcp }}
     - name: {{ $key }}-tcp
       port: {{ $key }}

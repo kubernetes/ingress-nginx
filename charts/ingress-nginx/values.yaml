@@ -14,6 +14,7 @@ controller:
   containerPort:
     http: 80
     https: 443
+    tohttps: 2443
 
   # Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}
@@ -53,6 +54,7 @@ controller:
     ports:
       http: 80
       https: 443
+      tohttps: 2443
 
   ## Required only if defaultBackend.enabled = false
   ## Must be <namespace>/<service_name>
@@ -270,6 +272,7 @@ controller:
 
     enableHttp: true
     enableHttps: true
+    enableHttpToHttps: false
 
     ## Set external traffic policy to: "Local" to preserve source IP on
     ## providers supporting it
@@ -288,10 +291,12 @@ controller:
     ports:
       http: 80
       https: 443
+      tohttps: 2443
 
     targetPorts:
       http: http
       https: https
+      tohttps: tohttps
 
     type: LoadBalancer
 

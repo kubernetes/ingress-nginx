@@ -61,6 +61,10 @@ local function redirect_to_https(location_config)
     return false
   end
 
+  if location_config.redirect_to_http_port == ngx.var.server_port then
+    return true
+  end
+
   if location_config.force_ssl_redirect and ngx.var.pass_access_scheme == "http" then
     return true
   end
