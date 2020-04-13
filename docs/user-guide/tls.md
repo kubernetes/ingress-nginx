@@ -105,7 +105,7 @@ The first version to fully support Kube-Lego is Nginx Ingress controller 0.8.
 
 To provide the most secure baseline configuration possible,
 
-nginx-ingress defaults to using TLS 1.2 only and a [secure set of TLS ciphers][ssl-ciphers].
+nginx-ingress defaults to using TLS 1.2 and 1.3 only, with a [secure set of TLS ciphers][ssl-ciphers].
 
 ### Legacy TLS
 
@@ -117,7 +117,8 @@ are not compatible with nginx-ingress's default configuration.
 
 To change this default behavior, use a [ConfigMap][ConfigMap].
 
-A sample ConfigMap fragment to allow these older clients to connect could look something like the following:
+A sample ConfigMap fragment to allow these older clients to connect could look something like the following
+(generated using the Mozilla SSL Configuration Generator)[mozilla-ssl-config-old]:
 
 ```
 kind: ConfigMap
@@ -125,8 +126,8 @@ apiVersion: v1
 metadata:
   name: nginx-config
 data:
-  ssl-ciphers: "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
-  ssl-protocols: "TLSv1 TLSv1.1 TLSv1.2"
+  ssl-ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA"
+  ssl-protocols: "TLSv1 TLSv1.1 TLSv1.2 TLSv1.3"
 ```
 
 
@@ -137,3 +138,4 @@ data:
 [ConfigMap]: ./nginx-configuration/configmap.md
 [ssl-ciphers]: ./nginx-configuration/configmap.md#ssl-ciphers
 [SNI]: https://en.wikipedia.org/wiki/Server_Name_Indication
+[mozilla-ssl-config-old]: https://ssl-config.mozilla.org/#server=nginx&config=old
