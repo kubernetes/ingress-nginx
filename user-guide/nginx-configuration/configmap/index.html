@@ -923,6 +923,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#plugins" class="md-nav__link">
+    plugins
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#server-tokens" class="md-nav__link">
     server-tokens
   </a>
@@ -2563,6 +2570,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#plugins" class="md-nav__link">
+    plugins
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#server-tokens" class="md-nav__link">
     server-tokens
   </a>
@@ -3588,6 +3602,11 @@ Same for numbers, like "100".</p>
 <td align="left">64</td>
 </tr>
 <tr>
+<td align="left"><a href="#plugins">plugins</a></td>
+<td align="left">[]string</td>
+<td align="left"></td>
+</tr>
+<tr>
 <td align="left"><a href="#reuse-port">reuse-port</a></td>
 <td align="left">bool</td>
 <td align="left">"true"</td>
@@ -4285,6 +4304,9 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <li><a href="http://nginx.org/en/docs/hash.html">http://nginx.org/en/docs/hash.html</a></li>
 <li><a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size">https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size</a></li>
 </ul>
+<h2 id="plugins">plugins<a class="headerlink" href="#plugins" title="Permanent link"> ¶</a></h2>
+<p>Configures plugins to use placed in the directory /etc/nginx/lua/plugins. Every plugin has to have main.lua in the root.
+Every plugin has to bundle all of its dependencies. The execution order follows the definition.</p>
 <h2 id="server-tokens">server-tokens<a class="headerlink" href="#server-tokens" title="Permanent link"> ¶</a></h2>
 <p>Send NGINX Server header in responses and display NGINX version in error pages. <em><strong>default:</strong></em> is enabled</p>
 <h2 id="ssl-ciphers">ssl-ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link"> ¶</a></h2>
