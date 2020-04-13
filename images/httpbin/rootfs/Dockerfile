@@ -12,18 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM k8s.gcr.io/debian-base:v2.0.0
+FROM alpine:3.11
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-WORKDIR /httpbin
-
-RUN clean-install python3-pip curl python3-pip git bash gcc libstdc++-8-dev libpython3.7-dev python3-setuptools \
-    && pip3 install --no-cache-dir httpbin \
-    && pip3 install --no-cache-dir gunicorn \
-    && pip3 install --no-cache-dir gevent \
-    && apt remove git gcc libstdc++-8-dev libpython3.7-dev python3-setuptools --yes
+RUN apk add --no-cache \
+    python3 python3-dev musl-dev gcc g++ make libffi libffi-dev libstdc++ \
+ && pip3 install gunicorn httpbin gevent \
+ && apk del python3-dev musl-dev gcc g++ make libffi-dev
 
 EXPOSE 80
 
