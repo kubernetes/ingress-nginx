@@ -4305,8 +4305,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <li><a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size">https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size</a></li>
 </ul>
 <h2 id="plugins">plugins<a class="headerlink" href="#plugins" title="Permanent link"> ¶</a></h2>
-<p>Configures plugins to use placed in the directory /etc/nginx/lua/plugins. Every plugin has to have main.lua in the root.
-Every plugin has to bundle all of its dependencies. The execution order follows the definition.</p>
+<p>Activates plugins installed in <code class="codehilite"><span class="err">/etc/nginx/lua/plugins</span></code>. Refer to <a href="https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/plugins/README.md">ingress-nginx plugins README</a> for more information on how to write and install a plugin.</p>
 <h2 id="server-tokens">server-tokens<a class="headerlink" href="#server-tokens" title="Permanent link"> ¶</a></h2>
 <p>Send NGINX Server header in responses and display NGINX version in error pages. <em><strong>default:</strong></em> is enabled</p>
 <h2 id="ssl-ciphers">ssl-ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link"> ¶</a></h2>
