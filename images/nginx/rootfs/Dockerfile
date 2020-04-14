@@ -49,7 +49,7 @@ RUN apk add -U --no-cache \
     nano \
     tzdata \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
-  && ln -s /usr/local/lib/mimalloc-1.6/libmimalloc.so /usr/local/lib/libmimalloc.so \
+  && ln -s /usr/local/lib/mimalloc-*/libmimalloc.so /usr/local/lib/libmimalloc.so \
   && addgroup -Sg 101 www-data \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
     -s /sbin/nologin -G www-data -g www-data www-data \
