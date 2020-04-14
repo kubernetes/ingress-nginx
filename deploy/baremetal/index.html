@@ -1261,7 +1261,7 @@ Kubernetes cluster running on bare-metal.</p>
 <h2 id="a-pure-software-solution-metallb">A pure software solution: MetalLB<a class="headerlink" href="#a-pure-software-solution-metallb" title="Permanent link"> ¶</a></h2>
 <p><a href="https://metallb.universe.tf/">MetalLB</a> provides a network load-balancer implementation for Kubernetes clusters that do not run on a
 supported cloud provider, effectively allowing the usage of LoadBalancer Services within any cluster.</p>
-<p>This section demonstrates how to use the <a href="https://metallb.universe.tf/tutorial/layer2/">Layer 2 configuration mode</a> of MetalLB together with the NGINX
+<p>This section demonstrates how to use the <a href="https://metallb.universe.tf/concepts/layer2/">Layer 2 configuration mode</a> of MetalLB together with the NGINX
 Ingress controller in a Kubernetes cluster that has <strong>publicly accessible nodes</strong>. In this mode, one node attracts all
 the traffic for the <code class="codehilite"><span class="err">ingress-nginx</span></code> Service IP. See <a href="https://metallb.universe.tf/usage/#traffic-policies">Traffic policies</a> for more details.</p>
 <p><img alt="MetalLB in L2 mode" src="../../images/baremetal/metallb.jpg" /></p>
