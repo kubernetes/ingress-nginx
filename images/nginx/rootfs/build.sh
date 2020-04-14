@@ -21,7 +21,7 @@ set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-export NGINX_VERSION=1.17.9
+export NGINX_VERSION=1.17.10
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -44,7 +44,7 @@ export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 export RESTY_LUAROCKS_VERSION=3.1.3
-export LUAJIT_VERSION=38cb695de87cfeadcba5eeaf57f39e41d529aa1f
+export LUAJIT_VERSION=33b5f86c1b9ab53ad09c33f9097df42403587bea
 export LUA_RESTY_BALANCER=0.03
 export LUA_RESTY_CORE=0.1.17
 export LUA_CJSON_VERSION=2.1.0.7
@@ -132,7 +132,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 7dd65d405c753c41b7fdab9415cfb4bdbaf093ec6d9f7432072d52cb7bcbb689 \
+get_src a9aa73f19c352a6b166d78e2a664bb3ef1295bbe6d3cc5aa7404bd4664ab4b83 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -177,7 +177,7 @@ get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
 
-get_src 7df70318762f4150e6fe27dd1838b4b89a24ed9351c82d0b332d7d8457dd1b95 \
+get_src 3b43917a155b81b7d20fdbb3c1be4419626286616195ad426bff1f2f59aa3659 \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 
 get_src 6dc1088ab7f788b6c849fbaa6300517c8fdf88991a70b778be79c284c36857bf \
