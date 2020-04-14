@@ -47,6 +47,7 @@ var _ = framework.IngressNginxDescribe("plugins", func() {
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
+			WithHeader("User-Agent", "hello").
 			Expect().
 			Status(http.StatusOK).
 			Body().Contains("x-hello-world=1")
