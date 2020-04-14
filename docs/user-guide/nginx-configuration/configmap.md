@@ -468,7 +468,7 @@ _References:_
 
 ## plugins
 
-Activates plugins installed in `/etc/nginx/lua/plugins`. Refer to [ingress-nginx plugins README](../../../rootfs/etc/nginx/lua/plugins/README.md) for more information on how to write and install a plugin.
+Activates plugins installed in `/etc/nginx/lua/plugins`. Refer to [ingress-nginx plugins README](https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/plugins/README.md) for more information on how to write and install a plugin.
 
 ## server-tokens
 
