@@ -89,7 +89,7 @@ Server: nginx/1.15.2
 
 [metallb]: https://metallb.universe.tf/
 [metallb-maturity]: https://metallb.universe.tf/concepts/maturity/
-[metallb-l2]: https://metallb.universe.tf/tutorial/layer2/
+[metallb-l2]: https://metallb.universe.tf/concepts/layer2/
 [metallb-install]: https://metallb.universe.tf/installation/
 [metallb-trafficpolicies]: https://metallb.universe.tf/usage/#traffic-policies
 
