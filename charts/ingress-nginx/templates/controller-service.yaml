@@ -26,13 +26,13 @@ spec:
 {{- if .Values.controller.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.controller.service.loadBalancerSourceRanges | nindent 4 }}
 {{- end }}
-{{- if and .Values.controller.service.externalTrafficPolicy (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if .Values.controller.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
 {{- end }}
 {{- if .Values.controller.service.sessionAffinity }}
   sessionAffinity: {{ .Values.controller.service.sessionAffinity }}
 {{- end }}
-{{- if and .Values.controller.service.healthCheckNodePort (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if .Values.controller.service.healthCheckNodePort }}
   healthCheckNodePort: {{ .Values.controller.service.healthCheckNodePort }}
 {{- end }}
   ports:
