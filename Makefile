@@ -247,12 +247,7 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
-	@docker buildx build \
-		--pull \
-		--load \
-		--progress plain \
-		-t ingress-nginx/mkdocs images/mkdocs
-	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
+	@docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material:5.1.0
 
 .PHONY: misspell
 misspell: check-go-version ## Check for spelling errors.

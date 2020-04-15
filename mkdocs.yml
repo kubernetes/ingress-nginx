@@ -17,17 +17,19 @@ markdown_extensions:
       permalink: " ¶"
 theme:
   name: material
-  feature:
-    tabs: true
-  logo:
-    icon: "public" # globe icon
+  features:
+    - tabs
+    - instant
+
   palette:
     primary: "teal"
     accent: "green"
+
   include_sidebar: true
 
 plugins:
   - search
+  - awesome-pages
 
 extra_css: [extra.css]
 
