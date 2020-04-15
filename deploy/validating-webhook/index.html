@@ -1,40 +1,19 @@
 
 
 
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
-      <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
         <link rel="canonical" href="https://kubernetes.github.io/ingress-nginx/deploy/validating-webhook/">
       
       
-      
-        <meta name="lang:clipboard.copy" content="Copy to clipboard">
-      
-        <meta name="lang:clipboard.copied" content="Copied to clipboard">
-      
-        <meta name="lang:search.language" content="en">
-      
-        <meta name="lang:search.pipeline.stopwords" content="True">
-      
-        <meta name="lang:search.pipeline.trimmer" content="True">
-      
-        <meta name="lang:search.result.none" content="No matching documents">
-      
-        <meta name="lang:search.result.one" content="1 matching document">
-      
-        <meta name="lang:search.result.other" content="# matching documents">
-      
-        <meta name="lang:search.tokenizer" content="[\s\-]+">
-      
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.3">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.1.0">
     
     
       
@@ -42,9 +21,9 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.89dc9fe3.min.css">
       
-        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecd4686e.min.css">
       
       
         
@@ -53,16 +32,13 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
-    
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
     
-    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
       <link rel="stylesheet" href="../../extra.css">
@@ -70,99 +46,80 @@
     
       
         
-<script>
-  window.ga = window.ga || function() {
-    (ga.q = ga.q || []).push(arguments)
-  }
-  ga.l = +new Date
-  /* Setup integration and send page view */
-  ga("create", "UA-118407822-1", "kubernetes.github.io")
-  ga("set", "anonymizeIp", true)
-  ga("send", "pageview")
-  /* Register handler to log search on blur */
-  document.addEventListener("DOMContentLoaded", () => {
-    if (document.forms.search) {
-      var query = document.forms.search.query
-      query.addEventListener("blur", function() {
-        if (this.value) {
-          var path = document.location.pathname;
-          ga("send", "pageview", path + "?q=" + this.value)
-        }
-      })
-    }
-  })
-</script>
+<link rel="preconnect dns-prefetch" href="https://www.google-analytics.com">
+<script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-118407822-1","kubernetes.github.io"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){if(this.value){var e=document.location.pathname;ga("send","pageview",e+"?q="+this.value)}})}),document.addEventListener("DOMContentSwitch",function(){ga("send","pageview")})</script>
 <script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
   </head>
   
+  
     
     
     <body dir="ltr" data-md-color-primary="teal" data-md-color-accent="green">
   
-    <svg class="md-svg">
-      <defs>
-        
-        
-          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
-        
-      </defs>
-    </svg>
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
-    
-      <a href="#validating-webhook-admission-controller" tabindex="0" class="md-skip">
-        Skip to content
-      </a>
-    
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#validating-webhook-admission-controller" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid">
-    <div class="md-flex">
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
-          
-            <i class="md-icon">public</i>
-          
-        </a>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
-      </div>
-      <div class="md-flex__cell md-flex__cell--stretch">
-        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-          
-            <span class="md-header-nav__topic">
-              NGINX Ingress Controller
-            </span>
-            <span class="md-header-nav__topic">
-              
-                Validating Webhook (admission controller)
-              
-            </span>
-          
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo" aria-label="NGINX Ingress Controller">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            NGINX Ingress Controller
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              Validating Webhook (admission controller)
+            
+          </span>
         </div>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        
-          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
-          
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+      </label>
+      
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
-      <label class="md-icon md-search__icon" for="__search"></label>
-      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
-        &#xE5CD;
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
       </button>
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="result">
+        <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Type to start searching
           </div>
@@ -172,45 +129,35 @@
     </div>
   </div>
 </div>
+    
+    
+      <div class="md-header-nav__source">
         
-      </div>
-      
-        <div class="md-flex__cell md-flex__cell--shrink">
-          <div class="md-header-nav__source">
-            
-
-
-  
-
-<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     kubernetes/ingress-nginx
   </div>
 </a>
-          </div>
-        </div>
-      
-    </div>
+      </div>
+    
   </nav>
 </header>
     
-    <div class="md-container">
+    <div class="md-container" data-md-component="container">
       
         
       
       
         
+          
 
   
 
-<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+<nav class="md-tabs md-tabs--active" aria-label="Tabs" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
       
@@ -275,38 +222,33 @@
     </ul>
   </div>
 </nav>
+        
       
-      <main class="md-main" role="main">
-        <div class="md-main__inner md-grid" data-md-component="container">
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
           
             
               <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" data-md-level="0">
-  <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo" aria-label="NGINX Ingress Controller">
       
-        <i class="md-icon">public</i>
-      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
     </a>
     NGINX Ingress Controller
   </label>
   
     <div class="md-nav__source">
       
-
-
-  
-
-<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     kubernetes/ingress-nginx
   </div>
@@ -322,13 +264,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
     
     <label class="md-nav__link" for="nav-1">
       Welcome
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Welcome" data-md-level="1">
       <label class="md-nav__title" for="nav-1">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Welcome
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -408,13 +356,19 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
     
     <label class="md-nav__link" for="nav-2">
       Deployment
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Deployment" data-md-level="1">
       <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Deployment
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -465,13 +419,16 @@
 
   <li class="md-nav__item md-nav__item--active">
     
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
       
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         Validating Webhook (admission controller)
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
+        </span>
       </label>
     
     <a href="./" title="Validating Webhook (admission controller)" class="md-nav__link md-nav__link--active">
@@ -479,13 +436,18 @@
     </a>
     
       
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -500,7 +462,7 @@
     Configure the webhook
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Configure the webhook">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -508,7 +470,7 @@
     Generate the webhook certificate
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Generate the webhook certificate">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -516,7 +478,7 @@
     Self signed certificate
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Self signed certificate">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -569,10 +531,6 @@
   
 </li>
       
-      
-      
-      
-      
     </ul>
   
 </nav>
@@ -604,13 +562,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
     
     <label class="md-nav__link" for="nav-3">
       User guide
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="User guide" data-md-level="1">
       <label class="md-nav__title" for="nav-3">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         User guide
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -623,13 +587,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1">
     
     <label class="md-nav__link" for="nav-3-1">
       NGINX Configuration
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="NGINX Configuration" data-md-level="2">
       <label class="md-nav__title" for="nav-3-1">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         NGINX Configuration
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -851,13 +821,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
     
     <label class="md-nav__link" for="nav-3-13">
       Third party addons
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Third party addons" data-md-level="2">
       <label class="md-nav__title" for="nav-3-13">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Third party addons
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -904,13 +880,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
     
     <label class="md-nav__link" for="nav-4">
       Examples
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Examples" data-md-level="1">
       <label class="md-nav__title" for="nav-4">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Examples
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -959,13 +941,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
     
     <label class="md-nav__link" for="nav-4-4">
       Auth
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Auth" data-md-level="2">
       <label class="md-nav__title" for="nav-4-4">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Auth
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1031,13 +1019,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
     
     <label class="md-nav__link" for="nav-4-5">
       Customization
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Customization" data-md-level="2">
       <label class="md-nav__title" for="nav-4-5">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Customization
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1232,13 +1226,18 @@
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -1253,7 +1252,7 @@
     Configure the webhook
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Configure the webhook">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1261,7 +1260,7 @@
     Generate the webhook certificate
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Generate the webhook certificate">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1269,7 +1268,7 @@
     Self signed certificate
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Self signed certificate">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1322,10 +1321,6 @@
   
 </li>
       
-      
-      
-      
-      
     </ul>
   
 </nav>
@@ -1338,7 +1333,12 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/deploy/validating-webhook.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/deploy/validating-webhook.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" /></svg>
+                  </a>
+                
+                
+                  
                 
                 
                 <h1 id="validating-webhook-admission-controller">Validating webhook (admission controller)<a class="headerlink" href="#validating-webhook-admission-controller" title="Permanent link"> ¶</a></h1>
@@ -1352,8 +1352,8 @@
 <p>Validating webhook must be served using TLS, you need to generate a certificate. Note that kube API server is checking the hostname of the certificate, the common name of your certificate will need to match the service name.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p>To run the validating webhook with a service named <code class="codehilite"><span class="err">ingress-validation-webhook</span></code> in the namespace <code class="codehilite"><span class="err">ingress-nginx</span></code>, run</p>
-<div class="codehilite"><pre><span></span><code>openssl req -x509 -newkey rsa:2048 -keyout certificate.pem -out key.pem -days <span class="m">365</span> -nodes -subj <span class="s2">&quot;/CN=ingress-validation-webhook.ingress-nginx.svc&quot;</span>
+<p>To run the validating webhook with a service named <code>ingress-validation-webhook</code> in the namespace <code>ingress-nginx</code>, run</p>
+<div class="highlight"><pre><span></span><code>openssl req -x509 -newkey rsa:2048 -keyout certificate.pem -out key.pem -days <span class="m">365</span> -nodes -subj <span class="s2">&quot;/CN=ingress-validation-webhook.ingress-nginx.svc&quot;</span>
 </code></pre></div>
 
 </div>
@@ -1361,68 +1361,68 @@
 <p>Kubernetes also provides primitives to sign a certificate request. Here is an example on how to use it</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<div class="codehilite"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+<div class="highlight"><pre><span></span><code>#!/bin/bash
 
-<span class="nv">SERVICE_NAME</span><span class="o">=</span>ingress-nginx
-<span class="nv">NAMESPACE</span><span class="o">=</span>ingress-nginx
+SERVICE_NAME=ingress-nginx
+NAMESPACE=ingress-nginx
 
-<span class="nv">TEMP_DIRECTORY</span><span class="o">=</span><span class="k">$(</span>mktemp -d<span class="k">)</span>
-<span class="nb">echo</span> <span class="s2">&quot;creating certs in directory </span><span class="si">${</span><span class="nv">TEMP_DIRECTORY</span><span class="si">}</span><span class="s2">&quot;</span>
+TEMP_DIRECTORY=$(mktemp -d)
+echo &quot;creating certs in directory ${TEMP_DIRECTORY}&quot;
 
-cat <span class="s">&lt;&lt;EOF &gt;&gt; ${TEMP_DIRECTORY}/csr.conf</span>
-<span class="s">[req]</span>
-<span class="s">req_extensions = v3_req</span>
-<span class="s">distinguished_name = req_distinguished_name</span>
-<span class="s">[req_distinguished_name]</span>
-<span class="s">[ v3_req ]</span>
-<span class="s">basicConstraints = CA:FALSE</span>
-<span class="s">keyUsage = nonRepudiation, digitalSignature, keyEncipherment</span>
-<span class="s">extendedKeyUsage = serverAuth</span>
-<span class="s">subjectAltName = @alt_names</span>
-<span class="s">[alt_names]</span>
-<span class="s">DNS.1 = ${SERVICE_NAME}</span>
-<span class="s">DNS.2 = ${SERVICE_NAME}.${NAMESPACE}</span>
-<span class="s">DNS.3 = ${SERVICE_NAME}.${NAMESPACE}.svc</span>
-<span class="s">EOF</span>
+cat &lt;&lt;EOF &gt;&gt; ${TEMP_DIRECTORY}/csr.conf
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = ${SERVICE_NAME}
+DNS.2 = ${SERVICE_NAME}.${NAMESPACE}
+DNS.3 = ${SERVICE_NAME}.${NAMESPACE}.svc
+EOF
 
-openssl genrsa -out <span class="si">${</span><span class="nv">TEMP_DIRECTORY</span><span class="si">}</span>/server-key.pem <span class="m">2048</span>
-openssl req -new -key <span class="si">${</span><span class="nv">TEMP_DIRECTORY</span><span class="si">}</span>/server-key.pem <span class="se">\</span>
-    -subj <span class="s2">&quot;/CN=</span><span class="si">${</span><span class="nv">SERVICE_NAME</span><span class="si">}</span><span class="s2">.</span><span class="si">${</span><span class="nv">NAMESPACE</span><span class="si">}</span><span class="s2">.svc&quot;</span> <span class="se">\</span>
-    -out <span class="si">${</span><span class="nv">TEMP_DIRECTORY</span><span class="si">}</span>/server.csr <span class="se">\</span>
-    -config <span class="si">${</span><span class="nv">TEMP_DIRECTORY</span><span class="si">}</span>/csr.conf
+openssl genrsa -out ${TEMP_DIRECTORY}/server-key.pem 2048
+openssl req -new -key ${TEMP_DIRECTORY}/server-key.pem \
+    -subj &quot;/CN=${SERVICE_NAME}.${NAMESPACE}.svc&quot; \
+    -out ${TEMP_DIRECTORY}/server.csr \
+    -config ${TEMP_DIRECTORY}/csr.conf
 
-cat <span class="s">&lt;&lt;EOF | kubectl create -f -</span>
-<span class="s">apiVersion: certificates.k8s.io/v1beta1</span>
-<span class="s">kind: CertificateSigningRequest</span>
-<span class="s">metadata:</span>
-<span class="s">  name: ${SERVICE_NAME}.${NAMESPACE}.svc</span>
-<span class="s">spec:</span>
-<span class="s">  request: $(cat ${TEMP_DIRECTORY}/server.csr | base64 | tr -d &#39;\n&#39;)</span>
-<span class="s">  usages:</span>
-<span class="s">  - digital signature</span>
-<span class="s">  - key encipherment</span>
-<span class="s">  - server auth</span>
-<span class="s">EOF</span>
+cat &lt;&lt;EOF | kubectl create -f -
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: ${SERVICE_NAME}.${NAMESPACE}.svc
+spec:
+  request: $(cat ${TEMP_DIRECTORY}/server.csr | base64 | tr -d &#39;\n&#39;)
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+EOF
 
-kubectl certificate approve <span class="si">${</span><span class="nv">SERVICE_NAME</span><span class="si">}</span>.<span class="si">${</span><span class="nv">NAMESPACE</span><span class="si">}</span>.svc
+kubectl certificate approve ${SERVICE_NAME}.${NAMESPACE}.svc
 
-<span class="k">for</span> x in <span class="k">$(</span>seq <span class="m">10</span><span class="k">)</span><span class="p">;</span> <span class="k">do</span>
-    <span class="nv">SERVER_CERT</span><span class="o">=</span><span class="k">$(</span>kubectl get csr <span class="si">${</span><span class="nv">SERVICE_NAME</span><span class="si">}</span>.<span class="si">${</span><span class="nv">NAMESPACE</span><span class="si">}</span>.svc -o <span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.status.certificate}&#39;</span><span class="k">)</span>
-    <span class="k">if</span> <span class="o">[[</span> <span class="si">${</span><span class="nv">SERVER_CERT</span><span class="si">}</span> !<span class="o">=</span> <span class="s1">&#39;&#39;</span> <span class="o">]]</span><span class="p">;</span> <span class="k">then</span>
-        <span class="nb">break</span>
-    <span class="k">fi</span>
-    sleep <span class="m">1</span>
-<span class="k">done</span>
-<span class="k">if</span> <span class="o">[[</span> <span class="si">${</span><span class="nv">SERVER_CERT</span><span class="si">}</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="o">]]</span><span class="p">;</span> <span class="k">then</span>
-    <span class="nb">echo</span> <span class="s2">&quot;ERROR: After approving csr </span><span class="si">${</span><span class="nv">SERVICE_NAME</span><span class="si">}</span><span class="s2">.</span><span class="si">${</span><span class="nv">NAMESPACE</span><span class="si">}</span><span class="s2">.svc, the signed certificate did not appear on the resource. Giving up after 10 attempts.&quot;</span> &gt;<span class="p">&amp;</span><span class="m">2</span>
-    <span class="nb">exit</span> <span class="m">1</span>
-<span class="k">fi</span>
-<span class="nb">echo</span> <span class="si">${</span><span class="nv">SERVER_CERT</span><span class="si">}</span> <span class="p">|</span> openssl base64 -d -A -out <span class="si">${</span><span class="nv">TEMP_DIRECTORY</span><span class="si">}</span>/server-cert.pem
+for x in $(seq 10); do
+    SERVER_CERT=$(kubectl get csr ${SERVICE_NAME}.${NAMESPACE}.svc -o jsonpath=&#39;{.status.certificate}&#39;)
+    if [[ ${SERVER_CERT} != &#39;&#39; ]]; then
+        break
+    fi
+    sleep 1
+done
+if [[ ${SERVER_CERT} == &#39;&#39; ]]; then
+    echo &quot;ERROR: After approving csr ${SERVICE_NAME}.${NAMESPACE}.svc, the signed certificate did not appear on the resource. Giving up after 10 attempts.&quot; &gt;&amp;2
+    exit 1
+fi
+echo ${SERVER_CERT} | openssl base64 -d -A -out ${TEMP_DIRECTORY}/server-cert.pem
 
-kubectl create secret generic ingress-nginx.svc <span class="se">\</span>
-    --from-file<span class="o">=</span>key.pem<span class="o">=</span><span class="si">${</span><span class="nv">TEMP_DIRECTORY</span><span class="si">}</span>/server-key.pem <span class="se">\</span>
-    --from-file<span class="o">=</span>cert.pem<span class="o">=</span><span class="si">${</span><span class="nv">TEMP_DIRECTORY</span><span class="si">}</span>/server-cert.pem <span class="se">\</span>
-    -n <span class="si">${</span><span class="nv">NAMESPACE</span><span class="si">}</span>
+kubectl create secret generic ingress-nginx.svc \
+    --from-file=key.pem=${TEMP_DIRECTORY}/server-key.pem \
+    --from-file=cert.pem=${TEMP_DIRECTORY}/server-cert.pem \
+    -n ${NAMESPACE}
 </code></pre></div>
 
 </div>
@@ -1438,19 +1438,19 @@ kubectl create secret generic ingress-nginx.svc <span class="se">\</span>
 </thead>
 <tbody>
 <tr>
-<td><code class="codehilite"><span class="err">--validating-webhook</span></code></td>
+<td><code>--validating-webhook</code></td>
 <td>The address to start an admission controller on</td>
-<td><code class="codehilite"><span class="err">:8080</span></code></td>
+<td><code>:8080</code></td>
 </tr>
 <tr>
-<td><code class="codehilite"><span class="err">--validating-webhook-certificate</span></code></td>
+<td><code>--validating-webhook-certificate</code></td>
 <td>The certificate the webhook is using for its TLS handling</td>
-<td><code class="codehilite"><span class="err">/usr/local/certificates/validating-webhook.pem</span></code></td>
+<td><code>/usr/local/certificates/validating-webhook.pem</code></td>
 </tr>
 <tr>
-<td><code class="codehilite"><span class="err">--validating-webhook-key</span></code></td>
+<td><code>--validating-webhook-key</code></td>
 <td>The key the webhook is using for its TLS handling</td>
-<td><code class="codehilite"><span class="err">/usr/local/certificates/validating-webhook-key.pem</span></code></td>
+<td><code>/usr/local/certificates/validating-webhook-key.pem</code></td>
 </tr>
 </tbody>
 </table>
@@ -1459,7 +1459,7 @@ kubectl create secret generic ingress-nginx.svc <span class="se">\</span>
 To check that your kube API server runs with the required flags, please refer to the <a href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook">kubernetes</a> documentation.</p>
 <h3 id="additional-kubernetes-objects">Additional kubernetes objects<a class="headerlink" href="#additional-kubernetes-objects" title="Permanent link"> ¶</a></h3>
 <p>Once both the ingress controller and the kube API server are configured to serve the webhook, add the you can configure the webhook with the following objects:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Service</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ingress-validation-webhook</span>
@@ -1500,12 +1500,9 @@ To check that your kube API server runs with the required flags, please refer to
 </code></pre></div>
 
 <h3 id="using-helm">Using Helm<a class="headerlink" href="#using-helm" title="Permanent link"> ¶</a></h3>
-<p>On nginx-ingress helm chart, set <code class="codehilite"><span class="err">controller.admissionWebhooks.enable</span></code> to <code class="codehilite"><span class="err">true</span></code> (default to <code class="codehilite"><span class="err">false</span></code>) to enabled Validating webhook.</p>
-<p>With <code class="codehilite"><span class="err">controller.admissionWebhooks.patch.enabled</span></code> set to <code class="codehilite"><span class="err">true</span></code> (default value) a certificate will be automatically created and the CA added to ValidatingWebhookConfiguration.
+<p>On nginx-ingress helm chart, set <code>controller.admissionWebhooks.enable</code> to <code>true</code> (default to <code>false</code>) to enabled Validating webhook.</p>
+<p>With <code>controller.admissionWebhooks.patch.enabled</code> set to <code>true</code> (default value) a certificate will be automatically created and the CA added to ValidatingWebhookConfiguration.
 For more details check <a href="https://github.com/helm/charts/tree/master/stable/nginx-ingress/templates/admission-webhooks/job-patch">here</a>.</p>
-                
-                  
-                
                 
               
               
@@ -1522,34 +1519,34 @@ For more details check <a href="https://github.com/helm/charts/tree/master/stabl
 <footer class="md-footer">
   
     <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../rbac/" title="Role Based Access Control (RBAC)" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+          <a href="../rbac/" title="Role Based Access Control (RBAC)" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
             </div>
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
                 Role Based Access Control (RBAC)
-              </span>
+              </div>
             </div>
           </a>
         
         
-          <a href="../upgrade/" title="Upgrade" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+          <a href="../upgrade/" title="Upgrade" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
                 Upgrade
-              </span>
+              </div>
             </div>
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" /></svg>
             </div>
           </a>
         
@@ -1560,11 +1557,10 @@ For more details check <a href="https://github.com/helm/charts/tree/master/stabl
     <div class="md-footer-meta__inner md-grid">
       <div class="md-footer-copyright">
         
-        powered by
-        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
-        and
+        Made with
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs</a>
+          Material for MkDocs
+        </a>
       </div>
       
     </div>
@@ -1573,9 +1569,18 @@ For more details check <a href="https://github.com/helm/charts/tree/master/stabl
       
     </div>
     
-      <script src="../../assets/javascripts/application.df00da5d.js"></script>
+      <script src="../../assets/javascripts/vendor.36cbf620.min.js"></script>
+      <script src="../../assets/javascripts/bundle.00c583dd.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
-      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      <script>
+        app = initialize({
+          base: "../..",
+          features: ["tabs", "instant"],
+          search: Object.assign({
+            worker: "../../assets/javascripts/worker/search.7f7c8775.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
       
     
   </body>

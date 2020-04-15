@@ -1,40 +1,19 @@
 
 
 
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
-      <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
         <link rel="canonical" href="https://kubernetes.github.io/ingress-nginx/how-it-works/">
       
       
-      
-        <meta name="lang:clipboard.copy" content="Copy to clipboard">
-      
-        <meta name="lang:clipboard.copied" content="Copied to clipboard">
-      
-        <meta name="lang:search.language" content="en">
-      
-        <meta name="lang:search.pipeline.stopwords" content="True">
-      
-        <meta name="lang:search.pipeline.trimmer" content="True">
-      
-        <meta name="lang:search.result.none" content="No matching documents">
-      
-        <meta name="lang:search.result.one" content="1 matching document">
-      
-        <meta name="lang:search.result.other" content="# matching documents">
-      
-        <meta name="lang:search.tokenizer" content="[\s\-]+">
-      
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.3">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.1.0">
     
     
       
@@ -42,9 +21,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.adb8469c.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.89dc9fe3.min.css">
       
-        <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecd4686e.min.css">
       
       
         
@@ -53,16 +32,13 @@
       
     
     
-      <script src="../assets/javascripts/modernizr.86422ebf.js"></script>
-    
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
     
-    <link rel="stylesheet" href="../assets/fonts/material-icons.css">
     
     
       <link rel="stylesheet" href="../extra.css">
@@ -70,99 +46,80 @@
     
       
         
-<script>
-  window.ga = window.ga || function() {
-    (ga.q = ga.q || []).push(arguments)
-  }
-  ga.l = +new Date
-  /* Setup integration and send page view */
-  ga("create", "UA-118407822-1", "kubernetes.github.io")
-  ga("set", "anonymizeIp", true)
-  ga("send", "pageview")
-  /* Register handler to log search on blur */
-  document.addEventListener("DOMContentLoaded", () => {
-    if (document.forms.search) {
-      var query = document.forms.search.query
-      query.addEventListener("blur", function() {
-        if (this.value) {
-          var path = document.location.pathname;
-          ga("send", "pageview", path + "?q=" + this.value)
-        }
-      })
-    }
-  })
-</script>
+<link rel="preconnect dns-prefetch" href="https://www.google-analytics.com">
+<script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-118407822-1","kubernetes.github.io"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){if(this.value){var e=document.location.pathname;ga("send","pageview",e+"?q="+this.value)}})}),document.addEventListener("DOMContentSwitch",function(){ga("send","pageview")})</script>
 <script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
   </head>
   
+  
     
     
     <body dir="ltr" data-md-color-primary="teal" data-md-color-accent="green">
   
-    <svg class="md-svg">
-      <defs>
-        
-        
-          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
-        
-      </defs>
-    </svg>
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
-    
-      <a href="#how-it-works" tabindex="0" class="md-skip">
-        Skip to content
-      </a>
-    
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-it-works" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid">
-    <div class="md-flex">
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
-          
-            <i class="md-icon">public</i>
-          
-        </a>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
-      </div>
-      <div class="md-flex__cell md-flex__cell--stretch">
-        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-          
-            <span class="md-header-nav__topic">
-              NGINX Ingress Controller
-            </span>
-            <span class="md-header-nav__topic">
-              
-                How it works
-              
-            </span>
-          
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo" aria-label="NGINX Ingress Controller">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            NGINX Ingress Controller
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              How it works
+            
+          </span>
         </div>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        
-          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
-          
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+      </label>
+      
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
-      <label class="md-icon md-search__icon" for="__search"></label>
-      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
-        &#xE5CD;
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
       </button>
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="result">
+        <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Type to start searching
           </div>
@@ -172,45 +129,35 @@
     </div>
   </div>
 </div>
+    
+    
+      <div class="md-header-nav__source">
         
-      </div>
-      
-        <div class="md-flex__cell md-flex__cell--shrink">
-          <div class="md-header-nav__source">
-            
-
-
-  
-
-<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     kubernetes/ingress-nginx
   </div>
 </a>
-          </div>
-        </div>
-      
-    </div>
+      </div>
+    
   </nav>
 </header>
     
-    <div class="md-container">
+    <div class="md-container" data-md-component="container">
       
         
       
       
         
+          
 
   
 
-<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+<nav class="md-tabs md-tabs--active" aria-label="Tabs" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
       
@@ -275,38 +222,33 @@
     </ul>
   </div>
 </nav>
+        
       
-      <main class="md-main" role="main">
-        <div class="md-main__inner md-grid" data-md-component="container">
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
           
             
               <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" data-md-level="0">
-  <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo" aria-label="NGINX Ingress Controller">
       
-        <i class="md-icon">public</i>
-      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
     </a>
     NGINX Ingress Controller
   </label>
   
     <div class="md-nav__source">
       
-
-
-  
-
-<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     kubernetes/ingress-nginx
   </div>
@@ -324,13 +266,19 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" checked>
     
     <label class="md-nav__link" for="nav-1">
       Welcome
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Welcome" data-md-level="1">
       <label class="md-nav__title" for="nav-1">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Welcome
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -357,13 +305,16 @@
 
   <li class="md-nav__item md-nav__item--active">
     
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
       
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         How it works
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
+        </span>
       </label>
     
     <a href="./" title="How it works" class="md-nav__link md-nav__link--active">
@@ -371,13 +322,18 @@
     </a>
     
       
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -413,7 +369,7 @@
     Avoiding reloads
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Avoiding reloads">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -434,10 +390,6 @@
     </nav>
   
 </li>
-      
-      
-      
-      
       
     </ul>
   
@@ -494,13 +446,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
     
     <label class="md-nav__link" for="nav-2">
       Deployment
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Deployment" data-md-level="1">
       <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Deployment
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -578,13 +536,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
     
     <label class="md-nav__link" for="nav-3">
       User guide
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="User guide" data-md-level="1">
       <label class="md-nav__title" for="nav-3">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         User guide
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -597,13 +561,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1">
     
     <label class="md-nav__link" for="nav-3-1">
       NGINX Configuration
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="NGINX Configuration" data-md-level="2">
       <label class="md-nav__title" for="nav-3-1">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         NGINX Configuration
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -825,13 +795,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
     
     <label class="md-nav__link" for="nav-3-13">
       Third party addons
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Third party addons" data-md-level="2">
       <label class="md-nav__title" for="nav-3-13">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Third party addons
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -878,13 +854,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
     
     <label class="md-nav__link" for="nav-4">
       Examples
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Examples" data-md-level="1">
       <label class="md-nav__title" for="nav-4">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Examples
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -933,13 +915,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
     
     <label class="md-nav__link" for="nav-4-4">
       Auth
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Auth" data-md-level="2">
       <label class="md-nav__title" for="nav-4-4">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Auth
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1005,13 +993,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
     
     <label class="md-nav__link" for="nav-4-5">
       Customization
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Customization" data-md-level="2">
       <label class="md-nav__title" for="nav-4-5">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Customization
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1206,13 +1200,18 @@
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -1248,7 +1247,7 @@
     Avoiding reloads
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Avoiding reloads">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1270,10 +1269,6 @@
   
 </li>
       
-      
-      
-      
-      
     </ul>
   
 </nav>
@@ -1286,16 +1281,21 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/how-it-works.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/how-it-works.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" /></svg>
+                  </a>
+                
+                
+                  
                 
                 
                 <h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link"> ¶</a></h1>
 <p>The objective of this document is to explain how the NGINX Ingress controller works, in particular how the NGINX model is built and why we need one.</p>
 <h2 id="nginx-configuration">NGINX configuration<a class="headerlink" href="#nginx-configuration" title="Permanent link"> ¶</a></h2>
-<p>The goal of this Ingress controller is the assembly of a configuration file (nginx.conf). The main implication of this requirement is the need to reload NGINX after any change in the configuration file. <em>Though it is important to note that we don't reload Nginx on changes that impact only an <code class="codehilite"><span class="err">upstream</span></code> configuration (i.e Endpoints change when you deploy your app)</em>. We use <a href="https://github.com/openresty/lua-nginx-module">lua-nginx-module</a> to achieve this. Check <a href="#avoiding-reloads-on-endpoints-changes">below</a> to learn more about how it's done.</p>
+<p>The goal of this Ingress controller is the assembly of a configuration file (nginx.conf). The main implication of this requirement is the need to reload NGINX after any change in the configuration file. <em>Though it is important to note that we don't reload Nginx on changes that impact only an <code>upstream</code> configuration (i.e Endpoints change when you deploy your app)</em>. We use <a href="https://github.com/openresty/lua-nginx-module">lua-nginx-module</a> to achieve this. Check <a href="#avoiding-reloads-on-endpoints-changes">below</a> to learn more about how it's done.</p>
 <h2 id="nginx-model">NGINX model<a class="headerlink" href="#nginx-model" title="Permanent link"> ¶</a></h2>
 <p>Usually, a Kubernetes Controller utilizes the <a href="https://coreos.com/kubernetes/docs/latest/replication-controller.html#the-reconciliation-loop-in-detail">synchronization loop pattern</a> to check if the desired state in the controller is updated or a change is required. To this purpose, we need to build a model using different objects from the cluster, in particular (in no special order) Ingresses, Services, Endpoints, Secrets, and Configmaps to generate a point in time configuration file that reflects the state of the cluster.</p>
-<p>To get this object from the cluster, we use <a href="https://godoc.org/k8s.io/client-go/informers#NewFilteredSharedInformerFactory">Kubernetes Informers</a>, in particular, <code class="codehilite"><span class="err">FilteredSharedInformer</span></code>. This informers allows reacting to changes in using <a href="https://godoc.org/k8s.io/client-go/tools/cache#ResourceEventHandlerFuncs">callbacks</a> to individual changes when a new object is added, modified or removed. Unfortunately, there is no way to know if a particular change is going to affect the final configuration file. Therefore on every change, we have to rebuild a new model from scratch based on the state of cluster and compare it to the current model. If the new model equals to the current one, then we avoid generating a new NGINX configuration and triggering a reload. Otherwise, we check if the difference is only about Endpoints. If so we then send the new list of Endpoints to a Lua handler running inside Nginx using HTTP POST request and again avoid generating a new NGINX configuration and triggering a reload. If the difference between running and new model is about more than just Endpoints we create a new NGINX configuration based on the new model, replace the current model and trigger a reload.</p>
+<p>To get this object from the cluster, we use <a href="https://godoc.org/k8s.io/client-go/informers#NewFilteredSharedInformerFactory">Kubernetes Informers</a>, in particular, <code>FilteredSharedInformer</code>. This informers allows reacting to changes in using <a href="https://godoc.org/k8s.io/client-go/tools/cache#ResourceEventHandlerFuncs">callbacks</a> to individual changes when a new object is added, modified or removed. Unfortunately, there is no way to know if a particular change is going to affect the final configuration file. Therefore on every change, we have to rebuild a new model from scratch based on the state of cluster and compare it to the current model. If the new model equals to the current one, then we avoid generating a new NGINX configuration and triggering a reload. Otherwise, we check if the difference is only about Endpoints. If so we then send the new list of Endpoints to a Lua handler running inside Nginx using HTTP POST request and again avoid generating a new NGINX configuration and triggering a reload. If the difference between running and new model is about more than just Endpoints we create a new NGINX configuration based on the new model, replace the current model and trigger a reload.</p>
 <p>One of the uses of the model is to avoid unnecessary reloads when there's no change in the state and to detect conflicts in definitions.</p>
 <p>The final representation of the NGINX configuration is generated from a <a href="https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/template/nginx.tmpl">Go template</a> using the new model as input for the variables required by the template.</p>
 <h2 id="building-the-nginx-model">Building the NGINX model<a class="headerlink" href="#building-the-nginx-model" title="Permanent link"> ¶</a></h2>
@@ -1303,7 +1303,7 @@
 <p>Operations to build the model:</p>
 <ul>
 <li>
-<p>Order Ingress rules by <code class="codehilite"><span class="err">CreationTimestamp</span></code> field, i.e., old rules first.</p>
+<p>Order Ingress rules by <code>CreationTimestamp</code> field, i.e., old rules first.</p>
 </li>
 <li>
 <p>If the same path for the same host is defined in more than one Ingress, the oldest rule wins.</p>
@@ -1325,7 +1325,7 @@
 <ul>
 <li>New Ingress Resource Created.</li>
 <li>TLS section is added to existing Ingress.</li>
-<li>Change in Ingress annotations that impacts more than just upstream configuration. For instance <code class="codehilite"><span class="err">load-balance</span></code> annotation does not require a reload.</li>
+<li>Change in Ingress annotations that impacts more than just upstream configuration. For instance <code>load-balance</code> annotation does not require a reload.</li>
 <li>A path is added/removed from an Ingress.</li>
 <li>An Ingress, Service, Secret is removed.</li>
 <li>Some missing referenced object from the Ingress is available, like a Service or Secret.</li>
@@ -1334,15 +1334,12 @@
 <h2 id="avoiding-reloads">Avoiding reloads<a class="headerlink" href="#avoiding-reloads" title="Permanent link"> ¶</a></h2>
 <p>In some cases, it is possible to avoid reloads, in particular when there is a change in the endpoints, i.e., a pod is started or replaced. It is out of the scope of this Ingress controller to remove reloads completely. This would require an incredible amount of work and at some point makes no sense. This can change only if NGINX changes the way new configurations are read, basically, new changes do not replace worker processes.</p>
 <h3 id="avoiding-reloads-on-endpoints-changes">Avoiding reloads on Endpoints changes<a class="headerlink" href="#avoiding-reloads-on-endpoints-changes" title="Permanent link"> ¶</a></h3>
-<p>On every endpoint change the controller fetches endpoints from all the services it sees and generates corresponding Backend objects. It then sends these objects to a Lua handler running inside Nginx. The Lua code in turn stores those backends in a shared memory zone. Then for every request Lua code running in <a href="https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md"><code class="codehilite"><span class="err">balancer_by_lua</span></code></a> context detects what endpoints it should choose upstream peer from and applies the configured load balancing algorithm to choose the peer. Then Nginx takes care of the rest. This way we avoid reloading Nginx on endpoint changes. <em>Note</em> that this includes annotation changes that affects only <code class="codehilite"><span class="err">upstream</span></code> configuration in Nginx as well.</p>
+<p>On every endpoint change the controller fetches endpoints from all the services it sees and generates corresponding Backend objects. It then sends these objects to a Lua handler running inside Nginx. The Lua code in turn stores those backends in a shared memory zone. Then for every request Lua code running in <a href="https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md"><code>balancer_by_lua</code></a> context detects what endpoints it should choose upstream peer from and applies the configured load balancing algorithm to choose the peer. Then Nginx takes care of the rest. This way we avoid reloading Nginx on endpoint changes. <em>Note</em> that this includes annotation changes that affects only <code>upstream</code> configuration in Nginx as well.</p>
 <p>In a relatively big clusters with frequently deploying apps this feature saves significant number of Nginx reloads which can otherwise affect response latency, load balancing quality (after every reload Nginx resets the state of load balancing) and so on.</p>
 <h3 id="avoiding-outage-from-wrong-configuration">Avoiding outage from wrong configuration<a class="headerlink" href="#avoiding-outage-from-wrong-configuration" title="Permanent link"> ¶</a></h3>
-<p>Because the ingress controller works using the <a href="https://coreos.com/kubernetes/docs/latest/replication-controller.html#the-reconciliation-loop-in-detail">synchronization loop pattern</a>, it is applying the configuration for all matching objects. In case some Ingress objects have a broken configuration, for example a syntax error in the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/configuration-snippet</span></code> annotation, the generated configuration becomes invalid, does not reload and hence no more ingresses will be taken into account.</p>
+<p>Because the ingress controller works using the <a href="https://coreos.com/kubernetes/docs/latest/replication-controller.html#the-reconciliation-loop-in-detail">synchronization loop pattern</a>, it is applying the configuration for all matching objects. In case some Ingress objects have a broken configuration, for example a syntax error in the <code>nginx.ingress.kubernetes.io/configuration-snippet</code> annotation, the generated configuration becomes invalid, does not reload and hence no more ingresses will be taken into account.</p>
 <p>To prevent this situation to happen, the nginx ingress controller optionally exposes a <a href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook">validating admission webhook server</a> to ensure the validity of incoming ingress objects.
 This webhook appends the incoming ingress objects to the list of ingresses, generates the configuration and calls nginx to ensure the configuration has no syntax errors.</p>
-                
-                  
-                
                 
               
               
@@ -1359,34 +1356,34 @@ This webhook appends the incoming ingress objects to the list of ingresses, gene
 <footer class="md-footer">
   
     <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href=".." title="Welcome" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+          <a href=".." title="Welcome" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
             </div>
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
                 Welcome
-              </span>
+              </div>
             </div>
           </a>
         
         
-          <a href="../troubleshooting/" title="Troubleshooting" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+          <a href="../troubleshooting/" title="Troubleshooting" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
                 Troubleshooting
-              </span>
+              </div>
             </div>
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" /></svg>
             </div>
           </a>
         
@@ -1397,11 +1394,10 @@ This webhook appends the incoming ingress objects to the list of ingresses, gene
     <div class="md-footer-meta__inner md-grid">
       <div class="md-footer-copyright">
         
-        powered by
-        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
-        and
+        Made with
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs</a>
+          Material for MkDocs
+        </a>
       </div>
       
     </div>
@@ -1410,9 +1406,18 @@ This webhook appends the incoming ingress objects to the list of ingresses, gene
       
     </div>
     
-      <script src="../assets/javascripts/application.df00da5d.js"></script>
+      <script src="../assets/javascripts/vendor.36cbf620.min.js"></script>
+      <script src="../assets/javascripts/bundle.00c583dd.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
-      <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
+      <script>
+        app = initialize({
+          base: "..",
+          features: ["tabs", "instant"],
+          search: Object.assign({
+            worker: "../assets/javascripts/worker/search.7f7c8775.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
       
     
   </body>

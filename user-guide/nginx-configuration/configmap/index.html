@@ -1,40 +1,19 @@
 
 
 
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
-      <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
         <link rel="canonical" href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/">
       
       
-      
-        <meta name="lang:clipboard.copy" content="Copy to clipboard">
-      
-        <meta name="lang:clipboard.copied" content="Copied to clipboard">
-      
-        <meta name="lang:search.language" content="en">
-      
-        <meta name="lang:search.pipeline.stopwords" content="True">
-      
-        <meta name="lang:search.pipeline.trimmer" content="True">
-      
-        <meta name="lang:search.result.none" content="No matching documents">
-      
-        <meta name="lang:search.result.one" content="1 matching document">
-      
-        <meta name="lang:search.result.other" content="# matching documents">
-      
-        <meta name="lang:search.tokenizer" content="[\s\-]+">
-      
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.3">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.1.0">
     
     
       
@@ -42,9 +21,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.adb8469c.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.89dc9fe3.min.css">
       
-        <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.a8b3c06d.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecd4686e.min.css">
       
       
         
@@ -53,16 +32,13 @@
       
     
     
-      <script src="../../../assets/javascripts/modernizr.86422ebf.js"></script>
-    
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
     
-    <link rel="stylesheet" href="../../../assets/fonts/material-icons.css">
     
     
       <link rel="stylesheet" href="../../../extra.css">
@@ -70,99 +46,80 @@
     
       
         
-<script>
-  window.ga = window.ga || function() {
-    (ga.q = ga.q || []).push(arguments)
-  }
-  ga.l = +new Date
-  /* Setup integration and send page view */
-  ga("create", "UA-118407822-1", "kubernetes.github.io")
-  ga("set", "anonymizeIp", true)
-  ga("send", "pageview")
-  /* Register handler to log search on blur */
-  document.addEventListener("DOMContentLoaded", () => {
-    if (document.forms.search) {
-      var query = document.forms.search.query
-      query.addEventListener("blur", function() {
-        if (this.value) {
-          var path = document.location.pathname;
-          ga("send", "pageview", path + "?q=" + this.value)
-        }
-      })
-    }
-  })
-</script>
+<link rel="preconnect dns-prefetch" href="https://www.google-analytics.com">
+<script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-118407822-1","kubernetes.github.io"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){if(this.value){var e=document.location.pathname;ga("send","pageview",e+"?q="+this.value)}})}),document.addEventListener("DOMContentSwitch",function(){ga("send","pageview")})</script>
 <script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
   </head>
   
+  
     
     
     <body dir="ltr" data-md-color-primary="teal" data-md-color-accent="green">
   
-    <svg class="md-svg">
-      <defs>
-        
-        
-          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
-        
-      </defs>
-    </svg>
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
-    
-      <a href="#configmaps" tabindex="0" class="md-skip">
-        Skip to content
-      </a>
-    
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#configmaps" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid">
-    <div class="md-flex">
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
-          
-            <i class="md-icon">public</i>
-          
-        </a>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
-      </div>
-      <div class="md-flex__cell md-flex__cell--stretch">
-        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-          
-            <span class="md-header-nav__topic">
-              NGINX Ingress Controller
-            </span>
-            <span class="md-header-nav__topic">
-              
-                ConfigMap
-              
-            </span>
-          
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo" aria-label="NGINX Ingress Controller">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            NGINX Ingress Controller
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              ConfigMap
+            
+          </span>
         </div>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        
-          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
-          
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+      </label>
+      
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
-      <label class="md-icon md-search__icon" for="__search"></label>
-      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
-        &#xE5CD;
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
       </button>
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="result">
+        <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Type to start searching
           </div>
@@ -172,45 +129,35 @@
     </div>
   </div>
 </div>
+    
+    
+      <div class="md-header-nav__source">
         
-      </div>
-      
-        <div class="md-flex__cell md-flex__cell--shrink">
-          <div class="md-header-nav__source">
-            
-
-
-  
-
-<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     kubernetes/ingress-nginx
   </div>
 </a>
-          </div>
-        </div>
-      
-    </div>
+      </div>
+    
   </nav>
 </header>
     
-    <div class="md-container">
+    <div class="md-container" data-md-component="container">
       
         
       
       
         
+          
 
   
 
-<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+<nav class="md-tabs md-tabs--active" aria-label="Tabs" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
       
@@ -275,38 +222,33 @@
     </ul>
   </div>
 </nav>
+        
       
-      <main class="md-main" role="main">
-        <div class="md-main__inner md-grid" data-md-component="container">
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
           
             
               <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" data-md-level="0">
-  <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo" aria-label="NGINX Ingress Controller">
       
-        <i class="md-icon">public</i>
-      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
     </a>
     NGINX Ingress Controller
   </label>
   
     <div class="md-nav__source">
       
-
-
-  
-
-<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     kubernetes/ingress-nginx
   </div>
@@ -322,13 +264,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
     
     <label class="md-nav__link" for="nav-1">
       Welcome
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Welcome" data-md-level="1">
       <label class="md-nav__title" for="nav-1">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Welcome
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -406,13 +354,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
     
     <label class="md-nav__link" for="nav-2">
       Deployment
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Deployment" data-md-level="1">
       <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Deployment
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -492,13 +446,19 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
     
     <label class="md-nav__link" for="nav-3">
       User guide
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="User guide" data-md-level="1">
       <label class="md-nav__title" for="nav-3">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         User guide
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -513,13 +473,19 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1" checked>
     
     <label class="md-nav__link" for="nav-3-1">
       NGINX Configuration
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="NGINX Configuration" data-md-level="2">
       <label class="md-nav__title" for="nav-3-1">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         NGINX Configuration
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -570,13 +536,16 @@
 
   <li class="md-nav__item md-nav__item--active">
     
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
       
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         ConfigMap
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
+        </span>
       </label>
     
     <a href="./" title="ConfigMap" class="md-nav__link md-nav__link--active">
@@ -584,13 +553,18 @@
     </a>
     
       
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -1671,10 +1645,6 @@
   
 </li>
       
-      
-      
-      
-      
     </ul>
   
 </nav>
@@ -1850,13 +1820,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
     
     <label class="md-nav__link" for="nav-3-13">
       Third party addons
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Third party addons" data-md-level="2">
       <label class="md-nav__title" for="nav-3-13">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Third party addons
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1903,13 +1879,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
     
     <label class="md-nav__link" for="nav-4">
       Examples
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Examples" data-md-level="1">
       <label class="md-nav__title" for="nav-4">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Examples
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1958,13 +1940,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
     
     <label class="md-nav__link" for="nav-4-4">
       Auth
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Auth" data-md-level="2">
       <label class="md-nav__title" for="nav-4-4">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Auth
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -2030,13 +2018,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
     
     <label class="md-nav__link" for="nav-4-5">
       Customization
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Customization" data-md-level="2">
       <label class="md-nav__title" for="nav-4-5">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Customization
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -2231,13 +2225,18 @@
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -3318,10 +3317,6 @@
   
 </li>
       
-      
-      
-      
-      
     </ul>
   
 </nav>
@@ -3334,7 +3329,12 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/nginx-configuration/configmap.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/nginx-configuration/configmap.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" /></svg>
+                  </a>
+                
+                
+                  
                 
                 
                 <h1 id="configmaps">ConfigMaps<a class="headerlink" href="#configmaps" title="Permanent link"> ¶</a></h1>
@@ -3343,7 +3343,7 @@
 components for the nginx-controller.</p>
 <p>In order to overwrite nginx-controller configuration values as seen in <a href="https://github.com/kubernetes/ingress-nginx/blob/master/internal/ingress/controller/config/config.go">config.go</a>,
 you can add key-value pairs to the data section of the config-map. For Example:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">data</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="nt">data</span><span class="p">:</span>
   <span class="nt">map-hash-bucket-size</span><span class="p">:</span> <span class="s">&quot;128&quot;</span>
   <span class="nt">ssl-protocols</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">SSLv2</span>
 </code></pre></div>
@@ -3353,7 +3353,7 @@ you can add key-value pairs to the data section of the config-map. For Example:<
 <p>The key and values in a ConfigMap can only be strings.
 This means that we want a value with boolean values we need to quote the values, like "true" or "false".
 Same for numbers, like "100".</p>
-<p>"Slice" types (defined below as <code class="codehilite"><span class="err">[]string</span></code> or <code class="codehilite"><span class="err">[]int</span></code> can be provided as a comma-delimited string.</p>
+<p>"Slice" types (defined below as <code>[]string</code> or <code>[]int</code> can be provided as a comma-delimited string.</p>
 </div>
 <h2 id="configuration-options">Configuration options<a class="headerlink" href="#configuration-options" title="Permanent link"> ¶</a></h2>
 <p>The following table shows a configuration option's name, type, and the default value:</p>
@@ -3534,12 +3534,12 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#log-format-upstream">log-format-upstream</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite"><span class="err">$remote_addr - $remote_user [$time_local] &quot;$request&quot; $status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id</span></code></td>
+<td align="left"><code>$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id</code></td>
 </tr>
 <tr>
 <td align="left"><a href="#log-format-stream">log-format-stream</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite"><span class="err">[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time</span></code></td>
+<td align="left"><code>[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time</code></td>
 </tr>
 <tr>
 <td align="left"><a href="#enable-multi-accept">enable-multi-accept</a></td>
@@ -3589,7 +3589,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#server-name-hash-bucket-size">server-name-hash-bucket-size</a></td>
 <td align="left">int</td>
-<td align="left"><code class="codehilite"><span class="err">&lt;size of the processor’s cache line&gt;</span></code></td>
+<td align="left"><code>&lt;size of the processor’s cache line&gt;</code></td>
 </tr>
 <tr>
 <td align="left"><a href="#proxy-headers-hash-max-size">proxy-headers-hash-max-size</a></td>
@@ -3654,7 +3654,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#ssl-session-ticket-key">ssl-session-ticket-key</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite"><span class="err">&lt;Randomly Generated&gt;</span></code></td>
+<td align="left"><code>&lt;Randomly Generated&gt;</code></td>
 </tr>
 <tr>
 <td align="left"><a href="#ssl-session-timeout">ssl-session-timeout</a></td>
@@ -3724,7 +3724,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#worker-processes">worker-processes</a></td>
 <td align="left">string</td>
-<td align="left"><code class="codehilite"><span class="err">&lt;Number of CPUs&gt;</span></code></td>
+<td align="left"><code>&lt;Number of CPUs&gt;</code></td>
 </tr>
 <tr>
 <td align="left"><a href="#worker-cpu-affinity">worker-cpu-affinity</a></td>
@@ -4147,13 +4147,13 @@ Same for numbers, like "100".</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log">http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log</a></p>
 <h2 id="access-log-path">access-log-path<a class="headerlink" href="#access-log-path" title="Permanent link"> ¶</a></h2>
-<p>Access log path. Goes to <code class="codehilite"><span class="err">/var/log/nginx/access.log</span></code> by default.</p>
-<p><strong>Note:</strong> the file <code class="codehilite"><span class="err">/var/log/nginx/access.log</span></code> is a symlink to <code class="codehilite"><span class="err">/dev/stdout</span></code></p>
+<p>Access log path. Goes to <code>/var/log/nginx/access.log</code> by default.</p>
+<p><strong>Note:</strong> the file <code>/var/log/nginx/access.log</code> is a symlink to <code>/dev/stdout</code></p>
 <h2 id="enable-access-log-for-default-backend">enable-access-log-for-default-backend<a class="headerlink" href="#enable-access-log-for-default-backend" title="Permanent link"> ¶</a></h2>
 <p>Enables logging access to default backend. <em><strong>default:</strong></em> is disabled.</p>
 <h2 id="error-log-path">error-log-path<a class="headerlink" href="#error-log-path" title="Permanent link"> ¶</a></h2>
-<p>Error log path. Goes to <code class="codehilite"><span class="err">/var/log/nginx/error.log</span></code> by default.</p>
-<p><strong>Note:</strong> the file <code class="codehilite"><span class="err">/var/log/nginx/error.log</span></code> is a symlink to <code class="codehilite"><span class="err">/dev/stderr</span></code></p>
+<p>Error log path. Goes to <code>/var/log/nginx/error.log</code> by default.</p>
+<p><strong>Note:</strong> the file <code>/var/log/nginx/error.log</code> is a symlink to <code>/dev/stderr</code></p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/ngx_core_module.html#error_log">http://nginx.org/en/docs/ngx_core_module.html#error_log</a></p>
 <h2 id="enable-modsecurity">enable-modsecurity<a class="headerlink" href="#enable-modsecurity" title="Permanent link"> ¶</a></h2>
@@ -4183,9 +4183,9 @@ Same for numbers, like "100".</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log">http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log</a></p>
 <h2 id="disable-ipv6">disable-ipv6<a class="headerlink" href="#disable-ipv6" title="Permanent link"> ¶</a></h2>
-<p>Disable listening on IPV6. <em><strong>default:</strong></em> <code class="codehilite"><span class="err">false</span></code>; IPv6 listening is enabled</p>
+<p>Disable listening on IPV6. <em><strong>default:</strong></em> <code>false</code>; IPv6 listening is enabled</p>
 <h2 id="disable-ipv6-dns">disable-ipv6-dns<a class="headerlink" href="#disable-ipv6-dns" title="Permanent link"> ¶</a></h2>
-<p>Disable IPV6 for nginx DNS resolver. <em><strong>default:</strong></em> <code class="codehilite"><span class="err">false</span></code>; IPv6 resolving enabled.</p>
+<p>Disable IPV6 for nginx DNS resolver. <em><strong>default:</strong></em> <code>false</code>; IPv6 resolving enabled.</p>
 <h2 id="enable-underscores-in-headers">enable-underscores-in-headers<a class="headerlink" href="#enable-underscores-in-headers" title="Permanent link"> ¶</a></h2>
 <p>Enables underscores in header names. <em><strong>default:</strong></em> is disabled</p>
 <h2 id="ignore-invalid-headers">ignore-invalid-headers<a class="headerlink" href="#ignore-invalid-headers" title="Permanent link"> ¶</a></h2>
@@ -4244,7 +4244,7 @@ HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature
 <h2 id="log-format-upstream">log-format-upstream<a class="headerlink" href="#log-format-upstream" title="Permanent link"> ¶</a></h2>
 <p>Sets the nginx <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format">log format</a>.
 Example for json output:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">log-format-upstream:</span> <span class="err">&#39;</span><span class="p">{</span><span class="nt">&quot;time&quot;</span><span class="p">:</span> <span class="s2">&quot;$time_iso8601&quot;</span><span class="p">,</span> <span class="nt">&quot;remote_addr&quot;</span><span class="p">:</span> <span class="s2">&quot;$proxy_protocol_addr&quot;</span><span class="p">,</span> <span class="nt">&quot;x-forward-for&quot;</span><span class="p">:</span> <span class="s2">&quot;$proxy_add_x_forwarded_for&quot;</span><span class="p">,</span> <span class="nt">&quot;request_id&quot;</span><span class="p">:</span> <span class="s2">&quot;$req_id&quot;</span><span class="p">,</span>
+<div class="highlight"><pre><span></span><code><span class="err">log-format-upstream:</span> <span class="err">&#39;</span><span class="p">{</span><span class="nt">&quot;time&quot;</span><span class="p">:</span> <span class="s2">&quot;$time_iso8601&quot;</span><span class="p">,</span> <span class="nt">&quot;remote_addr&quot;</span><span class="p">:</span> <span class="s2">&quot;$proxy_protocol_addr&quot;</span><span class="p">,</span> <span class="nt">&quot;x-forward-for&quot;</span><span class="p">:</span> <span class="s2">&quot;$proxy_add_x_forwarded_for&quot;</span><span class="p">,</span> <span class="nt">&quot;request_id&quot;</span><span class="p">:</span> <span class="s2">&quot;$req_id&quot;</span><span class="p">,</span>
   <span class="nt">&quot;remote_user&quot;</span><span class="p">:</span> <span class="s2">&quot;$remote_user&quot;</span><span class="p">,</span> <span class="nt">&quot;bytes_sent&quot;</span><span class="p">:</span> <span class="err">$bytes_sent</span><span class="p">,</span> <span class="nt">&quot;request_time&quot;</span><span class="p">:</span> <span class="err">$request_time</span><span class="p">,</span> <span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="err">$status</span><span class="p">,</span> <span class="nt">&quot;vhost&quot;</span><span class="p">:</span> <span class="s2">&quot;$host&quot;</span><span class="p">,</span> <span class="nt">&quot;request_proto&quot;</span><span class="p">:</span> <span class="s2">&quot;$server_protocol&quot;</span><span class="p">,</span>
   <span class="nt">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;$uri&quot;</span><span class="p">,</span> <span class="nt">&quot;request_query&quot;</span><span class="p">:</span> <span class="s2">&quot;$args&quot;</span><span class="p">,</span> <span class="nt">&quot;request_length&quot;</span><span class="p">:</span> <span class="err">$request_length</span><span class="p">,</span> <span class="nt">&quot;duration&quot;</span><span class="p">:</span> <span class="err">$request_time</span><span class="p">,</span><span class="nt">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;$request_method&quot;</span><span class="p">,</span> <span class="nt">&quot;http_referrer&quot;</span><span class="p">:</span> <span class="s2">&quot;$http_referer&quot;</span><span class="p">,</span>
   <span class="nt">&quot;http_user_agent&quot;</span><span class="p">:</span> <span class="s2">&quot;$http_user_agent&quot;</span> <span class="p">}</span><span class="err">&#39;</span>
@@ -4305,13 +4305,13 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <li><a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size">https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size</a></li>
 </ul>
 <h2 id="plugins">plugins<a class="headerlink" href="#plugins" title="Permanent link"> ¶</a></h2>
-<p>Activates plugins installed in <code class="codehilite"><span class="err">/etc/nginx/lua/plugins</span></code>. Refer to <a href="https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/plugins/README.md">ingress-nginx plugins README</a> for more information on how to write and install a plugin.</p>
+<p>Activates plugins installed in <code>/etc/nginx/lua/plugins</code>. Refer to <a href="https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/plugins/README.md">ingress-nginx plugins README</a> for more information on how to write and install a plugin.</p>
 <h2 id="server-tokens">server-tokens<a class="headerlink" href="#server-tokens" title="Permanent link"> ¶</a></h2>
 <p>Send NGINX Server header in responses and display NGINX version in error pages. <em><strong>default:</strong></em> is enabled</p>
 <h2 id="ssl-ciphers">ssl-ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link"> ¶</a></h2>
 <p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers">ciphers</a> list to enable. The ciphers are specified in the format understood by the OpenSSL library.</p>
 <p>The default cipher list is:
- <code class="codehilite"><span class="c">ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256</span></code>.</p>
+ <code>ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256</code>.</p>
 <p>The ordering of a ciphersuite is very important because it decides which algorithms are going to be selected in priority. The recommendation above prioritizes algorithms that provide perfect <a href="https://wiki.mozilla.org/Security/Server_Side_TLS#Forward_Secrecy">forward secrecy</a>.</p>
 <p>Please check the <a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla SSL Configuration Generator</a>.</p>
 <h2 id="ssl-ecdh-curve">ssl-ecdh-curve<a class="headerlink" href="#ssl-ecdh-curve" title="Permanent link"> ¶</a></h2>
@@ -4327,12 +4327,12 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <li><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam">http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam</a></li>
 </ul>
 <h2 id="ssl-protocols">ssl-protocols<a class="headerlink" href="#ssl-protocols" title="Permanent link"> ¶</a></h2>
-<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols">SSL protocols</a> to use. The default is: <code class="codehilite"><span class="err">TLSv1.2</span></code>.</p>
-<p>Please check the result of the configuration using <code class="codehilite"><span class="c">https://ssllabs.com/ssltest/analyze.html</span></code> or <code class="codehilite"><span class="c">https://testssl.sh</span></code>.</p>
+<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols">SSL protocols</a> to use. The default is: <code>TLSv1.2</code>.</p>
+<p>Please check the result of the configuration using <code>https://ssllabs.com/ssltest/analyze.html</code> or <code>https://testssl.sh</code>.</p>
 <h2 id="ssl-early-data">ssl-early-data<a class="headerlink" href="#ssl-early-data" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables TLS 1.3 <a href="https://tools.ietf.org/html/rfc8446#section-2.3">early data</a></p>
-<p>This requires <code class="codehilite"><span class="err">ssl-protocols</span></code> to have <code class="codehilite"><span class="err">TLSv1.3</span></code> enabled.</p>
-<p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data">ssl_early_data</a>. The default is: <code class="codehilite"><span class="err">false</span></code>.</p>
+<p>This requires <code>ssl-protocols</code> to have <code>TLSv1.3</code> enabled.</p>
+<p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data">ssl_early_data</a>. The default is: <code>false</code>.</p>
 <h2 id="ssl-session-cache">ssl-session-cache<a class="headerlink" href="#ssl-session-cache" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables the use of shared <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache">SSL cache</a> among worker processes.</p>
 <h2 id="ssl-session-cache-size">ssl-session-cache-size<a class="headerlink" href="#ssl-session-cache-size" title="Permanent link"> ¶</a></h2>
@@ -4341,7 +4341,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <p>Enables or disables session resumption through <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session tickets</a>.</p>
 <h2 id="ssl-session-ticket-key">ssl-session-ticket-key<a class="headerlink" href="#ssl-session-ticket-key" title="Permanent link"> ¶</a></h2>
 <p>Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
-To create a ticket: <code class="codehilite"><span class="err">openssl rand 80 | openssl enc -A -base64</span></code></p>
+To create a ticket: <code>openssl rand 80 | openssl enc -A -base64</code></p>
 <p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session ticket-key</a>, by default, a randomly generated key is used.</p>
 <h2 id="ssl-session-timeout">ssl-session-timeout<a class="headerlink" href="#ssl-session-timeout" title="Permanent link"> ¶</a></h2>
 <p>Sets the time during which a client may <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout">reuse the session</a> parameters stored in a cache.</p>
@@ -4364,9 +4364,9 @@ To create a ticket: <code class="codehilite"><span class="err">openssl rand 80 |
 </blockquote>
 <h2 id="use-geoip2">use-geoip2<a class="headerlink" href="#use-geoip2" title="Permanent link"> ¶</a></h2>
 <p>Enables the <a href="https://github.com/leev/ngx_http_geoip2_module">geoip2 module</a> for NGINX.
-Since <code class="codehilite"><span class="err">0.27.0</span></code> and due to a <a href="https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases">change in the MaxMind databases</a> a license is required to have access to the databases.
-For this reason, it is required to define a new flag <code class="codehilite"><span class="err">--maxmind-license-key</span></code> in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
-Alternatively, it is possible to use a volume to mount the files <code class="codehilite"><span class="err">/etc/nginx/geoip/GeoLite2-City.mmdb</span></code> and <code class="codehilite"><span class="err">/etc/nginx/geoip/GeoLite2-ASN.mmdb</span></code>, avoiding the overhead of the download.</p>
+Since <code>0.27.0</code> and due to a <a href="https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases">change in the MaxMind databases</a> a license is required to have access to the databases.
+For this reason, it is required to define a new flag <code>--maxmind-license-key</code> in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
+Alternatively, it is possible to use a volume to mount the files <code>/etc/nginx/geoip/GeoLite2-City.mmdb</code> and <code>/etc/nginx/geoip/GeoLite2-ASN.mmdb</code>, avoiding the overhead of the download.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>If the feature is enabled but the files are missing, GeoIP2 will not be enabled.</p>
@@ -4374,7 +4374,7 @@ Alternatively, it is possible to use a volume to mount the files <code class="co
 <p><em><strong>default:</strong></em> false</p>
 <h2 id="enable-brotli">enable-brotli<a class="headerlink" href="#enable-brotli" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables compression of HTTP responses using the <a href="https://github.com/google/ngx_brotli">"brotli" module</a>.
-The default mime type list to compress is: <code class="codehilite"><span class="err">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</span></code>. <em><strong>default:</strong></em> is disabled</p>
+The default mime type list to compress is: <code>application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>. <em><strong>default:</strong></em> is disabled</p>
 <blockquote>
 <p><strong>Note:</strong> Brotli does not works in Safari &lt; 11. For more information see <a href="https://caniuse.com/#feat=brotli">https://caniuse.com/#feat=brotli</a></p>
 </blockquote>
@@ -4382,7 +4382,7 @@ The default mime type list to compress is: <code class="codehilite"><span class=
 <p>Sets the Brotli Compression Level that will be used. <em><strong>default:</strong></em> 4</p>
 <h2 id="brotli-types">brotli-types<a class="headerlink" href="#brotli-types" title="Permanent link"> ¶</a></h2>
 <p>Sets the MIME Types that will be compressed on-the-fly by brotli.
-<em><strong>default:</strong></em> <code class="codehilite"><span class="err">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</span></code></p>
+<em><strong>default:</strong></em> <code>application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code></p>
 <h2 id="use-http2">use-http2<a class="headerlink" href="#use-http2" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_v2_module.html">HTTP/2</a> support in secure connections.</p>
 <h2 id="gzip-level">gzip-level<a class="headerlink" href="#gzip-level" title="Permanent link"> ¶</a></h2>
@@ -4390,8 +4390,8 @@ The default mime type list to compress is: <code class="codehilite"><span class=
 <h2 id="gzip-min-length">gzip-min-length<a class="headerlink" href="#gzip-min-length" title="Permanent link"> ¶</a></h2>
 <p>Minimum length of responses to be returned to the client before it is eligible for gzip compression, in bytes. <em><strong>default:</strong></em> 256</p>
 <h2 id="gzip-types">gzip-types<a class="headerlink" href="#gzip-types" title="Permanent link"> ¶</a></h2>
-<p>Sets the MIME types in addition to "text/html" to compress. The special value "*" matches any MIME type. Responses with the "text/html" type are always compressed if <a href="#use-gzip"><code class="codehilite"><span class="err">use-gzip</span></code></a> is enabled.
-<em><strong>default:</strong></em> <code class="codehilite"><span class="err">application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</span></code>.</p>
+<p>Sets the MIME types in addition to "text/html" to compress. The special value "*" matches any MIME type. Responses with the "text/html" type are always compressed if <a href="#use-gzip"><code>use-gzip</code></a> is enabled.
+<em><strong>default:</strong></em> <code>application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>.</p>
 <h2 id="worker-processes">worker-processes<a class="headerlink" href="#worker-processes" title="Permanent link"> ¶</a></h2>
 <p>Sets the number of <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_processes">worker processes</a>.
 The default of "auto" means number of available CPU cores.</p>
@@ -4400,7 +4400,7 @@ The default of "auto" means number of available CPU cores.</p>
 By default worker processes are not bound to any specific CPUs. The value can be:</p>
 <ul>
 <li>"": empty string indicate no affinity is applied.</li>
-<li>cpumask: e.g. <code class="codehilite"><span class="err">0001 0010 0100 1000</span></code> to bind processes to specific cpus.</li>
+<li>cpumask: e.g. <code>0001 0010 0100 1000</code> to bind processes to specific cpus.</li>
 <li>auto: binding worker processes automatically to available CPUs.</li>
 </ul>
 <h2 id="worker-shutdown-timeout">worker-shutdown-timeout<a class="headerlink" href="#worker-shutdown-timeout" title="Permanent link"> ¶</a></h2>
@@ -4412,10 +4412,10 @@ The value can either be:</p>
 <li>round_robin: to use the default round robin loadbalancer</li>
 <li>ewma: to use the Peak EWMA method for routing (<a href="https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/balancer/ewma.lua">implementation</a>)</li>
 </ul>
-<p>The default is <code class="codehilite"><span class="err">round_robin</span></code>.</p>
+<p>The default is <code>round_robin</code>.</p>
 <ul>
-<li>To load balance using consistent hashing of IP or other variables, consider the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/upstream-hash-by</span></code> annotation.</li>
-<li>To load balance using session cookies, consider the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/affinity</span></code> annotation.</li>
+<li>To load balance using consistent hashing of IP or other variables, consider the <code>nginx.ingress.kubernetes.io/upstream-hash-by</code> annotation.</li>
+<li>To load balance using session cookies, consider the <code>nginx.ingress.kubernetes.io/affinity</code> annotation.</li>
 </ul>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/load_balancing.html">http://nginx.org/en/docs/http/load_balancing.html</a></p>
@@ -4458,8 +4458,8 @@ requests is made, the connection is closed.
 <h2 id="bind-address">bind-address<a class="headerlink" href="#bind-address" title="Permanent link"> ¶</a></h2>
 <p>Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.</p>
 <h2 id="use-forwarded-headers">use-forwarded-headers<a class="headerlink" href="#use-forwarded-headers" title="Permanent link"> ¶</a></h2>
-<p>If true, NGINX passes the incoming <code class="codehilite"><span class="err">X-Forwarded-*</span></code> headers to upstreams. Use this option when NGINX is behind another L7 proxy / load balancer that is setting these headers.</p>
-<p>If false, NGINX ignores incoming <code class="codehilite"><span class="err">X-Forwarded-*</span></code> headers, filling them with the request information it sees. Use this option if NGINX is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.</p>
+<p>If true, NGINX passes the incoming <code>X-Forwarded-*</code> headers to upstreams. Use this option when NGINX is behind another L7 proxy / load balancer that is setting these headers.</p>
+<p>If false, NGINX ignores incoming <code>X-Forwarded-*</code> headers, filling them with the request information it sees. Use this option if NGINX is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.</p>
 <h2 id="forwarded-for-header">forwarded-for-header<a class="headerlink" href="#forwarded-for-header" title="Permanent link"> ¶</a></h2>
 <p>Sets the header field for identifying the originating IP address of a client. <em><strong>default:</strong></em> X-Forwarded-For</p>
 <h2 id="compute-full-forwarded-for">compute-full-forwarded-for<a class="headerlink" href="#compute-full-forwarded-for" title="Permanent link"> ¶</a></h2>
@@ -4514,10 +4514,10 @@ Leave blank to use default value (localhost). <em><strong>default:</strong></em>
 <p>Overrides the operation naem to use for any traces crated. <em><strong>default:</strong></em> nginx.handle</p>
 <h2 id="datadog-priority-sampling">datadog-priority-sampling<a class="headerlink" href="#datadog-priority-sampling" title="Permanent link"> ¶</a></h2>
 <p>Specifies to use client-side sampling.
-If true disables client-side sampling (thus ignoring <code class="codehilite"><span class="err">sample_rate</span></code>) and enables distributed priority sampling, where traces are sampled based on a combination of user-assigned priorities and configuration from the agent. <em><strong>default:</strong></em> true</p>
+If true disables client-side sampling (thus ignoring <code>sample_rate</code>) and enables distributed priority sampling, where traces are sampled based on a combination of user-assigned priorities and configuration from the agent. <em><strong>default:</strong></em> true</p>
 <h2 id="datadog-sample-rate">datadog-sample-rate<a class="headerlink" href="#datadog-sample-rate" title="Permanent link"> ¶</a></h2>
 <p>Specifies sample rate for any traces created.
-This is effective only when <code class="codehilite"><span class="err">datadog-priority-sampling</span></code> is <code class="codehilite"><span class="err">false</span></code> <em><strong>default:</strong></em> 1.0</p>
+This is effective only when <code>datadog-priority-sampling</code> is <code>false</code> <em><strong>default:</strong></em> 1.0</p>
 <h2 id="main-snippet">main-snippet<a class="headerlink" href="#main-snippet" title="Permanent link"> ¶</a></h2>
 <p>Adds custom configuration to the main section of the nginx configuration.</p>
 <h2 id="http-snippet">http-snippet<a class="headerlink" href="#http-snippet" title="Permanent link"> ¶</a></h2>
@@ -4530,7 +4530,7 @@ This is effective only when <code class="codehilite"><span class="err">datadog-p
 <h2 id="custom-http-errors">custom-http-errors<a class="headerlink" href="#custom-http-errors" title="Permanent link"> ¶</a></h2>
 <p>Enables which HTTP codes should be passed for processing with the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page">error_page directive</a></p>
 <p>Setting at least one code also enables <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors">proxy_intercept_errors</a> which are required to process error_page.</p>
-<p>Example usage: <code class="codehilite"><span class="c">custom-http-errors: 404,415</span></code></p>
+<p>Example usage: <code>custom-http-errors: 404,415</code></p>
 <h2 id="proxy-body-size">proxy-body-size<a class="headerlink" href="#proxy-body-size" title="Permanent link"> ¶</a></h2>
 <p>Sets the maximum allowed size of the client request body.
 See NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size">client_max_body_size</a>.</p>
@@ -4564,10 +4564,10 @@ See NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#clien
 <p>Sets the global value of redirects (301) to HTTPS if the server has a TLS certificate (defined in an Ingress rule).
 <em><strong>default:</strong></em> "true"</p>
 <h2 id="whitelist-source-range">whitelist-source-range<a class="headerlink" href="#whitelist-source-range" title="Permanent link"> ¶</a></h2>
-<p>Sets the default whitelisted IPs for each <code class="codehilite"><span class="err">server</span></code> block. This can be overwritten by an annotation on an Ingress rule.
+<p>Sets the default whitelisted IPs for each <code>server</code> block. This can be overwritten by an annotation on an Ingress rule.
 See <a href="http://nginx.org/en/docs/http/ngx_http_access_module.html">ngx_http_access_module</a>.</p>
 <h2 id="skip-access-log-urls">skip-access-log-urls<a class="headerlink" href="#skip-access-log-urls" title="Permanent link"> ¶</a></h2>
-<p>Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like <code class="codehilite"><span class="err">/health</span></code> or <code class="codehilite"><span class="err">health-check</span></code> that make "complex" reading the logs. <em><strong>default:</strong></em> is empty</p>
+<p>Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like <code>/health</code> or <code>health-check</code> that make "complex" reading the logs. <em><strong>default:</strong></em> is empty</p>
 <h2 id="limit-rate">limit-rate<a class="headerlink" href="#limit-rate" title="Permanent link"> ¶</a></h2>
 <p>Limits the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.</p>
 <p><em>References:</em>
@@ -4576,12 +4576,12 @@ See <a href="http://nginx.org/en/docs/http/ngx_http_access_module.html">ngx_http
 <p>Sets the initial amount after which the further transmission of a response to a client will be rate limited.</p>
 <h2 id="lua-shared-dicts">lua-shared-dicts<a class="headerlink" href="#lua-shared-dicts" title="Permanent link"> ¶</a></h2>
 <p>Customize default Lua shared dictionaries or define more. You can use the following syntax to do so:</p>
-<div class="codehilite"><pre><span></span><code><span class="c">lua-shared-dicts: &quot;&lt;my dict name&gt;: &lt;my dict size&gt;, [&lt;my dict name&gt;: &lt;my dict size&gt;], ...&quot;</span>
+<div class="highlight"><pre><span></span><code>lua-shared-dicts: &quot;&lt;my dict name&gt;: &lt;my dict size&gt;, [&lt;my dict name&gt;: &lt;my dict size&gt;], ...&quot;
 </code></pre></div>
 
-<p>For example following will set default <code class="codehilite"><span class="err">certificate_data</span></code> dictionary to <code class="codehilite"><span class="err">100M</span></code> and will introduce a new dictionary called
-<code class="codehilite"><span class="err">my_custom_plugin</span></code>:</p>
-<div class="codehilite"><pre><span></span><code><span class="c">lua-shared-dicts: &quot;certificate_data: 100, my_custom_plugin: 5&quot;</span>
+<p>For example following will set default <code>certificate_data</code> dictionary to <code>100M</code> and will introduce a new dictionary called
+<code>my_custom_plugin</code>:</p>
+<div class="highlight"><pre><span></span><code>lua-shared-dicts: &quot;certificate_data: 100, my_custom_plugin: 5&quot;
 </code></pre></div>
 
 <p><em>References:</em>
@@ -4605,34 +4605,34 @@ Supported codes are <a href="https://developer.mozilla.org/docs/Web/HTTP/Status/
 <em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>
 <h2 id="global-auth-url">global-auth-url<a class="headerlink" href="#global-auth-url" title="Permanent link"> ¶</a></h2>
 <p>A url to an existing service that provides authentication for all the locations.
-Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-url</span></code>.
-Locations that should not get authenticated can be listed using <code class="codehilite"><span class="err">no-auth-locations</span></code> See <a href="#no-auth-locations">no-auth-locations</a>. In addition, each service can be excluded from authentication via annotation <code class="codehilite"><span class="err">enable-global-auth</span></code> set to "false".
+Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-url</code>.
+Locations that should not get authenticated can be listed using <code>no-auth-locations</code> See <a href="#no-auth-locations">no-auth-locations</a>. In addition, each service can be excluded from authentication via annotation <code>enable-global-auth</code> set to "false".
 <em><strong>default:</strong></em> ""</p>
 <p><em>References:</em> <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#external-authentication">https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#external-authentication</a></p>
 <h2 id="global-auth-method">global-auth-method<a class="headerlink" href="#global-auth-method" title="Permanent link"> ¶</a></h2>
 <p>A HTTP method to use for an existing service that provides authentication for all the locations.
-Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-method</span></code>.
+Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-method</code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-signin">global-auth-signin<a class="headerlink" href="#global-auth-signin" title="Permanent link"> ¶</a></h2>
 <p>Sets the location of the error page for an existing service that provides authentication for all the locations.
-Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-signin</span></code>.
+Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-signin</code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-response-headers">global-auth-response-headers<a class="headerlink" href="#global-auth-response-headers" title="Permanent link"> ¶</a></h2>
 <p>Sets the headers to pass to backend once authentication request completes. Applied to all the locations.
-Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-response-headers</span></code>.
+Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-response-headers</code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-request-redirect">global-auth-request-redirect<a class="headerlink" href="#global-auth-request-redirect" title="Permanent link"> ¶</a></h2>
 <p>Sets the X-Auth-Request-Redirect header value. Applied to all the locations.
-Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-request-redirect</span></code>.
+Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-request-redirect</code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-snippet">global-auth-snippet<a class="headerlink" href="#global-auth-snippet" title="Permanent link"> ¶</a></h2>
 <p>Sets a custom snippet to use with external authentication. Applied to all the locations.
-Similar to the Ingress rule annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-request-redirect</span></code>.
+Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-request-redirect</code>.
 <em><strong>default:</strong></em> ""</p>
 <h2 id="global-auth-cache-key">global-auth-cache-key<a class="headerlink" href="#global-auth-cache-key" title="Permanent link"> ¶</a></h2>
-<p>Enables caching for global auth requests. Specify a lookup key for auth responses, e.g. <code class="codehilite"><span class="err">$remote_user$http_authorization</span></code>.</p>
+<p>Enables caching for global auth requests. Specify a lookup key for auth responses, e.g. <code>$remote_user$http_authorization</code>.</p>
 <h2 id="global-auth-cache-duration">global-auth-cache-duration<a class="headerlink" href="#global-auth-cache-duration" title="Permanent link"> ¶</a></h2>
-<p>Set a caching time for auth responses based on their response codes, e.g. <code class="codehilite"><span class="err">200 202 30m</span></code>. See <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid">proxy_cache_valid</a> for details. You may specify multiple, comma-separated values: <code class="codehilite"><span class="err">200 202 10m, 401 5m</span></code>. defaults to <code class="codehilite"><span class="err">200 202 401 5m</span></code>.</p>
+<p>Set a caching time for auth responses based on their response codes, e.g. <code>200 202 30m</code>. See <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid">proxy_cache_valid</a> for details. You may specify multiple, comma-separated values: <code>200 202 10m, 401 5m</code>. defaults to <code>200 202 401 5m</code>.</p>
 <h2 id="no-auth-locations">no-auth-locations<a class="headerlink" href="#no-auth-locations" title="Permanent link"> ¶</a></h2>
 <p>A comma-separated list of locations that should not get authenticated.
 <em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>
@@ -4642,20 +4642,17 @@ Similar to the Ingress rule annotation <code class="codehilite"><span class="err
 <a href="http://nginx.org/en/docs/http/ngx_http_access_module.html#deny">http://nginx.org/en/docs/http/ngx_http_access_module.html#deny</a></p>
 <h2 id="block-user-agents">block-user-agents<a class="headerlink" href="#block-user-agents" title="Permanent link"> ¶</a></h2>
 <p>A comma-separated list of User-Agent, request from which have to be blocked globally.
-It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code class="codehilite"><span class="err">map</span></code> Nginx directive documentation.</p>
+It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code>map</code> Nginx directive documentation.</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#map">http://nginx.org/en/docs/http/ngx_http_map_module.html#map</a></p>
 <h2 id="block-referers">block-referers<a class="headerlink" href="#block-referers" title="Permanent link"> ¶</a></h2>
 <p>A comma-separated list of Referers, request from which have to be blocked globally.
-It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code class="codehilite"><span class="err">map</span></code> Nginx directive documentation.</p>
+It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code>map</code> Nginx directive documentation.</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#map">http://nginx.org/en/docs/http/ngx_http_map_module.html#map</a></p>
 <h2 id="proxy-ssl-location-only">proxy-ssl-location-only<a class="headerlink" href="#proxy-ssl-location-only" title="Permanent link"> ¶</a></h2>
 <p>Set if proxy-ssl parameters should be applied only on locations and not on servers.
 <em><strong>default:</strong></em> is disabled</p>
-                
-                  
-                
                 
               
               
@@ -4672,34 +4669,34 @@ It's possible to use here full strings and regular expressions. More details abo
 <footer class="md-footer">
   
     <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../annotations/" title="Annotations" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+          <a href="../annotations/" title="Annotations" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
             </div>
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
                 Annotations
-              </span>
+              </div>
             </div>
           </a>
         
         
-          <a href="../custom-template/" title="Custom NGINX template" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+          <a href="../custom-template/" title="Custom NGINX template" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
                 Custom NGINX template
-              </span>
+              </div>
             </div>
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" /></svg>
             </div>
           </a>
         
@@ -4710,11 +4707,10 @@ It's possible to use here full strings and regular expressions. More details abo
     <div class="md-footer-meta__inner md-grid">
       <div class="md-footer-copyright">
         
-        powered by
-        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
-        and
+        Made with
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs</a>
+          Material for MkDocs
+        </a>
       </div>
       
     </div>
@@ -4723,9 +4719,18 @@ It's possible to use here full strings and regular expressions. More details abo
       
     </div>
     
-      <script src="../../../assets/javascripts/application.df00da5d.js"></script>
+      <script src="../../../assets/javascripts/vendor.36cbf620.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.00c583dd.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
-      <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
+      <script>
+        app = initialize({
+          base: "../../..",
+          features: ["tabs", "instant"],
+          search: Object.assign({
+            worker: "../../../assets/javascripts/worker/search.7f7c8775.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
       
     
   </body>

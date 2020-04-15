@@ -1,40 +1,19 @@
 
 
 
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
-      <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
         <link rel="canonical" href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/">
       
       
-      
-        <meta name="lang:clipboard.copy" content="Copy to clipboard">
-      
-        <meta name="lang:clipboard.copied" content="Copied to clipboard">
-      
-        <meta name="lang:search.language" content="en">
-      
-        <meta name="lang:search.pipeline.stopwords" content="True">
-      
-        <meta name="lang:search.pipeline.trimmer" content="True">
-      
-        <meta name="lang:search.result.none" content="No matching documents">
-      
-        <meta name="lang:search.result.one" content="1 matching document">
-      
-        <meta name="lang:search.result.other" content="# matching documents">
-      
-        <meta name="lang:search.tokenizer" content="[\s\-]+">
-      
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.3">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.1.0">
     
     
       
@@ -42,9 +21,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.adb8469c.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.89dc9fe3.min.css">
       
-        <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.a8b3c06d.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecd4686e.min.css">
       
       
         
@@ -53,16 +32,13 @@
       
     
     
-      <script src="../../../assets/javascripts/modernizr.86422ebf.js"></script>
-    
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
     
-    <link rel="stylesheet" href="../../../assets/fonts/material-icons.css">
     
     
       <link rel="stylesheet" href="../../../extra.css">
@@ -70,99 +46,80 @@
     
       
         
-<script>
-  window.ga = window.ga || function() {
-    (ga.q = ga.q || []).push(arguments)
-  }
-  ga.l = +new Date
-  /* Setup integration and send page view */
-  ga("create", "UA-118407822-1", "kubernetes.github.io")
-  ga("set", "anonymizeIp", true)
-  ga("send", "pageview")
-  /* Register handler to log search on blur */
-  document.addEventListener("DOMContentLoaded", () => {
-    if (document.forms.search) {
-      var query = document.forms.search.query
-      query.addEventListener("blur", function() {
-        if (this.value) {
-          var path = document.location.pathname;
-          ga("send", "pageview", path + "?q=" + this.value)
-        }
-      })
-    }
-  })
-</script>
+<link rel="preconnect dns-prefetch" href="https://www.google-analytics.com">
+<script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-118407822-1","kubernetes.github.io"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){if(this.value){var e=document.location.pathname;ga("send","pageview",e+"?q="+this.value)}})}),document.addEventListener("DOMContentSwitch",function(){ga("send","pageview")})</script>
 <script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
   </head>
   
+  
     
     
     <body dir="ltr" data-md-color-primary="teal" data-md-color-accent="green">
   
-    <svg class="md-svg">
-      <defs>
-        
-        
-          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
-        
-      </defs>
-    </svg>
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
-    
-      <a href="#annotations" tabindex="0" class="md-skip">
-        Skip to content
-      </a>
-    
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#annotations" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid">
-    <div class="md-flex">
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" aria-label="NGINX Ingress Controller" class="md-header-nav__button md-logo">
-          
-            <i class="md-icon">public</i>
-          
-        </a>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
-      </div>
-      <div class="md-flex__cell md-flex__cell--stretch">
-        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-          
-            <span class="md-header-nav__topic">
-              NGINX Ingress Controller
-            </span>
-            <span class="md-header-nav__topic">
-              
-                Annotations
-              
-            </span>
-          
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-header-nav__button md-logo" aria-label="NGINX Ingress Controller">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            NGINX Ingress Controller
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              Annotations
+            
+          </span>
         </div>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        
-          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
-          
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+      </label>
+      
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
-      <label class="md-icon md-search__icon" for="__search"></label>
-      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
-        &#xE5CD;
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
       </button>
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="result">
+        <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Type to start searching
           </div>
@@ -172,45 +129,35 @@
     </div>
   </div>
 </div>
+    
+    
+      <div class="md-header-nav__source">
         
-      </div>
-      
-        <div class="md-flex__cell md-flex__cell--shrink">
-          <div class="md-header-nav__source">
-            
-
-
-  
-
-<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     kubernetes/ingress-nginx
   </div>
 </a>
-          </div>
-        </div>
-      
-    </div>
+      </div>
+    
   </nav>
 </header>
     
-    <div class="md-container">
+    <div class="md-container" data-md-component="container">
       
         
       
       
         
+          
 
   
 
-<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+<nav class="md-tabs md-tabs--active" aria-label="Tabs" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
       
@@ -275,38 +222,33 @@
     </ul>
   </div>
 </nav>
+        
       
-      <main class="md-main" role="main">
-        <div class="md-main__inner md-grid" data-md-component="container">
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
           
             
               <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" data-md-level="0">
-  <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://kubernetes.github.io/ingress-nginx" title="NGINX Ingress Controller" class="md-nav__button md-logo" aria-label="NGINX Ingress Controller">
       
-        <i class="md-icon">public</i>
-      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
     </a>
     NGINX Ingress Controller
   </label>
   
     <div class="md-nav__source">
       
-
-
-  
-
-<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     kubernetes/ingress-nginx
   </div>
@@ -322,13 +264,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
     
     <label class="md-nav__link" for="nav-1">
       Welcome
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Welcome" data-md-level="1">
       <label class="md-nav__title" for="nav-1">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Welcome
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -406,13 +354,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
     
     <label class="md-nav__link" for="nav-2">
       Deployment
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Deployment" data-md-level="1">
       <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Deployment
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -492,13 +446,19 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
     
     <label class="md-nav__link" for="nav-3">
       User guide
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="User guide" data-md-level="1">
       <label class="md-nav__title" for="nav-3">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         User guide
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -513,13 +473,19 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1" checked>
     
     <label class="md-nav__link" for="nav-3-1">
       NGINX Configuration
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="NGINX Configuration" data-md-level="2">
       <label class="md-nav__title" for="nav-3-1">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         NGINX Configuration
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -558,13 +524,16 @@
 
   <li class="md-nav__item md-nav__item--active">
     
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
       
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         Annotations
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
+        </span>
       </label>
     
     <a href="./" title="Annotations" class="md-nav__link md-nav__link--active">
@@ -572,13 +541,18 @@
     </a>
     
       
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -600,7 +574,7 @@
     Session Affinity
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Session Affinity">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -718,7 +692,7 @@
     External Authentication
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="External Authentication">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -773,7 +747,7 @@
     Service Upstream
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Service Upstream">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -970,10 +944,6 @@
   
 </li>
       
-      
-      
-      
-      
     </ul>
   
 </nav>
@@ -1161,13 +1131,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-13" type="checkbox" id="nav-3-13">
     
     <label class="md-nav__link" for="nav-3-13">
       Third party addons
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Third party addons" data-md-level="2">
       <label class="md-nav__title" for="nav-3-13">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Third party addons
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1214,13 +1190,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
     
     <label class="md-nav__link" for="nav-4">
       Examples
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Examples" data-md-level="1">
       <label class="md-nav__title" for="nav-4">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Examples
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1269,13 +1251,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
     
     <label class="md-nav__link" for="nav-4-4">
       Auth
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Auth" data-md-level="2">
       <label class="md-nav__title" for="nav-4-4">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Auth
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1341,13 +1329,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
     
     <label class="md-nav__link" for="nav-4-5">
       Customization
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" aria-label="Customization" data-md-level="2">
       <label class="md-nav__title" for="nav-4-5">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Customization
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1542,13 +1536,18 @@
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -1570,7 +1569,7 @@
     Session Affinity
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Session Affinity">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1688,7 +1687,7 @@
     External Authentication
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="External Authentication">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1743,7 +1742,7 @@
     Service Upstream
   </a>
   
-    <nav class="md-nav">
+    <nav class="md-nav" aria-label="Service Upstream">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1940,10 +1939,6 @@
   
 </li>
       
-      
-      
-      
-      
     </ul>
   
 </nav>
@@ -1956,7 +1951,12 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/nginx-configuration/annotations.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/nginx-configuration/annotations.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" /></svg>
+                  </a>
+                
+                
+                  
                 
                 
                 <h1 id="annotations">Annotations<a class="headerlink" href="#annotations" title="Permanent link"> ¶</a></h1>
@@ -1965,13 +1965,13 @@
 <p class="admonition-title">Tip</p>
 <p>Annotation keys and values can only be strings.
 Other types, such as boolean or numeric values must be quoted,
-i.e. <code class="codehilite"><span class="err">&quot;true&quot;</span></code>, <code class="codehilite"><span class="err">&quot;false&quot;</span></code>, <code class="codehilite"><span class="err">&quot;100&quot;</span></code>.</p>
+i.e. <code>"true"</code>, <code>"false"</code>, <code>"100"</code>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The annotation prefix can be changed using the
-<a href="../../cli-arguments/"><code class="codehilite"><span class="err">--annotations-prefix</span></code> command line argument</a>,
-but the default is <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io</span></code>, as described in the
+<a href="../../cli-arguments/"><code>--annotations-prefix</code> command line argument</a>,
+but the default is <code>nginx.ingress.kubernetes.io</code>, as described in the
 table below.</p>
 </div>
 <table>
@@ -2413,73 +2413,73 @@ table below.</p>
 </tbody>
 </table>
 <h3 id="canary">Canary<a class="headerlink" href="#canary" title="Permanent link"> ¶</a></h3>
-<p>In some cases, you may want to "canary" a new set of changes by sending a small number of requests to a different service than the production service. The canary annotation enables the Ingress spec to act as an alternative service for requests to route to depending on the rules applied. The following annotations to configure canary can be enabled after <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary: &quot;true&quot;</span></code> is set:</p>
+<p>In some cases, you may want to "canary" a new set of changes by sending a small number of requests to a different service than the production service. The canary annotation enables the Ingress spec to act as an alternative service for requests to route to depending on the rules applied. The following annotations to configure canary can be enabled after <code>nginx.ingress.kubernetes.io/canary: "true"</code> is set:</p>
 <ul>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header</span></code>: The header to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to <code class="codehilite"><span class="err">always</span></code>, it will be routed to the canary. When the header is set to <code class="codehilite"><span class="err">never</span></code>, it will never be routed to the canary. For any other value, the header will be ignored and the request compared against the other canary rules by precedence.</p>
+<p><code>nginx.ingress.kubernetes.io/canary-by-header</code>: The header to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to <code>always</code>, it will be routed to the canary. When the header is set to <code>never</code>, it will never be routed to the canary. For any other value, the header will be ignored and the request compared against the other canary rules by precedence.</p>
 </li>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header-value</span></code>: The header value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to this value, it will be routed to the canary. For any other header value, the header will be ignored and the request compared against the other canary rules by precedence. This annotation has to be used together with . The annotation is an extension of the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header</span></code> to allow customizing the header value instead of using hardcoded values. It doesn't have any effect if the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header</span></code> annotation is not defined.</p>
+<p><code>nginx.ingress.kubernetes.io/canary-by-header-value</code>: The header value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to this value, it will be routed to the canary. For any other header value, the header will be ignored and the request compared against the other canary rules by precedence. This annotation has to be used together with . The annotation is an extension of the <code>nginx.ingress.kubernetes.io/canary-by-header</code> to allow customizing the header value instead of using hardcoded values. It doesn't have any effect if the <code>nginx.ingress.kubernetes.io/canary-by-header</code> annotation is not defined.</p>
 </li>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-header-pattern</span></code>: This works the same way as <code class="codehilite"><span class="err">canary-by-header-value</span></code> except it does PCRE Regex matching. Note that when <code class="codehilite"><span class="err">canary-by-header-value</span></code> is set this annotation will be ignored. When the given Regex causes error during request processing, the request will be considered as not matching.</p>
+<p><code>nginx.ingress.kubernetes.io/canary-by-header-pattern</code>: This works the same way as <code>canary-by-header-value</code> except it does PCRE Regex matching. Note that when <code>canary-by-header-value</code> is set this annotation will be ignored. When the given Regex causes error during request processing, the request will be considered as not matching.</p>
 </li>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-by-cookie</span></code>: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to <code class="codehilite"><span class="err">always</span></code>, it will be routed to the canary. When the cookie is set to <code class="codehilite"><span class="err">never</span></code>, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence.</p>
+<p><code>nginx.ingress.kubernetes.io/canary-by-cookie</code>: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to <code>always</code>, it will be routed to the canary. When the cookie is set to <code>never</code>, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence.</p>
 </li>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/canary-weight</span></code>: The integer based (0 - 100) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of 100 means implies all requests will be sent to the alternative service specified in the Ingress.</p>
+<p><code>nginx.ingress.kubernetes.io/canary-weight</code>: The integer based (0 - 100) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of 100 means implies all requests will be sent to the alternative service specified in the Ingress.</p>
 </li>
 </ul>
 <p>Canary rules are evaluated in order of precedence. Precedence is as follows:
-<code class="codehilite"><span class="err">canary-by-header -&gt; canary-by-cookie -&gt; canary-weight</span></code></p>
-<p><strong>Note</strong> that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/load-balance</span></code> and <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/upstream-hash-by</span></code>.</p>
+<code>canary-by-header -&gt; canary-by-cookie -&gt; canary-weight</code></p>
+<p><strong>Note</strong> that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except <code>nginx.ingress.kubernetes.io/load-balance</code> and <code>nginx.ingress.kubernetes.io/upstream-hash-by</code>.</p>
 <p><strong>Known Limitations</strong></p>
 <p>Currently a maximum of one canary ingress can be applied per Ingress rule.</p>
 <h3 id="rewrite">Rewrite<a class="headerlink" href="#rewrite" title="Permanent link"> ¶</a></h3>
 <p>In some scenarios the exposed URL in the backend service differs from the specified path in the Ingress rule. Without a rewrite any request will return 404.
-Set the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/rewrite-target</span></code> to the path expected by the service.</p>
-<p>If the Application Root is exposed in a different path and needs to be redirected, set the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/app-root</span></code> to redirect requests for <code class="codehilite"><span class="err">/</span></code>.</p>
+Set the annotation <code>nginx.ingress.kubernetes.io/rewrite-target</code> to the path expected by the service.</p>
+<p>If the Application Root is exposed in a different path and needs to be redirected, set the annotation <code>nginx.ingress.kubernetes.io/app-root</code> to redirect requests for <code>/</code>.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Please check the <a href="../../../examples/rewrite/">rewrite</a> example.</p>
 </div>
 <h3 id="session-affinity">Session Affinity<a class="headerlink" href="#session-affinity" title="Permanent link"> ¶</a></h3>
-<p>The annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/affinity</span></code> enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
-The only affinity type available for NGINX is <code class="codehilite"><span class="err">cookie</span></code>.</p>
-<p>The annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/affinity-mode</span></code> defines the stickyness of a session. Setting this to <code class="codehilite"><span class="err">balanced</span></code> (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to <code class="codehilite"><span class="err">persistent</span></code> will not rebalance sessions to new servers, therefore providing maximum stickyness.</p>
+<p>The annotation <code>nginx.ingress.kubernetes.io/affinity</code> enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
+The only affinity type available for NGINX is <code>cookie</code>.</p>
+<p>The annotation <code>nginx.ingress.kubernetes.io/affinity-mode</code> defines the stickyness of a session. Setting this to <code>balanced</code> (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to <code>persistent</code> will not rebalance sessions to new servers, therefore providing maximum stickyness.</p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
-<p>If more than one Ingress is defined for a host and at least one Ingress uses <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/affinity: cookie</span></code>, then only paths on the Ingress using <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/affinity</span></code> will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server.</p>
+<p>If more than one Ingress is defined for a host and at least one Ingress uses <code>nginx.ingress.kubernetes.io/affinity: cookie</code>, then only paths on the Ingress using <code>nginx.ingress.kubernetes.io/affinity</code> will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server.</p>
 </div>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Please check the <a href="../../../examples/affinity/cookie/">affinity</a> example.</p>
 </div>
 <h4 id="cookie-affinity">Cookie affinity<a class="headerlink" href="#cookie-affinity" title="Permanent link"> ¶</a></h4>
-<p>If you use the <code class="codehilite"><span class="err">cookie</span></code> affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/session-cookie-name</span></code>. The default is to create a cookie named 'INGRESSCOOKIE'.</p>
-<p>The NGINX annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/session-cookie-path</span></code> defines the path that will be set on the cookie. This is optional unless the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/use-regex</span></code> is set to true; Session cookie paths do not support regex.</p>
-<p>Use <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/session-cookie-samesite</span></code> to apply a <code class="codehilite"><span class="err">SameSite</span></code> attribute to the sticky cookie. Browser accepted values are <code class="codehilite"><span class="err">None</span></code>, <code class="codehilite"><span class="err">Lax</span></code>, and <code class="codehilite"><span class="err">Strict</span></code>. Some browsers reject cookies with <code class="codehilite"><span class="err">SameSite=None</span></code>, including those created before the <code class="codehilite"><span class="err">SameSite=None</span></code> specification (e.g. Chrome 5X). Other browsers mistakenly treat <code class="codehilite"><span class="err">SameSite=None</span></code> cookies as <code class="codehilite"><span class="err">SameSite=Strict</span></code> (e.g. Safari running on OSX 14). To omit <code class="codehilite"><span class="err">SameSite=None</span></code> from browsers with these incompatibilities, add the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: &quot;true&quot;</span></code>.</p>
+<p>If you use the <code>cookie</code> affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation <code>nginx.ingress.kubernetes.io/session-cookie-name</code>. The default is to create a cookie named 'INGRESSCOOKIE'.</p>
+<p>The NGINX annotation <code>nginx.ingress.kubernetes.io/session-cookie-path</code> defines the path that will be set on the cookie. This is optional unless the annotation <code>nginx.ingress.kubernetes.io/use-regex</code> is set to true; Session cookie paths do not support regex.</p>
+<p>Use <code>nginx.ingress.kubernetes.io/session-cookie-samesite</code> to apply a <code>SameSite</code> attribute to the sticky cookie. Browser accepted values are <code>None</code>, <code>Lax</code>, and <code>Strict</code>. Some browsers reject cookies with <code>SameSite=None</code>, including those created before the <code>SameSite=None</code> specification (e.g. Chrome 5X). Other browsers mistakenly treat <code>SameSite=None</code> cookies as <code>SameSite=Strict</code> (e.g. Safari running on OSX 14). To omit <code>SameSite=None</code> from browsers with these incompatibilities, add the annotation <code>nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true"</code>.</p>
 <h3 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link"> ¶</a></h3>
 <p>Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.</p>
 <p>The annotations are:
-<div class="codehilite"><pre><span></span><code><span class="err">nginx.ingress.kubernetes.io/auth-type: [basic|digest]</span>
+<div class="highlight"><pre><span></span><code>nginx.ingress.kubernetes.io/auth-type: [basic|digest]
 </code></pre></div></p>
 <p>Indicates the <a href="https://tools.ietf.org/html/rfc2617">HTTP Authentication Type: Basic or Digest Access Authentication</a>.</p>
-<div class="codehilite"><pre><span></span><code><span class="err">nginx.ingress.kubernetes.io/auth-secret: secretName</span>
+<div class="highlight"><pre><span></span><code>nginx.ingress.kubernetes.io/auth-secret: secretName
 </code></pre></div>
 
-<p>The name of the Secret that contains the usernames and passwords which are granted access to the <code class="codehilite"><span class="err">path</span></code>s defined in the Ingress rules.
+<p>The name of the Secret that contains the usernames and passwords which are granted access to the <code>path</code>s defined in the Ingress rules.
 This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.</p>
-<div class="codehilite"><pre><span></span><code><span class="err">nginx.ingress.kubernetes.io/auth-secret-type: [auth-file|auth-map]</span>
+<div class="highlight"><pre><span></span><code>nginx.ingress.kubernetes.io/auth-secret-type: [auth-file|auth-map]
 </code></pre></div>
 
-<p>The <code class="codehilite"><span class="err">auth-secret</span></code> can have two forms:</p>
+<p>The <code>auth-secret</code> can have two forms:</p>
 <ul>
-<li><code class="codehilite"><span class="err">auth-file</span></code> - default, an htpasswd file in the key <code class="codehilite"><span class="err">auth</span></code> within the secret</li>
-<li><code class="codehilite"><span class="err">auth-map</span></code> - the keys of the secret are the usernames, and the values are the hashed passwords</li>
+<li><code>auth-file</code> - default, an htpasswd file in the key <code>auth</code> within the secret</li>
+<li><code>auth-map</code> - the keys of the secret are the usernames, and the values are the hashed passwords</li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="err">nginx.ingress.kubernetes.io/auth-realm: &quot;realm string&quot;</span>
+<div class="highlight"><pre><span></span><code>nginx.ingress.kubernetes.io/auth-realm: &quot;realm string&quot;
 </code></pre></div>
 
 <div class="admonition example">
@@ -2490,30 +2490,30 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <p>NGINX supports load balancing by client-server mapping based on <a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash">consistent hashing</a> for a given key. The key can contain text, variables or any combination thereof. This feature allows for request stickiness other than client IP or cookies. The <a href="http://www.last.fm/user/RJ/journal/2007/04/10/392555/">ketama</a> consistent hashing method will be used which ensures only a few keys would be remapped to different servers on upstream group changes.</p>
 <p>There is a special mode of upstream hashing called subset. In this mode, upstream servers are grouped into subsets, and stickiness works by mapping keys to a subset instead of individual upstream servers. Specific server is chosen uniformly at random from the selected sticky subset. It provides a balance between stickiness and load distribution.</p>
 <p>To enable consistent hashing for a backend:</p>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/upstream-hash-by</span></code>: the nginx variable, text value or any combination thereof to use for consistent hashing. For example <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/upstream-hash-by: &quot;$request_uri&quot;</span></code> to consistently hash upstream requests by the current request URI.</p>
-<p>"subset" hashing can be enabled setting <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/upstream-hash-by-subset</span></code>: "true". This maps requests to subset of nodes instead of a single one. <code class="codehilite"><span class="err">upstream-hash-by-subset-size</span></code> determines the size of each subset (default 3).</p>
+<p><code>nginx.ingress.kubernetes.io/upstream-hash-by</code>: the nginx variable, text value or any combination thereof to use for consistent hashing. For example <code>nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"</code> to consistently hash upstream requests by the current request URI.</p>
+<p>"subset" hashing can be enabled setting <code>nginx.ingress.kubernetes.io/upstream-hash-by-subset</code>: "true". This maps requests to subset of nodes instead of a single one. <code>upstream-hash-by-subset-size</code> determines the size of each subset (default 3).</p>
 <p>Please check the <a href="../../../examples/chashsubset/deployment.yaml">chashsubset</a> example.</p>
 <h3 id="custom-nginx-load-balancing">Custom NGINX load balancing<a class="headerlink" href="#custom-nginx-load-balancing" title="Permanent link"> ¶</a></h3>
-<p>This is similar to <a href="../configmap/#load-balance"><code class="codehilite"><span class="err">load-balance</span></code> in ConfigMap</a>, but configures load balancing algorithm per ingress.</p>
+<p>This is similar to <a href="../configmap/#load-balance"><code>load-balance</code> in ConfigMap</a>, but configures load balancing algorithm per ingress.</p>
 <blockquote>
-<p>Note that <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/upstream-hash-by</span></code> takes preference over this. If this and <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/upstream-hash-by</span></code> are not set then we fallback to using globally configured load balancing algorithm.</p>
+<p>Note that <code>nginx.ingress.kubernetes.io/upstream-hash-by</code> takes preference over this. If this and <code>nginx.ingress.kubernetes.io/upstream-hash-by</code> are not set then we fallback to using globally configured load balancing algorithm.</p>
 </blockquote>
 <h3 id="custom-nginx-upstream-vhost">Custom NGINX upstream vhost<a class="headerlink" href="#custom-nginx-upstream-vhost" title="Permanent link"> ¶</a></h3>
-<p>This configuration setting allows you to control the value for host in the following statement: <code class="codehilite"><span class="err">proxy_set_header Host $host</span></code>, which forms part of the location block.  This is useful if you need to call the upstream server by something other than <code class="codehilite"><span class="err">$host</span></code>.</p>
+<p>This configuration setting allows you to control the value for host in the following statement: <code>proxy_set_header Host $host</code>, which forms part of the location block.  This is useful if you need to call the upstream server by something other than <code>$host</code>.</p>
 <h3 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link"> ¶</a></h3>
 <p>It is possible to enable Client Certificate Authentication using additional annotations in Ingress Rule.</p>
 <p>The annotations are:</p>
 <ul>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-tls-secret: secretName</span></code>:
-  The name of the Secret that contains the full Certificate Authority chain <code class="codehilite"><span class="err">ca.crt</span></code> that is enabled to authenticate against this Ingress.
+<li><code>nginx.ingress.kubernetes.io/auth-tls-secret: secretName</code>:
+  The name of the Secret that contains the full Certificate Authority chain <code>ca.crt</code> that is enabled to authenticate against this Ingress.
   This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-tls-verify-depth</span></code>:
+<li><code>nginx.ingress.kubernetes.io/auth-tls-verify-depth</code>:
   The validation depth between the provided client certificate and the Certification Authority chain.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-tls-verify-client</span></code>:
+<li><code>nginx.ingress.kubernetes.io/auth-tls-verify-client</code>:
   Enables verification of client certificates.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-tls-error-page</span></code>:
+<li><code>nginx.ingress.kubernetes.io/auth-tls-error-page</code>:
   The URL/Page that user should be redirected in case of a Certificate Authentication Error</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream</span></code>:
+<li><code>nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream</code>:
   Indicates if the received certificates should be passed or not to the upstream server.  By default this is disabled.</li>
 </ul>
 <div class="admonition example">
@@ -2529,80 +2529,80 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <h3 id="backend-certificate-authentication">Backend Certificate Authentication<a class="headerlink" href="#backend-certificate-authentication" title="Permanent link"> ¶</a></h3>
 <p>It is possible to authenticate to a proxied HTTPS backend with certificate using additional annotations in Ingress Rule.</p>
 <ul>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-ssl-secret: secretName</span></code>:
-  Specifies a Secret with the certificate <code class="codehilite"><span class="err">tls.crt</span></code>, key <code class="codehilite"><span class="err">tls.key</span></code> in PEM format used for authentication to a proxied HTTPS server. It should also contain trusted CA certificates <code class="codehilite"><span class="err">ca.crt</span></code> in PEM format used to verify the certificate of the proxied HTTPS server.
+<li><code>nginx.ingress.kubernetes.io/proxy-ssl-secret: secretName</code>:
+  Specifies a Secret with the certificate <code>tls.crt</code>, key <code>tls.key</code> in PEM format used for authentication to a proxied HTTPS server. It should also contain trusted CA certificates <code>ca.crt</code> in PEM format used to verify the certificate of the proxied HTTPS server.
   This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-ssl-verify</span></code>:
+<li><code>nginx.ingress.kubernetes.io/proxy-ssl-verify</code>:
   Enables or disables verification of the proxied HTTPS server certificate. (default: off)</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-ssl-verify-depth</span></code>:
+<li><code>nginx.ingress.kubernetes.io/proxy-ssl-verify-depth</code>:
   Sets the verification depth in the proxied HTTPS server certificates chain. (default: 1)</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-ssl-ciphers</span></code>:
+<li><code>nginx.ingress.kubernetes.io/proxy-ssl-ciphers</code>:
   Specifies the enabled <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_ciphers">ciphers</a> for requests to a proxied HTTPS server. The ciphers are specified in the format understood by the OpenSSL library.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-ssl-name</span></code>:
+<li><code>nginx.ingress.kubernetes.io/proxy-ssl-name</code>:
   Allows to set <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_name">proxy_ssl_name</a>. This allows overriding the server name used to verify the certificate of the proxied HTTPS server. This value is also passed through SNI when a connection is established to the proxied HTTPS server.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-ssl-protocols</span></code>:
+<li><code>nginx.ingress.kubernetes.io/proxy-ssl-protocols</code>:
   Enables the specified <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_protocols">protocols</a> for requests to a proxied HTTPS server.</li>
 </ul>
 <h3 id="configuration-snippet">Configuration snippet<a class="headerlink" href="#configuration-snippet" title="Permanent link"> ¶</a></h3>
 <p>Using this annotation you can add additional configuration to the NGINX location. For example:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/configuration-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/configuration-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
   <span class="no">more_set_headers &quot;Request-Id: $req_id&quot;;</span>
 </code></pre></div>
 
 <h3 id="custom-http-errors">Custom HTTP Errors<a class="headerlink" href="#custom-http-errors" title="Permanent link"> ¶</a></h3>
-<p>Like the <a href="../configmap/#custom-http-errors"><code class="codehilite"><span class="err">custom-http-errors</span></code></a> value in the ConfigMap, this annotation will set NGINX <code class="codehilite"><span class="err">proxy-intercept-errors</span></code>, but only for the NGINX location associated with this ingress. If a <a href="#default-backend">default backend annotation</a> is specified on the ingress, the errors will be routed to that annotation's default backend service (instead of the global default backend).
+<p>Like the <a href="../configmap/#custom-http-errors"><code>custom-http-errors</code></a> value in the ConfigMap, this annotation will set NGINX <code>proxy-intercept-errors</code>, but only for the NGINX location associated with this ingress. If a <a href="#default-backend">default backend annotation</a> is specified on the ingress, the errors will be routed to that annotation's default backend service (instead of the global default backend).
 Different ingresses can specify different sets of error codes. Even if multiple ingress objects share the same hostname, this annotation can be used to intercept different error codes for each ingress (for example, different error codes to be intercepted for different paths on the same hostname, if each path is on a different ingress).
-If <code class="codehilite"><span class="err">custom-http-errors</span></code> is also specified globally, the error values specified in this annotation will override the global value for the given ingress' hostname and path.</p>
+If <code>custom-http-errors</code> is also specified globally, the error values specified in this annotation will override the global value for the given ingress' hostname and path.</p>
 <p>Example usage:
-<div class="codehilite"><pre><span></span><code><span class="err">nginx.ingress.kubernetes.io/custom-http-errors: &quot;404,415&quot;</span>
+<div class="highlight"><pre><span></span><code>nginx.ingress.kubernetes.io/custom-http-errors: &quot;404,415&quot;
 </code></pre></div></p>
 <h3 id="default-backend">Default Backend<a class="headerlink" href="#default-backend" title="Permanent link"> ¶</a></h3>
-<p>This annotation is of the form <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/default-backend: &lt;svc name&gt;</span></code> to specify a custom default backend.  This <code class="codehilite"><span class="err">&lt;svc name&gt;</span></code> is a reference to a service inside of the same namespace in which you are applying this annotation. This annotation overrides the global default backend.</p>
+<p>This annotation is of the form <code>nginx.ingress.kubernetes.io/default-backend: &lt;svc name&gt;</code> to specify a custom default backend.  This <code>&lt;svc name&gt;</code> is a reference to a service inside of the same namespace in which you are applying this annotation. This annotation overrides the global default backend.</p>
 <p>This service will be handle the response when the service in the Ingress rule does not have active endpoints. It will also handle the error responses if both this annotation and the <a href="#custom-http-errors">custom-http-errors annotation</a> is set.</p>
 <h3 id="enable-cors">Enable CORS<a class="headerlink" href="#enable-cors" title="Permanent link"> ¶</a></h3>
 <p>To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule, add the annotation
-<code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/enable-cors: &quot;true&quot;</span></code>. This will add a section in the server
+<code>nginx.ingress.kubernetes.io/enable-cors: "true"</code>. This will add a section in the server
 location enabling this functionality.</p>
 <p>CORS can be controlled with the following annotations:</p>
 <ul>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-allow-methods</span></code>
+<li><code>nginx.ingress.kubernetes.io/cors-allow-methods</code>
   controls which methods are accepted. This is a multi-valued field, separated by ',' and
   accepts only letters (upper and lower case).</li>
-<li>Default: <code class="codehilite"><span class="err">GET, PUT, POST, DELETE, PATCH, OPTIONS</span></code></li>
+<li>Default: <code>GET, PUT, POST, DELETE, PATCH, OPTIONS</code></li>
 <li>
-<p>Example: <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-allow-methods: &quot;PUT, GET, POST, OPTIONS&quot;</span></code></p>
+<p>Example: <code>nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"</code></p>
 </li>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-allow-headers</span></code>
+<p><code>nginx.ingress.kubernetes.io/cors-allow-headers</code>
   controls which headers are accepted. This is a multi-valued field, separated by ',' and accepts letters,
   numbers, _ and -.</p>
 </li>
-<li>Default: <code class="codehilite"><span class="err">DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization</span></code></li>
+<li>Default: <code>DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization</code></li>
 <li>
-<p>Example: <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-allow-headers: &quot;X-Forwarded-For, X-app123-XPTO&quot;</span></code></p>
+<p>Example: <code>nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"</code></p>
 </li>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-allow-origin</span></code>
+<p><code>nginx.ingress.kubernetes.io/cors-allow-origin</code>
   controls what's the accepted Origin for CORS.
-  This is a single field value, with the following format: <code class="codehilite"><span class="err">http(s)://origin-site.com</span></code> or <code class="codehilite"><span class="err">http(s)://origin-site.com:port</span></code></p>
+  This is a single field value, with the following format: <code>http(s)://origin-site.com</code> or <code>http(s)://origin-site.com:port</code></p>
 </li>
-<li>Default: <code class="codehilite"><span class="err">*</span></code></li>
+<li>Default: <code>*</code></li>
 <li>
-<p>Example: <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-allow-origin: &quot;https://origin-site.com:4443&quot;</span></code></p>
+<p>Example: <code>nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"</code></p>
 </li>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-allow-credentials</span></code>
+<p><code>nginx.ingress.kubernetes.io/cors-allow-credentials</code>
   controls if credentials can be passed during CORS operations.</p>
 </li>
-<li>Default: <code class="codehilite"><span class="err">true</span></code></li>
+<li>Default: <code>true</code></li>
 <li>
-<p>Example: <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-allow-credentials: &quot;false&quot;</span></code></p>
+<p>Example: <code>nginx.ingress.kubernetes.io/cors-allow-credentials: "false"</code></p>
 </li>
 <li>
-<p><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-max-age</span></code>
+<p><code>nginx.ingress.kubernetes.io/cors-max-age</code>
   controls how long preflight requests can be cached.
-  Default: <code class="codehilite"><span class="err">1728000</span></code>
-  Example: <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/cors-max-age: 600</span></code></p>
+  Default: <code>1728000</code>
+  Example: <code>nginx.ingress.kubernetes.io/cors-max-age: 600</code></p>
 </li>
 </ul>
 <div class="admonition note">
@@ -2614,22 +2614,22 @@ location enabling this functionality.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <ul>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/http2-push-preload: &quot;true&quot;</span></code></li>
+<li><code>nginx.ingress.kubernetes.io/http2-push-preload: "true"</code></li>
 </ul>
 </div>
 <h3 id="server-alias">Server Alias<a class="headerlink" href="#server-alias" title="Permanent link"> ¶</a></h3>
-<p>Allows the definition of one or more aliases in the server definition of the NGINX configuration using the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/server-alias: &quot;&lt;alias 1&gt;,&lt;alias 2&gt;&quot;</span></code>.
-This will create a server with the same configuration, but adding new values to the <code class="codehilite"><span class="err">server_name</span></code> directive.</p>
+<p>Allows the definition of one or more aliases in the server definition of the NGINX configuration using the annotation <code>nginx.ingress.kubernetes.io/server-alias: "&lt;alias 1&gt;,&lt;alias 2&gt;"</code>.
+This will create a server with the same configuration, but adding new values to the <code>server_name</code> directive.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>A server-alias name cannot conflict with the hostname of an existing server. If it does, the server-alias annotation will be ignored.
 If a server-alias is created and later a new server with the same hostname is created, the new server configuration will take
 place over the alias configuration.</p>
 </div>
-<p>For more information please see <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name">the <code class="codehilite"><span class="err">server_name</span></code> documentation</a>.</p>
+<p>For more information please see <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name">the <code>server_name</code> documentation</a>.</p>
 <h3 id="server-snippet">Server snippet<a class="headerlink" href="#server-snippet" title="Permanent link"> ¶</a></h3>
-<p>Using the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/server-snippet</span></code> it is possible to add custom configuration in the server configuration block.</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
+<p>Using the annotation <code>nginx.ingress.kubernetes.io/server-snippet</code> it is possible to add custom configuration in the server configuration block.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1beta1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="nt">metadata</span><span class="p">:</span>
   <span class="nt">annotations</span><span class="p">:</span>
@@ -2661,54 +2661,54 @@ applied to each location provided in the ingress rule.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <ul>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/client-body-buffer-size: &quot;1000&quot;</span></code> # 1000 bytes</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/client-body-buffer-size: 1k</span></code> # 1 kilobyte</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/client-body-buffer-size: 1K</span></code> # 1 kilobyte</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/client-body-buffer-size: 1m</span></code> # 1 megabyte</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/client-body-buffer-size: 1M</span></code> # 1 megabyte</li>
+<li><code>nginx.ingress.kubernetes.io/client-body-buffer-size: "1000"</code> # 1000 bytes</li>
+<li><code>nginx.ingress.kubernetes.io/client-body-buffer-size: 1k</code> # 1 kilobyte</li>
+<li><code>nginx.ingress.kubernetes.io/client-body-buffer-size: 1K</code> # 1 kilobyte</li>
+<li><code>nginx.ingress.kubernetes.io/client-body-buffer-size: 1m</code> # 1 megabyte</li>
+<li><code>nginx.ingress.kubernetes.io/client-body-buffer-size: 1M</code> # 1 megabyte</li>
 </ul>
 </div>
 <p>For more information please see <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size">http://nginx.org</a></p>
 <h3 id="external-authentication">External Authentication<a class="headerlink" href="#external-authentication" title="Permanent link"> ¶</a></h3>
-<p>To use an existing service that provides authentication the Ingress rule can be annotated with <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-url</span></code> to indicate the URL where the HTTP request should be sent.</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/auth-url</span><span class="p">:</span> <span class="s">&quot;URL</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">authentication</span><span class="nv"> </span><span class="s">service&quot;</span>
+<p>To use an existing service that provides authentication the Ingress rule can be annotated with <code>nginx.ingress.kubernetes.io/auth-url</code> to indicate the URL where the HTTP request should be sent.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/auth-url</span><span class="p">:</span> <span class="s">&quot;URL</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">authentication</span><span class="nv"> </span><span class="s">service&quot;</span>
 </code></pre></div>
 
 <p>Additionally it is possible to set:</p>
 <ul>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-method</span></code>:
-  <code class="codehilite"><span class="err">&lt;Method&gt;</span></code> to specify the HTTP method to use.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-signin</span></code>:
-  <code class="codehilite"><span class="err">&lt;SignIn_URL&gt;</span></code> to specify the location of the error page.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-response-headers</span></code>:
-  <code class="codehilite"><span class="err">&lt;Response_Header_1, ..., Response_Header_n&gt;</span></code> to specify headers to pass to backend once authentication request completes.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-proxy-set-headers</span></code>:
-  <code class="codehilite"><span class="err">&lt;ConfigMap&gt;</span></code> the name of a ConfigMap that specifies headers to pass to the authentication service</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-request-redirect</span></code>:
-  <code class="codehilite"><span class="err">&lt;Request_Redirect_URL&gt;</span></code>  to specify the X-Auth-Request-Redirect header value.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-cache-key</span></code>:
-  <code class="codehilite"><span class="err">&lt;Cache_Key&gt;</span></code> this enables caching for auth requests. specify a lookup key for auth responses. e.g. <code class="codehilite"><span class="err">$remote_user$http_authorization</span></code>. Each server and location has it's own keyspace. Hence a cached response is only valid on a per-server and per-location basis.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-cache-duration</span></code>:
-  <code class="codehilite"><span class="err">&lt;Cache_duration&gt;</span></code> to specify a caching time for auth responses based on their response codes, e.g. <code class="codehilite"><span class="err">200 202 30m</span></code>. See <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid">proxy_cache_valid</a> for details. You may specify multiple, comma-separated values: <code class="codehilite"><span class="err">200 202 10m, 401 5m</span></code>. defaults to <code class="codehilite"><span class="err">200 202 401 5m</span></code>.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-snippet</span></code>:
-  <code class="codehilite"><span class="err">&lt;Auth_Snippet&gt;</span></code> to specify a custom snippet to use with external authentication, e.g.</li>
+<li><code>nginx.ingress.kubernetes.io/auth-method</code>:
+  <code>&lt;Method&gt;</code> to specify the HTTP method to use.</li>
+<li><code>nginx.ingress.kubernetes.io/auth-signin</code>:
+  <code>&lt;SignIn_URL&gt;</code> to specify the location of the error page.</li>
+<li><code>nginx.ingress.kubernetes.io/auth-response-headers</code>:
+  <code>&lt;Response_Header_1, ..., Response_Header_n&gt;</code> to specify headers to pass to backend once authentication request completes.</li>
+<li><code>nginx.ingress.kubernetes.io/auth-proxy-set-headers</code>:
+  <code>&lt;ConfigMap&gt;</code> the name of a ConfigMap that specifies headers to pass to the authentication service</li>
+<li><code>nginx.ingress.kubernetes.io/auth-request-redirect</code>:
+  <code>&lt;Request_Redirect_URL&gt;</code>  to specify the X-Auth-Request-Redirect header value.</li>
+<li><code>nginx.ingress.kubernetes.io/auth-cache-key</code>:
+  <code>&lt;Cache_Key&gt;</code> this enables caching for auth requests. specify a lookup key for auth responses. e.g. <code>$remote_user$http_authorization</code>. Each server and location has it's own keyspace. Hence a cached response is only valid on a per-server and per-location basis.</li>
+<li><code>nginx.ingress.kubernetes.io/auth-cache-duration</code>:
+  <code>&lt;Cache_duration&gt;</code> to specify a caching time for auth responses based on their response codes, e.g. <code>200 202 30m</code>. See <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid">proxy_cache_valid</a> for details. You may specify multiple, comma-separated values: <code>200 202 10m, 401 5m</code>. defaults to <code>200 202 401 5m</code>.</li>
+<li><code>nginx.ingress.kubernetes.io/auth-snippet</code>:
+  <code>&lt;Auth_Snippet&gt;</code> to specify a custom snippet to use with external authentication, e.g.</li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/auth-url</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">http://foo.com/external-auth</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/auth-url</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">http://foo.com/external-auth</span>
 <span class="nt">nginx.ingress.kubernetes.io/auth-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
     <span class="no">proxy_set_header Foo-Header 42;</span>
 </code></pre></div>
 
 <blockquote>
-<p>Note: <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-snippet</span></code> is an optional annotation. However, it may only be used in conjunction with <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-url</span></code> and will be ignored if <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/auth-url</span></code> is not set</p>
+<p>Note: <code>nginx.ingress.kubernetes.io/auth-snippet</code> is an optional annotation. However, it may only be used in conjunction with <code>nginx.ingress.kubernetes.io/auth-url</code> and will be ignored if <code>nginx.ingress.kubernetes.io/auth-url</code> is not set</p>
 </blockquote>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Please check the <a href="../../../examples/auth/external-auth/">external-auth</a> example.</p>
 </div>
 <h4 id="global-external-authentication">Global External Authentication<a class="headerlink" href="#global-external-authentication" title="Permanent link"> ¶</a></h4>
-<p>By default the controller redirects all requests to an existing service that provides authentication if <code class="codehilite"><span class="err">global-auth-url</span></code> is set in the NGINX ConfigMap. If you want to disable this behavior for that ingress, you can use <code class="codehilite"><span class="c">enable-global-auth: &quot;false&quot;</span></code> in the NGINX ConfigMap.
-<code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/enable-global-auth</span></code>:
-   indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to <code class="codehilite"><span class="err">&quot;true&quot;</span></code>.</p>
+<p>By default the controller redirects all requests to an existing service that provides authentication if <code>global-auth-url</code> is set in the NGINX ConfigMap. If you want to disable this behavior for that ingress, you can use <code>enable-global-auth: "false"</code> in the NGINX ConfigMap.
+<code>nginx.ingress.kubernetes.io/enable-global-auth</code>:
+   indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to <code>"true"</code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>For more information please see <a href="../configmap/#global-auth-url">global-auth-url</a>.</p>
@@ -2716,30 +2716,30 @@ applied to each location provided in the ingress rule.</p>
 <h3 id="rate-limiting">Rate limiting<a class="headerlink" href="#rate-limiting" title="Permanent link"> ¶</a></h3>
 <p>These annotations define limits on connections and transmission rates.  These can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus">DDoS Attacks</a>.</p>
 <ul>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/limit-connections</span></code>: number of concurrent connections allowed from a single IP address. A 503 error is returned when exceeding this limit.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/limit-rps</span></code>: number of requests accepted from a given IP each second. The burst limit is set to 5 times the limit. When clients exceed this limit,  <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#limit-req-status-code">limit-req-status-code</a> <strong><em>default:</em></strong> 503 is returned.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/limit-rpm</span></code>: number of requests accepted from a given IP each minute. The burst limit is set to 5 times the limit. When clients exceed this limit,  <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#limit-req-status-code">limit-req-status-code</a> <strong><em>default:</em></strong> 503 is returned.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/limit-rate-after</span></code>: initial number of kilobytes after which the further transmission of a response to a given connection will be rate limited. This feature must be used with <a href="#proxy-buffering">proxy-buffering</a> enabled.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/limit-rate</span></code>: number of kilobytes per second allowed to send to a given connection.  The zero value disables rate limiting. This feature must be used with <a href="#proxy-buffering">proxy-buffering</a> enabled.</li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/limit-whitelist</span></code>: client IP source ranges to be excluded from rate-limiting. The value is a comma separated list of CIDRs.</li>
+<li><code>nginx.ingress.kubernetes.io/limit-connections</code>: number of concurrent connections allowed from a single IP address. A 503 error is returned when exceeding this limit.</li>
+<li><code>nginx.ingress.kubernetes.io/limit-rps</code>: number of requests accepted from a given IP each second. The burst limit is set to 5 times the limit. When clients exceed this limit,  <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#limit-req-status-code">limit-req-status-code</a> <strong><em>default:</em></strong> 503 is returned.</li>
+<li><code>nginx.ingress.kubernetes.io/limit-rpm</code>: number of requests accepted from a given IP each minute. The burst limit is set to 5 times the limit. When clients exceed this limit,  <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#limit-req-status-code">limit-req-status-code</a> <strong><em>default:</em></strong> 503 is returned.</li>
+<li><code>nginx.ingress.kubernetes.io/limit-rate-after</code>: initial number of kilobytes after which the further transmission of a response to a given connection will be rate limited. This feature must be used with <a href="#proxy-buffering">proxy-buffering</a> enabled.</li>
+<li><code>nginx.ingress.kubernetes.io/limit-rate</code>: number of kilobytes per second allowed to send to a given connection.  The zero value disables rate limiting. This feature must be used with <a href="#proxy-buffering">proxy-buffering</a> enabled.</li>
+<li><code>nginx.ingress.kubernetes.io/limit-whitelist</code>: client IP source ranges to be excluded from rate-limiting. The value is a comma separated list of CIDRs.</li>
 </ul>
-<p>If you specify multiple annotations in a single Ingress rule, limits are applied in the order <code class="codehilite"><span class="err">limit-connections</span></code>, <code class="codehilite"><span class="err">limit-rpm</span></code>, <code class="codehilite"><span class="err">limit-rps</span></code>.</p>
-<p>To configure settings globally for all Ingress rules, the <code class="codehilite"><span class="err">limit-rate-after</span></code> and <code class="codehilite"><span class="err">limit-rate</span></code> values may be set in the <a href="../configmap/#limit-rate">NGINX ConfigMap</a>.  The value set in an Ingress annotation will override the global setting.</p>
-<p>The client IP address will be set based on the use of <a href="../configmap/#use-proxy-protocol">PROXY protocol</a> or from the <code class="codehilite"><span class="err">X-Forwarded-For</span></code> header value when <a href="../configmap/#use-forwarded-headers">use-forwarded-headers</a> is enabled.</p>
+<p>If you specify multiple annotations in a single Ingress rule, limits are applied in the order <code>limit-connections</code>, <code>limit-rpm</code>, <code>limit-rps</code>.</p>
+<p>To configure settings globally for all Ingress rules, the <code>limit-rate-after</code> and <code>limit-rate</code> values may be set in the <a href="../configmap/#limit-rate">NGINX ConfigMap</a>.  The value set in an Ingress annotation will override the global setting.</p>
+<p>The client IP address will be set based on the use of <a href="../configmap/#use-proxy-protocol">PROXY protocol</a> or from the <code>X-Forwarded-For</code> header value when <a href="../configmap/#use-forwarded-headers">use-forwarded-headers</a> is enabled.</p>
 <h3 id="permanent-redirect">Permanent Redirect<a class="headerlink" href="#permanent-redirect" title="Permanent link"> ¶</a></h3>
-<p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</span></code> would redirect everything to Google.</p>
+<p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code>nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
 <h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link"> ¶</a></h3>
-<p>This annotation allows you to modify the status code used for permanent redirects.  For example <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/permanent-redirect-code: &#39;308&#39;</span></code> would return your permanent-redirect with a 308.</p>
+<p>This annotation allows you to modify the status code used for permanent redirects.  For example <code>nginx.ingress.kubernetes.io/permanent-redirect-code: '308'</code> would return your permanent-redirect with a 308.</p>
 <h3 id="temporal-redirect">Temporal Redirect<a class="headerlink" href="#temporal-redirect" title="Permanent link"> ¶</a></h3>
-<p>This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. For example <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/temporal-redirect: https://www.google.com</span></code> would redirect everything to Google with a Return Code of 302 (Moved Temporarily)</p>
+<p>This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. For example <code>nginx.ingress.kubernetes.io/temporal-redirect: https://www.google.com</code> would redirect everything to Google with a Return Code of 302 (Moved Temporarily)</p>
 <h3 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link"> ¶</a></h3>
-<p>The annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/ssl-passthrough</span></code> instructs the controller to send TLS connections directly
+<p>The annotation <code>nginx.ingress.kubernetes.io/ssl-passthrough</code> instructs the controller to send TLS connections directly
 to the backend instead of letting NGINX decrypt the communication. See also <a href="../../tls/#ssl-passthrough">TLS/HTTPS</a> in
 the User guide.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>SSL Passthrough is <strong>disabled by default</strong> and requires starting the controller with the
-<a href="../../cli-arguments/"><code class="codehilite"><span class="err">--enable-ssl-passthrough</span></code></a> flag.</p>
+<a href="../../cli-arguments/"><code>--enable-ssl-passthrough</code></a> flag.</p>
 </div>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
@@ -2748,37 +2748,37 @@ invalidates all the other annotations set on an Ingress object.</p>
 </div>
 <h3 id="service-upstream">Service Upstream<a class="headerlink" href="#service-upstream" title="Permanent link"> ¶</a></h3>
 <p>By default the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.</p>
-<p>The <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/service-upstream</span></code> annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.</p>
+<p>The <code>nginx.ingress.kubernetes.io/service-upstream</code> annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.</p>
 <p>This can be desirable for things like zero-downtime deployments as it reduces the need to reload NGINX configuration when Pods come up and down. See issue <a href="https://github.com/kubernetes/ingress-nginx/issues/257">#257</a>.</p>
 <h4 id="known-issues">Known Issues<a class="headerlink" href="#known-issues" title="Permanent link"> ¶</a></h4>
-<p>If the <code class="codehilite"><span class="err">service-upstream</span></code> annotation is specified the following things should be taken into consideration:</p>
+<p>If the <code>service-upstream</code> annotation is specified the following things should be taken into consideration:</p>
 <ul>
 <li>Sticky Sessions will not work as only round-robin load balancing is supported.</li>
-<li>The <code class="codehilite"><span class="err">proxy_next_upstream</span></code> directive will not have any effect meaning on error the request will not be dispatched to another upstream.</li>
+<li>The <code>proxy_next_upstream</code> directive will not have any effect meaning on error the request will not be dispatched to another upstream.</li>
 </ul>
 <h3 id="server-side-https-enforcement-through-redirect">Server-side HTTPS enforcement through redirect<a class="headerlink" href="#server-side-https-enforcement-through-redirect" title="Permanent link"> ¶</a></h3>
 <p>By default the controller redirects (308) to HTTPS if TLS is enabled for that ingress.
-If you want to disable this behavior globally, you can use <code class="codehilite"><span class="c">ssl-redirect: &quot;false&quot;</span></code> in the NGINX <a href="../configmap/#ssl-redirect">ConfigMap</a>.</p>
-<p>To configure this feature for specific ingress resources, you can use the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/ssl-redirect: &quot;false&quot;</span></code>
+If you want to disable this behavior globally, you can use <code>ssl-redirect: "false"</code> in the NGINX <a href="../configmap/#ssl-redirect">ConfigMap</a>.</p>
+<p>To configure this feature for specific ingress resources, you can use the <code>nginx.ingress.kubernetes.io/ssl-redirect: "false"</code>
 annotation in the particular resource.</p>
 <p>When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to HTTPS
 even when there is no TLS certificate available.
-This can be achieved by using the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/force-ssl-redirect: &quot;true&quot;</span></code> annotation in the particular resource.</p>
+This can be achieved by using the <code>nginx.ingress.kubernetes.io/force-ssl-redirect: "true"</code> annotation in the particular resource.</p>
 <h3 id="redirect-fromto-www">Redirect from/to www<a class="headerlink" href="#redirect-fromto-www" title="Permanent link"> ¶</a></h3>
-<p>In some scenarios is required to redirect from <code class="codehilite"><span class="err">www.domain.com</span></code> to <code class="codehilite"><span class="err">domain.com</span></code> or vice versa.
-To enable this feature use the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/from-to-www-redirect: &quot;true&quot;</span></code></p>
+<p>In some scenarios is required to redirect from <code>www.domain.com</code> to <code>domain.com</code> or vice versa.
+To enable this feature use the annotation <code>nginx.ingress.kubernetes.io/from-to-www-redirect: "true"</code></p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
-<p>If at some point a new Ingress is created with a host equal to one of the options (like <code class="codehilite"><span class="err">domain.com</span></code>) the annotation will be omitted.</p>
+<p>If at some point a new Ingress is created with a host equal to one of the options (like <code>domain.com</code>) the annotation will be omitted.</p>
 </div>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>For HTTPS to HTTPS redirects is mandatory the SSL Certificate defined in the Secret, located in the TLS section of Ingress, contains both FQDN in the common name of the certificate.</p>
 </div>
 <h3 id="whitelist-source-range">Whitelist source range<a class="headerlink" href="#whitelist-source-range" title="Permanent link"> ¶</a></h3>
-<p>You can specify allowed client IP source ranges through the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/whitelist-source-range</span></code> annotation.
-The value is a comma separated list of <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDRs</a>, e.g.  <code class="codehilite"><span class="err">10.0.0.0/24,172.10.0.1</span></code>.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite"><span class="err">whitelist-source-range</span></code> value may be set in the <a href="../configmap/#whitelist-source-range">NGINX ConfigMap</a>.</p>
+<p>You can specify allowed client IP source ranges through the <code>nginx.ingress.kubernetes.io/whitelist-source-range</code> annotation.
+The value is a comma separated list of <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDRs</a>, e.g.  <code>10.0.0.0/24,172.10.0.1</code>.</p>
+<p>To configure this setting globally for all Ingress rules, the <code>whitelist-source-range</code> value may be set in the <a href="../configmap/#whitelist-source-range">NGINX ConfigMap</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Adding an annotation to an Ingress rule overrides any global restriction.</p>
@@ -2787,134 +2787,134 @@ The value is a comma separated list of <a href="https://en.wikipedia.org/wiki/Cl
 <p>Using the configuration configmap it is possible to set the default global timeout for connections to the upstream servers.
 In some scenarios is required to have different values. To allow this we provide annotations that allows this customization:</p>
 <ul>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-connect-timeout</span></code></li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-send-timeout</span></code></li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-read-timeout</span></code></li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-next-upstream</span></code></li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-next-upstream-timeout</span></code></li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-next-upstream-tries</span></code></li>
-<li><code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-request-buffering</span></code></li>
+<li><code>nginx.ingress.kubernetes.io/proxy-connect-timeout</code></li>
+<li><code>nginx.ingress.kubernetes.io/proxy-send-timeout</code></li>
+<li><code>nginx.ingress.kubernetes.io/proxy-read-timeout</code></li>
+<li><code>nginx.ingress.kubernetes.io/proxy-next-upstream</code></li>
+<li><code>nginx.ingress.kubernetes.io/proxy-next-upstream-timeout</code></li>
+<li><code>nginx.ingress.kubernetes.io/proxy-next-upstream-tries</code></li>
+<li><code>nginx.ingress.kubernetes.io/proxy-request-buffering</code></li>
 </ul>
 <h3 id="proxy-redirect">Proxy redirect<a class="headerlink" href="#proxy-redirect" title="Permanent link"> ¶</a></h3>
-<p>With the annotations <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-redirect-from</span></code> and <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-redirect-to</span></code> it is possible to
-set the text that should be changed in the <code class="codehilite"><span class="err">Location</span></code> and <code class="codehilite"><span class="err">Refresh</span></code> header fields of a <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect">proxied server response</a></p>
-<p>Setting "off" or "default" in the annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-redirect-from</span></code> disables <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/proxy-redirect-to</span></code>,
+<p>With the annotations <code>nginx.ingress.kubernetes.io/proxy-redirect-from</code> and <code>nginx.ingress.kubernetes.io/proxy-redirect-to</code> it is possible to
+set the text that should be changed in the <code>Location</code> and <code>Refresh</code> header fields of a <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect">proxied server response</a></p>
+<p>Setting "off" or "default" in the annotation <code>nginx.ingress.kubernetes.io/proxy-redirect-from</code> disables <code>nginx.ingress.kubernetes.io/proxy-redirect-to</code>,
 otherwise, both annotations must be used in unison. Note that each annotation must be a string without spaces.</p>
 <p>By default the value of each annotation is "off".</p>
 <h3 id="custom-max-body-size">Custom max body size<a class="headerlink" href="#custom-max-body-size" title="Permanent link"> ¶</a></h3>
-<p>For NGINX, an 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size"><code class="codehilite"><span class="err">client_max_body_size</span></code></a>.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite"><span class="err">proxy-body-size</span></code> value may be set in the <a href="../configmap/#proxy-body-size">NGINX ConfigMap</a>.
+<p>For NGINX, an 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size"><code>client_max_body_size</code></a>.</p>
+<p>To configure this setting globally for all Ingress rules, the <code>proxy-body-size</code> value may be set in the <a href="../configmap/#proxy-body-size">NGINX ConfigMap</a>.
 To use custom values in an Ingress rule define these annotation:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-body-size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8m</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-body-size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8m</span>
 </code></pre></div>
 
 <h3 id="proxy-cookie-domain">Proxy cookie domain<a class="headerlink" href="#proxy-cookie-domain" title="Permanent link"> ¶</a></h3>
 <p>Sets a text that <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain">should be changed in the domain attribute</a> of the "Set-Cookie" header fields of a proxied server response.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite"><span class="err">proxy-cookie-domain</span></code> value may be set in the <a href="../configmap/#proxy-cookie-domain">NGINX ConfigMap</a>.</p>
+<p>To configure this setting globally for all Ingress rules, the <code>proxy-cookie-domain</code> value may be set in the <a href="../configmap/#proxy-cookie-domain">NGINX ConfigMap</a>.</p>
 <h3 id="proxy-cookie-path">Proxy cookie path<a class="headerlink" href="#proxy-cookie-path" title="Permanent link"> ¶</a></h3>
 <p>Sets a text that <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path">should be changed in the path attribute</a> of the "Set-Cookie" header fields of a proxied server response.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite"><span class="err">proxy-cookie-path</span></code> value may be set in the <a href="../configmap/#proxy-cookie-path">NGINX ConfigMap</a>.</p>
+<p>To configure this setting globally for all Ingress rules, the <code>proxy-cookie-path</code> value may be set in the <a href="../configmap/#proxy-cookie-path">NGINX ConfigMap</a>.</p>
 <h3 id="proxy-buffering">Proxy buffering<a class="headerlink" href="#proxy-buffering" title="Permanent link"> ¶</a></h3>
-<p>Enable or disable proxy buffering <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering"><code class="codehilite"><span class="err">proxy_buffering</span></code></a>.
+<p>Enable or disable proxy buffering <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering"><code>proxy_buffering</code></a>.
 By default proxy buffering is disabled in the NGINX config.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite"><span class="err">proxy-buffering</span></code> value may be set in the <a href="../configmap/#proxy-buffering">NGINX ConfigMap</a>.
+<p>To configure this setting globally for all Ingress rules, the <code>proxy-buffering</code> value may be set in the <a href="../configmap/#proxy-buffering">NGINX ConfigMap</a>.
 To use custom values in an Ingress rule define these annotation:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-buffering</span><span class="p">:</span> <span class="s">&quot;on&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-buffering</span><span class="p">:</span> <span class="s">&quot;on&quot;</span>
 </code></pre></div>
 
 <h3 id="proxy-buffers-number">Proxy buffers Number<a class="headerlink" href="#proxy-buffers-number" title="Permanent link"> ¶</a></h3>
-<p>Sets the number of the buffers in <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers"><code class="codehilite"><span class="err">proxy_buffers</span></code></a> used for reading the first part of the response received from the proxied server.
+<p>Sets the number of the buffers in <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers"><code>proxy_buffers</code></a> used for reading the first part of the response received from the proxied server.
 By default proxy buffers number is set as 4</p>
-<p>To configure this setting globally, set <code class="codehilite"><span class="err">proxy-buffers-number</span></code> in <a href="../configmap/#proxy-buffers-number">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-buffers-number</span><span class="p">:</span> <span class="s">&quot;4&quot;</span>
+<p>To configure this setting globally, set <code>proxy-buffers-number</code> in <a href="../configmap/#proxy-buffers-number">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-buffers-number</span><span class="p">:</span> <span class="s">&quot;4&quot;</span>
 </code></pre></div></p>
 <h3 id="proxy-buffer-size">Proxy buffer size<a class="headerlink" href="#proxy-buffer-size" title="Permanent link"> ¶</a></h3>
-<p>Sets the size of the buffer <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code class="codehilite"><span class="err">proxy_buffer_size</span></code></a> used for reading the first part of the response received from the proxied server.
+<p>Sets the size of the buffer <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code>proxy_buffer_size</code></a> used for reading the first part of the response received from the proxied server.
 By default proxy buffer size is set as "4k"</p>
-<p>To configure this setting globally, set <code class="codehilite"><span class="err">proxy-buffer-size</span></code> in <a href="../configmap/#proxy-buffer-size">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-buffer-size</span><span class="p">:</span> <span class="s">&quot;8k&quot;</span>
+<p>To configure this setting globally, set <code>proxy-buffer-size</code> in <a href="../configmap/#proxy-buffer-size">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-buffer-size</span><span class="p">:</span> <span class="s">&quot;8k&quot;</span>
 </code></pre></div></p>
 <h3 id="proxy-max-temp-file-size">Proxy max temp file size<a class="headerlink" href="#proxy-max-temp-file-size" title="Permanent link"> ¶</a></h3>
-<p>When <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering"><code class="codehilite"><span class="err">buffering</span></code></a> of responses from the proxied server is enabled, and the whole response does not fit into the buffers set by the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code class="codehilite"><span class="err">proxy_buffer_size</span></code></a> and <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers"><code class="codehilite"><span class="err">proxy_buffers</span></code></a> directives, a part of the response can be saved to a temporary file. This directive sets the maximum <code class="codehilite"><span class="err">size</span></code> of the temporary file setting the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_max_temp_file_size"><code class="codehilite"><span class="err">proxy_max_temp_file_size</span></code></a>. The size of data written to the temporary file at a time is set by the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_temp_file_write_size"><code class="codehilite"><span class="err">proxy_temp_file_write_size</span></code></a> directive.</p>
+<p>When <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering"><code>buffering</code></a> of responses from the proxied server is enabled, and the whole response does not fit into the buffers set by the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code>proxy_buffer_size</code></a> and <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers"><code>proxy_buffers</code></a> directives, a part of the response can be saved to a temporary file. This directive sets the maximum <code>size</code> of the temporary file setting the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_max_temp_file_size"><code>proxy_max_temp_file_size</code></a>. The size of data written to the temporary file at a time is set by the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_temp_file_write_size"><code>proxy_temp_file_write_size</code></a> directive.</p>
 <p>The zero value disables buffering of responses to temporary files.</p>
 <p>To use custom values in an Ingress rule, define this annotation:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-max-temp-file-size</span><span class="p">:</span> <span class="s">&quot;1024m&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-max-temp-file-size</span><span class="p">:</span> <span class="s">&quot;1024m&quot;</span>
 </code></pre></div></p>
 <h3 id="proxy-http-version">Proxy HTTP version<a class="headerlink" href="#proxy-http-version" title="Permanent link"> ¶</a></h3>
-<p>Using this annotation sets the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version"><code class="codehilite"><span class="err">proxy_http_version</span></code></a> that the Nginx reverse proxy will use to communicate with the backend.
+<p>Using this annotation sets the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version"><code>proxy_http_version</code></a> that the Nginx reverse proxy will use to communicate with the backend.
 By default this is set to "1.1".</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-http-version</span><span class="p">:</span> <span class="s">&quot;1.0&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/proxy-http-version</span><span class="p">:</span> <span class="s">&quot;1.0&quot;</span>
 </code></pre></div>
 
 <h3 id="ssl-ciphers">SSL ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link"> ¶</a></h3>
 <p>Specifies the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers">enabled ciphers</a>.</p>
-<p>Using this annotation will set the <code class="codehilite"><span class="err">ssl_ciphers</span></code> directive at the server level. This configuration is active for all the paths in the host.</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/ssl-ciphers</span><span class="p">:</span> <span class="s">&quot;ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP&quot;</span>
+<p>Using this annotation will set the <code>ssl_ciphers</code> directive at the server level. This configuration is active for all the paths in the host.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/ssl-ciphers</span><span class="p">:</span> <span class="s">&quot;ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP&quot;</span>
 </code></pre></div>
 
 <h3 id="connection-proxy-header">Connection proxy header<a class="headerlink" href="#connection-proxy-header" title="Permanent link"> ¶</a></h3>
 <p>Using this annotation will override the default connection header set by NGINX.
 To use custom values in an Ingress rule, define the annotation:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/connection-proxy-header</span><span class="p">:</span> <span class="s">&quot;keep-alive&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/connection-proxy-header</span><span class="p">:</span> <span class="s">&quot;keep-alive&quot;</span>
 </code></pre></div>
 
 <h3 id="enable-access-log">Enable Access Log<a class="headerlink" href="#enable-access-log" title="Permanent link"> ¶</a></h3>
 <p>Access logs are enabled by default, but in some scenarios access logs might be required to be disabled for a given
 ingress. To do this, use the annotation:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-access-log</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-access-log</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
 </code></pre></div>
 
 <h3 id="enable-rewrite-log">Enable Rewrite Log<a class="headerlink" href="#enable-rewrite-log" title="Permanent link"> ¶</a></h3>
 <p>Rewrite logs are not enabled by default. In some scenarios it could be required to enable NGINX rewrite logs.
 Note that rewrite logs are sent to the error_log file at the notice level. To enable this feature use the annotation:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-rewrite-log</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-rewrite-log</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </code></pre></div>
 
 <h3 id="enable-opentracing">Enable Opentracing<a class="headerlink" href="#enable-opentracing" title="Permanent link"> ¶</a></h3>
 <p>Opentracing can be enabled or disabled globally through the ConfigMap but this will sometimes need to be overridden
 to enable it or disable it for a specific ingress (e.g. to turn off tracing of external health check endpoints)</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-opentracing</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-opentracing</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </code></pre></div>
 
 <h3 id="x-forwarded-prefix-header">X-Forwarded-Prefix Header<a class="headerlink" href="#x-forwarded-prefix-header" title="Permanent link"> ¶</a></h3>
-<p>To add the non-standard <code class="codehilite"><span class="err">X-Forwarded-Prefix</span></code> header to the upstream request with a string value, the following annotation can be used:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/x-forwarded-prefix</span><span class="p">:</span> <span class="s">&quot;/path&quot;</span>
+<p>To add the non-standard <code>X-Forwarded-Prefix</code> header to the upstream request with a string value, the following annotation can be used:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/x-forwarded-prefix</span><span class="p">:</span> <span class="s">&quot;/path&quot;</span>
 </code></pre></div>
 
 <h3 id="lua-resty-waf">Lua Resty WAF<a class="headerlink" href="#lua-resty-waf" title="Permanent link"> ¶</a></h3>
-<p>Using <code class="codehilite"><span class="err">lua-resty-waf-*</span></code> annotations we can enable and control the <a href="https://github.com/p0pr0ck5/lua-resty-waf">lua-resty-waf</a>
+<p>Using <code>lua-resty-waf-*</code> annotations we can enable and control the <a href="https://github.com/p0pr0ck5/lua-resty-waf">lua-resty-waf</a>
 Web Application Firewall per location.</p>
 <p>Following configuration will enable the WAF for the paths defined in the corresponding ingress:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf</span><span class="p">:</span> <span class="s">&quot;active&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf</span><span class="p">:</span> <span class="s">&quot;active&quot;</span>
 </code></pre></div>
 
-<p>In order to run it in debugging mode you can set <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/lua-resty-waf-debug</span></code> to <code class="codehilite"><span class="err">&quot;true&quot;</span></code> in addition to the above configuration.
-The other possible values for <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/lua-resty-waf</span></code> are <code class="codehilite"><span class="err">inactive</span></code> and <code class="codehilite"><span class="err">simulate</span></code>.
-In <code class="codehilite"><span class="err">inactive</span></code> mode WAF won't do anything, whereas in <code class="codehilite"><span class="err">simulate</span></code> mode it will log a warning message if there's a matching WAF rule for given request. This is useful to debug a rule and eliminate possible false positives before fully deploying it.</p>
-<p><code class="codehilite"><span class="err">lua-resty-waf</span></code> comes with predefined set of rules <a href="https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules">https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules</a> that covers ModSecurity CRS.
-You can use <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</span></code> to ignore a subset of those rulesets. For an example:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</span><span class="p">:</span> <span class="s">&quot;41000_sqli,</span><span class="nv"> </span><span class="s">42000_xss&quot;</span>
+<p>In order to run it in debugging mode you can set <code>nginx.ingress.kubernetes.io/lua-resty-waf-debug</code> to <code>"true"</code> in addition to the above configuration.
+The other possible values for <code>nginx.ingress.kubernetes.io/lua-resty-waf</code> are <code>inactive</code> and <code>simulate</code>.
+In <code>inactive</code> mode WAF won't do anything, whereas in <code>simulate</code> mode it will log a warning message if there's a matching WAF rule for given request. This is useful to debug a rule and eliminate possible false positives before fully deploying it.</p>
+<p><code>lua-resty-waf</code> comes with predefined set of rules <a href="https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules">https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules</a> that covers ModSecurity CRS.
+You can use <code>nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</code> to ignore a subset of those rulesets. For an example:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</span><span class="p">:</span> <span class="s">&quot;41000_sqli,</span><span class="nv"> </span><span class="s">42000_xss&quot;</span>
 </code></pre></div>
 
 <p>will ignore the two mentioned rulesets.</p>
-<p>It is also possible to configure custom WAF rules per ingress using the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</span></code> annotation. For an example the following snippet will configure a WAF rule to deny requests with query string value that contains word <code class="codehilite"><span class="err">foo</span></code>:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</span><span class="p">:</span> <span class="s">&#39;[=[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;access&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;actions&quot;:</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;disrupt&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;DENY&quot;</span><span class="nv"> </span><span class="s">},</span><span class="nv"> </span><span class="s">&quot;id&quot;:</span><span class="nv"> </span><span class="s">10001,</span><span class="nv"> </span><span class="s">&quot;msg&quot;:</span><span class="nv"> </span><span class="s">&quot;my</span><span class="nv"> </span><span class="s">custom</span><span class="nv"> </span><span class="s">rule&quot;,</span><span class="nv"> </span><span class="s">&quot;operator&quot;:</span><span class="nv"> </span><span class="s">&quot;STR_CONTAINS&quot;,</span><span class="nv"> </span><span class="s">&quot;pattern&quot;:</span><span class="nv"> </span><span class="s">&quot;foo&quot;,</span><span class="nv"> </span><span class="s">&quot;vars&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;parse&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">&quot;values&quot;,</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;type&quot;:</span><span class="nv"> </span><span class="s">&quot;REQUEST_ARGS&quot;</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;body_filter&quot;:</span><span class="nv"> </span><span class="s">[],</span><span class="nv"> </span><span class="s">&quot;header_filter&quot;:[]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]=]&#39;</span>
+<p>It is also possible to configure custom WAF rules per ingress using the <code>nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</code> annotation. For an example the following snippet will configure a WAF rule to deny requests with query string value that contains word <code>foo</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</span><span class="p">:</span> <span class="s">&#39;[=[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;access&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;actions&quot;:</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;disrupt&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;DENY&quot;</span><span class="nv"> </span><span class="s">},</span><span class="nv"> </span><span class="s">&quot;id&quot;:</span><span class="nv"> </span><span class="s">10001,</span><span class="nv"> </span><span class="s">&quot;msg&quot;:</span><span class="nv"> </span><span class="s">&quot;my</span><span class="nv"> </span><span class="s">custom</span><span class="nv"> </span><span class="s">rule&quot;,</span><span class="nv"> </span><span class="s">&quot;operator&quot;:</span><span class="nv"> </span><span class="s">&quot;STR_CONTAINS&quot;,</span><span class="nv"> </span><span class="s">&quot;pattern&quot;:</span><span class="nv"> </span><span class="s">&quot;foo&quot;,</span><span class="nv"> </span><span class="s">&quot;vars&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;parse&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">&quot;values&quot;,</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;type&quot;:</span><span class="nv"> </span><span class="s">&quot;REQUEST_ARGS&quot;</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;body_filter&quot;:</span><span class="nv"> </span><span class="s">[],</span><span class="nv"> </span><span class="s">&quot;header_filter&quot;:[]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]=]&#39;</span>
 </code></pre></div>
 
-<p>Since the default allowed contents were <code class="codehilite"><span class="err">&quot;text/html&quot;, &quot;text/json&quot;, &quot;application/json&quot;</span></code>
+<p>Since the default allowed contents were <code>"text/html", "text/json", "application/json"</code>
 We can enable the following annotation for allow all contents type:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </code></pre></div>
 
 <p>The default score of lua-resty-waf is 5, which usually triggered if hitting 2 default rules, you can modify the score threshold with following annotation:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold</span><span class="p">:</span> <span class="s">&quot;10&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold</span><span class="p">:</span> <span class="s">&quot;10&quot;</span>
 </code></pre></div>
 
 <p>When you enabled HTTPS in the endpoint and since resty-lua will return 500 error when processing "multipart" contents
 Reference for this <a href="https://github.com/p0pr0ck5/lua-resty-waf/issues/166">issue</a></p>
 <p>By default, it will be "true"</p>
 <p>You may enable the following annotation for work around:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
 </code></pre></div>
 
 <p>For details on how to write WAF rules, please refer to <a href="https://github.com/p0pr0ck5/lua-resty-waf">https://github.com/p0pr0ck5/lua-resty-waf</a>.</p>
@@ -2924,45 +2924,45 @@ of ingress locations. The ModSecurity module must first be enabled by enabling M
 <a href="../configmap/#enable-modsecurity">ConfigMap</a>. Note this will enable ModSecurity for all paths, and each path
 must be disabled manually.</p>
 <p>It can be enabled using the following annotation:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-modsecurity</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-modsecurity</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </code></pre></div>
 ModSecurity will run in "Detection-Only" mode using the <a href="https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended">recommended configuration</a>.</p>
 <p>You can enable the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> by
 setting the following annotation:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-owasp-core-rules</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-owasp-core-rules</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </code></pre></div></p>
 <p>You can pass transactionIDs from nginx by setting up the following:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/modsecurity-transaction-id</span><span class="p">:</span> <span class="s">&quot;$request_id&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/modsecurity-transaction-id</span><span class="p">:</span> <span class="s">&quot;$request_id&quot;</span>
 </code></pre></div></p>
 <p>You can also add your own set of modsecurity rules via a snippet:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
 <span class="l l-Scalar l-Scalar-Plain">SecRuleEngine On</span>
 <span class="l l-Scalar l-Scalar-Plain">SecDebugLog /tmp/modsec_debug.log</span>
 </code></pre></div></p>
-<p>Note: If you use both <code class="codehilite"><span class="err">enable-owasp-core-rules</span></code> and <code class="codehilite"><span class="err">modsecurity-snippet</span></code> annotations together, only the
-<code class="codehilite"><span class="err">modsecurity-snippet</span></code> will take effect. If you wish to include the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> or
+<p>Note: If you use both <code>enable-owasp-core-rules</code> and <code>modsecurity-snippet</code> annotations together, only the
+<code>modsecurity-snippet</code> will take effect. If you wish to include the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> or
 <a href="https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended">recommended configuration</a> simply use the include
 statement:</p>
 <p>nginx 0.24.1 and below
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
 <span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf</span>
 <span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/modsecurity/modsecurity.conf</span>
 </code></pre></div>
 nginx 0.25.0 and above
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
 <span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf</span>
 </code></pre></div></p>
 <h3 id="influxdb">InfluxDB<a class="headerlink" href="#influxdb" title="Permanent link"> ¶</a></h3>
-<p>Using <code class="codehilite"><span class="err">influxdb-*</span></code> annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
+<p>Using <code>influxdb-*</code> annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
 using the <a href="https://github.com/influxdata/nginx-influxdb-module/">nginx-influxdb-module</a>.</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-influxdb</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/enable-influxdb</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 <span class="nt">nginx.ingress.kubernetes.io/influxdb-measurement</span><span class="p">:</span> <span class="s">&quot;nginx-reqs&quot;</span>
 <span class="nt">nginx.ingress.kubernetes.io/influxdb-port</span><span class="p">:</span> <span class="s">&quot;8089&quot;</span>
 <span class="nt">nginx.ingress.kubernetes.io/influxdb-host</span><span class="p">:</span> <span class="s">&quot;127.0.0.1&quot;</span>
 <span class="nt">nginx.ingress.kubernetes.io/influxdb-server-name</span><span class="p">:</span> <span class="s">&quot;nginx-ingress&quot;</span>
 </code></pre></div>
 
-<p>For the <code class="codehilite"><span class="err">influxdb-host</span></code> parameter you have two options:</p>
+<p>For the <code>influxdb-host</code> parameter you have two options:</p>
 <ul>
 <li>Use an InfluxDB server configured with the  <a href="https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/">UDP protocol</a> enabled.</li>
 <li>Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the <a href="https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener">socket listener input</a> and to write using
@@ -2970,51 +2970,48 @@ anyone of the <a href="https://github.com/influxdata/telegraf/tree/release-1.7/p
 Prometheus, etc.. (recommended)</li>
 </ul>
 <p>It's important to remember that there's no DNS resolver at this stage so you will have to configure
-an ip address to <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/influxdb-host</span></code>. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use <code class="codehilite"><span class="err">127.0.0.1</span></code>.</p>
+an ip address to <code>nginx.ingress.kubernetes.io/influxdb-host</code>. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use <code>127.0.0.1</code>.</p>
 <h3 id="backend-protocol">Backend Protocol<a class="headerlink" href="#backend-protocol" title="Permanent link"> ¶</a></h3>
-<p>Using <code class="codehilite"><span class="err">backend-protocol</span></code> annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces <code class="codehilite"><span class="err">secure-backends</span></code> in older versions)
+<p>Using <code>backend-protocol</code> annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces <code>secure-backends</code> in older versions)
 Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
-<p>By default NGINX uses <code class="codehilite"><span class="err">HTTP</span></code>.</p>
+<p>By default NGINX uses <code>HTTP</code>.</p>
 <p>Example:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/backend-protocol</span><span class="p">:</span> <span class="s">&quot;HTTPS&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/backend-protocol</span><span class="p">:</span> <span class="s">&quot;HTTPS&quot;</span>
 </code></pre></div>
 
 <h3 id="use-regex">Use Regex<a class="headerlink" href="#use-regex" title="Permanent link"> ¶</a></h3>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
-<p>When using this annotation with the NGINX annotation <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/affinity</span></code> of type <code class="codehilite"><span class="err">cookie</span></code>,  <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/session-cookie-path</span></code> must be also set; Session cookie paths do not support regex.</p>
+<p>When using this annotation with the NGINX annotation <code>nginx.ingress.kubernetes.io/affinity</code> of type <code>cookie</code>,  <code>nginx.ingress.kubernetes.io/session-cookie-path</code> must be also set; Session cookie paths do not support regex.</p>
 </div>
-<p>Using the <code class="codehilite"><span class="err">nginx.ingress.kubernetes.io/use-regex</span></code> annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is <code class="codehilite"><span class="err">false</span></code>.</p>
+<p>Using the <code>nginx.ingress.kubernetes.io/use-regex</code> annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is <code>false</code>.</p>
 <p>The following will indicate that regular expression paths are being used:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/use-regex</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/use-regex</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </code></pre></div></p>
 <p>The following will indicate that regular expression paths are <strong>not</strong> being used:
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/use-regex</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/use-regex</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
 </code></pre></div></p>
-<p>When this annotation is set to <code class="codehilite"><span class="err">true</span></code>, the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.</p>
-<p>Additionally, if the <a href="#rewrite"><code class="codehilite"><span class="err">rewrite-target</span></code> annotation</a> is used on any Ingress for a given host, then the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.</p>
+<p>When this annotation is set to <code>true</code>, the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.</p>
+<p>Additionally, if the <a href="#rewrite"><code>rewrite-target</code> annotation</a> is used on any Ingress for a given host, then the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.</p>
 <p>Please read about <a href="../../ingress-path-matching/">ingress path matching</a> before using this modifier.</p>
 <h3 id="satisfy">Satisfy<a class="headerlink" href="#satisfy" title="Permanent link"> ¶</a></h3>
 <p>By default, a request would need to satisfy all authentication requirements in order to be allowed. By using this annotation, requests that satisfy either any or all authentication requirements are allowed, based on the configuration value.</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/satisfy</span><span class="p">:</span> <span class="s">&quot;any&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/satisfy</span><span class="p">:</span> <span class="s">&quot;any&quot;</span>
 </code></pre></div>
 
 <h3 id="mirror">Mirror<a class="headerlink" href="#mirror" title="Permanent link"> ¶</a></h3>
 <p>Enables a request to be mirrored to a mirror backend. Responses by mirror backends are ignored. This feature is useful, to see how requests will react in "test" backends.</p>
 <p>The mirror backend can be set by applying:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/mirror-target</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://test.env.com/$request_uri</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/mirror-target</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://test.env.com/$request_uri</span>
 </code></pre></div>
 
 <p>By default the request-body is sent to the mirror backend, but can be turned off by applying:</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/mirror-request-body</span><span class="p">:</span> <span class="s">&quot;off&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/mirror-request-body</span><span class="p">:</span> <span class="s">&quot;off&quot;</span>
 </code></pre></div>
 
 <p><strong>Note:</strong> The mirror directive will be applied to all paths within the ingress resource.</p>
 <p>The request sent to the mirror is linked to the original request. If you have a slow mirror backend, then the original request will throttle.</p>
 <p>For more information on the mirror module see <a href="https://nginx.org/en/docs/http/ngx_http_mirror_module.html">ngx_http_mirror_module</a></p>
-                
-                  
-                
                 
               
               
@@ -3031,34 +3028,34 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
 <footer class="md-footer">
   
     <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../basic-usage/" title="Basic usage" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+          <a href="../../basic-usage/" title="Basic usage" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
             </div>
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
                 Basic usage
-              </span>
+              </div>
             </div>
           </a>
         
         
-          <a href="../configmap/" title="ConfigMap" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+          <a href="../configmap/" title="ConfigMap" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
                 ConfigMap
-              </span>
+              </div>
             </div>
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" /></svg>
             </div>
           </a>
         
@@ -3069,11 +3066,10 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
     <div class="md-footer-meta__inner md-grid">
       <div class="md-footer-copyright">
         
-        powered by
-        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
-        and
+        Made with
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs</a>
+          Material for MkDocs
+        </a>
       </div>
       
     </div>
@@ -3082,9 +3078,18 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
       
     </div>
     
-      <script src="../../../assets/javascripts/application.df00da5d.js"></script>
+      <script src="../../../assets/javascripts/vendor.36cbf620.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.00c583dd.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
-      <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
+      <script>
+        app = initialize({
+          base: "../../..",
+          features: ["tabs", "instant"],
+          search: Object.assign({
+            worker: "../../../assets/javascripts/worker/search.7f7c8775.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
       
     
   </body>
