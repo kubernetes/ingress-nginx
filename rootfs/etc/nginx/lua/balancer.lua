@@ -154,13 +154,7 @@ local function sync_backends()
   end
 end
 
-local function route_to_alternative_balancer(balancer)
-  if not balancer.alternative_backends then
-    return false
-  end
-
-  -- TODO: support traffic shaping for n > 1 alternative backends
-  local backend_name = balancer.alternative_backends[1]
+local function backend_match(backend_name, sharping_by_weight_backends)
   if not backend_name then
     ngx.log(ngx.ERR, "empty alternative backend")
     return false
@@ -216,11 +210,34 @@ local function route_to_alternative_balancer(balancer)
     end
   end
 
-  if math.random(100) <= traffic_shaping_policy.weight then
-    return true
+  table.insert(sharping_by_weight_backends, backend_name)
+  return false
+end
+
+local function route_to_alternative_balancer(balancer)
+  if not balancer.alternative_backends then
+    return false, nil
   end
 
-  return false
+  local sharping_by_weight_backends = {}
+  for _, backend_name in ipairs(balancer.alternative_backends) do
+    local match = backend_match(backend_name, sharping_by_weight_backends)
+    if match then
+      return true, backend_name
+    end
+  end
+
+  local remain_weight = 100
+  for _, backend_name in ipairs(sharping_by_weight_backends) do
+    local alternative_balancer = balancers[backend_name]
+    if math.random(remain_weight) <= alternative_balancer.traffic_shaping_policy.weight then
+      return true, backend_name
+    else
+      remain_weight = remain_weight - alternative_balancer.traffic_shaping_policy.weight
+    end
+  end
+
+  return false, nil
 end
 
 local function get_balancer()
@@ -235,10 +252,9 @@ local function get_balancer()
     return
   end
 
-  if route_to_alternative_balancer(balancer) then
-    local alternative_backend_name = balancer.alternative_backends[1]
+  local route_to_alternative, alternative_backend_name = route_to_alternative_balancer(balancer)
+  if route_to_alternative then
     ngx.var.proxy_alternative_upstream_name = alternative_backend_name
-
     balancer = balancers[alternative_backend_name]
   end
 

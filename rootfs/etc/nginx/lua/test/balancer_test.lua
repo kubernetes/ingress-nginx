@@ -289,6 +289,116 @@ describe("Balancer", function()
         end
       end)
     end)
+
+    context("multiple canary", function()
+      it("canary by header || cookie || weight", function()
+
+        local canary_by_header_v1 = {
+          name = "canary-by-header-v1", port = "80", secure = false, sslPassthrough = false,
+          endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
+          trafficShapingPolicy = {
+            weight = 0,
+            header = "canaryHeader",
+            headerValue = "v1",
+            cookie = ""
+          },
+        }
+        local canary_by_header_v2 = {
+          name = "canary_by_header_v2", port = "80", secure = false, sslPassthrough = false,
+          endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
+          trafficShapingPolicy = {
+            weight = 0,
+            header = "canaryHeader",
+            headerValue = "v2",
+            cookie = ""
+          },
+        }
+        local canary_by_cookie = {
+          name = "canary_by_cookie", port = "80", secure = false, sslPassthrough = false,
+          endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
+          trafficShapingPolicy = {
+            weight = 0,
+            header = "",
+            headerValue = "",
+            cookie = "canaryCookie"
+          },
+        }
+        local canary_by_weight_100 = {
+          name = "canary_by_weight_100", port = "80", secure = false, sslPassthrough = false,
+          endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
+          trafficShapingPolicy = {
+            weight = 100,
+            header = "",
+            headerValue = "",
+            cookie = ""
+          },
+        }
+
+        local test_patterns = {
+          {
+            case_title = "canary by header && header value = v1",
+            request_header_name = "canaryHeader",
+            request_header_value = "v1",
+            request_cookie_name = "cookie",
+            request_cookie_value = "cookieValue",
+            expected_route_to_alternative = true,
+            expected_alternative_backend_name = canary_by_header_v1.name,
+          },
+          {
+            case_title = "canary by header && header value = v2",
+            request_header_name = "canaryHeader",
+            request_header_value = "v2",
+            request_cookie_name = "cookie",
+            request_cookie_value = "cookieValue",
+            expected_route_to_alternative = true,
+            expected_alternative_backend_name = canary_by_header_v2.name,
+          },
+          {
+            case_title = "canary by cookie",
+            request_header_name = "header",
+            request_header_value = "headerValue",
+            request_cookie_name = "canaryCookie",
+            request_cookie_value = "always",
+            expected_route_to_alternative = true,
+            expected_alternative_backend_name = canary_by_cookie.name,
+          },
+          {
+            case_title = "canary by weight",
+            request_header_name = "header",
+            request_header_value = "headerValue",
+            request_cookie_name = "cookie",
+            request_cookie_value = "cookieValue",
+            expected_route_to_alternative = true,
+            expected_alternative_backend_name = canary_by_weight_100.name,
+          },
+        }
+
+        for _, test_pattern in pairs(test_patterns) do
+          reset_balancer()
+          balancer.sync_backend(canary_by_header_v1)
+          balancer.sync_backend(canary_by_header_v2)
+          balancer.sync_backend(canary_by_cookie)
+          balancer.sync_backend(canary_by_weight_100)
+          _balancer.alternative_backends = {
+            canary_by_header_v1.name,
+            canary_by_header_v2.name,
+            canary_by_cookie.name,
+            canary_by_weight_100.name,
+          }
+          mock_ngx({ var = {
+            ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
+            ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
+            request_uri = "/"
+          }})
+
+          local route_to_alternative, alternative_backend_name = balancer.route_to_alternative_balancer(_balancer)
+          assert.message("\nTest data pattern: " .. test_pattern.case_title)
+                .equal(test_pattern.expected_route_to_alternative, route_to_alternative)
+          assert.are.same(test_pattern.expected_alternative_backend_name, alternative_backend_name)
+          reset_ngx()
+        end
+      end)
+    end)
   end)
 
   describe("sync_backend()", function()

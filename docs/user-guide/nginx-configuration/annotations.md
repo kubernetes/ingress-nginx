@@ -140,11 +140,12 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 Canary rules are evaluated in order of precedence. Precedence is as follows:
 `canary-by-header -> canary-by-cookie -> canary-weight`
 
+**Multiple Canary Ingress Per Ingress Rule** 
+
+when exist multiple canary Ingress for same main Ingress, will first determine whether `canary-by-header` and `canary-by-cookie` match, finally deal with `canary-weight` Ingress
+
 **Note** that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except `nginx.ingress.kubernetes.io/load-balance` and `nginx.ingress.kubernetes.io/upstream-hash-by`.
 
-**Known Limitations**
-
-Currently a maximum of one canary ingress can be applied per Ingress rule.
 
 ### Rewrite
 
