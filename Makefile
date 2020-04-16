@@ -261,6 +261,10 @@ misspell: check-go-version ## Check for spelling errors.
 kind-e2e-test: check-go-version ## Run e2e tests using kind.
 	@test/e2e/run.sh
 
+.PHONY: kind-e2e-chart-tests
+kind-e2e-chart-tests: ## Run helm chart e2e tests
+	@test/e2e/run-chart-test.sh
+
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
 	@build/run-ingress-controller.sh
