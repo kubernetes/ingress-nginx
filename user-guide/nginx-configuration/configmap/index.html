@@ -701,6 +701,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-ocsp" class="md-nav__link">
+    enable-ocsp
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ignore-invalid-headers" class="md-nav__link">
     ignore-invalid-headers
   </a>
@@ -2373,6 +2380,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-ocsp" class="md-nav__link">
+    enable-ocsp
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ignore-invalid-headers" class="md-nav__link">
     ignore-invalid-headers
   </a>
@@ -3457,6 +3471,11 @@ Same for numbers, like "100".</p>
 <td align="left">false</td>
 </tr>
 <tr>
+<td align="left"><a href="#enable-ocsp">enable-ocsp</a></td>
+<td align="left">bool</td>
+<td align="left">false</td>
+</tr>
+<tr>
 <td align="left"><a href="#ignore-invalid-headers">ignore-invalid-headers</a></td>
 <td align="left">bool</td>
 <td align="left">true</td>
@@ -4188,6 +4207,9 @@ Same for numbers, like "100".</p>
 <p>Disable IPV6 for nginx DNS resolver. <em><strong>default:</strong></em> <code>false</code>; IPv6 resolving enabled.</p>
 <h2 id="enable-underscores-in-headers">enable-underscores-in-headers<a class="headerlink" href="#enable-underscores-in-headers" title="Permanent link"> ¶</a></h2>
 <p>Enables underscores in header names. <em><strong>default:</strong></em> is disabled</p>
+<h2 id="enable-ocsp">enable-ocsp<a class="headerlink" href="#enable-ocsp" title="Permanent link"> ¶</a></h2>
+<p>Enables <a href="https://en.wikipedia.org/wiki/OCSP_stapling">Online Certificate Status Protocol stapling</a> (OCSP) support.
+<em><strong>default:</strong></em> is disabled</p>
 <h2 id="ignore-invalid-headers">ignore-invalid-headers<a class="headerlink" href="#ignore-invalid-headers" title="Permanent link"> ¶</a></h2>
 <p>Set if header fields with invalid names should be ignored.
 <em><strong>default:</strong></em> is enabled</p>
