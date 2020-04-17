@@ -1,4 +1,4 @@
-FROM quay.io/kubernetes-ingress-controller/e2e:v04142020-0257068b9 AS BASE
+FROM quay.io/kubernetes-ingress-controller/e2e:v04172020-6e8c68d88 AS BASE
 
 FROM alpine:3.11
 
@@ -16,6 +16,8 @@ RUN curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-hel
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/
 COPY --from=BASE /usr/local/bin/kubectl /usr/local/bin/
+COPY --from=BASE /usr/local/bin/cfssl /usr/local/bin/
+COPY --from=BASE /usr/local/bin/cfssljson /usr/local/bin/
 
 COPY . /
 
