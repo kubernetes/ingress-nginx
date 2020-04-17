@@ -112,11 +112,11 @@ controller:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
-  useHostPort: true
+  hostPort:
+    enabled: true
   terminationGracePeriodSeconds: 0
-
-defaultBackend:
-  enabled: false
+  service:
+    type: NodePort
 EOF
 
 cat <<EOF
