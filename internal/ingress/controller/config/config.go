@@ -129,6 +129,10 @@ type Configuration struct {
 	// By default this is disabled
 	EnableModsecurity bool `json:"enable-modsecurity"`
 
+	// EnableOCSP enables the OCSP support in SSL connections
+	// By default this is disabled
+	EnableOCSP bool `json:"enable-ocsp"`
+
 	// EnableOWASPCoreRules enables the OWASP ModSecurity Core Rule Set (CRS)
 	// By default this is disabled
 	EnableOWASPCoreRules bool `json:"enable-owasp-modsecurity-crs"`
