@@ -138,4 +138,8 @@ RUN wget https://github.com/helm/chart-testing/releases/download/v${CHART_TESTIN
 
 RUN curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
+RUN  curl -sSL -o /usr/local/bin/cfssl     https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssl_1.4.1_linux_amd64 \
+  && curl -sSL -o /usr/local/bin/cfssljson https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssljson_1.4.1_linux_amd64 \
+  && chmod +x /usr/local/bin/cfssl*
+
 WORKDIR $GOPATH

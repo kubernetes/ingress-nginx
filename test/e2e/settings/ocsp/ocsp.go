@@ -22,12 +22,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -119,7 +116,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 			})
 
 		tlsConfig := &tls.Config{ServerName: host, InsecureSkipVerify: true}
-		resp := f.HTTPTestClientWithTLSConfig(tlsConfig).
+		f.HTTPTestClientWithTLSConfig(tlsConfig).
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).
 			WithHeader("Host", host).
@@ -127,8 +124,12 @@ var _ = framework.DescribeSetting("OCSP", func() {
 			Status(http.StatusOK).
 			Raw()
 
-		// TODO: avoid second request
-		resp = f.HTTPTestClientWithTLSConfig(tlsConfig).
+		// give time the lua request to the OCSP
+		// URL to finish and update the cache
+		time.Sleep(5 * time.Second)
+
+		// TODO: is possible to avoid second request?
+		resp := f.HTTPTestClientWithTLSConfig(tlsConfig).
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).
 			WithHeader("Host", host).
@@ -202,28 +203,16 @@ func prepareCertificates(namespace string) error {
 		return fmt.Errorf("creating cfssl_config.json file: %v", err)
 	}
 
-	cfssl := "cfssl"
-	cfssljson := "cfssljson"
-	if !commandExists(cfssl) {
-		ginkgo.By("downloading cfssl...")
-		cfssl, err = downloadBinary(cfssl)
-		if err != nil {
-			return fmt.Errorf("downloading cfssl: %v", err)
-		}
-	}
-
-	if !commandExists(cfssljson) {
-		ginkgo.By("downloading cfssljson...")
-		cfssljson, err = downloadBinary(cfssljson)
-		if err != nil {
-			return fmt.Errorf("downloading cfssljson: %v", err)
-		}
+	cpCmd := exec.Command("cp", "-rf", "template.db", "empty.db")
+	err = cpCmd.Run()
+	if err != nil {
+		return fmt.Errorf("copying sqlite file: %v", err)
 	}
 
 	commands := []string{
-		fmt.Sprintf("%v gencert -initca ca_csr.json | %v -bare ca", cfssl, cfssljson),
-		fmt.Sprintf("%v gencert -ca ca.pem -ca-key ca-key.pem -config=cfssl_config.json -profile=intermediate intermediate_ca_csr.json | %v -bare intermediate_ca", cfssl, cfssljson),
-		fmt.Sprintf("%v gencert -ca intermediate_ca.pem -ca-key intermediate_ca-key.pem -config=cfssl_config.json -profile=ocsp ocsp_csr.json | %v -bare ocsp", cfssl, cfssljson),
+		"cfssl gencert -initca ca_csr.json | cfssljson -bare ca",
+		"cfssl gencert -ca ca.pem -ca-key ca-key.pem -config=cfssl_config.json -profile=intermediate intermediate_ca_csr.json | cfssljson -bare intermediate_ca",
+		"cfssl gencert -ca intermediate_ca.pem -ca-key intermediate_ca-key.pem -config=cfssl_config.json -profile=ocsp ocsp_csr.json | cfssljson -bare ocsp",
 	}
 
 	for _, command := range commands {
@@ -238,7 +227,7 @@ func prepareCertificates(namespace string) error {
 	ctx, canc := context.WithCancel(context.Background())
 	defer canc()
 
-	command := fmt.Sprintf("%v serve -db-config=db-config.json -ca-key=intermediate_ca-key.pem -ca=intermediate_ca.pem -config=cfssl_config.json -responder=ocsp.pem -responder-key=ocsp-key.pem", cfssl)
+	command := "cfssl serve -db-config=db-config.json -ca-key=intermediate_ca-key.pem -ca=intermediate_ca.pem -config=cfssl_config.json -responder=ocsp.pem -responder-key=ocsp-key.pem"
 	ginkgo.By(fmt.Sprintf("running %v", command))
 	serve := exec.CommandContext(ctx, "bash", "-c", command)
 	if err := serve.Start(); err != nil {
@@ -248,7 +237,7 @@ func prepareCertificates(namespace string) error {
 
 	time.Sleep(1 * time.Second)
 
-	command = fmt.Sprintf("%v gencert -remote=localhost -profile=server leaf_csr.json | %v -bare leaf", cfssl, cfssljson)
+	command = "cfssl gencert -remote=localhost -profile=server leaf_csr.json | cfssljson -bare leaf"
 	ginkgo.By(fmt.Sprintf("running %v", command))
 	out, err := exec.Command("bash", "-c", command).Output()
 	if err != nil {
@@ -262,7 +251,7 @@ func prepareCertificates(namespace string) error {
 		return err
 	}
 
-	command = fmt.Sprintf("%v ocsprefresh -ca intermediate_ca.pem -responder=ocsp.pem -responder-key=ocsp-key.pem -db-config=db-config.json", cfssl)
+	command = "cfssl ocsprefresh -ca intermediate_ca.pem -responder=ocsp.pem -responder-key=ocsp-key.pem -db-config=db-config.json"
 	ginkgo.By(fmt.Sprintf("running %v", command))
 	out, err = exec.Command("bash", "-c", command).Output()
 	if err != nil {
@@ -286,57 +275,6 @@ func commandExists(name string) bool {
 	}
 
 	return true
-}
-
-func getBinary(filepath string, url string) error {
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-
-	defer out.Close()
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected error downloading CFSSL")
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func downloadBinary(name string) (string, error) {
-	f, err := ioutil.TempFile("", "fw")
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	arch := runtime.GOARCH
-	goos := runtime.GOOS
-	cfsslURL := "https://github.com/cloudflare/cfssl/releases/download/v1.4.1/" + name + "_1.4.1_" + goos + "_" + arch
-
-	err = getBinary(f.Name(), cfsslURL)
-	if err != nil {
-		return "", err
-	}
-
-	err = os.Chmod(f.Name(), 0755)
-	if err != nil {
-		return "", err
-	}
-
-	return f.Name(), nil
 }
 
 func ocspserveDeployment(namespace string) (*appsv1.Deployment, *corev1.Service) {
@@ -364,7 +302,7 @@ func ocspserveDeployment(namespace string) (*appsv1.Deployment, *corev1.Service)
 						Containers: []corev1.Container{
 							{
 								Name:  name,
-								Image: "cfssl/cfssl:1.3.2",
+								Image: "ingress-controller/cfssl:1.0.0-dev",
 								Command: []string{
 									"/bin/bash",
 									"-c",
