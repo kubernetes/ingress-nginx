@@ -1,12 +1,19 @@
+local http = require("resty.http")
 local ssl = require("ngx.ssl")
+local ocsp = require("ngx.ocsp")
 local re_sub = ngx.re.sub
 
-local _M = {}
+local dns_lookup = require("util.dns").lookup
+
+local _M = {
+  is_ocsp_stapling_enabled = false
+}
 
 local DEFAULT_CERT_HOSTNAME = "_"
 
 local certificate_data = ngx.shared.certificate_data
 local certificate_servers = ngx.shared.certificate_servers
+local ocsp_response_cache = ngx.shared.ocsp_response_cache
 
 local function get_der_cert_and_priv_key(pem_cert_key)
   local der_cert, der_cert_err = ssl.cert_pem_to_der(pem_cert_key)
@@ -53,6 +60,122 @@ local function get_pem_cert_uid(raw_hostname)
   end
 
   return uid
+end
+
+local function is_ocsp_stapling_enabled_for(_)
+  -- TODO: implement per ingress OCSP stapling control
+  -- and make use of uid. The idea is to have configureCertificates
+  -- in controller side to push uid -> is_ocsp_enabled data to Lua land.
+
+  return _M.is_ocsp_stapling_enabled
+end
+
+local function get_resolved_url(parsed_url)
+  local scheme, host, port, path = unpack(parsed_url)
+  local ip = dns_lookup(host)[1]
+  return string.format("%s://%s:%s%s", scheme, ip, port, path)
+end
+
+local function do_ocsp_request(url, ocsp_request)
+  local httpc = http.new()
+  httpc:set_timeout(1000, 1000, 2000)
+
+  local parsed_url, err = httpc:parse_uri(url)
+  if not parsed_url then
+    return nil, err
+  end
+
+  local resolved_url = get_resolved_url(parsed_url)
+
+  local http_response
+  http_response, err = httpc:request_uri(resolved_url, {
+    method = "POST",
+    headers = {
+      ["Content-Type"] = "application/ocsp-request",
+      ["Host"] = parsed_url[2],
+    },
+    body = ocsp_request,
+  })
+  if not http_response then
+    return nil, err
+  end
+  if http_response.status ~= 200 then
+    return nil, "unexpected OCSP responder status code: " .. tostring(http_response.status)
+  end
+
+  return http_response.body, nil
+end
+
+-- TODO: ideally this function should have a lock around to ensure
+-- only one instance runs at a time. Otherwise it is theoretically possible
+-- that this function gets called from multiple Nginx workers at the same time.
+-- While this has no functional implications, it generates extra load on OCSP servers.
+local function fetch_and_cache_ocsp_response(uid, der_cert)
+  local url, err = ocsp.get_ocsp_responder_from_der_chain(der_cert)
+  if not url then
+    ngx.log(ngx.ERR, "could not extract OCSP responder URL: ", err)
+    return
+  end
+
+  local request
+  request, err = ocsp.create_ocsp_request(der_cert)
+  if not request then
+    ngx.log(ngx.ERR, "could not create OCSP request: ", err)
+    return
+  end
+
+  local ocsp_response
+  ocsp_response, err = do_ocsp_request(url, request)
+  if err then
+    ngx.log(ngx.ERR, "could not get OCSP response: ", err)
+    return
+  end
+  if not ocsp_response or #ocsp_response == 0 then
+    ngx.log(ngx.ERR, "OCSP responder returned an empty response")
+    return
+  end
+
+  -- Normally this should be (nextUpdate - thisUpdate), but Lua API does not expose
+  -- those attributes.
+  local expiry = 3600 * 24 * 3
+  local success, forcible
+  success, err, forcible = ocsp_response_cache:set(uid, ocsp_response, expiry)
+  if not success then
+    ngx.log(ngx.ERR, "failed to cache OCSP response: ", err)
+  end
+  if forcible then
+    ngx.log(ngx.NOTICE, "removed an existing item when saving OCSP response, ",
+      "consider increasing shared dictionary size for 'ocsp_reponse_cache'")
+  end
+end
+
+-- ocsp_staple looks at the cache and staples response from cache if it exists
+-- if there is no cached response or the existing response is stale,
+-- it enqueues fetch_and_cache_ocsp_response function to refetch the response.
+-- This design tradeoffs lack of OCSP response in the first request with better latency.
+--
+-- Serving stale response ensures that we don't serve another request without OCSP response
+-- when the cache entry expires. Instead we serve the signle request with stale response
+-- and enqueue fetch_and_cache_ocsp_response for refetch.
+local function ocsp_staple(uid, der_cert)
+  local response, _, is_stale = ocsp_response_cache:get_stale(uid)
+  if not response or is_stale then
+    ngx.timer.at(0, function() fetch_and_cache_ocsp_response(uid, der_cert) end)
+    return false, nil
+  end
+
+  local ok, err = ocsp.validate_ocsp_response(response, der_cert)
+  if not ok then
+    -- we still continue with stapling, following is only for visiblity purposes
+    ngx.log(ngx.NOTICE, "OCSP response validation: ", err)
+  end
+
+  ok, err = ocsp.set_ocsp_status_resp(response)
+  if not ok then
+    return false, err
+  end
+
+  return true, nil
 end
 
 function _M.configured_for_current_request()
@@ -105,9 +228,12 @@ function _M.call()
     return ngx.exit(ngx.ERROR)
   end
 
-  -- TODO: based on `der_cert` find OCSP responder URL
-  -- make OCSP request and POST it there and get the response and staple it to
-  -- the current SSL connection if OCSP stapling is enabled
+  if is_ocsp_stapling_enabled_for(pem_cert_uid) then
+    local _, err = ocsp_staple(pem_cert_uid, der_cert)
+    if err then
+      ngx.log(ngx.ERR, "error during OCSP stapling: ", err)
+    end
+  end
 end
 
 return _M
