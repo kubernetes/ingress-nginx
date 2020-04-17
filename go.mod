@@ -38,6 +38,7 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
+	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
 	google.golang.org/grpc v1.26.0
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7

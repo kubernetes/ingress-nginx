@@ -104,6 +104,7 @@ docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx
 # Preload images used in e2e tests
 docker pull openresty/openresty:1.15.8.2-alpine
 docker pull moul/grpcbin
+docker pull cfssl/cfssl:1.3.2
 
 echo "[dev-env] copying docker images to cluster..."
 export EXIT_CODE=-1
@@ -115,6 +116,7 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" openresty/openresty:1.15.8.
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/echo:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" moul/grpcbin
+kind load docker-image --name="${KIND_CLUSTER_NAME}" cfssl/cfssl:1.3.2
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?
 if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
 then

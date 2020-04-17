@@ -94,8 +94,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           certificate = res
-          -- TODO: get this from the configmap
-          certificate.is_ocsp_stapling_enabled = false
+          certificate.is_ocsp_stapling_enabled = {{ $cfg.EnableOCSP }}
         end
 
         ok, res = pcall(require, "plugins")

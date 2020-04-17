@@ -45,6 +45,7 @@ The following table shows a configuration option's name, type, and the default v
 |[disable-ipv6](#disable-ipv6)|bool|false|
 |[disable-ipv6-dns](#disable-ipv6-dns)|bool|false|
 |[enable-underscores-in-headers](#enable-underscores-in-headers)|bool|false|
+|[enable-ocsp](#enable-ocsp)|bool|false|
 |[ignore-invalid-headers](#ignore-invalid-headers)|bool|true|
 |[retry-non-idempotent](#retry-non-idempotent)|bool|"false"|
 |[error-log-level](#error-log-level)|string|"notice"|
@@ -281,6 +282,11 @@ Disable IPV6 for nginx DNS resolver. _**default:**_ `false`; IPv6 resolving enab
 ## enable-underscores-in-headers
 
 Enables underscores in header names. _**default:**_ is disabled
+
+## enable-ocsp
+
+Enables [Online Certificate Status Protocol stapling](https://en.wikipedia.org/wiki/OCSP_stapling) (OCSP) support.
+_**default:**_ is disabled
 
 ## ignore-invalid-headers
 
