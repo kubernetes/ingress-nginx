@@ -93,6 +93,11 @@ local function handle_servers()
       local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s", uid)
       ngx.log(ngx.WARN, msg)
     end
+    if success then
+      -- trigger a timer to fetch OCSP response and cache
+      -- but if we require certificate module here then there will be circular dependency
+      -- maybe we should refactor and let the certificate module to handle this configuration request
+    end
   end
 
   if #err_buf > 0 then
