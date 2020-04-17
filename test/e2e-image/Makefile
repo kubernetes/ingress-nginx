@@ -24,6 +24,9 @@ endif
 	cp $(DIR)/../e2e/wait-for-nginx.sh .
 	cp -R $(DIR)/../../charts .
 
+	# TODO: avoid manual copy
+	cp -R $(DIR)/../../test/e2e/settings/ocsp/* .
+
 	docker buildx build \
 		--load \
 		--progress plain \

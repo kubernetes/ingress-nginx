@@ -2,3 +2,6 @@ e2e.test
 ginkgo
 kubectl
 charts/*
+*.json
+*.db
+*.go
