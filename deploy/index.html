@@ -460,22 +460,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#elastic-load-balancer-elb" class="md-nav__link">
-    Elastic Load Balancer - ELB
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#elb-idle-timeouts" class="md-nav__link">
-    ELB Idle Timeouts
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#network-load-balancer-nlb" class="md-nav__link">
     Network Load Balancer (NLB)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tls-termination-in-the-load-balancer-elb" class="md-nav__link">
+    TLS termination in the Load Balancer (ELB)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nlb-idle-timeouts" class="md-nav__link">
+    NLB Idle Timeouts
   </a>
   
 </li>
@@ -535,6 +535,19 @@
     Using Helm
   </a>
   
+    <nav class="md-nav" aria-label="Using Helm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detect-installed-version_1" class="md-nav__link">
+    Detect installed version:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -564,18 +577,6 @@
   <li class="md-nav__item">
     <a href="rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="validating-webhook/" title="Validating Webhook (admission controller)" class="md-nav__link">
-      Validating Webhook (admission controller)
     </a>
   </li>
 
@@ -1328,22 +1329,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#elastic-load-balancer-elb" class="md-nav__link">
-    Elastic Load Balancer - ELB
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#elb-idle-timeouts" class="md-nav__link">
-    ELB Idle Timeouts
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#network-load-balancer-nlb" class="md-nav__link">
     Network Load Balancer (NLB)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tls-termination-in-the-load-balancer-elb" class="md-nav__link">
+    TLS termination in the Load Balancer (ELB)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nlb-idle-timeouts" class="md-nav__link">
+    NLB Idle Timeouts
   </a>
   
 </li>
@@ -1403,6 +1404,19 @@
     Using Helm
   </a>
   
+    <nav class="md-nav" aria-label="Using Helm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detect-installed-version_1" class="md-nav__link">
+    Detect installed version:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1460,20 +1474,12 @@ To change this behavior use the flag <code>--watch-namespace</code> to limit the
 <span class="go">  --user $(gcloud config get-value account)</span>
 </code></pre></div></p>
 </div>
-<p>The following <strong>Mandatory Command</strong> is required for all deployments except <a href="#minikube">minikube</a>.</p>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml</span>
-</code></pre></div>
-
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>If you are using a Kubernetes version previous to 1.14, you need to change <code>kubernetes.io/os</code> to <code>beta.kubernetes.io/os</code> at line 217 of <a href="https://github.com/kubernetes/ingress-nginx/blob/master/deploy/static/mandatory.yaml#L217">mandatory.yaml</a>, see <a href="https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/">Labels details</a>.</p>
-</div>
 <h3 id="provider-specific-steps">Provider Specific Steps<a class="headerlink" href="#provider-specific-steps" title="Permanent link"> ¶</a></h3>
 <p>There are cloud provider specific yaml files.</p>
 <h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link"> ¶</a></h4>
 <p>Kubernetes is available in Docker for Mac (from <a href="https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018">version 18.06.0-ce</a>)</p>
 <p>Create a service</p>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml</span>
 </code></pre></div>
 
 <h4 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link"> ¶</a></h4>
@@ -1498,54 +1504,55 @@ To change this behavior use the flag <code>--watch-namespace</code> to limit the
 </code></pre></div>
 
 <h4 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link"> ¶</a></h4>
-<p>In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of <code>Type=LoadBalancer</code>.
-Since Kubernetes v1.9.0 it is possible to use a classic load balancer (ELB) or network load balancer (NLB)
-Please check the <a href="https://aws.amazon.com/elasticloadbalancing/details/">elastic load balancing AWS details page</a></p>
-<h5 id="elastic-load-balancer-elb">Elastic Load Balancer - ELB<a class="headerlink" href="#elastic-load-balancer-elb" title="Permanent link"> ¶</a></h5>
-<p>This setup requires to choose in which layer (L4 or L7) we want to configure the ELB:</p>
-<ul>
-<li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer">Layer 4</a>: use TCP as the listener protocol for ports 80 and 443.</li>
-<li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer">Layer 7</a>: use HTTP as the listener protocol for port 80 and terminate TLS in the ELB</li>
-</ul>
-<p>For L4:</p>
-<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code>service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code>provider/aws/service-l4.yaml</code></p>
-<p>Then execute:</p>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-l4.yaml</span>
-<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/patch-configmap-l4.yaml</span>
-</code></pre></div>
-
-<p>For L7:</p>
-<p>Change line of the file <code>provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code>"arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"</code></p>
-<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code>service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code>provider/aws/service-l7.yaml</code></p>
-<p>Then execute:</p>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-l7.yaml</span>
-<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/patch-configmap-l7.yaml</span>
-</code></pre></div>
-
-<p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
-<p><img alt="Listeners" src="../images/elb-l7-listener.png" /></p>
-<h5 id="elb-idle-timeouts">ELB Idle Timeouts<a class="headerlink" href="#elb-idle-timeouts" title="Permanent link"> ¶</a></h5>
-<p>In some scenarios users will need to modify the value of the ELB idle timeout. Users need to ensure the idle timeout is less than the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> that is configured for NGINX. By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
-<p>The default ELB idle timeout will work for most scenarios, unless the NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> has been modified, in which case <code>service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> will need to be modified to ensure it is less than the <code>keepalive_timeout</code> the user has configured.</p>
-<p><em>Please Note: An idle timeout of <code>3600s</code> is recommended when using WebSockets.</em></p>
-<p>More information with regards to idle timeouts for your Load Balancer can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/config-idle-timeout.html">official AWS documentation</a>.</p>
+<p>In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of <code>Type=LoadBalancer</code>.</p>
 <h5 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link"> ¶</a></h5>
-<p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.</p>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-nlb.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/deploy.yaml</span>
 </code></pre></div>
 
+<h5 id="tls-termination-in-the-load-balancer-elb">TLS termination in the Load Balancer (ELB)<a class="headerlink" href="#tls-termination-in-the-load-balancer-elb" title="Permanent link"> ¶</a></h5>
+<p>In some scenarios is not possible to terminate TLS in the ingress controller but in the Load Balancer.
+For this purpose we provide a template:</p>
+<ol>
+<li>Download <a href="https://raw.githubusercontent.com/kubernetes/ingress-nginx/204739fb6650c48fd41dc9505f8fd9ef6bc768e1/deploy/static/provider/aws/deploy-tls-termination.yaml">deploy-tls-termination.yaml</a></li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="go">wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/204739fb6650c48fd41dc9505f8fd9ef6bc768e1/deploy/static/provider/aws/deploy-tls-termination.yaml</span>
+</code></pre></div>
+
+<ol>
+<li>
+<p>Change:</p>
+</li>
+<li>
+<p>Set the VPC CIDR: <code>proxy-real-ip-cidr: XXX.XXX.XXX/XX</code></p>
+</li>
+<li>
+<p>Change the AWS Certificate Manager (ACM) ID <code>service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX</code></p>
+</li>
+<li>
+<p>Deploy the manifests:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f deploy-tls-termination.yaml</span>
+</code></pre></div>
+
+<h5 id="nlb-idle-timeouts">NLB Idle Timeouts<a class="headerlink" href="#nlb-idle-timeouts" title="Permanent link"> ¶</a></h5>
+<p>In some scenarios users will need to modify the value of the NLB idle timeout. Users need to ensure the idle timeout is less than the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> that is configured for NGINX.
+By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
+<p>The default NLB idle timeout will work for most scenarios, unless the NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> has been modified, in which case <code>service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> will need to be modified to ensure it is less than the <code>keepalive_timeout</code> the user has configured.</p>
+<p><em>Please Note: An idle timeout of <code>3600s</code> is recommended when using WebSockets.</em></p>
+<p>More information with regards to idle timeouts for your Load Balancer can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout">official AWS documentation</a>.</p>
 <h4 id="gce-gke">GCE-GKE<a class="headerlink" href="#gce-gke" title="Permanent link"> ¶</a></h4>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml</span>
 </code></pre></div>
 
 <p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
 <h4 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link"> ¶</a></h4>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml</span>
 </code></pre></div>
 
 <h4 id="bare-metal">Bare-metal<a class="headerlink" href="#bare-metal" title="Permanent link"> ¶</a></h4>
 <p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/baremetal/service-nodeport.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/deploy.yaml</span>
 </code></pre></div>
 
 <div class="admonition tip">
@@ -1568,22 +1575,18 @@ Now, you are ready to create your first ingress.</p>
 </code></pre></div>
 
 <h2 id="using-helm">Using Helm<a class="headerlink" href="#using-helm" title="Permanent link"> ¶</a></h2>
-<p>NGINX Ingress controller can be installed via <a href="https://helm.sh/">Helm</a> using the chart <a href="https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress">stable/nginx-ingress</a> from the official charts repository.
-To install the chart with the release name <code>my-nginx</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="go">helm install my-nginx stable/nginx-ingress</span>
-</code></pre></div>
-
-<p>If the kubernetes cluster has RBAC enabled, then run:</p>
-<div class="highlight"><pre><span></span><code><span class="go">helm install my-nginx stable/nginx-ingress --set rbac.create=true</span>
+<p>NGINX Ingress controller can be installed via <a href="https://helm.sh/">Helm</a> using the chart from the project repository.
+To install the chart with the release name <code>ingress-nginx</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="go">helm repo add k8s-ingress-nginx https://kubernetes.github.io/ingress-nginx/</span>
+<span class="go">helm install ingress-nginx k8s-ingress-nginx</span>
 </code></pre></div>
 
 <p>If you are using <a href="https://v2.helm.sh/">Helm 2</a> then specify release name using <code>--name</code> flag</p>
-<p><div class="highlight"><pre><span></span><code><span class="go">helm install stable/nginx-ingress --name my-nginx</span>
+<div class="highlight"><pre><span></span><code><span class="go">helm repo add k8s-ingress-nginx https://kubernetes.github.io/ingress-nginx/</span>
+<span class="go">helm install k8s-ingress-nginx --name ingress-nginx</span>
 </code></pre></div>
-or
-<div class="highlight"><pre><span></span><code><span class="go">helm install stable/nginx-ingress --name my-nginx --set rbac.create=true</span>
-</code></pre></div></p>
-<p>Detect installed version:</p>
+
+<h3 id="detect-installed-version_1">Detect installed version:<a class="headerlink" href="#detect-installed-version_1" title="Permanent link"> ¶</a></h3>
 <div class="highlight"><pre><span></span><code><span class="go">POD_NAME=$(kubectl get pods -l app.kubernetes.io/name=ingress-nginx -o jsonpath=&#39;{.items[0].metadata.name}&#39;)</span>
 <span class="go">kubectl exec -it $POD_NAME -- /nginx-ingress-controller --version</span>
 </code></pre></div>
