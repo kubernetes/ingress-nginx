@@ -36,7 +36,7 @@ export DATADOG_CPP_VERSION=1.1.3
 export MODSECURITY_VERSION=1.0.1
 export MODSECURITY_LIB_VERSION=6624a18a4e7fd9881a7a9b435db3e481e8e986a5
 export OWASP_MODSECURITY_CRS_VERSION=3.2.0
-export LUA_NGX_VERSION=0.10.15
+export LUA_NGX_VERSION=faad7f1f51e3142e01087a1db5227adbed7b5463
 export LUA_STREAM_NGX_VERSION=0.0.7
 export LUA_UPSTREAM_VERSION=0.07
 export LUA_BRIDGE_TRACER_VERSION=0.1.1
@@ -46,7 +46,7 @@ export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 export RESTY_LUAROCKS_VERSION=3.1.3
 export LUAJIT_VERSION=33b5f86c1b9ab53ad09c33f9097df42403587bea
 export LUA_RESTY_BALANCER=0.03
-export LUA_RESTY_CORE=0.1.17
+export LUA_RESTY_CORE=3d1720a7bd5ff5fc6aa7247fb5d90693756097bc
 export LUA_CJSON_VERSION=2.1.0.7
 export LUA_RESTY_COOKIE_VERSION=766ad8c15e498850ac77f5e0265f1d3f30dc4027
 
@@ -168,8 +168,8 @@ get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
 get_src ff865a36bad5c72b8e7ebc4b7cf5f27a820fce4faff9c571c1791e3728355a39 \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src 7d5f3439c8df56046d0564b5857fd8a30296ab1bd6df0f048aed7afb56a0a4c2 \
-        "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
+get_src 12d46652ade22e0771b7bdf5075efc0119652dfde49bbe324173da86001b50b9 \
+        "https://github.com/ElvinEfendi/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
 get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
@@ -207,8 +207,8 @@ get_src 095615fe94e64615c4a27f4f4475b91c047cf8d10bc2dbde8d5ba6aa625fc5ab \
 get_src 82209d5a5d9545c6dde3db7857f84345db22162fdea9743d5e2b2094d8d407f8 \
         "https://github.com/openresty/lua-resty-balancer/archive/v$LUA_RESTY_BALANCER.tar.gz"
 
-get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
-        "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
+get_src db3be7fd398d31598e2929bbf58e69532a73be515c2f21bd74eaeab34715f2d5 \
+        "https://github.com/ElvinEfendi/lua-resty-core/archive/$LUA_RESTY_CORE.tar.gz"
 
 get_src 59d2f18ecadba48be61061004c8664eaed1111a3372cd2567cb24c5a47eb41fe \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz"
