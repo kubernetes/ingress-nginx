@@ -552,7 +552,6 @@ rewrite "(?i)%s" %s break;
 	return defProxyPass
 }
 
-// TODO: Needs Unit Tests
 func filterRateLimits(input interface{}) []ratelimit.Config {
 	ratelimits := []ratelimit.Config{}
 	found := sets.String{}
@@ -573,7 +572,6 @@ func filterRateLimits(input interface{}) []ratelimit.Config {
 	return ratelimits
 }
 
-// TODO: Needs Unit Tests
 // buildRateLimitZones produces an array of limit_conn_zone in order to allow
 // rate limiting of request. Each Ingress rule could have up to three zones, one
 // for connection limit by IP address, one for limiting requests per minute, and
