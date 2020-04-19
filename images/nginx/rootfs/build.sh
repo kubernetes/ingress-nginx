@@ -37,7 +37,7 @@ export MODSECURITY_VERSION=1.0.1
 export MODSECURITY_LIB_VERSION=6624a18a4e7fd9881a7a9b435db3e481e8e986a5
 export OWASP_MODSECURITY_CRS_VERSION=3.2.0
 export LUA_NGX_VERSION=faad7f1f51e3142e01087a1db5227adbed7b5463
-export LUA_STREAM_NGX_VERSION=0.0.7
+export LUA_STREAM_NGX_VERSION=0.0.8rc3
 export LUA_UPSTREAM_VERSION=0.07
 export LUA_BRIDGE_TRACER_VERSION=0.1.1
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
@@ -171,7 +171,7 @@ get_src ff865a36bad5c72b8e7ebc4b7cf5f27a820fce4faff9c571c1791e3728355a39 \
 get_src 12d46652ade22e0771b7bdf5075efc0119652dfde49bbe324173da86001b50b9 \
         "https://github.com/ElvinEfendi/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
-get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
+get_src fce6214ad4828e75f03151a77334b6e7c2e7da04a8371c4f613ff9960b52919b \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
