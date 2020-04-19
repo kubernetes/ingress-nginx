@@ -135,6 +135,35 @@ local function fetch_and_cache_ocsp_response(uid, der_cert)
     return
   end
 
+  local ok
+  ok, err = ocsp.validate_ocsp_response(ocsp_response, der_cert)
+  if not ok then
+    -- We are doing the same thing as vanilla Nginx here - if response status is not "good"
+    -- we do not use it - no stapling.
+    -- We can look into differentiation of validation errors and when status is i.e "revoked"
+    -- we might want to continue with stapling - it is at the least counterintuitive that
+    -- one would not staple response when certificate is revoked (I have not managed to find
+    -- and spec about this). Also one would expect browsers to do all these verifications
+    -- comprehensively, so why we bother doing this on server side? This can be tricky though:
+    -- imagine the certificate is not revoked but its OCSP responder is having some issues
+    -- and not generating a valid OCSP response. We would then staple that invalid OCSP response
+    -- and then browser would fail the connection because of invalid OCSP response - as a result
+    -- user request fails. But as a server we can validate response here and not staple it
+    -- to the connection if it is invalid. But if browser/client has must-staple enabled
+    -- then this will break anyway. So for must-staple there's no difference from users'
+    -- perspective. When must-staple is not enabled though it is better to not staple
+    -- invalid response and let the client/browser to fallback to CRL check or retry OCSP
+    -- on its own.
+    --
+
+    -- Also we should do negative caching here to avoid sending too many request to
+    -- the OCSP responder. Imagine OCSP responder is having an intermittent issue
+    -- and we keep sending request. It might make things worse for the responder.
+
+    ngx.log(ngx.NOTICE, "OCSP response validation failed: ", err)
+    return
+  end
+
   -- Normally this should be (nextUpdate - thisUpdate), but Lua API does not expose
   -- those attributes.
   local expiry = 3600 * 24 * 3
@@ -164,13 +193,7 @@ local function ocsp_staple(uid, der_cert)
     return false, nil
   end
 
-  local ok, err = ocsp.validate_ocsp_response(response, der_cert)
-  if not ok then
-    -- we still continue with stapling, following is only for visiblity purposes
-    ngx.log(ngx.NOTICE, "OCSP response validation: ", err)
-  end
-
-  ok, err = ocsp.set_ocsp_status_resp(response)
+  local ok, err = ocsp.set_ocsp_status_resp(response)
   if not ok then
     return false, err
   end
