@@ -129,3 +129,33 @@ EOF
 
 echo "${NAMESPACE_VAR}
 $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
+
+# Kind - https://kind.sigs.k8s.io/docs/user/ingress/
+OUTPUT_FILE="${DIR}/deploy/static/provider/kind/deploy.yaml"
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+controller:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  hostPort:
+    enabled: true
+  terminationGracePeriodSeconds: 0
+  service:
+    type: NodePort
+
+  nodeSelector:
+    ingress-ready: "true"
+  tolerations:
+    - key: "node-role.kubernetes.io/master"
+      operator: "Equal"
+      effect: "NoSchedule"
+
+  publishService:
+    enabled: false
+  extraArgs:
+    publish-status-address: localhost
+EOF
+
+echo "${NAMESPACE_VAR}
+$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
