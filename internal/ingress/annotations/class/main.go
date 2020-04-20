@@ -18,6 +18,7 @@ package class
 
 import (
 	networking "k8s.io/api/networking/v1beta1"
+	"k8s.io/ingress-nginx/internal/k8s"
 )
 
 const (
@@ -37,30 +38,30 @@ var (
 	IngressClass = "nginx"
 )
 
-// IsValid returns true if the given Ingress either doesn't specify
-// the ingress.class annotation, or it's set to the configured in the
-// ingress controller.
+// IsValid returns true if the given Ingress specify the ingress.class
+// annotation or IngressClassName resource for Kubernetes >= v1.18
 func IsValid(ing *networking.Ingress) bool {
-	className := ing.Spec.IngressClassName
+	// 1. with annotation
+	ingress, ok := ing.GetAnnotations()[IngressKey]
+	if ok {
+		// empty annotation and same annotation on ingress
+		if ingress == "" && IngressClass == DefaultClass {
+			return true
+		}
 
-	// we have 2 valid combinations
-	// 1 - ingress with default class | blank annotation on ingress
-	// 2 - ingress with specific class | same annotation on ingress
-	//
-	// and 2 invalid combinations
-	// 3 - ingress with default class | fixed annotation on ingress
-	// 4 - ingress with specific class | different annotation on ingress
-	if className != nil {
-		return *className == IngressClass
+		return ingress == IngressClass
 	}
 
-	if IngressClass == DefaultClass {
-		return true
+	// 2. k8s < v1.18. Check default annotation
+	if !k8s.IsIngressV1Ready {
+		return IngressClass == DefaultClass
 	}
 
-	if IngressClass == "" {
-		return true
+	// 3. without annotation and IngressClass. Check default annotation
+	if k8s.IngressClass == nil {
+		return IngressClass == DefaultClass
 	}
 
-	return false
+	// 4. with IngressClass
+	return k8s.IngressClass.Name == *ing.Spec.IngressClassName
 }
