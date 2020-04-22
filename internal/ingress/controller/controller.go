@@ -527,6 +527,12 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				addLoc := true
 				for _, loc := range server.Locations {
 					if loc.Path == nginxPath {
+						// Same paths but different types are allowed
+						// (same type means overlap in the path definition)
+						if *loc.PathType != *path.PathType {
+							break
+						}
+
 						addLoc = false
 
 						if !loc.IsDefBackend {
@@ -543,6 +549,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						loc.Port = ups.Port
 						loc.Service = ups.Service
 						loc.Ingress = ing
+
 						locationApplyAnnotations(loc, anns)
 
 						if loc.Redirect.FromToWWW {
@@ -556,9 +563,9 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				if addLoc {
 					klog.V(3).Infof("Adding location %q for server %q with upstream %q (Ingress %q)",
 						nginxPath, server.Hostname, ups.Name, ingKey)
-
 					loc := &ingress.Location{
 						Path:         nginxPath,
+						PathType:     path.PathType,
 						Backend:      ups.Name,
 						IsDefBackend: false,
 						Service:      ups.Service,
@@ -953,12 +960,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	}
 
 	// initialize default server and root location
+	pathTypePrefix := networking.PathTypePrefix
 	servers[defServerName] = &ingress.Server{
 		Hostname: defServerName,
 		SSLCert:  n.getDefaultSSLCertificate(),
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
+				PathType:     &pathTypePrefix,
 				IsDefBackend: true,
 				Backend:      du.Name,
 				Proxy:        ngxProxy,
@@ -1025,8 +1034,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				continue
 			}
 
+			pathTypePrefix := networking.PathTypePrefix
 			loc := &ingress.Location{
 				Path:         rootLocation,
+				PathType:     &pathTypePrefix,
 				IsDefBackend: true,
 				Backend:      un,
 				Service:      &apiv1.Service{},
@@ -1311,7 +1322,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					break
 				}
 
-				if canMergeBackend(priUps, altUps) && loc.Path == path.Path {
+				if canMergeBackend(priUps, altUps) && loc.Path == path.Path && *loc.PathType == *path.PathType {
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
