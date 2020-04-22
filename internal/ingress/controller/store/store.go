@@ -949,28 +949,16 @@ func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
 			return nil, false
 		}
 
-		ing.Spec.IngressClassName = extractClassName(ing)
 		setDefaultPathTypeIfEmpty(ing)
-
 		return ing, true
 	}
 
 	if ing, ok := obj.(*networkingv1beta1.Ingress); ok {
-		ing.Spec.IngressClassName = extractClassName(ing)
 		setDefaultPathTypeIfEmpty(ing)
-
 		return ing, true
 	}
 
 	return nil, false
-}
-
-func extractClassName(ing *networkingv1beta1.Ingress) *string {
-	if c, ok := ing.Annotations[class.IngressKey]; ok {
-		return &c
-	}
-
-	return nil
 }
 
 // Default path type is Prefix to not break existing definitions
