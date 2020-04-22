@@ -25,6 +25,7 @@ import (
 	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
@@ -120,6 +121,13 @@ var IsNetworkingIngressAvailable bool
 
 // IsIngressV1Ready indicates if the running Kubernetes version is at least v1.18.0
 var IsIngressV1Ready bool
+
+// IngressClass indicates the class of the Ingress to use as filter
+var IngressClass *networkingv1beta1.IngressClass
+
+// IngressNGINXController defines the valid value of IngressClass
+// Controller field for ingress-nginx
+const IngressNGINXController = "k8s.io/ingress-nginx"
 
 // NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1beta1"
 // is available or not and if Ingress V1 is supported (k8s >= v1.18.0)

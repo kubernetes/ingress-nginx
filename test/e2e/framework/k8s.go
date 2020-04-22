@@ -213,7 +213,8 @@ func podRunningReady(p *core.Pod) (bool, error) {
 	return true, nil
 }
 
-func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
+// GetIngressNGINXPod returns the ingress controller running pod
+func GetIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
 	l, err := kubeClientSet.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})

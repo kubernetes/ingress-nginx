@@ -54,10 +54,10 @@ func TestIsValidClass(t *testing.T) {
 		},
 	}
 
+	data := map[string]string{}
+	ing.SetAnnotations(data)
 	for _, test := range tests {
-		if test.ingress != "" {
-			ing.Spec.IngressClassName = &test.ingress
-		}
+		ing.Annotations[IngressKey] = test.ingress
 
 		IngressClass = test.controller
 		DefaultClass = test.defClass

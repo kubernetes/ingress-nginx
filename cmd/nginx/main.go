@@ -29,7 +29,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -42,6 +41,7 @@ import (
 	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -87,8 +87,10 @@ func main() {
 			if errors.IsUnauthorized(err) || errors.IsForbidden(err) {
 				klog.Fatal("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
 			}
+
 			klog.Fatalf("No service with name %v found: %v", conf.DefaultService, err)
 		}
+
 		klog.Infof("Validated %v as the default backend.", conf.DefaultService)
 	}
 
@@ -107,8 +109,28 @@ func main() {
 		klog.Warningf("Using deprecated \"k8s.io/api/extensions/v1beta1\" package because Kubernetes version is < v1.14.0")
 	}
 
-	if !k8s.IsIngressV1Ready {
-		klog.Infof("Enabling new Ingress features availables since v1.18.0")
+	if k8s.IsIngressV1Ready {
+		klog.Infof("Enabling new Ingress features available since Kubernetes v1.18")
+		k8s.IngressClass, err = kubeClient.NetworkingV1beta1().IngressClasses().
+			Get(context.TODO(), class.IngressClass, metav1.GetOptions{})
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				if !errors.IsUnauthorized(err) && !errors.IsForbidden(err) {
+					klog.Fatalf("Error searching IngressClass: %v", err)
+				}
+
+				klog.Errorf("Unexpected error searching IngressClass: %v", err)
+			}
+
+			klog.Warningf("No IngressClass resource with name %v found. Only annotation will be used.", class.IngressClass)
+
+			// TODO: remove once this is fixed in client-go
+			k8s.IngressClass = nil
+		}
+
+		if k8s.IngressClass != nil && k8s.IngressClass.Spec.Controller != k8s.IngressNGINXController {
+			klog.Fatalf("IngressClass with name %v is not valid for ingress-nginx (invalid Spec.Controller)", class.IngressClass)
+		}
 	}
 
 	conf.Client = kubeClient
