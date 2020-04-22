@@ -884,13 +884,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lua-resty-waf" class="md-nav__link">
-    Lua Resty WAF
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#modsecurity" class="md-nav__link">
     ModSecurity
   </a>
@@ -1879,13 +1872,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lua-resty-waf" class="md-nav__link">
-    Lua Resty WAF
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#modsecurity" class="md-nav__link">
     ModSecurity
   </a>
@@ -2320,34 +2306,6 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#enable-opentracing">nginx.ingress.kubernetes.io/enable-opentracing</a></td>
-<td>"true" or "false"</td>
-</tr>
-<tr>
-<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf</a></td>
-<td>string</td>
-</tr>
-<tr>
-<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-debug</a></td>
-<td>"true" or "false"</td>
-</tr>
-<tr>
-<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</a></td>
-<td>string</td>
-</tr>
-<tr>
-<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</a></td>
-<td>string</td>
-</tr>
-<tr>
-<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types</a></td>
-<td>"true" or "false"</td>
-</tr>
-<tr>
-<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold</a></td>
-<td>number</td>
-</tr>
-<tr>
-<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body</a></td>
 <td>"true" or "false"</td>
 </tr>
 <tr>
@@ -2869,43 +2827,6 @@ to enable it or disable it for a specific ingress (e.g. to turn off tracing of e
 <div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/x-forwarded-prefix</span><span class="p">:</span> <span class="s">&quot;/path&quot;</span>
 </code></pre></div>
 
-<h3 id="lua-resty-waf">Lua Resty WAF<a class="headerlink" href="#lua-resty-waf" title="Permanent link"> ¶</a></h3>
-<p>Using <code>lua-resty-waf-*</code> annotations we can enable and control the <a href="https://github.com/p0pr0ck5/lua-resty-waf">lua-resty-waf</a>
-Web Application Firewall per location.</p>
-<p>Following configuration will enable the WAF for the paths defined in the corresponding ingress:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf</span><span class="p">:</span> <span class="s">&quot;active&quot;</span>
-</code></pre></div>
-
-<p>In order to run it in debugging mode you can set <code>nginx.ingress.kubernetes.io/lua-resty-waf-debug</code> to <code>"true"</code> in addition to the above configuration.
-The other possible values for <code>nginx.ingress.kubernetes.io/lua-resty-waf</code> are <code>inactive</code> and <code>simulate</code>.
-In <code>inactive</code> mode WAF won't do anything, whereas in <code>simulate</code> mode it will log a warning message if there's a matching WAF rule for given request. This is useful to debug a rule and eliminate possible false positives before fully deploying it.</p>
-<p><code>lua-resty-waf</code> comes with predefined set of rules <a href="https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules">https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules</a> that covers ModSecurity CRS.
-You can use <code>nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</code> to ignore a subset of those rulesets. For an example:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</span><span class="p">:</span> <span class="s">&quot;41000_sqli,</span><span class="nv"> </span><span class="s">42000_xss&quot;</span>
-</code></pre></div>
-
-<p>will ignore the two mentioned rulesets.</p>
-<p>It is also possible to configure custom WAF rules per ingress using the <code>nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</code> annotation. For an example the following snippet will configure a WAF rule to deny requests with query string value that contains word <code>foo</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</span><span class="p">:</span> <span class="s">&#39;[=[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;access&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;actions&quot;:</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;disrupt&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;DENY&quot;</span><span class="nv"> </span><span class="s">},</span><span class="nv"> </span><span class="s">&quot;id&quot;:</span><span class="nv"> </span><span class="s">10001,</span><span class="nv"> </span><span class="s">&quot;msg&quot;:</span><span class="nv"> </span><span class="s">&quot;my</span><span class="nv"> </span><span class="s">custom</span><span class="nv"> </span><span class="s">rule&quot;,</span><span class="nv"> </span><span class="s">&quot;operator&quot;:</span><span class="nv"> </span><span class="s">&quot;STR_CONTAINS&quot;,</span><span class="nv"> </span><span class="s">&quot;pattern&quot;:</span><span class="nv"> </span><span class="s">&quot;foo&quot;,</span><span class="nv"> </span><span class="s">&quot;vars&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;parse&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">&quot;values&quot;,</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;type&quot;:</span><span class="nv"> </span><span class="s">&quot;REQUEST_ARGS&quot;</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;body_filter&quot;:</span><span class="nv"> </span><span class="s">[],</span><span class="nv"> </span><span class="s">&quot;header_filter&quot;:[]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]=]&#39;</span>
-</code></pre></div>
-
-<p>Since the default allowed contents were <code>"text/html", "text/json", "application/json"</code>
-We can enable the following annotation for allow all contents type:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
-</code></pre></div>
-
-<p>The default score of lua-resty-waf is 5, which usually triggered if hitting 2 default rules, you can modify the score threshold with following annotation:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold</span><span class="p">:</span> <span class="s">&quot;10&quot;</span>
-</code></pre></div>
-
-<p>When you enabled HTTPS in the endpoint and since resty-lua will return 500 error when processing "multipart" contents
-Reference for this <a href="https://github.com/p0pr0ck5/lua-resty-waf/issues/166">issue</a></p>
-<p>By default, it will be "true"</p>
-<p>You may enable the following annotation for work around:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
-</code></pre></div>
-
-<p>For details on how to write WAF rules, please refer to <a href="https://github.com/p0pr0ck5/lua-resty-waf">https://github.com/p0pr0ck5/lua-resty-waf</a>.</p>
 <h3 id="modsecurity">ModSecurity<a class="headerlink" href="#modsecurity" title="Permanent link"> ¶</a></h3>
 <p><a href="http://modsecurity.org/">ModSecurity</a> is an OpenSource Web Application firewall. It can be enabled for a particular set
 of ingress locations. The ModSecurity module must first be enabled by enabling ModSecurity in the
