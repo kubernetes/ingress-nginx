@@ -7,6 +7,14 @@ function _M.get_backends_data()
   return tcp_udp_configuration_data:get("backends")
 end
 
+function _M.get_timestamp_data()
+  local timestamp = tcp_udp_configuration_data:get("timestamp")
+  if timestamp == nil then
+    timestamp = 1
+  end
+  return timestamp
+end
+
 function _M.call()
   local sock, err = ngx.req.socket(true)
   if not sock then
@@ -31,6 +39,14 @@ function _M.call()
   if not success then
     ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err_conf))
     ngx.say("error: ", err_conf)
+    return
+  end
+
+  local timestamp = os.time()
+  success, err = tcp_udp_configuration_data:set("timestamp", timestamp)
+  if not success then
+    ngx.log(ngx.ERR, "dynamic-configuration: error setting sync timestamp: " .. tostring(err))
+    ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
 end

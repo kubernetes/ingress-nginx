@@ -17,6 +17,14 @@ function _M.get_general_data()
   return configuration_data:get("general")
 end
 
+function _M.get_timestamp_data()
+  local timestamp = configuration_data:get("timestamp")
+  if timestamp == nil then
+    timestamp = 1
+  end
+  return timestamp
+end
+
 local function fetch_request_body()
   ngx.req.read_body()
   local body = ngx.req.get_body_data()
@@ -173,6 +181,14 @@ local function handle_backends()
   local success, err = configuration_data:set("backends", backends)
   if not success then
     ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+
+  local timestamp = os.time()
+  success, err = configuration_data:set("timestamp", timestamp)
+  if not success then
+    ngx.log(ngx.ERR, "dynamic-configuration: error setting sync timestamp: " .. tostring(err))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
