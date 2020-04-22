@@ -17,9 +17,14 @@ FROM alpine:3.11
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-RUN apk add --no-cache \
-    python3 python3-dev musl-dev gcc g++ make libffi libffi-dev libstdc++ \
- && pip3 install gunicorn httpbin gevent \
+RUN echo "@edge http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
+ && apk update \
+ && apk add --no-cache \
+      python3 python3-dev \
+      musl-dev gcc g++ make \
+      libffi libffi-dev libstdc++ \
+      py3-gevent py3-gunicorn py3-wheel@edge \
+ && pip3 install httpbin \
  && apk del python3-dev musl-dev gcc g++ make libffi-dev
 
 EXPOSE 80
