@@ -590,6 +590,8 @@ make install
 cd "$BUILD_PATH"
 git clone https://github.com/microsoft/mimalloc
 cd mimalloc
+git checkout v1.6.2
+
 mkdir -p out/release
 cd out/release
 cmake ../..
