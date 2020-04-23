@@ -61,13 +61,6 @@ func Failf(format string, args ...interface{}) {
 	ginkgo.Fail(nowStamp()+": "+msg, 1)
 }
 
-// Skipf logs to the INFO logs and skips the test.
-func Skipf(format string, args ...interface{}) {
-	msg := fmt.Sprintf(format, args...)
-	log("INFO", msg)
-	ginkgo.Skip(nowStamp() + ": " + msg)
-}
-
 // RestclientConfig deserializes the contents of a kubeconfig file into a Config object.
 func RestclientConfig(config, context string) (*api.Config, error) {
 	Logf(">>> config: %s\n", config)

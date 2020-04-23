@@ -39,6 +39,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 
@@ -402,6 +403,11 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	if enforceRegex {
 		return fmt.Sprintf(`~* "^%s"`, path)
 	}
+
+	if location.PathType != nil && *location.PathType == networkingv1beta1.PathTypeExact {
+		return fmt.Sprintf(`= %s`, path)
+	}
+
 	return path
 }
 

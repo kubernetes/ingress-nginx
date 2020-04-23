@@ -25,6 +25,7 @@ import (
 	"k8s.io/component-base/logs"
 
 	// required
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -34,6 +35,7 @@ import (
 	_ "k8s.io/ingress-nginx/test/e2e/dbg"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
 	_ "k8s.io/ingress-nginx/test/e2e/gracefulshutdown"
+	_ "k8s.io/ingress-nginx/test/e2e/ingress"
 	_ "k8s.io/ingress-nginx/test/e2e/leaks"
 	_ "k8s.io/ingress-nginx/test/e2e/loadbalance"
 	_ "k8s.io/ingress-nginx/test/e2e/lua"

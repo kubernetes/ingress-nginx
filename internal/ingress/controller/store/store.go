@@ -26,8 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/klog"
-
 	"github.com/eapache/channels"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
@@ -36,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
@@ -43,6 +42,7 @@ import (
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -639,6 +639,9 @@ func isCatchAllIngress(spec networkingv1beta1.IngressSpec) bool {
 	return spec.Backend != nil && len(spec.Rules) == 0
 }
 
+// Default path type is Prefix to not break existing definitions
+var defaultPathType = networkingv1beta1.PathTypePrefix
+
 // syncIngress parses ingress annotations converting the value of the
 // annotation to a go struct
 func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
@@ -658,6 +661,17 @@ func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
 		for pi, path := range rule.HTTP.Paths {
 			if path.Path == "" {
 				copyIng.Spec.Rules[ri].HTTP.Paths[pi].Path = "/"
+			}
+
+			if path.PathType == nil {
+				copyIng.Spec.Rules[ri].HTTP.Paths[pi].PathType = &defaultPathType
+				continue
+			}
+
+			// PathType ImplementationSpecific is not supported.
+			// Set type to PathTypePrefix.
+			if *path.PathType == networkingv1beta1.PathTypeImplementationSpecific {
+				copyIng.Spec.Rules[ri].HTTP.Paths[pi].PathType = &defaultPathType
 			}
 		}
 	}
@@ -925,8 +939,8 @@ func (s k8sStore) GetRunningControllerPodsCount() int {
 var runtimeScheme = k8sruntime.NewScheme()
 
 func init() {
-	extensionsv1beta1.AddToScheme(runtimeScheme)
-	networkingv1beta1.AddToScheme(runtimeScheme)
+	utilruntime.Must(extensionsv1beta1.AddToScheme(runtimeScheme))
+	utilruntime.Must(networkingv1beta1.AddToScheme(runtimeScheme))
 }
 
 func fromExtensions(old *extensionsv1beta1.Ingress) (*networkingv1beta1.Ingress, error) {
@@ -960,9 +974,6 @@ func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
 
 	return nil, false
 }
-
-// Default path type is Prefix to not break existing definitions
-var defaultPathType = networkingv1beta1.PathTypePrefix
 
 func setDefaultPathTypeIfEmpty(ing *networkingv1beta1.Ingress) {
 	for _, rule := range ing.Spec.Rules {
