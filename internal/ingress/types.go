@@ -224,6 +224,8 @@ type Location struct {
 	// a '/'. If unspecified, the path defaults to a catch all sending
 	// traffic to the backend.
 	Path string `json:"path"`
+	// PathType represents the type of path referred to by a HTTPIngressPath.
+	PathType *networking.PathType `json:"pathType"`
 	// IsDefBackend indicates if service specified in the Ingress
 	// contains active endpoints or not. Returning true means the location
 	// uses the default backend.
