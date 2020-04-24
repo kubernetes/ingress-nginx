@@ -30,7 +30,7 @@ Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://doc
 [enable]: https://docs.docker.com/docker-for-mac/#kubernetes
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 #### minikube
@@ -65,7 +65,7 @@ In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controll
 ##### Network Load Balancer (NLB)
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/aws/deploy.yaml
 ```
 
 ##### TLS termination in AWS Load Balancer (ELB)
@@ -121,7 +121,7 @@ More information with regards to timeouts for can be found in the [official AWS 
     ```
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 !!! warning Important
@@ -130,7 +130,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 #### Azure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 #### Bare-metal
@@ -138,7 +138,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/baremetal/deploy.yaml
 ```
 
 !!! tip
