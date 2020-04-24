@@ -288,3 +288,7 @@ endif
 	docker buildx create --name ingress-nginx --use || true
 	docker buildx inspect --bootstrap
 endif
+
+.PHONY: show-version
+show-version:
+	echo -n $(TAG)
