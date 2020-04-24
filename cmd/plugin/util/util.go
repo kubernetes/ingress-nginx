@@ -29,8 +29,8 @@ import (
 
 // The default deployment and service names for ingress-nginx
 const (
-	DefaultIngressDeploymentName = "nginx-ingress-controller"
-	DefaultIngressServiceName    = "ingress-nginx"
+	DefaultIngressDeploymentName = "ingress-nginx-controller"
+	DefaultIngressServiceName    = "ingress-nginx-controller"
 )
 
 // IssuePrefix is the github url that we can append an issue number to to link to it
