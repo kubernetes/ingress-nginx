@@ -36,17 +36,15 @@ mkdocs build --config-file "${GITHUB_WORKSPACE}/mkdocs.yml"
 git clone --branch=gh-pages --depth=1 "${remote_repo}" gh-pages
 cd gh-pages
 
-# TODO: enable before release of helm chart
 # copy current index file index.yaml before any change
-#temp_worktree=$(mktemp -d)
-#cp --force "index.yaml" "$temp_worktree/index.yaml"
+temp_worktree=$(mktemp -d)
+cp --force "index.yaml" "$temp_worktree/index.yaml"
 # remove current content in branch gh-pages
 git rm -r .
 # copy new doc.
 cp -r ../site/* .
 # restore chart index
-# TODO: enable before release of helm chart
-#cp "$temp_worktree/index.yaml" .
+cp "$temp_worktree/index.yaml" .
 # commit changes
 git add .
 git commit -m "Deploy GitHub Pages"
