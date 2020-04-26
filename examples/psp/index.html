@@ -1143,7 +1143,7 @@ you will need to provide the Deployment with the permissions to create pods.</p>
 <div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/psp/psp.yaml</span>
 </code></pre></div></p>
 <p>Now that the pod security policy is applied, we can continue as usual by applying the
-<a href="https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml">mandatory.yaml</a>
+<a href="https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.31.0/deploy/static/mandatory.yaml">mandatory.yaml</a>
 according to the <a href="../../deploy/">Installation Guide</a>.</p>
 <p>Note: PSP permissions must be granted before to the creation of the Deployment and the ReplicaSet.
 If the Deployment or ReplicaSet already exist, they will receive the PSP permissions

@@ -1439,7 +1439,7 @@
 <h3 id="provider-specific-steps">Provider Specific Steps<a class="headerlink" href="#provider-specific-steps" title="Permanent link"> ¶</a></h3>
 <h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link"> ¶</a></h4>
 <p>Kubernetes is available in Docker for Mac (from <a href="https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018">version 18.06.0-ce</a>)</p>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/cloud/deploy.yaml</span>
 </code></pre></div>
 
 <h4 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link"> ¶</a></h4>
@@ -1466,7 +1466,7 @@
 <h4 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link"> ¶</a></h4>
 <p>In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of <code>Type=LoadBalancer</code>.</p>
 <h5 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link"> ¶</a></h5>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/deploy.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/aws/deploy.yaml</span>
 </code></pre></div>
 
 <h5 id="tls-termination-in-aws-load-balancer-elb">TLS termination in AWS Load Balancer (ELB)<a class="headerlink" href="#tls-termination-in-aws-load-balancer-elb" title="Permanent link"> ¶</a></h5>
@@ -1515,7 +1515,7 @@ By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
 <span class="go">  --user $(gcloud config get-value account)</span>
 </code></pre></div></p>
 </div>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/cloud/deploy.yaml</span>
 </code></pre></div>
 
 <div class="admonition warning important">
@@ -1523,12 +1523,12 @@ By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
 <p>Proxy protocol is not supported in GCE/GKE</p>
 </div>
 <h4 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link"> ¶</a></h4>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/cloud/deploy.yaml</span>
 </code></pre></div>
 
 <h4 id="bare-metal">Bare-metal<a class="headerlink" href="#bare-metal" title="Permanent link"> ¶</a></h4>
 <p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
-<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/deploy.yaml</span>
+<div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/tree/nginx-0.31.0/deploy/static/provider/baremetal/deploy.yaml</span>
 </code></pre></div>
 
 <div class="admonition tip">
