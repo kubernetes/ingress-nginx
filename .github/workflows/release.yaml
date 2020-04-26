@@ -1,10 +1,6 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - master
-
   watch:
     types: [started]
 
@@ -117,16 +113,16 @@ jobs:
         run: |
           echo "::set-env name=KREW_PLUGIN_BODY_PR::$(cat cmd/plugin/release/ingress-nginx.yaml)"
 
-      - name: Open PR for new release of Krew Plugin
-        uses: gha-utilities/init-pull-request@v0.1.2
-        env:
-          GITHUB_REPOSITORY: maintainer/repo-name
-        with:
-          verbose: true
-          draft: false
-          pull_request_token: ${{ secrets.GITHUB_TOKEN }}
-          head: ingress-nginx:krew
-          base: krew
-          title: 'Update ingress-nginx krew plugin to ${{ env.RELEASE_VERSION }}'
-          body: |
-            ${{ env.KREW_PLUGIN_BODY_PR }}
+#      - name: Open PR for new release of Krew Plugin
+#        uses: gha-utilities/init-pull-request@v0.1.2
+#        env:
+#          GITHUB_REPOSITORY: maintainer/repo-name
+#        with:
+#          verbose: true
+#          draft: false
+#          pull_request_token: ${{ secrets.GITHUB_TOKEN }}
+#          head: ingress-nginx:krew
+#          base: krew
+#          title: 'Update ingress-nginx krew plugin to ${{ env.RELEASE_VERSION }}'
+#          body: |
+#            ${{ env.KREW_PLUGIN_BODY_PR }}
