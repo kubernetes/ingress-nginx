@@ -2,12 +2,16 @@ name: Release
 
 on:
   push:
-    tags:
-      - controller*
+    branches:
+      - master
+
+  watch:
+    types: [started]
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: github.actor == 'aledbf'
     steps:
       - name: Checkout master
         uses: actions/checkout@v1
