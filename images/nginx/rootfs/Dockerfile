@@ -32,7 +32,9 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
 
-RUN apk add -U --no-cache \
+RUN apk update \
+  && apk upgrade \
+  && apk add -U --no-cache \
     bash \
     openssl \
     pcre \
