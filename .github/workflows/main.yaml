@@ -7,7 +7,19 @@ on:
 
 jobs:
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v1
+
+      - name: Deploy docs
+        uses: ./.github/actions/mkdocs
+        env:
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+
   chart:
+    needs: docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout master
@@ -23,15 +35,3 @@ jobs:
         uses: helm/chart-releaser-action@v1.0.0-rc.2
         env:
           CR_TOKEN: "${{ secrets.PERSONAL_TOKEN }}"
-
-  docs:
-    needs: chart
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout master
-        uses: actions/checkout@v1
-
-      - name: Deploy docs
-        uses: ./.github/actions/mkdocs
-        env:
-          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
