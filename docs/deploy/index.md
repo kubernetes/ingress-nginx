@@ -175,7 +175,7 @@ To install the chart with the release name `ingress-nginx`:
 
 ```console
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm install my-release-name ingress-nginx
+helm install my-release ingress-nginx/ingress-nginx
 ```
 
 If you are using [Helm 2](https://v2.helm.sh/) then specify release name using `--name` flag
