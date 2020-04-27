@@ -963,28 +963,14 @@ func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
 			return nil, false
 		}
 
-		setDefaultPathTypeIfEmpty(ing)
+		k8s.SetDefaultPathTypeIfEmpty(ing)
 		return ing, true
 	}
 
 	if ing, ok := obj.(*networkingv1beta1.Ingress); ok {
-		setDefaultPathTypeIfEmpty(ing)
+		k8s.SetDefaultPathTypeIfEmpty(ing)
 		return ing, true
 	}
 
 	return nil, false
-}
-
-func setDefaultPathTypeIfEmpty(ing *networkingv1beta1.Ingress) {
-	for _, rule := range ing.Spec.Rules {
-		if rule.IngressRuleValue.HTTP == nil {
-			continue
-		}
-
-		for _, path := range rule.IngressRuleValue.HTTP.Paths {
-			if path.PathType == nil {
-				path.PathType = &defaultPathType
-			}
-		}
-	}
 }
