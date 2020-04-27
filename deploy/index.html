@@ -1555,7 +1555,7 @@ By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
 <p>NGINX Ingress controller can be installed via <a href="https://helm.sh/">Helm</a> using the chart from the project repository.
 To install the chart with the release name <code>ingress-nginx</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="go">helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx</span>
-<span class="go">helm install my-release-name ingress-nginx</span>
+<span class="go">helm install my-release ingress-nginx/ingress-nginx</span>
 </code></pre></div>
 
 <p>If you are using <a href="https://v2.helm.sh/">Helm 2</a> then specify release name using <code>--name</code> flag</p>
