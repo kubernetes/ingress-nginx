@@ -1,6 +1,3 @@
-|![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Warning.svg/156px-Warning.svg.png) | Work in progress. Please do not use it until we release an official version. |
-|---|---|
-
 # ingress-nginx
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) is an Ingress controller that uses ConfigMap to store the nginx configuration.
@@ -11,7 +8,7 @@ To use, add the `kubernetes.io/ingress.class: nginx` annotation to your Ingress 
 
 ```console
 $ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-$ helm install ingress-nginx
+$ helm install my-release ingress-nginx/ingress-nginx
 ```
 
 ## Introduction
@@ -27,7 +24,7 @@ This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kuber
 To install the chart with the release name `my-release`:
 
 ```console
-$ helm install --name my-release ingress-nginx
+$ helm install --name my-release ingress-nginx/ingress-nginx
 ```
 
 The command deploys ingress-nginx on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
