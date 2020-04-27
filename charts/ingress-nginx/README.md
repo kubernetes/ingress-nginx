@@ -1,6 +1,6 @@
 # ingress-nginx
 
-[ingress-nginx](https://github.com/kubernetes/ingress-nginx) is an Ingress controller that uses ConfigMap to store the nginx configuration.
+[ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
 To use, add the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
