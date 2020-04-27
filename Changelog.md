@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.31.1
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.31.1`
+
+Fix regression in validating webhook
+
+- [X] [#5445](https://github.com/kubernetes/ingress-nginx/pull/5445) Ensure webhook validation ingress has a PathType
+
 ### 0.31.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.31.0`
