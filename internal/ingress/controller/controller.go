@@ -26,6 +26,7 @@ import (
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -218,6 +219,8 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return toCheck.ObjectMeta.Namespace == ing.ObjectMeta.Namespace &&
 			toCheck.ObjectMeta.Name == ing.ObjectMeta.Name
 	}
+
+	k8s.SetDefaultPathTypeIfEmpty(ing)
 
 	ings := n.store.ListIngresses(filter)
 	ings = append(ings, &ingress.Ingress{
@@ -529,7 +532,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					if loc.Path == nginxPath {
 						// Same paths but different types are allowed
 						// (same type means overlap in the path definition)
-						if *loc.PathType != *path.PathType {
+						if !apiequality.Semantic.DeepEqual(loc.PathType, path.PathType) {
 							break
 						}
 
