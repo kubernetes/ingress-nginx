@@ -93,6 +93,5 @@ ARCH=amd64 make build container push
 ARCH=arm   make build container push
 ARCH=arm64 make build container push
 
-# Requires https://github.com/kubernetes/ingress-nginx/pull/4271
-#echo "Creating multi-arch images..."
-#make push-manifest
+echo "Creating multi-arch images..."
+make push-manifest
