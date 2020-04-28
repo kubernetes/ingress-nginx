@@ -3626,7 +3626,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#ssl-ciphers">ssl-ciphers</a></td>
 <td align="left">string</td>
-<td align="left">"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"</td>
+<td align="left">"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"</td>
 </tr>
 <tr>
 <td align="left"><a href="#ssl-ecdh-curve">ssl-ecdh-curve</a></td>
@@ -3641,7 +3641,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#ssl-protocols">ssl-protocols</a></td>
 <td align="left">string</td>
-<td align="left">"TLSv1.2"</td>
+<td align="left">"TLSv1.2 TLSv1.3"</td>
 </tr>
 <tr>
 <td align="left"><a href="#ssl-session-cache">ssl-session-cache</a></td>
@@ -4321,7 +4321,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <h2 id="ssl-ciphers">ssl-ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link"> ¶</a></h2>
 <p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers">ciphers</a> list to enable. The ciphers are specified in the format understood by the OpenSSL library.</p>
 <p>The default cipher list is:
- <code>ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256</code>.</p>
+ <code>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384</code>.</p>
 <p>The ordering of a ciphersuite is very important because it decides which algorithms are going to be selected in priority. The recommendation above prioritizes algorithms that provide perfect <a href="https://wiki.mozilla.org/Security/Server_Side_TLS#Forward_Secrecy">forward secrecy</a>.</p>
 <p>Please check the <a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla SSL Configuration Generator</a>.</p>
 <h2 id="ssl-ecdh-curve">ssl-ecdh-curve<a class="headerlink" href="#ssl-ecdh-curve" title="Permanent link"> ¶</a></h2>
@@ -4337,7 +4337,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <li><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam">http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam</a></li>
 </ul>
 <h2 id="ssl-protocols">ssl-protocols<a class="headerlink" href="#ssl-protocols" title="Permanent link"> ¶</a></h2>
-<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols">SSL protocols</a> to use. The default is: <code>TLSv1.2</code>.</p>
+<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols">SSL protocols</a> to use. The default is: <code>TLSv1.2 TLSv1.3</code>.</p>
 <p>Please check the result of the configuration using <code>https://ssllabs.com/ssltest/analyze.html</code> or <code>https://testssl.sh</code>.</p>
 <h2 id="ssl-early-data">ssl-early-data<a class="headerlink" href="#ssl-early-data" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables TLS 1.3 <a href="https://tools.ietf.org/html/rfc8446#section-2.3">early data</a></p>
