@@ -818,6 +818,33 @@ func TestExtractTLSSecretName(t *testing.T) {
 			},
 			"demo",
 		},
+		"ingress tls, hosts, matching cert cn, uppercase host": {
+			"FOO.BAR",
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test",
+					},
+					Spec: networking.IngressSpec{
+						TLS: []networking.IngressTLS{
+							{
+								Hosts:      []string{"foo.bar", "example.com"},
+								SecretName: "demo",
+							},
+						},
+						Rules: []networking.IngressRule{
+							{
+								Host: "foo.bar",
+							},
+						},
+					},
+				},
+			},
+			func(string) (*ingress.SSLCert, error) {
+				return nil, nil
+			},
+			"demo",
+		},
 	}
 
 	for title, tc := range testCases {
