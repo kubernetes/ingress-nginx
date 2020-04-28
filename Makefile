@@ -124,6 +124,14 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 .push-$(ARCH):
 	docker push $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG)
 
+.PHONY: push-manifest
+push-manifest:
+	docker manifest create $(REGISTRY)/nginx-ingress-controller:$(TAG) \
+		$(REGISTRY)/nginx-ingress-controller-amd64:$(TAG) \
+		$(REGISTRY)/nginx-ingress-controller-arm:$(TAG) \
+		$(REGISTRY)/nginx-ingress-controller-arm64:$(TAG)
+	docker manifest push --purge $(REGISTRY)/nginx-ingress-controller:$(TAG)
+
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
 ifeq ($(USE_DOCKER), true)
