@@ -17,12 +17,12 @@ function _M.get_general_data()
   return configuration_data:get("general")
 end
 
-function _M.get_timestamp_data()
-  local timestamp = configuration_data:get("timestamp")
-  if timestamp == nil then
-    timestamp = 1
+function _M.get_raw_backends_last_synced_at()
+  local raw_backends_last_synced_at = configuration_data:get("raw_backends_last_synced_at")
+  if raw_backends_last_synced_at == nil then
+    raw_backends_last_synced_at = 1
   end
-  return timestamp
+  return raw_backends_last_synced_at
 end
 
 local function fetch_request_body()
@@ -185,10 +185,11 @@ local function handle_backends()
     return
   end
 
-  local timestamp = os.time()
-  success, err = configuration_data:set("timestamp", timestamp)
+  ngx.update_time()
+  local raw_backends_last_synced_at = ngx.time()
+  success, err = configuration_data:set("raw_backends_last_synced_at", raw_backends_last_synced_at)
   if not success then
-    ngx.log(ngx.ERR, "dynamic-configuration: error setting sync timestamp: " .. tostring(err))
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating when backends sync, new upstream peers wait for force syncing: " .. tostring(err))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end

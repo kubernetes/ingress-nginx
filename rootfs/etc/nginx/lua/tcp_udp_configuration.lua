@@ -7,12 +7,12 @@ function _M.get_backends_data()
   return tcp_udp_configuration_data:get("backends")
 end
 
-function _M.get_timestamp_data()
-  local timestamp = tcp_udp_configuration_data:get("timestamp")
-  if timestamp == nil then
-    timestamp = 1
+function _M.get_raw_backends_last_synced_at_data()
+  local raw_backends_last_synced_at = tcp_udp_configuration_data:get("raw_backends_last_synced_at")
+  if raw_backends_last_synced_at == nil then
+    raw_backends_last_synced_at = 1
   end
-  return timestamp
+  return raw_backends_last_synced_at
 end
 
 function _M.call()
@@ -42,10 +42,11 @@ function _M.call()
     return
   end
 
-  local timestamp = os.time()
-  success, err = tcp_udp_configuration_data:set("timestamp", timestamp)
+  ngx.update_time()
+  local raw_backends_last_synced_at = ngx.time()
+  success, err = tcp_udp_configuration_data:set("raw_backends_last_synced_at", raw_backends_last_synced_at)
   if not success then
-    ngx.log(ngx.ERR, "dynamic-configuration: error setting sync timestamp: " .. tostring(err))
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating when backends sync, new upstream peers wait for force syncing: " .. tostring(err))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end

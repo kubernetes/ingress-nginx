@@ -23,6 +23,7 @@ local math = math
 -- it will take <the delay until controller POSTed the backend object to the
 -- Nginx endpoint> + BACKENDS_SYNC_INTERVAL
 local BACKENDS_SYNC_INTERVAL = 1
+local BACKENDS_FORCE_SYNC_INTERVAL = 30
 
 local DEFAULT_LB_ALG = "round_robin"
 local IMPLEMENTATIONS = {
@@ -36,8 +37,8 @@ local IMPLEMENTATIONS = {
 
 local _M = {}
 local balancers = {}
-local external_backends = {}
-local last_timestamp = 0
+local backends_with_external_name = {}
+local backends_last_synced_at = 0
 
 local function get_implementation(backend)
   local name = backend["load-balance"] or DEFAULT_LB_ALG
@@ -94,7 +95,7 @@ local function format_ipv6_endpoints(endpoints)
   return formatted_endpoints
 end
 
-local function use_external_name(backend)
+local function is_backend_with_external_name(backend)
   local serv_type = backend.service and backend.service.spec
                        and backend.service.spec["type"]
   return serv_type == "ExternalName"
@@ -125,7 +126,7 @@ local function sync_backend(backend)
     return
   end
 
-  if use_external_name(backend) then
+  if is_backend_with_external_name(backend) then
     backend = resolve_external_names(backend)
   end
 
@@ -135,14 +136,16 @@ local function sync_backend(backend)
 end
 
 local function sync_backends()
-  local timestamp = configuration.get_timestamp_data()
-  if timestamp <= last_timestamp then
-    for _, external_backend in pairs(external_backends) do
-      sync_backend(external_backend)
+  local raw_backends_last_synced_at = configuration.get_raw_backends_last_synced_at()
+  ngx.update_time()
+  local current_timestamp = ngx.time()
+  if current_timestamp - backends_last_synced_at < BACKENDS_FORCE_SYNC_INTERVAL
+      and raw_backends_last_synced_at <= backends_last_synced_at then
+    for _, backend_with_external_name in pairs(backends_with_external_name) do
+      sync_backend(backend_with_external_name)
     end
     return
   end
-  last_timestamp = timestamp
 
   local backends_data = configuration.get_backends_data()
   if not backends_data then
@@ -160,18 +163,19 @@ local function sync_backends()
   for _, new_backend in ipairs(new_backends) do
     sync_backend(new_backend)
     balancers_to_keep[new_backend.name] = balancers[new_backend.name]
-    if use_external_name(new_backend) then
-      local external_backend = util.deepcopy(new_backend)
-      external_backends[external_backend.name] = external_backend
+    if is_backend_with_external_name(new_backend) then
+      local backend_with_external_name = util.deepcopy(new_backend)
+      backends_with_external_name[backend_with_external_name.name] = backend_with_external_name
     end
   end
 
   for backend_name, _ in pairs(balancers) do
     if not balancers_to_keep[backend_name] then
       balancers[backend_name] = nil
-      external_backends[backend_name] = nil
+      backends_with_external_name[backend_name] = nil
     end
   end
+  backends_last_synced_at = raw_backends_last_synced_at
 end
 
 local function route_to_alternative_balancer(balancer)
