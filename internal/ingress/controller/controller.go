@@ -199,19 +199,18 @@ func (n *NGINXController) syncIngress(interface{}) error {
 // CheckIngress returns an error in case the provided ingress, when added
 // to the current configuration, generates an invalid configuration
 func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
-
 	if ing == nil {
 		// no ingress to add, no state change
 		return nil
 	}
 
 	if !class.IsValid(ing) {
-		klog.Infof("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
+		klog.Warningf("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
 		return nil
 	}
 
 	if n.cfg.Namespace != "" && ing.ObjectMeta.Namespace != n.cfg.Namespace {
-		klog.Infof("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
+		klog.Warningf("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
 		return nil
 	}
 
@@ -220,7 +219,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 			toCheck.ObjectMeta.Name == ing.ObjectMeta.Name
 	}
 
-	k8s.SetDefaultPathTypeIfEmpty(ing)
+	k8s.SetDefaultNGINXPathType(ing)
 
 	ings := n.store.ListIngresses(filter)
 	ings = append(ings, &ingress.Ingress{
