@@ -110,6 +110,9 @@ func (f *Framework) BeforeEach() {
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress pods to be ready")
+
+	// wait before any request
+	time.Sleep(5 * time.Second)
 }
 
 // AfterEach deletes the namespace, after reading its events.
