@@ -180,7 +180,7 @@ Parameter | Description | Default
 `controller.tcp.annotations` | annotations to be added to tcp configmap | `{}`
 `controller.udp.configMapNamespace` | The udp-services-configmap namespace name | `""`
 `controller.udp.annotations` | annotations to be added to udp configmap | `{}`
-`defaultBackend.enabled` | Use default backend component | `true`
+`defaultBackend.enabled` | Use default backend component | `false`
 `defaultBackend.image.repository` | default backend container image repository | `k8s.gcr.io/defaultbackend-amd64`
 `defaultBackend.image.tag` | default backend container image tag | `1.5`
 `defaultBackend.image.pullPolicy` | default backend container image pull policy | `IfNotPresent`
