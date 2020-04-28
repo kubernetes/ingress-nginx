@@ -662,19 +662,10 @@ func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
 			if path.Path == "" {
 				copyIng.Spec.Rules[ri].HTTP.Paths[pi].Path = "/"
 			}
-
-			if path.PathType == nil {
-				copyIng.Spec.Rules[ri].HTTP.Paths[pi].PathType = &defaultPathType
-				continue
-			}
-
-			// PathType ImplementationSpecific is not supported.
-			// Set type to PathTypePrefix.
-			if *path.PathType == networkingv1beta1.PathTypeImplementationSpecific {
-				copyIng.Spec.Rules[ri].HTTP.Paths[pi].PathType = &defaultPathType
-			}
 		}
 	}
+
+	k8s.SetDefaultNGINXPathType(copyIng)
 
 	err := s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
 		Ingress:           *copyIng,
@@ -963,12 +954,12 @@ func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
 			return nil, false
 		}
 
-		k8s.SetDefaultPathTypeIfEmpty(ing)
+		k8s.SetDefaultNGINXPathType(ing)
 		return ing, true
 	}
 
 	if ing, ok := obj.(*networkingv1beta1.Ingress); ok {
-		k8s.SetDefaultPathTypeIfEmpty(ing)
+		k8s.SetDefaultNGINXPathType(ing)
 		return ing, true
 	}
 

@@ -150,11 +150,11 @@ func NetworkingIngressAvailable(client clientset.Interface) (bool, bool) {
 	return runningVersion.AtLeast(version114), runningVersion.AtLeast(version118)
 }
 
-// Default path type is Prefix to not break existing definitions
+// default path type is Prefix to not break existing definitions
 var defaultPathType = networkingv1beta1.PathTypePrefix
 
-// SetDefaultPathTypeIfEmpty sets a default PathType when is not defined.
-func SetDefaultPathTypeIfEmpty(ing *networkingv1beta1.Ingress) {
+// SetDefaultNGINXPathType sets a default PathType when is not defined.
+func SetDefaultNGINXPathType(ing *networkingv1beta1.Ingress) {
 	for _, rule := range ing.Spec.Rules {
 		if rule.IngressRuleValue.HTTP == nil {
 			continue
@@ -163,6 +163,10 @@ func SetDefaultPathTypeIfEmpty(ing *networkingv1beta1.Ingress) {
 		for idx := range rule.IngressRuleValue.HTTP.Paths {
 			p := &rule.IngressRuleValue.HTTP.Paths[idx]
 			if p.PathType == nil {
+				p.PathType = &defaultPathType
+			}
+
+			if *p.PathType == networkingv1beta1.PathTypeImplementationSpecific {
 				p.PathType = &defaultPathType
 			}
 		}
