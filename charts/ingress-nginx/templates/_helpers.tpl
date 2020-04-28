@@ -58,7 +58,7 @@ Create a default fully qualified default backend name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "ingress-nginx.defaultBackend.fullname" -}}
-{{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.defaultBackend.name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" (include "ingress-nginx.fullname" .) "defaultbackend" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
