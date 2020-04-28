@@ -1351,9 +1351,12 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 	}
 
 	// naively return Secret name from TLS spec if host name matches
+	lowercaseHost := toLowerCaseASCII(host)
 	for _, tls := range ing.Spec.TLS {
-		if sets.NewString(tls.Hosts...).Has(host) {
-			return tls.SecretName
+		for _, tlsHost := range tls.Hosts {
+			if toLowerCaseASCII(tlsHost) == lowercaseHost {
+				return tls.SecretName
+			}
 		}
 	}
 
