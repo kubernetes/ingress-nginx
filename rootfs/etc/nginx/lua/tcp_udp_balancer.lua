@@ -100,7 +100,7 @@ local function sync_backend(backend)
 end
 
 local function sync_backends()
-  local raw_backends_last_sync = configuration.get_raw_backends_last_synced_at()
+  local raw_backends_last_synced_at = configuration.get_raw_backends_last_synced_at()
   ngx.update_time()
   local current_timestamp = ngx.time()
   if current_timestamp - backends_last_synced_at < BACKENDS_FORCE_SYNC_INTERVAL

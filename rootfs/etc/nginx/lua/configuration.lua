@@ -189,7 +189,8 @@ local function handle_backends()
   local raw_backends_last_synced_at = ngx.time()
   success, err = configuration_data:set("raw_backends_last_synced_at", raw_backends_last_synced_at)
   if not success then
-    ngx.log(ngx.ERR, "dynamic-configuration: error updating when backends sync, new upstream peers wait for force syncing: " .. tostring(err))
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating when backends sync, " ..
+                     "new upstream peers waiting for force syncing: " .. tostring(err))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
