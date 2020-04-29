@@ -615,11 +615,27 @@ func New(
 		},
 	}
 
+	serviceHandler := cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(old, cur interface{}) {
+			oldSvc := old.(*corev1.Service)
+			curSvc := cur.(*corev1.Service)
+
+			if reflect.DeepEqual(oldSvc, curSvc) {
+				return
+			}
+
+			updateCh.In() <- Event{
+				Type: UpdateEvent,
+				Obj:  cur,
+			}
+		},
+	}
+
 	store.informers.Ingress.AddEventHandler(ingEventHandler)
 	store.informers.Endpoint.AddEventHandler(epEventHandler)
 	store.informers.Secret.AddEventHandler(secrEventHandler)
 	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
-	store.informers.Service.AddEventHandler(cache.ResourceEventHandlerFuncs{})
+	store.informers.Service.AddEventHandler(serviceHandler)
 	store.informers.Pod.AddEventHandler(podEventHandler)
 
 	// do not wait for informers to read the configmap configuration
