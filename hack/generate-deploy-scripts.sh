@@ -115,9 +115,6 @@ controller:
     tohttps: 2443
 
   config:
-    # Obtain IP ranges from AWS and configure the defaults
-    # curl https://ip-ranges.amazonaws.com/ip-ranges.json | cat ip-ranges.json | jq -r '.prefixes[] .ip_prefix'| paste -sd "," -
-    # DO NOT FORGET TO SET YOUR VPC CIDR
     proxy-real-ip-cidr: XXX.XXX.XXX/XX
     use-forwarded-headers: "true"
     http-snippet: |
@@ -155,6 +152,23 @@ controller:
     enabled: false
   extraArgs:
     publish-status-address: localhost
+EOF
+
+# Digital Ocean
+echo "${NAMESPACE_VAR}
+$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
+
+OUTPUT_FILE="${DIR}/deploy/static/provider/do/deploy.yaml"
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+controller:
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+    annotations:
+      service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
+  config:
+    use-proxy-protocol: "true"
+
 EOF
 
 echo "${NAMESPACE_VAR}
