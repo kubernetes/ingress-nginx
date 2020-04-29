@@ -181,8 +181,8 @@ helm install my-release ingress-nginx/ingress-nginx
 If you are using [Helm 2](https://v2.helm.sh/) then specify release name using `--name` flag
 
 ```console
-helm repo add https://kubernetes.github.io/ingress-nginx/
-helm install --name ingress-nginx
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
+helm install --name ingress-nginx ingress-nginx/ingress-nginx
 ```
 
 ## Detect installed version:
