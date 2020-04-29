@@ -522,7 +522,7 @@ spec:
     spec:
       containers:
         - name: create
-          image: jettech/kube-webhook-certgen:v1.0.0
+          image: jettech/kube-webhook-certgen:v1.2.0
           imagePullPolicy: IfNotPresent
           args:
             - create
@@ -565,7 +565,7 @@ spec:
     spec:
       containers:
         - name: patch
-          image: jettech/kube-webhook-certgen:v1.0.0
+          image: jettech/kube-webhook-certgen:v1.2.0
           imagePullPolicy:
           args:
             - patch
