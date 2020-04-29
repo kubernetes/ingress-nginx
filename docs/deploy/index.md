@@ -16,6 +16,7 @@
   - [AWS](#aws)
   - [GCE - GKE](#gce-gke)
   - [Azure](#azure)
+  - [Digital Ocean](#digital-ocean)
   - [Bare-metal](#bare-metal)
   - [Verify installation](#verify-installation)
   - [Detect installed version](#detect-installed-version)
@@ -131,6 +132,12 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.31.1/deploy/static/provider/cloud/deploy.yaml
+```
+
+#### Digital Ocean
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/do/deploy.yaml
 ```
 
 #### Bare-metal
