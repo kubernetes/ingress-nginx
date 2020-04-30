@@ -35,7 +35,7 @@ spec:
       securityContext: {{ toYaml .Values.defaultBackend.podSecurityContext | nindent 8 }}
     {{- end }}
       containers:
-        - name: {{ template "ingress-nginx.name" . }}-{{ .Values.defaultBackend.name }}
+        - name: {{ template "ingress-nginx.name" . }}-default-backend
           image: {{ .Values.defaultBackend.image.repository }}:{{ .Values.defaultBackend.image.tag }}
           imagePullPolicy: {{ .Values.defaultBackend.image.pullPolicy }}
         {{- if .Values.defaultBackend.extraArgs }}
