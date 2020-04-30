@@ -444,6 +444,10 @@ controller:
 ##
 revisionHistoryLimit: 10
 
+# Maxmind license key to download GeoLite2 Databases
+# https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
+maxmindLicenseKey: ""
+
 ## Default 404 backend
 ##
 defaultBackend:
@@ -456,10 +460,6 @@ defaultBackend:
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
     runAsUser: 65534
-
-  # Maxmind license key to download GeoLite2 Databases
-  # https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
-  maxmindLicenseKey: ""
 
   extraArgs: {}
 
