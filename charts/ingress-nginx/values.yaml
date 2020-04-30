@@ -54,11 +54,6 @@ controller:
       http: 80
       https: 443
 
-  ## Required only if defaultBackend.enabled = false
-  ## Must be <namespace>/<service_name>
-  ##
-  defaultBackendService: ""
-
   ## Election ID to use for status update
   ##
   electionID: ingress-controller-leader
@@ -452,8 +447,6 @@ revisionHistoryLimit: 10
 ## Default 404 backend
 ##
 defaultBackend:
-
-  ## If false, controller.defaultBackendService must be provided
   ##
   enabled: false
 
