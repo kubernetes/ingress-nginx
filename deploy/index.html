@@ -1437,6 +1437,11 @@
 <p class="admonition-title">Warning</p>
 <p>If multiple Ingresses define paths for the same host, the ingress controller <strong>merges the definitions</strong>.</p>
 </div>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>The <a href="https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/">admission webhook</a> require conectivity between Kubernetes API server and the ingress controller.</p>
+<p>In case <a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">Network policies</a> or additional firewalls, please allow access to port <code>8443</code>.</p>
+</div>
 <h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link"> ¶</a></h2>
 <ul>
 <li><a href="#provider-specific-steps">Provider Specific Steps</a></li>
@@ -1530,11 +1535,16 @@ By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
 <span class="go">  --user $(gcloud config get-value account)</span>
 </code></pre></div></p>
 </div>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>For private clusters, you will need to either add an additional firewall rule that allows master nodes access port <code>8443/tcp</code> on worker nodes, or change the existing rule that allows access to ports <code>80/tcp</code>, <code>443/tcp</code> and <code>10254/tcp</code> to also allow access to port <code>8443/tcp</code>.</p>
+<p>See the <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules">GKE documentation</a> on adding rules and the <a href="https://github.com/kubernetes/kubernetes/issues/79739">Kubernetes issue</a> for more detail.</p>
+</div>
 <div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.31.1/deploy/static/provider/cloud/deploy.yaml</span>
 </code></pre></div>
 
-<div class="admonition warning important">
-<p class="admonition-title">Warning</p>
+<div class="admonition failure important">
+<p class="admonition-title">Failure</p>
 <p>Proxy protocol is not supported in GCE/GKE</p>
 </div>
 <h4 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link"> ¶</a></h4>
