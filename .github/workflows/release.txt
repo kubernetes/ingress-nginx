@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  watch:
+    types: [started]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.actor == 'aledbf'
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v1
+
+      - name: Set up Go 1.14
+        uses: actions/setup-go@master
+        with:
+          go-version: 1.14
+
+      - name: Build krew plugin
+        shell: bash
+        run: |
+          export PATH=${PATH}:`go env GOPATH`/bin
+          make build-plugin
+
+#      - name: Build and publish images
+#        shell: bash
+#        run: |
+#          cat <<EOF | > build/images/nginx/aws.tfvars
+#          access_key = "${{ secrets.AWS_ACCESS_KEY }}"
+#          secret_key = "${{ secrets.AWS_ACCESS_SECRET_KEY }}"
+#          EOF
+#
+#          cat <<EOF | > build/images/nginx/env.tfvars
+#          docker_username="${{ secrets.DOCKER_USERNAME }}"
+#          docker_password="${{ secrets.DOCKER_PASSWORD }}"
+#          EOF
+#
+#          ./build/build-ingress-controller.sh
+
+      - name: Create env variables
+        shell: bash
+        run: |
+          # $(cat cmd/plugin/release/ingress-nginx.yaml)
+          echo "::set-env name=RELEASE_VERSION::$(make show-version)"
+          echo "::set-env name=RELEASE_CHANGELOG::##CHANGELOG##"
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/controller')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: controller-${{ env.RELEASE_VERSION }}
+          release_name: "NGINX: ${{ env.RELEASE_VERSION }}"
+          body: |
+            **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:${{ env.RELEASE_VERSION }}`
+
+            ${{ env.RELEASE_CHANGELOG }}
+
+            Complete changelog [here](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md)
+
+          draft: false
+          prerelease: false
+
+      - name: Upload krew plugin Darwin
+        uses: actions/upload-release-asset@v1
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/controller')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/plugin/release/kubectl-ingress_nginx-darwin-amd64.tar.gz
+          asset_name: kubectl-ingress_nginx-darwin-amd64.tar.gz
+          asset_content_type: application/tar+gzip
+
+      - name: Upload krew plugin Linux
+        uses: actions/upload-release-asset@v1
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/controller')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/plugin/release/kubectl-ingress_nginx-linux-amd64.tar.gz
+          asset_name: kubectl-ingress_nginx-linux-amd64.tar.gz
+          asset_content_type: application/tar+gzip
+
+      - name: Upload krew plugin Windows
+        uses: actions/upload-release-asset@v1
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/controller')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/plugin/release/kubectl-ingress_nginx-windows-amd64.tar.gz
+          asset_name: kubectl-ingress_nginx-windows-amd64.tar.gz
+          asset_content_type: application/tar+gzip
+
+      - name: Upload krew plugin
+        uses: actions/upload-release-asset@v1
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/controller')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/plugin/release/ingress-nginx.yaml
+          asset_name: ingress-nginx.yaml
+          asset_content_type: text/x-yaml
+
+      - name: Create KREW_PLUGIN_BODY_PR env variable
+        shell: bash
+        run: |
+          echo "::set-env name=KREW_PLUGIN_BODY_PR::$(cat cmd/plugin/release/ingress-nginx.yaml)"
+
+#      - name: Open PR for new release of Krew Plugin
+#        uses: gha-utilities/init-pull-request@v0.1.2
+#        env:
+#          GITHUB_REPOSITORY: maintainer/repo-name
+#        with:
+#          verbose: true
+#          draft: false
+#          pull_request_token: ${{ secrets.GITHUB_TOKEN }}
+#          head: ingress-nginx:krew
+#          base: krew
+#          title: 'Update ingress-nginx krew plugin to ${{ env.RELEASE_VERSION }}'
+#          body: |
+#            ${{ env.KREW_PLUGIN_BODY_PR }}

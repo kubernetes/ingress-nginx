@@ -129,6 +129,10 @@ type Configuration struct {
 	// By default this is disabled
 	EnableModsecurity bool `json:"enable-modsecurity"`
 
+	// EnableOCSP enables the OCSP support in SSL connections
+	// By default this is disabled
+	EnableOCSP bool `json:"enable-ocsp"`
+
 	// EnableOWASPCoreRules enables the OWASP ModSecurity Core Rule Set (CRS)
 	// By default this is disabled
 	EnableOWASPCoreRules bool `json:"enable-owasp-modsecurity-crs"`
@@ -267,6 +271,11 @@ type Configuration struct {
 	// the /nginx_status endpoint of the "_" server
 	NginxStatusIpv4Whitelist []string `json:"nginx-status-ipv4-whitelist,omitempty"`
 	NginxStatusIpv6Whitelist []string `json:"nginx-status-ipv6-whitelist,omitempty"`
+
+	// Plugins configures plugins to use placed in the directory /etc/nginx/lua/plugins.
+	// Every plugin has to have main.lua in the root. Every plugin has to bundle all of its dependencies.
+	// The execution order follows the definition.
+	Plugins []string `json:"plugins,omitempty"`
 
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
@@ -826,6 +835,7 @@ type TemplateConfig struct {
 	ListenPorts              *ListenPorts
 	PublishService           *apiv1.Service
 	EnableMetrics            bool
+	MaxmindEditionFiles      []string
 
 	PID        string
 	StatusPath string

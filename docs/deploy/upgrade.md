@@ -24,16 +24,16 @@ spec:
     spec:
       containers:
         - name: nginx-ingress-controller
-          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0
           args: ...
 ```
 
-simply change the `0.9.0` tag to the version you wish to upgrade to.
+simply change the `0.30.0` tag to the version you wish to upgrade to.
 The easiest way to do this is e.g. (do note you may need to change the name parameter according to your installation):
 
 ```
 kubectl set image deployment/nginx-ingress-controller \
-  nginx-ingress-controller=quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0
+  nginx-ingress-controller=quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.31.1
 ```
 
 For interactive editing, use `kubectl edit deployment nginx-ingress-controller`.

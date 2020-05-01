@@ -1,3 +1,5 @@
+# TODO: remove the need to use fullnameOverride
+fullnameOverride: nginx-ingress
 controller:
   image:
     repository: ingress-controller/nginx-ingress-controller
@@ -17,17 +19,14 @@ controller:
   livenessProbe:
     port: 9090
     initialDelaySeconds: 1
-  podLabels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
   service:
     type: NodePort
-    labels:
-      app.kubernetes.io/name: ingress-nginx
-      app.kubernetes.io/part-of: ingress-nginx
+  admissionWebhooks:
+    enabled: false
 
 defaultBackend:
   enabled: false
 
 rbac:
-  create: false
+  create: true
+  scope: true

@@ -61,6 +61,7 @@ const (
 	globalAuthCacheKey        = "global-auth-cache-key"
 	globalAuthCacheDuration   = "global-auth-cache-duration"
 	luaSharedDictsKey         = "lua-shared-dicts"
+	plugins                   = "plugins"
 )
 
 var (
@@ -72,6 +73,7 @@ var (
 		"balancer_ewma_last_touched_at": 10,
 		"balancer_ewma_locks":           1,
 		"certificate_servers":           5,
+		"ocsp_response_cache":           5, // keep this same as certificate_servers
 	}
 )
 
@@ -107,7 +109,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	//parse lua shared dict values
 	if val, ok := conf[luaSharedDictsKey]; ok {
 		delete(conf, luaSharedDictsKey)
-		lsd := strings.Split(val, ",")
+		lsd := splitAndTrimSpace(val, ",")
 		for _, v := range lsd {
 			v = strings.Replace(v, " ", "", -1)
 			results := strings.SplitN(v, ":", 2)
@@ -136,9 +138,10 @@ func ReadConfig(src map[string]string) config.Configuration {
 			luaSharedDicts[k] = v
 		}
 	}
+
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
-		for _, i := range strings.Split(val, ",") {
+		for _, i := range splitAndTrimSpace(val, ",") {
 			j, err := strconv.Atoi(i)
 			if err != nil {
 				klog.Warningf("%v is not a valid http code: %v", i, err)
@@ -147,27 +150,32 @@ func ReadConfig(src map[string]string) config.Configuration {
 			}
 		}
 	}
+
 	if val, ok := conf[hideHeaders]; ok {
 		delete(conf, hideHeaders)
-		hideHeadersList = strings.Split(val, ",")
+		hideHeadersList = splitAndTrimSpace(val, ",")
 	}
+
 	if val, ok := conf[skipAccessLogUrls]; ok {
 		delete(conf, skipAccessLogUrls)
-		skipUrls = strings.Split(val, ",")
+		skipUrls = splitAndTrimSpace(val, ",")
 	}
+
 	if val, ok := conf[whitelistSourceRange]; ok {
 		delete(conf, whitelistSourceRange)
-		whiteList = append(whiteList, strings.Split(val, ",")...)
+		whiteList = append(whiteList, splitAndTrimSpace(val, ",")...)
 	}
+
 	if val, ok := conf[proxyRealIPCIDR]; ok {
 		delete(conf, proxyRealIPCIDR)
-		proxyList = append(proxyList, strings.Split(val, ",")...)
+		proxyList = append(proxyList, splitAndTrimSpace(val, ",")...)
 	} else {
 		proxyList = append(proxyList, "0.0.0.0/0")
 	}
+
 	if val, ok := conf[bindAddress]; ok {
 		delete(conf, bindAddress)
-		for _, i := range strings.Split(val, ",") {
+		for _, i := range splitAndTrimSpace(val, ",") {
 			ns := net.ParseIP(i)
 			if ns != nil {
 				if ing_net.IsIPV6(ns) {
@@ -183,15 +191,17 @@ func ReadConfig(src map[string]string) config.Configuration {
 
 	if val, ok := conf[blockCIDRs]; ok {
 		delete(conf, blockCIDRs)
-		blockCIDRList = strings.Split(val, ",")
+		blockCIDRList = splitAndTrimSpace(val, ",")
 	}
+
 	if val, ok := conf[blockUserAgents]; ok {
 		delete(conf, blockUserAgents)
-		blockUserAgentList = strings.Split(val, ",")
+		blockUserAgentList = splitAndTrimSpace(val, ",")
 	}
+
 	if val, ok := conf[blockReferers]; ok {
 		delete(conf, blockReferers)
-		blockRefererList = strings.Split(val, ",")
+		blockRefererList = splitAndTrimSpace(val, ",")
 	}
 
 	if val, ok := conf[httpRedirectCode]; ok {
@@ -249,15 +259,12 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, globalAuthResponseHeaders)
 
 		if len(val) != 0 {
-			harr := strings.Split(val, ",")
+			harr := splitAndTrimSpace(val, ",")
 			for _, header := range harr {
-				header = strings.TrimSpace(header)
-				if len(header) > 0 {
-					if !authreq.ValidHeader(header) {
-						klog.Warningf("Global auth location denied - %v.", "invalid headers list")
-					} else {
-						responseHeaders = append(responseHeaders, header)
-					}
+				if !authreq.ValidHeader(header) {
+					klog.Warningf("Global auth location denied - %v.", "invalid headers list")
+				} else {
+					responseHeaders = append(responseHeaders, header)
 				}
 			}
 		}
@@ -266,19 +273,16 @@ func ReadConfig(src map[string]string) config.Configuration {
 
 	if val, ok := conf[globalAuthRequestRedirect]; ok {
 		delete(conf, globalAuthRequestRedirect)
-
 		to.GlobalExternalAuth.RequestRedirect = val
 	}
 
 	if val, ok := conf[globalAuthSnippet]; ok {
 		delete(conf, globalAuthSnippet)
-
 		to.GlobalExternalAuth.AuthSnippet = val
 	}
 
 	if val, ok := conf[globalAuthCacheKey]; ok {
 		delete(conf, globalAuthCacheKey)
-
 		to.GlobalExternalAuth.AuthCacheKey = val
 	}
 
@@ -317,28 +321,27 @@ func ReadConfig(src map[string]string) config.Configuration {
 
 	// Nginx Status whitelist
 	if val, ok := conf[nginxStatusIpv4Whitelist]; ok {
-		whitelist := make([]string, 0)
-		whitelist = append(whitelist, strings.Split(val, ",")...)
-		to.NginxStatusIpv4Whitelist = whitelist
-
+		to.NginxStatusIpv4Whitelist = splitAndTrimSpace(val, ",")
 		delete(conf, nginxStatusIpv4Whitelist)
 	}
-	if val, ok := conf[nginxStatusIpv6Whitelist]; ok {
-		whitelist := make([]string, 0)
-		whitelist = append(whitelist, strings.Split(val, ",")...)
-		to.NginxStatusIpv6Whitelist = whitelist
 
+	if val, ok := conf[nginxStatusIpv6Whitelist]; ok {
+		to.NginxStatusIpv6Whitelist = splitAndTrimSpace(val, ",")
 		delete(conf, nginxStatusIpv6Whitelist)
 	}
 
 	if val, ok := conf[workerProcesses]; ok {
 		to.WorkerProcesses = val
-
 		if val == "auto" {
 			to.WorkerProcesses = strconv.Itoa(runtime.NumCPU())
 		}
 
 		delete(conf, workerProcesses)
+	}
+
+	if val, ok := conf[plugins]; ok {
+		to.Plugins = splitAndTrimSpace(val, ",")
+		delete(conf, plugins)
 	}
 
 	to.CustomHTTPErrors = filterErrors(errors)
@@ -394,4 +397,17 @@ func filterErrors(codes []int) []int {
 	}
 
 	return fa
+}
+
+func splitAndTrimSpace(s, sep string) []string {
+	f := func(c rune) bool {
+		return strings.EqualFold(string(c), sep)
+	}
+
+	values := strings.FieldsFunc(s, f)
+	for i := range values {
+		values[i] = strings.TrimSpace(values[i])
+	}
+
+	return values
 }

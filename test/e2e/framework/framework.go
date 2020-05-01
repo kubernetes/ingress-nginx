@@ -14,6 +14,7 @@ limitations under the License.
 package framework
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -34,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/klog"
 )
 
@@ -55,6 +57,8 @@ var (
 type Framework struct {
 	BaseName string
 
+	IsIngressV1Ready bool
+
 	// A Kubernetes and Service Catalog client
 	KubeClientSet          kubernetes.Interface
 	KubeConfig             *restclient.Config
@@ -72,15 +76,18 @@ func NewDefaultFramework(baseName string) *Framework {
 	if err != nil {
 		panic(err.Error())
 	}
-	assert.Nil(ginkgo.GinkgoT(), err, "creting kubernetes API client configuration")
+	assert.Nil(ginkgo.GinkgoT(), err, "creating kubernetes API client configuration")
 
 	kubeClient, err := kubernetes.NewForConfig(kubeConfig)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating Kubernetes API client")
 
+	_, isIngressV1Ready := k8s.NetworkingIngressAvailable(kubeClient)
+
 	f := &Framework{
-		BaseName:      baseName,
-		KubeConfig:    kubeConfig,
-		KubeClientSet: kubeClient,
+		BaseName:         baseName,
+		KubeConfig:       kubeConfig,
+		KubeClientSet:    kubeClient,
+		IsIngressV1Ready: isIngressV1Ready,
 	}
 
 	ginkgo.BeforeEach(f.BeforeEach)
@@ -108,7 +115,7 @@ func (f *Framework) BeforeEach() {
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
 	if ginkgo.CurrentGinkgoTestDescription().Failed {
-		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
+		pod, err := GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
 		if err != nil {
 			Logf("Unexpected error searching for ingress controller pod: %v", err)
 			return
@@ -172,7 +179,7 @@ func (f *Framework) GetNginxIP() string {
 	s, err := f.KubeClientSet.
 		CoreV1().
 		Services(f.Namespace).
-		Get("nginx-ingress-controller", metav1.GetOptions{})
+		Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX IP address")
 	return s.Spec.ClusterIP
 }
@@ -182,7 +189,7 @@ func (f *Framework) GetNginxPodIP() []string {
 	e, err := f.KubeClientSet.
 		CoreV1().
 		Endpoints(f.Namespace).
-		Get("nginx-ingress-controller", metav1.GetOptions{})
+		Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX IP address")
 	eips := make([]string, 0)
 	for _, s := range e.Subsets {
@@ -213,8 +220,14 @@ func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
 
+// WaitForNginxCustomConfiguration waits until the nginx configuration given part (from, to) contains a particular configuration
+func (f *Framework) WaitForNginxCustomConfiguration(from string, to string, matcher func(cfg string) bool) {
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxCustomConditions(from, to, matcher))
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
+}
+
 func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
-	pod, err := getIngressNGINXPod(namespace, client)
+	pod, err := GetIngressNGINXPod(namespace, client)
 	if err != nil {
 		return "", err
 	}
@@ -233,7 +246,7 @@ func (f *Framework) NginxLogs() (string, error) {
 
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
-		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
+		pod, err := GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
 		if err != nil {
 			return false, nil
 		}
@@ -244,6 +257,33 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		} else {
 			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
 		}
+
+		o, err := f.ExecCommand(pod, cmd)
+		if err != nil {
+			return false, nil
+		}
+
+		if klog.V(10) && len(o) > 0 {
+			klog.Infof("nginx.conf:\n%v", o)
+		}
+
+		// passes the nginx config to the passed function
+		if matcher(strings.Join(strings.Fields(o), " ")) {
+			return true, nil
+		}
+
+		return false, nil
+	}
+}
+
+func (f *Framework) matchNginxCustomConditions(from string, to string, matcher func(cfg string) bool) wait.ConditionFunc {
+	return func() (bool, error) {
+		pod, err := GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
+		if err != nil {
+			return false, nil
+		}
+
+		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf| awk '/%v/,/%v/'", from, to)
 
 		o, err := f.ExecCommand(pod, cmd)
 		if err != nil {
@@ -275,7 +315,7 @@ func (f *Framework) getConfigMap(name string) (*v1.ConfigMap, error) {
 	config, err := f.KubeClientSet.
 		CoreV1().
 		ConfigMaps(f.Namespace).
-		Get(name, metav1.GetOptions{})
+		Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +334,7 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 	_, err = f.KubeClientSet.
 		CoreV1().
 		ConfigMaps(f.Namespace).
-		Update(cfgMap)
+		Update(context.TODO(), cfgMap, metav1.UpdateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
 
 	time.Sleep(5 * time.Second)
@@ -302,13 +342,13 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 
 // CreateConfigMap creates a new configmap in the current namespace
 func (f *Framework) CreateConfigMap(name string, data map[string]string) {
-	_, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(&v1.ConfigMap{
+	_, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(context.TODO(), &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: f.Namespace,
 		},
 		Data: data,
-	})
+	}, metav1.CreateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "creating configMap")
 }
 
@@ -323,7 +363,7 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 	_, err = f.KubeClientSet.
 		CoreV1().
 		ConfigMaps(f.Namespace).
-		Update(config)
+		Update(context.TODO(), config, metav1.UpdateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
 
 	time.Sleep(5 * time.Second)
@@ -333,14 +373,14 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 // Grace period to wait for pod shutdown is in seconds.
 func (f *Framework) DeleteNGINXPod(grace int64) {
 	ns := f.Namespace
-	pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
+	pod, err := GetIngressNGINXPod(ns, f.KubeClientSet)
 	assert.Nil(ginkgo.GinkgoT(), err, "expected ingress nginx pod to be running")
 
-	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(pod.GetName(), metav1.NewDeleteOptions(grace))
+	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(context.TODO(), pod.GetName(), *metav1.NewDeleteOptions(grace))
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting ingress nginx pod")
 
 	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
-		pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
+		pod, err := GetIngressNGINXPod(ns, f.KubeClientSet)
 		if err != nil || pod == nil {
 			return false, nil
 		}
@@ -389,7 +429,7 @@ func (f *Framework) newTestClient(config *tls.Config) *httpexpect.Expect {
 
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
 func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1.Deployment) error) error {
-	deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
+	deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -402,7 +442,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 
 	if *deployment.Spec.Replicas != int32(replicas) {
 		deployment.Spec.Replicas = NewInt32(int32(replicas))
-		_, err = kubeClientSet.AppsV1().Deployments(namespace).Update(deployment)
+		_, err = kubeClientSet.AppsV1().Deployments(namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "scaling the number of replicas to %v", replicas)
 		}
@@ -420,7 +460,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 
 // UpdateIngress runs the given updateFunc on the ingress
 func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name string, updateFunc func(d *networking.Ingress) error) error {
-	ingress, err := kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+	ingress, err := kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -437,7 +477,7 @@ func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name st
 		return err
 	}
 
-	_, err = kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Update(ingress)
+	_, err = kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}

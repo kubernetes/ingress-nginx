@@ -17,17 +17,19 @@ markdown_extensions:
       permalink: " ¶"
 theme:
   name: material
-  feature:
-    tabs: true
-  logo:
-    icon: "public" # globe icon
+  features:
+    - tabs
+    - instant
+
   palette:
     primary: "teal"
     accent: "green"
+
   include_sidebar: true
 
 plugins:
   - search
+  - awesome-pages
 
 extra_css: [extra.css]
 
@@ -44,7 +46,6 @@ nav:
       - Installation Guide: "deploy/index.md"
       - Bare-metal considerations: "deploy/baremetal.md"
       - Role Based Access Control (RBAC): "deploy/rbac.md"
-      - Validating Webhook (admission controller): "deploy/validating-webhook.md"
       - Upgrade: "deploy/upgrade.md"
   - User guide:
       - NGINX Configuration:

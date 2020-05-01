@@ -58,52 +58,44 @@ func TestHandleAdmission(t *testing.T) {
 			Resource: v1.GroupVersionResource{Group: "", Version: "v1", Resource: "pod"},
 		},
 	}
-	err := adm.HandleAdmission(review)
-	if !review.Response.Allowed {
-		t.Errorf("with a non ingress resource, the check should pass")
-	}
-	if err != nil {
-		t.Errorf("with a non ingress resource, no error should be returned")
+
+	adm.HandleAdmission(review)
+	if review.Response.Allowed {
+		t.Fatalf("with a non ingress resource, the check should not pass")
 	}
 
-	review.Request.Resource = v1.GroupVersionResource{Group: networking.SchemeGroupVersion.Group, Version: networking.SchemeGroupVersion.Version, Resource: "ingresses"}
+	review.Request.Resource = v1.GroupVersionResource{Group: networking.GroupName, Version: "v1beta1", Resource: "ingresses"}
 	review.Request.Object.Raw = []byte{0xff}
 
-	err = adm.HandleAdmission(review)
+	adm.HandleAdmission(review)
 	if review.Response.Allowed {
-		t.Errorf("when the request object is not decodable, the request should not be allowed")
-	}
-	if err == nil {
-		t.Errorf("when the request object is not decodable, an error should be returned")
+		t.Fatalf("when the request object is not decodable, the request should not be allowed")
 	}
 
 	raw, err := json.Marshal(networking.Ingress{ObjectMeta: v1.ObjectMeta{Name: testIngressName}})
 	if err != nil {
-		t.Errorf("failed to prepare test ingress data: %v", err.Error())
+		t.Fatalf("failed to prepare test ingress data: %v", err.Error())
 	}
+
 	review.Request.Object.Raw = raw
 
 	adm.Checker = testChecker{
 		t:   t,
 		err: fmt.Errorf("this is a test error"),
 	}
-	err = adm.HandleAdmission(review)
+
+	adm.HandleAdmission(review)
 	if review.Response.Allowed {
-		t.Errorf("when the checker returns an error, the request should not be allowed")
-	}
-	if err == nil {
-		t.Errorf("when the checker returns an error, an error should be returned")
+		t.Fatalf("when the checker returns an error, the request should not be allowed")
 	}
 
 	adm.Checker = testChecker{
 		t:   t,
 		err: nil,
 	}
-	err = adm.HandleAdmission(review)
+
+	adm.HandleAdmission(review)
 	if !review.Response.Allowed {
-		t.Errorf("when the checker returns no error, the request should be allowed")
-	}
-	if err != nil {
-		t.Errorf("when the checker returns no error, no error should be returned")
+		t.Fatalf("when the checker returns no error, the request should be allowed")
 	}
 }

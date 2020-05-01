@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:7b6e2dd312f1808e43fb39992ea814035557c7f3
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:5d67794f4fbf38ec6575476de46201b068eabf87
 
 ARG GOLANG_VERSION
 ARG GOLANG_SHA
@@ -137,5 +137,9 @@ RUN wget https://github.com/helm/chart-testing/releases/download/v${CHART_TESTIN
   && rm -rf /tmp/ct-download
 
 RUN curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+RUN  curl -sSL -o /usr/local/bin/cfssl     https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssl_1.4.1_linux_amd64 \
+  && curl -sSL -o /usr/local/bin/cfssljson https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssljson_1.4.1_linux_amd64 \
+  && chmod +x /usr/local/bin/cfssl*
 
 WORKDIR $GOPATH

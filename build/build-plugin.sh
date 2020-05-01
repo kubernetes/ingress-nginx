@@ -62,7 +62,8 @@ function build_for_arch(){
       -X ${PKG}/version.REPO=${REPO_INFO}" \
     -o "${release}/kubectl-ingress_nginx${extension}" "${PKG}/cmd/plugin"
 
-    tar -C "${release}" -zcvf "${release}/kubectl-ingress_nginx-${os}-${arch}.tar.gz" "kubectl-ingress_nginx${extension}"
+    cp LICENSE ${release}
+    tar -C "${release}" -zcvf "${release}/kubectl-ingress_nginx-${os}-${arch}.tar.gz" "kubectl-ingress_nginx${extension}" LICENSE
     rm "${release}/kubectl-ingress_nginx${extension}"
     hash=$(sha256sum "${release}/kubectl-ingress_nginx-${os}-${arch}.tar.gz" | awk '{ print $1 }')
     sed -i "s/%%%shasum_${os}_${arch}%%%/${hash}/g" "${release}/ingress-nginx.yaml"

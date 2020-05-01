@@ -39,6 +39,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 
@@ -171,7 +172,6 @@ var (
 		"proxySetHeader":                     proxySetHeader,
 		"buildInfluxDB":                      buildInfluxDB,
 		"enforceRegexModifier":               enforceRegexModifier,
-		"stripLocationModifer":               stripLocationModifer,
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
@@ -373,10 +373,6 @@ func needsRewrite(location *ingress.Location) bool {
 	return false
 }
 
-func stripLocationModifer(path string) string {
-	return strings.TrimLeft(path, "~* ")
-}
-
 // enforceRegexModifier checks if the "rewrite-target" or "use-regex" annotation
 // is used on any location path within a server
 func enforceRegexModifier(input interface{}) bool {
@@ -407,6 +403,11 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	if enforceRegex {
 		return fmt.Sprintf(`~* "^%s"`, path)
 	}
+
+	if location.PathType != nil && *location.PathType == networkingv1beta1.PathTypeExact {
+		return fmt.Sprintf(`= %s`, path)
+	}
+
 	return path
 }
 
@@ -557,7 +558,6 @@ rewrite "(?i)%s" %s break;
 	return defProxyPass
 }
 
-// TODO: Needs Unit Tests
 func filterRateLimits(input interface{}) []ratelimit.Config {
 	ratelimits := []ratelimit.Config{}
 	found := sets.String{}
@@ -578,7 +578,6 @@ func filterRateLimits(input interface{}) []ratelimit.Config {
 	return ratelimits
 }
 
-// TODO: Needs Unit Tests
 // buildRateLimitZones produces an array of limit_conn_zone in order to allow
 // rate limiting of request. Each Ingress rule could have up to three zones, one
 // for connection limit by IP address, one for limiting requests per minute, and
@@ -1345,26 +1344,21 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 
 func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Location) string {
 	isMSEnabledInLoc := location.ModSecurity.Enable
+	isMSEnableSetInLoc := location.ModSecurity.EnableSet
 	isMSEnabled := cfg.EnableModsecurity
 
 	if !isMSEnabled && !isMSEnabledInLoc {
 		return ""
 	}
 
-	if !isMSEnabledInLoc {
-		return ""
+	if isMSEnableSetInLoc && !isMSEnabledInLoc {
+		return "modsecurity off;"
 	}
 
 	var buffer bytes.Buffer
 
 	if !isMSEnabled {
 		buffer.WriteString(`modsecurity on;
-modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-`)
-	}
-
-	if !cfg.EnableOWASPCoreRules && location.ModSecurity.OWASPRules {
-		buffer.WriteString(`modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
 `)
 	}
 
@@ -1378,6 +1372,16 @@ modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
 	if location.ModSecurity.TransactionID != "" {
 		buffer.WriteString(fmt.Sprintf(`modsecurity_transaction_id "%v";
 `, location.ModSecurity.TransactionID))
+	}
+
+	if !isMSEnabled {
+		buffer.WriteString(`modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+`)
+	}
+
+	if !cfg.EnableOWASPCoreRules && location.ModSecurity.OWASPRules {
+		buffer.WriteString(`modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+`)
 	}
 
 	return buffer.String()

@@ -51,7 +51,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-fromto-www)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
@@ -103,13 +103,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/lua-resty-waf](#lua-resty-waf)|string|
-|[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
-|[nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules](#lua-resty-waf)|string|
-|[nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types](#lua-resty-waf)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold](#lua-resty-waf)|number|
-|[nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-influxdb](#influxdb)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/influxdb-measurement](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
@@ -695,67 +688,6 @@ To add the non-standard `X-Forwarded-Prefix` header to the upstream request with
 ```yaml
 nginx.ingress.kubernetes.io/x-forwarded-prefix: "/path"
 ```
-
-### Lua Resty WAF
-
-Using `lua-resty-waf-*` annotations we can enable and control the [lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf)
-Web Application Firewall per location.
-
-Following configuration will enable the WAF for the paths defined in the corresponding ingress:
-
-```yaml
-nginx.ingress.kubernetes.io/lua-resty-waf: "active"
-```
-
-In order to run it in debugging mode you can set `nginx.ingress.kubernetes.io/lua-resty-waf-debug` to `"true"` in addition to the above configuration.
-The other possible values for `nginx.ingress.kubernetes.io/lua-resty-waf` are `inactive` and `simulate`.
-In `inactive` mode WAF won't do anything, whereas in `simulate` mode it will log a warning message if there's a matching WAF rule for given request. This is useful to debug a rule and eliminate possible false positives before fully deploying it.
-
-`lua-resty-waf` comes with predefined set of rules [https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules](https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules) that covers ModSecurity CRS.
-You can use `nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets` to ignore a subset of those rulesets. For an example:
-
-```yaml
-nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets: "41000_sqli, 42000_xss"
-```
-
-will ignore the two mentioned rulesets.
-
-It is also possible to configure custom WAF rules per ingress using the `nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules` annotation. For an example the following snippet will configure a WAF rule to deny requests with query string value that contains word `foo`:
-
-
-```yaml
-nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules: '[=[ { "access": [ { "actions": { "disrupt" : "DENY" }, "id": 10001, "msg": "my custom rule", "operator": "STR_CONTAINS", "pattern": "foo", "vars": [ { "parse": [ "values", 1 ], "type": "REQUEST_ARGS" } ] } ], "body_filter": [], "header_filter":[] } ]=]'
-```
-
-Since the default allowed contents were `"text/html", "text/json", "application/json"`
-We can enable the following annotation for allow all contents type:
-
-
-```yaml
-nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types: "true"
-```
-
-The default score of lua-resty-waf is 5, which usually triggered if hitting 2 default rules, you can modify the score threshold with following annotation:
-
-
-```yaml
-nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold: "10"
-```
-
-When you enabled HTTPS in the endpoint and since resty-lua will return 500 error when processing "multipart" contents
-Reference for this [issue](https://github.com/p0pr0ck5/lua-resty-waf/issues/166)
-
-By default, it will be "true"
-
-You may enable the following annotation for work around:
-
-```yaml
-nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body: "false"
-```
-
-For details on how to write WAF rules, please refer to [https://github.com/p0pr0ck5/lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf).
-
-[configmap]: ./configmap.md
 
 ### ModSecurity
 

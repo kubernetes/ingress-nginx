@@ -17,6 +17,7 @@ limitations under the License.
 package lua
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -175,11 +176,11 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 				return true
 			})
 
-			ingress, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get("foo.com", metav1.GetOptions{})
+			ingress, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), "foo.com", metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
-			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(ingress)
+			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			f.HTTPTestClient().

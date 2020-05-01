@@ -26,6 +26,7 @@ import (
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -98,7 +99,8 @@ type Configuration struct {
 	ValidationWebhookCertPath string
 	ValidationWebhookKeyPath  string
 
-	GlobalExternalAuth *ngx_config.GlobalExternalAuth
+	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
+	MaxmindEditionFiles []string
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -197,23 +199,18 @@ func (n *NGINXController) syncIngress(interface{}) error {
 // CheckIngress returns an error in case the provided ingress, when added
 // to the current configuration, generates an invalid configuration
 func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
-	//TODO: this is wrong
-	if n == nil {
-		return fmt.Errorf("cannot check ingress on a nil ingress controller")
-	}
-
 	if ing == nil {
 		// no ingress to add, no state change
 		return nil
 	}
 
 	if !class.IsValid(ing) {
-		klog.Infof("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
+		klog.Warningf("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
 		return nil
 	}
 
 	if n.cfg.Namespace != "" && ing.ObjectMeta.Namespace != n.cfg.Namespace {
-		klog.Infof("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
+		klog.Warningf("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
 		return nil
 	}
 
@@ -221,6 +218,8 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return toCheck.ObjectMeta.Namespace == ing.ObjectMeta.Namespace &&
 			toCheck.ObjectMeta.Name == ing.ObjectMeta.Name
 	}
+
+	k8s.SetDefaultNGINXPathType(ing)
 
 	ings := n.store.ListIngresses(filter)
 	ings = append(ings, &ingress.Ingress{
@@ -530,6 +529,12 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				addLoc := true
 				for _, loc := range server.Locations {
 					if loc.Path == nginxPath {
+						// Same paths but different types are allowed
+						// (same type means overlap in the path definition)
+						if !apiequality.Semantic.DeepEqual(loc.PathType, path.PathType) {
+							break
+						}
+
 						addLoc = false
 
 						if !loc.IsDefBackend {
@@ -546,6 +551,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						loc.Port = ups.Port
 						loc.Service = ups.Service
 						loc.Ingress = ing
+
 						locationApplyAnnotations(loc, anns)
 
 						if loc.Redirect.FromToWWW {
@@ -559,9 +565,9 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				if addLoc {
 					klog.V(3).Infof("Adding location %q for server %q with upstream %q (Ingress %q)",
 						nginxPath, server.Hostname, ups.Name, ingKey)
-
 					loc := &ingress.Location{
 						Path:         nginxPath,
+						PathType:     path.PathType,
 						Backend:      ups.Name,
 						IsDefBackend: false,
 						Service:      ups.Service,
@@ -956,12 +962,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	}
 
 	// initialize default server and root location
+	pathTypePrefix := networking.PathTypePrefix
 	servers[defServerName] = &ingress.Server{
 		Hostname: defServerName,
 		SSLCert:  n.getDefaultSSLCertificate(),
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
+				PathType:     &pathTypePrefix,
 				IsDefBackend: true,
 				Backend:      du.Name,
 				Proxy:        ngxProxy,
@@ -1028,8 +1036,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				continue
 			}
 
+			pathTypePrefix := networking.PathTypePrefix
 			loc := &ingress.Location{
 				Path:         rootLocation,
+				PathType:     &pathTypePrefix,
 				IsDefBackend: true,
 				Backend:      un,
 				Service:      &apiv1.Service{},
@@ -1065,7 +1075,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 			if len(servers[host].Aliases) == 0 {
 				servers[host].Aliases = anns.Aliases
-				if _, ok := allAliases[host]; !ok {
+				if aliases := allAliases[host]; len(aliases) == 0 {
 					allAliases[host] = anns.Aliases
 				}
 			} else {
@@ -1314,7 +1324,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					break
 				}
 
-				if canMergeBackend(priUps, altUps) && loc.Path == path.Path {
+				if canMergeBackend(priUps, altUps) && loc.Path == path.Path && *loc.PathType == *path.PathType {
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
@@ -1340,9 +1350,12 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 	}
 
 	// naively return Secret name from TLS spec if host name matches
+	lowercaseHost := toLowerCaseASCII(host)
 	for _, tls := range ing.Spec.TLS {
-		if sets.NewString(tls.Hosts...).Has(host) {
-			return tls.SecretName
+		for _, tlsHost := range tls.Hosts {
+			if toLowerCaseASCII(tlsHost) == lowercaseHost {
+				return tls.SecretName
+			}
 		}
 	}
 

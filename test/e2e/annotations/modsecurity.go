@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo"
@@ -103,5 +104,116 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 				return strings.Contains(server, "modsecurity on;") &&
 					strings.Contains(server, "SecRuleEngine On")
 			})
+	})
+
+	ginkgo.It("should enable modsecurity without using 'modsecurity on;'", func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"enable-modsecurity": "true"},
+		)
+
+		host := "modsecurity.foo.com"
+		nameSpace := f.Namespace
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-modsecurity": "true",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return !strings.Contains(server, "modsecurity on;") &&
+					!strings.Contains(server, "modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;")
+			})
+	})
+
+	ginkgo.It("should disable modsecurity using 'modsecurity off;'", func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"enable-modsecurity": "true"},
+		)
+
+		host := "modsecurity.foo.com"
+		nameSpace := f.Namespace
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-modsecurity": "false",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "modsecurity off;")
+			})
+	})
+
+	ginkgo.It("should enable modsecurity with snippet and block requests", func() {
+		host := "modsecurity.foo.com"
+		nameSpace := f.Namespace
+
+		snippet := `SecRuleEngine On
+		SecRequestBodyAccess On
+		SecAuditEngine RelevantOnly
+		SecAuditLogParts ABIJDEFHZ
+		SecAuditLog /dev/stdout
+		SecAuditLogType Serial
+		SecRule REQUEST_HEADERS:User-Agent \"block-ua\" \"log,deny,id:107,status:403,msg:\'UA blocked\'\"`
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-modsecurity":  "true",
+			"nginx.ingress.kubernetes.io/modsecurity-snippet": snippet,
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "modsecurity on;") &&
+					strings.Contains(server, "SecRuleEngine On")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("User-Agent", "block-ua").
+			Expect().
+			Status(http.StatusForbidden)
+	})
+
+	ginkgo.It("should enable modsecurity globally and with modsecurity-snippet block requests", func() {
+		host := "modsecurity.foo.com"
+		nameSpace := f.Namespace
+
+		snippet := `SecRuleEngine On
+		SecRequestBodyAccess On
+		SecAuditEngine RelevantOnly
+		SecAuditLogParts ABIJDEFHZ
+		SecAuditLog /dev/stdout
+		SecAuditLogType Serial
+		SecRule REQUEST_HEADERS:User-Agent \"block-ua\" \"log,deny,id:107,status:403,msg:\'UA blocked\'\"`
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/modsecurity-snippet": snippet,
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.UpdateNginxConfigMapData("enable-modsecurity", "true")
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "SecRuleEngine On")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("User-Agent", "block-ua").
+			Expect().
+			Status(http.StatusForbidden)
 	})
 })

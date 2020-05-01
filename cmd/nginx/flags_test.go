@@ -43,7 +43,11 @@ func TestDefaults(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--default-backend-service", "namespace/test", "--http-port", "0", "--https-port", "0"}
+	os.Args = []string{"cmd",
+		"--default-backend-service", "namespace/test",
+		"--http-port", "0",
+		"--https-port", "0",
+	}
 
 	showVersion, conf, err := parseFlags()
 	if err != nil {
@@ -69,6 +73,19 @@ func TestFlagConflict(t *testing.T) {
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--publish-status-address", "1.1.1.1"}
+
+	_, _, err := parseFlags()
+	if err == nil {
+		t.Fatalf("Expected an error parsing flags but none returned")
+	}
+}
+
+func TestMaxmindEdition(t *testing.T) {
+	resetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City, TestCheck"}
 
 	_, _, err := parseFlags()
 	if err == nil {

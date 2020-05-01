@@ -53,8 +53,6 @@ local function a_records_and_min_ttl(answers)
 end
 
 local function resolve_host_for_qtype(r, host, qtype)
-  ngx_log(ngx_INFO, string_format("resolving %s with qtype %s", host, qtype))
-
   local answers, err = r:query(host, { qtype = qtype }, {})
   if not answers then
     return nil, -1, err

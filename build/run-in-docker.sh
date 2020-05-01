@@ -34,7 +34,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v03062020-7b6e2dd31
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v04212020-5d67794f4
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 
@@ -43,7 +43,10 @@ KUBE_ROOT=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 FLAGS=$@
 
 PKG=k8s.io/ingress-nginx
-ARCH=$(go env GOARCH)
+ARCH=${ARCH:-}
+if [[ -z "$ARCH" ]]; then
+  ARCH=$(go env GOARCH)
+fi
 
 # create output directory as current user to avoid problem with docker.
 mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"

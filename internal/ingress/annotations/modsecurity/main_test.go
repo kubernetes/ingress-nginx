@@ -41,22 +41,22 @@ func TestParse(t *testing.T) {
 		annotations map[string]string
 		expected    Config
 	}{
-		{map[string]string{enable: "true"}, Config{true, false, "", ""}},
-		{map[string]string{enable: "false"}, Config{false, false, "", ""}},
-		{map[string]string{enable: ""}, Config{false, false, "", ""}},
+		{map[string]string{enable: "true"}, Config{true, true, false, "", ""}},
+		{map[string]string{enable: "false"}, Config{false, true, false, "", ""}},
+		{map[string]string{enable: ""}, Config{false, false, false, "", ""}},
 
-		{map[string]string{owasp: "true"}, Config{false, true, "", ""}},
-		{map[string]string{owasp: "false"}, Config{false, false, "", ""}},
-		{map[string]string{owasp: ""}, Config{false, false, "", ""}},
+		{map[string]string{owasp: "true"}, Config{false, false, true, "", ""}},
+		{map[string]string{owasp: "false"}, Config{false, false, false, "", ""}},
+		{map[string]string{owasp: ""}, Config{false, false, false, "", ""}},
 
-		{map[string]string{transID: "ok"}, Config{false, false, "ok", ""}},
-		{map[string]string{transID: ""}, Config{false, false, "", ""}},
+		{map[string]string{transID: "ok"}, Config{false, false, false, "ok", ""}},
+		{map[string]string{transID: ""}, Config{false, false, false, "", ""}},
 
-		{map[string]string{snippet: "ModSecurity Rule"}, Config{false, false, "", "ModSecurity Rule"}},
-		{map[string]string{snippet: ""}, Config{false, false, "", ""}},
+		{map[string]string{snippet: "ModSecurity Rule"}, Config{false, false, false, "", "ModSecurity Rule"}},
+		{map[string]string{snippet: ""}, Config{false, false, false, "", ""}},
 
-		{map[string]string{}, Config{false, false, "", ""}},
-		{nil, Config{false, false, "", ""}},
+		{map[string]string{}, Config{false, false, false, "", ""}},
+		{nil, Config{false, false, false, "", ""}},
 	}
 
 	ing := &networking.Ingress{

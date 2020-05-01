@@ -1,9 +1,6 @@
-|![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Warning.svg/156px-Warning.svg.png) | Work in progress. Please do not use it until we release an official version. |
-|---|---|
-
 # ingress-nginx
 
-[ingress-nginx](https://github.com/kubernetes/ingress-nginx) is an Ingress controller that uses ConfigMap to store the nginx configuration.
+[ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
 To use, add the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -11,7 +8,7 @@ To use, add the `kubernetes.io/ingress.class: nginx` annotation to your Ingress 
 
 ```console
 $ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-$ helm install ingress-nginx
+$ helm install my-release ingress-nginx/ingress-nginx
 ```
 
 ## Introduction
@@ -27,7 +24,7 @@ This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kuber
 To install the chart with the release name `my-release`:
 
 ```console
-$ helm install --name my-release ingress-nginx
+$ helm install --name my-release ingress-nginx/ingress-nginx
 ```
 
 The command deploys ingress-nginx on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -59,7 +56,6 @@ Parameter | Description | Default
 `controller.config` | nginx [ConfigMap](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md) entries | none
 `controller.configAnnotations` | annotations to be added to controller custom configuration configmap | `{}`
 `controller.hostNetwork` | If the nginx deployment / daemonset should run on the host's network namespace. Do not set this when `controller.service.externalIPs` is set and `kube-proxy` is used as there will be a port-conflict for port `80` | false
-`controller.defaultBackendService` | default 404 backend service; needed only if `defaultBackend.enabled = false` and version < 0.21.0| `""`
 `controller.dnsPolicy` | If using `hostNetwork=true`, change to `ClusterFirstWithHostNet`. See [pod's dns policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy) for details | `ClusterFirst`
 `controller.dnsConfig` | custom pod dnsConfig. See [pod's dns config](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-config) for details | `{}`
 `controller.reportNodeInternalIp` | If using `hostNetwork=true`, setting `reportNodeInternalIp=true`, will pass the flag `report-node-internal-ip-address` to ingress-nginx. This sets the status of all Ingress objects to the internal IP address of all nodes running the NGINX Ingress controller.
@@ -69,21 +65,22 @@ Parameter | Description | Default
 `controller.extraVolumeMounts` | Additional volumeMounts to the controller main container | `{}`
 `controller.extraVolumes` | Additional volumes to the controller pod | `{}`
 `controller.extraInitContainers` | Containers, which are run before the app containers are started | `[]`
+`controller.healthCheckPath` | Path of the health check endpoint. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. | `/healthz"`
 `controller.ingressClass` | name of the ingress class to route through this controller | `nginx`
 `controller.maxmindLicenseKey` | Maxmind license key to download GeoLite2 Databases. See [Accessing and using GeoLite2 database](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) | `""`
 `controller.scope.enabled` | limit the scope of the ingress controller | `false` (watch all namespaces)
 `controller.scope.namespace` | namespace to watch for ingress | `""` (use the release namespace)
 `controller.extraArgs` | Additional controller container arguments | `{}`
 `controller.kind` | install as Deployment, DaemonSet or Both | `Deployment`
-`controller.deploymentAnnotations` | annotations to be added to deployment | `{}`
+`controller.annotations` | annotations to be added to the Deployment or Daemonset | `{}`
 `controller.autoscaling.enabled` | If true, creates Horizontal Pod Autoscaler | false
 `controller.autoscaling.minReplicas` | If autoscaling enabled, this field sets minimum replica count | `2`
 `controller.autoscaling.maxReplicas` | If autoscaling enabled, this field sets maximum replica count | `11`
 `controller.autoscaling.targetCPUUtilizationPercentage` | Target CPU utilization percentage to scale | `"50"`
 `controller.autoscaling.targetMemoryUtilizationPercentage` | Target memory utilization percentage to scale | `"50"`
-`controller.daemonset.useHostPort` | If `controller.kind` is `DaemonSet`, this will enable `hostPort` for TCP/80 and TCP/443 | false
-`controller.daemonset.hostPorts.http` | If `controller.daemonset.useHostPort` is `true` and this is non-empty, it sets the hostPort | `"80"`
-`controller.daemonset.hostPorts.https` | If `controller.daemonset.useHostPort` is `true` and this is non-empty, it sets the hostPort | `"443"`
+`controller.hostPort.enabled` | This enable `hostPort` for ports defined in TCP/80 and TCP/443 | false
+`controller.hostPort.ports.http` | If `controller.hostPort.enabled` is `true` and this is non-empty, it sets the hostPort | `"80"`
+`controller.hostPort.ports.https` | If `controller.hostPort.enabled` is `true` and this is non-empty, it sets the hostPort | `"443"`
 `controller.tolerations` | node taints to tolerate (requires Kubernetes >=1.6) | `[]`
 `controller.affinity` | node/pod affinities (requires Kubernetes >=1.6) | `{}`
 `controller.terminationGracePeriodSeconds` | how many seconds to wait before terminating a pod | `60`
@@ -101,7 +98,7 @@ Parameter | Description | Default
 `controller.service.labels` | labels for controller service | `{}`
 `controller.publishService.enabled` | if true, the controller will set the endpoint records on the ingress objects to reflect those on the service | `false`
 `controller.publishService.pathOverride` | override of the default publish-service name | `""`
-`controller.service.enabled` | if disabled no service will be created. This is especially useful when `controller.kind` is set to `DaemonSet` and `controller.daemonset.useHostPorts` is `true` | true
+`controller.service.enabled` | if disabled no service will be created. This is especially useful when `controller.kind` is set to `DaemonSet` and `controller.hostPorts.enabled` is `true` | true
 `controller.service.clusterIP` | internal controller cluster service IP (set to `"-"` to pass an empty value) | `nil`
 `controller.service.omitClusterIP` | (Deprecated) To omit the `clusterIP` from the controller service | `false`
 `controller.service.externalIPs` | controller service external IP addresses. Do not set this when `controller.hostNetwork` is set to `true` and `kube-proxy` is used as there will be a port-conflict for port `80` | `[]`
@@ -153,9 +150,9 @@ Parameter | Description | Default
 `controller.metrics.prometheusRule.additionalLabels` | Additional labels that can be used so prometheusRules will be discovered by Prometheus | `{}`
 `controller.metrics.prometheusRule.namespace` | namespace where prometheusRules resource should be created | `the same namespace as nginx ingress`
 `controller.metrics.prometheusRule.rules` | [rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) to be prometheus in YAML format, check values for an example. | `[]`
-`controller.admissionWebhooks.enabled` | Create Ingress admission webhooks. Validating webhook will check the ingress syntax. | `false`
+`controller.admissionWebhooks.enabled` | Create Ingress admission webhooks. Validating webhook will check the ingress syntax. | `true`
 `controller.admissionWebhooks.failurePolicy` | Failure policy for admission webhooks | `Fail`
-`controller.admissionWebhooks.port` | Admission webhook port | `8080`
+`controller.admissionWebhooks.port` | Admission webhook port | `8443`
 `controller.admissionWebhooks.service.annotations` | Annotations for admission webhook service | `{}`
 `controller.admissionWebhooks.service.omitClusterIP` | (Deprecated) To omit the `clusterIP` from the admission webhook service | `false`
 `controller.admissionWebhooks.service.clusterIP` | cluster IP address to assign to admission webhook service (set to `"-"` to pass an empty value) | `nil`
@@ -166,7 +163,7 @@ Parameter | Description | Default
 `controller.admissionWebhooks.service.type` | Type of admission webhook service to create | `ClusterIP`
 `controller.admissionWebhooks.patch.enabled` | If true, will use a pre and post install hooks to generate a CA and certificate to use for the prometheus operator tls proxy, and patch the created webhooks with the CA. | `true`
 `controller.admissionWebhooks.patch.image.repository` | Repository to use for the webhook integration jobs | `jettech/kube-webhook-certgen`
-`controller.admissionWebhooks.patch.image.tag` |  Tag to use for the webhook integration jobs | `v1.0.0`
+`controller.admissionWebhooks.patch.image.tag` |  Tag to use for the webhook integration jobs | `v1.2.0`
 `controller.admissionWebhooks.patch.image.pullPolicy` | Image pull policy for the webhook integration jobs | `IfNotPresent`
 `controller.admissionWebhooks.patch.priorityClassName` | Priority class for the webhook integration jobs | `""`
 `controller.admissionWebhooks.patch.podAnnotations` | Annotations for the webhook job pods | `{}`
@@ -182,7 +179,7 @@ Parameter | Description | Default
 `controller.tcp.annotations` | annotations to be added to tcp configmap | `{}`
 `controller.udp.configMapNamespace` | The udp-services-configmap namespace name | `""`
 `controller.udp.annotations` | annotations to be added to udp configmap | `{}`
-`defaultBackend.enabled` | Use default backend component | `true`
+`defaultBackend.enabled` | Use default backend component | `false`
 `defaultBackend.image.repository` | default backend container image repository | `k8s.gcr.io/defaultbackend-amd64`
 `defaultBackend.image.tag` | default backend container image tag | `1.5`
 `defaultBackend.image.pullPolicy` | default backend container image pull policy | `IfNotPresent`
@@ -316,6 +313,7 @@ controller:
 ## Ingress Admission Webhooks
 
 With nginx-ingress-controller version 0.25+, the nginx ingress controller pod exposes an endpoint that will integrate with the `validatingwebhookconfiguration` Kubernetes feature to prevent bad ingress from being added to the cluster.
+**This feature is enabled by default since 0.31.0.**
 
 With nginx-ingress-controller in 0.25.* work only with kubernetes 1.14+, 0.26 fix [this issue](https://github.com/kubernetes/ingress-nginx/pull/4521)
 

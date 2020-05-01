@@ -61,7 +61,7 @@ echo "[dev-env] building container"
 make build container
 docker tag "${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG}" "${DEV_IMAGE}"
 
-export K8S_VERSION=${K8S_VERSION:-v1.17.2@sha256:59df31fc61d1da5f46e8a61ef612fa53d3f9140f82419d1ef1a6b9656c6b737c}
+export K8S_VERSION=${K8S_VERSION:-v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694}
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
@@ -69,7 +69,7 @@ KIND_CLUSTER_NAME="ingress-nginx-dev"
 
 if ! kind get clusters -q | grep -q ${KIND_CLUSTER_NAME}; then
 echo "[dev-env] creating Kubernetes cluster with kind"
-cat <<EOF | kind create cluster --name ${KIND_CLUSTER_NAME} --config=-
+cat <<EOF | kind create cluster --name ${KIND_CLUSTER_NAME} --image "kindest/node:${K8S_VERSION}" --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
@@ -107,25 +107,16 @@ controller:
   config:
     worker-processes: "1"
   podLabels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
     deploy-date: "$(date +%s)"
-  service:
-    labels:
-      app.kubernetes.io/name: ingress-nginx
-      app.kubernetes.io/part-of: ingress-nginx
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
-  # change this when deployment supports hostPort without kubectl patch
-  kind: DaemonSet
-  daemonset:
-    useHostPort: true
+  hostPort:
+    enabled: true
   terminationGracePeriodSeconds: 0
-
-defaultBackend:
-  enabled: false
+  service:
+    type: NodePort
 EOF
 
 cat <<EOF

@@ -60,8 +60,7 @@ Help up us (if possible) reproducing the issue using minikube or kind.
 
 ## Install the ingress controller
 
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/deploy.yaml
 
 ## Install an application that will act as default backend (is just an echo app)
 

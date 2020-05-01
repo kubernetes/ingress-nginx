@@ -15,10 +15,6 @@
 # Add the following 'help' target to your Makefile
 # And add help text after each target name starting with '\#\#'
 
-ifeq ($(shell which go >/dev/null 2>&1; echo $$?), 1)
-    $(error Can't find 'go' in PATH, please fix and retry. See http://golang.org/doc/install for installation instructions.)
-endif
-
 .DEFAULT_GOAL:=help
 
 .EXPORT_ALL_VARIABLES:
@@ -31,7 +27,7 @@ endif
 SHELL=/bin/bash -o pipefail -o errexit
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.30.0
+TAG ?= 0.31.1
 
 # Use docker to run makefile tasks
 USE_DOCKER ?= true
@@ -46,7 +42,7 @@ endif
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 10
+E2E_NODES ?= 14
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
 # run e2e test suite with tests that check for memory leaks? (default is false)
@@ -57,14 +53,16 @@ GIT_COMMIT ?= git-$(shell git rev-parse --short HEAD)
 
 PKG = k8s.io/ingress-nginx
 
-BUSTED_ARGS =-v --pattern=_test
-
-ARCH ?= $(shell go env GOARCH)
+HOST_ARCH = $(shell which go >/dev/null 2>&1 && go env GOARCH)
+ARCH ?= $(HOST_ARCH)
+ifeq ($(ARCH),)
+    $(error mandatory variable ARCH is empty, either set it when calling the command or make sure 'go env GOARCH' works)
+endif
 
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx
-BASE_TAG ?= 7b6e2dd312f1808e43fb39992ea814035557c7f3
+BASE_TAG ?= 5d67794f4fbf38ec6575476de46201b068eabf87
 
 GOARCH=$(ARCH)
 GOBUILD_FLAGS := -v
@@ -125,6 +123,14 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
 	docker push $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG)
+
+.PHONY: push-manifest
+push-manifest:
+	docker manifest create $(REGISTRY)/nginx-ingress-controller:$(TAG) \
+		$(REGISTRY)/nginx-ingress-controller-amd64:$(TAG) \
+		$(REGISTRY)/nginx-ingress-controller-arm:$(TAG) \
+		$(REGISTRY)/nginx-ingress-controller-arm64:$(TAG)
+	docker manifest push --purge $(REGISTRY)/nginx-ingress-controller:$(TAG)
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
@@ -249,12 +255,7 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
-	@docker buildx build \
-		--pull \
-		--load \
-		--progress plain \
-		-t ingress-nginx/mkdocs images/mkdocs
-	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
+	@docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material:5.1.0
 
 .PHONY: misspell
 misspell: check-go-version ## Check for spelling errors.
@@ -268,13 +269,22 @@ misspell: check-go-version ## Check for spelling errors.
 kind-e2e-test: check-go-version ## Run e2e tests using kind.
 	@test/e2e/run.sh
 
+.PHONY: kind-e2e-chart-tests
+kind-e2e-chart-tests: ## Run helm chart e2e tests
+	@test/e2e/run-chart-test.sh
+
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
 	@build/run-ingress-controller.sh
 
 .PHONY: check-go-version
 check-go-version:
+ifeq ($(USE_DOCKER), true)
+	@build/run-in-docker.sh \
+		hack/check-go-version.sh
+else
 	@hack/check-go-version.sh
+endif
 
 .PHONY: init-docker-buildx
 init-docker-buildx:
@@ -286,3 +296,7 @@ endif
 	docker buildx create --name ingress-nginx --use || true
 	docker buildx inspect --bootstrap
 endif
+
+.PHONY: show-version
+show-version:
+	echo -n $(TAG)

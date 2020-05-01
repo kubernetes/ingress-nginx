@@ -18,6 +18,7 @@ package store
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -252,7 +253,7 @@ func TestStore(t *testing.T) {
 		// Secret takes a bit to update
 		time.Sleep(3 * time.Second)
 
-		err = clientSet.NetworkingV1beta1().Ingresses(ni.Namespace).Delete(ni.Name, &metav1.DeleteOptions{})
+		err = clientSet.NetworkingV1beta1().Ingresses(ni.Namespace).Delete(context.TODO(), ni.Name, metav1.DeleteOptions{})
 		if err != nil {
 			t.Errorf("error creating ingress: %v", err)
 		}
@@ -451,7 +452,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected 0 events of type Delete but %v occurred", del)
 		}
 
-		err = clientSet.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{})
+		err = clientSet.CoreV1().Secrets(ns).Delete(context.TODO(), secretName, metav1.DeleteOptions{})
 		if err != nil {
 			t.Errorf("error deleting secret: %v", err)
 		}
@@ -565,7 +566,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected 1 events of type Update but %v occurred", upd)
 		}
 
-		err = clientSet.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{})
+		err = clientSet.CoreV1().Secrets(ns).Delete(context.TODO(), secretName, metav1.DeleteOptions{})
 		if err != nil {
 			t.Errorf("error deleting secret: %v", err)
 		}
@@ -707,7 +708,7 @@ func createNamespace(clientSet kubernetes.Interface, t *testing.T) string {
 		},
 	}
 
-	ns, err := clientSet.CoreV1().Namespaces().Create(namespace)
+	ns, err := clientSet.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 	if err != nil {
 		t.Errorf("error creating the namespace: %v", err)
 	}
@@ -718,7 +719,7 @@ func createNamespace(clientSet kubernetes.Interface, t *testing.T) string {
 func deleteNamespace(ns string, clientSet kubernetes.Interface, t *testing.T) {
 	t.Helper()
 
-	err := clientSet.CoreV1().Namespaces().Delete(ns, &metav1.DeleteOptions{})
+	err := clientSet.CoreV1().Namespaces().Delete(context.TODO(), ns, metav1.DeleteOptions{})
 	if err != nil {
 		t.Errorf("error deleting the namespace: %v", err)
 	}
@@ -733,7 +734,7 @@ func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) st
 		},
 	}
 
-	cm, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
+	cm, err := clientSet.CoreV1().ConfigMaps(ns).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		t.Errorf("error creating the configuration map: %v", err)
 	}
@@ -743,13 +744,13 @@ func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) st
 
 func ensureIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, t *testing.T) *networking.Ingress {
 	t.Helper()
-	ing, err := clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Update(ingress)
+	ing, err := clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
 
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			t.Logf("Ingress %v not found, creating", ingress)
 
-			ing, err = clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Create(ingress)
+			ing, err = clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Create(context.TODO(), ingress, metav1.CreateOptions{})
 			if err != nil {
 				t.Fatalf("error creating ingress %+v: %v", ingress, err)
 			}
@@ -766,7 +767,7 @@ func ensureIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, 
 
 func deleteIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, t *testing.T) {
 	t.Helper()
-	err := clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Delete(ingress.Name, &metav1.DeleteOptions{})
+	err := clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Delete(context.TODO(), ingress.Name, metav1.DeleteOptions{})
 
 	if err != nil {
 		t.Errorf("failed to delete ingress %+v: %v", ingress, err)

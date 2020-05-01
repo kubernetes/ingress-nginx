@@ -59,7 +59,7 @@ export TAG=1.0.0-dev
 export ARCH=amd64
 export REGISTRY=ingress-controller
 
-export K8S_VERSION=${K8S_VERSION:-v1.17.2@sha256:59df31fc61d1da5f46e8a61ef612fa53d3f9140f82419d1ef1a6b9656c6b737c}
+export K8S_VERSION=${K8S_VERSION:-v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694}
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
@@ -86,8 +86,9 @@ make -C ${DIR}/../../ e2e-test-image
 make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build container
 make -C ${DIR}/../../images/echo/ container
 make -C ${DIR}/../../images/httpbin/ container
+make -C ${DIR}/../../images/cfssl/ container
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?
-if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ]; 
+if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
 then
   echo "Image builds were ok! Log:"
   cat /tmp/log
@@ -105,18 +106,21 @@ docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx
 docker pull openresty/openresty:1.15.8.2-alpine
 docker pull moul/grpcbin
 
+KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
+
 echo "[dev-env] copying docker images to cluster..."
 export EXIT_CODE=-1
 echo "
-kind load docker-image --name="${KIND_CLUSTER_NAME}" nginx-ingress-controller:e2e
-kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/nginx-ingress-controller:${TAG}
-kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/fastcgi-helloserver:${TAG}
-kind load docker-image --name="${KIND_CLUSTER_NAME}" openresty/openresty:1.15.8.2-alpine
-kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/httpbin:${TAG}
-kind load docker-image --name="${KIND_CLUSTER_NAME}" ${REGISTRY}/echo:${TAG}
-kind load docker-image --name="${KIND_CLUSTER_NAME}" moul/grpcbin
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} nginx-ingress-controller:e2e
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/nginx-ingress-controller:${TAG}
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/fastcgi-helloserver:${TAG}
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} openresty/openresty:1.15.8.2-alpine
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/httpbin:${TAG}
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/echo:${TAG}
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} moul/grpcbin
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/cfssl:${TAG}
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?
-if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ]; 
+if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
 then
   echo "Image loads were ok! Log:"
   cat /tmp/log

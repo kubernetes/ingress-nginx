@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -89,7 +90,7 @@ var _ = framework.DescribeAnnotation("satisfy", func() {
 		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(framework.HTTPBinService, metav1.GetOptions{})
+		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		httpbinIP := e.Subsets[0].Addresses[0].IP
