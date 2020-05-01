@@ -8,6 +8,11 @@
 !!! warning
     If multiple Ingresses define paths for the same host, the ingress controller **merges the definitions**.
 
+!!! danger
+    The [admission webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) require conectivity between Kubernetes API server and the ingress controller.
+
+    In case [Network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) or additional firewalls, please allow access to port `8443`.
+
 ## Contents
 
 - [Provider Specific Steps](#provider-specific-steps)
@@ -121,11 +126,17 @@ More information with regards to timeouts for can be found in the [official AWS 
       --user $(gcloud config get-value account)
     ```
 
+!!! danger
+    For private clusters, you will need to either add an additional firewall rule that allows master nodes access port `8443/tcp` on worker nodes, or change the existing rule that allows access to ports `80/tcp`, `443/tcp` and `10254/tcp` to also allow access to port `8443/tcp`.
+
+    See the [GKE documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules) on adding rules and the [Kubernetes issue](https://github.com/kubernetes/kubernetes/issues/79739) for more detail.
+
+
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.31.1/deploy/static/provider/cloud/deploy.yaml
 ```
 
-!!! warning Important
+!!! failure Important
     Proxy protocol is not supported in GCE/GKE
 
 #### Azure
