@@ -94,6 +94,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           certificate = res
+          certificate.is_ocsp_stapling_enabled = {{ $cfg.EnableOCSP }}
         end
 
         ok, res = pcall(require, "plugins")
@@ -103,7 +104,7 @@ http {
           plugins = res
         end
         -- load all plugins that'll be used here
-        plugins.init({})
+        plugins.init({ {{ range  $idx, $plugin := $cfg.Plugins }}{{ if $idx }},{{ end }}{{ $plugin | quote }}{{ end }} })
     }
 
     init_worker_by_lua_block {
@@ -159,6 +160,8 @@ http {
     {{ if $cfg.UseGeoIP2 }}
     # https://github.com/leev/ngx_http_geoip2_module#example-usage
 
+    {{ range $index, $file := $all.MaxmindEditionFiles }}
+    {{ if eq $file "GeoLite2-City.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoLite2-City.mmdb {
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
@@ -171,11 +174,50 @@ http {
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
     }
+    {{ end }}
 
+    {{ if eq $file "GeoIP2-City.mmdb" }}
+    geoip2 /etc/nginx/geoip/GeoIP2-City.mmdb {
+        $geoip2_city_country_code source=$remote_addr country iso_code;
+        $geoip2_city_country_name source=$remote_addr country names en;
+        $geoip2_city source=$remote_addr city names en;
+        $geoip2_postal_code source=$remote_addr postal code;
+        $geoip2_dma_code source=$remote_addr location metro_code;
+        $geoip2_latitude source=$remote_addr location latitude;
+        $geoip2_longitude source=$remote_addr location longitude;
+        $geoip2_time_zone source=$remote_addr location time_zone;
+        $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
+        $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoLite2-ASN.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoLite2-ASN.mmdb {
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-ASN.mmdb" }}
+    geoip2 /etc/nginx/geoip/GeoIP2-ASN.mmdb {
+        $geoip2_asn source=$remote_addr autonomous_system_number;
+        $geoip2_org source=$remote_addr autonomous_system_organization;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-ISP.mmdb" }}
+    geoip2 /etc/nginx/geoip/GeoIP2-ISP.mmdb {
+        $geoip2_isp isp;
+        $geoip2_isp_org organization;
+    }
+    {{ end }}
+    {{ if eq $file "GeoIP2-Connection-Type.mmdb" }}
+    geoip2 /etc/nginx/geoip/GeoIP2-Connection-Type.mmdb {
+        $geoip2_connection_type connection_type;
+    }
+    {{ end }}
+    {{ end }}
+
     {{ end }}
 
     aio                 threads;
@@ -821,7 +863,7 @@ stream {
         proxy_ssl_verify_depth                  {{ $server.ProxySSL.VerifyDepth }};
         {{ if not (empty $server.ProxySSL.ProxySSLName) }}
         proxy_ssl_name                           {{ $server.ProxySSL.ProxySSLName }};
-        {{ end }}        
+        {{ end }}
         {{ end }}
 
         {{ if not (empty $server.ProxySSL.PemFileName) }}
@@ -855,9 +897,9 @@ stream {
         {{ $externalAuth = $all.Cfg.GlobalExternalAuth }}
         {{ end }}
 
-        {{ if not (empty $location.Rewrite.AppRoot)}}
+        {{ if not (empty $location.Rewrite.AppRoot) }}
         if ($uri = /) {
-            return 302 {{ $location.Rewrite.AppRoot }};
+            return 302 $scheme://$http_host{{ $location.Rewrite.AppRoot }};
         }
         {{ end }}
 
@@ -893,8 +935,9 @@ stream {
             set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
 
             proxy_pass_request_body     off;
-            proxy_set_header            Content-Length "";
-            proxy_set_header            X-Forwarded-Proto "";
+            proxy_set_header            Content-Length          "";
+            proxy_set_header            X-Forwarded-Proto       "";
+            proxy_set_header            X-Request-ID            $req_id;
 
             {{ if $externalAuth.Method }}
             proxy_method                {{ $externalAuth.Method }};
@@ -1094,12 +1137,6 @@ stream {
 
             {{ buildInfluxDB $location.InfluxDB }}
 
-            {{ if not (empty $location.Redirect.URL) }}
-            if ($uri ~* {{ stripLocationModifer $path }}) {
-                return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
-            }
-            {{ end }}
-
             {{ if isValidByteSize $location.Proxy.BodySize true }}
             client_max_body_size                    {{ $location.Proxy.BodySize }};
             {{ end }}
@@ -1223,6 +1260,10 @@ stream {
             {{- end -}}
             {{ range $k, $v := $location.FastCGI.Params }}
             fastcgi_param {{ $k }} {{ $v | quote }};
+            {{ end }}
+
+            {{ if not (empty $location.Redirect.URL) }}
+            return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
             {{ end }}
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}

@@ -67,7 +67,7 @@ echo ${docker_password} | docker login -u ${docker_username} --password-stdin qu
 curl -sL -o /usr/local/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 chmod +x /usr/local/bin/gimme
 
-eval "$(gimme 1.14)"
+eval "$(gimme 1.14.2)"
 
 export GOPATH="/tmp/go"
 
@@ -93,6 +93,5 @@ ARCH=amd64 make build container push
 ARCH=arm   make build container push
 ARCH=arm64 make build container push
 
-# Requires https://github.com/kubernetes/ingress-nginx/pull/4271
-#echo "Creating multi-arch images..."
-#make push-manifest
+echo "Creating multi-arch images..."
+make push-manifest

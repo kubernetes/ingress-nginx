@@ -17,6 +17,7 @@ limitations under the License.
 package framework
 
 import (
+	"context"
 	"time"
 
 	"github.com/onsi/ginkgo"
@@ -110,13 +111,13 @@ server {
 
 `
 
-	_, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(&corev1.ConfigMap{
+	_, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(context.TODO(), &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      SlowEchoService,
 			Namespace: f.Namespace,
 		},
 		Data: data,
-	})
+	}, metav1.CreateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
 
 	deployment := newDeployment(SlowEchoService, f.Namespace, "openresty/openresty:1.15.8.2-alpine", 80, 1,
@@ -366,24 +367,29 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 
 // DeleteDeployment deletes a deployment with a particular name and waits for the pods to be deleted
 func (f *Framework) DeleteDeployment(name string) error {
-	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(name, metav1.GetOptions{})
+	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
-	err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Delete(name, &metav1.DeleteOptions{})
+
+	grace := int64(0)
+	err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Delete(context.TODO(), name, metav1.DeleteOptions{
+		GracePeriodSeconds: &grace,
+	})
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting deployment")
-	return WaitForPodsDeleted(f.KubeClientSet, time.Second*60, f.Namespace, metav1.ListOptions{
+
+	return WaitForPodsDeleted(f.KubeClientSet, 2*time.Minute, f.Namespace, metav1.ListOptions{
 		LabelSelector: labelSelectorToString(d.Spec.Selector.MatchLabels),
 	})
 }
 
 // ScaleDeploymentToZero scales a deployment with a particular name and waits for the pods to be deleted
 func (f *Framework) ScaleDeploymentToZero(name string) {
-	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(name, metav1.GetOptions{})
+	d, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
 	assert.NotNil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
 
 	d.Spec.Replicas = NewInt32(0)
 
-	d, err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(d)
+	d, err = f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), d, metav1.UpdateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
 	assert.NotNil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
 

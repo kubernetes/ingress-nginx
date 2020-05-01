@@ -1,5 +1,5 @@
 {{- if and .Values.podSecurityPolicy.enabled .Values.defaultBackend.enabled -}}
-apiVersion: {{ template "podSecurityPolicy.apiVersion" . }}
+apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: {{ include "ingress-nginx.fullname" . }}-backend

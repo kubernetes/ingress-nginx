@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -83,7 +84,7 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		ing.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "OTHERCOOKIENAME"
 
-		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(ing)
+		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress")
 		time.Sleep(5 * time.Second)
 

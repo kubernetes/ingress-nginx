@@ -94,8 +94,6 @@ end
 
 local function sync_backend(backend)
   if not backend.endpoints or #backend.endpoints == 0 then
-    ngx.log(ngx.INFO, "there is no endpoint for backend ", backend.name,
-            ". Removing...")
     balancers[backend.name] = nil
     return
   end
@@ -250,11 +248,18 @@ local function get_balancer()
 end
 
 function _M.init_worker()
-  sync_backends() -- when worker starts, sync backends without delay
-  local _, err = ngx.timer.every(BACKENDS_SYNC_INTERVAL, sync_backends)
-  if err then
-    ngx.log(ngx.ERR, "error when setting up timer.every for sync_backends: ",
-            tostring(err))
+  -- when worker starts, sync backends without delay
+  -- we call it in timer because for endpoints that require
+  -- DNS resolution it needs to use socket which is not avalable in
+  -- init_worker phase
+  local ok, err = ngx.timer.at(0, sync_backends)
+  if not ok then
+    ngx.log(ngx.ERR, "failed to create timer: ", err)
+  end
+
+  ok, err = ngx.timer.every(BACKENDS_SYNC_INTERVAL, sync_backends)
+  if not ok then
+    ngx.log(ngx.ERR, "error when setting up timer.every for sync_backends: ", err)
   end
 end
 

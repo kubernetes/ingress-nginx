@@ -14,10 +14,4 @@ Before applying any objects, first apply the PSP permissions by running:
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/psp/psp.yaml
 ```
 
-Now that the pod security policy is applied, we can continue as usual by applying the
-[mandatory.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml)
-according to the [Installation Guide](../../deploy/index.md).
-
 Note: PSP permissions must be granted before to the creation of the Deployment and the ReplicaSet.
-If the Deployment or ReplicaSet already exist, they will receive the PSP permissions
-only after deleting them and reapplying mandatory.yaml.

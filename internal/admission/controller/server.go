@@ -36,7 +36,7 @@ var (
 // AdmissionController checks if an object
 // is allowed in the cluster
 type AdmissionController interface {
-	HandleAdmission(*v1beta1.AdmissionReview) error
+	HandleAdmission(*v1beta1.AdmissionReview)
 }
 
 // AdmissionControllerServer implements an HTTP server
@@ -58,18 +58,16 @@ func NewAdmissionControllerServer(ac AdmissionController) *AdmissionControllerSe
 
 // ServeHTTP implements http.Server method
 func (acs *AdmissionControllerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("handling admission controller request %s", r.URL.String())
-
 	review, err := parseAdmissionReview(acs.Decoder, r.Body)
 	if err != nil {
-		klog.Error("Can't decode request", err)
+		klog.Errorf("Unexpected error decoding request: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	acs.AdmissionController.HandleAdmission(review)
 	if err := writeAdmissionReview(w, review); err != nil {
-		klog.Error(err)
+		klog.Errorf("Unexpected returning admission review: %v", err)
 	}
 }
 

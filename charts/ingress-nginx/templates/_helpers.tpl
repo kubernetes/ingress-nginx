@@ -58,7 +58,7 @@ Create a default fully qualified default backend name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "ingress-nginx.defaultBackend.fullname" -}}
-{{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.defaultBackend.name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" (include "ingress-nginx.fullname" .) "defaultbackend" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -104,28 +104,6 @@ Create the name of the backend service account to use - only used when podsecuri
 {{- end -}}
 
 {{/*
-Return the appropriate apiVersion for deployment.
-*/}}
-{{- define "deployment.apiVersion" -}}
-{{- if semverCompare ">=1.9-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "apps/v1" -}}
-{{- else -}}
-{{- print "extensions/v1beta1" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return the appropriate apiVersion for daemonset.
-*/}}
-{{- define "daemonset.apiVersion" -}}
-{{- if semverCompare ">=1.9-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "apps/v1" -}}
-{{- else -}}
-{{- print "v1/beta2" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
 Return the appropriate apiGroup for PodSecurityPolicy.
 */}}
 {{- define "podSecurityPolicy.apiGroup" -}}
@@ -137,12 +115,10 @@ Return the appropriate apiGroup for PodSecurityPolicy.
 {{- end -}}
 
 {{/*
-Return the appropriate apiVersion for podSecurityPolicy.
+Check the ingress controller version tag is at most three versions behind the last release
 */}}
-{{- define "podSecurityPolicy.apiVersion" -}}
-{{- if semverCompare ">=1.10-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "policy/v1beta1" -}}
-{{- else -}}
-{{- print "extensions/v1beta1" -}}
+{{- define "isControllerTagValid" -}}
+{{- if not (semverCompare ">=0.27.0-0" .Values.controller.image.tag) -}}
+{{- fail "Controller container image tag should be 0.27.0 or higher" -}}
 {{- end -}}
 {{- end -}}

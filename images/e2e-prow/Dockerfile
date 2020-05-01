@@ -45,6 +45,7 @@ RUN apt-get update \
 ARG K8S_RELEASE
 ARG ETCD_VERSION
 ARG KIND_VERSION
+ARG GO_VERSION
 
 RUN curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl
@@ -62,7 +63,6 @@ RUN curl -sSL https://github.com/kubernetes-sigs/kind/releases/download/${KIND_V
     && chmod +x /usr/local/bin/kind
 
 # install go
-ENV GO_VERSION 1.14
 ENV GO_TARBALL "go${GO_VERSION}.linux-amd64.tar.gz"
 RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" \
     && tar xzf "${GO_TARBALL}" -C /usr/local \

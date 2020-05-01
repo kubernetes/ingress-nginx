@@ -29,12 +29,10 @@ import (
 
 type testAdmissionHandler struct{}
 
-func (testAdmissionHandler) HandleAdmission(ar *v1beta1.AdmissionReview) error {
+func (testAdmissionHandler) HandleAdmission(ar *v1beta1.AdmissionReview) {
 	ar.Response = &v1beta1.AdmissionResponse{
 		Allowed: true,
 	}
-
-	return nil
 }
 
 type errorReader struct{}

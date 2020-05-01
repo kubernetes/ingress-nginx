@@ -17,6 +17,7 @@ limitations under the License.
 package request
 
 import (
+	"context"
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -100,7 +101,7 @@ func GetDeployments(flags *genericclioptions.ConfigFlags, namespace string) ([]a
 		return make([]appsv1.Deployment, 0), err
 	}
 
-	deployments, err := api.Deployments(namespace).List(metav1.ListOptions{})
+	deployments, err := api.Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return make([]appsv1.Deployment, 0), err
 	}
@@ -120,7 +121,7 @@ func GetIngressDefinitions(flags *genericclioptions.ConfigFlags, namespace strin
 		return make([]networking.Ingress, 0), err
 	}
 
-	pods, err := api.Ingresses(namespace).List(metav1.ListOptions{})
+	pods, err := api.Ingresses(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return make([]networking.Ingress, 0), err
 	}
@@ -189,7 +190,7 @@ func getEndpoints(flags *genericclioptions.ConfigFlags, namespace string) ([]api
 		return nil, err
 	}
 
-	endpointsList, err := api.Endpoints(namespace).List(metav1.ListOptions{})
+	endpointsList, err := api.Endpoints(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +257,7 @@ func getPods(flags *genericclioptions.ConfigFlags) ([]apiv1.Pod, error) {
 		return make([]apiv1.Pod, 0), err
 	}
 
-	pods, err := api.Pods(namespace).List(metav1.ListOptions{})
+	pods, err := api.Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return make([]apiv1.Pod, 0), err
 	}
@@ -277,7 +278,7 @@ func getLabeledPods(flags *genericclioptions.ConfigFlags, label string) ([]apiv1
 		return make([]apiv1.Pod, 0), err
 	}
 
-	pods, err := api.Pods(namespace).List(metav1.ListOptions{
+	pods, err := api.Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: label,
 	})
 
@@ -317,7 +318,7 @@ func getServices(flags *genericclioptions.ConfigFlags) ([]apiv1.Service, error) 
 		return make([]apiv1.Service, 0), err
 	}
 
-	services, err := api.Services(namespace).List(metav1.ListOptions{})
+	services, err := api.Services(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return make([]apiv1.Service, 0), err
 	}

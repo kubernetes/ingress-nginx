@@ -128,6 +128,34 @@ describe("Certificate", function()
       refute_certificate_is_set()
       assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to convert certificate chain from PEM to DER: PEM_read_bio_X509_AUX() failed")
     end)
+
+    describe("OCSP stapling", function()
+      before_each(function()
+        certificate.is_ocsp_stapling_enabled = true
+      end)
+
+      after_each(function()
+        certificate.is_ocsp_stapling_enabled = false
+      end)
+
+      it("fetches and caches OCSP response when there is no cached response", function()
+      end)
+
+      it("fetches and caches OCSP response when cached response is stale", function()
+      end)
+
+      it("staples using cached OCSP response", function()
+      end)
+
+      it("staples using cached stale OCSP response", function()
+      end)
+
+      it("does negative caching when OCSP response URL extraction fails", function()
+      end)
+
+      it("does negative caching when the request to OCSP responder fails", function()
+      end)
+    end)
   end)
 
   describe("configured_for_current_request", function()
@@ -135,7 +163,7 @@ describe("Certificate", function()
       local _ngx = { var = { host = "hostname" } }
       setmetatable(_ngx, {__index = _G.ngx})
       _G.ngx = _ngx
-      ngx.ctx.configured_for_current_request = nil
+      ngx.ctx.cert_configured_for_current_request = nil
 
       set_certificate("hostname", EXAMPLE_CERT, UUID)
     end)
@@ -150,7 +178,7 @@ describe("Certificate", function()
     end)
 
     it("returns cached value from ngx.ctx", function()
-      ngx.ctx.configured_for_current_request = false
+      ngx.ctx.cert_configured_for_current_request = false
       assert.is_false(certificate.configured_for_current_request())
     end)
   end)
