@@ -1,5 +1,45 @@
 # Changelog
 
+### 0.32.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.32.0`
+
+Fix regression in validating webhook when the ingress controller is installed in Kubernetes v1.18
+
+_Changes:_
+
+- [X] [#4271](https://github.com/kubernetes/ingress-nginx/pull/4271) Add support for multi-arch images
+- [X] [#5429](https://github.com/kubernetes/ingress-nginx/pull/5429) Update krew plugin configuration
+- [X] [#5430](https://github.com/kubernetes/ingress-nginx/pull/5430) Use github actions to create releases and krew plugin assets
+- [X] [#5432](https://github.com/kubernetes/ingress-nginx/pull/5432) Allow releases from a github action
+- [X] [#5433](https://github.com/kubernetes/ingress-nginx/pull/5433) Avoid removal of index.yaml file
+- [X] [#5434](https://github.com/kubernetes/ingress-nginx/pull/5434) Disable PR against krew repository
+- [X] [#5436](https://github.com/kubernetes/ingress-nginx/pull/5436) Disable github release action
+- [X] [#5439](https://github.com/kubernetes/ingress-nginx/pull/5439) Change action order
+- [X] [#5453](https://github.com/kubernetes/ingress-nginx/pull/5453) Ensure alpine packages are up to date
+- [X] [#5456](https://github.com/kubernetes/ingress-nginx/pull/5456) Case-insensitive TLS host matching
+- [X] [#5459](https://github.com/kubernetes/ingress-nginx/pull/5459) Refactor ingress validation in webhook
+- [X] [#5461](https://github.com/kubernetes/ingress-nginx/pull/5461) Fix helper for defaultbackend name
+- [X] [#5462](https://github.com/kubernetes/ingress-nginx/pull/5462) Remove noisy dns log
+- [X] [#5469](https://github.com/kubernetes/ingress-nginx/pull/5469) Changes on services must trigger a sync event
+- [X] [#5472](https://github.com/kubernetes/ingress-nginx/pull/5472) Update admission webhook image
+- [X] [#5474](https://github.com/kubernetes/ingress-nginx/pull/5474) Add install command for Digital Ocean
+- [X] [#5476](https://github.com/kubernetes/ingress-nginx/pull/5476) Fix chart missing default backend name
+- [X] [#5481](https://github.com/kubernetes/ingress-nginx/pull/5481) fix first backend sync
+- [X] [#5483](https://github.com/kubernetes/ingress-nginx/pull/5483) Fix chart maxmindLicenseKey location
+- [X] [#5484](https://github.com/kubernetes/ingress-nginx/pull/5484) Only load docker images in kind worker nodes
+
+_Documentation:_
+
+- [X] [#5404](https://github.com/kubernetes/ingress-nginx/pull/5404) update the helm v3 install way
+- [X] [#5435](https://github.com/kubernetes/ingress-nginx/pull/5435) Fix deployment links
+- [X] [#5438](https://github.com/kubernetes/ingress-nginx/pull/5438) Update chart instructions
+- [X] [#5460](https://github.com/kubernetes/ingress-nginx/pull/5460) fix(Chart): Mismatch between README.md and values.yml (defaultBackend.enabled)
+- [X] [#5465](https://github.com/kubernetes/ingress-nginx/pull/5465) Update helm v2 installation instructions
+- [X] [#5468](https://github.com/kubernetes/ingress-nginx/pull/5468) Update admission webhook annotations
+- [X] [#5479](https://github.com/kubernetes/ingress-nginx/pull/5479) Remove obsolete default backend settings
+- [X] [#5480](https://github.com/kubernetes/ingress-nginx/pull/5480) docs(changelog): fix typo
+
 ### 0.31.1
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.31.1`

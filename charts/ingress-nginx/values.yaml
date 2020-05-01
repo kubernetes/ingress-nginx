@@ -4,7 +4,7 @@
 controller:
   image:
     repository: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
-    tag: "0.31.1"
+    tag: "0.32.0"
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
