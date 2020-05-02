@@ -70,7 +70,7 @@ const (
 
 	// SSL enabled protocols to use
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
-	sslProtocols = "TLSv1.2"
+	sslProtocols = "TLSv1.2 TLSv1.3"
 
 	// Disable TLS 1.3 early data
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data
