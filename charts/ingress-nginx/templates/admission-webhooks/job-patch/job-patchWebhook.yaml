@@ -45,5 +45,5 @@ spec:
     {{- end }}
       securityContext:
         runAsNonRoot: true
-        runAsUser: 2000
+        runAsUser: {{ .Values.controller.admissionWebhooks.patch.image.runAsUser }}
 {{- end }}
