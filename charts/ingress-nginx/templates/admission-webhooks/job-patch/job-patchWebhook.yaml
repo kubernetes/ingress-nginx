@@ -30,7 +30,7 @@ spec:
       containers:
         - name: patch
           image: {{ .Values.controller.admissionWebhooks.patch.image.repository }}:{{ .Values.controller.admissionWebhooks.patch.image.tag }}
-          imagePullPolicy: {{ .Values.controller.admissionWebhooks.patch.pullPolicy }}
+          imagePullPolicy: {{ .Values.controller.admissionWebhooks.patch.image.pullPolicy }}
           args:
             - patch
             - --webhook-name={{ include "ingress-nginx.fullname" . }}-admission
