@@ -106,7 +106,6 @@ controller:
     targetPorts:
       http: tohttps
       https: http
-      tohttps: tohttps
 
   # Configures the ports the nginx-controller listens on
   containerPort:
