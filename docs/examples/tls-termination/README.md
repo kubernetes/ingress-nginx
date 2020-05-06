@@ -8,7 +8,7 @@ You need a [TLS cert](../PREREQUISITES.md#tls-certificates) and a [test HTTP ser
 
 ## Deployment
 
-Create a `values.yaml` file.
+Create a `ingress.yaml` file.
 
 ```yaml
 apiVersion: networking.k8s.io/v1beta1
