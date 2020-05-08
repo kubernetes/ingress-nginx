@@ -108,8 +108,4 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	if !nginxAffinity.Cookie.ChangeOnFailure {
 		t.Errorf("expected change of failure parameter set to true but returned %v", nginxAffinity.Cookie.ChangeOnFailure)
 	}
-
-	if !nginxAffinity.Cookie.ChangeOnFailure {
-		t.Errorf("expected change of failure parameter set to true but returned %v", nginxAffinity.Cookie.ChangeOnFailure)
-	}
 }
