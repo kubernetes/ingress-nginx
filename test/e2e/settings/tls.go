@@ -64,7 +64,10 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 		})
 
 		ginkgo.It("setting cipher suite", func() {
-			f.UpdateNginxConfigMapData(sslCiphers, testCiphers)
+			f.SetNginxConfigMapData(map[string]string{
+				sslCiphers:   testCiphers,
+				sslProtocols: "TLSv1.2",
+			})
 
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
