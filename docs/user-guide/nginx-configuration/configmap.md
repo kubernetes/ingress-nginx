@@ -516,9 +516,11 @@ Please check the result of the configuration using `https://ssllabs.com/ssltest/
 
 ## ssl-early-data
 
-Enables or disables TLS 1.3 [early data](https://tools.ietf.org/html/rfc8446#section-2.3)
+Enables or disables TLS 1.3 [early data](https://tools.ietf.org/html/rfc8446#section-2.3), also known as Zero Round Trip
+Time Resumption (0-RTT).
 
-This requires `ssl-protocols` to have `TLSv1.3` enabled.
+This requires `ssl-protocols` to have `TLSv1.3` enabled. Enable this with caution, because requests sent within early
+data are subject to [replay attacks](https://tools.ietf.org/html/rfc8470).
 
 [ssl_early_data](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data). The default is: `false`.
 
