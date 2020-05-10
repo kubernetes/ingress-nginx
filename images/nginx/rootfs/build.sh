@@ -21,7 +21,7 @@ set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-export NGINX_VERSION=1.17.10
+export NGINX_VERSION=1.18.0
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -132,7 +132,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src a9aa73f19c352a6b166d78e2a664bb3ef1295bbe6d3cc5aa7404bd4664ab4b83 \
+get_src 4c373e7ab5bf91d34a4f11a0c9496561061ba5eee6020db272a17a7228d35f99 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
