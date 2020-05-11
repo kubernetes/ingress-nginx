@@ -871,6 +871,10 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 			continue
 		}
 
+		if hostname != rule.Host {
+			continue
+		}
+
 		for _, rPath := range rule.HTTP.Paths {
 			if path == rPath.Path {
 				info.Service = rPath.Backend.ServiceName
