@@ -200,6 +200,9 @@ type Server struct {
 	ServerSnippet string `json:"serverSnippet"`
 	// SSLCiphers returns list of ciphers to be enabled
 	SSLCiphers string `json:"sslCiphers,omitempty"`
+	// SSLPreferServerCiphers indicates that server ciphers should be preferred
+	// over client ciphers when using the SSLv3 and TLS protocols.
+	SSLPreferServerCiphers string `sslPreferServerCiphers,omitempty`
 	// AuthTLSError contains the reason why the access to a server should be denied
 	AuthTLSError string `json:"authTLSError,omitempty"`
 }
