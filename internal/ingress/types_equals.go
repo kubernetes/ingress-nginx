@@ -308,6 +308,9 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.SSLCiphers != s2.SSLCiphers {
 		return false
 	}
+	if s1.SSLPreferServerCiphers != s2.SSLPreferServerCiphers {
+		return false
+	}
 	if s1.AuthTLSError != s2.AuthTLSError {
 		return false
 	}
