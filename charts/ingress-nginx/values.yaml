@@ -236,7 +236,7 @@ controller:
     minReplicas: 1
     maxReplicas: 11
     targetCPUUtilizationPercentage: 50
-    targetMemoryUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: nil
 
   ## Enable mimalloc as a drop-in replacement for malloc.
   ## ref: https://github.com/microsoft/mimalloc
