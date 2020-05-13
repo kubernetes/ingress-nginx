@@ -27,6 +27,7 @@ type sslCipher struct {
 	r resolver.Resolver
 }
 
+// Config contains the ssl-ciphers & ssl-prefer-server-ciphers configuration
 type Config struct {
 	SSLCiphers             string
 	SSLPreferServerCiphers string
