@@ -132,11 +132,6 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieChangeOnFailure)
 	}
 
-	cookie.ChangeOnFailure, err = parser.GetBoolAnnotation(annotationAffinityCookieChangeOnFailure, ing)
-	if err != nil {
-		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieChangeOnFailure)
-	}
-
 	return cookie
 }
 
