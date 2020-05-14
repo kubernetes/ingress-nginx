@@ -77,21 +77,19 @@ func main() {
 	}
 
 	if len(conf.DefaultService) > 0 {
-		defSvcNs, defSvcName, err := k8s.ParseNameNS(conf.DefaultService)
+		err := checkService(conf.DefaultService, kubeClient)
 		if err != nil {
 			klog.Fatal(err)
 		}
 
-		_, err = kubeClient.CoreV1().Services(defSvcNs).Get(context.TODO(), defSvcName, metav1.GetOptions{})
-		if err != nil {
-			if errors.IsUnauthorized(err) || errors.IsForbidden(err) {
-				klog.Fatal("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
-			}
-
-			klog.Fatalf("No service with name %v found: %v", conf.DefaultService, err)
-		}
-
 		klog.Infof("Validated %v as the default backend.", conf.DefaultService)
+	}
+
+	if len(conf.PublishService) > 0 {
+		err := checkService(conf.PublishService, kubeClient)
+		if err != nil {
+			klog.Fatal(err)
+		}
 	}
 
 	if conf.Namespace != "" {
@@ -328,4 +326,26 @@ func startHTTPServer(port int, mux *http.ServeMux) {
 		IdleTimeout:       120 * time.Second,
 	}
 	klog.Fatal(server.ListenAndServe())
+}
+
+func checkService(key string, kubeClient *kubernetes.Clientset) error {
+	ns, name, err := k8s.ParseNameNS(key)
+	if err != nil {
+		return err
+	}
+
+	_, err = kubeClient.CoreV1().Services(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsUnauthorized(err) || errors.IsForbidden(err) {
+			return fmt.Errorf("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
+		}
+
+		if errors.IsNotFound(err) {
+			return fmt.Errorf("No service with name %v found in namespace %v: %v", ns, name, err)
+		}
+
+		return fmt.Errorf("Unexpected error searching service with name %v in namespace %v: %v", ns, name, err)
+	}
+
+	return nil
 }
