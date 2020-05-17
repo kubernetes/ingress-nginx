@@ -11,4 +11,4 @@ $ kubectl apply -f ingress.yaml
 ## Test
 
 Check if the contents of the annotation are present in the nginx.conf file using:
-`kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf`
+`kubectl exec ingress-nginx-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf`
