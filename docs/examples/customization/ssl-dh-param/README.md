@@ -13,7 +13,7 @@ data:
   ssl-dh-param: "ingress-nginx/lb-dhparam"
 kind: ConfigMap
 metadata:
-  name: nginx-configuration
+  name: ingress-nginx-controller
   namespace: ingress-nginx
   labels:
     app.kubernetes.io/name: ingress-nginx
@@ -52,4 +52,4 @@ $ kubectl create -f ssl-dh-param.yaml
 ## Test
 
 Check the contents of the configmap is present in the nginx.conf file using:
-`kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf`
+`kubectl exec ingress-nginx-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf`

@@ -170,14 +170,14 @@ field of the `ingress-nginx` Service spec to `Local` ([example][preserve-ip]).
     host-3   Ready    node     203.0.113.3
     ```
 
-    with a `nginx-ingress-controller` Deployment composed of 2 replicas
+    with a `ingress-nginx-controller` Deployment composed of 2 replicas
 
     ```console
     $ kubectl -n ingress-nginx get pod -o wide
     NAME                                       READY   STATUS    IP           NODE
     default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1   host-2
-    nginx-ingress-controller-cf9ff8c96-8vvf8   1/1     Running   172.17.0.3   host-3
-    nginx-ingress-controller-cf9ff8c96-pxsds   1/1     Running   172.17.1.4   host-2
+    ingress-nginx-controller-cf9ff8c96-8vvf8   1/1     Running   172.17.0.3   host-3
+    ingress-nginx-controller-cf9ff8c96-pxsds   1/1     Running   172.17.1.4   host-2
     ```
 
     Requests sent to `host-2` and `host-3` would be forwarded to NGINX and original client's IP would be preserved,
@@ -279,15 +279,15 @@ template:
     including the host's loopback. Please evaluate the impact this may have on the security of your system carefully.
 
 !!! example
-    Consider this `nginx-ingress-controller` Deployment composed of 2 replicas, NGINX Pods inherit from the IP address
+    Consider this `ingress-nginx-controller` Deployment composed of 2 replicas, NGINX Pods inherit from the IP address
     of their host instead of an internal Pod IP.
 
     ```console
     $ kubectl -n ingress-nginx get pod -o wide
     NAME                                       READY   STATUS    IP            NODE
     default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1    host-2
-    nginx-ingress-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3
-    nginx-ingress-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2
+    ingress-nginx-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3
+    ingress-nginx-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2
     ```
 
 One major limitation of this deployment approach is that only **a single NGINX Ingress controller Pod** may be scheduled
@@ -295,7 +295,7 @@ on each cluster node, because binding the same port multiple times on the same n
 impossible. Pods that are unschedulable due to such situation fail with the following event:
 
 ```console
-$ kubectl -n ingress-nginx describe pod <unschedulable-nginx-ingress-controller-pod>
+$ kubectl -n ingress-nginx describe pod <unschedulable-ingress-nginx-controller-pod>
 ...
 Events:
   Type     Reason            From               Message
@@ -340,14 +340,14 @@ Instead, and because bare-metal nodes usually don't have an ExternalIP, one has 
 address of all nodes running the NGINX Ingress controller.
 
 !!! example
-    Given a `nginx-ingress-controller` DaemonSet composed of 2 replicas
+    Given a `ingress-nginx-controller` DaemonSet composed of 2 replicas
 
     ```console
     $ kubectl -n ingress-nginx get pod -o wide
     NAME                                       READY   STATUS    IP            NODE
     default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1    host-2
-    nginx-ingress-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3
-    nginx-ingress-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2
+    ingress-nginx-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3
+    ingress-nginx-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2
     ```
 
     the controller sets the status of all Ingress objects it manages to the following value:
