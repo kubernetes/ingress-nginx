@@ -1222,7 +1222,7 @@ use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 <span class="go">  ssl-dh-param: &quot;ingress-nginx/lb-dhparam&quot;</span>
 <span class="go">kind: ConfigMap</span>
 <span class="go">metadata:</span>
-<span class="go">  name: nginx-configuration</span>
+<span class="go">  name: ingress-nginx-controller</span>
 <span class="go">  namespace: ingress-nginx</span>
 <span class="go">  labels:</span>
 <span class="go">    app.kubernetes.io/name: ingress-nginx</span>
@@ -1255,7 +1255,7 @@ use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 
 <h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link"> ¶</a></h2>
 <p>Check the contents of the configmap is present in the nginx.conf file using:
-<code>kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf</code></p>
+<code>kubectl exec ingress-nginx-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf</code></p>
                 
               
               

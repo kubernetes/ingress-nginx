@@ -1234,11 +1234,11 @@ service/nginx-errors   ClusterIP   10.0.0.12   &lt;none&gt;        80/TCP    10s
 <a href="../../../deploy/">deployment guide</a>, then follow these steps:</p>
 <ol>
 <li>
-<p>Edit the <code>nginx-ingress-controller</code> Deployment and set the value of the <code>--default-backend-service</code> flag to the name of the
+<p>Edit the <code>ingress-nginx-controller</code> Deployment and set the value of the <code>--default-backend-service</code> flag to the name of the
    newly created error backend.</p>
 </li>
 <li>
-<p>Edit the <code>nginx-configuration</code> ConfigMap and create the key <code>custom-http-errors</code> with a value of <code>404,503</code>.</p>
+<p>Edit the <code>ingress-nginx-controller</code> ConfigMap and create the key <code>custom-http-errors</code> with a value of <code>404,503</code>.</p>
 </li>
 <li>
 <p>Take note of the IP address assigned to the NGINX Ingress controller Service.

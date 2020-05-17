@@ -1383,12 +1383,12 @@ this value is &lt;None>)</p>
 <span class="go">host-3   Ready    node     203.0.113.3</span>
 </code></pre></div>
 
-<p>with a <code>nginx-ingress-controller</code> Deployment composed of 2 replicas</p>
+<p>with a <code>ingress-nginx-controller</code> Deployment composed of 2 replicas</p>
 <div class="highlight"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
 <span class="go">NAME                                       READY   STATUS    IP           NODE</span>
 <span class="go">default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1   host-2</span>
-<span class="go">nginx-ingress-controller-cf9ff8c96-8vvf8   1/1     Running   172.17.0.3   host-3</span>
-<span class="go">nginx-ingress-controller-cf9ff8c96-pxsds   1/1     Running   172.17.1.4   host-2</span>
+<span class="go">ingress-nginx-controller-cf9ff8c96-8vvf8   1/1     Running   172.17.0.3   host-3</span>
+<span class="go">ingress-nginx-controller-cf9ff8c96-pxsds   1/1     Running   172.17.1.4   host-2</span>
 </code></pre></div>
 
 <p>Requests sent to <code>host-2</code> and <code>host-3</code> would be forwarded to NGINX and original client's IP would be preserved,
@@ -1478,20 +1478,20 @@ including the host's loopback. Please evaluate the impact this may have on the s
 </div>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p>Consider this <code>nginx-ingress-controller</code> Deployment composed of 2 replicas, NGINX Pods inherit from the IP address
+<p>Consider this <code>ingress-nginx-controller</code> Deployment composed of 2 replicas, NGINX Pods inherit from the IP address
 of their host instead of an internal Pod IP.</p>
 <div class="highlight"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
 <span class="go">NAME                                       READY   STATUS    IP            NODE</span>
 <span class="go">default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1    host-2</span>
-<span class="go">nginx-ingress-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3</span>
-<span class="go">nginx-ingress-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2</span>
+<span class="go">ingress-nginx-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3</span>
+<span class="go">ingress-nginx-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2</span>
 </code></pre></div>
 
 </div>
 <p>One major limitation of this deployment approach is that only <strong>a single NGINX Ingress controller Pod</strong> may be scheduled
 on each cluster node, because binding the same port multiple times on the same network interface is technically
 impossible. Pods that are unschedulable due to such situation fail with the following event:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx describe pod &lt;unschedulable-nginx-ingress-controller-pod&gt;
+<div class="highlight"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx describe pod &lt;unschedulable-ingress-nginx-controller-pod&gt;
 <span class="go">...</span>
 <span class="go">Events:</span>
 <span class="go">  Type     Reason            From               Message</span>
@@ -1532,12 +1532,12 @@ blank.</p>
 address of all nodes running the NGINX Ingress controller.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p>Given a <code>nginx-ingress-controller</code> DaemonSet composed of 2 replicas</p>
+<p>Given a <code>ingress-nginx-controller</code> DaemonSet composed of 2 replicas</p>
 <div class="highlight"><pre><span></span><code><span class="gp">$</span> kubectl -n ingress-nginx get pod -o wide
 <span class="go">NAME                                       READY   STATUS    IP            NODE</span>
 <span class="go">default-http-backend-7c5bc89cc9-p86md      1/1     Running   172.17.1.1    host-2</span>
-<span class="go">nginx-ingress-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3</span>
-<span class="go">nginx-ingress-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2</span>
+<span class="go">ingress-nginx-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3</span>
+<span class="go">ingress-nginx-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2</span>
 </code></pre></div>
 
 <p>the controller sets the status of all Ingress objects it manages to the following value:</p>

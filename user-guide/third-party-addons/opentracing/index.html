@@ -1339,7 +1339,7 @@ data:
   enable-opentracing: &quot;true&quot;
   zipkin-collector-host: zipkin.default.svc.cluster.local
 metadata:
-  name: nginx-configuration
+  name: ingress-nginx-controller
   namespace: kube-system
 &#39; | kubectl replace -f -
 </code></pre></div>
@@ -1393,7 +1393,7 @@ $ echo &#39;
     enable-opentracing: &quot;true&quot;
     jaeger-collector-host: jaeger-agent.default.svc.cluster.local
   metadata:
-    name: nginx-configuration
+    name: ingress-nginx-controller
     namespace: kube-system
   &#39; | kubectl replace -f -
 </code></pre></div></p>
