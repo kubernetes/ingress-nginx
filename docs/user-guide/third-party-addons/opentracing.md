@@ -122,7 +122,7 @@ data:
   enable-opentracing: "true"
   zipkin-collector-host: zipkin.default.svc.cluster.local
 metadata:
-  name: nginx-configuration
+  name: ingress-nginx-controller
   namespace: kube-system
 ' | kubectl replace -f -
 ```
@@ -177,7 +177,7 @@ In the Zipkin interface we can see the details:
         enable-opentracing: "true"
         jaeger-collector-host: jaeger-agent.default.svc.cluster.local
       metadata:
-        name: nginx-configuration
+        name: ingress-nginx-controller
         namespace: kube-system
       ' | kubectl replace -f -
     ```
