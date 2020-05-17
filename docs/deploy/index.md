@@ -56,12 +56,12 @@ minikube addons disable ingress
 ```
 
 - Execute `make dev-env`
-- Confirm the `nginx-ingress-controller` deployment exists:
+- Confirm the `ingress-nginx-controller` deployment exists:
 
 ```console
 $ kubectl get pods -n ingress-nginx
 NAME                                       READY     STATUS    RESTARTS   AGE
-nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
+ingress-nginx-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
 ```
 
 #### AWS
