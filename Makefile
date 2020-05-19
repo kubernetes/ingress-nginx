@@ -300,3 +300,10 @@ endif
 .PHONY: show-version
 show-version:
 	echo -n $(TAG)
+
+.PHONY: staging-gcr
+staging-gcr:
+	echo "Building NGINX image..."
+	ARCH=amd64 make build container push
+	ARCH=arm   make build container push
+	ARCH=arm64 make build container push
