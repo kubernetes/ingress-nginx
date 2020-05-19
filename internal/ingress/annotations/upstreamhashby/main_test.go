@@ -39,6 +39,7 @@ func TestParse(t *testing.T) {
 		expected    string
 	}{
 		{map[string]string{annotation: "$request_uri"}, "$request_uri"},
+		{map[string]string{annotation: "$request_uri$scheme"}, "$request_uri$scheme"},
 		{map[string]string{annotation: "false"}, "false"},
 		{map[string]string{}, ""},
 		{nil, ""},

@@ -1,14 +1,14 @@
 local string        = string
 local string_len    = string.len
-local string_sub    = string.sub
 local string_format = string.format
 local pairs         = pairs
+local ipairs        = ipairs
 local tonumber      = tonumber
 local getmetatable  = getmetatable
 local type          = type
 local next          = next
 local table         = table
-
+local re_gmatch     = ngx.re.gmatch
 
 local _M = {}
 
@@ -24,15 +24,57 @@ function _M.get_nodes(endpoints)
   return nodes
 end
 
--- given an Nginx variable i.e $request_uri
--- it returns value of ngx.var[request_uri]
-function _M.lua_ngx_var(ngx_var)
-  local var_name = string_sub(ngx_var, 2)
-  if var_name:match("^%d+$") then
-    var_name = tonumber(var_name)
+-- parse the compound variables, then call generate_var_value function
+-- to parse into a string value.
+function _M.parse_complex_value(complex_value)
+    local reg = [[ (\\\$[0-9a-zA-Z_]+) | ]]     -- \$var
+            .. [[ \$\{([0-9a-zA-Z_]+)\} | ]]    -- ${var}
+            .. [[ \$([0-9a-zA-Z_]+) | ]]        -- $var
+            .. [[ (\$|[^$\\]+) ]]               -- $ or text value
+    local iterator, err = re_gmatch(complex_value, reg, "jiox")
+    if not iterator then
+        return nil, err
+    end
+
+    local v
+    local t = {}
+    while true do
+        v, err = iterator()
+        if err then
+            return nil, err
+        end
+
+        if not v then
+            break
+        end
+
+        table.insert(t, v)
+    end
+
+    return t
+end
+
+-- Parse the return value of function parse_complex_value
+-- into a string value
+function _M.generate_var_value(data)
+  if data == nil then
+    return ""
   end
 
-  return ngx.var[var_name]
+  local t = {}
+  for _, value in ipairs(data) do
+    local var_name = value[2] or value[3]
+    if var_name then
+      if var_name:match("^%d+$") then
+        var_name = tonumber(var_name)
+      end
+      table.insert(t, ngx.var[var_name])
+    else
+      table.insert(t, value[1] or value[4])
+    end
+  end
+
+  return table.concat(t, "")
 end
 
 -- normalize_endpoints takes endpoints as an array of endpoint objects
