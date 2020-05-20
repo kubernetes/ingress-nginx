@@ -367,6 +367,7 @@ controller:
       priorityClassName: ""
       podAnnotations: {}
       nodeSelector: {}
+      tolerations: []
       runAsUser: 2000
 
   metrics:

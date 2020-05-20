@@ -168,6 +168,7 @@ Parameter | Description | Default
 `controller.admissionWebhooks.patch.priorityClassName` | Priority class for the webhook integration jobs | `""`
 `controller.admissionWebhooks.patch.podAnnotations` | Annotations for the webhook job pods | `{}`
 `controller.admissionWebhooks.patch.nodeSelector` | Node selector for running admission hook patch jobs | `{}`
+`controller.admissionWebhooks.patch.tolerations` | Node taints/tolerations for running admission hook patch jobs | `[]`
 `controller.customTemplate.configMapName` | configMap containing a custom nginx template | `""`
 `controller.customTemplate.configMapKey` | configMap key containing the nginx template | `""`
 `controller.addHeaders` | configMap key:value pairs containing [custom headers](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers) added before sending response to the client | `{}`
