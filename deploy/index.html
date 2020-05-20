@@ -1442,6 +1442,18 @@
 <p>The <a href="https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/">admission webhook</a> require conectivity between Kubernetes API server and the ingress controller.</p>
 <p>In case <a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">Network policies</a> or additional firewalls, please allow access to port <code>8443</code>.</p>
 </div>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>The first time the ingress controller starts, two <a href="https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/">Jobs</a> create the SSL Certificate used by the admission webhook.
+For this reason, there is an initial delay of up to two minutes until it is possible to create and validate Ingress definitions.</p>
+<p>You can wait until is ready to running the next command:</p>
+<div class="highlight"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">kubectl wait --namespace ingress-nginx \</span>
+  <span class="l l-Scalar l-Scalar-Plain">--for=condition=ready pod \</span>
+  <span class="l l-Scalar l-Scalar-Plain">--selector=app.kubernetes.io/component=controller \</span>
+  <span class="l l-Scalar l-Scalar-Plain">--timeout=90s</span>
+</code></pre></div>
+
+</div>
 <h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link"> ¶</a></h2>
 <ul>
 <li><a href="#provider-specific-steps">Provider Specific Steps</a></li>
@@ -1565,6 +1577,10 @@ By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
 <p>For extended notes regarding deployments on bare-metal, see <a href="baremetal/">Bare-metal considerations</a>.</p>
 </div>
 <h3 id="verify-installation">Verify installation<a class="headerlink" href="#verify-installation" title="Permanent link"> ¶</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>In minikube the ingress addon is installed in the namespace <strong>kube-system</strong> instead of ingress-nginx</p>
+</div>
 <p>To check if the ingress controller pods have started, run the following command:</p>
 <div class="highlight"><pre><span></span><code><span class="go">kubectl get pods -n ingress-nginx \</span>
 <span class="go">  -l app.kubernetes.io/name=ingress-nginx --watch</span>
