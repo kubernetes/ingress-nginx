@@ -13,6 +13,19 @@
 
     In case [Network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) or additional firewalls, please allow access to port `8443`.
 
+!!! attention
+    The first time the ingress controller starts, two [Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) create the SSL Certificate used by the admission webhook.
+    For this reason, there is an initial delay of up to two minutes until it is possible to create and validate Ingress definitions.
+
+    You can wait until is ready to running the next command:
+
+    ```yaml
+    kubectl wait --namespace ingress-nginx \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/component=controller \
+      --timeout=90s
+    ```
+
 ## Contents
 
 - [Provider Specific Steps](#provider-specific-steps)
@@ -163,6 +176,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
 
 ### Verify installation
+
+!!! info
+    In minikube the ingress addon is installed in the namespace **kube-system** instead of ingress-nginx
 
 To check if the ingress controller pods have started, run the following command:
 
