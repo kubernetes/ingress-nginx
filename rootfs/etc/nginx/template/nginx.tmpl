@@ -211,11 +211,21 @@ http {
         $geoip2_isp_org organization;
     }
     {{ end }}
+
     {{ if eq $file "GeoIP2-Connection-Type.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoIP2-Connection-Type.mmdb {
         $geoip2_connection_type connection_type;
     }
     {{ end }}
+
+    {{ if eq $file "GeoIP2-Anonymous-IP.mmdb" }}
+    geoip2 /etc/nginx/geoip/GeoIP2-Anonymous-IP.mmdb {
+        $geoip2_is_anon source=$remote_addr is_anonymous;
+        $geoip2_is_hosting_provider source=$remote_addr is_hosting_provider;
+        $geoip2_is_public_proxy source=$remote_addr is_public_proxy;
+    }
+    {{ end }}
+
     {{ end }}
 
     {{ end }}
