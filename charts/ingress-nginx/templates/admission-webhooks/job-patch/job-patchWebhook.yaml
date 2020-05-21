@@ -32,7 +32,9 @@ spec:
     {{- end }}
       containers:
         - name: patch
-          image: {{ .Values.controller.admissionWebhooks.patch.image.repository }}:{{ .Values.controller.admissionWebhooks.patch.image.tag }}
+          {{- with .Values.controller.admissionWebhooks.patch.image }}
+          image: "{{.repository}}{{- if (.digest) -}} @{{.digest}} {{- else -}} :{{ .tag }} {{- end -}}"
+          {{- end }}
           imagePullPolicy: {{ .Values.controller.admissionWebhooks.patch.image.pullPolicy }}
           args:
             - patch
