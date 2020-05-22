@@ -71,28 +71,43 @@ var DryRunAll = dryRunAll{}
 
 type dryRunAll struct{}
 
+// ApplyToCreate applies this configuration to the given create options.
 func (dryRunAll) ApplyToCreate(opts *CreateOptions) {
 	opts.DryRun = []string{metav1.DryRunAll}
 }
+
+// ApplyToUpdate applies this configuration to the given update options.
 func (dryRunAll) ApplyToUpdate(opts *UpdateOptions) {
 	opts.DryRun = []string{metav1.DryRunAll}
 }
+
+// ApplyToPatch applies this configuration to the given patch options.
 func (dryRunAll) ApplyToPatch(opts *PatchOptions) {
 	opts.DryRun = []string{metav1.DryRunAll}
 }
+
+// ApplyToPatch applies this configuration to the given delete options.
 func (dryRunAll) ApplyToDelete(opts *DeleteOptions) {
+	opts.DryRun = []string{metav1.DryRunAll}
+}
+func (dryRunAll) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	opts.DryRun = []string{metav1.DryRunAll}
 }
 
 // FieldOwner set the field manager name for the given server-side apply patch.
 type FieldOwner string
 
+// ApplyToPatch applies this configuration to the given patch options.
 func (f FieldOwner) ApplyToPatch(opts *PatchOptions) {
 	opts.FieldManager = string(f)
 }
+
+// ApplyToCreate applies this configuration to the given create options.
 func (f FieldOwner) ApplyToCreate(opts *CreateOptions) {
 	opts.FieldManager = string(f)
 }
+
+// ApplyToUpdate applies this configuration to the given update options.
 func (f FieldOwner) ApplyToUpdate(opts *UpdateOptions) {
 	opts.FieldManager = string(f)
 }
@@ -252,33 +267,49 @@ func (o *DeleteOptions) ApplyToDelete(do *DeleteOptions) {
 // to the given number of seconds.
 type GracePeriodSeconds int64
 
+// ApplyToDelete applies this configuration to the given delete options.
 func (s GracePeriodSeconds) ApplyToDelete(opts *DeleteOptions) {
 	secs := int64(s)
 	opts.GracePeriodSeconds = &secs
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (s GracePeriodSeconds) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	s.ApplyToDelete(&opts.DeleteOptions)
 }
 
+// Preconditions must be fulfilled before an operation (update, delete, etc.) is carried out.
 type Preconditions metav1.Preconditions
 
+// ApplyToDelete applies this configuration to the given delete options.
 func (p Preconditions) ApplyToDelete(opts *DeleteOptions) {
 	preconds := metav1.Preconditions(p)
 	opts.Preconditions = &preconds
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (p Preconditions) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	p.ApplyToDelete(&opts.DeleteOptions)
 }
 
+// PropagationPolicy determined whether and how garbage collection will be
+// performed. Either this field or OrphanDependents may be set, but not both.
+// The default policy is decided by the existing finalizer set in the
+// metadata.finalizers and the resource-specific default policy.
+// Acceptable values are: 'Orphan' - orphan the dependents; 'Background' -
+// allow the garbage collector to delete the dependents in the background;
+// 'Foreground' - a cascading policy that deletes all dependents in the
+// foreground.
 type PropagationPolicy metav1.DeletionPropagation
 
+// ApplyToDelete applies the given delete options on these options.
+// It will propagate to the dependents of the object to let the garbage collector handle it.
 func (p PropagationPolicy) ApplyToDelete(opts *DeleteOptions) {
 	policy := metav1.DeletionPropagation(p)
 	opts.PropagationPolicy = &policy
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (p PropagationPolicy) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	p.ApplyToDelete(&opts.DeleteOptions)
 }
@@ -379,12 +410,14 @@ func (o *ListOptions) ApplyOptions(opts []ListOption) *ListOptions {
 // MatchingLabels filters the list/delete operation on the given set of labels.
 type MatchingLabels map[string]string
 
+// ApplyToList applies this configuration to the given list options.
 func (m MatchingLabels) ApplyToList(opts *ListOptions) {
 	// TODO(directxman12): can we avoid reserializing this over and over?
-	sel := labels.SelectorFromSet(map[string]string(m))
+	sel := labels.SelectorFromValidatedSet(map[string]string(m))
 	opts.LabelSelector = sel
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (m MatchingLabels) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	m.ApplyToList(&opts.ListOptions)
 }
@@ -393,6 +426,7 @@ func (m MatchingLabels) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 // without checking their values.
 type HasLabels []string
 
+// ApplyToList applies this configuration to the given list options.
 func (m HasLabels) ApplyToList(opts *ListOptions) {
 	sel := labels.NewSelector()
 	for _, label := range m {
@@ -404,6 +438,7 @@ func (m HasLabels) ApplyToList(opts *ListOptions) {
 	opts.LabelSelector = sel
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (m HasLabels) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	m.ApplyToList(&opts.ListOptions)
 }
@@ -415,10 +450,12 @@ type MatchingLabelsSelector struct {
 	labels.Selector
 }
 
+// ApplyToList applies this configuration to the given list options.
 func (m MatchingLabelsSelector) ApplyToList(opts *ListOptions) {
 	opts.LabelSelector = m
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (m MatchingLabelsSelector) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	m.ApplyToList(&opts.ListOptions)
 }
@@ -435,12 +472,14 @@ func MatchingField(name, val string) MatchingFields {
 // (or index in the case of cached lists).
 type MatchingFields fields.Set
 
+// ApplyToList applies this configuration to the given list options.
 func (m MatchingFields) ApplyToList(opts *ListOptions) {
 	// TODO(directxman12): can we avoid re-serializing this?
 	sel := fields.Set(m).AsSelector()
 	opts.FieldSelector = sel
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (m MatchingFields) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	m.ApplyToList(&opts.ListOptions)
 }
@@ -452,10 +491,12 @@ type MatchingFieldsSelector struct {
 	fields.Selector
 }
 
+// ApplyToList applies this configuration to the given list options.
 func (m MatchingFieldsSelector) ApplyToList(opts *ListOptions) {
 	opts.FieldSelector = m
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (m MatchingFieldsSelector) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	m.ApplyToList(&opts.ListOptions)
 }
@@ -463,10 +504,12 @@ func (m MatchingFieldsSelector) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 // InNamespace restricts the list/delete operation to the given namespace.
 type InNamespace string
 
+// ApplyToList applies this configuration to the given list options.
 func (n InNamespace) ApplyToList(opts *ListOptions) {
 	opts.Namespace = string(n)
 }
 
+// ApplyToDeleteAllOf applies this configuration to the given an List options.
 func (n InNamespace) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 	n.ApplyToList(&opts.ListOptions)
 }
@@ -476,6 +519,7 @@ func (n InNamespace) ApplyToDeleteAllOf(opts *DeleteAllOfOptions) {
 // does not support setting it for deletecollection operations.
 type Limit int64
 
+// ApplyToList applies this configuration to the given an list options.
 func (l Limit) ApplyToList(opts *ListOptions) {
 	opts.Limit = int64(l)
 }
@@ -485,6 +529,7 @@ func (l Limit) ApplyToList(opts *ListOptions) {
 // does not support setting it for deletecollection operations.
 type Continue string
 
+// ApplyToList applies this configuration to the given an List options.
 func (c Continue) ApplyToList(opts *ListOptions) {
 	opts.Continue = string(c)
 }

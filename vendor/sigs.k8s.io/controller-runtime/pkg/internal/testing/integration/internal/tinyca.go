@@ -73,6 +73,8 @@ func newPrivateKey() (crypto.Signer, error) {
 	return rsa.GenerateKey(crand.Reader, rsaKeySize)
 }
 
+// NewTinyCA creates a new a tiny CA utility for provisioning serving certs and client certs FOR TESTING ONLY.
+// Don't use this for anything else!
 func NewTinyCA() (*TinyCA, error) {
 	caPrivateKey, err := newPrivateKey()
 	if err != nil {
