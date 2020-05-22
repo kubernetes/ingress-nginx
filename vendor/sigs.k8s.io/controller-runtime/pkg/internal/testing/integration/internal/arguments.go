@@ -5,6 +5,7 @@ import (
 	"html/template"
 )
 
+// RenderTemplates returns an []string to render the templates
 func RenderTemplates(argTemplates []string, data interface{}) (args []string, err error) {
 	var t *template.Template
 

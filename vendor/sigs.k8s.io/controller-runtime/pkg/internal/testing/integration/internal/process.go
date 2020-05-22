@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/internal/testing/integration/addr"
 )
 
+// ProcessState define the state of the process.
 type ProcessState struct {
 	DefaultedProcessInput
 	Session *gexec.Session
@@ -46,6 +47,7 @@ type ProcessState struct {
 	ready bool
 }
 
+// DefaultedProcessInput defines the default process input required to perform the test.
 type DefaultedProcessInput struct {
 	URL              url.URL
 	Dir              string
@@ -55,6 +57,8 @@ type DefaultedProcessInput struct {
 	StartTimeout     time.Duration
 }
 
+// DoDefaulting sets the default configuration according to the data informed and return an DefaultedProcessInput
+// and an error if some requirement was not informed.
 func DoDefaulting(
 	name string,
 	listenURL *url.URL,
@@ -112,6 +116,8 @@ func DoDefaulting(
 
 type stopChannel chan struct{}
 
+// Start starts the apiserver, waits for it to come up, and returns an error,
+// if occurred.
 func (ps *ProcessState) Start(stdout, stderr io.Writer) (err error) {
 	if ps.ready {
 		return nil
@@ -187,6 +193,8 @@ func pollURLUntilOK(url url.URL, interval time.Duration, ready chan bool, stopCh
 	}
 }
 
+// Stop stops this process gracefully, waits for its termination, and cleans up
+// the CertDir if necessary.
 func (ps *ProcessState) Stop() error {
 	if ps.Session == nil {
 		return nil
