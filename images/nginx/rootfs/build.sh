@@ -21,7 +21,7 @@ set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-export NGINX_VERSION=1.17.10
+export NGINX_VERSION=1.19.0
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -31,8 +31,8 @@ export NGINX_OPENTRACING_VERSION=0.9.0
 export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=0.4.2
-export MSGPACK_VERSION=3.2.0
-export DATADOG_CPP_VERSION=1.1.3
+export MSGPACK_VERSION=3.2.1
+export DATADOG_CPP_VERSION=1.1.5
 export MODSECURITY_VERSION=1.0.1
 export MODSECURITY_LIB_VERSION=6624a18a4e7fd9881a7a9b435db3e481e8e986a5
 export OWASP_MODSECURITY_CRS_VERSION=3.2.0
@@ -44,7 +44,7 @@ export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 export RESTY_LUAROCKS_VERSION=3.1.3
-export LUAJIT_VERSION=33b5f86c1b9ab53ad09c33f9097df42403587bea
+export LUAJIT_VERSION=31116c4d25c4283a52b2d87fed50101cf20f5b77
 export LUA_RESTY_BALANCER=0.03
 export LUA_RESTY_CORE=0.1.17
 export LUA_CJSON_VERSION=2.1.0.7
@@ -132,7 +132,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src a9aa73f19c352a6b166d78e2a664bb3ef1295bbe6d3cc5aa7404bd4664ab4b83 \
+get_src 44a616171fcd7d7ad7c6af3e6f3ad0879b54db5a5d21be874cd458b5691e36c8 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -165,7 +165,7 @@ get_src c969a78659bb47c84929de0b9adc1f8c512a51ec9dd3b162cb568ae228d3d59e \
 get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
 
-get_src ff865a36bad5c72b8e7ebc4b7cf5f27a820fce4faff9c571c1791e3728355a39 \
+get_src 464f46744a6be778626d11452c4db3c2d09461080c6db42e358e21af19d542f6 \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
 get_src 7d5f3439c8df56046d0564b5857fd8a30296ab1bd6df0f048aed7afb56a0a4c2 \
@@ -177,10 +177,10 @@ get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
 
-get_src 3b43917a155b81b7d20fdbb3c1be4419626286616195ad426bff1f2f59aa3659 \
+get_src 82bf1af1ee89887648b53c9df566f8b52ec10400f1641c051970a7540b7bf06a \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 
-get_src 6dc1088ab7f788b6c849fbaa6300517c8fdf88991a70b778be79c284c36857bf \
+get_src b84fd2fb0bb0578af4901db31d1c0ae909b532a1016fe6534cbe31a6c3ad6924 \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
 get_src 6faab57557bd9cc9fc38208f6bc304c1c13cf048640779f98812cf1f9567e202 \
@@ -375,7 +375,8 @@ sh build.sh
 ./configure \
   --disable-doxygen-doc \
   --disable-doxygen-html \
-  --disable-examples
+  --disable-examples \
+  --enable-prce-jit
 
 make
 make install
@@ -590,7 +591,7 @@ make install
 cd "$BUILD_PATH"
 git clone https://github.com/microsoft/mimalloc
 cd mimalloc
-git checkout v1.6.2
+git checkout v1.6.3
 
 mkdir -p out/release
 cd out/release

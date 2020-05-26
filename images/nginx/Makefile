@@ -18,7 +18,7 @@
 SHELL=/bin/bash -o pipefail
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.101
+TAG ?= 0.102
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 IMGNAME = nginx
@@ -33,6 +33,7 @@ COMMA := ,
 .PHONY: container
 container:
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
+		--pull \
 		--progress plain \
 		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
 		--tag $(IMAGE):$(TAG) rootfs
