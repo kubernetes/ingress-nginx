@@ -62,7 +62,7 @@ endif
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx
-BASE_TAG ?= 5d67794f4fbf38ec6575476de46201b068eabf87
+BASE_TAG ?= 227f97465158f038b3c0a3bfd8299fe8d8a530e3
 
 GOARCH=$(ARCH)
 GOBUILD_FLAGS := -v

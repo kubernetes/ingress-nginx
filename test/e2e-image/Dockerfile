@@ -1,4 +1,4 @@
-FROM quay.io/kubernetes-ingress-controller/e2e:v04212020-5d67794f4 AS BASE
+FROM quay.io/kubernetes-ingress-controller/e2e:v05262020-209405940c6 AS BASE
 
 FROM alpine:3.11
 
@@ -10,9 +10,7 @@ RUN apk add -U --no-cache \
     libc6-compat \
     openssl
 
-RUN curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash \
-  && helm repo add stable https://kubernetes-charts.storage.googleapis.com \
-  && helm repo update
+RUN curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/
 COPY --from=BASE /usr/local/bin/kubectl /usr/local/bin/
