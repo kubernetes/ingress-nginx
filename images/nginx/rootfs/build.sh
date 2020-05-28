@@ -14,12 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 set -o errexit
 set -o nounset
 set -o pipefail
-
-export DEBIAN_FRONTEND=noninteractive
 
 export NGINX_VERSION=1.19.0
 export NDK_VERSION=0.3.1rc1
@@ -40,15 +37,20 @@ export LUA_NGX_VERSION=0.10.15
 export LUA_STREAM_NGX_VERSION=0.0.7
 export LUA_UPSTREAM_VERSION=0.07
 export LUA_BRIDGE_TRACER_VERSION=0.1.1
+export LUA_CJSON_VERSION=2.1.0.7
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export RESTY_LUAROCKS_VERSION=3.1.3
+
 export LUAJIT_VERSION=31116c4d25c4283a52b2d87fed50101cf20f5b77
+
 export LUA_RESTY_BALANCER=0.03
+export LUA_RESTY_CACHE=0.10rc1
 export LUA_RESTY_CORE=0.1.17
-export LUA_CJSON_VERSION=2.1.0.7
 export LUA_RESTY_COOKIE_VERSION=766ad8c15e498850ac77f5e0265f1d3f30dc4027
+export LUA_RESTY_DNS=0.21
+export LUA_RESTY_HTTP=0.15
+export LUA_RESTY_LOCK=0.08
 
 export BUILD_PATH=/tmp/build
 
@@ -92,7 +94,6 @@ apk add \
   alpine-sdk \
   findutils \
   curl ca-certificates \
-  geoip-dev \
   patch \
   libaio-dev \
   openssl \
@@ -102,12 +103,12 @@ apk add \
   wget \
   curl-dev \
   libprotobuf \
-  git g++ pkgconf flex bison doxygen yajl-dev lmdb-dev libtool autoconf libxml2 pcre-dev libxml2-dev \
+  git g++ pkgconf flex bison doxygen yajl-dev lmdb-dev libtool autoconf libxml2 libxml2-dev \
   python \
   libmaxminddb-dev \
   bc \
   unzip \
-  dos2unix mercurial \
+  dos2unix \
   yaml-cpp
 
 mkdir -p /etc/nginx
@@ -195,9 +196,6 @@ get_src 41378438c833e313a18869d0c4a72704b4835c30acaf7fd68013ab6732ff78a7 \
 get_src 5f629a50ba22347c441421091da70fdc2ac14586619934534e5a0f8a1390a950 \
         "https://github.com/yaoweibin/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
-get_src c573435f495aac159e34eaa0a3847172a2298eb6295fcdc35d565f9f9b990513 \
-        "https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz"
-
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
         "https://github.com/openresty/lua-resty-upload/archive/v0.10.tar.gz"
 
@@ -216,6 +214,19 @@ get_src 59d2f18ecadba48be61061004c8664eaed1111a3372cd2567cb24c5a47eb41fe \
 get_src f818b5cef0881e5987606f2acda0e491531a0cb0c126d8dca02e2343edf641ef \
         "https://github.com/cloudflare/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz"
 
+get_src f6b57d83a937899f97a98372c1e2631dd1ab8f580fc0ffeac0b27b4d42225a99 \
+        "https://github.com/openresty/lua-resty-lrucache/archive/v$LUA_RESTY_CACHE.tar.gz"
+
+get_src 2b4683f9abe73e18ca00345c65010c9056777970907a311d6e1699f753141de2 \
+        "https://github.com/openresty/lua-resty-lock/archive/v$LUA_RESTY_LOCK.tar.gz"
+
+get_src 4aca34f324d543754968359672dcf5f856234574ee4da360ce02c778d244572a \
+        "https://github.com/openresty/lua-resty-dns/archive/v$LUA_RESTY_DNS.tar.gz"
+
+get_src 987d5754a366d3ccbf745d2765f82595dcff5b94ba6c755eeb6d310447996f32 \
+        "https://github.com/ledgetech/lua-resty-http/archive/v$LUA_RESTY_HTTP.tar.gz"
+
+
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
 
@@ -233,7 +244,12 @@ cd "$BUILD_PATH/luajit2-$LUAJIT_VERSION"
 make CCDEBUG=-g
 make install
 
+ln -s /usr/local/bin/luajit /usr/local/bin/lua
+
 cd "$BUILD_PATH"
+
+# Git tuning
+git config --global --add core.compression -1
 
 # install openresty-gdb-utils
 cd /
@@ -375,8 +391,7 @@ sh build.sh
 ./configure \
   --disable-doxygen-doc \
   --disable-doxygen-html \
-  --disable-examples \
-  --enable-prce-jit
+  --disable-examples
 
 make
 make install
@@ -534,28 +549,15 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
 make
 make install
 
-cd "$BUILD_PATH/luarocks-${RESTY_LUAROCKS_VERSION}"
-./configure \
-  --lua-suffix=jit-2.1.0-beta3 \
-  --with-lua-include=/usr/local/include/luajit-2.1
-
-make
-make install
-
-export LUA_INCLUDE_DIR=/usr/local/include/luajit-2.1
-
-ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
-
-if [[ ${ARCH} != "armv7l" ]]; then
-  luarocks install lrexlib-pcre 2.7.2-1
-fi
-
 cd "$BUILD_PATH/lua-resty-core-$LUA_RESTY_CORE"
 make install
 
 cd "$BUILD_PATH/lua-resty-balancer-$LUA_RESTY_BALANCER"
 make all
 make install
+
+export LUA_INCLUDE_DIR=/usr/local/include/luajit-2.1
+ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
 
 cd "$BUILD_PATH/lua-cjson-$LUA_CJSON_VERSION"
 make all
@@ -565,13 +567,18 @@ cd "$BUILD_PATH/lua-resty-cookie-$LUA_RESTY_COOKIE_VERSION"
 make all
 make install
 
-luarocks install lua-resty-iputils 0.3.0-1
-luarocks install lua-resty-lrucache 0.09-2
-luarocks install lua-resty-lock 0.08-0
-luarocks install lua-resty-dns 0.21-1
+cd "$BUILD_PATH/lua-resty-lrucache-$LUA_RESTY_CACHE"
+make install
+
+cd "$BUILD_PATH/lua-resty-dns-$LUA_RESTY_DNS"
+make install
+
+cd "$BUILD_PATH/lua-resty-lock-$LUA_RESTY_LOCK"
+make install
 
 # required for OCSP verification
-luarocks install lua-resty-http
+cd "$BUILD_PATH/lua-resty-http-$LUA_RESTY_HTTP"
+make install
 
 cd "$BUILD_PATH/lua-resty-upload-0.10"
 make install
@@ -589,9 +596,8 @@ make install
 
 # mimalloc
 cd "$BUILD_PATH"
-git clone https://github.com/microsoft/mimalloc
+git clone --depth=1 -b v1.6.3 https://github.com/microsoft/mimalloc
 cd mimalloc
-git checkout v1.6.3
 
 mkdir -p out/release
 cd out/release
