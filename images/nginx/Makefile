@@ -21,10 +21,9 @@ SHELL=/bin/bash -o pipefail
 TAG ?= 0.102
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
-IMGNAME = nginx
-IMAGE = $(REGISTRY)/$(IMGNAME)
+IMAGE = $(REGISTRY)/nginx
 
-PLATFORMS = amd64 arm arm64
+PLATFORMS = amd64 arm arm64 s390x
 
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
@@ -34,32 +33,16 @@ COMMA := ,
 container:
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
 		--pull \
+		--push \
 		--progress plain \
 		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
 		--tag $(IMAGE):$(TAG) rootfs
-
-	# https://github.com/docker/buildx/issues/59
-	$(foreach PLATFORM,$(PLATFORMS), \
-		DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
-		--load \
-		--progress plain \
-		--platform $(PLATFORM) \
-		--tag $(IMAGE)-$(PLATFORM):$(TAG) rootfs;)
-
-.PHONY: push
-push: container
-	$(foreach PLATFORM,$(PLATFORMS), \
-		docker push $(IMAGE)-$(PLATFORM):$(TAG);)
-
-.PHONY: release
-release: push
-	echo "done"
 
 .PHONY: init-docker-buildx
 init-docker-buildx:
 ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
 	$(error "buildx not vailable. Docker 19.03 or higher is required")
 endif
-	docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
+	docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
 	docker buildx create --name ingress-nginx --use || true
 	docker buildx inspect --bootstrap
