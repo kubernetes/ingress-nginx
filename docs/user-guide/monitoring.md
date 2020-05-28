@@ -23,6 +23,11 @@ Running the following command deploys prometheus in Kubernetes:
 kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/
 ```
 
+You will also need to configure `ingress-nginx-controller` deployment to be monitored by Prometheus by setting following Kubernetes annotations:
+
+- `prometheus.io/scrape` to `true` to enable monitoring
+- `prometheus.io/port` to `10254` port of the metrics endpoint
+
 ### Prometheus Dashboard
 
 Open Prometheus dashboard in a web browser:
