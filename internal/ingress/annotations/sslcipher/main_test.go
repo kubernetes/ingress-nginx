@@ -17,6 +17,7 @@ limitations under the License.
 package sslcipher
 
 import (
+	"reflect"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -27,22 +28,27 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	annotation := parser.GetAnnotationWithPrefix("ssl-ciphers")
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
 		t.Fatalf("expected a parser.IngressAnnotation but returned nil")
 	}
 
+	annotationSSLCiphers := parser.GetAnnotationWithPrefix("ssl-ciphers")
+	annotationSSLPreferServerCiphers := parser.GetAnnotationWithPrefix("ssl-prefer-server-ciphers")
+
 	testCases := []struct {
 		annotations map[string]string
-		expected    string
+		expected    Config
 	}{
-		{map[string]string{annotation: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"}, "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"},
-		{map[string]string{annotation: "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"},
-			"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"},
-		{map[string]string{annotation: ""}, ""},
-		{map[string]string{}, ""},
-		{nil, ""},
+		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", ""}},
+		{map[string]string{annotationSSLCiphers: "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"},
+			Config{"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256", ""}},
+		{map[string]string{annotationSSLCiphers: ""}, Config{"", ""}},
+		{map[string]string{annotationSSLPreferServerCiphers: "true"}, Config{"", "on"}},
+		{map[string]string{annotationSSLPreferServerCiphers: "false"}, Config{"", "off"}},
+		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", annotationSSLPreferServerCiphers: "true"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", "on"}},
+		{map[string]string{}, Config{"", ""}},
+		{nil, Config{"", ""}},
 	}
 
 	ing := &networking.Ingress{
@@ -56,7 +62,7 @@ func TestParse(t *testing.T) {
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		result, _ := ap.Parse(ing)
-		if result != testCase.expected {
+		if !reflect.DeepEqual(result, &testCase.expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
 	}

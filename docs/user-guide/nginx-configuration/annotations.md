@@ -100,6 +100,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-max-temp-file-size](#proxy-max-temp-file-size)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
+|[nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers](#ssl-ciphers)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|
@@ -644,6 +645,12 @@ Using this annotation will set the `ssl_ciphers` directive at the server level. 
 
 ```yaml
 nginx.ingress.kubernetes.io/ssl-ciphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
+```
+
+The following annotation will set the `ssl_prefer_server_ciphers` directive at the server level. This configuration specifies that server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols.
+
+```yaml
+nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers: "true"
 ```
 
 ### Connection proxy header

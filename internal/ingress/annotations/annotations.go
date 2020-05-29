@@ -108,7 +108,7 @@ type Ingress struct {
 	UpstreamVhost      string
 	Whitelist          ipwhitelist.SourceRange
 	XForwardedPrefix   string
-	SSLCiphers         string
+	SSLCipher          sslcipher.Config
 	Logs               log.Config
 	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
@@ -156,7 +156,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
-			"SSLCiphers":           sslcipher.NewParser(cfg),
+			"SSLCipher":            sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),
 			"InfluxDB":             influxdb.NewParser(cfg),
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
