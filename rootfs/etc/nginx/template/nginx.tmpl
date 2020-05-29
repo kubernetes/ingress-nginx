@@ -885,6 +885,10 @@ stream {
         ssl_ciphers                             {{ $server.SSLCiphers }};
         {{ end }}
 
+        {{ if not (empty $server.SSLPreferServerCiphers) }}
+        ssl_prefer_server_ciphers               {{ $server.SSLPreferServerCiphers }};
+        {{ end }}
+
         {{ if not (empty $server.ServerSnippet) }}
         {{ $server.ServerSnippet }}
         {{ end }}
