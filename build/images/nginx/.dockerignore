@@ -1,1 +1,8 @@
 *.tfvars
+.terraform*
+terraform*
+*.tfstate
+*.tfstate.backup
+id_rsa*
+aws.tfvars
+env.tfvars
