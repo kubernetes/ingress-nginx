@@ -2297,6 +2297,10 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#ssl-ciphers">nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
 <td><a href="#connection-proxy-header">nginx.ingress.kubernetes.io/connection-proxy-header</a></td>
 <td>string</td>
 </tr>
@@ -2796,6 +2800,10 @@ By default this is set to "1.1".</p>
 <p>Specifies the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers">enabled ciphers</a>.</p>
 <p>Using this annotation will set the <code>ssl_ciphers</code> directive at the server level. This configuration is active for all the paths in the host.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/ssl-ciphers</span><span class="p">:</span> <span class="s">&quot;ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP&quot;</span>
+</code></pre></div>
+
+<p>The following annotation will set the <code>ssl_prefer_server_ciphers</code> directive at the server level. This configuration specifies that server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </code></pre></div>
 
 <h3 id="connection-proxy-header">Connection proxy header<a class="headerlink" href="#connection-proxy-header" title="Permanent link"> ¶</a></h3>
