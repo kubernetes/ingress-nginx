@@ -329,6 +329,8 @@ spec:
         app.kubernetes.io/component: controller
     spec:
       dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
       containers:
         - name: controller
           image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.32.0
@@ -520,6 +522,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: admission-webhook
     spec:
+      nodeSelector:
+        kubernetes.io/os: linux
       containers:
         - name: create
           image: jettech/kube-webhook-certgen:v1.2.0
@@ -563,6 +567,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: admission-webhook
     spec:
+      nodeSelector:
+        kubernetes.io/os: linux
       containers:
         - name: patch
           image: jettech/kube-webhook-certgen:v1.2.0
