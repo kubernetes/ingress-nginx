@@ -35,8 +35,14 @@ trap 'catch $? $LINENO' ERR
 
 terraform init
 
+GET_UNTIL_VALID="
+from datetime import datetime, timedelta
+two_hours_from_now = datetime.utcnow() + timedelta(hours=2)
+print(two_hours_from_now.strftime('%Y-%m-%dT%H:%M:%SZ'))
+"
+
 # destroy spot instance after two hours
-EC2_VALID_UNTIL=$(date -d "+2 hours" +%Y-%m-%dT%H:%M:%SZ)
+EC2_VALID_UNTIL=$(python3 -c "$GET_UNTIL_VALID")
 
 terraform plan \
   -var-file /root/aws.tfvars \

@@ -35,16 +35,11 @@ source_tfvars /tmp/env
 export DEBIAN_FRONTEND=noninteractive
 export AR_FLAGS=cr
 
-apt -q=3 update
+apt update
+apt dist-upgrade --yes
+apt update
 
-apt -q=3 dist-upgrade --yes
-
-add-apt-repository universe   --yes
-add-apt-repository multiverse --yes
-
-apt -q=3 update
-
-apt -q=3 install \
+apt install \
   apt-transport-https \
   ca-certificates \
   curl \
@@ -59,21 +54,15 @@ add-apt-repository \
   $(lsb_release -cs) \
   stable" --yes
 
-apt -q=3 update
+apt update
 
-apt -q=3 install docker-ce --yes
+apt install docker-ce --yes
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 echo ${docker_password} | docker login -u ${docker_username} --password-stdin quay.io
 
-curl -sL -o /usr/local/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
-chmod +x /usr/local/bin/gimme
-
-eval "$(gimme 1.14.3)"
-
 git clone https://github.com/kubernetes/ingress-nginx
-
 cd ingress-nginx/images/nginx
 
 export TAG=$(git rev-parse HEAD)
@@ -82,4 +71,4 @@ make init-docker-buildx
 docker buildx use ingress-nginx --default --global
 
 echo "Building NGINX images..."
-make release
+make container

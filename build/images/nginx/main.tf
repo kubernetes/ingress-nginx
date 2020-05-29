@@ -165,8 +165,8 @@ resource "aws_spot_instance_request" "build_worker" {
   }
 
   provisioner "file" {
-    source      = "build-nginx.sh"
-    destination = "/tmp/build-nginx.sh"
+    source      = "build.sh"
+    destination = "/tmp/build.sh"
   }
 
   provisioner "file" {
@@ -177,8 +177,8 @@ resource "aws_spot_instance_request" "build_worker" {
   provisioner "remote-exec" {
     inline = [
       "echo Building nginx images...",
-      "chmod +x /tmp/build-nginx.sh",
-      "sudo /tmp/build-nginx.sh",
+      "chmod +x /tmp/build.sh",
+      "sudo /tmp/build.sh",
     ]
   }
 }
