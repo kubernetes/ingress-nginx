@@ -61,8 +61,7 @@ endif
 
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
-BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx
-BASE_TAG ?= 227f97465158f038b3c0a3bfd8299fe8d8a530e3
+BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 
 GOARCH=$(ARCH)
 GOBUILD_FLAGS := -v
@@ -107,7 +106,7 @@ container: clean-container .container-$(ARCH) ## Build image for a particular ar
 		--no-cache \
 		--progress plain \
 		--platform linux/$(ARCH) \
-		--build-arg BASE_IMAGE="$(BASE_IMAGE)-$(ARCH):$(BASE_TAG)" \
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		-t $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG) $(TEMP_DIR)/rootfs
 
@@ -292,7 +291,7 @@ ifeq ($(DIND_TASKS),)
 ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
 	$(error "buildx not available. Docker 19.03 or higher is required with experimental features enabled")
 endif
-	docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
+	docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
 	docker buildx create --name ingress-nginx --use || true
 	docker buildx inspect --bootstrap
 endif
