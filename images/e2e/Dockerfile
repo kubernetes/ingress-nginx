@@ -107,6 +107,9 @@ RUN set -eux; \
   ; \
   apk del .build-deps;
 
+RUN wget https://raw.githubusercontent.com/openresty/openresty-devel-utils/master/lj-releng -O /usr/local/bin/lj-releng \
+  && chmod +x /usr/local/bin/lj-releng
+
 RUN wget https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
   && chmod +x /usr/local/bin/kubectl
 
