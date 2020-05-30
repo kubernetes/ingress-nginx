@@ -31,8 +31,8 @@ export JAEGER_VERSION=0.4.2
 export MSGPACK_VERSION=3.2.1
 export DATADOG_CPP_VERSION=1.1.5
 export MODSECURITY_VERSION=1.0.1
-export MODSECURITY_LIB_VERSION=6624a18a4e7fd9881a7a9b435db3e481e8e986a5
-export OWASP_MODSECURITY_CRS_VERSION=3.2.0
+export MODSECURITY_LIB_VERSION=v3.0.4
+export OWASP_MODSECURITY_CRS_VERSION=v3.2.0
 export LUA_NGX_VERSION=0.10.15
 export LUA_STREAM_NGX_VERSION=0.0.7
 export LUA_UPSTREAM_VERSION=0.07
@@ -104,7 +104,7 @@ apk add \
   curl-dev \
   libprotobuf \
   git g++ pkgconf flex bison doxygen yajl-dev lmdb-dev libtool autoconf libxml2 libxml2-dev \
-  python \
+  python3 \
   libmaxminddb-dev \
   bc \
   unzip \
@@ -353,7 +353,7 @@ git submodule init
 git submodule update
 
 cd "$BUILD_PATH"
-git clone https://github.com/ssdeep-project/ssdeep
+git clone --depth=1 https://github.com/ssdeep-project/ssdeep
 cd ssdeep/
 
 ./bootstrap
@@ -364,9 +364,8 @@ make install
 
 # build modsecurity library
 cd "$BUILD_PATH"
-git clone https://github.com/SpiderLabs/ModSecurity
+git clone --depth=1 -b $MODSECURITY_LIB_VERSION https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
-git checkout $MODSECURITY_LIB_VERSION
 git submodule init
 git submodule update
 
@@ -393,7 +392,7 @@ echo "SecAuditLogStorageDir /var/log/audit/" >> /etc/nginx/modsecurity/modsecuri
 # Download owasp modsecurity crs
 cd /etc/nginx/
 
-git clone -b v$OWASP_MODSECURITY_CRS_VERSION https://github.com/SpiderLabs/owasp-modsecurity-crs
+git clone -b $OWASP_MODSECURITY_CRS_VERSION https://github.com/SpiderLabs/owasp-modsecurity-crs
 cd owasp-modsecurity-crs
 
 mv crs-setup.conf.example crs-setup.conf
