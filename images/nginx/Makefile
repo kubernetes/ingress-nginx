@@ -18,24 +18,18 @@
 SHELL=/bin/bash -o pipefail
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.102
+TAG ?= 0.103
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 IMAGE = $(REGISTRY)/nginx
 
-PLATFORMS = amd64 arm arm64 s390x
-
-EMPTY :=
-SPACE := $(EMPTY) $(EMPTY)
-COMMA := ,
-
-.PHONY: container
-container:
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
+.PHONY: image
+image:
+	docker buildx build \
 		--pull \
 		--push \
 		--progress plain \
-		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--platform amd64,arm,arm64,s390x \
 		--tag $(IMAGE):$(TAG) rootfs
 
 .PHONY: init-docker-buildx
