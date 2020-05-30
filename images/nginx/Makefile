@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.DEFAULT_GOAL:=container
+.DEFAULT_GOAL:=image
 
 # set default shell
 SHELL=/bin/bash -o pipefail
