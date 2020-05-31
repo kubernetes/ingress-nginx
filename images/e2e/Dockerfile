@@ -98,6 +98,9 @@ RUN wget -O /tmp/ct-${CHART_TESTING_VERSION}-linux-amd64.tar.gz \
   && cp -R /tmp/ct-download/etc/* /etc/ct \
   && rm -rf /tmp/*
 
+RUN wget https://raw.githubusercontent.com/openresty/openresty-devel-utils/master/lj-releng -O /usr/local/bin/lj-releng \
+  && chmod +x /usr/local/bin/lj-releng
+
 ARG HELM_VERSION
 
 RUN wget -O /tmp/helm.tgz https://get.helm.sh/helm-${HELM_VERSION}-linux-${TARGETARCH}.tar.gz \
