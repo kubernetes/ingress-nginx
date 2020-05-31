@@ -78,15 +78,15 @@ kind create cluster \
 echo "Kubernetes cluster:"
 kubectl get nodes -o wide
 
-echo "[dev-env] building container"
+echo "[dev-env] building image"
 export EXIT_CODE=-1
 echo "
-make -C ${DIR}/../../ build container
+make -C ${DIR}/../../ build image
 make -C ${DIR}/../../ e2e-test-image
-make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build container
-make -C ${DIR}/../../images/echo/ container
-make -C ${DIR}/../../images/httpbin/ container
-make -C ${DIR}/../../images/cfssl/ container
+make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build image
+make -C ${DIR}/../../images/httpbin/ image
+make -C ${DIR}/../../images/echo/ image
+make -C ${DIR}/../../images/cfssl/ image
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?
 if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
 then
@@ -102,8 +102,8 @@ fi
 docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
 
 # Preload images used in e2e tests
-docker pull openresty/openresty:1.15.8.2-alpine
 docker pull moul/grpcbin
+docker pull quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 
 KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
 
@@ -113,9 +113,9 @@ echo "
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/nginx-ingress-controller:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/fastcgi-helloserver:${TAG}
-kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} openresty/openresty:1.15.8.2-alpine
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/httpbin:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/echo:${TAG}
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} moul/grpcbin
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/cfssl:${TAG}
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?
