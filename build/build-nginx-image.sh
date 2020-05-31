@@ -41,6 +41,7 @@ fi
 export DOCKER_CLI_EXPERIMENTAL=enabled
 docker buildx build \
   --load \
+  --progress plain \
   --platform linux/amd64 \
   --tag build-nginx-terraform $DIR/images/nginx
 

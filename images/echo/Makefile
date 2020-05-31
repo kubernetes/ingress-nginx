@@ -36,6 +36,7 @@ IMAGE = $(REGISTRY)/echo
 image:
 	docker buildx build \
 		--load \
+		--progress plain \
 		--platform $(ARCH) \
 		-t $(IMAGE):$(TAG) .
 

@@ -37,5 +37,6 @@ IMAGE = $(REGISTRY)/httpbin
 image:
 	docker buildx build \
 		--load \
+		--progress plain \
 		--platform $(ARCH) \
 		-t $(IMAGE):$(TAG) rootfs
