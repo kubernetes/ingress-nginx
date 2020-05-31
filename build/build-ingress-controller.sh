@@ -40,6 +40,7 @@ fi
 # build local terraform image to build nginx
 docker buildx build \
   --load \
+  --progress plain \
   --platform linux/amd64 \
   --tag build-ingress-controller-terraform $DIR/images/ingress-controller
 
