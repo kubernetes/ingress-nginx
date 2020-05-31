@@ -17,17 +17,27 @@
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
 TAG ?= 0.0
 
+HOSTARCH := $(shell uname -m | sed -e s/x86_64/amd64/ \
+	-e s/s390x/s390x/ \
+	-e s/armv7l/arm/ \
+	-e s/aarch64.*/arm64/)
+
+ifndef ARCH
+ARCH := $(HOSTARCH)
+endif
+ifeq ($(ARCH),)
+    $(error mandatory variable ARCH is empty)
+endif
+
 REGISTRY ?= ingress-controller
-DOCKER ?= docker
 
-IMGNAME = echo
-IMAGE = $(REGISTRY)/$(IMGNAME)
+IMAGE = $(REGISTRY)/echo
 
-container:
-	$(DOCKER) buildx build \
+image:
+	docker buildx build \
 		--load \
-		--platform linux/amd64 \
+		--platform $(ARCH) \
 		-t $(IMAGE):$(TAG) .
 
 clean:
-	$(DOCKER) rmi -f $(IMAGE):$(TAG) || true
+	docker rmi -f $(IMAGE):$(TAG) || true

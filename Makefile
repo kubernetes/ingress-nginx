@@ -76,21 +76,21 @@ help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 # internal task
-.PHONY: sub-container-%
-sub-container-%:
-	$(MAKE) ARCH=$* build container
+.PHONY: sub-image-%
+sub-image-%:
+	$(MAKE) ARCH=$* build image
 
 # internal task
 .PHONY: sub-push-%
 sub-push-%: ## Publish image for a particular arch.
 	$(MAKE) ARCH=$* push
 
-.PHONY: container
-container: clean-container .container-$(ARCH) ## Build image for a particular arch.
+.PHONY: image
+image: clean-image .image-$(ARCH) ## Build image for a particular arch.
 
 # internal task to build image for a particular arch.
-.PHONY: .container-$(ARCH)
-.container-$(ARCH): init-docker-buildx
+.PHONY: .image-$(ARCH)
+.image-$(ARCH): init-docker-buildx
 	mkdir -p $(TEMP_DIR)/rootfs
 	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
 	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
@@ -110,8 +110,8 @@ container: clean-container .container-$(ARCH) ## Build image for a particular ar
 		--build-arg VERSION="$(TAG)" \
 		-t $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG) $(TEMP_DIR)/rootfs
 
-.PHONY: clean-container
-clean-container: ## Removes local image
+.PHONY: clean-image
+clean-image: ## Removes local image
 	echo "removing old image $(BASE_IMAGE)-$(ARCH):$(TAG)"
 	@docker rmi -f $(BASE_IMAGE)-$(ARCH):$(TAG) || true
 
@@ -303,6 +303,6 @@ show-version:
 .PHONY: staging-gcr
 staging-gcr:
 	echo "Building NGINX image..."
-	ARCH=amd64 make build container push
-	ARCH=arm   make build container push
-	ARCH=arm64 make build container push
+	ARCH=amd64 make build image push
+	ARCH=arm   make build image push
+	ARCH=arm64 make build image push

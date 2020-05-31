@@ -82,9 +82,9 @@ docker buildx use ingress-nginx --default --global
 export DIND_TASKS=0
 
 echo "Building NGINX image..."
-ARCH=amd64 make build container push
-ARCH=arm   make build container push
-ARCH=arm64 make build container push
+ARCH=amd64 make build image push
+ARCH=arm   make build image push
+ARCH=arm64 make build image push
 
 echo "Creating multi-arch images..."
 make push-manifest
