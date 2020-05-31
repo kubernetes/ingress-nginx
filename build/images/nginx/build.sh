@@ -71,4 +71,4 @@ make init-docker-buildx
 docker buildx use ingress-nginx --default --global
 
 echo "Building NGINX images..."
-make container
+make image

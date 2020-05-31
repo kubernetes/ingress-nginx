@@ -1,5 +1,5 @@
 .PHONY: all
-all: container
+all: image
 
 DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
@@ -12,8 +12,8 @@ ifdef DIND_TASKS
 USE_DOCKER=false
 endif
 
-.PHONY: container
-container:
+.PHONY: image
+image:
 ifeq ($(USE_DOCKER), true)
 	@$(DIR)/../../build/run-in-docker.sh make e2e-test-binary
 else
