@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM us.gcr.io/k8s-artifacts-prod/build-image/debian-base-amd64:v2.1.0
+FROM scratch
 
 COPY . /
 
