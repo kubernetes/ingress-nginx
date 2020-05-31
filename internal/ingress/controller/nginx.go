@@ -343,17 +343,10 @@ func (n *NGINXController) Start() {
 			// issues because of this behavior.
 			// To avoid this issue we restart nginx in case of errors.
 			if process.IsRespawnIfRequired(err) {
-				process.WaitUntilPortIsAvailable(n.cfg.ListenPorts.HTTP)
 				// release command resources
-				cmd.Process.Release()
-				// start a new nginx master process if the controller is not being stopped
-				cmd = n.command.ExecCommand()
-				cmd.SysProcAttr = &syscall.SysProcAttr{
-					Setpgid: true,
-					Pgid:    0,
-				}
-				n.start(cmd)
+				return
 			}
+
 		case event := <-n.updateCh.Out():
 			if n.isShuttingDown {
 				break
