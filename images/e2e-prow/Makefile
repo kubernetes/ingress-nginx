@@ -5,7 +5,7 @@ IMAGE = $(REGISTRY)/e2e-prow
 
 .PHONY: image
 image:
-	$(DOCKER) buildx build \
+	docker buildx build \
 		--pull \
 		--push \
 		--platform amd64 \

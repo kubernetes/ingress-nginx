@@ -22,7 +22,8 @@ PLATFORM ?= amd64
 .PHONY: image
 image:
 	docker buildx build \
-		--load \
+		--pull \
+		--push \
 		--progress plain \
 		--platform $(PLATFORM) \
 		--build-arg K8S_RELEASE=v1.15.7 \
