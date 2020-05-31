@@ -39,6 +39,7 @@ PKG=k8s.io/ingress-nginx/images/fastcgi-helloserver
 image: build
 	docker buildx build \
 		--load \
+		--progress plain \
 		--platform $(ARCH) \
 		-t $(IMAGE):$(TAG) rootfs
 

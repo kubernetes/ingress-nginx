@@ -8,6 +8,7 @@ image:
 	docker buildx build \
 		--pull \
 		--push \
+		--progress plain \
 		--platform amd64 \
 		--build-arg K8S_RELEASE=v1.17.0 \
 		--build-arg ETCD_VERSION=v3.3.18 \
