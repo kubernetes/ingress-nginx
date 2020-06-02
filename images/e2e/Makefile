@@ -17,9 +17,16 @@ REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 IMAGE = $(REGISTRY)/e2e
 
+HOST_ARCH = $(shell which go >/dev/null 2>&1 && go env GOARCH)
+ARCH ?= $(HOST_ARCH)
+ifeq ($(ARCH),)
+    $(error mandatory variable ARCH is empty, either set it when calling the command or make sure 'go env GOARCH' works)
+endif
+
 .PHONY: image
 image:
 	docker build \
+		--build-arg TARGETARCH="$(ARCH)" \
 		--build-arg K8S_RELEASE=v1.15.7 \
 		--build-arg RESTY_CLI_VERSION=0.25rc2 \
 		--build-arg RESTY_CLI_SHA=a38d850441384fa037a5922ca012dcce8708d0e4abe34ad2fe4164a01b28bdfb \
