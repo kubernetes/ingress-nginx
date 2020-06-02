@@ -13,6 +13,7 @@
 # limitations under the License.
 
 FROM golang:1.14.3-alpine3.11 as GO
+FROM k8s.gcr.io/etcd:3.4.3-0 as etcd
 
 FROM quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 
@@ -25,7 +26,8 @@ ARG CHART_TESTING_VERSION
 
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
-COPY --from=GO /usr/local/go /usr/local/go
+COPY --from=GO   /usr/local/go /usr/local/go
+COPY --from=etcd /usr/local/bin/etcd /usr/local/bin/etcd
 
 RUN apk add --no-cache \
   bash \
@@ -56,16 +58,13 @@ RUN wget -O /tmp/resty_cli.tgz https://github.com/openresty/resty-cli/archive/v$
   && resty -V \
   && rm -rf /tmp/*
 
-ARG LUA_CHECK_VERSION
-ARG LUA_CHECK_SHA
-
 RUN wget -O /tmp/luarocks.tgz https://github.com/luarocks/luarocks/archive/v3.3.1.tar.gz \
   && tar -C /tmp -xzf /tmp/luarocks.tgz \
   && cd /tmp/luarocks* \
   && ./configure \
   && make install
 
-RUN luarocks install busted \
+RUN  luarocks install busted \
   && luarocks install luacheck
 
 ARG BUSTED_VERSION
@@ -80,13 +79,6 @@ RUN wget -O /usr/local/bin/kubectl \
 RUN wget -O /usr/local/bin/kube-apiserver \
   https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/${TARGETARCH}/kube-apiserver \
   && chmod +x /usr/local/bin/kube-apiserver
-
-RUN wget -O /tmp/etcd-${ETCD_VERSION}-linux-${TARGETARCH}.tar.gz \
-  https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-${TARGETARCH}.tar.gz \
-  && mkdir -p /tmp/etcd-download \
-  && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp/etcd-download --strip-components=1 \
-  && cp /tmp/etcd-download/etcd /usr/local/bin \
-  && rm -rf /tmp/*
 
 RUN wget -O /tmp/ct-${CHART_TESTING_VERSION}-linux-amd64.tar.gz \
   https://github.com/helm/chart-testing/releases/download/v${CHART_TESTING_VERSION}/chart-testing_${CHART_TESTING_VERSION}_linux_amd64.tar.gz \

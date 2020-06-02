@@ -27,9 +27,7 @@ endif
 	# TODO: avoid manual copy
 	cp -R $(DIR)/../../test/e2e/settings/ocsp/* .
 
-	docker buildx build \
-		--load \
-		--progress plain \
+	docker build \
 		--tag nginx-ingress-controller:e2e .
 
 .PHONY: clean
