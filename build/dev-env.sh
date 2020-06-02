@@ -25,7 +25,6 @@ set -o pipefail
 DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 
 export TAG=1.0.0-dev
-export ARCH=amd64
 export REGISTRY=${REGISTRY:-ingress-controller}
 
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
@@ -59,7 +58,7 @@ fi
 
 echo "[dev-env] building image"
 make build image
-docker tag "${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG}" "${DEV_IMAGE}"
+docker tag "${REGISTRY}/nginx-ingress-controller:${TAG}" "${DEV_IMAGE}"
 
 export K8S_VERSION=${K8S_VERSION:-v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694}
 
