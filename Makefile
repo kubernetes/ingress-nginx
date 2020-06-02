@@ -74,7 +74,7 @@ help:  ## Display this help
 .PHONY: image
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	@cp -R bin/ rootfs/
+	@cp -R bin/ rootfs/bin
 	@docker build \
 		--no-cache \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
@@ -267,7 +267,7 @@ release: init-docker-buildx clean
 	echo "Building binaries..."
 	$(foreach PLATFORM,$(PLATFORMS), ARCH=$(PLATFORM) make build;)
 
-	@cp -R bin/ rootfs/
+	@cp -R bin/ rootfs/bin
 
 	echo "Building and pushing ingress-nginx image..."
 	@docker buildx build \
