@@ -96,10 +96,8 @@ then
 else
   echo "Image builds were not ok! Log:"
   cat /tmp/log
-  exit
+  exit 1
 fi
-
-docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
 
 # Preload images used in e2e tests
 docker pull moul/grpcbin

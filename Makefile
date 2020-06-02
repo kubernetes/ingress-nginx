@@ -42,7 +42,7 @@ endif
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 14
+E2E_NODES ?= 15
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
 # run e2e test suite with tests that check for memory leaks? (default is false)
@@ -61,75 +61,31 @@ endif
 
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
-BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
+BASE_IMAGE ?= $(REGISTRY)/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 
 GOARCH=$(ARCH)
-GOBUILD_FLAGS := -v
 
 # use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
 GO111MODULE=off
 
-TEMP_DIR := $(shell mktemp -d)
-DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
-
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-# internal task
-.PHONY: sub-image-%
-sub-image-%:
-	$(MAKE) ARCH=$* build image
-
-# internal task
-.PHONY: sub-push-%
-sub-push-%: ## Publish image for a particular arch.
-	$(MAKE) ARCH=$* push
-
 .PHONY: image
-image: clean-image .image-$(ARCH) ## Build image for a particular arch.
-
-# internal task to build image for a particular arch.
-.PHONY: .image-$(ARCH)
-.image-$(ARCH): init-docker-buildx
-	mkdir -p $(TEMP_DIR)/rootfs
-	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
-	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
-	cp bin/$(ARCH)/wait-shutdown $(TEMP_DIR)/rootfs/wait-shutdown
-
-	cp -RP rootfs/* $(TEMP_DIR)/rootfs
-
+image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	# buildx assumes images are multi-arch
-	docker buildx build \
-		--pull \
-		--load \
+	@cp -R bin/ rootfs/
+	@docker build \
 		--no-cache \
-		--progress plain \
-		--platform linux/$(ARCH) \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		-t $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG) $(TEMP_DIR)/rootfs
+		--build-arg TARGETARCH="$(ARCH)" \
+		-t $(REGISTRY)/nginx-ingress-controller:$(TAG) rootfs
 
 .PHONY: clean-image
 clean-image: ## Removes local image
-	echo "removing old image $(BASE_IMAGE)-$(ARCH):$(TAG)"
-	@docker rmi -f $(BASE_IMAGE)-$(ARCH):$(TAG) || true
-
-.PHONY: push
-push: .push-$(ARCH) ## Publish image for a particular arch.
-
-# internal task
-.PHONY: .push-$(ARCH)
-.push-$(ARCH):
-	docker push $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG)
-
-.PHONY: push-manifest
-push-manifest:
-	docker manifest create $(REGISTRY)/nginx-ingress-controller:$(TAG) \
-		$(REGISTRY)/nginx-ingress-controller-amd64:$(TAG) \
-		$(REGISTRY)/nginx-ingress-controller-arm:$(TAG) \
-		$(REGISTRY)/nginx-ingress-controller-arm64:$(TAG)
-	docker manifest push --purge $(REGISTRY)/nginx-ingress-controller:$(TAG)
+	echo "removing old image $(BASE_IMAGE):$(TAG)"
+	@docker rmi -f $(BASE_IMAGE):$(TAG) || true
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
@@ -300,9 +256,25 @@ endif
 show-version:
 	echo -n $(TAG)
 
-.PHONY: staging-gcr
-staging-gcr:
-	echo "Building NGINX image..."
-	ARCH=amd64 make build image push
-	ARCH=arm   make build image push
-	ARCH=arm64 make build image push
+PLATFORMS ?= amd64 arm arm64 s390x
+
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+COMMA := ,
+
+.PHONY: release # Build a multi-arch docker image
+release: init-docker-buildx clean
+	echo "Building binaries..."
+	$(foreach PLATFORM,$(PLATFORMS), ARCH=$(PLATFORM) make build;)
+
+	@cp -R bin/ rootfs/
+
+	echo "Building and pushing ingress-nginx image..."
+	@docker buildx build \
+		--no-cache \
+		--push \
+		--progress plain \
+		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
+		--build-arg VERSION="$(TAG)" \
+		-t $(REGISTRY)/nginx-ingress-controller:$(TAG) rootfs
