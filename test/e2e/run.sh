@@ -63,7 +63,7 @@ export K8S_VERSION=${K8S_VERSION:-v1.18.0@sha256:0e20578828edd939d25eb98496a685c
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
-KIND_CLUSTER_NAME="ingress-nginx-dev"
+export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 
 echo "[dev-env] creating Kubernetes cluster with kind"
 
@@ -81,8 +81,8 @@ kubectl get nodes -o wide
 echo "[dev-env] building image"
 export EXIT_CODE=-1
 echo "
-make -C ${DIR}/../../ build image
-make -C ${DIR}/../../ e2e-test-image
+make -C ${DIR}/../../ clean-image build image
+make -C ${DIR}/../e2e-image image
 make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build image
 make -C ${DIR}/../../images/httpbin/ image
 make -C ${DIR}/../../images/echo/ image
