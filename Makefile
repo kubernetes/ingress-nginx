@@ -74,7 +74,6 @@ help:  ## Display this help
 .PHONY: image
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	@cp -R bin/ rootfs/bin
 	@docker build \
 		--no-cache \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
@@ -158,10 +157,6 @@ endif
 .PHONY: e2e-test
 e2e-test: check-go-version ## Run e2e tests (expects access to a working Kubernetes cluster).
 	@build/run-e2e-suite.sh
-
-.PHONY: e2e-test-image
-e2e-test-image: ## Build image for e2e tests.
-	@make -C test/e2e-image
 
 .PHONY: e2e-test-binary
 e2e-test-binary: check-go-version ## Build ginkgo binary for e2e tests.
@@ -265,9 +260,7 @@ COMMA := ,
 .PHONY: release # Build a multi-arch docker image
 release: init-docker-buildx clean
 	echo "Building binaries..."
-	$(foreach PLATFORM,$(PLATFORMS), ARCH=$(PLATFORM) make build;)
-
-	@cp -R bin/ rootfs/bin
+	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
 
 	echo "Building and pushing ingress-nginx image..."
 	@docker buildx build \

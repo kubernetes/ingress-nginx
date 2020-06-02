@@ -76,7 +76,7 @@ To find the registry simply run: `docker system info | grep Registry`
 The e2e test image can also be built through the Makefile.
 
 ```console
-$ make e2e-test-image
+$ make -C test/e2e-image image
 ```
 
 You can then make this image available on your minikube host by exporting the image and loading it with the minikube docker context:

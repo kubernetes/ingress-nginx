@@ -51,18 +51,18 @@ go build \
     -X ${PKG}/version.RELEASE=${TAG} \
     -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
     -X ${PKG}/version.REPO=${REPO_INFO}" \
-  -o "bin/${ARCH}/nginx-ingress-controller" "${PKG}/cmd/nginx"
+  -o "rootfs/bin/${ARCH}/nginx-ingress-controller" "${PKG}/cmd/nginx"
 
 go build \
   -ldflags "-s -w \
     -X ${PKG}/version.RELEASE=${TAG} \
     -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
     -X ${PKG}/version.REPO=${REPO_INFO}" \
-  -o "bin/${ARCH}/dbg" "${PKG}/cmd/dbg"
+  -o "rootfs/bin/${ARCH}/dbg" "${PKG}/cmd/dbg"
 
 go build \
   -ldflags "-s -w \
     -X ${PKG}/version.RELEASE=${TAG} \
     -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
     -X ${PKG}/version.REPO=${REPO_INFO}" \
-  -o "bin/${ARCH}/wait-shutdown" "${PKG}/cmd/waitshutdown"
+  -o "rootfs/bin/${ARCH}/wait-shutdown" "${PKG}/cmd/waitshutdown"
