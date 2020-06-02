@@ -61,7 +61,7 @@ endif
 
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
-BASE_IMAGE ?= $(REGISTRY)/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
+BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 
 GOARCH=$(ARCH)
 
