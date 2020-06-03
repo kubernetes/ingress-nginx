@@ -95,10 +95,10 @@ Parameter | Description | Default
 `controller.resources` | controller pod resource requests & limits | `{}`
 `controller.priorityClassName` | controller priorityClassName | `nil`
 `controller.lifecycle` | controller pod lifecycle hooks | `{}`
-`controller.service.annotations` | annotations for controller service | `{}`
-`controller.service.labels` | labels for controller service | `{}`
 `controller.publishService.enabled` | if true, the controller will set the endpoint records on the ingress objects to reflect those on the service | `false`
 `controller.publishService.pathOverride` | override of the default publish-service name | `""`
+`controller.service.annotations` | annotations for controller service | `{}`
+`controller.service.labels` | labels for controller service | `{}`
 `controller.service.enabled` | if disabled no service will be created. This is especially useful when `controller.kind` is set to `DaemonSet` and `controller.hostPorts.enabled` is `true` | true
 `controller.service.clusterIP` | internal controller cluster service IP (set to `"-"` to pass an empty value) | `nil`
 `controller.service.omitClusterIP` | (Deprecated) To omit the `clusterIP` from the controller service | `false`

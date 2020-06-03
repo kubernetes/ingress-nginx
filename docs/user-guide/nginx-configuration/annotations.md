@@ -173,7 +173,7 @@ Use `nginx.ingress.kubernetes.io/session-cookie-samesite` to apply a `SameSite` 
 
 ### Authentication
 
-Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.
+It is possible to add authentication by adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.
 
 The annotations are:
 ```
