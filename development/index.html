@@ -1399,8 +1399,8 @@ or push an image to a remote repository.</p>
 <div class="highlight"><pre><span></span><code><span class="gp">$</span> make -C test/e2e-image image
 </code></pre></div>
 
-<p>You can then make this image available on your minikube host by exporting the image and loading it with the minikube docker context:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> docker save nginx-ingress-controller:e2e <span class="p">|</span>  <span class="o">(</span><span class="nb">eval</span> <span class="k">$(</span>minikube docker-env<span class="k">)</span> <span class="o">&amp;&amp;</span> docker load<span class="o">)</span>
+<p>Then you can load the docker image using kind: </p>
+<div class="highlight"><pre><span></span><code><span class="gp">$</span> kind load docker-image --name<span class="o">=</span><span class="s2">&quot;ingress-nginx-dev&quot;</span> nginx-ingress-controller:e2e
 </code></pre></div>
 
 <h3 id="nginx-controller">Nginx Controller<a class="headerlink" href="#nginx-controller" title="Permanent link"> ¶</a></h3>
@@ -1426,8 +1426,11 @@ Please check the <a href="../deploy/">deployment guide</a></p>
 </code></pre></div>
 
 <p>If you have access to a Kubernetes cluster, you can also run e2e tests using ginkgo.</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
-<span class="gp">$</span> make e2e-test
+<p><div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
+<span class="gp">$</span> <span class="nv">KIND_CLUSTER_NAME</span><span class="o">=</span><span class="s2">&quot;ingress-nginx-test&quot;</span> make kind-e2e-test
+</code></pre></div>
+To set focus to a particular set of tests, a FOCUS flag can be set.</p>
+<div class="highlight"><pre><span></span><code><span class="go">KIND_CLUSTER_NAME=&quot;ingress-nginx-test&quot; FOCUS=&quot;no-auth-locations&quot; make kind-e2e-test</span>
 </code></pre></div>
 
 <p>NOTE: if your e2e pod keeps hanging in an ImagePullBackoff, make sure you've made your e2e nginx-ingress-controller image available to minikube as explained in the <strong>Building the e2e test image</strong> section</p>
