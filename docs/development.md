@@ -79,12 +79,11 @@ The e2e test image can also be built through the Makefile.
 $ make -C test/e2e-image image
 ```
 
-You can then make this image available on your minikube host by exporting the image and loading it with the minikube docker context:
+Then you can load the docker image using kind: 
 
 ```console
-$ docker save nginx-ingress-controller:e2e |  (eval $(minikube docker-env) && docker load)
+$ kind load docker-image --name="ingress-nginx-dev" nginx-ingress-controller:e2e
 ```
-
 
 ### Nginx Controller
 
@@ -125,7 +124,12 @@ If you have access to a Kubernetes cluster, you can also run e2e tests using gin
 
 ```console
 $ cd $GOPATH/src/k8s.io/ingress-nginx
-$ make e2e-test
+$ KIND_CLUSTER_NAME="ingress-nginx-test" make kind-e2e-test
+```
+To set focus to a particular set of tests, a FOCUS flag can be set.
+
+```console
+KIND_CLUSTER_NAME="ingress-nginx-test" FOCUS="no-auth-locations" make kind-e2e-test
 ```
 
 NOTE: if your e2e pod keeps hanging in an ImagePullBackoff, make sure you've made your e2e nginx-ingress-controller image available to minikube as explained in the **Building the e2e test image** section
