@@ -613,6 +613,9 @@ type Configuration struct {
 	// HTTPSnippet adds custom configuration to the http section of the nginx configuration
 	HTTPSnippet string `json:"http-snippet"`
 
+	// StreamSnippet adds custom configuration to the stream section of the nginx configuration
+	StreamSnippet string `json:"stream-snippet"`
+
 	// ServerSnippet adds custom configuration to all the servers in the nginx configuration
 	ServerSnippet string `json:"server-snippet"`
 
