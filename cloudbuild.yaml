@@ -12,6 +12,7 @@ steps:
       - TAG=$_GIT_TAG
       - BASE_REF=$_PULL_BASE_REF
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
+      - REPO_INFO=https://github.com/kubernetes/ingress-nginx
       - HOME=/root
       - USER=root
     args:
