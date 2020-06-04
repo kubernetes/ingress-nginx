@@ -200,6 +200,28 @@ func TestCheckIngress(t *testing.T) {
 		}
 	})
 
+	t.Run("When the ingress host path has defined", func(t *testing.T) {
+		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
+		nginx.store = fakeIngressStore{
+			ingresses: []*ingress.Ingress{
+				{
+					Ingress:           *ing.DeepCopy(),
+					ParsedAnnotations: &annotations.Ingress{},
+				},
+			},
+		}
+		testIng := ing.DeepCopy()
+		testIng.Name = "other-ingress"
+		nginx.command = testNginxTestCommand{
+			t:        t,
+			err:      fmt.Errorf("test error"),
+			expected: "_,example.com",
+		}
+		if nginx.CheckIngress(testIng) == nil {
+			t.Errorf("with a new ingress with same host path defined, an error should be returned")
+		}
+	})
+
 	t.Run("when the class is the nginx one", func(t *testing.T) {
 		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
 		nginx.command = testNginxTestCommand{

@@ -124,9 +124,9 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	ings := n.store.ListIngresses(nil)
-	hosts, servers, pcfg := n.getConfiguration(ings)
+	hosts, _, pcfg := n.getConfiguration(ings)
 
-	n.metricCollector.SetSSLExpireTime(servers)
+	n.metricCollector.SetSSLExpireTime(pcfg.Servers)
 
 	if n.runningConfig.Equal(pcfg) {
 		klog.V(3).Infof("No configuration change detected, skipping backend reload.")
@@ -227,7 +227,11 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
 	})
 
-	_, _, pcfg := n.getConfiguration(ings)
+	_, servers, pcfg := n.getConfiguration(ings)
+	if err := n.checkIngressHostPath(ing, servers); err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+		return err
+	}
 
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
@@ -400,15 +404,17 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 }
 
 // getConfiguration returns the configuration matching the standard kubernetes ingress
-func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.String, []*ingress.Server, *ingress.Configuration) {
+func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.String, map[string]*ingress.Server, *ingress.Configuration) {
 	upstreams, servers := n.getBackendServers(ingresses)
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
 	hosts := sets.NewString()
+	hServers := make(map[string]*ingress.Server, len(servers))
 
 	for _, server := range servers {
 		if !hosts.Has(server.Hostname) {
 			hosts.Insert(server.Hostname)
+			hServers[server.Hostname] = server
 		}
 
 		for _, alias := range server.Aliases {
@@ -436,7 +442,7 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 		}
 	}
 
-	return hosts, servers, &ingress.Configuration{
+	return hosts, hServers, &ingress.Configuration{
 		Backends:              upstreams,
 		Servers:               servers,
 		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
@@ -445,6 +451,48 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
 		ControllerPodsCount:   n.store.GetRunningControllerPodsCount(),
 	}
+}
+
+func (n *NGINXController) checkIngressHostPath(ing *networking.Ingress, servers map[string]*ingress.Server) error {
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			continue
+		}
+
+		if rule.Host == "" {
+			rule.Host = defServerName
+		}
+
+		server, ok := servers[rule.Host]
+		if !ok || server == nil {
+			klog.Warningf(`No host "%s" found in ingress servers`, rule.Host)
+			continue
+		}
+
+		locations := make(map[string]*ingress.Location, len(server.Locations))
+		for _, location := range server.Locations {
+			locations[location.Path] = location
+		}
+
+		for _, path := range rule.HTTP.Paths {
+			if path.Path == "" {
+				path.Path = rootLocation
+			}
+
+			location, ok := locations[path.Path]
+			if !ok {
+				klog.Warningf(`No host "%s" path "%s" found in ingress servers`, rule.Host, path.Path)
+				continue
+			}
+
+			if location.Ingress.Name == ing.Name && location.Ingress.Namespace == ing.Namespace {
+				continue
+			}
+			return fmt.Errorf(`host "%s" path "%s" has defined in ingress %s/%s`, rule.Host, path.Path, location.Ingress.Namespace, location.Ingress.Name)
+		}
+	}
+
+	return nil
 }
 
 // getBackendServers returns a list of Upstream and Server to be used by the
