@@ -5,6 +5,13 @@ It includes how to build, test, and release ingress controllers.
 
 ## Quick Start
 
+### Prerequisites
+1. Go >= 1.13
+2. Docker >= 19.0.3
+2. Helm 3
+3. [Kind](https://kind.sigs.k8s.io/) 
+4. [Parallel](https://www.gnu.org/software/parallel/)
+
 ### Getting the code
 
 The code must be checked out as a subdirectory of k8s.io, and not github.com.
@@ -20,6 +27,8 @@ cd ingress-nginx
 ### Initial developer environment build
 
 Ensure docker experimental features option is enabled for [buildx](https://docs.docker.com/buildx/working-with-buildx/)
+
+> In addition to enabling server experimental feature, the CLI experimental features should also be enabled for buildx to work.
 
 ```
 $ make dev-env

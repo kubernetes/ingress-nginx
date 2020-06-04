@@ -702,6 +702,11 @@ stream {
 
     error_log  {{ $cfg.ErrorLogPath }};
 
+    {{ if not (empty $cfg.StreamSnippet) }}
+    # Custom code snippet configured in the configuration configmap
+    {{ $cfg.StreamSnippet }}
+    {{ end }}
+
     upstream upstream_balancer {
         server 0.0.0.1:1234; # placeholder
 
