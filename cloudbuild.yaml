@@ -1,12 +1,12 @@
 # See https://cloud.google.com/cloud-build/docs/build-config
 
+timeout: 1800s
 # this prevents errors if you don't use both _GIT_TAG and _PULL_BASE_REF,
 # or any new substitutions added in the future.
 options:
   substitution_option: ALLOW_LOOSE
 steps:
   - name: 'gcr.io/k8s-testimages/gcb-docker-gcloud:v20200422-b25d964'
-    timeout: 1800s
     entrypoint: bash
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
