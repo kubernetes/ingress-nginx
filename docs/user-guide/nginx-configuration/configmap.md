@@ -32,6 +32,8 @@ The following table shows a configuration option's name, type, and the default v
 |[hide-headers](#hide-headers)|string array|empty|
 |[access-log-params](#access-log-params)|string|""|
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
+|[http-access-log-path](#http-access-log-path)|string|""|
+|[stream-access-log-path](#stream-access-log-path)|string|""|
 |[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"|
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
@@ -207,9 +209,23 @@ _References:_
 
 ## access-log-path
 
-Access log path. Goes to `/var/log/nginx/access.log` by default.
+Access log path for both http and stream context. Goes to `/var/log/nginx/access.log` by default.
 
 __Note:__ the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
+
+## http-access-log-path
+
+Access log path for http context globally.
+_**default:**_ ""
+
+__Note:__ If not specified, the `access-log-path` will be used.
+
+## stream-access-log-path
+
+Access log path for stream context globally.
+_**default:**_ ""
+
+__Note:__ If not specified, the `access-log-path` will be used.
 
 ## enable-access-log-for-default-backend
 
