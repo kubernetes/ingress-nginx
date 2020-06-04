@@ -6,6 +6,7 @@ options:
   substitution_option: ALLOW_LOOSE
 steps:
   - name: 'gcr.io/k8s-testimages/gcb-docker-gcloud:v20200422-b25d964'
+    timeout: 1800s
     entrypoint: bash
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
