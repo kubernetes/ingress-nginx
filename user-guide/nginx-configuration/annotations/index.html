@@ -2411,7 +2411,7 @@ The only affinity type available for NGINX is <code>cookie</code>.</p>
 <p>The NGINX annotation <code>nginx.ingress.kubernetes.io/session-cookie-path</code> defines the path that will be set on the cookie. This is optional unless the annotation <code>nginx.ingress.kubernetes.io/use-regex</code> is set to true; Session cookie paths do not support regex.</p>
 <p>Use <code>nginx.ingress.kubernetes.io/session-cookie-samesite</code> to apply a <code>SameSite</code> attribute to the sticky cookie. Browser accepted values are <code>None</code>, <code>Lax</code>, and <code>Strict</code>. Some browsers reject cookies with <code>SameSite=None</code>, including those created before the <code>SameSite=None</code> specification (e.g. Chrome 5X). Other browsers mistakenly treat <code>SameSite=None</code> cookies as <code>SameSite=Strict</code> (e.g. Safari running on OSX 14). To omit <code>SameSite=None</code> from browsers with these incompatibilities, add the annotation <code>nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true"</code>.</p>
 <h3 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link"> ¶</a></h3>
-<p>Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.</p>
+<p>It is possible to add authentication by adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.</p>
 <p>The annotations are:
 <div class="highlight"><pre><span></span><code>nginx.ingress.kubernetes.io/auth-type: [basic|digest]
 </code></pre></div></p>
