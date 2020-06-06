@@ -1,5 +1,5 @@
 local original_ngx = ngx
-local util = require("util")
+local util
 
 local function reset_ngx()
   _G.ngx = original_ngx
@@ -20,6 +20,7 @@ describe("utility", function()
   describe("ngx_complex_value", function()
     before_each(function()
       mock_ngx({ var = { remote_addr = "192.168.1.1", [1] = "nginx/regexp/1/group/capturing" } })
+      util = require("util")
     end)
 
     local ngx_complex_value = function(data)

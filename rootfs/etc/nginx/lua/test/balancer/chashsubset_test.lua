@@ -1,3 +1,8 @@
+function mock_ngx(mock)
+  local _ngx = mock
+  setmetatable(_ngx, {__index = _G.ngx})
+  _G.ngx = _ngx
+end
 
 local function get_test_backend(n_endpoints) 
    local backend = {
@@ -18,11 +23,15 @@ local function get_test_backend(n_endpoints)
 end
  
 describe("Balancer chash subset", function()
-  local balancer_chashsubset = require("balancer.chashsubset")
+  local balancer_chashsubset
+
+  before_each(function()
+      mock_ngx({ var = { request_uri = "/alma/armud" }})
+      balancer_chashsubset = require("balancer.chashsubset")
+  end)
 
   describe("balance()", function()
     it("returns peers from the same subset", function()
-      _G.ngx = { var = { request_uri = "/alma/armud" }}
 
       local backend = get_test_backend(9)
       
@@ -67,7 +76,6 @@ describe("Balancer chash subset", function()
   end)
   describe("new(backend)", function()
     it("fills last subset correctly", function()
-      _G.ngx = { var = { request_uri = "/alma/armud" }}
 
       local backend = get_test_backend(7)
       

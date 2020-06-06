@@ -1,3 +1,5 @@
+local ipairs = ipairs
+
 local _M = {}
 
 -- splits strings into host and port
@@ -34,7 +36,8 @@ function _M.split_upstream_var(var)
   return t
 end
 
--- Splits an NGINX $upstream_addr and returns an array of tables with a `host` and `port` key-value pair.
+-- Splits an NGINX $upstream_addr and returns an array of tables
+-- with a `host` and `port` key-value pair.
 function _M.split_upstream_addr(addrs_str)
   if not addrs_str then
     return nil, nil

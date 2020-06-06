@@ -1,8 +1,13 @@
+local require = require
+local ngx = ngx
+local pairs = pairs
+local ipairs = ipairs
 local string_format = string.format
 local new_tab = require "table.new"
 local ngx_log = ngx.log
 local INFO = ngx.INFO
 local ERR = ngx.ERR
+local pcall = pcall
 
 local _M = {}
 local MAX_NUMBER_OF_PLUGINS = 10000
@@ -36,10 +41,12 @@ function _M.run()
 
       -- TODO: consider sandboxing this, should we?
       -- probably yes, at least prohibit plugin from accessing env vars etc
-      -- but since the plugins are going to be installed by ingress-nginx operator they can be assumed to be safe also
+      -- but since the plugins are going to be installed by ingress-nginx
+      -- operator they can be assumed to be safe also
       local ok, err = pcall(plugin[phase])
       if not ok then
-        ngx_log(ERR, string_format("error while running plugin \"%s\" in phase \"%s\": %s", name, phase, err))
+        ngx_log(ERR, string_format("error while running plugin \"%s\" in phase \"%s\": %s",
+            name, phase, err))
       end
     end
   end
