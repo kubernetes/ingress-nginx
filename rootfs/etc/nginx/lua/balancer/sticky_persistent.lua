@@ -6,6 +6,7 @@
 local balancer_sticky = require("balancer.sticky")
 local util_get_nodes = require("util").get_nodes
 local util_nodemap = require("util.nodemap")
+local setmetatable = setmetatable
 
 local _M = balancer_sticky:new()
 

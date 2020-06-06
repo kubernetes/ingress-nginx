@@ -9,6 +9,10 @@ local math_random = require("math").random
 local resty_chash = require("resty.chash")
 local util_get_nodes = require("util").get_nodes
 
+local ngx = ngx
+local string = string
+local setmetatable = setmetatable
+
 local _M = balancer_sticky:new()
 
 -- Consider the situation of N upstreams one of which is failing.
