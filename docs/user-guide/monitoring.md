@@ -74,6 +74,6 @@ According to the above example, this URL will be http://10.192.0.3:31086
 
 The username and password is `admin`
 
-After the login you can import the Grafana dashboard from _https://github.com/kubernetes/ingress-nginx/tree/master/deploy/grafana/dashboards_
+After the login you can import the Grafana dashboard from [official dashboards](https://github.com/kubernetes/ingress-nginx/tree/master/deploy/grafana/dashboards)
 
 ![Dashboard](../images/grafana.png)
