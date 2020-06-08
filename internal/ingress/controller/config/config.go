@@ -111,10 +111,19 @@ type Configuration struct {
 	// By default this is disabled
 	EnableAccessLogForDefaultBackend bool `json:"enable-access-log-for-default-backend"`
 
-	// AccessLogPath sets the path of the access logs if enabled
+	// AccessLogPath sets the path of the access logs for both http and stream contexts if enabled
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
 	// By default access logs go to /var/log/nginx/access.log
 	AccessLogPath string `json:"access-log-path,omitempty"`
+
+	// HttpAccessLogPath sets the path of the access logs for http context globally if enabled
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+	HttpAccessLogPath string `json:"http-access-log-path,omitempty"`
+
+	// StreamAccessLogPath sets the path of the access logs for stream context globally if enabled
+	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
+	StreamAccessLogPath string `json:"stream-access-log-path,omitempty"`
 
 	// WorkerCPUAffinity bind nginx worker processes to CPUs this will improve response latency
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_cpu_affinity
