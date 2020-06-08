@@ -1018,7 +1018,7 @@ stream {
         }
         {{ end }}
 
-
+        {{ if isLocationAllowed $location }}
         {{ if $externalAuth.SigninURL }}
         location {{ buildAuthSignURLLocation $location.Path $externalAuth.SigninURL }} {
             internal;
@@ -1027,6 +1027,7 @@ stream {
 
             return 302 {{ buildAuthSignURL $externalAuth.SigninURL }};
         }
+        {{ end }}
         {{ end }}
 
         location {{ $path }} {
