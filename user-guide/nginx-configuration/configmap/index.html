@@ -598,6 +598,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#http-access-log-path" class="md-nav__link">
+    http-access-log-path
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stream-access-log-path" class="md-nav__link">
+    stream-access-log-path
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#enable-access-log-for-default-backend" class="md-nav__link">
     enable-access-log-for-default-backend
   </a>
@@ -2277,6 +2291,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#http-access-log-path" class="md-nav__link">
+    http-access-log-path
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stream-access-log-path" class="md-nav__link">
+    stream-access-log-path
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#enable-access-log-for-default-backend" class="md-nav__link">
     enable-access-log-for-default-backend
   </a>
@@ -3394,6 +3422,16 @@ Same for numbers, like "100".</p>
 <td align="left">"/var/log/nginx/access.log"</td>
 </tr>
 <tr>
+<td align="left"><a href="#http-access-log-path">http-access-log-path</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
+<td align="left"><a href="#stream-access-log-path">stream-access-log-path</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
 <td align="left"><a href="#enable-access-log-for-default-backend">enable-access-log-for-default-backend</a></td>
 <td align="left">bool</td>
 <td align="left">"false"</td>
@@ -4154,8 +4192,16 @@ Same for numbers, like "100".</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log">http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log</a></p>
 <h2 id="access-log-path">access-log-path<a class="headerlink" href="#access-log-path" title="Permanent link"> ¶</a></h2>
-<p>Access log path. Goes to <code>/var/log/nginx/access.log</code> by default.</p>
+<p>Access log path for both http and stream context. Goes to <code>/var/log/nginx/access.log</code> by default.</p>
 <p><strong>Note:</strong> the file <code>/var/log/nginx/access.log</code> is a symlink to <code>/dev/stdout</code></p>
+<h2 id="http-access-log-path">http-access-log-path<a class="headerlink" href="#http-access-log-path" title="Permanent link"> ¶</a></h2>
+<p>Access log path for http context globally.
+<em><strong>default:</strong></em> ""</p>
+<p><strong>Note:</strong> If not specified, the <code>access-log-path</code> will be used.</p>
+<h2 id="stream-access-log-path">stream-access-log-path<a class="headerlink" href="#stream-access-log-path" title="Permanent link"> ¶</a></h2>
+<p>Access log path for stream context globally.
+<em><strong>default:</strong></em> ""</p>
+<p><strong>Note:</strong> If not specified, the <code>access-log-path</code> will be used.</p>
 <h2 id="enable-access-log-for-default-backend">enable-access-log-for-default-backend<a class="headerlink" href="#enable-access-log-for-default-backend" title="Permanent link"> ¶</a></h2>
 <p>Enables logging access to default backend. <em><strong>default:</strong></em> is disabled.</p>
 <h2 id="error-log-path">error-log-path<a class="headerlink" href="#error-log-path" title="Permanent link"> ¶</a></h2>
