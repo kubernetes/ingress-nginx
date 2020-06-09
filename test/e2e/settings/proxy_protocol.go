@@ -17,6 +17,7 @@ limitations under the License.
 package settings
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -101,6 +102,49 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=443"))
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=https"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=192.168.0.1"))
+	})
+
+	ginkgo.It("should enable PROXY Protocol for HTTPS", func() {
+		host := "proxy-protocol"
+
+		f.UpdateNginxConfigMapData(setting, "true")
+
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
+		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
+			ing.Spec.TLS[0].Hosts,
+			ing.Spec.TLS[0].SecretName,
+			ing.Namespace)
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "443 proxy_protocol")
+			})
+
+		ip := f.GetNginxIP()
+
+		conn, err := net.Dial("tcp", net.JoinHostPort(ip, "443"))
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error connecting to %v:443", ip)
+		defer conn.Close()
+
+		_, err = fmt.Fprintf(conn, "PROXY TCP4 192.168.0.1 192.168.0.11 56324 1234\r\n")
+		assert.Nil(ginkgo.GinkgoT(), err, "writing proxy protocol")
+
+		tlsConn := tls.Client(conn, tlsConfig)
+		defer tlsConn.Close()
+
+		_, err = tlsConn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
+		assert.Nil(ginkgo.GinkgoT(), err, "writing HTTP request")
+
+		data, err := ioutil.ReadAll(tlsConn)
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
+
+		body := string(data)
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=https"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-scheme=https"))
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=192.168.0.1"))
 	})
 })
