@@ -1229,18 +1229,17 @@ func commonListenOptions(template config.TemplateConfig, hostname string) string
 func httpListener(addresses []string, co string, tc config.TemplateConfig) []string {
 	out := make([]string, 0)
 	for _, address := range addresses {
-		l := make([]string, 0)
-		l = append(l, "listen")
+		lo := []string{"listen"}
 
 		if address == "" {
-			l = append(l, fmt.Sprintf("%v", tc.ListenPorts.HTTP))
+			lo = append(lo, fmt.Sprintf("%v", tc.ListenPorts.HTTP))
 		} else {
-			l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTP))
+			lo = append(lo, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTP))
 		}
 
-		l = append(l, co)
-		l = append(l, ";")
-		out = append(out, strings.Join(l, " "))
+		lo = append(lo, co)
+		lo = append(lo, ";")
+		out = append(out, strings.Join(lo, " "))
 	}
 
 	return out
@@ -1249,38 +1248,35 @@ func httpListener(addresses []string, co string, tc config.TemplateConfig) []str
 func httpsListener(addresses []string, co string, tc config.TemplateConfig) []string {
 	out := make([]string, 0)
 	for _, address := range addresses {
-		l := make([]string, 0)
-		l = append(l, "listen")
+		lo := []string{"listen"}
 
 		if tc.IsSSLPassthroughEnabled {
 			if address == "" {
-				l = append(l, fmt.Sprintf("%v", tc.ListenPorts.SSLProxy))
+				lo = append(lo, fmt.Sprintf("%v", tc.ListenPorts.SSLProxy))
 			} else {
-				l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.SSLProxy))
+				lo = append(lo, fmt.Sprintf("%v:%v", address, tc.ListenPorts.SSLProxy))
 			}
 
-			l = append(l, "proxy_protocol")
+			if !strings.Contains(co, "proxy_protocol") {
+				lo = append(lo, "proxy_protocol")
+			}
 		} else {
 			if address == "" {
-				l = append(l, fmt.Sprintf("%v", tc.ListenPorts.HTTPS))
+				lo = append(lo, fmt.Sprintf("%v", tc.ListenPorts.HTTPS))
 			} else {
-				l = append(l, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTPS))
-			}
-
-			if tc.Cfg.UseProxyProtocol {
-				l = append(l, "proxy_protocol")
+				lo = append(lo, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTPS))
 			}
 		}
 
-		l = append(l, co)
-		l = append(l, "ssl")
+		lo = append(lo, co)
+		lo = append(lo, "ssl")
 
 		if tc.Cfg.UseHTTP2 {
-			l = append(l, "http2")
+			lo = append(lo, "http2")
 		}
 
-		l = append(l, ";")
-		out = append(out, strings.Join(l, " "))
+		lo = append(lo, ";")
+		out = append(out, strings.Join(lo, " "))
 	}
 
 	return out
