@@ -1,7 +1,5 @@
 std = 'ngx_lua'
-globals = {
-  '_TEST'
-}
+max_line_length = 100
 exclude_files = {'./rootfs/etc/nginx/lua/test/**/*.lua', './rootfs/etc/nginx/lua/plugins/**/test/**/*.lua'}
 files["rootfs/etc/nginx/lua/lua_ingress.lua"] = {
   ignore = { "122" },

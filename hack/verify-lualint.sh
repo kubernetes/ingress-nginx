@@ -19,3 +19,5 @@ set -o nounset
 set -o pipefail
 
 luacheck --codes -q rootfs/etc/nginx/lua/
+
+find rootfs/etc/nginx/lua/ -name "*.lua" -not -path "*/test/*" -exec lj-releng -L -s {} + && echo "lj-releng validation is success!"

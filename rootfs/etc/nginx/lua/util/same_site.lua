@@ -1,3 +1,5 @@
+local string = string
+
 local _M = {}
 
 -- determines whether to apply a SameSite=None attribute

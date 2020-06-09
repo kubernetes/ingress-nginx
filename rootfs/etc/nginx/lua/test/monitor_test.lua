@@ -1,4 +1,3 @@
-_G._TEST = true
 
 local original_ngx = ngx
 local function reset_ngx()
@@ -31,8 +30,8 @@ describe("Monitor", function()
   end)
 
   it("batches metrics", function()
-    local monitor = require("monitor")
     mock_ngx({ var = {} })
+    local monitor = require("monitor")
 
     for i = 1,10,1 do
       monitor.call()
@@ -44,8 +43,8 @@ describe("Monitor", function()
   describe("flush", function()
     it("short circuits when premmature is true (when worker is shutting down)", function()
       local tcp_mock = mock_ngx_socket_tcp()
-      local monitor = require("monitor")
       mock_ngx({ var = {} })
+      local monitor = require("monitor")
 
       for i = 1,10,1 do
         monitor.call()
@@ -64,7 +63,6 @@ describe("Monitor", function()
 
     it("JSON encodes and sends the batched metrics", function()
       local tcp_mock = mock_ngx_socket_tcp()
-      local monitor = require("monitor")
 
       local ngx_var_mock = {
         host = "example.com",
@@ -86,6 +84,7 @@ describe("Monitor", function()
         upstream_status = "200",
       }
       mock_ngx({ var = ngx_var_mock })
+      local monitor = require("monitor")
       monitor.call()
 
       local ngx_var_mock1 = ngx_var_mock

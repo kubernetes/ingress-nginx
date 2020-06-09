@@ -1,4 +1,3 @@
-_G._TEST = true
 
 local balancer, expected_implementations, backends
 local original_ngx = ngx
@@ -110,10 +109,11 @@ describe("Balancer", function()
         },
       }
 
+      mock_ngx({ var = { proxy_upstream_name = backend.name } })
+      reset_balancer()
+
       balancer.sync_backend(backend)
       balancer.sync_backend(canary_backend)
-
-      mock_ngx({ var = { proxy_upstream_name = backend.name } })
 
       local expected = balancer.get_balancer()
 
@@ -134,6 +134,7 @@ describe("Balancer", function()
         }
       }
       mock_ngx({ var = { request_uri = "/" } })
+      reset_balancer()
     end)
 
     it("returns false when no trafficShapingPolicy is set", function()
@@ -171,8 +172,6 @@ describe("Balancer", function()
 
     context("canary by cookie", function()
       it("returns correct result for given cookies", function()
-        backend.trafficShapingPolicy.cookie = "canaryCookie"
-        balancer.sync_backend(backend)
         local test_patterns = {
           {
             case_title = "cookie_value is 'always'",
@@ -204,6 +203,9 @@ describe("Balancer", function()
             ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
             request_uri = "/"
           }})
+          reset_balancer()
+          backend.trafficShapingPolicy.cookie = "canaryCookie"
+          balancer.sync_backend(backend)
           assert.message("\nTest data pattern: " .. test_pattern.case_title)
             .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
           reset_ngx()
@@ -275,14 +277,14 @@ describe("Balancer", function()
         }
 
         for _, test_pattern in pairs(test_patterns) do
-          reset_balancer()
-          backend.trafficShapingPolicy.header = test_pattern.header_name
-          backend.trafficShapingPolicy.headerValue = test_pattern.header_value
-          balancer.sync_backend(backend)
           mock_ngx({ var = {
             ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
             request_uri = "/"
           }})
+          reset_balancer()
+          backend.trafficShapingPolicy.header = test_pattern.header_name
+          backend.trafficShapingPolicy.headerValue = test_pattern.header_value
+          balancer.sync_backend(backend)
           assert.message("\nTest data pattern: " .. test_pattern.case_title)
             .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
           reset_ngx()

@@ -1,5 +1,9 @@
 local math_random = require("math").random
 local util_tablelength = require("util").tablelength
+local ngx = ngx
+local pairs = pairs
+local string = string
+local setmetatable = setmetatable
 
 local _M = {}
 
@@ -41,7 +45,8 @@ local function get_random_node(map)
       count = count + 1
   end
 
-  ngx.log(ngx.ERR, string.format("Failed to find node %d of %d! This is a bug, please report!", index, size))
+  ngx.log(ngx.ERR, string.format("Failed to find node %d of %d! "
+    .. "This is a bug, please report!", index, size))
 
   return nil, nil
 end
@@ -55,7 +60,8 @@ end
 -- To make sure hash keys are reproducible on different ingress controller instances the salt
 -- needs to be shared and therefore is not simply generated randomly.
 --
--- @tparam {[string]=number} endpoints A table with the node endpoint as a key and its weight as a value.
+-- @tparam {[string]=number} endpoints A table with the node endpoint
+-- as a key and its weight as a value.
 -- @tparam[opt] string hash_salt A optional hash salt that will be used to obfuscate the hash key.
 function _M.new(self, endpoints, hash_salt)
   if hash_salt == nil then

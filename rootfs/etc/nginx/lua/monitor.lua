@@ -6,7 +6,13 @@ local clear_tab = require "table.clear"
 local clone_tab = require "table.clone"
 local nkeys = require "table.nkeys"
 
--- if an Nginx worker processes more than (MAX_BATCH_SIZE/FLUSH_INTERVAL) RPS then it will start dropping metrics
+local ngx = ngx
+local tonumber = tonumber
+local string = string
+local tostring = tostring
+
+-- if an Nginx worker processes more than (MAX_BATCH_SIZE/FLUSH_INTERVAL) RPS
+-- then it will start dropping metrics
 local MAX_BATCH_SIZE = 10000
 local FLUSH_INTERVAL = 1 -- second
 
@@ -80,9 +86,9 @@ function _M.call()
   metrics_batch[metrics_size + 1] = metrics()
 end
 
-if _TEST then
-  _M.flush = flush
-  _M.get_metrics_batch = function() return metrics_batch end
-end
+setmetatable(_M, {__index = {
+  flush = flush,
+  get_metrics_batch = function() return metrics_batch end,
+}})
 
 return _M

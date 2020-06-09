@@ -1,5 +1,12 @@
 local cjson = require("cjson.safe")
 
+local io = io
+local ngx = ngx
+local tostring = tostring
+local string = string
+local table = table
+local pairs = pairs
+
 -- this is the Lua representation of Configuration struct in internal/ingress/types.go
 local configuration_data = ngx.shared.configuration_data
 local certificate_data = ngx.shared.certificate_data
@@ -72,12 +79,13 @@ local function handle_servers()
     else
       local success, set_err, forcible = certificate_servers:set(server, uid)
       if not success then
-        local err_msg = string.format("error setting certificate for %s: %s\n", server, tostring(set_err))
+        local err_msg = string.format("error setting certificate for %s: %s\n",
+          server, tostring(set_err))
         table.insert(err_buf, err_msg)
       end
       if forcible then
-        local msg = string.format("certificate_servers dictionary is full, LRU entry has been removed to store %s",
-          server)
+        local msg = string.format("certificate_servers dictionary is full, "
+          .. "LRU entry has been removed to store %s", server)
         ngx.log(ngx.WARN, msg)
       end
     end
@@ -86,11 +94,13 @@ local function handle_servers()
   for uid, cert in pairs(configuration.certificates) do
     local success, set_err, forcible = certificate_data:set(uid, cert)
     if not success then
-      local err_msg = string.format("error setting certificate for %s: %s\n", uid, tostring(set_err))
+      local err_msg = string.format("error setting certificate for %s: %s\n",
+        uid, tostring(set_err))
       table.insert(err_buf, err_msg)
     end
     if forcible then
-      local msg = string.format("certificate_data dictionary is full, LRU entry has been removed to store %s", uid)
+      local msg = string.format("certificate_data dictionary is full, "
+        .. "LRU entry has been removed to store %s", uid)
       ngx.log(ngx.WARN, msg)
     end
   end
@@ -211,8 +221,6 @@ function _M.call()
   ngx.print("Not found!")
 end
 
-if _TEST then
-  _M.handle_servers = handle_servers
-end
+setmetatable(_M, {__index = { handle_servers = handle_servers }})
 
 return _M
