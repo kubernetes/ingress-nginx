@@ -1,3 +1,4 @@
+local ngx           = ngx
 local string        = string
 local string_len    = string.len
 local string_format = string.format
@@ -117,7 +118,8 @@ function _M.diff_endpoints(old, new)
 end
 
 -- this implementation is taken from
--- https://web.archive.org/web/20131225070434/http://snippets.luacode.org/snippets/Deep_Comparison_of_Two_Values_3
+-- https://web.archive.org/web/20131225070434/http://snippets.
+-- luacode.org/snippets/Deep_Comparison_of_Two_Values_3
 -- and modified for use in this project
 local function deep_compare(t1, t2, ignore_mt)
   local ty1 = type(t1)

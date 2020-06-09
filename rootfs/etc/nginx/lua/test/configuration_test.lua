@@ -1,4 +1,3 @@
-_G._TEST = true
 local cjson = require("cjson")
 local configuration = require("configuration")
 
@@ -48,12 +47,12 @@ end
 describe("Configuration", function()
   before_each(function()
     _G.ngx = get_mocked_ngx_env()
+    package.loaded["configuration"] = nil
+    configuration = require("configuration")
   end)
 
   after_each(function()
     _G.ngx = unmocked_ngx
-    package.loaded["configuration"] = nil
-    configuration = require("configuration")
   end)
 
   describe("Backends", function()

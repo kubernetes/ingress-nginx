@@ -4,6 +4,13 @@ local ngx_balancer = require("ngx.balancer")
 local split = require("util.split")
 local same_site = require("util.same_site")
 
+local ngx = ngx
+local pairs = pairs
+local ipairs = ipairs
+local string = string
+local tonumber = tonumber
+local setmetatable = setmetatable
+
 local _M = balancer_resty:new()
 local DEFAULT_COOKIE_NAME = "route"
 
@@ -64,7 +71,8 @@ function _M.set_cookie(self, value)
   }
 
   if self.cookie_session_affinity.expires and self.cookie_session_affinity.expires ~= "" then
-      cookie_data.expires = ngx.cookie_time(ngx.time() + tonumber(self.cookie_session_affinity.expires))
+      cookie_data.expires = ngx.cookie_time(ngx.time() +
+        tonumber(self.cookie_session_affinity.expires))
   end
 
   if self.cookie_session_affinity.maxage and self.cookie_session_affinity.maxage ~= "" then
@@ -132,8 +140,8 @@ function _M.balance(self)
   end
 
   local last_failure = self.get_last_failure()
-  local should_pick_new_upstream = last_failure ~= nil and self.cookie_session_affinity.change_on_failure or
-    upstream_from_cookie == nil
+  local should_pick_new_upstream = last_failure ~= nil and
+    self.cookie_session_affinity.change_on_failure or upstream_from_cookie == nil
 
   if not should_pick_new_upstream then
     return upstream_from_cookie

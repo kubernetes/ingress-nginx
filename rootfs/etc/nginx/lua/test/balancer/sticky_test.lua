@@ -1,5 +1,5 @@
-local sticky_balanced = require("balancer.sticky_balanced")
-local sticky_persistent = require("balancer.sticky_persistent")
+local sticky_balanced
+local sticky_persistent
 local cookie = require("resty.cookie")
 local util = require("util")
 
@@ -13,6 +13,14 @@ end
 
 local function reset_ngx()
   _G.ngx = original_ngx
+end
+
+local function reset_sticky_balancer()
+  package.loaded["balancer.sticky"] = nil
+  package.loaded["balancer.sticky_balanced"] = nil
+  package.loaded["balancer.sticky_persistent"] = nil
+  sticky_balanced = require("balancer.sticky_balanced")
+  sticky_persistent = require("balancer.sticky_persistent")
 end
 
 function get_mocked_cookie_new()
@@ -47,6 +55,7 @@ end
 describe("Sticky", function()
   before_each(function()
     mock_ngx({ var = { location_path = "/", host = "test.com" } })
+    reset_sticky_balancer()
   end)
 
   after_each(function()
@@ -302,11 +311,8 @@ describe("Sticky", function()
     local mocked_cookie_new = cookie.new
 
     before_each(function()
-      package.loaded["balancer.sticky_balanced"] = nil
-      package.loaded["balancer.sticky_persistent"] = nil
-      sticky_balanced = require("balancer.sticky_balanced")
-      sticky_persistent = require("balancer.sticky_persistent")
       mock_ngx({ var = { location_path = "/", host = "test.com" } })
+      reset_sticky_balancer()
     end)
 
     after_each(function()
@@ -459,6 +465,7 @@ describe("Sticky", function()
     end)
     it("returns a cookie without SameSite=None when user specifies samesite None and conditional samesite none with unsupported user agent", function()
       mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"} })
+      reset_sticky_balancer()
       test_set_cookie(sticky_balanced, "None", true, "/", nil)
     end)
   end)

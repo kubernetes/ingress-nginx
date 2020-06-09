@@ -3,6 +3,7 @@ local util = require("util")
 local string_format = string.format
 local ngx_log = ngx.log
 local INFO = ngx.INFO
+local setmetatable = setmetatable
 
 local _M = {}
 

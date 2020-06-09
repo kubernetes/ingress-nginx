@@ -1,5 +1,6 @@
 local ngx_re_split = require("ngx.re").split
 local string_format = string.format
+local tonumber = tonumber
 
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR

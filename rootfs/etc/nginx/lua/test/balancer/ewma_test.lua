@@ -34,6 +34,8 @@ describe("Balancer ewma", function()
 
   before_each(function()
     mock_ngx({ now = function() return ngx_now end, var = { balancer_ewma_score = -1 } })
+    package.loaded["balancer.ewma"] = nil
+    balancer_ewma = require("balancer.ewma")
 
     backend = {
       name = "namespace-service-port", ["load-balance"] = "ewma",
