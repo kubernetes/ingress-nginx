@@ -49,7 +49,8 @@ local function get_pem_cert_uid(raw_hostname)
   -- Convert hostname to ASCII lowercase (see RFC 6125 6.4.1) so that requests with uppercase
   -- host would lead to the right certificate being chosen (controller serves certificates for
   -- lowercase hostnames as specified in Ingress object's spec.rules.host)
-  local hostname = re_sub(raw_hostname, "\\.$", "", "jo"):gsub("[A-Z]", function(c) return c:lower() end)
+  local hostname = re_sub(raw_hostname, "\\.$", "", "jo"):gsub("[A-Z]",
+    function(c) return c:lower() end)
 
   local uid = certificate_servers:get(hostname)
   if uid then
