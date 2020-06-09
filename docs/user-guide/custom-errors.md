@@ -5,7 +5,7 @@ that it passes several HTTP headers down to its `default-backend` in case of err
 
 | Header           | Value                                                               |
 | ---------------- | ------------------------------------------------------------------- |
-| `X-Code`         | HTTP status code retuned by the request                             |
+| `X-Code`         | HTTP status code returned by the request                            |
 | `X-Format`       | Value of the `Accept` header sent by the client                     |
 | `X-Original-URI` | URI that caused the error                                           |
 | `X-Namespace`    | Namespace where the backend Service is located                      |
