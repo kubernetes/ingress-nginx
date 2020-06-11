@@ -261,10 +261,24 @@ func New(
 
 	store.listers.IngressWithAnnotation.Store = cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)
 
+	// As we currently do not filter out kubernetes objects we list, we can
+	// retrieve a huge amount of data from the API server.
+	// In a cluster using HELM < v3 configmaps are used to store binary data.
+	// If you happen to have a lot of HELM releases in the cluster it will make
+	// the memory consumption of nginx-ingress-controller explode.
+	// In order to avoid that we filter out labels OWNER=TILLER.
+	tweakListOptionsFunc := func(options *metav1.ListOptions) {
+		if len(options.LabelSelector) > 0 {
+			options.LabelSelector += ",OWNER!=TILLER"
+		} else {
+			options.LabelSelector = "OWNER!=TILLER"
+		}
+	}
+
 	// create informers factory, enable and assign required informers
 	infFactory := informers.NewSharedInformerFactoryWithOptions(client, resyncPeriod,
 		informers.WithNamespace(namespace),
-		informers.WithTweakListOptions(func(*metav1.ListOptions) {}))
+		informers.WithTweakListOptions(tweakListOptionsFunc))
 
 	if k8s.IsNetworkingIngressAvailable {
 		store.informers.Ingress = infFactory.Networking().V1beta1().Ingresses().Informer()
