@@ -79,6 +79,7 @@ Parameter | Description | Default
 `controller.autoscaling.maxReplicas` | If autoscaling enabled, this field sets maximum replica count | `11`
 `controller.autoscaling.targetCPUUtilizationPercentage` | Target CPU utilization percentage to scale | `"50"`
 `controller.autoscaling.targetMemoryUtilizationPercentage` | Target memory utilization percentage to scale | `"50"`
+`controller.autoscaling.autoscalingTemplate` | If autoscaling template provided, creates custom autoscaling metric | false
 `controller.hostPort.enabled` | This enable `hostPort` for ports defined in TCP/80 and TCP/443 | false
 `controller.hostPort.ports.http` | If `controller.hostPort.enabled` is `true` and this is non-empty, it sets the hostPort | `"80"`
 `controller.hostPort.ports.https` | If `controller.hostPort.enabled` is `true` and this is non-empty, it sets the hostPort | `"443"`
