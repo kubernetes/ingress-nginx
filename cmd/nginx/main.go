@@ -24,6 +24,8 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -201,9 +203,20 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 // the in-cluster config is missing or fails, we fallback to the default config.
 func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kubernetes.Clientset, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags(apiserverHost, kubeConfig)
+
 	if err != nil {
 		return nil, err
 	}
+
+	// Configure the User-Agent used for the HTTP requests made to the API server.
+	cfg.UserAgent = fmt.Sprintf(
+		"%s/%s (%s/%s) ingress-nginx/%s",
+		filepath.Base(os.Args[0]),
+		version.RELEASE,
+		runtime.GOOS,
+		runtime.GOARCH,
+		version.COMMIT,
+	)
 
 	if apiserverHost != "" && rootCAFile != "" {
 		tlsClientConfig := rest.TLSClientConfig{}
