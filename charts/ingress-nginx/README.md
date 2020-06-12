@@ -90,6 +90,7 @@ Parameter | Description | Default
 `controller.podAnnotations` | annotations to be added to pods | `{}`
 `controller.podLabels` | labels to add to the pod container metadata | `{}`
 `controller.podSecurityContext` | Security context policies to add to the controller pod | `{}`
+`controller.sysctls` | Map of optional sysctls to enable in the controller and in the PodSecurityPolicy | `{}`
 `controller.replicaCount` | desired number of controller pods | `1`
 `controller.minAvailable` | minimum number of available controller pods for PodDisruptionBudget | `1`
 `controller.resources` | controller pod resource requests & limits | `{}`
