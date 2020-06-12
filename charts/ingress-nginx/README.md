@@ -95,7 +95,7 @@ Parameter | Description | Default
 `controller.resources` | controller pod resource requests & limits | `{}`
 `controller.priorityClassName` | controller priorityClassName | `nil`
 `controller.lifecycle` | controller pod lifecycle hooks | `{}`
-`controller.publishService.enabled` | if true, the controller will set the endpoint records on the ingress objects to reflect those on the service | `false`
+`controller.publishService.enabled` | if true, the controller will set the endpoint records on the ingress objects to reflect those on the service | `true`
 `controller.publishService.pathOverride` | override of the default publish-service name | `""`
 `controller.service.annotations` | annotations for controller service | `{}`
 `controller.service.labels` | labels for controller service | `{}`
