@@ -205,7 +205,10 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
-	@docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material:5.1.0
+	@docker run --rm -it \
+		-p 8000:8000 \
+		-v ${PWD}:/docs \
+		squidfunk/mkdocs-material:5.2.3
 
 .PHONY: misspell
 misspell: check-go-version ## Check for spelling errors.
