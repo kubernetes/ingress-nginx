@@ -109,7 +109,7 @@ $ TAG=<tag> REGISTRY=$USER/ingress-controller make push
 ## Deploying
 
 There are several ways to deploy the ingress controller onto a cluster.
-Please check the [deployment guide](../deploy/)
+Please check the [deployment guide](./deploy/)
 
 ## Testing
 
