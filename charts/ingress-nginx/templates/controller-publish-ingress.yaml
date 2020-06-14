@@ -1,0 +1,23 @@
+{{- if .Values.controller.publishIngress.enabled -}}
+{{- if .Values.controller.publishService.enabled }}{{ fail "controller.publishService and controller.publishIngress are mutually exclusive" }}{{ end -}}
+{{- if not .Values.controller.service.enabled }}{{ fail "controller.service should be enabled when publishIngress enabeld" }}{{ end -}}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginx-ingress-publisher
+  namespace: kube-ingress
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.controller.publishIngress.ingressClass }}
+    {{- toYaml .Values.controller.publishIngress.annotations | nindent 4 }}
+  labels:
+    app.kubernetes.io/component: controller
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: {{ include "ingress-nginx.controller.fullname" . }}
+          servicePort: http
+{{- end }}

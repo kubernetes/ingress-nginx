@@ -53,6 +53,22 @@ Users can provide an override for an explicit service they want bound via `.Valu
 {{- print $servicePath | trimSuffix "-" -}}
 {{- end -}}
 
+
+{{/*
+Construct the path for the publish-ingress.
+
+By convention this will simply use the <namespace>/<controller-name> to match the name of the
+ingress generated.
+
+Users can provide an override for an explicit ingress they want bound via `.Values.controller.publishIngress.pathOverride`
+
+*/}}
+{{- define "ingress-nginx.controller.publishIngressPath" -}}
+{{- $defIngressName := printf "%s/%s" .Release.Namespace (include "ingress-nginx.controller.fullname" .) -}}
+{{- $ingressPath := default $defIngressName .Values.controller.publishIngress.pathOverride }}
+{{- print $ingressPath | trimSuffix "-" -}}
+{{- end -}}
+
 {{/*
 Create a default fully qualified default backend name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).

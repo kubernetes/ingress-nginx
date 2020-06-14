@@ -83,6 +83,31 @@ controller:
     ##
     pathOverride: ""
 
+  ## Allows customization of the source of the IP address or FQDN to report
+  ## in the ingress status field. By default, it reads the information provided
+  ## by the ingress. If disable, the status field reports the IP address of the
+  ## node or nodes where an ingress controller pod is running.
+  publishIngress:
+    ## If enabled, controller.service must be enabled too,
+    ## and service controller.service.type must set to NodePort or LoadBalancer
+    enabled: false
+    ## Allows overriding of the publish ingress to bind to
+    ## Must be <namespace>/<service_name>
+    ##
+    pathOverride: ""
+    ## the ingress class of which you want to put in front of ingress-nginx
+    ##
+    ingressClass: alb
+    ## additional annotations of publish ingress
+    annotations:
+      ## ref: https://kubernetes-sigs.github.io/aws-alb-ingress-controller/guide/ingress/annotation/
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+#      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:<region>:<user>:certificate/<uuid>"
+#      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+      # 426 for websocket
+      alb.ingress.kubernetes.io/success-codes: 200,201,426,405,404
+
   ## Limit the scope of the controller
   ##
   scope:
