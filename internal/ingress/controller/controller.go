@@ -73,6 +73,7 @@ type Configuration struct {
 
 	// +optional
 	PublishService       string
+	PublishIngress       string
 	PublishStatusAddress string
 
 	UpdateStatus           bool

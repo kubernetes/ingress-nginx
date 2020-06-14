@@ -142,6 +142,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		n.syncStatus = status.NewStatusSyncer(pod, status.Config{
 			Client:                 config.Client,
 			PublishService:         config.PublishService,
+			PublishIngress:         config.PublishIngress,
 			PublishStatusAddress:   config.PublishStatusAddress,
 			IngressLister:          n.store,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,

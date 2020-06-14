@@ -19,6 +19,7 @@ package status
 import (
 	"context"
 	"fmt"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"net"
 	"sort"
 	"strings"
@@ -29,6 +30,7 @@ import (
 
 	pool "gopkg.in/go-playground/pool.v3"
 	apiv1 "k8s.io/api/core/v1"
+	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -63,6 +65,8 @@ type Config struct {
 
 	PublishService string
 
+	PublishIngress string
+
 	PublishStatusAddress string
 
 	UpdateStatusOnShutdown bool
@@ -76,9 +80,10 @@ type Config struct {
 // in all the defined rules. To simplify the process leader election is used so the update
 // is executed only in one node (Ingress controllers can be scaled to more than one)
 // If the controller is running with the flag --publish-service (with a valid service)
-// the IP address behind the service is used, if it is running with the flag
-// --publish-status-address, the address specified in the flag is used, if neither of the
-// two flags are set, the source is the IP/s of the node/s
+// the IP address behind the service is used, if the controller is running with the flag
+// --publish-ingress (with a valid ingress) the IP address behind the ingress is used,
+// if it is running with the flag --publish-status-address, the address specified in the
+// flag is used, if neither of the two flags are set, the source is the IP/s of the node/s
 type statusSync struct {
 	Config
 
@@ -180,6 +185,10 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		return statusAddressFromService(s.PublishService, s.Client)
 	}
 
+	if s.PublishIngress != "" {
+		return statusAddressFromIngress(s.PublishIngress, s.Client)
+	}
+
 	// get information about all the pods running the ingress controller
 	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
@@ -231,6 +240,20 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 	})
 
 	return lbi
+}
+
+// statusToSlice converts a LoadBalancerIngress to slice of IP and/or hostnames
+func statusToSlice(status []apiv1.LoadBalancerIngress) []string {
+	addrs := []string{}
+	for _, addr := range status {
+		if addr.Hostname != "" {
+			addrs = append(addrs, addr.Hostname)
+		}
+		if addr.IP != "" {
+			addrs = append(addrs, addr.IP)
+		}
+	}
+	return addrs
 }
 
 // updateStatus changes the status information of Ingress rules
@@ -362,4 +385,39 @@ func statusAddressFromService(service string, kubeClient clientset.Interface) ([
 	}
 
 	return nil, fmt.Errorf("unable to extract IP address/es from service %v", service)
+}
+
+func statusAddressFromIngress(ingress string, client clientset.Interface) ([]string, error) {
+	ns, name, _ := k8s.ParseNameNS(ingress)
+	if k8s.IsNetworkingIngressAvailable {
+		ingClient := client.NetworkingV1beta1().Ingresses(ns)
+		ing, err := ingClient.Get(context.TODO(), name, metav1.GetOptions{})
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ns, name))
+		}
+		if class.IsValid(ing) {
+			return nil, errors.New("invalid publish-ingress, must not be routable by this ingress")
+		}
+		if ing.Status.LoadBalancer.Ingress != nil {
+			return statusToSlice(ing.Status.LoadBalancer.Ingress), nil
+		}
+	} else {
+		ingClient := client.ExtensionsV1beta1().Ingresses(ns)
+		ing, err := ingClient.Get(context.TODO(), name, metav1.GetOptions{})
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ns, name))
+		}
+		if class.IsValid(&networking.Ingress{
+			TypeMeta:   ing.TypeMeta,
+			ObjectMeta: ing.ObjectMeta,
+			Spec:       networking.IngressSpec{IngressClassName: ing.Spec.IngressClassName},
+		}) {
+			return nil, errors.New("invalid publish-ingress, must not be routable by this ingress")
+		}
+		if ing.Status.LoadBalancer.Ingress != nil {
+			return statusToSlice(ing.Status.LoadBalancer.Ingress), nil
+		}
+	}
+
+	return nil, fmt.Errorf("unable to extract IP address/es from ingress %v", ingress)
 }

@@ -24,6 +24,7 @@ import (
 	"time"
 
 	apiv1 "k8s.io/api/core/v1"
+	extentions "k8s.io/api/extensions/v1beta1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
@@ -524,6 +525,146 @@ func TestRunningAddresessWithPublishService(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunningAddresessWithPublishIngress(t *testing.T) {
+	testCases := map[string]struct {
+		fakeClient                   *testclient.Clientset
+		expected                     []string
+		errExpected                  bool
+		isNetworkingIngressAvailable bool
+	}{
+		"networkingV1 ingress": {
+			testclient.NewSimpleClientset(
+				&networking.IngressList{Items: []networking.Ingress{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+							Annotations: map[string]string{
+								class.IngressKey: "some-random-ingress",
+							},
+						},
+						Status: networking.IngressStatus{
+							LoadBalancer: apiv1.LoadBalancerStatus{
+								Ingress: []apiv1.LoadBalancerIngress{
+									{IP: "1.1.1.1"},
+									{Hostname: "host.example.com"},
+								},
+							},
+						},
+					},
+				},
+				},
+			),
+			[]string{"1.1.1.1", "host.example.com"},
+			false,
+			true,
+		},
+		"extentionsV1 ingress": {
+			testclient.NewSimpleClientset(
+				&extentions.IngressList{Items: []extentions.Ingress{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+							Annotations: map[string]string{
+								class.IngressKey: "some-random-ingress",
+							},
+						},
+						Status: extentions.IngressStatus{
+							LoadBalancer: apiv1.LoadBalancerStatus{
+								Ingress: []apiv1.LoadBalancerIngress{
+									{IP: "1.1.1.1"},
+									{Hostname: "host.example.com"},
+								},
+							},
+						},
+					},
+				},
+				},
+			),
+			[]string{"1.1.1.1", "host.example.com"},
+			false,
+			false,
+		},
+		"networkingV1 ingress but routable": {
+			testclient.NewSimpleClientset(
+				&networking.IngressList{Items: []networking.Ingress{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+							Annotations: map[string]string{
+								class.IngressKey: class.IngressClass,
+							},
+						},
+						Status: networking.IngressStatus{
+							LoadBalancer: apiv1.LoadBalancerStatus{
+								Ingress: []apiv1.LoadBalancerIngress{
+									{IP: "1.1.1.1"},
+									{Hostname: "host.example.com"},
+								},
+							},
+						},
+					},
+				},
+				},
+			),
+			nil,
+			true,
+			true,
+		},
+		"invalid ingress": {
+			testclient.NewSimpleClientset(
+				&networking.IngressList{Items: []networking.Ingress{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+							Annotations: map[string]string{
+								class.IngressKey: "some-random-ingress",
+							},
+						},
+					},
+				},
+				},
+			),
+			nil,
+			true,
+			true,
+		},
+	}
+
+	oldIsNetworkingIngressAvailable := k8s.IsNetworkingIngressAvailable
+	for title, tc := range testCases {
+		t.Run(title, func(t *testing.T) {
+
+			fk := buildStatusSync()
+			fk.Config.Client = tc.fakeClient
+			fk.PublishService = ""
+			fk.PublishIngress = apiv1.NamespaceDefault + "/" + "foo"
+			k8s.IsNetworkingIngressAvailable = tc.isNetworkingIngressAvailable
+
+			ra, err := fk.runningAddresses()
+			if err != nil {
+				if tc.errExpected {
+					return
+				}
+
+				t.Fatalf("%v: unexpected error obtaining running address/es: %v", title, err)
+			}
+
+			if ra == nil {
+				t.Fatalf("returned nil but expected valid []string")
+			}
+
+			if !reflect.DeepEqual(tc.expected, ra) {
+				t.Errorf("returned %v but expected %v", ra, tc.expected)
+			}
+		})
+	}
+	k8s.IsNetworkingIngressAvailable = oldIsNetworkingIngressAvailable
 }
 
 func TestRunningAddresessWithPods(t *testing.T) {
