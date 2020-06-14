@@ -4,8 +4,7 @@
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: nginx-ingress-publisher
-  namespace: kube-ingress
+  name: {{ include "ingress-nginx.controller.fullname" . }}
   annotations:
     kubernetes.io/ingress.class: {{ .Values.controller.publishIngress.ingressClass }}
     {{- toYaml .Values.controller.publishIngress.annotations | nindent 4 }}
