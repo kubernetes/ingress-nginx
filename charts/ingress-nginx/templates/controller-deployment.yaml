@@ -46,8 +46,18 @@ spec:
     {{- if .Values.controller.priorityClassName }}
       priorityClassName: {{ .Values.controller.priorityClassName }}
     {{- end }}
+    {{- if or .Values.controller.podSecurityContext .Values.controller.sysctls }}
+      securityContext:
+    {{- end }}
     {{- if .Values.controller.podSecurityContext }}
-      securityContext: {{ toYaml .Values.controller.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.controller.podSecurityContext | nindent 8 }}
+    {{- end }}
+    {{- if .Values.controller.sysctls }}
+        sysctls:
+    {{- range $sysctl, $value := .Values.controller.sysctls }}
+        - name: {{ $sysctl }}
+          value: {{ $value }}
+    {{- end }}
     {{- end }}
       containers:
         - name: controller

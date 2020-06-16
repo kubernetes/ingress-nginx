@@ -67,10 +67,15 @@ controller:
   #  key: value
 
   ## Security Context policies for controller pods
-  ## See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for
-  ## notes on enabling and using sysctls
   ##
   podSecurityContext: {}
+
+  ## See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for
+  ## notes on enabling and using sysctls
+  ###
+  sysctls: {}
+  # sysctls:
+  #   "net.core.somaxconn": "8192"
 
   ## Allows customization of the source of the IP address or FQDN to report
   ## in the ingress status field. By default, it reads the information provided
