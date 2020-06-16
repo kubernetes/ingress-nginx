@@ -9,6 +9,14 @@ function _M.get_backends_data()
   return tcp_udp_configuration_data:get("backends")
 end
 
+function _M.get_raw_backends_last_synced_at()
+  local raw_backends_last_synced_at = tcp_udp_configuration_data:get("raw_backends_last_synced_at")
+  if raw_backends_last_synced_at == nil then
+    raw_backends_last_synced_at = 1
+  end
+  return raw_backends_last_synced_at
+end
+
 function _M.call()
   local sock, err = ngx.req.socket(true)
   if not sock then
@@ -33,6 +41,17 @@ function _M.call()
   if not success then
     ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err_conf))
     ngx.say("error: ", err_conf)
+    return
+  end
+
+  ngx.update_time()
+  local raw_backends_last_synced_at = ngx.time()
+  success, err = tcp_udp_configuration_data:set("raw_backends_last_synced_at",
+                      raw_backends_last_synced_at)
+  if not success then
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating when backends sync, " ..
+                     "new upstream peers waiting for force syncing: " .. tostring(err))
+    ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
 end
