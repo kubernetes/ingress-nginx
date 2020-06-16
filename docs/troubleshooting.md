@@ -165,7 +165,7 @@ Kubernetes                                                  Workstation
 
 ### Service Account
 
-If using a service account to connect to the API server, Dashboard expects the file
+If using a service account to connect to the API server, the ingress-controller expects the file
 `/var/run/secrets/kubernetes.io/serviceaccount/token` to be present. It provides a secret
 token that is required to authenticate with the API server.
 
