@@ -24,6 +24,14 @@ function _M.get_general_data()
   return configuration_data:get("general")
 end
 
+function _M.get_raw_backends_last_synced_at()
+  local raw_backends_last_synced_at = configuration_data:get("raw_backends_last_synced_at")
+  if raw_backends_last_synced_at == nil then
+    raw_backends_last_synced_at = 1
+  end
+  return raw_backends_last_synced_at
+end
+
 local function fetch_request_body()
   ngx.req.read_body()
   local body = ngx.req.get_body_data()
@@ -183,6 +191,16 @@ local function handle_backends()
   local success, err = configuration_data:set("backends", backends)
   if not success then
     ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+
+  ngx.update_time()
+  local raw_backends_last_synced_at = ngx.time()
+  success, err = configuration_data:set("raw_backends_last_synced_at", raw_backends_last_synced_at)
+  if not success then
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating when backends sync, " ..
+                     "new upstream peers waiting for force syncing: " .. tostring(err))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
