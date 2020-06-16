@@ -119,6 +119,8 @@ Parameter | Description | Default
 `controller.service.nodePorts.https` | If `controller.service.type` is either `NodePort` or `LoadBalancer` and this is non-empty, it sets the nodePort that maps to the Ingress' port 443 | `""`
 `controller.service.nodePorts.tcp` | Sets the nodePort for an entry referenced by its key from `tcp` | `{}`
 `controller.service.nodePorts.udp` | Sets the nodePort for an entry referenced by its key from `udp` | `{}`
+`controller.service.internal.enabled` | Enables an (additional) internal load balancer | false
+`controller.service.internal.annotations` | Annotations for configuring the additional internal load balancer | `{}`
 `controller.livenessProbe.initialDelaySeconds` | Delay before liveness probe is initiated | 10
 `controller.livenessProbe.periodSeconds` | How often to perform the probe | 10
 `controller.livenessProbe.timeoutSeconds` | When the probe times out | 5
@@ -313,6 +315,48 @@ controller:
     annotations:
       domainName: "kubernetes-example.com"
 ```
+
+## Additional internal load balancer
+
+This setup is useful when you need both external and internal load balancers but don't want to have multiple ingress controllers and multiple ingress objects per application.
+
+By default, the ingress object will point to the external load balancer address, but if correctly configured, you can make use of the internal one if the URL you are looking up resolves to the internal load balancer's URL.
+
+You'll need to set both the following values:
+
+`controller.service.internal.enabled`
+`controller.service.internal.annotations`
+
+If one of them is missing the internal load balancer will not be deployed. Example you may have `controller.service.internal.enabled=true` but no annotations set, in this case no action will be taken.
+
+`controller.service.internal.annotations` varies with the cloud service you're using.
+
+Example for AWS
+```
+controller:
+  service:
+    internal:
+      enabled: true
+      annotations:
+        # Create internal ELB
+        service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+        # Any other annotation can be declared here.
+```
+
+Example for GCE
+```
+controller:
+  service:
+    internal:
+      enabled: true
+      annotations:
+        # Create internal LB
+        cloud.google.com/load-balancer-type: "Internal"
+        # Any other annotation can be declared here.
+```
+
+An use case for this scenario is having a split-view DNS setup where the public zone CNAME records point to the external balancer URL while the private zone CNAME records point to the internal balancer URL. This way, you only need one ingress kubernetes object.
+
 
 ## Ingress Admission Webhooks
 
