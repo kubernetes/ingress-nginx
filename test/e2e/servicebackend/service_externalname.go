@@ -86,7 +86,10 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+		}
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -124,7 +127,10 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		}
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+		}
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -193,7 +199,10 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		}
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+		}
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
 		ing.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort = intstr.FromString(host)
 		f.EnsureIngress(ing)
 
@@ -232,7 +241,10 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		}
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+		}
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
 		ing.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort = intstr.FromString(host)
 		f.EnsureIngress(ing)
 
