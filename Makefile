@@ -83,8 +83,8 @@ image: clean-image ## Build image for a particular arch.
 
 .PHONY: clean-image
 clean-image: ## Removes local image
-	echo "removing old image $(BASE_IMAGE):$(TAG)"
-	@docker rmi -f $(BASE_IMAGE):$(TAG) || true
+	echo "removing old image $(REGISTRY)/nginx-ingress-controller:$(TAG)"
+	@docker rmi -f $(REGISTRY)/nginx-ingress-controller:$(TAG) || true
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
