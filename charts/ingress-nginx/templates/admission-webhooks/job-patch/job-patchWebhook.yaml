@@ -43,6 +43,10 @@ spec:
             - --patch-mutating=false
             - --secret-name={{ include "ingress-nginx.fullname" . }}-admission
             - --patch-failure-policy={{ .Values.controller.admissionWebhooks.failurePolicy }}
+{{- with .Values.controller.admissionWebhooks.patch.resources }}
+          resources:
+{{ toYaml . | indent 12 }}
+{{- end }}
       restartPolicy: OnFailure
       serviceAccountName: {{ include "ingress-nginx.fullname" . }}-admission
     {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
