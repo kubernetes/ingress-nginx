@@ -380,6 +380,7 @@ controller:
       nodeSelector: {}
       tolerations: []
       runAsUser: 2000
+      resources: {}
 
   metrics:
     port: 10254
