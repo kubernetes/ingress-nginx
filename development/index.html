@@ -1365,7 +1365,7 @@ cd ingress-nginx
 
 <h3 id="updating-the-deployment">Updating the deployment<a class="headerlink" href="#updating-the-deployment" title="Permanent link"> ¶</a></h3>
 <p>The nginx controller container image can be rebuilt using:
-<div class="highlight"><pre><span></span><code>$ ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build container
+<div class="highlight"><pre><span></span><code>$ ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build image
 </code></pre></div></p>
 <p>The image will only be used by pods created after the rebuild. To delete old pods which will cause new ones to spin up:
 <div class="highlight"><pre><span></span><code>$ kubectl get pods -n ingress-nginx
@@ -1409,11 +1409,7 @@ or push an image to a remote repository.</p>
 </code></pre></div></p>
 <p><a href="https://github.com/kubernetes/ingress-nginx/issues/387">TODO</a>: add more specific instructions needed for raw server binary.</p>
 <p>Build a local container image</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make container
-</code></pre></div>
-
-<p>Push the container image to a remote repository</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make push
+<div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make image
 </code></pre></div>
 
 <h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link"> ¶</a></h2>
