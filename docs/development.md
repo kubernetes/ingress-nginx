@@ -29,7 +29,7 @@ $ make dev-env
 
 The nginx controller container image can be rebuilt using:
 ```
-$ ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build container
+$ ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build image
 ```
 
 The image will only be used by pods created after the rebuild. To delete old pods which will cause new ones to spin up:
@@ -97,13 +97,7 @@ $ make build
 Build a local container image
 
 ```console
-$ TAG=<tag> REGISTRY=$USER/ingress-controller make container
-```
-
-Push the container image to a remote repository
-
-```console
-$ TAG=<tag> REGISTRY=$USER/ingress-controller make push
+$ TAG=<tag> REGISTRY=$USER/ingress-controller make image
 ```
 
 ## Deploying
