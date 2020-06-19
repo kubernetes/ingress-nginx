@@ -456,6 +456,7 @@ WITH_FLAGS="--with-debug \
   --with-http_v2_module \
   --with-stream \
   --with-stream_ssl_module \
+  --with-stream_realip_module \
   --with-stream_ssl_preread_module \
   --with-threads \
   --with-http_secure_link_module \
