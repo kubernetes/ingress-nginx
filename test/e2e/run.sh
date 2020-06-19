@@ -56,7 +56,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Use 1.0.0-dev to make sure we use the latest configuration in the helm template
 export TAG=1.0.0-dev
-export ARCH=amd64
+export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
 export K8S_VERSION=${K8S_VERSION:-v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694}
