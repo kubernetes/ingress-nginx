@@ -29,7 +29,7 @@ const (
 )
 
 var (
-	// DefaultClass defines the default class used in the nginx ingres controller
+	// DefaultClass defines the default class used in the nginx ingress controller
 	DefaultClass = "nginx"
 
 	// IngressClass sets the runtime ingress class to use
