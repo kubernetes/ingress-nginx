@@ -3,6 +3,13 @@
 
 local resty_chash = require("resty.chash")
 local util = require("util")
+local ngx_log = ngx.log
+local ngx_ERR = ngx.ERR
+local setmetatable = setmetatable
+local tostring = tostring
+local math = math
+local table = table
+local pairs = pairs
 
 local _M = { name = "chashsubset" }
 
@@ -44,10 +51,15 @@ end
 
 function _M.new(self, backend)
   local subset_map, subsets = build_subset_map(backend)
+  local complex_val, err =
+    util.parse_complex_value(backend["upstreamHashByConfig"]["upstream-hash-by"])
+  if err ~= nil then
+    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by: ", err)
+  end
 
   local o = {
     instance = resty_chash:new(subset_map),
-    hash_by = backend["upstreamHashByConfig"]["upstream-hash-by"],
+    hash_by = complex_val,
     subsets = subsets,
     current_endpoints = backend.endpoints
   }
@@ -57,7 +69,7 @@ function _M.new(self, backend)
 end
 
 function _M.balance(self)
-  local key = util.lua_ngx_var(self.hash_by)
+  local key = util.generate_var_value(self.hash_by)
   local subset_id = self.instance:find(key)
   local endpoints = self.subsets[subset_id]
   local endpoint = endpoints[math.random(#endpoints)]

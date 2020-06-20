@@ -1,7 +1,11 @@
 local http = require("resty.http")
 local ssl = require("ngx.ssl")
 local ocsp = require("ngx.ocsp")
+local ngx = ngx
+local string = string
+local tostring = tostring
 local re_sub = ngx.re.sub
+local unpack = unpack
 
 local dns_lookup = require("util.dns").lookup
 
@@ -42,7 +46,11 @@ local function set_der_cert_and_key(der_cert, der_priv_key)
 end
 
 local function get_pem_cert_uid(raw_hostname)
-  local hostname = re_sub(raw_hostname, "\\.$", "", "jo")
+  -- Convert hostname to ASCII lowercase (see RFC 6125 6.4.1) so that requests with uppercase
+  -- host would lead to the right certificate being chosen (controller serves certificates for
+  -- lowercase hostnames as specified in Ingress object's spec.rules.host)
+  local hostname = re_sub(raw_hostname, "\\.$", "", "jo"):gsub("[A-Z]",
+    function(c) return c:lower() end)
 
   local uid = certificate_servers:get(hostname)
   if uid then
@@ -215,8 +223,8 @@ function _M.call()
     ngx.log(ngx.ERR, "error while obtaining hostname: " .. hostname_err)
   end
   if not hostname then
-    ngx.log(ngx.INFO,
-      "obtained hostname is nil (the client does not support SNI?), falling back to default certificate")
+    ngx.log(ngx.INFO, "obtained hostname is nil (the client does "
+      .. "not support SNI?), falling back to default certificate")
     hostname = DEFAULT_CERT_HOSTNAME
   end
 
@@ -229,7 +237,8 @@ function _M.call()
     pem_cert = certificate_data:get(pem_cert_uid)
   end
   if not pem_cert then
-    ngx.log(ngx.ERR, "certificate not found, falling back to fake certificate for hostname: " .. tostring(hostname))
+    ngx.log(ngx.ERR, "certificate not found, falling back to fake certificate for hostname: "
+      .. tostring(hostname))
     return
   end
 

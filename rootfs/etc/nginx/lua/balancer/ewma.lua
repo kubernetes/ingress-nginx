@@ -9,6 +9,14 @@ local resty_lock = require("resty.lock")
 local util = require("util")
 local split = require("util.split")
 
+local ngx = ngx
+local math = math
+local pairs = pairs
+local ipairs = ipairs
+local tostring = tostring
+local string = string
+local tonumber = tonumber
+local setmetatable = setmetatable
 local string_format = string.format
 local ngx_log = ngx.log
 local INFO = ngx.INFO
@@ -185,7 +193,8 @@ function _M.after_balance(_)
 end
 
 function _M.sync(self, backend)
-  local normalized_endpoints_added, normalized_endpoints_removed = util.diff_endpoints(self.peers, backend.endpoints)
+  local normalized_endpoints_added, normalized_endpoints_removed =
+    util.diff_endpoints(self.peers, backend.endpoints)
 
   if #normalized_endpoints_added == 0 and #normalized_endpoints_removed == 0 then
     ngx.log(ngx.INFO, "endpoints did not change for backend " .. tostring(backend.name))

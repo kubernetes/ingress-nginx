@@ -165,8 +165,8 @@ resource "aws_spot_instance_request" "build_worker" {
   }
 
   provisioner "file" {
-    source      = "build-ingress-controller.sh"
-    destination = "/tmp/build-ingress-controller.sh"
+    source      = "build.sh"
+    destination = "/tmp/build.sh"
   }
 
   provisioner "file" {
@@ -177,8 +177,8 @@ resource "aws_spot_instance_request" "build_worker" {
   provisioner "remote-exec" {
     inline = [
       "echo Building ingress controller images...",
-      "chmod +x /tmp/build-ingress-controller.sh",
-      "sudo /tmp/build-ingress-controller.sh",
+      "chmod +x /tmp/build.sh",
+      "sudo /tmp/build.sh",
     ]
   }
 }

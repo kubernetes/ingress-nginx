@@ -13,6 +13,19 @@
 
     In case [Network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) or additional firewalls, please allow access to port `8443`.
 
+!!! attention
+    The first time the ingress controller starts, two [Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) create the SSL Certificate used by the admission webhook.
+    For this reason, there is an initial delay of up to two minutes until it is possible to create and validate Ingress definitions.
+
+    You can wait until is ready to running the next command:
+
+    ```yaml
+    kubectl wait --namespace ingress-nginx \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/component=controller \
+      --timeout=120s
+    ```
+
 ## Contents
 
 - [Provider Specific Steps](#provider-specific-steps)
@@ -36,7 +49,7 @@ Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://doc
 [enable]: https://docs.docker.com/docker-for-mac/#kubernetes
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
 ```
 
 #### minikube
@@ -71,7 +84,7 @@ In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controll
 ##### Network Load Balancer (NLB)
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/aws/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/deploy.yaml
 ```
 
 ##### TLS termination in AWS Load Balancer (ELB)
@@ -80,10 +93,10 @@ In some scenarios is required to terminate TLS in the Load Balancer and not in t
 
 For this purpose we provide a template:
 
-- Download [deploy-tls-termination.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/aws/deploy-tls-termination.yaml)
+- Download [deploy-tls-termination.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/deploy-tls-termination.yaml)
 
 ```console
-wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/aws/deploy-tls-termination.yaml
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/deploy-tls-termination.yaml
 ```
 
 - Edit the file and change:
@@ -133,7 +146,7 @@ More information with regards to timeouts for can be found in the [official AWS 
 
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
 ```
 
 !!! failure Important
@@ -142,13 +155,13 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 #### Azure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud/deploy.yaml
 ```
 
 #### Digital Ocean
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/do/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/do/deploy.yaml
 ```
 
 #### Bare-metal
@@ -156,13 +169,16 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/baremetal/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/deploy.yaml
 ```
 
 !!! tip
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
 
 ### Verify installation
+
+!!! info
+    In minikube the ingress addon is installed in the namespace **kube-system** instead of ingress-nginx
 
 To check if the ingress controller pods have started, run the following command:
 

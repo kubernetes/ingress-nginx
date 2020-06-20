@@ -74,7 +74,6 @@ echo -e "Starting the e2e test pod"
 kubectl run --rm \
   --attach \
   --restart=Never \
-  --generator=run-pod/v1 \
   --env="E2E_NODES=${E2E_NODES}" \
   --env="FOCUS=${FOCUS}" \
   --env="E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS}" \

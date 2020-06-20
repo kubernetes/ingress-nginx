@@ -211,11 +211,21 @@ http {
         $geoip2_isp_org organization;
     }
     {{ end }}
+
     {{ if eq $file "GeoIP2-Connection-Type.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoIP2-Connection-Type.mmdb {
         $geoip2_connection_type connection_type;
     }
     {{ end }}
+
+    {{ if eq $file "GeoIP2-Anonymous-IP.mmdb" }}
+    geoip2 /etc/nginx/geoip/GeoIP2-Anonymous-IP.mmdb {
+        $geoip2_is_anon source=$remote_addr is_anonymous;
+        $geoip2_is_hosting_provider source=$remote_addr is_hosting_provider;
+        $geoip2_is_public_proxy source=$remote_addr is_public_proxy;
+    }
+    {{ end }}
+
     {{ end }}
 
     {{ end }}
@@ -321,7 +331,7 @@ http {
     {{ if $cfg.EnableSyslog }}
     access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
     {{ else }}
-    access_log {{ $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
+    access_log {{ or $cfg.HttpAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
     {{ end }}
     {{ end }}
 
@@ -687,7 +697,7 @@ stream {
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
-    access_log {{ $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
+    access_log {{ or $cfg.StreamAccessLogPath $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
     {{ end }}
 
     error_log  {{ $cfg.ErrorLogPath }};
@@ -875,6 +885,10 @@ stream {
         ssl_ciphers                             {{ $server.SSLCiphers }};
         {{ end }}
 
+        {{ if not (empty $server.SSLPreferServerCiphers) }}
+        ssl_prefer_server_ciphers               {{ $server.SSLPreferServerCiphers }};
+        {{ end }}
+
         {{ if not (empty $server.ServerSnippet) }}
         {{ $server.ServerSnippet }}
         {{ end }}
@@ -1004,7 +1018,7 @@ stream {
         }
         {{ end }}
 
-
+        {{ if isLocationAllowed $location }}
         {{ if $externalAuth.SigninURL }}
         location {{ buildAuthSignURLLocation $location.Path $externalAuth.SigninURL }} {
             internal;
@@ -1013,6 +1027,7 @@ stream {
 
             return 302 {{ buildAuthSignURL $externalAuth.SigninURL }};
         }
+        {{ end }}
         {{ end }}
 
         location {{ $path }} {

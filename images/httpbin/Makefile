@@ -18,16 +18,10 @@
 TAG ?= 0.0
 
 REGISTRY ?= ingress-controller
-DOCKER ?= docker
 
-IMGNAME = httpbin
-IMAGE = $(REGISTRY)/$(IMGNAME)
+IMAGE = $(REGISTRY)/httpbin
 
-container:
-	$(DOCKER) buildx build \
-		--load \
-		--platform linux/amd64 \
+.PHONY: image
+image:
+	docker build \
 		-t $(IMAGE):$(TAG) rootfs
-
-clean:
-	$(DOCKER) rmi -f $(IMAGE):$(TAG) || true

@@ -27,7 +27,7 @@ endif
 SHELL=/bin/bash -o pipefail -o errexit
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.32.0
+TAG ?= 0.33.0
 
 # Use docker to run makefile tasks
 USE_DOCKER ?= true
@@ -42,7 +42,7 @@ endif
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 14
+E2E_NODES ?= 10
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
 # run e2e test suite with tests that check for memory leaks? (default is false)
@@ -61,76 +61,30 @@ endif
 
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
-BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx
-BASE_TAG ?= 5d67794f4fbf38ec6575476de46201b068eabf87
+BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 
 GOARCH=$(ARCH)
-GOBUILD_FLAGS := -v
 
 # use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
 GO111MODULE=off
 
-TEMP_DIR := $(shell mktemp -d)
-DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
-
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-# internal task
-.PHONY: sub-container-%
-sub-container-%:
-	$(MAKE) ARCH=$* build container
-
-# internal task
-.PHONY: sub-push-%
-sub-push-%: ## Publish image for a particular arch.
-	$(MAKE) ARCH=$* push
-
-.PHONY: container
-container: clean-container .container-$(ARCH) ## Build image for a particular arch.
-
-# internal task to build image for a particular arch.
-.PHONY: .container-$(ARCH)
-.container-$(ARCH): init-docker-buildx
-	mkdir -p $(TEMP_DIR)/rootfs
-	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
-	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
-	cp bin/$(ARCH)/wait-shutdown $(TEMP_DIR)/rootfs/wait-shutdown
-
-	cp -RP rootfs/* $(TEMP_DIR)/rootfs
-
+.PHONY: image
+image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	# buildx assumes images are multi-arch
-	docker buildx build \
-		--pull \
-		--load \
+	@docker build \
 		--no-cache \
-		--progress plain \
-		--platform linux/$(ARCH) \
-		--build-arg BASE_IMAGE="$(BASE_IMAGE)-$(ARCH):$(BASE_TAG)" \
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		-t $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG) $(TEMP_DIR)/rootfs
+		--build-arg TARGETARCH="$(ARCH)" \
+		-t $(REGISTRY)/nginx-ingress-controller:$(TAG) rootfs
 
-.PHONY: clean-container
-clean-container: ## Removes local image
-	echo "removing old image $(BASE_IMAGE)-$(ARCH):$(TAG)"
-	@docker rmi -f $(BASE_IMAGE)-$(ARCH):$(TAG) || true
-
-.PHONY: push
-push: .push-$(ARCH) ## Publish image for a particular arch.
-
-# internal task
-.PHONY: .push-$(ARCH)
-.push-$(ARCH):
-	docker push $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG)
-
-.PHONY: push-manifest
-push-manifest:
-	docker manifest create $(REGISTRY)/nginx-ingress-controller:$(TAG) \
-		$(REGISTRY)/nginx-ingress-controller-amd64:$(TAG) \
-		$(REGISTRY)/nginx-ingress-controller-arm:$(TAG) \
-		$(REGISTRY)/nginx-ingress-controller-arm64:$(TAG)
-	docker manifest push --purge $(REGISTRY)/nginx-ingress-controller:$(TAG)
+.PHONY: clean-image
+clean-image: ## Removes local image
+	echo "removing old image $(REGISTRY)/nginx-ingress-controller:$(TAG)"
+	@docker rmi -f $(REGISTRY)/nginx-ingress-controller:$(TAG) || true
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
@@ -204,10 +158,6 @@ endif
 e2e-test: check-go-version ## Run e2e tests (expects access to a working Kubernetes cluster).
 	@build/run-e2e-suite.sh
 
-.PHONY: e2e-test-image
-e2e-test-image: ## Build image for e2e tests.
-	@make -C test/e2e-image
-
 .PHONY: e2e-test-binary
 e2e-test-binary: check-go-version ## Build ginkgo binary for e2e tests.
 ifeq ($(USE_DOCKER), true)
@@ -255,7 +205,10 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
-	@docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material:5.1.0
+	@docker run --rm -it \
+		-p 8000:8000 \
+		-v ${PWD}:/docs \
+		squidfunk/mkdocs-material:5.2.3
 
 .PHONY: misspell
 misspell: check-go-version ## Check for spelling errors.
@@ -292,7 +245,7 @@ ifeq ($(DIND_TASKS),)
 ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
 	$(error "buildx not available. Docker 19.03 or higher is required with experimental features enabled")
 endif
-	docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
+	docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
 	docker buildx create --name ingress-nginx --use || true
 	docker buildx inspect --bootstrap
 endif
@@ -300,3 +253,24 @@ endif
 .PHONY: show-version
 show-version:
 	echo -n $(TAG)
+
+PLATFORMS ?= amd64 arm arm64 s390x
+
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+COMMA := ,
+
+.PHONY: release # Build a multi-arch docker image
+release: init-docker-buildx clean
+	echo "Building binaries..."
+	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
+
+	echo "Building and pushing ingress-nginx image..."
+	@docker buildx build \
+		--no-cache \
+		--push \
+		--progress plain \
+		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
+		--build-arg VERSION="$(TAG)" \
+		-t $(REGISTRY)/nginx-ingress-controller:$(TAG) rootfs

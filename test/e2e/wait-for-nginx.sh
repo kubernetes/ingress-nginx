@@ -81,8 +81,18 @@ controller:
   admissionWebhooks:
     enabled: false
 
-defaultBackend:
-  enabled: false
+  # ulimit -c unlimited
+  # mkdir -p /tmp/coredump
+  # chmod a+rwx /tmp/coredump
+  # echo "/tmp/coredump/core.%e.%p.%h.%t" > /proc/sys/kernel/core_pattern
+  extraVolumeMounts:
+    - name: coredump
+      mountPath: /tmp/coredump
+
+  extraVolumes:
+    - name: coredump
+      hostPath:
+        path: /tmp/coredump
 
 rbac:
   create: true

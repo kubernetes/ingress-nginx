@@ -37,12 +37,7 @@ if [ ! -f "${ENV_FILE}" ]; then
   exit 1
 fi
 
-# build local terraform image to build nginx
-export DOCKER_CLI_EXPERIMENTAL=enabled
-docker buildx build \
-  --load \
-  --no-cache \
-  --platform linux/amd64 \
+docker build \
   --tag build-nginx-terraform $DIR/images/nginx
 
 # build nginx and publish docker images to quay.io.

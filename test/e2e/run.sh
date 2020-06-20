@@ -56,14 +56,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Use 1.0.0-dev to make sure we use the latest configuration in the helm template
 export TAG=1.0.0-dev
-export ARCH=amd64
+export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
 export K8S_VERSION=${K8S_VERSION:-v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694}
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
-KIND_CLUSTER_NAME="ingress-nginx-dev"
+export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 
 echo "[dev-env] creating Kubernetes cluster with kind"
 
@@ -78,15 +78,15 @@ kind create cluster \
 echo "Kubernetes cluster:"
 kubectl get nodes -o wide
 
-echo "[dev-env] building container"
+echo "[dev-env] building image"
 export EXIT_CODE=-1
 echo "
-make -C ${DIR}/../../ build container
-make -C ${DIR}/../../ e2e-test-image
-make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build container
-make -C ${DIR}/../../images/echo/ container
-make -C ${DIR}/../../images/httpbin/ container
-make -C ${DIR}/../../images/cfssl/ container
+make -C ${DIR}/../../ clean-image build image
+make -C ${DIR}/../e2e-image image
+make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build image
+make -C ${DIR}/../../images/httpbin/ image
+make -C ${DIR}/../../images/echo/ image
+make -C ${DIR}/../../images/cfssl/ image
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?
 if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
 then
@@ -96,14 +96,12 @@ then
 else
   echo "Image builds were not ok! Log:"
   cat /tmp/log
-  exit
+  exit 1
 fi
 
-docker tag ${REGISTRY}/nginx-ingress-controller-${ARCH}:${TAG} ${REGISTRY}/nginx-ingress-controller:${TAG}
-
 # Preload images used in e2e tests
-docker pull openresty/openresty:1.15.8.2-alpine
 docker pull moul/grpcbin
+docker pull quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 
 KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
 
@@ -113,9 +111,9 @@ echo "
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/nginx-ingress-controller:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/fastcgi-helloserver:${TAG}
-kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} openresty/openresty:1.15.8.2-alpine
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/httpbin:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/echo:${TAG}
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} moul/grpcbin
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/cfssl:${TAG}
 " | parallel --joblog /tmp/log {} || EXIT_CODE=$?

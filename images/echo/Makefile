@@ -18,16 +18,12 @@
 TAG ?= 0.0
 
 REGISTRY ?= ingress-controller
-DOCKER ?= docker
 
-IMGNAME = echo
-IMAGE = $(REGISTRY)/$(IMGNAME)
+IMAGE = $(REGISTRY)/echo
 
-container:
-	$(DOCKER) buildx build \
-		--load \
-		--platform linux/amd64 \
-		-t $(IMAGE):$(TAG) .
+image:
+	docker build \
+		-t $(IMAGE):$(TAG) rootfs
 
 clean:
-	$(DOCKER) rmi -f $(IMAGE):$(TAG) || true
+	docker rmi -f $(IMAGE):$(TAG) || true

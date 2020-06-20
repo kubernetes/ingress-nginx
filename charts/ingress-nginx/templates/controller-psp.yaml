@@ -9,6 +9,12 @@ metadata:
 spec:
   allowedCapabilities:
     - NET_BIND_SERVICE
+{{- if .Values.controller.sysctls }}
+  allowedUnsafeSysctls:
+  {{- range $sysctl, $value := .Values.controller.sysctls }}
+  - {{ $sysctl }}
+  {{- end }}
+{{- end }}
   privileged: false
   allowPrivilegeEscalation: true
   # Allow core volume types.

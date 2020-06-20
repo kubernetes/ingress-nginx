@@ -38,9 +38,7 @@ if [ ! -f "${ENV_FILE}" ]; then
 fi
 
 # build local terraform image to build nginx
-docker buildx build \
-  --load \
-  --platform linux/amd64 \
+docker build \
   --tag build-ingress-controller-terraform $DIR/images/ingress-controller
 
 # build nginx and publish docker images to quay.io.

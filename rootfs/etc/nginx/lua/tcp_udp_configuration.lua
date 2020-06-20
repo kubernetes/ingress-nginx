@@ -1,3 +1,5 @@
+local ngx = ngx
+local tostring = tostring
 -- this is the Lua representation of TCP/UDP Configuration
 local tcp_udp_configuration_data = ngx.shared.tcp_udp_configuration_data
 

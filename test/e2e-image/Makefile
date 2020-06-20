@@ -1,5 +1,5 @@
 .PHONY: all
-all: container
+all: image
 
 DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
@@ -12,8 +12,8 @@ ifdef DIND_TASKS
 USE_DOCKER=false
 endif
 
-.PHONY: container
-container:
+.PHONY: image
+image:
 ifeq ($(USE_DOCKER), true)
 	@$(DIR)/../../build/run-in-docker.sh make e2e-test-binary
 else
@@ -27,9 +27,7 @@ endif
 	# TODO: avoid manual copy
 	cp -R $(DIR)/../../test/e2e/settings/ocsp/* .
 
-	docker buildx build \
-		--load \
-		--progress plain \
+	docker build \
 		--tag nginx-ingress-controller:e2e .
 
 .PHONY: clean

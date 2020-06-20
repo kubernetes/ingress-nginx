@@ -16,6 +16,7 @@ ARG BASE_IMAGE
 
 FROM ${BASE_IMAGE}
 
+ARG TARGETARCH
 ARG VERSION
 
 LABEL org.opencontainers.image.title="NGINX Ingress Controller for Kubernetes"
@@ -29,12 +30,16 @@ WORKDIR  /etc/nginx
 
 RUN apk update \
   && apk upgrade \
-  && apk add -U --no-cache \
+  && apk add --no-cache \
     diffutils \
-    libcap \
   && rm -rf /var/cache/apk/*
 
-COPY --chown=www-data:www-data . /
+COPY --chown=www-data:www-data etc /etc
+COPY --chown=www-data:www-data ingress-controller /ingress-controller
+
+COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
+COPY --chown=www-data:www-data bin/${TARGETARCH}/nginx-ingress-controller /
+COPY --chown=www-data:www-data bin/${TARGETARCH}/wait-shutdown /
 
 # Fix permission during the build to avoid issues at runtime
 # with volumes (custom templates)
@@ -51,11 +56,12 @@ RUN bash -xeu -c ' \
     chown -R www-data.www-data ${dir}; \
   done'
 
-RUN  setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
-  && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller
-
-RUN  setcap    cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
-  && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx
+RUN apk add --no-cache libcap \
+  && setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
+  && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller \
+  && setcap    cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
+  && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
+  && apk del libcap
 
 USER www-data
 

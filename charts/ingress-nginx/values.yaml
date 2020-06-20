@@ -4,7 +4,7 @@
 controller:
   image:
     repository: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
-    tag: "0.32.0"
+    tag: "0.33.0"
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -67,10 +67,15 @@ controller:
   #  key: value
 
   ## Security Context policies for controller pods
-  ## See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for
-  ## notes on enabling and using sysctls
   ##
   podSecurityContext: {}
+
+  ## See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for
+  ## notes on enabling and using sysctls
+  ###
+  sysctls: {}
+  # sysctls:
+  #   "net.core.somaxconn": "8192"
 
   ## Allows customization of the source of the IP address or FQDN to report
   ## in the ingress status field. By default, it reads the information provided
@@ -238,6 +243,17 @@ controller:
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
 
+  autoscalingTemplate: []
+  # Custom or additional autoscaling metrics
+  # ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-custom-metrics
+  # - type: Pods
+  #   pods:
+  #     metric:
+  #       name: nginx_ingress_controller_nginx_process_requests_total
+  #     target:
+  #       type: AverageValue
+  #       averageValue: 10000m
+
   ## Enable mimalloc as a drop-in replacement for malloc.
   ## ref: https://github.com/microsoft/mimalloc
   ##
@@ -301,6 +317,12 @@ controller:
       https: ""
       tcp: {}
       udp: {}
+
+    ## Enables an additional internal load balancer (besides the external one).
+    ## Annotations are mandatory for the load balancer to come up. Varies with the cloud service.
+    internal:
+      enabled: false
+      annotations: {}
 
   extraContainers: []
   ## Additional containers to be added to the controller pod.
@@ -367,6 +389,7 @@ controller:
       priorityClassName: ""
       podAnnotations: {}
       nodeSelector: {}
+      tolerations: []
       runAsUser: 2000
 
   metrics:

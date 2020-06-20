@@ -53,9 +53,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int) {
 // name is configurable
 func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas int) {
 	deployment := newDeployment(name, f.Namespace, "ingress-controller/echo:1.0.0-dev", 80, int32(replicas),
-		[]string{
-			"openresty",
-		},
+		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
 	)
@@ -91,21 +89,35 @@ func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas i
 // NewSlowEchoDeployment creates a new deployment of the slow echo server image in a particular namespace.
 func (f *Framework) NewSlowEchoDeployment() {
 	data := map[string]string{}
-	data["default.conf"] = `#
+	data["nginx.conf"] = `#
 
-server {
-	access_log on;
-	access_log /dev/stdout;
+events {
+	worker_connections  1024;
+	multi_accept on;
+}
 
-	listen 80;
+http {
+	default_type 'text/plain';
+	client_max_body_size 0;
 
-	location / {
-		echo ok;
-	}
+	server {
+		access_log on;
+		access_log /dev/stdout;
 
-	location ~ ^/sleep/(?<sleepTime>[0-9]+)$ {
-		echo_sleep $sleepTime;
-		echo "ok after $sleepTime seconds";
+		listen 80;
+
+		location / {
+			content_by_lua_block {
+				ngx.print("ok")
+			}
+		}
+
+		location ~ ^/sleep/(?<sleepTime>[0-9]+)$ {
+			content_by_lua_block {
+				ngx.sleep(ngx.var.sleepTime)
+				ngx.print("ok after " .. ngx.var.sleepTime .. " seconds")
+			}
+		}
 	}
 }
 
@@ -120,12 +132,13 @@ server {
 	}, metav1.CreateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
 
-	deployment := newDeployment(SlowEchoService, f.Namespace, "openresty/openresty:1.15.8.2-alpine", 80, 1,
+	deployment := newDeployment(SlowEchoService, f.Namespace, "quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f", 80, 1,
 		nil,
 		[]corev1.VolumeMount{
 			{
 				Name:      SlowEchoService,
-				MountPath: "/etc/nginx/conf.d",
+				MountPath: "/etc/nginx/nginx.conf",
+				SubPath:   "nginx.conf",
 				ReadOnly:  true,
 			},
 		},

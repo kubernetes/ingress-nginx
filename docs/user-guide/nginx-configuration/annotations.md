@@ -100,6 +100,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-max-temp-file-size](#proxy-max-temp-file-size)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
+|[nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers](#ssl-ciphers)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|
@@ -172,7 +173,7 @@ Use `nginx.ingress.kubernetes.io/session-cookie-samesite` to apply a `SameSite` 
 
 ### Authentication
 
-Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.
+It is possible to add authentication by adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.
 
 The annotations are:
 ```
@@ -212,7 +213,7 @@ There is a special mode of upstream hashing called subset. In this mode, upstrea
 
 To enable consistent hashing for a backend:
 
-`nginx.ingress.kubernetes.io/upstream-hash-by`: the nginx variable, text value or any combination thereof to use for consistent hashing. For example `nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"` to consistently hash upstream requests by the current request URI.
+`nginx.ingress.kubernetes.io/upstream-hash-by`: the nginx variable, text value or any combination thereof to use for consistent hashing. For example: `nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"` or `nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri$host"` or `nginx.ingress.kubernetes.io/upstream-hash-by: "${request_uri}-text-value"` to consistently hash upstream requests by the current request URI.
 
 "subset" hashing can be enabled setting `nginx.ingress.kubernetes.io/upstream-hash-by-subset`: "true". This maps requests to subset of nodes instead of a single one. `upstream-hash-by-subset-size` determines the size of each subset (default 3).
 
@@ -644,6 +645,12 @@ Using this annotation will set the `ssl_ciphers` directive at the server level. 
 
 ```yaml
 nginx.ingress.kubernetes.io/ssl-ciphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
+```
+
+The following annotation will set the `ssl_prefer_server_ciphers` directive at the server level. This configuration specifies that server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols.
+
+```yaml
+nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers: "true"
 ```
 
 ### Connection proxy header
