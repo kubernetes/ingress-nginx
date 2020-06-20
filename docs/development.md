@@ -35,7 +35,7 @@ $ ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build image
 The image will only be used by pods created after the rebuild. To delete old pods which will cause new ones to spin up:
 ```
 $ kubectl get pods -n ingress-nginx
-$ kubectl delete pod -n ingress-nginx nginx-ingress-controller-<unique-pod-id>
+$ kubectl delete pod -n ingress-nginx ingress-nginx-controller-<unique-pod-id>
 ```
 
 ## Dependencies
