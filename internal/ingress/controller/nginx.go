@@ -617,6 +617,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		EnableMetrics:            n.cfg.EnableMetrics,
 		MaxmindEditionFiles:      n.cfg.MaxmindEditionFiles,
 		HealthzURI:               nginx.HealthPath,
+		MonitorMaxBatchSize:      n.cfg.MonitorMaxBatchSize,
 		PID:                      nginx.PID,
 		StatusPath:               nginx.StatusPath,
 		StatusPort:               nginx.StatusPort,

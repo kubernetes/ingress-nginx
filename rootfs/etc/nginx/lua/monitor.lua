@@ -63,7 +63,14 @@ local function flush(premature)
   send(payload)
 end
 
-function _M.init_worker()
+local function set_metrics_max_batch_size(max_batch_size)
+  if max_batch_size > 10000 then
+    MAX_BATCH_SIZE = max_batch_size
+  end
+end
+
+function _M.init_worker(max_batch_size)
+  set_metrics_max_batch_size(max_batch_size)
   local _, err = ngx.timer.every(FLUSH_INTERVAL, flush)
   if err then
     ngx.log(ngx.ERR, string.format("error when setting up timer.every: %s", tostring(err)))
@@ -83,6 +90,7 @@ end
 if _TEST then
   _M.flush = flush
   _M.get_metrics_batch = function() return metrics_batch end
+  _M.set_metrics_max_batch_size = set_metrics_max_batch_size
 end
 
 return _M

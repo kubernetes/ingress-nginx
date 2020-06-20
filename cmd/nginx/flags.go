@@ -145,6 +145,7 @@ Requires the update-status parameter.`)
 			`Enables the collection of NGINX metrics`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host`)
+		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics")
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
@@ -269,6 +270,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		EnableProfiling:        *profiling,
 		EnableMetrics:          *enableMetrics,
 		MetricsPerHost:         *metricsPerHost,
+		MonitorMaxBatchSize:    *monitorMaxBatchSize,
 		EnableSSLPassthrough:   *enableSSLPassthrough,
 		ResyncPeriod:           *resyncPeriod,
 		DefaultService:         *defaultSvc,

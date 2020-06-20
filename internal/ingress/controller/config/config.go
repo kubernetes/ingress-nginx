@@ -836,6 +836,7 @@ type TemplateConfig struct {
 	PublishService           *apiv1.Service
 	EnableMetrics            bool
 	MaxmindEditionFiles      []string
+	MonitorMaxBatchSize      int
 
 	PID        string
 	StatusPath string
