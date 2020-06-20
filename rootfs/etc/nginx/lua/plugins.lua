@@ -1,13 +1,16 @@
+local require = require
+local ngx = ngx
+local pairs = pairs
+local ipairs = ipairs
 local string_format = string.format
-local new_tab = require "table.new"
 local ngx_log = ngx.log
 local INFO = ngx.INFO
 local ERR = ngx.ERR
+local pcall = pcall
 
 local _M = {}
-local MAX_NUMBER_OF_PLUGINS = 10000
--- TODO: is this good for a dictionary?
-local plugins = new_tab(MAX_NUMBER_OF_PLUGINS, 0)
+local MAX_NUMBER_OF_PLUGINS = 20
+local plugins = {}
 
 local function load_plugin(name)
   local path = string_format("plugins.%s.main", name)
@@ -22,8 +25,14 @@ local function load_plugin(name)
 end
 
 function _M.init(names)
+  local count = 0
   for _, name in ipairs(names) do
+    if count >= MAX_NUMBER_OF_PLUGINS then
+      ngx_log(ERR, "the total number of plugins exceed the maximum number: ", MAX_NUMBER_OF_PLUGINS)
+      break
+    end
     load_plugin(name)
+    count = count + 1 -- ignore loading failure, just count the total
   end
 end
 
@@ -36,10 +45,12 @@ function _M.run()
 
       -- TODO: consider sandboxing this, should we?
       -- probably yes, at least prohibit plugin from accessing env vars etc
-      -- but since the plugins are going to be installed by ingress-nginx operator they can be assumed to be safe also
+      -- but since the plugins are going to be installed by ingress-nginx
+      -- operator they can be assumed to be safe also
       local ok, err = pcall(plugin[phase])
       if not ok then
-        ngx_log(ERR, string_format("error while running plugin \"%s\" in phase \"%s\": %s", name, phase, err))
+        ngx_log(ERR, string_format("error while running plugin \"%s\" in phase \"%s\": %s",
+            name, phase, err))
       end
     end
   end

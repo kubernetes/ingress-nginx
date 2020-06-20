@@ -16,7 +16,7 @@ local getmetatable = getmetatable
 local tostring = tostring
 local pairs = pairs
 local math = math
-
+local ngx = ngx
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -305,11 +305,11 @@ function _M.log()
   balancer:after_balance()
 end
 
-if _TEST then
-  _M.get_implementation = get_implementation
-  _M.sync_backend = sync_backend
-  _M.route_to_alternative_balancer = route_to_alternative_balancer
-  _M.get_balancer = get_balancer
-end
+setmetatable(_M, {__index = {
+  get_implementation = get_implementation,
+  sync_backend = sync_backend,
+  route_to_alternative_balancer = route_to_alternative_balancer,
+  get_balancer = get_balancer,
+}})
 
 return _M

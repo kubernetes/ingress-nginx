@@ -1,4 +1,3 @@
-_G._TEST = true
 
 local main = require("plugins.hello_world.main")
 

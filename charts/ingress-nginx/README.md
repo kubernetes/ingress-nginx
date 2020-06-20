@@ -49,6 +49,7 @@ Parameter | Description | Default
 --- | --- | ---
 `controller.image.repository` | controller container image repository | `quay.io/kubernetes-ingress-controller/nginx-ingress-controller`
 `controller.image.tag` | controller container image tag | `0.30.0`
+`controller.image.digest` | controller container image digest | `""`
 `controller.image.pullPolicy` | controller container image pull policy | `IfNotPresent`
 `controller.image.runAsUser` | User ID of the controller process. Value depends on the Linux distribution used inside of the container image. | `101`
 `controller.containerPort.http` | The port that the controller container listens on for http connections. | `80`
@@ -78,6 +79,7 @@ Parameter | Description | Default
 `controller.autoscaling.maxReplicas` | If autoscaling enabled, this field sets maximum replica count | `11`
 `controller.autoscaling.targetCPUUtilizationPercentage` | Target CPU utilization percentage to scale | `"50"`
 `controller.autoscaling.targetMemoryUtilizationPercentage` | Target memory utilization percentage to scale | `"50"`
+`controller.autoscaling.autoscalingTemplate` | If autoscaling template provided, creates custom autoscaling metric | false
 `controller.hostPort.enabled` | This enable `hostPort` for ports defined in TCP/80 and TCP/443 | false
 `controller.hostPort.ports.http` | If `controller.hostPort.enabled` is `true` and this is non-empty, it sets the hostPort | `"80"`
 `controller.hostPort.ports.https` | If `controller.hostPort.enabled` is `true` and this is non-empty, it sets the hostPort | `"443"`
@@ -89,15 +91,16 @@ Parameter | Description | Default
 `controller.podAnnotations` | annotations to be added to pods | `{}`
 `controller.podLabels` | labels to add to the pod container metadata | `{}`
 `controller.podSecurityContext` | Security context policies to add to the controller pod | `{}`
+`controller.sysctls` | Map of optional sysctls to enable in the controller and in the PodSecurityPolicy | `{}`
 `controller.replicaCount` | desired number of controller pods | `1`
 `controller.minAvailable` | minimum number of available controller pods for PodDisruptionBudget | `1`
 `controller.resources` | controller pod resource requests & limits | `{}`
 `controller.priorityClassName` | controller priorityClassName | `nil`
 `controller.lifecycle` | controller pod lifecycle hooks | `{}`
+`controller.publishService.enabled` | if true, the controller will set the endpoint records on the ingress objects to reflect those on the service | `true`
+`controller.publishService.pathOverride` | override of the default publish-service name | `""`
 `controller.service.annotations` | annotations for controller service | `{}`
 `controller.service.labels` | labels for controller service | `{}`
-`controller.publishService.enabled` | if true, the controller will set the endpoint records on the ingress objects to reflect those on the service | `false`
-`controller.publishService.pathOverride` | override of the default publish-service name | `""`
 `controller.service.enabled` | if disabled no service will be created. This is especially useful when `controller.kind` is set to `DaemonSet` and `controller.hostPorts.enabled` is `true` | true
 `controller.service.clusterIP` | internal controller cluster service IP (set to `"-"` to pass an empty value) | `nil`
 `controller.service.omitClusterIP` | (Deprecated) To omit the `clusterIP` from the controller service | `false`
@@ -118,6 +121,8 @@ Parameter | Description | Default
 `controller.service.nodePorts.https` | If `controller.service.type` is either `NodePort` or `LoadBalancer` and this is non-empty, it sets the nodePort that maps to the Ingress' port 443 | `""`
 `controller.service.nodePorts.tcp` | Sets the nodePort for an entry referenced by its key from `tcp` | `{}`
 `controller.service.nodePorts.udp` | Sets the nodePort for an entry referenced by its key from `udp` | `{}`
+`controller.service.internal.enabled` | Enables an (additional) internal load balancer | false
+`controller.service.internal.annotations` | Annotations for configuring the additional internal load balancer | `{}`
 `controller.livenessProbe.initialDelaySeconds` | Delay before liveness probe is initiated | 10
 `controller.livenessProbe.periodSeconds` | How often to perform the probe | 10
 `controller.livenessProbe.timeoutSeconds` | When the probe times out | 5
@@ -164,10 +169,12 @@ Parameter | Description | Default
 `controller.admissionWebhooks.patch.enabled` | If true, will use a pre and post install hooks to generate a CA and certificate to use for the prometheus operator tls proxy, and patch the created webhooks with the CA. | `true`
 `controller.admissionWebhooks.patch.image.repository` | Repository to use for the webhook integration jobs | `jettech/kube-webhook-certgen`
 `controller.admissionWebhooks.patch.image.tag` |  Tag to use for the webhook integration jobs | `v1.2.0`
+`controller.admissionWebhooks.patch.image.digest` |  Digest to use for the webhook integration jobs | `""`
 `controller.admissionWebhooks.patch.image.pullPolicy` | Image pull policy for the webhook integration jobs | `IfNotPresent`
 `controller.admissionWebhooks.patch.priorityClassName` | Priority class for the webhook integration jobs | `""`
 `controller.admissionWebhooks.patch.podAnnotations` | Annotations for the webhook job pods | `{}`
 `controller.admissionWebhooks.patch.nodeSelector` | Node selector for running admission hook patch jobs | `{}`
+`controller.admissionWebhooks.patch.tolerations` | Node taints/tolerations for running admission hook patch jobs | `[]`
 `controller.customTemplate.configMapName` | configMap containing a custom nginx template | `""`
 `controller.customTemplate.configMapKey` | configMap key containing the nginx template | `""`
 `controller.addHeaders` | configMap key:value pairs containing [custom headers](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers) added before sending response to the client | `{}`
@@ -182,6 +189,7 @@ Parameter | Description | Default
 `defaultBackend.enabled` | Use default backend component | `false`
 `defaultBackend.image.repository` | default backend container image repository | `k8s.gcr.io/defaultbackend-amd64`
 `defaultBackend.image.tag` | default backend container image tag | `1.5`
+`defaultBackend.image.digest` | default backend container image digest | `""`
 `defaultBackend.image.pullPolicy` | default backend container image pull policy | `IfNotPresent`
 `defaultBackend.image.runAsUser` | User ID of the controller process. Value depends on the Linux distribution used inside of the container image. By default uses nobody user. | `65534`
 `defaultBackend.extraArgs` | Additional default backend container arguments | `{}`
@@ -309,6 +317,48 @@ controller:
     annotations:
       domainName: "kubernetes-example.com"
 ```
+
+## Additional internal load balancer
+
+This setup is useful when you need both external and internal load balancers but don't want to have multiple ingress controllers and multiple ingress objects per application.
+
+By default, the ingress object will point to the external load balancer address, but if correctly configured, you can make use of the internal one if the URL you are looking up resolves to the internal load balancer's URL.
+
+You'll need to set both the following values:
+
+`controller.service.internal.enabled`
+`controller.service.internal.annotations`
+
+If one of them is missing the internal load balancer will not be deployed. Example you may have `controller.service.internal.enabled=true` but no annotations set, in this case no action will be taken.
+
+`controller.service.internal.annotations` varies with the cloud service you're using.
+
+Example for AWS
+```
+controller:
+  service:
+    internal:
+      enabled: true
+      annotations:
+        # Create internal ELB
+        service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+        # Any other annotation can be declared here.
+```
+
+Example for GCE
+```
+controller:
+  service:
+    internal:
+      enabled: true
+      annotations:
+        # Create internal LB
+        cloud.google.com/load-balancer-type: "Internal"
+        # Any other annotation can be declared here.
+```
+
+An use case for this scenario is having a split-view DNS setup where the public zone CNAME records point to the external balancer URL while the private zone CNAME records point to the internal balancer URL. This way, you only need one ingress kubernetes object.
+
 
 ## Ingress Admission Webhooks
 

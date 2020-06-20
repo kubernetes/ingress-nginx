@@ -2,6 +2,8 @@ local balancer_resty = require("balancer.resty")
 local resty_roundrobin = require("resty.roundrobin")
 local util = require("util")
 
+local setmetatable = setmetatable
+
 local _M = balancer_resty:new({ factory = resty_roundrobin, name = "round_robin" })
 
 function _M.new(self, backend)

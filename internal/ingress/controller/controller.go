@@ -1053,8 +1053,9 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				Locations: []*ingress.Location{
 					loc,
 				},
-				SSLPassthrough: anns.SSLPassthrough,
-				SSLCiphers:     anns.SSLCiphers,
+				SSLPassthrough:         anns.SSLPassthrough,
+				SSLCiphers:             anns.SSLCipher.SSLCiphers,
+				SSLPreferServerCiphers: anns.SSLCipher.SSLPreferServerCiphers,
 			}
 		}
 	}
@@ -1094,8 +1095,13 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			}
 
 			// only add SSL ciphers if the server does not have them previously configured
-			if servers[host].SSLCiphers == "" && anns.SSLCiphers != "" {
-				servers[host].SSLCiphers = anns.SSLCiphers
+			if servers[host].SSLCiphers == "" && anns.SSLCipher.SSLCiphers != "" {
+				servers[host].SSLCiphers = anns.SSLCipher.SSLCiphers
+			}
+
+			// only add SSLPreferServerCiphers if the server does not have them previously configured
+			if servers[host].SSLPreferServerCiphers == "" && anns.SSLCipher.SSLPreferServerCiphers != "" {
+				servers[host].SSLPreferServerCiphers = anns.SSLCipher.SSLPreferServerCiphers
 			}
 
 			// only add a certificate if the server does not have one previously configured

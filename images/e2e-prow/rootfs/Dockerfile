@@ -16,6 +16,9 @@
 # unit and integration tests
 
 FROM gcr.io/k8s-testimages/bootstrap
+FROM k8s.gcr.io/etcd:3.4.3-0 as etcd
+
+COPY --from=etcd /usr/local/bin/etcd /usr/local/bin/etcd
 
 # hint to kubetest that it is in CI
 ENV KUBETEST_IN_DOCKER="true"
@@ -43,7 +46,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 ARG K8S_RELEASE
-ARG ETCD_VERSION
 ARG KIND_VERSION
 ARG GO_VERSION
 
@@ -52,12 +54,6 @@ RUN curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_RE
 
 RUN curl -sSL https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/amd64/kube-apiserver -o /usr/local/bin/kube-apiserver \
     && chmod +x /usr/local/bin/kube-apiserver
-
-RUN curl -sSL https://storage.googleapis.com/etcd/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz \
-    && mkdir -p /tmp/etcd-download \
-    && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 \
-    && cp /tmp/etcd-download/etcd /usr/local/bin \
-    && rm -rf /tmp/etcd-download
 
 RUN curl -sSL https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64 -o /usr/local/bin/kind \
     && chmod +x /usr/local/bin/kind

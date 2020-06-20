@@ -44,7 +44,7 @@ variable "ssh_public_key_path" {
 
 variable "instance_type" {
   description = "EC2 instance"
-  default     = "c5.18xlarge"
+  default     = "c5.xlarge"
 }
 
 variable "project_tag" {

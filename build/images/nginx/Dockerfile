@@ -1,6 +1,6 @@
-FROM k8s.gcr.io/debian-base:v2.0.0
+FROM us.gcr.io/k8s-artifacts-prod/build-image/debian-base-amd64:v2.1.0
 
-ENV TERRAFORM_VERSION 0.12.19
+ENV TERRAFORM_VERSION 0.12.26
 
 RUN clean-install \
     bash \
@@ -8,6 +8,7 @@ RUN clean-install \
     ca-certificates \
     unzip \
     git \
+    python3 \
     openssh-client
 
 RUN curl -sSL -o /terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \

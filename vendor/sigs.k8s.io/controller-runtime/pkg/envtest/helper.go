@@ -1,8 +1,6 @@
 package envtest
 
 import (
-	"reflect"
-
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -57,18 +55,6 @@ func mergeCRDs(s1, s2 []runtime.Object) []runtime.Object {
 	return merged
 }
 
-// existsUnstructured verify if a any item is common between two lists.
-func existsUnstructured(s1, s2 []*unstructured.Unstructured) bool {
-	for _, s1obj := range s1 {
-		for _, s2obj := range s2 {
-			if reflect.DeepEqual(s1obj, s2obj) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func runtimeCRDListToUnstructured(l []runtime.Object) []*unstructured.Unstructured {
 	res := []*unstructured.Unstructured{}
 	for _, obj := range l {
@@ -78,14 +64,6 @@ func runtimeCRDListToUnstructured(l []runtime.Object) []*unstructured.Unstructur
 			continue
 		}
 		res = append(res, u)
-	}
-	return res
-}
-
-func unstructuredCRDListToRuntime(l []*unstructured.Unstructured) []runtime.Object {
-	res := []runtime.Object{}
-	for _, obj := range l {
-		res = append(res, obj.DeepCopy())
 	}
 	return res
 }

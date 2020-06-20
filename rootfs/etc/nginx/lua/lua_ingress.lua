@@ -1,7 +1,12 @@
 local ngx_re_split = require("ngx.re").split
 
-local certificate_configured_for_current_request = require("certificate").configured_for_current_request
+local certificate_configured_for_current_request =
+  require("certificate").configured_for_current_request
 
+local ngx = ngx
+local io = io
+local math = math
+local string = string
 local original_randomseed = math.randomseed
 local string_format = string.format
 local ngx_redirect = ngx.redirect
@@ -38,8 +43,8 @@ end
 math.randomseed = function(seed)
   local pid = ngx.worker.pid()
   if seeds[pid] then
-    ngx.log(ngx.WARN,
-      string.format("ignoring math.randomseed(%d) since PRNG is already seeded for worker %d", seed, pid))
+    ngx.log(ngx.WARN, string.format("ignoring math.randomseed(%d) since PRNG "
+      .. "is already seeded for worker %d", seed, pid))
     return
   end
 
@@ -143,7 +148,8 @@ function _M.rewrite(location_config)
     local uri = string_format("https://%s%s", redirect_host(), ngx.var.request_uri)
 
     if location_config.use_port_in_redirects then
-      uri = string_format("https://%s:%s%s", redirect_host(), config.listen_ports.https, ngx.var.request_uri)
+      uri = string_format("https://%s:%s%s", redirect_host(),
+        config.listen_ports.https, ngx.var.request_uri)
     end
 
     ngx_redirect(uri, config.http_redirect_code)

@@ -76,7 +76,7 @@ if [[ "${USE_EXISTING_IMAGE}" == "true" ]]; then
   docker pull "${IMAGE}-${ARCH}:${TAG}"
 else
   echo -e "${BGREEN}Building ingress controller image${NC}"
-  make -C "${KUBE_ROOT}" build "sub-container-${ARCH}"
+  make -C "${KUBE_ROOT}" build "sub-image-${ARCH}"
 fi
 
 CONTEXT=$(kubectl config current-context)

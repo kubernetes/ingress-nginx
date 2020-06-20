@@ -12,53 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.DEFAULT_GOAL:=container
+.DEFAULT_GOAL:=image
 
 # set default shell
 SHELL=/bin/bash -o pipefail
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.101
+TAG ?= 0.103
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
-IMGNAME = nginx
-IMAGE = $(REGISTRY)/$(IMGNAME)
+IMAGE = $(REGISTRY)/nginx
 
-PLATFORMS = amd64 arm arm64
-
-EMPTY :=
-SPACE := $(EMPTY) $(EMPTY)
-COMMA := ,
-
-.PHONY: container
-container:
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
+.PHONY: image
+image:
+	docker buildx build \
+		--pull \
+		--push \
 		--progress plain \
-		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--platform amd64,arm,arm64,s390x \
 		--tag $(IMAGE):$(TAG) rootfs
-
-	# https://github.com/docker/buildx/issues/59
-	$(foreach PLATFORM,$(PLATFORMS), \
-		DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
-		--load \
-		--progress plain \
-		--platform $(PLATFORM) \
-		--tag $(IMAGE)-$(PLATFORM):$(TAG) rootfs;)
-
-.PHONY: push
-push: container
-	$(foreach PLATFORM,$(PLATFORMS), \
-		docker push $(IMAGE)-$(PLATFORM):$(TAG);)
-
-.PHONY: release
-release: push
-	echo "done"
 
 .PHONY: init-docker-buildx
 init-docker-buildx:
 ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
 	$(error "buildx not vailable. Docker 19.03 or higher is required")
 endif
-	docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
+	docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
 	docker buildx create --name ingress-nginx --use || true
 	docker buildx inspect --bootstrap

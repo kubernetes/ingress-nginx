@@ -165,6 +165,9 @@ describe("Certificate", function()
       _G.ngx = _ngx
       ngx.ctx.cert_configured_for_current_request = nil
 
+      package.loaded["certificate"] = nil
+      certificate = require("certificate")
+
       set_certificate("hostname", EXAMPLE_CERT, UUID)
     end)
 
