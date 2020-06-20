@@ -1369,7 +1369,7 @@ cd ingress-nginx
 </code></pre></div></p>
 <p>The image will only be used by pods created after the rebuild. To delete old pods which will cause new ones to spin up:
 <div class="highlight"><pre><span></span><code>$ kubectl get pods -n ingress-nginx
-$ kubectl delete pod -n ingress-nginx nginx-ingress-controller-&lt;unique-pod-id&gt;
+$ kubectl delete pod -n ingress-nginx ingress-nginx-controller-&lt;unique-pod-id&gt;
 </code></pre></div></p>
 <h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link"> ¶</a></h2>
 <p>The build uses dependencies in the <code>vendor</code> directory, which
