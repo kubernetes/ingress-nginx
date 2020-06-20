@@ -30,6 +30,18 @@ describe("Monitor", function()
     package.loaded["monitor"] = nil
   end)
 
+  it("extended batch size", function()
+    local monitor = require("monitor")
+    mock_ngx({ var = {} })
+    monitor.set_metrics_max_batch_size(20000)
+
+    for i = 1,20000,1 do
+      monitor.call()
+    end
+
+    assert.equal(20000, #monitor.get_metrics_batch())
+  end)
+
   it("batches metrics", function()
     local monitor = require("monitor")
     mock_ngx({ var = {} })

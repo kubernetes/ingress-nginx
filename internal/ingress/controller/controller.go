@@ -101,6 +101,8 @@ type Configuration struct {
 
 	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
 	MaxmindEditionFiles []string
+
+	MonitorMaxBatchSize int
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
