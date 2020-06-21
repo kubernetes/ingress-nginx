@@ -279,7 +279,7 @@ http {
     {{ buildOpentracing $cfg $servers }}
 
     include /etc/nginx/mime.types;
-    default_type text/html;
+    default_type {{ $cfg.DefaultType }};
 
     {{ if $cfg.EnableBrotli }}
     brotli on;
