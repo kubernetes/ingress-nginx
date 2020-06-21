@@ -74,6 +74,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"nginx-status-ipv6-whitelist":   "::1,2001::/16",
 		"proxy-add-original-uri-header": "false",
 		"disable-ipv6-dns":              "true",
+		"default-type":                  "text/plain",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -97,6 +98,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.ProxyAddOriginalURIHeader = false
 	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.DisableIpv6DNS = true
+	def.DefaultType = "text/plain"
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",
