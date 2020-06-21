@@ -671,6 +671,11 @@ type Configuration struct {
 	// proxy-ssl-* annotations are applied on on location level only in the nginx.conf file
 	// Default is that those are applied on server level, too
 	ProxySSLLocationOnly bool `json:"proxy-ssl-location-only"`
+
+	// DefaultType Sets the default MIME type of a response.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type
+	// Default: text/html
+	DefaultType string `json:"default-type"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -815,6 +820,7 @@ func NewDefault() Configuration {
 		NoAuthLocations:              "/.well-known/acme-challenge",
 		GlobalExternalAuth:           defGlobalExternalAuth,
 		ProxySSLLocationOnly:         false,
+		DefaultType:                  "text/html",
 	}
 
 	if klog.V(5) {

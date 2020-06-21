@@ -183,6 +183,7 @@ The following table shows a configuration option's name, type, and the default v
 |[block-user-agents](#block-user-agents)|[]string|""|
 |[block-referers](#block-referers)|[]string|""|
 |[proxy-ssl-location-only](#proxy-ssl-location-only)|bool|"false"|
+|[default-type](#default-type)|string|"text/html"|
 
 ## add-headers
 
@@ -1084,3 +1085,11 @@ _References:_
 
 Set if proxy-ssl parameters should be applied only on locations and not on servers.
 _**default:**_ is disabled
+
+## default-type
+
+Sets the default MIME type of a response.
+_**default:**_ text/html
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type](http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type)
