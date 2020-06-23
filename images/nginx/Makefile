@@ -12,31 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.DEFAULT_GOAL:=image
+.DEFAULT_GOAL:=build
 
 # set default shell
-SHELL=/bin/bash -o pipefail
+SHELL=/bin/bash
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.103
-REGISTRY ?= quay.io/kubernetes-ingress-controller
+TAG ?= 0.104
+REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
 IMAGE = $(REGISTRY)/nginx
 
-.PHONY: image
-image:
+# required to enable buildx
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
+# build with buildx
+PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
+OUTPUT=
+PROGRESS=plain
+build: ensure-buildx
 	docker buildx build \
+		--platform=${PLATFORMS} $(OUTPUT) \
+		--progress=$(PROGRESS) \
 		--pull \
-		--push \
-		--progress plain \
-		--platform amd64,arm,arm64,s390x \
 		--tag $(IMAGE):$(TAG) rootfs
 
-.PHONY: init-docker-buildx
-init-docker-buildx:
-ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
-	$(error "buildx not vailable. Docker 19.03 or higher is required")
-endif
-	docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
-	docker buildx create --name ingress-nginx --use || true
-	docker buildx inspect --bootstrap
+# push the cross built image
+push: OUTPUT=--push
+push: build
+
+# enable buildx
+ensure-buildx:
+	./../../hack/init-buildx.sh
+
+.PHONY: build push ensure-buildx
