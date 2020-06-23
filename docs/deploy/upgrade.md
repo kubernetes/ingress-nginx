@@ -44,5 +44,5 @@ If you installed ingress-nginx using the Helm command in the deployment docs so 
 you should be able to upgrade using
 
 ```shell
-helm upgrade --reuse-values ngx-ingress stable/nginx-ingress
+helm upgrade --reuse-values ngx-ingress ingress-nginx/ingress-nginx
 ```
