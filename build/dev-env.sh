@@ -40,11 +40,6 @@ if ! command -v kubectl &> /dev/null; then
   exit 1
 fi
 
-if ! docker buildx version &> /dev/null; then
-  echo "Make sure you have Docker 19.03 or higher and experimental features enabled"
-  exit 1
-fi
-
 if ! command -v helm &> /dev/null; then
   echo "Please install helm"
   exit 1
@@ -61,8 +56,6 @@ make build image
 docker tag "${REGISTRY}/nginx-ingress-controller:${TAG}" "${DEV_IMAGE}"
 
 export K8S_VERSION=${K8S_VERSION:-v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694}
-
-export DOCKER_CLI_EXPERIMENTAL=enabled
 
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
