@@ -1231,7 +1231,7 @@ The easiest way to do this is e.g. (do note you may need to change the name para
 <h2 id="with-helm">With Helm<a class="headerlink" href="#with-helm" title="Permanent link"> ¶</a></h2>
 <p>If you installed ingress-nginx using the Helm command in the deployment docs so its name is <code>ngx-ingress</code>,
 you should be able to upgrade using</p>
-<div class="highlight"><pre><span></span><code>helm upgrade --reuse-values ngx-ingress stable/nginx-ingress
+<div class="highlight"><pre><span></span><code>helm upgrade --reuse-values ngx-ingress ingress-nginx/ingress-nginx
 </code></pre></div>
                 
               
