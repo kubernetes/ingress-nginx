@@ -67,8 +67,7 @@ cd ingress-nginx/images/nginx
 
 export TAG=$(git rev-parse HEAD)
 
-make init-docker-buildx
-docker buildx use ingress-nginx --default --global
+make ensure-buildx
 
 echo "Building NGINX images..."
 make image

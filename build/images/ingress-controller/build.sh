@@ -75,16 +75,7 @@ cd ingress-nginx
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
-make init-docker-buildx
-docker buildx use ingress-nginx --default --global
+make ensure-buildx
 
-# disable docker in docker tasks
-export DIND_TASKS=0
-
-echo "Building NGINX image..."
-ARCH=amd64 make build image push
-ARCH=arm   make build image push
-ARCH=arm64 make build image push
-
-echo "Creating multi-arch images..."
-make push-manifest
+echo "Building ingress controller image..."
+make release
