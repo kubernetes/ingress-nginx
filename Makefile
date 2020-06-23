@@ -239,15 +239,10 @@ else
 	@hack/check-go-version.sh
 endif
 
-.PHONY: init-docker-buildx
-init-docker-buildx:
+.PHONY: ensure-buildx
+ensure-buildx:
 ifeq ($(DIND_TASKS),)
-ifneq ($(shell docker buildx 2>&1 >/dev/null; echo $?),)
-	$(error "buildx not available. Docker 19.03 or higher is required with experimental features enabled")
-endif
-	docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
-	docker buildx create --name ingress-nginx --use || true
-	docker buildx inspect --bootstrap
+	./hack/init-buildx.sh
 endif
 
 .PHONY: show-version
@@ -261,7 +256,7 @@ SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
 
 .PHONY: release # Build a multi-arch docker image
-release: init-docker-buildx clean
+release: ensure-buildx clean
 	echo "Building binaries..."
 	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
 
