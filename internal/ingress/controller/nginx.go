@@ -337,13 +337,9 @@ func (n *NGINXController) Start() {
 				return
 			}
 
-			// if the nginx master process dies the workers continue to process requests,
-			// passing checks but in case of updates in ingress no updates will be
-			// reflected in the nginx configuration which can lead to confusion and report
-			// issues because of this behavior.
-			// To avoid this issue we restart nginx in case of errors.
+			// if the nginx master process dies, the workers continue to process requests
+			// until the failure of the configured livenessProbe and restart of the pod.
 			if process.IsRespawnIfRequired(err) {
-				// release command resources
 				return
 			}
 
