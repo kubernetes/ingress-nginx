@@ -111,7 +111,7 @@ http {
         lua_ingress.init_worker()
         balancer.init_worker()
         {{ if $all.EnableMetrics }}
-        monitor.init_worker()
+        monitor.init_worker({{ $all.MonitorMaxBatchSize }})
         {{ end }}
 
         plugins.run()
