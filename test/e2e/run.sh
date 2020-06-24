@@ -83,7 +83,7 @@ export EXIT_CODE=-1
 echo "
 make -C ${DIR}/../../ clean-image build image
 make -C ${DIR}/../e2e-image image
-make -C ${DIR}/../../images/fastcgi-helloserver/ GO111MODULE=\"on\" build image
+make -C ${DIR}/../../images/fastcgi-helloserver/ build image
 make -C ${DIR}/../../images/httpbin/ image
 make -C ${DIR}/../../images/echo/ image
 make -C ${DIR}/../../images/cfssl/ image
