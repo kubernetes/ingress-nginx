@@ -19,9 +19,9 @@ package defaultbackend
 import (
 	"net/http"
 
+	"github.com/gavv/httpexpect/v2"
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/gavv/httpexpect.v2"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
