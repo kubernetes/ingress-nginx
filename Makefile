@@ -65,9 +65,6 @@ BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d
 
 GOARCH=$(ARCH)
 
-# use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
-GO111MODULE=off
-
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
@@ -188,12 +185,6 @@ check_dead_links: ## Check if the documentation contains dead links.
 	  -v $$PWD:/tmp aledbf/awesome_bot:0.1 \
 	  --allow-dupe \
 	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
-
-.PHONY: dep-ensure
-dep-ensure: check-go-version ## Update and vendo go dependencies.
-	GO111MODULE=on go mod tidy -v
-	find vendor -name '*_test.go' -delete
-	GO111MODULE=on go mod vendor
 
 .PHONY: dev-env
 dev-env: check-go-version ## Starts a local Kubernetes cluster using kind, building and deploying the ingress controller.
