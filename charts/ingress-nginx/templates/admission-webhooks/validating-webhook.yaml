@@ -1,5 +1,7 @@
 {{- if .Values.controller.admissionWebhooks.enabled -}}
-apiVersion: admissionregistration.k8s.io/v1
+# before changing this value, check the required kubernetes version
+# https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#prerequisites
+apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
   labels:
