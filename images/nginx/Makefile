@@ -18,8 +18,8 @@
 SHELL=/bin/bash
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.104
-REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
+TAG ?= 0.105
+REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 IMAGE = $(REGISTRY)/nginx
 
