@@ -951,7 +951,8 @@ stream {
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length          "";
             proxy_set_header            X-Forwarded-Proto       "";
-            proxy_set_header            X-Request-ID            $req_id;
+            proxy_set_header            X-Request-ID            "";
+            proxy_set_header            X-Parent-Request-ID     $req_id;
 
             {{ if $externalAuth.Method }}
             proxy_method                {{ $externalAuth.Method }};
