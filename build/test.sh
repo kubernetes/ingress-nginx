@@ -28,11 +28,5 @@ if [ -z "${PKG}" ]; then
   exit 1
 fi
 
-# enabled to use host dns resolver
-export CGO_ENABLED=1
-export GODEBUG=netdns=cgo+2
-# use vendor directory instead of go modules https://github.com/golang/go/wiki/Modules
-export GO111MODULE=off
-
 go test -v \
   $(go list "${PKG}/..." | grep -v vendor | grep -v '/test/e2e' | grep -v images | grep -v "docs/examples")
