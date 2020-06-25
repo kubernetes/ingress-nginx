@@ -6,6 +6,7 @@ options:
 steps:
   - name: gcr.io/k8s-testimages/gcb-docker-gcloud:v20200619-68869a4
     entrypoint: bash
+    dir: 'images/nginx'
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
       - TAG=$_GIT_TAG
