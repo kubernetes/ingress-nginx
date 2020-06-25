@@ -18,7 +18,7 @@ steps:
     - -c
     - |
       gcloud auth configure-docker \
-      && make build push
+      && make push
 substitutions:
   _GIT_TAG: "12345"
   _PULL_BASE_REF: "master"
