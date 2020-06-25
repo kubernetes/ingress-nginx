@@ -24,6 +24,11 @@ set -o pipefail
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
+if ! docker buildx 2>&1 >/dev/null; then
+  echo "buildx not available. Docker 19.03 or higher is required with experimental features enabled"
+  exit 1
+fi
+
 # We can skip setup if the current builder already has multi-arch
 # AND if it isn't the docker driver, which doesn't work
 current_builder="$(docker buildx inspect)"
