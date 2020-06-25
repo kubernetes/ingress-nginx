@@ -15,12 +15,13 @@
 .DEFAULT_GOAL:=build
 
 # set default shell
-SHELL=/bin/bash
+SHELL=/bin/bash -o pipefail -o errexit
 
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
+INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.106
+TAG ?= 0.105
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
 IMAGE = $(REGISTRY)/nginx
@@ -45,6 +46,12 @@ push: build
 
 # enable buildx
 ensure-buildx:
-	$(DIR)/../../hack/init-buildx.sh
+# this is required for cloudbuild
+ifeq ("$(wildcard $(INIT_BUILDX))","")
+	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/hack/init-buildx.sh | bash
+else
+	@exec $(INIT_BUILDX)
+endif
+	@echo "done"
 
 .PHONY: build push ensure-buildx
