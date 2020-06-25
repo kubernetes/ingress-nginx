@@ -17,6 +17,8 @@
 # set default shell
 SHELL=/bin/bash
 
+DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
+
 # 0.0.0 shouldn't clobber any released builds
 TAG ?= 0.106
 REGISTRY ?= quay.io/kubernetes-ingress-controller
@@ -43,6 +45,6 @@ push: build
 
 # enable buildx
 ensure-buildx:
-	./../../hack/init-buildx.sh
+	$(DIR)/../../hack/init-buildx.sh
 
 .PHONY: build push ensure-buildx
