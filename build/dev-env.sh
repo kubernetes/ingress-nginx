@@ -45,6 +45,12 @@ if ! command -v helm &> /dev/null; then
   exit 1
 fi
 
+HELM_VERSION=$(helm version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+') || true
+if [[ ${HELM_VERSION} < "v3.0.0" ]]; then
+  echo "Please upgrade helm to v3.0.0 or higher"
+  exit 1
+fi
+
 KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
 if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
   echo "Please update kubectl to 1.15 or higher"
