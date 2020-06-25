@@ -37,19 +37,13 @@ cleanup() {
 
 trap cleanup EXIT
 
-if ! command -v parallel &> /dev/null; then
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    echo "Parallel is not installed. Use the package manager to install it"
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "Parallel is not installed. Install it running brew install parallel"
-  fi
-
-  exit 1
-fi
-
 if ! command -v kind --version &> /dev/null; then
   echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
   exit 1
+fi
+
+if ! command -v ginkgo &> /dev/null; then
+  go get github.com/onsi/ginkgo/ginkgo
 fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -79,25 +73,13 @@ echo "Kubernetes cluster:"
 kubectl get nodes -o wide
 
 echo "[dev-env] building image"
-export EXIT_CODE=-1
-echo "
+
 make -C ${DIR}/../../ clean-image build image
 make -C ${DIR}/../e2e-image image
 make -C ${DIR}/../../images/fastcgi-helloserver/ build image
 make -C ${DIR}/../../images/httpbin/ image
 make -C ${DIR}/../../images/echo/ image
 make -C ${DIR}/../../images/cfssl/ image
-" | parallel --joblog /tmp/log {} || EXIT_CODE=$?
-if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
-then
-  echo "Image builds were ok! Log:"
-  cat /tmp/log
-  unset EXIT_CODE
-else
-  echo "Image builds were not ok! Log:"
-  cat /tmp/log
-  exit 1
-fi
 
 # Preload images used in e2e tests
 docker pull moul/grpcbin
@@ -106,8 +88,7 @@ docker pull quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f
 KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
 
 echo "[dev-env] copying docker images to cluster..."
-export EXIT_CODE=-1
-echo "
+
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/nginx-ingress-controller:${TAG}
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/fastcgi-helloserver:${TAG}
@@ -116,17 +97,6 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${R
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} moul/grpcbin
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/cfssl:${TAG}
-" | parallel --joblog /tmp/log {} || EXIT_CODE=$?
-if [ ${EXIT_CODE} -eq 0 ] || [ ${EXIT_CODE} -eq -1 ];
-then
-  echo "Image loads were ok! Log:"
-  cat /tmp/log
-  unset EXIT_CODE
-else
-  echo "Image loads were not ok! Log:"
-  cat /tmp/log
-  exit
-fi
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
