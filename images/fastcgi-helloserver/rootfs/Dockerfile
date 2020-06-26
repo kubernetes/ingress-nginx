@@ -12,8 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM scratch
+FROM golang:1.14-alpine as builder
 
-COPY . /
+WORKDIR /go/src/k8s.io/ingress-nginx/images/fastcgi
+
+COPY . .
+
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo \
+	-ldflags "-s -w" \
+	-o fastcgi-helloserver main.go
+
+# Use distroless as minimal base image to package the binary
+# Refer to https://github.com/GoogleContainerTools/distroless for more details
+FROM gcr.io/distroless/static:nonroot
+
+COPY --from=builder /go/src/k8s.io/ingress-nginx/images/fastcgi/fastcgi-helloserver /
+USER nonroot:nonroot
 
 CMD ["/fastcgi-helloserver"]
