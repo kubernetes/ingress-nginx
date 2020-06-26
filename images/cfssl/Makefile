@@ -12,18 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Docker image for e2e testing.
+# set default shell
+SHELL=/bin/bash -o pipefail -o errexit
 
-# Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.0
+DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
+INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
-REGISTRY ?= ingress-controller
+TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
+REGISTRY ?= local
 
-IMAGE = $(REGISTRY)/cfssl
+IMAGE = $(REGISTRY)/e2e-test-cfssl
 
-image:
-	docker build \
+# required to enable buildx
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
+# build with buildx
+PLATFORMS?=linux/amd64
+OUTPUT=
+PROGRESS=plain
+
+build: ensure-buildx
+	docker buildx build \
+		--platform=${PLATFORMS} $(OUTPUT) \
+		--progress=$(PROGRESS) \
+		--pull \
 		-t $(IMAGE):$(TAG) rootfs
 
-clean:
-	docker rmi -f $(IMAGE):$(TAG) || true
+# push the cross built image
+push: OUTPUT=--push
+push: build
+
+# enable buildx
+ensure-buildx:
+# this is required for cloudbuild
+ifeq ("$(wildcard $(INIT_BUILDX))","")
+	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/hack/init-buildx.sh | bash
+else
+	@exec $(INIT_BUILDX)
+endif
+	@echo "done"
+
+.PHONY: build push ensure-buildx
