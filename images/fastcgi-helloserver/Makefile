@@ -14,34 +14,44 @@
 
 # Docker image for e2e testing.
 
-# Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.0
+# set default shell
+SHELL=/bin/bash -o pipefail -o errexit
 
-HOSTARCH := $(shell uname -m | sed -e s/x86_64/amd64/ \
-	-e s/s390x/s390x/ \
-	-e s/armv7l/arm/ \
-	-e s/aarch64.*/arm64/)
+DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
+INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
-ifndef ARCH
-ARCH := $(HOSTARCH)
-endif
-ifeq ($(ARCH),)
-    $(error mandatory variable ARCH is empty)
-endif
+TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
+REGISTRY ?= local
 
-REGISTRY ?= ingress-controller
+IMAGE = $(REGISTRY)/e2e-test-fastcgi-helloserver
 
-IMAGE = $(REGISTRY)/fastcgi-helloserver
+# required to enable buildx
+export DOCKER_CLI_EXPERIMENTAL=enabled
 
-PKG=k8s.io/ingress-nginx/images/fastcgi-helloserver
+# build with buildx
+PLATFORMS?=linux/amd64
+OUTPUT=
+PROGRESS=plain
 
-.PHONY: image
-image: build
-	docker build \
+build: ensure-buildx
+	docker buildx build \
+		--platform=${PLATFORMS} $(OUTPUT) \
+		--progress=$(PROGRESS) \
+		--pull \
 		-t $(IMAGE):$(TAG) rootfs
 
-.PHONY: build
-build:
-	GOARCH=$(ARCH) CGO_ENABLED=0 go build -a -installsuffix cgo \
-		-ldflags "-s -w" \
-		-o rootfs/fastcgi-helloserver ${PKG}/...
+# push the cross built image
+push: OUTPUT=--push
+push: build
+
+# enable buildx
+ensure-buildx:
+# this is required for cloudbuild
+ifeq ("$(wildcard $(INIT_BUILDX))","")
+	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/hack/init-buildx.sh | bash
+else
+	@exec $(INIT_BUILDX)
+endif
+	@echo "done"
+
+.PHONY: build push ensure-buildx
