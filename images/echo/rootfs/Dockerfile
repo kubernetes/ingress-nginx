@@ -1,13 +1,19 @@
-FROM quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
+ARG BASE_IMAGE
+
+FROM ${BASE_IMAGE}
 
 RUN apk add -U perl curl make unzip
 
-RUN wget -O /tmp/luarocks.tgz https://github.com/luarocks/luarocks/archive/v3.3.1.tar.gz \
+ARG LUAROCKS_VERSION
+ARG LUAROCKS_SHA
+
+RUN wget -O /tmp/luarocks.tgz \
+  https://github.com/luarocks/luarocks/archive/v${LUAROCKS_VERSION}.tar.gz \
+  && echo "${LUAROCKS_SHA} */tmp/luarocks.tgz" | sha256sum -c - \
   && tar -C /tmp -xzf /tmp/luarocks.tgz \
   && cd /tmp/luarocks* \
   && ./configure \
-  && make install \
-  && rm -rf /tmp/*
+  && make install
 
 RUN luarocks install lua-resty-template
 
