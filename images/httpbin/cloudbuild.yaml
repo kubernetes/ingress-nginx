@@ -1,6 +1,8 @@
 timeout: 1200s
 options:
   substitution_option: ALLOW_LOOSE
+  # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
+  machineType: N1_HIGHCPU_8
 steps:
   - name: gcr.io/k8s-testimages/gcb-docker-gcloud:v20200619-68869a4
     entrypoint: bash
