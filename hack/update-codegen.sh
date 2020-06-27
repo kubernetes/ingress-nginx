@@ -16,15 +16,14 @@
 
 set -o errexit
 set -o nounset
-set -o pipefail
 
 SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
 CODEGEN_VERSION=$(grep 'k8s.io/code-generator' go.sum | awk '{print $2}' | sed 's/\/go.mod//g' | head -1)
 CODEGEN_PKG=$(echo `go env GOPATH`"/pkg/mod/k8s.io/code-generator@${CODEGEN_VERSION}")
 
 if [[ ! -d ${CODEGEN_PKG} ]]; then
-    echo "${CODEGEN_PKG} is missing. Running 'go mod download'."
-    go mod download
+  echo "${CODEGEN_PKG} is missing. Running 'go mod download'."
+  go mod download
 fi
 
 # Ensure we can execute.

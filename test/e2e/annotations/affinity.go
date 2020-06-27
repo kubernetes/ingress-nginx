@@ -86,7 +86,7 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress")
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		f.HTTPTestClient().
 			GET("/").

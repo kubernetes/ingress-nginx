@@ -37,6 +37,7 @@ trap cleanup EXIT
 E2E_IMAGE=${E2E_IMAGE:-gcr.io/k8s-staging-ingress-nginx/e2e-test-runner:v20200627-ingress-nginx-2.9.0-9-ga003eabd5}
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
+DOCKER_IN_DOCKER_ENABLED=${DOCKER_IN_DOCKER_ENABLED:-}
 
 KUBE_ROOT=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 
@@ -51,17 +52,21 @@ fi
 # create output directory as current user to avoid problem with docker.
 mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
-docker run                                            \
-  --tty                                               \
-  --rm                                                \
-  ${DOCKER_OPTS}                                      \
-  -e GOCACHE="/go/src/${PKG}/.cache"                  \
-  -e DIND_TASKS=0                                     \
-  -v "${HOME}/.kube:${HOME}/.kube"                    \
-  -v "${KUBE_ROOT}:/go/src/${PKG}"                    \
-  -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" \
-  -v "/var/run/docker.sock:/var/run/docker.sock"      \
-  -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
-  -w "/go/src/${PKG}"                                 \
-  -u $(id -u ${USER}):$(id -g ${USER})                \
-  ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
+if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
+  /bin/bash -c "${FLAGS}"
+else
+  docker run                                            \
+    --tty                                               \
+    --rm                                                \
+    ${DOCKER_OPTS}                                      \
+    -e GOCACHE="/go/src/${PKG}/.cache"                  \
+    -e DOCKER_IN_DOCKER_ENABLED="true"                  \
+    -v "${HOME}/.kube:${HOME}/.kube"                    \
+    -v "${KUBE_ROOT}:/go/src/${PKG}"                    \
+    -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" \
+    -v "/var/run/docker.sock:/var/run/docker.sock"      \
+    -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
+    -w "/go/src/${PKG}"                                 \
+    -u $(id -u ${USER}):$(id -g ${USER})                \
+    ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
+fi

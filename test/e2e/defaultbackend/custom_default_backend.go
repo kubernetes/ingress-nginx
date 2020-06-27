@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -43,12 +42,12 @@ var _ = framework.IngressNginxDescribe("[Default Backend] custom service", func(
 				args = append(args, fmt.Sprintf("--default-backend-service=%v/%v", f.Namespace, framework.EchoService))
 				deployment.Spec.Template.Spec.Containers[0].Args = args
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
-				time.Sleep(5 * time.Second)
+				framework.Sleep()
 				return err
 			})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating deployment")
 
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		f.WaitForNginxServer("_",
 			func(server string) bool {

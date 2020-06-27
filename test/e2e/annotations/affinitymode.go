@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -104,7 +103,7 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 			replicas = replicas + 1
 			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, deploymentName, replicas, nil)
 			assert.Nil(ginkgo.GinkgoT(), err)
-			time.Sleep(3 * time.Second)
+			framework.Sleep()
 			response = request.WithCookies(cookies).Expect()
 			newHostName := getHostnameFromResponseBody(response.Body().Raw())
 			assert.Equal(ginkgo.GinkgoT(), originalHostName, newHostName,
@@ -116,7 +115,7 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 		replicas = 0
 		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, deploymentName, replicas, nil)
 		assert.Nil(ginkgo.GinkgoT(), err)
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		// validate, there is no backend to serve the request
 		response = request.WithCookies(cookies).Expect().Status(http.StatusServiceUnavailable)
@@ -125,13 +124,13 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 		replicas = 2
 		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, deploymentName, replicas, nil)
 		assert.Nil(ginkgo.GinkgoT(), err)
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		// wait brand new backends to spawn
 		response = request.WithCookies(cookies).Expect()
 		try := 0
 		for (response.Raw().StatusCode == http.StatusServiceUnavailable) && (try < 30) {
-			time.Sleep(5 * time.Second)
+			framework.Sleep()
 			response = request.WithCookies(cookies).Expect()
 			try++
 		}
