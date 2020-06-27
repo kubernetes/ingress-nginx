@@ -83,7 +83,7 @@ func smugglingRequest(host, addr string, port int) (string, error) {
 	}
 
 	// wait for /_hidden/index.html response
-	time.Sleep(1 * time.Second)
+	framework.Sleep()
 
 	var buf = make([]byte, 1024)
 	r := bufio.NewReader(conn)

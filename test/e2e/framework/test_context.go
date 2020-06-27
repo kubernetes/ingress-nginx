@@ -32,20 +32,9 @@ type TestContextType struct {
 // TestContext is the global client context for tests.
 var TestContext TestContextType
 
-// RegisterCommonFlags registers flags common to all e2e test suites.
-func RegisterCommonFlags() {
-	// Turn on verbose by default to get spec names
-	config.DefaultReporterConfig.Verbose = true
-
-	// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
+// registerCommonFlags registers flags common to all e2e test suites.
+func registerCommonFlags() {
 	config.GinkgoConfig.EmitSpecProgress = true
-
-	// Randomize specs as well as suites
-	config.GinkgoConfig.RandomizeAllSpecs = true
-
-	// Default SlowSpecThreshold is 5 seconds.
-	// Too low for the kind of operations we need to tests
-	config.DefaultReporterConfig.SlowSpecThreshold = 20
 
 	flag.StringVar(&TestContext.KubeHost, "kubernetes-host", "http://127.0.0.1:8080", "The kubernetes host, or apiserver, to connect to")
 	//flag.StringVar(&TestContext.KubeConfig, "kubernetes-config", os.Getenv(clientcmd.RecommendedConfigPathEnvVar), "Path to config containing embedded authinfo for kubernetes. Default value is from environment variable "+clientcmd.RecommendedConfigPathEnvVar)
@@ -54,6 +43,6 @@ func RegisterCommonFlags() {
 
 // RegisterParseFlags registers and parses flags for the test binary.
 func RegisterParseFlags() {
-	RegisterCommonFlags()
+	registerCommonFlags()
 	flag.Parse()
 }

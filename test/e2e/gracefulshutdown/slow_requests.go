@@ -19,7 +19,6 @@ package gracefulshutdown
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/onsi/ginkgo"
 
@@ -55,7 +54,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] Graceful shutdown with pendin
 				Status(http.StatusOK)
 		}()
 
-		time.Sleep(1 * time.Second)
+		framework.Sleep()
 		f.DeleteNGINXPod(60)
 		<-done
 	})

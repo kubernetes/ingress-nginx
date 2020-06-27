@@ -27,7 +27,6 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -126,7 +125,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 
 		// give time the lua request to the OCSP
 		// URL to finish and update the cache
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		// TODO: is possible to avoid second request?
 		resp := f.HTTPTestClientWithTLSConfig(tlsConfig).
@@ -235,7 +234,7 @@ func prepareCertificates(namespace string) error {
 		return err
 	}
 
-	time.Sleep(1 * time.Second)
+	framework.Sleep()
 
 	command = "cfssl gencert -remote=localhost -profile=server leaf_csr.json | cfssljson -bare leaf"
 	ginkgo.By(fmt.Sprintf("running %v", command))

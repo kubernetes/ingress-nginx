@@ -39,7 +39,7 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 		})
 
-	err := wait.PollImmediate(framework.Poll, framework.DefaultTimeout, func() (bool, error) {
+	err := wait.Poll(framework.Poll, framework.DefaultTimeout, func() (bool, error) {
 
 		resp := f.HTTPTestClient().
 			GET("/").

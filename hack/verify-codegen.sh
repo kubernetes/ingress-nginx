@@ -19,14 +19,12 @@ set -o nounset
 set -o pipefail
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE}")/..
-SCRIPT_BASE=${SCRIPT_ROOT}/../..
 
 DIFFROOT="${SCRIPT_ROOT}/internal"
-TMP_DIFFROOT="${SCRIPT_ROOT}/_tmp/internal"
-_tmp="${SCRIPT_ROOT}/_tmp"
+TMP_DIFFROOT="${SCRIPT_ROOT}/_tmp"
 
 cleanup() {
-  rm -rf "${_tmp}"
+  rm -rf "${TMP_DIFFROOT}"
 }
 trap "cleanup" EXIT SIGINT
 
@@ -38,10 +36,10 @@ cp -a "${DIFFROOT}"/* "${TMP_DIFFROOT}"
 "${SCRIPT_ROOT}/hack/update-codegen.sh"
 echo "diffing ${DIFFROOT} against freshly generated codegen"
 ret=0
-diff -Naupr "${DIFFROOT}" "${TMP_DIFFROOT}" || ret=$?
+diff -Naupr --no-dereference "${DIFFROOT}" "${TMP_DIFFROOT}" || ret=1
+
 cp -a "${TMP_DIFFROOT}"/* "${DIFFROOT}"
-if [[ $ret -eq 0 ]]
-then
+if [[ $ret -eq 0 ]]; then
   echo "${DIFFROOT} up to date."
 else
   echo "${DIFFROOT} is out of date. Please run hack/update-codegen.sh"

@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -58,7 +57,7 @@ var _ = framework.IngressNginxDescribe("[SSL] secret update", func() {
 			ing.Namespace)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -70,7 +69,7 @@ var _ = framework.IngressNginxDescribe("[SSL] secret update", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
 		assert.NotContains(ginkgo.GinkgoT(), log, fmt.Sprintf("starting syncing of secret %v/dummy", f.Namespace))
 
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		dummySecret.Data["some-key"] = []byte("some value")
 

@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 		time.Sleep(waitForLuaSync)
 
 		ip := f.GetNginxPodIP()
-		mf, err := f.GetMetric("nginx_ingress_controller_success", ip[0])
+		mf, err := f.GetMetric("nginx_ingress_controller_success", ip)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), mf)
 
@@ -99,7 +99,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 		assert.NotEmpty(ginkgo.GinkgoT(), log)
 
 		ginkgo.By("skipping Nginx reload")
-		mf, err = f.GetMetric("nginx_ingress_controller_success", ip[0])
+		mf, err = f.GetMetric("nginx_ingress_controller_success", ip)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), mf)
 
@@ -189,7 +189,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 			ensureHTTPSRequest(f, fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.GetURL(framework.HTTPS)), host, host)
 
 			ip := f.GetNginxPodIP()
-			mf, err := f.GetMetric("nginx_ingress_controller_success", ip[0])
+			mf, err := f.GetMetric("nginx_ingress_controller_success", ip)
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), mf)
 
@@ -204,7 +204,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 			ginkgo.By("serving the default certificate on HTTPS endpoint")
 			ensureHTTPSRequest(f, f.GetURL(framework.HTTPS), host, "ingress.local")
 
-			mf, err = f.GetMetric("nginx_ingress_controller_success", ip[0])
+			mf, err = f.GetMetric("nginx_ingress_controller_success", ip)
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), mf)
 

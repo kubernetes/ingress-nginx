@@ -78,7 +78,7 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
 
 		// wait for update and nginx reload and new endpoint is available
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {

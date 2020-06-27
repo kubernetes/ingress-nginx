@@ -59,6 +59,8 @@ var _ = framework.IngressNginxDescribe("[Default Backend]", func() {
 			{"basic HTTPS POST request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTPS, "POST", "/demo", http.StatusNotFound},
 		}
 
+		framework.Sleep()
+
 		for _, test := range testCases {
 			ginkgo.By(test.Name)
 
