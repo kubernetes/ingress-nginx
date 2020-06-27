@@ -1,4 +1,4 @@
-FROM quay.io/kubernetes-ingress-controller/e2e:v05312020-d250b97b4 AS BASE
+FROM gcr.io/k8s-staging-ingress-nginx/e2e-test-runner:v20200627-ingress-nginx-2.9.0-9-ga003eabd5 AS BASE
 
 FROM alpine:3.12
 
