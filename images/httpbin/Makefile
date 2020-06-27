@@ -27,11 +27,11 @@ IMAGE = $(REGISTRY)/e2e-test-httpbin
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64
+PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
 OUTPUT=
 PROGRESS=plain
 
-build:
+build: ensure-buildx
 	docker buildx build \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \

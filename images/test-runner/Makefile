@@ -31,7 +31,7 @@ PLATFORMS?=linux/amd64
 OUTPUT=
 PROGRESS=plain
 
-build:
+build: ensure-buildx
 	docker buildx build \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
@@ -47,7 +47,7 @@ build:
 		--build-arg CHART_TESTING_VERSION=3.0.0-beta.1 \
 		--build-arg YAML_LINT_VERSION=1.13.0 \
 		--build-arg YAMALE_VERSION=1.8.0 \
-		--build-arg HELM_VERSION=v3.2.0 \
+		--build-arg HELM_VERSION=v3.2.1 \
 		-t $(IMAGE):$(TAG) rootfs
 
 # push the cross built image
