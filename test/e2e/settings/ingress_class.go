@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
+	"sync"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -38,28 +38,32 @@ import (
 var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 	f := framework.NewDefaultFramework("ingress-class")
 
-	f.KubeClientSet.RbacV1().ClusterRoles().Create(context.TODO(), &rbacv1.ClusterRole{
-		ObjectMeta: metav1.ObjectMeta{Name: "ingress-nginx-class"},
-		Rules: []rbacv1.PolicyRule{{
-			APIGroups: []string{"networking.k8s.io"},
-			Resources: []string{"ingressclasses"},
-			Verbs:     []string{"get", "list", "watch"},
-		}},
-	}, metav1.CreateOptions{})
-
-	f.KubeClientSet.RbacV1().ClusterRoleBindings().Create(context.TODO(), &rbacv1.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "ingress-nginx-class",
-		},
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
-			Name:     "ingress-nginx-class",
-		},
-	}, metav1.CreateOptions{})
+	var doOnce sync.Once
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
+
+		doOnce.Do(func() {
+			f.KubeClientSet.RbacV1().ClusterRoles().Create(context.TODO(), &rbacv1.ClusterRole{
+				ObjectMeta: metav1.ObjectMeta{Name: "ingress-nginx-class"},
+				Rules: []rbacv1.PolicyRule{{
+					APIGroups: []string{"networking.k8s.io"},
+					Resources: []string{"ingressclasses"},
+					Verbs:     []string{"get", "list", "watch"},
+				}},
+			}, metav1.CreateOptions{})
+
+			f.KubeClientSet.RbacV1().ClusterRoleBindings().Create(context.TODO(), &rbacv1.ClusterRoleBinding{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "ingress-nginx-class",
+				},
+				RoleRef: rbacv1.RoleRef{
+					APIGroup: "rbac.authorization.k8s.io",
+					Kind:     "ClusterRole",
+					Name:     "ingress-nginx-class",
+				},
+			}, metav1.CreateOptions{})
+		})
 	})
 
 	ginkgo.Context("Without a specific ingress-class", func() {
@@ -175,6 +179,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ing.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
+			framework.Sleep()
+
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return !strings.Contains(cfg, "server_name foo")
 			})
@@ -277,7 +283,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			return strings.Contains(cfg, fmt.Sprintf("server_name %v", host))
 		})
 
-		time.Sleep(2 * time.Second)
+		framework.Sleep()
 
 		f.HTTPTestClient().
 			GET("/").
@@ -297,7 +303,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		time.Sleep(2 * time.Second)
+		framework.Sleep()
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
 			return !strings.Contains(cfg, fmt.Sprintf("server_name %v", host))
@@ -319,7 +325,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		time.Sleep(2 * time.Second)
+		framework.Sleep()
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
 			return !strings.Contains(cfg, fmt.Sprintf("server_name %v", host))

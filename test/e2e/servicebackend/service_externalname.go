@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -271,7 +270,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		_, err = f.KubeClientSet.CoreV1().Services(f.Namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating httpbin service")
 
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		body = f.HTTPTestClient().
 			GET("/get").

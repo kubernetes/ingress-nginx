@@ -77,7 +77,7 @@ var _ = framework.DescribeAnnotation("influxdb-*", func() {
 			var measurements string
 			var err error
 
-			err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+			err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
 				measurements, err = extractInfluxDBMeasurements(f)
 				if err != nil {
 					return false, nil

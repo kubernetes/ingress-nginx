@@ -72,17 +72,17 @@ func (f *Framework) GetIngress(namespace string, name string) *networking.Ingres
 
 // EnsureIngress creates an Ingress object and retunrs it, throws error if it already exists.
 func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingress {
-	err := createIngressWithRetries(f.KubeClientSet, f.Namespace, ingress)
-	assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
+	fn := func() {
+		err := createIngressWithRetries(f.KubeClientSet, f.Namespace, ingress)
+		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
+	}
+
+	f.waitForReload(fn)
 
 	ing := f.GetIngress(f.Namespace, ingress.Name)
-
 	if ing.Annotations == nil {
 		ing.Annotations = make(map[string]string)
 	}
-
-	// creating an ingress requires a reload.
-	time.Sleep(5 * time.Second)
 
 	return ing
 }
@@ -93,13 +93,12 @@ func (f *Framework) UpdateIngress(ingress *networking.Ingress) *networking.Ingre
 	assert.Nil(ginkgo.GinkgoT(), err, "updating ingress")
 
 	ing := f.GetIngress(f.Namespace, ingress.Name)
-
 	if ing.Annotations == nil {
 		ing.Annotations = make(map[string]string)
 	}
 
 	// updating an ingress requires a reload.
-	time.Sleep(5 * time.Second)
+	Sleep()
 
 	return ing
 }
@@ -128,8 +127,8 @@ func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Depl
 	return d
 }
 
-// WaitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
-func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration, expectedReplicas int, namespace string, opts metav1.ListOptions) error {
+// waitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
+func waitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration, expectedReplicas int, namespace string, opts metav1.ListOptions) error {
 	return wait.Poll(Poll, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(context.TODO(), opts)
 		if err != nil {
@@ -215,6 +214,13 @@ func podRunningReady(p *core.Pod) (bool, error) {
 
 // GetIngressNGINXPod returns the ingress controller running pod
 func GetIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
+	err := waitForPodsReady(kubeClientSet, DefaultTimeout, 1, ns, metav1.ListOptions{
+		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	l, err := kubeClientSet.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
@@ -222,26 +228,15 @@ func GetIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Po
 		return nil, nil
 	}
 
-	if len(l.Items) == 0 {
-		return nil, fmt.Errorf("there is no ingress-nginx pods running in namespace %v", ns)
-	}
-
-	var pod *core.Pod
-
 	for _, p := range l.Items {
 		if strings.HasPrefix(p.GetName(), "nginx-ingress-controller") {
 			if isRunning, err := podRunningReady(&p); err == nil && isRunning {
-				pod = &p
-				break
+				return &p, nil
 			}
 		}
 	}
 
-	if pod == nil {
-		return nil, fmt.Errorf("there is no ingress-nginx pods running in namespace %v", ns)
-	}
-
-	return pod, nil
+	return nil, fmt.Errorf("there is no ingress-nginx pods running in namespace %v", ns)
 }
 
 func createDeploymentWithRetries(c kubernetes.Interface, namespace string, obj *appsv1.Deployment) error {

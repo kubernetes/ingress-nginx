@@ -74,10 +74,10 @@ To find the registry simply run: `docker system info | grep Registry`
 The e2e test image can also be built through the Makefile.
 
 ```console
-$ make -C test/e2e-image image
+$ make -C test/e2e-image build
 ```
 
-Then you can load the docker image using kind: 
+Then you can load the docker image using kind:
 
 ```console
 $ kind load docker-image --name="ingress-nginx-dev" nginx-ingress-controller:e2e

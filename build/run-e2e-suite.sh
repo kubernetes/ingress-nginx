@@ -29,7 +29,6 @@ BGREEN='\e[32m'
 declare -a mandatory
 mandatory=(
   E2E_NODES
-  SLOW_E2E_THRESHOLD
 )
 
 missing=false
@@ -77,6 +76,5 @@ kubectl run --rm \
   --env="E2E_NODES=${E2E_NODES}" \
   --env="FOCUS=${FOCUS}" \
   --env="E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS}" \
-  --env="SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD}" \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
   e2e --image=nginx-ingress-controller:e2e

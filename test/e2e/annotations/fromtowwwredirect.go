@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -81,7 +80,7 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 			ing.Spec.TLS[0].SecretName,
 			ing.Namespace)
 		assert.Nil(ginkgo.GinkgoT(), err)
-		time.Sleep(5 * time.Second)
+		framework.Sleep()
 
 		f.WaitForNginxServer(toHost,
 			func(server string) bool {
