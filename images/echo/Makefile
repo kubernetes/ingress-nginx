@@ -31,7 +31,7 @@ PLATFORMS?=linux/amd64
 OUTPUT=
 PROGRESS=plain
 
-build:
+build: ensure-buildx
 	docker buildx build \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
