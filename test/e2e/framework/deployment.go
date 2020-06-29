@@ -389,7 +389,7 @@ func (f *Framework) DeleteDeployment(name string) error {
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting deployment")
 
-	return WaitForPodsDeleted(f.KubeClientSet, 2*time.Minute, f.Namespace, metav1.ListOptions{
+	return waitForPodsDeleted(f.KubeClientSet, 2*time.Minute, f.Namespace, metav1.ListOptions{
 		LabelSelector: labelSelectorToString(d.Spec.Selector.MatchLabels),
 	})
 }

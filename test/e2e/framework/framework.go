@@ -203,20 +203,20 @@ func (f *Framework) GetURL(scheme RequestScheme) string {
 
 // WaitForNginxServer waits until the nginx configuration contains a particular server section
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
+	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 	Sleep()
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
+	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
 
 // WaitForNginxCustomConfiguration waits until the nginx configuration given part (from, to) contains a particular configuration
 func (f *Framework) WaitForNginxCustomConfiguration(from string, to string, matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxCustomConditions(from, to, matcher))
+	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxCustomConditions(from, to, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
 
@@ -364,7 +364,6 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 		assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
 	}
 
-	Sleep(1)
 	f.waitForReload(fn)
 }
 
@@ -377,7 +376,7 @@ func (f *Framework) waitForReload(fn func()) {
 	err := wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		// most of the cases reload the ingress controller
 		// in cases where the value is not modified we could wait forever
-		if count > 4 {
+		if count > 3 {
 			return true, nil
 		}
 
@@ -390,8 +389,12 @@ func (f *Framework) waitForReload(fn func()) {
 
 func (f *Framework) getReloadCount() int {
 	ip := f.GetNginxPodIP()
+
 	mf, err := f.GetMetric("nginx_ingress_controller_success", ip)
-	assert.Nil(ginkgo.GinkgoT(), err)
+	if err != nil {
+		return 0
+	}
+
 	assert.NotNil(ginkgo.GinkgoT(), mf)
 
 	rc0, err := extractReloadCount(mf)
@@ -422,7 +425,7 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(context.TODO(), pod.GetName(), *metav1.NewDeleteOptions(grace))
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting ingress nginx pod")
 
-	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
+	err = wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
 		pod, err := GetIngressNGINXPod(ns, f.KubeClientSet)
 		if err != nil || pod == nil {
 			return false, nil

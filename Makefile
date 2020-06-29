@@ -33,7 +33,7 @@ TAG ?= 0.33.0
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 6
+E2E_NODES ?= 10
 # run e2e test suite with tests that check for memory leaks? (default is false)
 E2E_CHECK_LEAKS ?=
 
@@ -50,7 +50,7 @@ endif
 
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
-BASE_IMAGE ?= quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f
+BASE_IMAGE ?= gcr.io/k8s-staging-ingress-nginx/nginx@sha256:35da1d3e00f5e763e59cb59159bf88ba0f0b6e8835885ac9d8b63029a478dba7
 
 GOARCH=$(ARCH)
 
