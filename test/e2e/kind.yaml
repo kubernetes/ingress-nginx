@@ -9,6 +9,3 @@ kubeadmConfigPatches:
   kind: ClusterConfiguration
   metadata:
     name: config
-  controllerManager:
-    extraArgs:
-      namespace-sync-period: 10s
