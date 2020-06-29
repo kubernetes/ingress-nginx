@@ -100,8 +100,6 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 			c <- resp.StatusCode
 		}(host, result)
 
-		framework.Sleep()
-
 		f.ScaleDeploymentToZero("nginx-ingress-controller")
 
 		assert.Equal(ginkgo.GinkgoT(), <-result, http.StatusOK, "expecting a valid response from HTTP request")
@@ -144,8 +142,6 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 
 			c <- resp.StatusCode
 		}(host, result)
-
-		framework.Sleep()
 
 		f.ScaleDeploymentToZero("nginx-ingress-controller")
 

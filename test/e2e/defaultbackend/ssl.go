@@ -28,6 +28,8 @@ var _ = framework.IngressNginxDescribe("[Default Backend] SSL", func() {
 
 	ginkgo.It("should return a self generated SSL certificate", func() {
 		ginkgo.By("checking SSL Certificate using the NGINX IP address")
+		framework.Sleep()
+
 		resp := f.HTTPTestClient().
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).
