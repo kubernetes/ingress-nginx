@@ -1395,10 +1395,10 @@ or push an image to a remote repository.</p>
 <p>To find the registry simply run: <code>docker system info | grep Registry</code></p>
 <h3 id="building-the-e2e-test-image">Building the e2e test image<a class="headerlink" href="#building-the-e2e-test-image" title="Permanent link"> ¶</a></h3>
 <p>The e2e test image can also be built through the Makefile.</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> make -C test/e2e-image image
+<div class="highlight"><pre><span></span><code><span class="gp">$</span> make -C test/e2e-image build
 </code></pre></div>
 
-<p>Then you can load the docker image using kind: </p>
+<p>Then you can load the docker image using kind:</p>
 <div class="highlight"><pre><span></span><code><span class="gp">$</span> kind load docker-image --name<span class="o">=</span><span class="s2">&quot;ingress-nginx-dev&quot;</span> nginx-ingress-controller:e2e
 </code></pre></div>
 
