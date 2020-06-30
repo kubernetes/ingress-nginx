@@ -1591,7 +1591,7 @@ By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
 <h3 id="detect-installed-version">Detect installed version<a class="headerlink" href="#detect-installed-version" title="Permanent link"> ¶</a></h3>
 <p>To detect which version of the ingress controller is running, exec into the pod and run <code>nginx-ingress-controller version</code> command.</p>
 <div class="highlight"><pre><span></span><code><span class="go">POD_NAMESPACE=ingress-nginx</span>
-<span class="go">POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx -o jsonpath=&#39;{.items[0].metadata.name}&#39;)</span>
+<span class="go">POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx --field-selector=status.phase=Running -o jsonpath=&#39;{.items[0].metadata.name}&#39;)</span>
 
 <span class="go">kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version</span>
 </code></pre></div>
