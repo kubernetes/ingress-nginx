@@ -1420,16 +1420,6 @@ Do not move it without providing redirects.
 <span class="go">Use &quot;ingress-nginx [command] --help&quot; for more information about a command.</span>
 </code></pre></div>
 
-<p>If a new <code>ingress-nginx</code> version has just been released, the plugin may not yet have been updated inside the repository. In that case, you can install the latest version of the plugin by running:</p>
-<div class="highlight"><pre><span></span><code><span class="go">(</span>
-<span class="go">    set -x; cd &quot;$(mktemp -d)&quot; &amp;&amp;</span>
-<span class="go">    curl -fsSLO &quot;https://github.com/kubernetes/ingress-nginx/releases/download/nginx-0.24.0/{ingress-nginx.yaml,kubectl-ingress_nginx-$(uname | tr &#39;[:upper:]&#39; &#39;[:lower:]&#39;)-amd64.tar.gz}&quot; &amp;&amp;</span>
-<span class="go">    kubectl krew install \</span>
-<span class="go">    --manifest=ingress-nginx.yaml --archive=kubectl-ingress_nginx-$(uname | tr &#39;[:upper:]&#39; &#39;[:lower:]&#39;)-amd64.tar.gz</span>
-<span class="go">)</span>
-</code></pre></div>
-
-<p>Replacing <code>0.24.0</code> with the recently released version.</p>
 <h2 id="common-flags">Common Flags<a class="headerlink" href="#common-flags" title="Permanent link"> ¶</a></h2>
 <ul>
 <li>Every subcommand supports the basic <code>kubectl</code> configuration flags like <code>--namespace</code>, <code>--context</code>, <code>--client-key</code> and so on.</li>
