@@ -65,19 +65,6 @@ Flags:
 Use "ingress-nginx [command] --help" for more information about a command.
 ```
 
-If a new `ingress-nginx` version has just been released, the plugin may not yet have been updated inside the repository. In that case, you can install the latest version of the plugin by running:
-
-```console
-(
-    set -x; cd "$(mktemp -d)" &&
-    curl -fsSLO "https://github.com/kubernetes/ingress-nginx/releases/download/nginx-0.24.0/{ingress-nginx.yaml,kubectl-ingress_nginx-$(uname | tr '[:upper:]' '[:lower:]')-amd64.tar.gz}" &&
-    kubectl krew install \
-    --manifest=ingress-nginx.yaml --archive=kubectl-ingress_nginx-$(uname | tr '[:upper:]' '[:lower:]')-amd64.tar.gz
-)
-```
-
-Replacing `0.24.0` with the recently released version.
-
 ## Common Flags
 
 - Every subcommand supports the basic `kubectl` configuration flags like `--namespace`, `--context`, `--client-key` and so on.
