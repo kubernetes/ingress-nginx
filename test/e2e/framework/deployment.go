@@ -52,7 +52,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int) {
 // replicas is configurable and
 // name is configurable
 func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas int) {
-	deployment := newDeployment(name, f.Namespace, "gcr.io/k8s-staging-ingress-nginx/e2e-test-echo:v20200627-ingress-nginx-2.9.0-11-g35e992fe0", 80, int32(replicas),
+	deployment := newDeployment(name, f.Namespace, "us.gcr.io/k8s-artifacts-prod/ingress-nginx/e2e-test-echo@sha256:41c043188a499d460e7425883a3b196e13f10bf40c395895dbdf06caf3324536", 80, int32(replicas),
 		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
@@ -343,7 +343,7 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
 func (f *Framework) NewHttpbinDeployment() {
-	f.NewDeployment(HTTPBinService, "gcr.io/k8s-staging-ingress-nginx/e2e-test-httpbin:v20200627-ingress-nginx-2.9.0-12-gfc91afac8", 80, 1)
+	f.NewDeployment(HTTPBinService, "us.gcr.io/k8s-artifacts-prod/ingress-nginx/e2e-test-httpbin@sha256:c6372ef57a775b95f18e19d4c735a9819f2e7bb4641e5e3f27287d831dfeb7e8", 80, 1)
 }
 
 // NewDeployment creates a new deployment in a particular namespace.
