@@ -50,7 +50,7 @@ endif
 
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 
-BASE_IMAGE ?= gcr.io/k8s-staging-ingress-nginx/nginx@sha256:35da1d3e00f5e763e59cb59159bf88ba0f0b6e8835885ac9d8b63029a478dba7
+BASE_IMAGE ?= us.gcr.io/k8s-artifacts-prod/ingress-nginx/nginx@sha256:35da1d3e00f5e763e59cb59159bf88ba0f0b6e8835885ac9d8b63029a478dba7
 
 GOARCH=$(ARCH)
 
