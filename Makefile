@@ -27,7 +27,7 @@ endif
 SHELL=/bin/bash -o pipefail -o errexit
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.33.0
+TAG ?= $(shell cat VERSION)
 
 # e2e settings
 # Allow limiting the scope of the e2e tests. By default run everything
