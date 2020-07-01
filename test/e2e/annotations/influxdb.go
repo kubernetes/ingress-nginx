@@ -72,7 +72,7 @@ var _ = framework.DescribeAnnotation("influxdb-*", func() {
 				Expect().
 				Status(http.StatusOK)
 
-			time.Sleep(10 * time.Second)
+			framework.Sleep(10 * time.Second)
 
 			var measurements string
 			var err error

@@ -40,7 +40,7 @@ const (
 var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies", func() {
 	f := framework.NewDefaultFramework("pod-security-policies")
 
-	ginkgo.BeforeEach(func() {
+	ginkgo.It("should be running with a Pod Security Policy", func() {
 		psp := createPodSecurityPolicy()
 		_, err := f.KubeClientSet.PolicyV1beta1().PodSecurityPolicies().Create(context.TODO(), psp, metav1.CreateOptions{})
 		if !k8sErrors.IsAlreadyExists(err) {
@@ -73,10 +73,10 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies", func(
 			})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating ingress controller deployment flags")
 
-		f.NewEchoDeployment()
-	})
+		f.WaitForNginxListening(80)
 
-	ginkgo.It("should be running with a Pod Security Policy", func() {
+		f.NewEchoDeployment()
+
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "server_tokens on")
@@ -125,5 +125,4 @@ func createPodSecurityPolicy() *policyv1beta1.PodSecurityPolicy {
 			},
 		},
 	}
-
 }

@@ -42,12 +42,9 @@ var _ = framework.IngressNginxDescribe("[Default Backend] custom service", func(
 				args = append(args, fmt.Sprintf("--default-backend-service=%v/%v", f.Namespace, framework.EchoService))
 				deployment.Spec.Template.Spec.Containers[0].Args = args
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
-				framework.Sleep()
 				return err
 			})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating deployment")
-
-		framework.Sleep()
 
 		f.WaitForNginxServer("_",
 			func(server string) bool {

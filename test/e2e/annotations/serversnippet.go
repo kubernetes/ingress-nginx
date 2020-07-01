@@ -31,7 +31,7 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 		f.NewEchoDeployment()
 	})
 
-	ginkgo.It(`add valid directives to server via server snippet"`, func() {
+	ginkgo.It(`add valid directives to server via server snippet`, func() {
 		host := "serversnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-snippet": `

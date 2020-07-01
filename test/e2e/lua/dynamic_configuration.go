@@ -99,7 +99,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, framework.EchoService, replicas, nil)
 			assert.Nil(ginkgo.GinkgoT(), err)
 
-			time.Sleep(waitForLuaSync)
+			framework.Sleep(waitForLuaSync)
 
 			f.HTTPTestClient().
 				GET("/").
@@ -117,7 +117,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 			err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, framework.EchoService, 0, nil)
 			assert.Nil(ginkgo.GinkgoT(), err)
 
-			time.Sleep(waitForLuaSync)
+			framework.Sleep(waitForLuaSync)
 
 			f.HTTPTestClient().
 				GET("/").
@@ -142,7 +142,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, deploymentName, replicas, nil)
 			assert.Nil(ginkgo.GinkgoT(), err)
 
-			time.Sleep(waitForLuaSync)
+			framework.Sleep(waitForLuaSync)
 
 			resp = f.HTTPTestClient().
 				GET("/").
@@ -155,7 +155,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 			err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, deploymentName, replicas, nil)
 			assert.Nil(ginkgo.GinkgoT(), err)
 
-			time.Sleep(waitForLuaSync)
+			framework.Sleep(waitForLuaSync)
 
 			resp = f.HTTPTestClient().
 				GET("/").
@@ -209,8 +209,6 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 
 		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 3, nil)
 		assert.Nil(ginkgo.GinkgoT(), err)
-
-		framework.Sleep()
 
 		output, err = f.ExecIngressPod(curlCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)

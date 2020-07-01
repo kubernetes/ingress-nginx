@@ -98,7 +98,7 @@ func (f *Framework) UpdateIngress(ingress *networking.Ingress) *networking.Ingre
 	}
 
 	// updating an ingress requires a reload.
-	Sleep()
+	Sleep(1 * time.Second)
 
 	return ing
 }
@@ -129,7 +129,7 @@ func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Depl
 
 // waitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
 func waitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration, expectedReplicas int, namespace string, opts metav1.ListOptions) error {
-	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
+	return wait.Poll(Poll, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(context.TODO(), opts)
 		if err != nil {
 			return false, nil
@@ -152,7 +152,7 @@ func waitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 
 // waitForPodsDeleted waits for a given amount of time until a group of Pods are deleted in the given namespace.
 func waitForPodsDeleted(kubeClientSet kubernetes.Interface, timeout time.Duration, namespace string, opts metav1.ListOptions) error {
-	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
+	return wait.Poll(Poll, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(context.TODO(), opts)
 		if err != nil {
 			return false, nil
@@ -161,6 +161,7 @@ func waitForPodsDeleted(kubeClientSet kubernetes.Interface, timeout time.Duratio
 		if len(pl.Items) == 0 {
 			return true, nil
 		}
+
 		return false, nil
 	})
 }
