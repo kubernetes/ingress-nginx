@@ -3397,7 +3397,7 @@ you can add key-value pairs to the data section of the config-map. For Example:<
 <p>The key and values in a ConfigMap can only be strings.
 This means that we want a value with boolean values we need to quote the values, like "true" or "false".
 Same for numbers, like "100".</p>
-<p>"Slice" types (defined below as <code>[]string</code> or <code>[]int</code> can be provided as a comma-delimited string.</p>
+<p>"Slice" types (defined below as <code>[]string</code> or <code>[]int</code>) can be provided as a comma-delimited string.</p>
 </div>
 <h2 id="configuration-options">Configuration options<a class="headerlink" href="#configuration-options" title="Permanent link"> ¶</a></h2>
 <p>The following table shows a configuration option's name, type, and the default value:</p>
@@ -4348,7 +4348,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <h2 id="map-hash-bucket-size">map-hash-bucket-size<a class="headerlink" href="#map-hash-bucket-size" title="Permanent link"> ¶</a></h2>
 <p>Sets the bucket size for the <a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size">map variables hash tables</a>. The details of setting up hash tables are provided in a separate <a href="http://nginx.org/en/docs/hash.html">document</a>.</p>
 <h2 id="proxy-real-ip-cidr">proxy-real-ip-cidr<a class="headerlink" href="#proxy-real-ip-cidr" title="Permanent link"> ¶</a></h2>
-<p>If use-proxy-protocol is enabled, proxy-real-ip-cidr defines the default the IP/network address of your external load balancer.</p>
+<p>If use-forwarded-headers or use-proxy-protocol is enabled, proxy-real-ip-cidr defines the default the IP/network address of your external load balancer.</p>
 <h2 id="proxy-set-headers">proxy-set-headers<a class="headerlink" href="#proxy-set-headers" title="Permanent link"> ¶</a></h2>
 <p>Sets custom headers from named configmap before sending traffic to backends. The value format is namespace/name.  See <a href="https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers">example</a></p>
 <h2 id="server-name-hash-max-size">server-name-hash-max-size<a class="headerlink" href="#server-name-hash-max-size" title="Permanent link"> ¶</a></h2>
@@ -4389,6 +4389,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
  <code>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384</code>.</p>
 <p>The ordering of a ciphersuite is very important because it decides which algorithms are going to be selected in priority. The recommendation above prioritizes algorithms that provide perfect <a href="https://wiki.mozilla.org/Security/Server_Side_TLS#Forward_Secrecy">forward secrecy</a>.</p>
 <p>Please check the <a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla SSL Configuration Generator</a>.</p>
+<p><strong>Note:</strong> ssl_prefer_server_ciphers directive will be enabled by default for http context.</p>
 <h2 id="ssl-ecdh-curve">ssl-ecdh-curve<a class="headerlink" href="#ssl-ecdh-curve" title="Permanent link"> ¶</a></h2>
 <p>Specifies a curve for ECDHE ciphers.</p>
 <p><em>References:</em>
