@@ -1195,7 +1195,9 @@ stream {
             {{ $proxySetHeader }} X-Forwarded-For        $remote_addr;
             {{ end }}
             {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
+            {{ if $all.Cfg.UseForwardedPort }}
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
+            {{ end }}
             {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
             {{ if $all.Cfg.ProxyAddOriginalURIHeader }}
             {{ $proxySetHeader }} X-Original-URI         $request_uri;

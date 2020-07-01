@@ -487,6 +487,10 @@ type Configuration struct {
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
 
+	// Set header X-Forwarded-Port
+	// Default: true
+	UseForwardedPort bool `json:"use-forwarded-port,omitempty"`
+
 	// If the request does not have a request-id, should we generate a random value?
 	// Default: true
 	GenerateRequestID bool `json:"generate-request-id,omitempty"`
@@ -714,6 +718,7 @@ func NewDefault() Configuration {
 		UseForwardedHeaders:              false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ComputeFullForwardedFor:          false,
+		UseForwardedPort:                 true,
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
 		HTTP2MaxFieldSize:                "4k",
