@@ -61,16 +61,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 		return errors.Wrapf(err, "checking for NGINX process with PID %v", pid)
 	}
 
-	statusCode, _, err := nginx.NewGetStatusRequest(nginx.HealthPath)
-	if err != nil {
-		return errors.Wrapf(err, "checking if NGINX is running")
-	}
-
-	if statusCode != 200 {
-		return fmt.Errorf("ingress controller is not healthy (%v)", statusCode)
-	}
-
-	statusCode, _, err = nginx.NewGetStatusRequest("/is-dynamic-lb-initialized")
+	statusCode, _, err := nginx.NewGetStatusRequest("/is-dynamic-lb-initialized")
 	if err != nil {
 		return errors.Wrapf(err, "checking if the dynamic load balancer started")
 	}
