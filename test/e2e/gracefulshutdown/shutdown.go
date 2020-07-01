@@ -71,7 +71,6 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 				return err
 			})
-
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		annotations := map[string]string{

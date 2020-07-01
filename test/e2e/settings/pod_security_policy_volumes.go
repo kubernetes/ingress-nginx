@@ -96,6 +96,8 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with vo
 			})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment")
 
+		f.WaitForNginxListening(80)
+
 		f.NewEchoDeployment()
 
 		f.WaitForNginxConfiguration(

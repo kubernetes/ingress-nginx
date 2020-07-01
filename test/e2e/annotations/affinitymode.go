@@ -104,6 +104,7 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, deploymentName, replicas, nil)
 			assert.Nil(ginkgo.GinkgoT(), err)
 			framework.Sleep()
+
 			response = request.WithCookies(cookies).Expect()
 			newHostName := getHostnameFromResponseBody(response.Body().Raw())
 			assert.Equal(ginkgo.GinkgoT(), originalHostName, newHostName,
