@@ -37,13 +37,11 @@ cleanup() {
 
 trap cleanup EXIT
 
+export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
+
 if ! command -v kind --version &> /dev/null; then
   echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
   exit 1
-fi
-
-if ! command -v ginkgo &> /dev/null; then
-  go get github.com/onsi/ginkgo/ginkgo
 fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -53,29 +51,35 @@ export TAG=1.0.0-dev
 export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
-export K8S_VERSION=${K8S_VERSION:-v1.18.4@sha256:d8ff5fc405fc679dd3dd0cccc01543ba4942ed90823817d2e9e2c474a5343c4f}
-
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
-export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
+export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 
-echo "[dev-env] creating Kubernetes cluster with kind"
+if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
+  echo "[dev-env] creating Kubernetes cluster with kind"
 
-export KUBECONFIG="${HOME}/.kube/kind-config-${KIND_CLUSTER_NAME}"
-kind create cluster \
-  --verbosity=${KIND_LOG_LEVEL} \
-  --name ${KIND_CLUSTER_NAME} \
-  --config ${DIR}/kind.yaml \
-  --retain \
-  --image "kindest/node:${K8S_VERSION}"
+  export K8S_VERSION=${K8S_VERSION:-v1.18.4@sha256:d8ff5fc405fc679dd3dd0cccc01543ba4942ed90823817d2e9e2c474a5343c4f}
 
-echo "Kubernetes cluster:"
-kubectl get nodes -o wide
+  kind create cluster \
+    --verbosity=${KIND_LOG_LEVEL} \
+    --name ${KIND_CLUSTER_NAME} \
+    --config ${DIR}/kind.yaml \
+    --retain \
+    --image "kindest/node:${K8S_VERSION}"
 
-echo "[dev-env] building image"
+  echo "Kubernetes cluster:"
+  kubectl get nodes -o wide
+fi
 
-make -C ${DIR}/../../ clean-image build image
-make -C ${DIR}/../e2e-image image
+if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
+  if ! command -v ginkgo &> /dev/null; then
+    go get github.com/onsi/ginkgo/ginkgo
+  fi
+
+  echo "[dev-env] building image"
+  make -C ${DIR}/../../ clean-image build image
+  make -C ${DIR}/../e2e-image image
+fi
 
 #make -C ${DIR}/../../images/fastcgi-helloserver/ build image
 #make -C ${DIR}/../../images/echo/ image

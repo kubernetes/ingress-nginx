@@ -178,6 +178,7 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 
 			err := f.DeleteDeployment(framework.HTTPBinService)
 			assert.Nil(ginkgo.GinkgoT(), err)
+			framework.Sleep()
 
 			f.HTTPTestClient().
 				GET(barPath).

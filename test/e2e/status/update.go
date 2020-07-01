@@ -80,7 +80,7 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 			})
 
 		framework.Logf("waiting for leader election and initial status update")
-		time.Sleep(30 * time.Second)
+		framework.Sleep(30 * time.Second)
 
 		err = cmd.Process.Kill()
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error terminating kubectl proxy")
@@ -91,7 +91,7 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 		ing.Status.LoadBalancer.Ingress = []apiv1.LoadBalancerIngress{}
 		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).UpdateStatus(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error cleaning Ingress status")
-		time.Sleep(10 * time.Second)
+		framework.Sleep(10 * time.Second)
 
 		err = f.KubeClientSet.CoreV1().
 			ConfigMaps(f.Namespace).

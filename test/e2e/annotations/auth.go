@@ -470,6 +470,8 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 					return strings.Contains(server, "location /bar")
 				})
 			}
+
+			framework.Sleep()
 		})
 
 		ginkgo.It("should return status code 200 when signed in after auth backend is deleted ", func() {
@@ -482,6 +484,7 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 
 			err := f.DeleteDeployment(framework.HTTPBinService)
 			assert.Nil(ginkgo.GinkgoT(), err)
+			framework.Sleep()
 
 			f.HTTPTestClient().
 				GET(fooPath).
@@ -501,6 +504,7 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 
 			err := f.DeleteDeployment(framework.HTTPBinService)
 			assert.Nil(ginkgo.GinkgoT(), err)
+			framework.Sleep()
 
 			f.HTTPTestClient().
 				GET(fooPath).
@@ -516,7 +520,6 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 				WithBasicAuth("user", "password").
 				Expect().
 				Status(http.StatusInternalServerError)
-
 		})
 
 		ginkgo.It("should deny login for different servers", func() {
@@ -530,6 +533,7 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 
 			err := f.DeleteDeployment(framework.HTTPBinService)
 			assert.Nil(ginkgo.GinkgoT(), err)
+			framework.Sleep()
 
 			ginkgo.By("receiving an internal server error without cache on thisHost location /bar")
 			f.HTTPTestClient().

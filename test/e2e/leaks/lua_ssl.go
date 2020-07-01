@@ -44,7 +44,7 @@ var _ = framework.IngressNginxDescribe("[Memory Leak] Dynamic Certificates", fun
 		iterations := 10
 
 		ginkgo.By("Waiting a minute before starting the test")
-		time.Sleep(1 * time.Minute)
+		framework.Sleep(1 * time.Minute)
 
 		for iteration := 1; iteration <= iterations; iteration++ {
 			ginkgo.By(fmt.Sprintf("Running iteration %v", iteration))
@@ -64,7 +64,7 @@ var _ = framework.IngressNginxDescribe("[Memory Leak] Dynamic Certificates", fun
 			p.Close()
 
 			ginkgo.By("waiting one minute before next iteration")
-			time.Sleep(1 * time.Minute)
+			framework.Sleep(1 * time.Minute)
 		}
 	})
 })
@@ -116,7 +116,7 @@ func run(host string, f *framework.Framework) pool.WorkFunc {
 		ginkgo.By(fmt.Sprintf("\tcreating ingress for host %v", host))
 		privisionIngress(host, f)
 
-		time.Sleep(100 * time.Millisecond)
+		framework.Sleep(100 * time.Millisecond)
 
 		ginkgo.By(fmt.Sprintf("\tchecking ingress for host %v", host))
 		checkIngress(host, f)
