@@ -39,6 +39,13 @@ trap cleanup EXIT
 
 export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 
+export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
+
+if [[ ! -z ${PROW_JOB_ID:-} ]]; then
+  echo "skipping execution..."
+  exit 0
+fi
+
 if ! command -v kind --version &> /dev/null; then
   echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
   exit 1
