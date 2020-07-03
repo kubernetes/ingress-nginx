@@ -7,8 +7,31 @@ on:
 
 jobs:
 
-  docs:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.filter.outputs.go }}
+      charts: ${{ steps.filter.outputs.charts }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - uses: dorny/paths-filter@v2.2.0
+        id: filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            docs:
+              - 'docs/**/*'
+            charts:
+              - 'charts/ingress-nginx/Chart.yaml'
+
+  docs:
+    name: Update Documentation
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.docs == 'true' }}
     steps:
       - name: Checkout master
         uses: actions/checkout@v1
@@ -19,8 +42,12 @@ jobs:
           PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
 
   chart:
-    needs: docs
+    name: Release Chart
     runs-on: ubuntu-latest
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.charts == 'true' }}
+
     steps:
       - name: Checkout master
         uses: actions/checkout@v1

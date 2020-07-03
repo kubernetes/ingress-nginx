@@ -4,24 +4,54 @@ on:
   pull_request:
     branches:
       - "*"
+
   push:
     branches:
       - master
 
 jobs:
-  build:
-    name: Build
+
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.filter.outputs.go }}
+      charts: ${{ steps.filter.outputs.charts }}
 
     steps:
-      - name: Set up Go 1.14
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.14
-        id: go
 
       - name: Checkout
         uses: actions/checkout@v1
+
+      - uses: dorny/paths-filter@v2.2.0
+        id: filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - 'rootfs/**/*'
+            charts:
+              - 'charts/ingress-nginx/Chart.yaml'
+              - 'charts/ingress-nginx/*'
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.go == 'true' }}
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Go 1.14
+        id: go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14
 
       - name: Set up Docker Buildx
         id: buildx
@@ -63,15 +93,55 @@ jobs:
           name: docker.tar.gz
           path: docker.tar.gz
 
+  helm:
+    name: Helm chart
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.charts == 'true' }}
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Lint
+        run: |
+          ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
+
+      - name: fix permissions
+        run: |
+          sudo mkdir -p $HOME/.kube
+          sudo chmod -R 777 $HOME/.kube
+
+      - name: Create Kubernetes cluster
+        id: kind
+        uses: engineerd/setup-kind@v0.4.0
+        with:
+          version: v0.8.1
+          image: kindest/node:v1.18.4
+
+      - name: Test
+        env:
+          KIND_CLUSTER_NAME: kind
+          SKIP_CLUSTER_CREATION: true
+        run: |
+          kind get kubeconfig > $HOME/.kube/kind-config-kind
+          make kind-e2e-chart-tests
+
   kubernetes:
     name: Kubernetes
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - changes
+      - build
+    if: ${{ needs.changes.outputs.go == 'true' }}
     strategy:
       matrix:
         k8s: [v1.14.10, v1.15.11, v1.16.9, v1.17.5, v1.18.4]
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v1
 
@@ -88,7 +158,6 @@ jobs:
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
-      # delete-artifact
       - uses: geekyeggo/delete-artifact@v1
         with:
           name: docker.tar.gz
