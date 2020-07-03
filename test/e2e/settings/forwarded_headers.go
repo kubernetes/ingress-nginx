@@ -47,7 +47,8 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name forwarded-headers")
+				return strings.Contains(server, "server_name forwarded-headers") &&
+					strings.Contains(server, "proxy_set_header X-Forwarded-Proto $full_x_forwarded_proto;")
 			})
 
 		ginkgo.By("ensuring single values are parsed correctly")
@@ -95,7 +96,8 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name forwarded-headers")
+				return strings.Contains(server, "server_name forwarded-headers") &&
+					strings.Contains(server, "proxy_set_header X-Forwarded-Proto $pass_access_scheme;")
 			})
 
 		body := f.HTTPTestClient().

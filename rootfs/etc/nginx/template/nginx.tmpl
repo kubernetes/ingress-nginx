@@ -376,6 +376,9 @@ http {
         {{ end}}
     }
 
+    {{ end }}
+
+    {{ if $cfg.UseForwardedHeaders }}
     map $http_x_forwarded_proto $full_x_forwarded_proto {
         default $http_x_forwarded_proto;
         "" $scheme;
@@ -1190,13 +1193,16 @@ stream {
             {{ $proxySetHeader }} X-Real-IP              $remote_addr;
             {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
             {{ $proxySetHeader }} X-Forwarded-For        $full_x_forwarded_for;
-            {{ $proxySetHeader }} X-Forwarded-Proto      $full_x_forwarded_proto;
             {{ else }}
             {{ $proxySetHeader }} X-Forwarded-For        $remote_addr;
             {{ end }}
+            {{ if $all.Cfg.UseForwardedHeaders }}
+            {{ $proxySetHeader }} X-Forwarded-Proto      $full_x_forwarded_proto;
+            {{ else }}
+            {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
+            {{ end }}
             {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
-            {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
             {{ if $all.Cfg.ProxyAddOriginalURIHeader }}
             {{ $proxySetHeader }} X-Original-URI         $request_uri;
             {{ end }}
