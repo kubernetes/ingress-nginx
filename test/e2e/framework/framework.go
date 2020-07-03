@@ -17,7 +17,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -106,17 +108,16 @@ func (f *Framework) BeforeEach() {
 	err = f.newIngressController(f.Namespace, f.BaseName)
 	assert.Nil(ginkgo.GinkgoT(), err, "deploying the ingress controller")
 
-	err = waitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
-	})
-	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress pods to be ready")
+	f.WaitForNginxListening(80)
 }
 
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
 	defer func(kubeClient kubernetes.Interface, ns string) {
-		err := deleteKubeNamespace(kubeClient, ns)
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
+		go func() {
+			err := deleteKubeNamespace(kubeClient, ns)
+			assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
+		}()
 	}(f.KubeClientSet, f.Namespace)
 
 	if !ginkgo.CurrentGinkgoTestDescription().Failed {
@@ -205,7 +206,7 @@ func (f *Framework) GetURL(scheme RequestScheme) string {
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
 	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
-	Sleep()
+	Sleep(1 * time.Second)
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
@@ -473,6 +474,27 @@ func (f *Framework) newTestClient(config *tls.Config) *httpexpect.Expect {
 	})
 }
 
+// WaitForNginxListening waits until NGINX starts accepting connections on a port
+func (f *Framework) WaitForNginxListening(port int) {
+	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
+		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
+	})
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress pods to be ready")
+
+	podIP := f.GetNginxIP()
+	err = wait.Poll(500*time.Millisecond, DefaultTimeout, func() (bool, error) {
+		conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", podIP, port))
+		if err != nil {
+			return false, nil
+		}
+
+		defer conn.Close()
+
+		return true, nil
+	})
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress controller pod listening on port 80")
+}
+
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
 func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1.Deployment) error) error {
 	deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
@@ -480,8 +502,15 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		return err
 	}
 
+	rolloutStatsCmd := fmt.Sprintf("%v --namespace %s rollout status deployment/%s -w --timeout 5m", KubectlPath, namespace, deployment.Name)
+
 	if updateFunc != nil {
 		if err := updateFunc(deployment); err != nil {
+			return err
+		}
+
+		err = exec.Command("bash", "-c", rolloutStatsCmd).Run()
+		if err != nil {
 			return err
 		}
 	}
@@ -491,6 +520,11 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		_, err = kubeClientSet.AppsV1().Deployments(namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "scaling the number of replicas to %v", replicas)
+		}
+
+		err = exec.Command("/bin/bash", "-c", rolloutStatsCmd).Run()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -528,7 +562,7 @@ func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name st
 		return err
 	}
 
-	Sleep()
+	Sleep(1 * time.Second)
 	return nil
 }
 

@@ -57,14 +57,14 @@ local function get_pem_cert_uid(raw_hostname)
     return uid
   end
 
-  local wildcard_hosatname, _, err = re_sub(hostname, "^[^\\.]+\\.", "*.", "jo")
+  local wildcard_hostname, _, err = re_sub(hostname, "^[^\\.]+\\.", "*.", "jo")
   if err then
     ngx.log(ngx.ERR, "error: ", err)
     return uid
   end
 
-  if wildcard_hosatname then
-    uid = ngx.shared.certificate_servers:get(wildcard_hosatname)
+  if wildcard_hostname then
+    uid = certificate_servers:get(wildcard_hostname)
   end
 
   return uid

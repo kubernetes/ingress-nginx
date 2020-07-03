@@ -51,8 +51,8 @@ spec:
     {{- if .Values.controller.sysctls }}
         sysctls:
     {{- range $sysctl, $value := .Values.controller.sysctls }}
-        - name: {{ $sysctl }}
-          value: {{ $value }}
+        - name: {{ $sysctl | quote }}
+          value: {{ $value | quote }}
     {{- end }}
     {{- end }}
       containers:
