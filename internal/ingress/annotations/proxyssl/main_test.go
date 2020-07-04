@@ -90,7 +90,7 @@ func TestAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-ciphers")] = "HIGH:-SHA"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-name")] = "$host"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-protocols")] = "TLSv1.3 SSLv2 TLSv1   TLSv1.2"
-	data[parser.GetAnnotationWithPrefix("proxy-ssl-server-name")] = "off"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-server-name")] = "on"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-session-reuse")] = "off"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-verify")] = "on"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-verify-depth")] = "3"
@@ -130,6 +130,9 @@ func TestAnnotations(t *testing.T) {
 	}
 	if u.ProxySSLName != "$host" {
 		t.Errorf("expected %v but got %v", "$host", u.ProxySSLName)
+	}
+	if u.ProxySSLServerName != "on" {
+		t.Errorf("expected %v but got %v", "on", u.ProxySSLServerName)
 	}
 
 }
@@ -187,6 +190,9 @@ func TestInvalidAnnotations(t *testing.T) {
 	}
 	if u.VerifyDepth != defaultProxySSLVerifyDepth {
 		t.Errorf("expected %v but got %v", defaultProxySSLVerifyDepth, u.VerifyDepth)
+	}
+	if u.ProxySSLServerName != defaultProxySSLServerName {
+		t.Errorf("expected %v but got %v", defaultProxySSLServerName, u.ProxySSLServerName)
 	}
 }
 
@@ -260,6 +266,15 @@ func TestEquals(t *testing.T) {
 		t.Errorf("Expected false")
 	}
 	cfg2.VerifyDepth = 1
+
+	// Different ProxySSLServerName
+	cfg1.ProxySSLServerName = "off"
+	cfg2.ProxySSLServerName = "on"
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.ProxySSLServerName = "off"
 
 	// Equal Configs
 	result = cfg1.Equal(cfg2)
