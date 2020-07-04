@@ -68,6 +68,6 @@ docker run --rm --interactive --network host \
     --volume $KUBECONFIG:/root/.kube/config \
     --volume "${DIR}/../../":/workdir \
     --workdir /workdir \
-    quay.io/helmpack/chart-testing:v3.0.0-rc.1 ct install \
+    aledbf/chart-testing:v3.0.0-rc.4 ct install \
         --charts charts/ingress-nginx \
-        --helm-extra-args "--timeout 120s"
+        --helm-extra-args "--timeout 60s"
