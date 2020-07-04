@@ -10,9 +10,10 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      go: ${{ steps.filter.outputs.go }}
+      docs: ${{ steps.filter.outputs.docs }}
       charts: ${{ steps.filter.outputs.charts }}
     steps:
+
       - name: Checkout
         uses: actions/checkout@v1
 
@@ -32,7 +33,9 @@ jobs:
     needs:
       - changes
     if: ${{ needs.changes.outputs.docs == 'true' }}
+
     steps:
+
       - name: Checkout master
         uses: actions/checkout@v1
 
@@ -49,6 +52,7 @@ jobs:
     if: ${{ needs.changes.outputs.charts == 'true' }}
 
     steps:
+
       - name: Checkout master
         uses: actions/checkout@v1
 
