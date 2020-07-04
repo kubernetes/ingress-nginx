@@ -34,6 +34,7 @@ const (
 	defaultProxySSLProtocols   = "TLSv1 TLSv1.1 TLSv1.2"
 	defaultProxySSLVerify      = "off"
 	defaultProxySSLVerifyDepth = 1
+	defaultProxySSLServerName  = "off"
 )
 
 var (
@@ -45,11 +46,12 @@ var (
 // and the configured VerifyDepth
 type Config struct {
 	resolver.AuthSSLCert
-	Ciphers      string `json:"ciphers"`
-	Protocols    string `json:"protocols"`
-	ProxySSLName string `json:"proxySSLName"`
-	Verify       string `json:"verify"`
-	VerifyDepth  int    `json:"verifyDepth"`
+	Ciphers            string `json:"ciphers"`
+	Protocols          string `json:"protocols"`
+	ProxySSLName       string `json:"proxySSLName"`
+	Verify             string `json:"verify"`
+	VerifyDepth        int    `json:"verifyDepth"`
+	ProxySSLServerName string `json:"proxySSLServerName"`
 }
 
 // Equal tests for equality between two Config types
@@ -73,6 +75,9 @@ func (pssl1 *Config) Equal(pssl2 *Config) bool {
 		return false
 	}
 	if pssl1.VerifyDepth != pssl2.VerifyDepth {
+		return false
+	}
+	if pssl1.ProxySSLServerName != pssl2.ProxySSLServerName {
 		return false
 	}
 	return true
@@ -157,6 +162,11 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.VerifyDepth, err = parser.GetIntAnnotation("proxy-ssl-verify-depth", ing)
 	if err != nil || config.VerifyDepth == 0 {
 		config.VerifyDepth = defaultProxySSLVerifyDepth
+	}
+
+	config.ProxySSLServerName, err = parser.GetStringAnnotation("proxy-ssl-server-name", ing)
+	if err != nil || !proxySSLOnOffRegex.MatchString(config.ProxySSLServerName) {
+		config.ProxySSLServerName = defaultProxySSLServerName
 	}
 
 	return config, nil
