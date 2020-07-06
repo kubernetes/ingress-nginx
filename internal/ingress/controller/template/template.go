@@ -171,7 +171,6 @@ var (
 		"buildOpentracing":                   buildOpentracing,
 		"proxySetHeader":                     proxySetHeader,
 		"buildInfluxDB":                      buildInfluxDB,
-		"enforceRegexModifier":               enforceRegexModifier,
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
@@ -373,26 +372,9 @@ func needsRewrite(location *ingress.Location) bool {
 	return false
 }
 
-// enforceRegexModifier checks if the "rewrite-target" or "use-regex" annotation
-// is used on any location path within a server
-func enforceRegexModifier(input interface{}) bool {
-	locations, ok := input.([]*ingress.Location)
-	if !ok {
-		klog.Errorf("expected an '[]*ingress.Location' type but %T was returned", input)
-		return false
-	}
-
-	for _, location := range locations {
-		if needsRewrite(location) || location.Rewrite.UseRegex {
-			return true
-		}
-	}
-	return false
-}
-
 // buildLocation produces the location string, if the ingress has redirects
 // (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
-func buildLocation(input interface{}, enforceRegex bool) string {
+func buildLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
@@ -400,7 +382,7 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	}
 
 	path := location.Path
-	if enforceRegex {
+	if location.Rewrite.UseRegex {
 		return fmt.Sprintf(`~* "^%s"`, path)
 	}
 
