@@ -367,6 +367,8 @@ func (n *NGINXController) Stop() error {
 		return fmt.Errorf("shutdown already in progress")
 	}
 
+	time.Sleep(time.Duration(n.cfg.ShutdownGracePeriod) * time.Second)
+
 	klog.InfoS("Shutting down controller queues")
 	close(n.stopCh)
 	go n.syncQueue.Shutdown()
