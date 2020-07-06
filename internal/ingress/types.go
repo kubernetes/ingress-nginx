@@ -202,7 +202,7 @@ type Server struct {
 	SSLCiphers string `json:"sslCiphers,omitempty"`
 	// SSLPreferServerCiphers indicates that server ciphers should be preferred
 	// over client ciphers when using the SSLv3 and TLS protocols.
-	SSLPreferServerCiphers string `sslPreferServerCiphers,omitempty`
+	SSLPreferServerCiphers string `json:"sslPreferServerCiphers,omitempty"`
 	// AuthTLSError contains the reason why the access to a server should be denied
 	AuthTLSError string `json:"authTLSError,omitempty"`
 }
