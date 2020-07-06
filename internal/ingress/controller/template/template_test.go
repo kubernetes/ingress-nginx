@@ -64,7 +64,7 @@ var (
 		Sticky           bool
 		XForwardedPrefix string
 		SecureBackend    bool
-		enforceRegex     bool
+		UseRegex         bool
 	}{
 		"when secure backend enabled": {
 			"/",
@@ -275,7 +275,7 @@ func TestQuote(t *testing.T) {
 func TestBuildLocation(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := "/"
-	actual := buildLocation(invalidType, true)
+	actual := buildLocation(invalidType)
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -284,10 +284,10 @@ func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:    tc.Path,
-			Rewrite: rewrite.Config{Target: tc.Target},
+			Rewrite: rewrite.Config{Target: tc.Target, UseRegex: tc.UseRegex},
 		}
 
-		newLoc := buildLocation(loc, tc.enforceRegex)
+		newLoc := buildLocation(loc)
 		if tc.Location != newLoc {
 			t.Errorf("%s: expected '%v' but returned %v", k, tc.Location, newLoc)
 		}
@@ -1193,32 +1193,6 @@ func TestBuildOpenTracing(t *testing.T) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
-}
-
-func TestEnforceRegexModifier(t *testing.T) {
-	invalidType := &ingress.Ingress{}
-	expected := false
-	actual := enforceRegexModifier(invalidType)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	locs := []*ingress.Location{
-		{
-			Rewrite: rewrite.Config{
-				Target:   "/alright",
-				UseRegex: true,
-			},
-			Path: "/ok",
-		},
-	}
-	expected = true
-	actual = enforceRegexModifier(locs)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
 }
 
 func TestShouldLoadModSecurityModule(t *testing.T) {
