@@ -1309,6 +1309,8 @@ stream {
 
             {{ if not (empty $location.ProxySSL.ProxySSLName) }}
             proxy_ssl_name                          {{ $location.ProxySSL.ProxySSLName }};
+            {{ end }}
+            {{ if not (empty $location.ProxySSL.ProxySSLServerName) }}
             proxy_ssl_server_name                   {{ $location.ProxySSL.ProxySSLServerName }};
             {{ end }}
 
