@@ -45,7 +45,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "off", 1, "on")
+		assertProxySSL(f, host, "", "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "off", 1, "")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -75,7 +75,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 2, "on")
+		assertProxySSL(f, host, "", "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 2, "on")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -103,7 +103,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "HIGH:!AES", "TLSv1 TLSv1.1 TLSv1.2", "off", 1, "off")
+		assertProxySSL(f, host, "", "HIGH:!AES", "TLSv1 TLSv1.1 TLSv1.2", "off", 1, "")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -131,7 +131,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "DEFAULT", "TLSv1.2 TLSv1.3", "off", 1, "off")
+		assertProxySSL(f, host, "", "DEFAULT", "TLSv1.2 TLSv1.3", "off", 1, "")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -169,7 +169,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		wlValue := "true"
 		f.UpdateNginxConfigMapData(wlKey, wlValue)
 
-		assertProxySSLName(f, host, secretName, "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 1, "on")
+		assertProxySSL(f, host, secretName, "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 1, "on")
 
 		f.WaitForNginxCustomConfiguration("## start server proxyssl.com", "location ", func(server string) bool {
 			return (!strings.Contains(server, "proxy_ssl_trusted_certificate") &&
@@ -198,32 +198,27 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 
 })
 
-func assertProxySSL(f *framework.Framework, host, ciphers, protocols, verify string, depth int, proxySSLServerName string) {
+func assertProxySSL(f *framework.Framework, host, sslName, ciphers, protocols, verify string, depth int, proxySSLServerName string) {
 	certFile := fmt.Sprintf("/etc/ingress-controller/ssl/%s-%s.pem", f.Namespace, host)
-	f.WaitForNginxServer(host,
-		func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("proxy_ssl_certificate %s;", certFile)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_certificate_key %s;", certFile)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_trusted_certificate %s;", certFile)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_ciphers %s;", ciphers)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_protocols %s;", protocols)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_verify %s;", verify)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_verify_depth %d;", depth)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_server_name %s;", proxySSLServerName))
-		})
-}
 
-func assertProxySSLName(f *framework.Framework, host, sslName, ciphers, protocols, verify string, depth int, proxySSLServerName string) {
-	certFile := fmt.Sprintf("/etc/ingress-controller/ssl/%s-%s.pem", f.Namespace, sslName)
+	if sslName != "" {
+		certFile = fmt.Sprintf("/etc/ingress-controller/ssl/%s-%s.pem", f.Namespace, sslName)
+	}
+
 	f.WaitForNginxServer(host,
 		func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("proxy_ssl_certificate %s;", certFile)) &&
+			c := strings.Contains(server, fmt.Sprintf("proxy_ssl_certificate %s;", certFile)) &&
 				strings.Contains(server, fmt.Sprintf("proxy_ssl_certificate_key %s;", certFile)) &&
 				strings.Contains(server, fmt.Sprintf("proxy_ssl_trusted_certificate %s;", certFile)) &&
 				strings.Contains(server, fmt.Sprintf("proxy_ssl_ciphers %s;", ciphers)) &&
 				strings.Contains(server, fmt.Sprintf("proxy_ssl_protocols %s;", protocols)) &&
 				strings.Contains(server, fmt.Sprintf("proxy_ssl_verify %s;", verify)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_verify_depth %d;", depth)) &&
-				strings.Contains(server, fmt.Sprintf("proxy_ssl_server_name %s;", proxySSLServerName))
+				strings.Contains(server, fmt.Sprintf("proxy_ssl_verify_depth %d;", depth))
+
+			if proxySSLServerName == "" {
+				return c
+			}
+
+			return c && strings.Contains(server, fmt.Sprintf("proxy_ssl_server_name %s;", proxySSLServerName))
 		})
 }
