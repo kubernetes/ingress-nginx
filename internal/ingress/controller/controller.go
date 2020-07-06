@@ -106,6 +106,8 @@ type Configuration struct {
 	MaxmindEditionFiles []string
 
 	MonitorMaxBatchSize int
+
+	ShutdownGracePeriod int
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
