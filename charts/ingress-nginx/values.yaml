@@ -198,7 +198,7 @@ controller:
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ##
   livenessProbe:
-    failureThreshold: 3
+    failureThreshold: 5
     initialDelaySeconds: 10
     periodSeconds: 10
     successThreshold: 1
