@@ -36,12 +36,12 @@ build: ensure-buildx
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
-		--build-arg BASE_IMAGE=us.gcr.io/k8s-artifacts-prod/ingress-nginx/nginx@sha256:35da1d3e00f5e763e59cb59159bf88ba0f0b6e8835885ac9d8b63029a478dba7 \
+		--build-arg BASE_IMAGE=us.gcr.io/k8s-artifacts-prod/ingress-nginx/nginx:v20200708-g00f4a215d@sha256:b0727cebafc35f5ab50f3fa0be5fda7f79937f1683f525f40982e75b882195d8 \
 		--build-arg GOLANG_VERSION=1.14.4 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
 		--build-arg K8S_RELEASE=v1.15.7 \
-		--build-arg RESTY_CLI_VERSION=0.25rc2 \
-		--build-arg RESTY_CLI_SHA=a38d850441384fa037a5922ca012dcce8708d0e4abe34ad2fe4164a01b28bdfb \
+		--build-arg RESTY_CLI_VERSION=0.25 \
+		--build-arg RESTY_CLI_SHA=7c3d1317d7ddab2030b49610c89e301995d4ae0f815f16466c48144d05ec7bcb \
 		--build-arg LUAROCKS_VERSION=3.3.1 \
 		--build-arg LUAROCKS_SHA=837481e408f7c06b59befe7ec194537c657687d624894bca7f79034302141a34 \
 		--build-arg CHART_TESTING_VERSION=3.0.0-beta.1 \
