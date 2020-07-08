@@ -30,14 +30,14 @@ export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=0.4.2
 export MSGPACK_VERSION=3.2.1
 export DATADOG_CPP_VERSION=1.1.5
-export MODSECURITY_VERSION=1.0.1
+export MODSECURITY_VERSION=b55a5778c539529ae1aa10ca49413771d52bb62e
 export MODSECURITY_LIB_VERSION=v3.0.4
 export OWASP_MODSECURITY_CRS_VERSION=v3.2.0
-export LUA_NGX_VERSION=0.10.15
-export LUA_STREAM_NGX_VERSION=0.0.7
+export LUA_NGX_VERSION=0.10.17
+export LUA_STREAM_NGX_VERSION=0.0.8
 export LUA_UPSTREAM_VERSION=0.07
 export LUA_BRIDGE_TRACER_VERSION=0.1.1
-export LUA_CJSON_VERSION=2.1.0.7
+export LUA_CJSON_VERSION=2.1.0.8
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
@@ -45,12 +45,14 @@ export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 export LUAJIT_VERSION=31116c4d25c4283a52b2d87fed50101cf20f5b77
 
 export LUA_RESTY_BALANCER=0.03
-export LUA_RESTY_CACHE=0.10rc1
-export LUA_RESTY_CORE=0.1.17
+export LUA_RESTY_CACHE=0.10
+export LUA_RESTY_CORE=0.1.19
 export LUA_RESTY_COOKIE_VERSION=766ad8c15e498850ac77f5e0265f1d3f30dc4027
 export LUA_RESTY_DNS=0.21
 export LUA_RESTY_HTTP=0.15
 export LUA_RESTY_LOCK=0.08
+export LUA_RESTY_UPLOAD_VERSION=0.10
+export LUA_RESTY_STRING_VERSION=0.12
 
 export BUILD_PATH=/tmp/build
 
@@ -144,8 +146,8 @@ get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
 get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src c969a78659bb47c84929de0b9adc1f8c512a51ec9dd3b162cb568ae228d3d59e \
-        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
+get_src 3f943d1ac7bbf64b010a57b8738107c1412cb31c55c73f0772b4148614493b7b \
+        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
 get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
@@ -153,10 +155,10 @@ get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
 get_src 464f46744a6be778626d11452c4db3c2d09461080c6db42e358e21af19d542f6 \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src 7d5f3439c8df56046d0564b5857fd8a30296ab1bd6df0f048aed7afb56a0a4c2 \
+get_src 1ebdcb041ca3bd238813ef6de352285e7418e6001c41a0a260b447260e37716e \
         "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
 
-get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
+get_src f2c4b7966dbb5c88edb5692616bf0eeca330ee2d43ae04c1cb96ef8fb072ba46 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
@@ -181,24 +183,24 @@ get_src 5f629a50ba22347c441421091da70fdc2ac14586619934534e5a0f8a1390a950 \
         "https://github.com/yaoweibin/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
-        "https://github.com/openresty/lua-resty-upload/archive/v0.10.tar.gz"
+        "https://github.com/openresty/lua-resty-upload/archive/v$LUA_RESTY_UPLOAD_VERSION.tar.gz"
 
-get_src 095615fe94e64615c4a27f4f4475b91c047cf8d10bc2dbde8d5ba6aa625fc5ab \
-        "https://github.com/openresty/lua-resty-string/archive/v0.11.tar.gz"
+get_src bfd8c4b6c90aa9dcbe047ac798593a41a3f21edcb71904d50d8ac0e8c77d1132 \
+        "https://github.com/openresty/lua-resty-string/archive/v$LUA_RESTY_STRING_VERSION.tar.gz"
 
 get_src 82209d5a5d9545c6dde3db7857f84345db22162fdea9743d5e2b2094d8d407f8 \
         "https://github.com/openresty/lua-resty-balancer/archive/v$LUA_RESTY_BALANCER.tar.gz"
 
-get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
+get_src 040878ed9a485ca7f0f8128e4e979280bcf501af875704c8830bec6a68f128f7 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 
-get_src 59d2f18ecadba48be61061004c8664eaed1111a3372cd2567cb24c5a47eb41fe \
+get_src bd6bee4ccc6cf3307ab6ca0eea693a921fab9b067ba40ae12a652636da588ff7 \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz"
 
 get_src f818b5cef0881e5987606f2acda0e491531a0cb0c126d8dca02e2343edf641ef \
         "https://github.com/cloudflare/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz"
 
-get_src f6b57d83a937899f97a98372c1e2631dd1ab8f580fc0ffeac0b27b4d42225a99 \
+get_src dae9fb572f04e7df0dabc228f21cdd8bbfa1ff88e682e983ef558585bc899de0 \
         "https://github.com/openresty/lua-resty-lrucache/archive/v$LUA_RESTY_CACHE.tar.gz"
 
 get_src 2b4683f9abe73e18ca00345c65010c9056777970907a311d6e1699f753141de2 \
@@ -235,29 +237,12 @@ cd "$BUILD_PATH"
 # Git tuning
 git config --global --add core.compression -1
 
-# install openresty-gdb-utils
-cd /
-git clone --depth=1 https://github.com/openresty/openresty-gdb-utils.git
-cat > ~/.gdbinit << EOF
-directory /openresty-gdb-utils
-
-py import sys
-py sys.path.append("/openresty-gdb-utils")
-
-source luajit20.gdb
-source ngx-lua.gdb
-source luajit21.py
-source ngx-raw-req.py
-set python print-stack full
-EOF
-
 # build opentracing lib
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
 mkdir .build
 cd .build
 
 cmake   -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_FLAGS="-fPIC" \
         -DBUILD_TESTING=OFF \
         -DBUILD_MOCKTRACER=OFF \
         ..
@@ -326,7 +311,6 @@ cd "$BUILD_PATH/msgpack-c-cpp-$MSGPACK_VERSION"
 mkdir .build
 cd .build
 cmake -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_FLAGS="-fPIC" \
         -DBUILD_SHARED_LIBS=OFF \
         -DBUILD_TESTING=OFF \
         -DBUILD_MOCKTRACER=OFF \
@@ -564,10 +548,10 @@ make install
 cd "$BUILD_PATH/lua-resty-http-$LUA_RESTY_HTTP"
 make install
 
-cd "$BUILD_PATH/lua-resty-upload-0.10"
+cd "$BUILD_PATH/lua-resty-upload-$LUA_RESTY_UPLOAD_VERSION"
 make install
 
-cd "$BUILD_PATH/lua-resty-string-0.11"
+cd "$BUILD_PATH/lua-resty-string-$LUA_RESTY_STRING_VERSION"
 make install
 
 # build Lua bridge tracer
