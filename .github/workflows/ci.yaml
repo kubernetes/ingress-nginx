@@ -32,6 +32,7 @@ jobs:
               - 'go.mod'
               - 'go.sum'
               - 'rootfs/**/*'
+              - 'TAG'
             charts:
               - 'charts/ingress-nginx/Chart.yaml'
               - 'charts/ingress-nginx/*'
