@@ -33,6 +33,7 @@ jobs:
               - 'go.sum'
               - 'rootfs/**/*'
               - 'TAG'
+              - 'test/e2e/**/*'
             charts:
               - 'charts/ingress-nginx/Chart.yaml'
               - 'charts/ingress-nginx/*'
@@ -85,7 +86,7 @@ jobs:
           echo "creating images cache..."
           docker save \
             nginx-ingress-controller:e2e \
-            ingress-controller/nginx-ingress-controller:1.0.0-dev \
+            ingress-controller/controller:1.0.0-dev \
             | pigz > docker.tar.gz
 
       - name: cache

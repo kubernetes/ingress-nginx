@@ -27,7 +27,7 @@ DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 export TAG=1.0.0-dev
 export REGISTRY=${REGISTRY:-ingress-controller}
 
-DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
+DEV_IMAGE=${REGISTRY}/controller:${TAG}
 
 if ! command -v kind &> /dev/null; then
   echo "kind is not installed"
@@ -59,7 +59,7 @@ fi
 
 echo "[dev-env] building image"
 make build image
-docker tag "${REGISTRY}/nginx-ingress-controller:${TAG}" "${DEV_IMAGE}"
+docker tag "${REGISTRY}/controller:${TAG}" "${DEV_IMAGE}"
 
 export K8S_VERSION=${K8S_VERSION:-v1.18.4@sha256:d8ff5fc405fc679dd3dd0cccc01543ba4942ed90823817d2e9e2c474a5343c4f}
 
@@ -100,7 +100,7 @@ kubectl create namespace ingress-nginx &> /dev/null || true
 cat << EOF | helm template ingress-nginx ${DIR}/../charts/ingress-nginx --namespace=ingress-nginx --values - | kubectl apply -n ingress-nginx -f -
 controller:
   image:
-    repository: ${REGISTRY}/nginx-ingress-controller
+    repository: ${REGISTRY}/controller
     tag: ${TAG}
   config:
     worker-processes: "1"

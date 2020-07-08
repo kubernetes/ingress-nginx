@@ -41,10 +41,10 @@ export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 
 # Disable execution if running as a Prow job
-if [[ ! -z ${PROW_JOB_ID:-} ]]; then
-  echo "skipping execution..."
-  exit 0
-fi
+#if [[ ! -z ${PROW_JOB_ID:-} ]]; then
+#  echo "skipping execution..."
+#  exit 0
+#fi
 
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"

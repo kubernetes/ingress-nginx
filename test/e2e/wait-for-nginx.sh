@@ -58,7 +58,7 @@ else
 fullnameOverride: nginx-ingress
 controller:
   image:
-    repository: ingress-controller/nginx-ingress-controller
+    repository: ingress-controller/controller
     tag: 1.0.0-dev
   scope:
     enabled: true
