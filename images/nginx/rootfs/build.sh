@@ -32,7 +32,7 @@ export MSGPACK_VERSION=3.2.1
 export DATADOG_CPP_VERSION=1.1.5
 export MODSECURITY_VERSION=b55a5778c539529ae1aa10ca49413771d52bb62e
 export MODSECURITY_LIB_VERSION=v3.0.4
-export OWASP_MODSECURITY_CRS_VERSION=v3.2.0
+export OWASP_MODSECURITY_CRS_VERSION=v3.3.0
 export LUA_NGX_VERSION=0.10.17
 export LUA_STREAM_NGX_VERSION=0.0.8
 export LUA_UPSTREAM_VERSION=0.07
@@ -376,7 +376,8 @@ echo "SecAuditLogStorageDir /var/log/audit/" >> /etc/nginx/modsecurity/modsecuri
 # Download owasp modsecurity crs
 cd /etc/nginx/
 
-git clone -b $OWASP_MODSECURITY_CRS_VERSION https://github.com/SpiderLabs/owasp-modsecurity-crs
+git clone -b $OWASP_MODSECURITY_CRS_VERSION https://github.com/coreruleset/coreruleset
+mv coreruleset owasp-modsecurity-crs
 cd owasp-modsecurity-crs
 
 mv crs-setup.conf.example crs-setup.conf
