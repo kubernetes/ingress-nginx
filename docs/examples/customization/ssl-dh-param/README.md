@@ -52,4 +52,4 @@ $ kubectl create -f ssl-dh-param.yaml
 ## Test
 
 Check the contents of the configmap is present in the nginx.conf file using:
-`kubectl exec ingress-nginx-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf`
+`kubectl exec ingress-nginx-controller-873061567-4n3k2 -n kube-system -- cat /etc/nginx/nginx.conf`

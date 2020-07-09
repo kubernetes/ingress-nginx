@@ -21,4 +21,4 @@ The nginx ingress controller will read the `ingress-nginx/ingress-nginx-controll
 ## Test
 
 Check the contents of the ConfigMaps are present in the nginx.conf file using:
-`kubectl exec ingress-nginx-controller-873061567-4n3k2 -n ingress-nginx cat /etc/nginx/nginx.conf`
+`kubectl exec ingress-nginx-controller-873061567-4n3k2 -n ingress-nginx -- cat /etc/nginx/nginx.conf`
