@@ -37,7 +37,7 @@ spec:
       containers:
         - name: {{ template "ingress-nginx.name" . }}-default-backend
           {{- with .Values.defaultBackend.image }}
-          image: "{{.repository}}{{- if (.digest) -}} @{{.digest}} {{- else -}} :{{ .tag }} {{- end -}}"
+          image: "{{.repository}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
           {{- end }}
           imagePullPolicy: {{ .Values.defaultBackend.image.pullPolicy }}
         {{- if .Values.defaultBackend.extraArgs }}
