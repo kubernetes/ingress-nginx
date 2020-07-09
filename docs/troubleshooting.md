@@ -65,7 +65,7 @@ $ kubectl get pods -n <namespace-of-ingress-controller>
 NAME                                        READY     STATUS    RESTARTS   AGE
 nginx-ingress-controller-67956bf89d-fv58j   1/1       Running   0          1m
 
-$ kubectl exec -it -n <namespace-of-ingress-controller> nginx-ingress-controller-67956bf89d-fv58j cat /etc/nginx/nginx.conf
+$ kubectl exec -it -n <namespace-of-ingress-controller> nginx-ingress-controller-67956bf89d-fv58j -- cat /etc/nginx/nginx.conf
 daemon off;
 worker_processes 2;
 pid /run/nginx.pid;
@@ -181,7 +181,7 @@ NAME                   READY     STATUS    RESTARTS   AGE
 test-701078429-s5kca   1/1       Running   0          16s
 
 # check if secret exists
-$ kubectl exec test-701078429-s5kca ls /var/run/secrets/kubernetes.io/serviceaccount/
+$ kubectl exec test-701078429-s5kca -- ls /var/run/secrets/kubernetes.io/serviceaccount/
 ca.crt
 namespace
 token
