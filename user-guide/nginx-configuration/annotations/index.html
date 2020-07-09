@@ -2205,6 +2205,10 @@ table below.</p>
 <td>number</td>
 </tr>
 <tr>
+<td><a href="#backend-certificate-authentication">nginx.ingress.kubernetes.io/proxy-ssl-server-name</a></td>
+<td>string</td>
+</tr>
+<tr>
 <td><a href="#enable-rewrite-log">nginx.ingress.kubernetes.io/enable-rewrite-log</a></td>
 <td>"true" or "false"</td>
 </tr>
@@ -2492,6 +2496,8 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
   Allows to set <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_name">proxy_ssl_name</a>. This allows overriding the server name used to verify the certificate of the proxied HTTPS server. This value is also passed through SNI when a connection is established to the proxied HTTPS server.</li>
 <li><code>nginx.ingress.kubernetes.io/proxy-ssl-protocols</code>:
   Enables the specified <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_protocols">protocols</a> for requests to a proxied HTTPS server.</li>
+<li><code>nginx.ingress.kubernetes.io/proxy-ssl-server-name</code>:
+  Enables passing of the server name through TLS Server Name Indication extension (SNI, RFC 6066) when establishing a connection with the proxied HTTPS server.</li>
 </ul>
 <h3 id="configuration-snippet">Configuration snippet<a class="headerlink" href="#configuration-snippet" title="Permanent link"> ¶</a></h3>
 <p>Using this annotation you can add additional configuration to the NGINX location. For example:</p>

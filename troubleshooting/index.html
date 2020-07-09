@@ -1321,7 +1321,7 @@ methods to obtain more information.</p>
 <span class="go">NAME                                        READY     STATUS    RESTARTS   AGE</span>
 <span class="go">nginx-ingress-controller-67956bf89d-fv58j   1/1       Running   0          1m</span>
 
-<span class="gp">$</span> kubectl <span class="nb">exec</span> -it -n &lt;namespace-of-ingress-controller&gt; nginx-ingress-controller-67956bf89d-fv58j cat /etc/nginx/nginx.conf
+<span class="gp">$</span> kubectl <span class="nb">exec</span> -it -n &lt;namespace-of-ingress-controller&gt; nginx-ingress-controller-67956bf89d-fv58j -- cat /etc/nginx/nginx.conf
 <span class="go">daemon off;</span>
 <span class="go">worker_processes 2;</span>
 <span class="go">pid /run/nginx.pid;</span>
@@ -1426,7 +1426,7 @@ token that is required to authenticate with the API server.</p>
 <span class="go">test-701078429-s5kca   1/1       Running   0          16s</span>
 
 <span class="gp">#</span> check <span class="k">if</span> secret exists
-<span class="gp">$</span> kubectl <span class="nb">exec</span> test-701078429-s5kca ls /var/run/secrets/kubernetes.io/serviceaccount/
+<span class="gp">$</span> kubectl <span class="nb">exec</span> test-701078429-s5kca -- ls /var/run/secrets/kubernetes.io/serviceaccount/
 <span class="go">ca.crt</span>
 <span class="go">namespace</span>
 <span class="go">token</span>
