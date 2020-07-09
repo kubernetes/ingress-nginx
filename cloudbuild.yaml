@@ -1,8 +1,6 @@
 # See https://cloud.google.com/cloud-build/docs/build-config
 
 timeout: 1800s
-# this prevents errors if you don't use both _GIT_TAG and _PULL_BASE_REF,
-# or any new substitutions added in the future.
 options:
   substitution_option: ALLOW_LOOSE
 steps:
@@ -10,8 +8,7 @@ steps:
     entrypoint: bash
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
-      - TAG=$_GIT_TAG
-      - BASE_REF=$_PULL_BASE_REF
+      - GIT_COMMIT=$_GIT_TAG
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
       - REPO_INFO=https://github.com/kubernetes/ingress-nginx
       - HOME=/root
@@ -22,9 +19,5 @@ steps:
       gcloud auth configure-docker \
       && make release
 substitutions:
-  # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and
-  # can be used as a substitution
   _GIT_TAG: "12345"
-  # _PULL_BASE_REF will contain the ref that was pushed to to trigger this build -
-  # a branch like 'master' or 'release-0.2', or a tag like 'v0.2'.
   _PULL_BASE_REF: "master"
