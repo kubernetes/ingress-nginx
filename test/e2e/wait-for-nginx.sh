@@ -60,6 +60,7 @@ controller:
   image:
     repository: ingress-controller/controller
     tag: 1.0.0-dev
+    digest:
   scope:
     enabled: true
   config:
