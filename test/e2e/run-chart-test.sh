@@ -36,20 +36,31 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export K8S_VERSION=${K8S_VERSION:-v1.18.4@sha256:d8ff5fc405fc679dd3dd0cccc01543ba4942ed90823817d2e9e2c474a5343c4f}
+export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 
-KIND_CLUSTER_NAME="ingress-nginx-dev"
+export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 
-echo "[dev-env] creating Kubernetes cluster with kind"
-export KUBECONFIG="${HOME}/.kube/kind-config-${KIND_CLUSTER_NAME}"
-kind create cluster \
-  --name ${KIND_CLUSTER_NAME} \
-  --config "${DIR}/kind.yaml" \
-  --retain \
-  --image "kindest/node:${K8S_VERSION}"
+# Disable execution if running as a Prow job
+#if [[ ! -z ${PROW_JOB_ID:-} ]]; then
+#  echo "skipping execution..."
+#  exit 0
+#fi
 
-echo "Kubernetes cluster:"
-kubectl get nodes -o wide
+if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
+  echo "[dev-env] creating Kubernetes cluster with kind"
+
+  export K8S_VERSION=${K8S_VERSION:-v1.18.4@sha256:d8ff5fc405fc679dd3dd0cccc01543ba4942ed90823817d2e9e2c474a5343c4f}
+
+  kind create cluster \
+    --verbosity=${KIND_LOG_LEVEL} \
+    --name ${KIND_CLUSTER_NAME} \
+    --config ${DIR}/kind.yaml \
+    --retain \
+    --image "kindest/node:${K8S_VERSION}"
+
+  echo "Kubernetes cluster:"
+  kubectl get nodes -o wide
+fi
 
 echo "[dev-env] running helm chart e2e tests..."
 docker run --rm --interactive --network host \
@@ -57,6 +68,6 @@ docker run --rm --interactive --network host \
     --volume $KUBECONFIG:/root/.kube/config \
     --volume "${DIR}/../../":/workdir \
     --workdir /workdir \
-    quay.io/helmpack/chart-testing:v3.0.0-rc.1 ct install \
+    aledbf/chart-testing:v3.0.0-rc.4 ct install \
         --charts charts/ingress-nginx \
-        --helm-extra-args "--timeout 120s"
+        --helm-extra-args "--timeout 60s"

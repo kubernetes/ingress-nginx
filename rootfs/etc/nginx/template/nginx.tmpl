@@ -875,7 +875,8 @@ stream {
         proxy_ssl_verify                        {{ $server.ProxySSL.Verify }};
         proxy_ssl_verify_depth                  {{ $server.ProxySSL.VerifyDepth }};
         {{ if not (empty $server.ProxySSL.ProxySSLName) }}
-        proxy_ssl_name                           {{ $server.ProxySSL.ProxySSLName }};
+        proxy_ssl_name                          {{ $server.ProxySSL.ProxySSLName }};
+        proxy_ssl_server_name                   {{ $server.ProxySSL.ProxySSLServerName }};
         {{ end }}
         {{ end }}
 
@@ -902,9 +903,8 @@ stream {
 
         {{ buildMirrorLocations $server.Locations }}
 
-        {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
-        {{ $path := buildLocation $location $enforceRegex }}
+        {{ $path := buildLocation $location }}
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
         {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
@@ -1309,7 +1309,10 @@ stream {
             {{ end }}
 
             {{ if not (empty $location.ProxySSL.ProxySSLName) }}
-            proxy_ssl_name                           {{ $location.ProxySSL.ProxySSLName }};
+            proxy_ssl_name                          {{ $location.ProxySSL.ProxySSLName }};
+            {{ end }}
+            {{ if not (empty $location.ProxySSL.ProxySSLServerName) }}
+            proxy_ssl_server_name                   {{ $location.ProxySSL.ProxySSLServerName }};
             {{ end }}
 
             {{ if not (empty $location.ProxySSL.PemFileName) }}

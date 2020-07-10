@@ -644,6 +644,11 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					continue
 				}
 
+				if len(location.DefaultBackend.Spec.Ports) == 0 {
+					klog.Errorf("Custom default backend service %v/%v has no ports. Ignoring", location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+					continue
+				}
+
 				sp := location.DefaultBackend.Spec.Ports[0]
 				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 				// custom backend is valid only if contains at least one endpoint
