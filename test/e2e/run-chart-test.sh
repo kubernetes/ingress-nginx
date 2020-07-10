@@ -14,6 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KIND_LOG_LEVEL="1"
+
+if ! [ -z $DEBUG ]; then
+  set -x
+  KIND_LOG_LEVEL="6"
+fi
+
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -41,10 +48,10 @@ export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 
 # Disable execution if running as a Prow job
-#if [[ ! -z ${PROW_JOB_ID:-} ]]; then
-#  echo "skipping execution..."
-#  exit 0
-#fi
+if [[ ! -z ${PROW_JOB_ID:-} ]]; then
+  echo "skipping execution..."
+  exit 0
+fi
 
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
