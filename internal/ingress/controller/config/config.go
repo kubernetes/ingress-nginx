@@ -479,6 +479,9 @@ type Configuration struct {
 	// Sets whether to use incoming X-Forwarded headers.
 	UseForwardedHeaders bool `json:"use-forwarded-headers"`
 
+	// Sets whether to enable the real ip module
+	EnableRealIp bool `json:"enable-real-ip"`
+
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
@@ -712,6 +715,7 @@ func NewDefault() Configuration {
 		EnableUnderscoresInHeaders:       false,
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,
+		EnableRealIp:                     false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
