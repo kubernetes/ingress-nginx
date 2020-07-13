@@ -102,6 +102,7 @@ controller:
   image:
     repository: ${REGISTRY}/controller
     tag: ${TAG}
+    digest:
   config:
     worker-processes: "1"
   podLabels:
