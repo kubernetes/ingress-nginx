@@ -903,8 +903,9 @@ stream {
 
         {{ buildMirrorLocations $server.Locations }}
 
+        {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
-        {{ $path := buildLocation $location }}
+        {{ $path := buildLocation $location $enforceRegex }}
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
         {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
