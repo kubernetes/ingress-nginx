@@ -82,12 +82,7 @@ type SocketCollector struct {
 }
 
 var (
-	requestTags = []string{
-		"status",
-
-		"method",
-		"path",
-
+	generalTags = []string {
 		"namespace",
 		"ingress",
 		"service",
@@ -121,9 +116,13 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 		"controller_pod":       pod,
 	}
 
-	requestTags := requestTags
+	requestTags := append(generalTags, "status", "method", "path")
+	requestsTags := append(generalTags, "status")
+	upstreamLatencyTag := generalTags
 	if metricsPerHost {
 		requestTags = append(requestTags, "host")
+		requestsTags = append(requestsTags, "host")
+		upstreamLatencyTag = append(upstreamLatencyTag, "host")
 	}
 
 	sc := &SocketCollector{
@@ -177,7 +176,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
-			[]string{"ingress", "namespace", "status", "service"},
+			requestsTags,
 		),
 
 		bytesSent: prometheus.NewHistogramVec(
@@ -199,7 +198,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				ConstLabels: constLabels,
 				Objectives:  defObjectives,
 			},
-			[]string{"ingress", "namespace", "service"},
+			upstreamLatencyTag,
 		),
 	}
 
@@ -244,9 +243,6 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"ingress":   stats.Ingress,
 			"service":   stats.Service,
 		}
-		if sc.metricsPerHost {
-			requestLabels["host"] = stats.Host
-		}
 
 		collectorLabels := prometheus.Labels{
 			"namespace": stats.Namespace,
@@ -259,6 +255,12 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"namespace": stats.Namespace,
 			"ingress":   stats.Ingress,
 			"service":   stats.Service,
+		}
+
+		if sc.metricsPerHost {
+			requestLabels["host"] = stats.Host
+			collectorLabels["host"] = stats.Host
+			latencyLabels["host"] = stats.Host
 		}
 
 		requestsMetric, err := sc.requests.GetMetricWith(collectorLabels)

@@ -282,6 +282,140 @@ func TestCollector(t *testing.T) {
 			wantAfter: `
 			`,
 		},
+
+		{
+			name: "collector should be able to handle batched metrics correctly",
+			data: []string{`[
+			{
+				"host":"testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":200,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app"
+			},
+			{
+				"host":"testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":100,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app"
+			},
+			{
+				"host":"testshop1.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":100,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app"
+			}]`},
+			metrics: []string{"nginx_ingress_controller_requests"},
+			wantBefore: `
+            # HELP nginx_ingress_controller_requests The total number of client requests.
+            # TYPE nginx_ingress_controller_requests counter
+            nginx_ingress_controller_requests{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",namespace="test-app-production",service="test-app",status="200"} 2
+            nginx_ingress_controller_requests{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop1.com",ingress="web-yml",namespace="test-app-production",service="test-app",status="200"} 1
+			`,
+			wantAfter: `
+			`,
+		},
+		{
+			name: "collector should be able to handle batched metrics correctly",
+			data: []string{`[
+			{
+				"host":"testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":200,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app",
+   				"upstreamLatency": 20.0
+			},
+			{
+				"host":"testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":100,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app",
+  				"upstreamLatency": 20.0
+			},
+			{
+				"host":"testshop1.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":100,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app",
+				"upstreamLatency": 10.0
+			}]`},
+			metrics: []string{"nginx_ingress_controller_ingress_upstream_latency_seconds"},
+			wantBefore: `
+			# HELP nginx_ingress_controller_ingress_upstream_latency_seconds Upstream service latency per Ingress
+            # TYPE nginx_ingress_controller_ingress_upstream_latency_seconds summary
+            nginx_ingress_controller_ingress_upstream_latency_seconds{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",namespace="test-app-production",service="test-app",quantile="0.5"} 20
+            nginx_ingress_controller_ingress_upstream_latency_seconds{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",namespace="test-app-production",service="test-app",quantile="0.9"} 20
+            nginx_ingress_controller_ingress_upstream_latency_seconds{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",namespace="test-app-production",service="test-app",quantile="0.99"} 20
+            nginx_ingress_controller_ingress_upstream_latency_seconds_sum{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",namespace="test-app-production",service="test-app"} 40
+            nginx_ingress_controller_ingress_upstream_latency_seconds_count{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",namespace="test-app-production",service="test-app"} 2
+            nginx_ingress_controller_ingress_upstream_latency_seconds{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop1.com",ingress="web-yml",namespace="test-app-production",service="test-app",quantile="0.5"} 10
+            nginx_ingress_controller_ingress_upstream_latency_seconds{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop1.com",ingress="web-yml",namespace="test-app-production",service="test-app",quantile="0.9"} 10
+            nginx_ingress_controller_ingress_upstream_latency_seconds{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop1.com",ingress="web-yml",namespace="test-app-production",service="test-app",quantile="0.99"} 10
+            nginx_ingress_controller_ingress_upstream_latency_seconds_sum{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop1.com",ingress="web-yml",namespace="test-app-production",service="test-app"} 10
+            nginx_ingress_controller_ingress_upstream_latency_seconds_count{controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop1.com",ingress="web-yml",namespace="test-app-production",service="test-app"} 1
+			`,
+			wantAfter: `
+			`,
+		},
 	}
 
 	for _, c := range cases {
@@ -297,7 +431,7 @@ func TestCollector(t *testing.T) {
 				t.Errorf("registering collector failed: %s", err)
 			}
 
-			sc.SetHosts(sets.NewString("testshop.com"))
+			sc.SetHosts(sets.NewString("testshop.com", "testshop1.com"))
 
 			for _, d := range c.data {
 				sc.handleMessage([]byte(d))
