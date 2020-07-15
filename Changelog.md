@@ -1,5 +1,21 @@
 # Changelog
 
+### 0.34.1
+
+**Image:**
+
+-   `us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.1@sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20`
+-   `eu.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.1@sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20`
+- `asia.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.1@sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20`
+
+Fix regression introduced in [#5691](https://github.com/kubernetes/ingress-nginx/pull/5691) related to annotations `use-regex` and `rewrite`.
+Update go to [1.14.5](https://groups.google.com/g/golang-announce/c/XZNfaiwgt2w/m/E6gHDs32AQAJ)
+
+_Changes:_
+
+- [X] [#5896](https://github.com/kubernetes/ingress-nginx/pull/5896) Revert "use-regex annotation should be applied to only one Location"
+- [X] [#5897](https://github.com/kubernetes/ingress-nginx/pull/5897) Update go version
+
 ### 0.34.0
 
 **Image:**
