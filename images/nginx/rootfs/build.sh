@@ -27,7 +27,7 @@ export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.9.0
 export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
-export JAEGER_VERSION=0.4.2
+export JAEGER_VERSION=0.6.0
 export MSGPACK_VERSION=3.2.1
 export DATADOG_CPP_VERSION=1.1.5
 export MODSECURITY_VERSION=b55a5778c539529ae1aa10ca49413771d52bb62e
@@ -149,7 +149,7 @@ get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
 get_src 3f943d1ac7bbf64b010a57b8738107c1412cb31c55c73f0772b4148614493b7b \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
-get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
+get_src 595193700d4b2e75a076724cab3ef4682d1cc1d5237cddea8a35e363ce1a3ac3 \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
 
 get_src 464f46744a6be778626d11452c4db3c2d09461080c6db42e358e21af19d542f6 \
@@ -250,10 +250,9 @@ cmake   -DCMAKE_BUILD_TYPE=Release \
 make
 make install
 
-if [[ ${ARCH} != "armv7l" ]]; then
-  # build jaeger lib
-  cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
-  sed -i 's/-Werror/-Wno-psabi/' CMakeLists.txt
+# build jaeger lib
+cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
+sed -i 's/-Werror/-Wno-psabi/' CMakeLists.txt
 
   cat <<EOF > export.map
 {
@@ -263,10 +262,10 @@ if [[ ${ARCH} != "armv7l" ]]; then
 };
 EOF
 
-  mkdir .build
-  cd .build
+mkdir .build
+cd .build
 
-  cmake -DCMAKE_BUILD_TYPE=Release \
+cmake   -DCMAKE_BUILD_TYPE=Release \
         -DBUILD_TESTING=OFF \
         -DJAEGERTRACING_BUILD_EXAMPLES=OFF \
         -DJAEGERTRACING_BUILD_CROSSDOCK=OFF \
@@ -275,13 +274,13 @@ EOF
         -DHUNTER_CONFIGURATION_TYPES=Release \
         -DJAEGERTRACING_WITH_YAML_CPP=ON ..
 
-  make
-  make install
+make
+make install
 
-  export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir) \
+export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir) \
 
-  mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
-fi
+mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
+
 
 # build zipkin lib
 cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
