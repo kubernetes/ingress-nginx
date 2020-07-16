@@ -101,7 +101,5 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, errors.NewInvalidAnnotationConfiguration("canary", "configured but not enabled")
 	}
 
-
-
 	return config, nil
 }
