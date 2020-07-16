@@ -4,7 +4,7 @@ function str_hash_to_uint(str)
     if l > 0 then
         local i = 0
         while i < l do
-            h = 31 * h + string.byte(str,i+1);
+            h = 31 * h + string.byte(str, i + 1);
             i = i + 1
         end
     end
