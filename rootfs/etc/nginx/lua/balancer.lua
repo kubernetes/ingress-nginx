@@ -17,6 +17,7 @@ local tostring = tostring
 local pairs = pairs
 local math = math
 local ngx = ngx
+local hashcode = require("balancer.hashcode").str_hash_to_uint
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -248,7 +249,7 @@ local function route_to_alternative_balancer(balancer)
     "-", "_")
   local hash_header_value = ngx.var["http_" .. target_hash_header]
   if hash_header_value then
-    if hash(hash_header_value) % 100 <= traffic_shaping_policy.hashHeaderWeight then
+    if math.abs(hashcode(hash_header_value)) % 100 <= traffic_shaping_policy.hashHeaderWeight then
       return true
     end
   end
