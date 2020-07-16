@@ -248,7 +248,7 @@ local function route_to_alternative_balancer(balancer)
     "-", "_")
   local hash_header_value = ngx.var["http_" .. target_hash_header]
   if hash_header_value then
-    if math.random(100) <= traffic_shaping_policy.hashHeaderWeight then
+    if hash(hash_header_value) % 100 <= traffic_shaping_policy.hashHeaderWeight then
       return true
     end
   end
