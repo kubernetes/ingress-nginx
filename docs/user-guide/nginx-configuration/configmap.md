@@ -115,6 +115,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-stream-responses](#proxy-stream-responses)|int|1|
 |[bind-address](#bind-address)|[]string|""|
 |[use-forwarded-headers](#use-forwarded-headers)|bool|"false"|
+|[enable-real-ip](#enable-real-ip)|bool|"false"|
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"false"|
@@ -744,6 +745,10 @@ Sets the addresses on which the server will accept requests instead of *. It sho
 If true, NGINX passes the incoming `X-Forwarded-*` headers to upstreams. Use this option when NGINX is behind another L7 proxy / load balancer that is setting these headers.
 
 If false, NGINX ignores incoming `X-Forwarded-*` headers, filling them with the request information it sees. Use this option if NGINX is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.
+
+## enable-real-ip
+
+`enable-real-ip` enables the configuration of [http://nginx.org/en/docs/http/ngx_http_realip_module.html](http://nginx.org/en/docs/http/ngx_http_realip_module.html). Specific attributes of the module can be configured further by using `forwarded-for-header` and `proxy-real-ip-cidr` settings.
 
 ## forwarded-for-header
 
