@@ -319,6 +319,24 @@ describe("Balancer", function()
             request_header_value = "bEn",
             expected_result = false,
           },
+          {
+            -- hashcode("bEn") % 100 is 27
+            case_title = "returns true when header matches but the weight of header value is less than hashHeaderWeight",
+            header_name = "canaryHeader",
+            header_weight = 28,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = true,
+          },
+          {
+            -- hashcode("bEn") % 100 is 27
+            case_title = "returns false when header matches but the weight of header value is more than or equal hashHeaderWeight",
+            header_name = "canaryHeader",
+            header_weight = 27,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = false,
+          },
         }
 
         for _, test_pattern in pairs(test_patterns) do
