@@ -123,6 +123,11 @@ type TrafficShapingPolicy struct {
 	HeaderPattern string `json:"headerPattern"`
 	// Cookie on which to redirect requests to this backend
 	Cookie string `json:"cookie"`
+	// HashHeader on which to redirect requests to this backend
+	// hash(the value of Header) % 100 ,Weight (0-100) of traffic to redirect to the backend
+	HashHeader string `json:"hashHeader"`
+	//HashHeaderWeight 20 means 20%
+	HashHeaderWeight int `json:"hashHeaderWeight"`
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash

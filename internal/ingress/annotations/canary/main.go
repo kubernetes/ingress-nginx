@@ -36,6 +36,8 @@ type Config struct {
 	HeaderValue   string
 	HeaderPattern string
 	Cookie        string
+	HashHeader        string
+	HashHeaderWeight        int
 }
 
 // NewParser parses the ingress for canary related annotations
@@ -79,8 +81,23 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.Cookie = ""
 	}
 
+	config.HashHeader, err = parser.GetStringAnnotation("canary-by-hash-header", ing)
+	if err != nil {
+		config.HashHeader = ""
+	}
+
+	config.HashHeaderWeight, err = parser.GetIntAnnotation("canary-by-hash-header-weight", ing)
+	if err != nil {
+		config.HashHeaderWeight = 0
+	}
+
+	if len(config.HashHeader) == 0 || config.HashHeaderWeight == 0  {
+		config.HashHeader = ""
+		config.HashHeaderWeight = 0
+	}
+
 	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0 ||
-		len(config.HeaderPattern) > 0) {
+		len(config.HeaderPattern) > 0 || len(config.HashHeader) > 0 || config.HashHeaderWeight > 0) {
 		return nil, errors.NewInvalidAnnotationConfiguration("canary", "configured but not enabled")
 	}
 

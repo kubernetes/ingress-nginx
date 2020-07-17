@@ -291,6 +291,69 @@ describe("Balancer", function()
         end
       end)
     end)
+
+    context("canary by header hash weight", function()
+      it("returns correct result for given header", function()
+        local test_patterns = {
+          {
+            case_title = "returns true when header matches and weight is 100",
+            header_name = "canaryHeader",
+            header_weight = 100,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = true,
+          },
+          {
+            case_title = "returns true when header matches and weight is 0",
+            header_name = "canaryHeader",
+            header_weight = 0,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = false,
+          },
+          {
+            case_title = "returns false when header not matches",
+            header_name = "canaryHeaderNotMatchs",
+            header_weight = 100,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = false,
+          },
+          {
+            -- hashcode("bEn") % 100 is 27
+            case_title = "returns true when header matches but the weight of header value is less than hashHeaderWeight",
+            header_name = "canaryHeader",
+            header_weight = 28,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = true,
+          },
+          {
+            -- hashcode("bEn") % 100 is 27
+            case_title = "returns false when header matches but the weight of header value is more than or equal hashHeaderWeight",
+            header_name = "canaryHeader",
+            header_weight = 27,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = false,
+          },
+        }
+
+        for _, test_pattern in pairs(test_patterns) do
+          mock_ngx({ var = {
+            ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
+            request_uri = "/"
+          }})
+          reset_balancer()
+          backend.trafficShapingPolicy.hashHeader = test_pattern.header_name
+          backend.trafficShapingPolicy.hashHeaderWeight = test_pattern.header_weight
+          balancer.sync_backend(backend)
+          assert.message("\nTest data pattern: " .. test_pattern.case_title)
+          .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+          reset_ngx()
+        end
+      end)
+    end)
   end)
 
   describe("sync_backend()", function()
