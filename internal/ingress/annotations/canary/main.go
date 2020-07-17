@@ -30,14 +30,14 @@ type canary struct {
 
 // Config returns the configuration rules for setting up the Canary
 type Config struct {
-	Enabled       bool
-	Weight        int
-	Header        string
-	HeaderValue   string
-	HeaderPattern string
-	Cookie        string
-	HashHeader        string
-	HashHeaderWeight        int
+	Enabled          bool
+	Weight           int
+	Header           string
+	HeaderValue      string
+	HeaderPattern    string
+	Cookie           string
+	HashHeader       string
+	HashHeaderWeight int
 }
 
 // NewParser parses the ingress for canary related annotations
