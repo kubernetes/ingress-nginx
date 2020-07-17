@@ -1,4 +1,6 @@
-function str_hash_to_uint(str)
+local _M = {}
+
+function _M.str_hash_to_uint(str)
     local h = 0
     local l = #str
     if l > 0 then
@@ -10,3 +12,5 @@ function str_hash_to_uint(str)
     end
     return h
 end
+
+return _M
