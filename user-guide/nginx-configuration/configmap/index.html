@@ -1179,6 +1179,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-real-ip" class="md-nav__link">
+    enable-real-ip
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#forwarded-for-header" class="md-nav__link">
     forwarded-for-header
   </a>
@@ -2879,6 +2886,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-real-ip" class="md-nav__link">
+    enable-real-ip
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#forwarded-for-header" class="md-nav__link">
     forwarded-for-header
   </a>
@@ -3851,6 +3865,11 @@ Same for numbers, like "100".</p>
 <td align="left">"false"</td>
 </tr>
 <tr>
+<td align="left"><a href="#enable-real-ip">enable-real-ip</a></td>
+<td align="left">bool</td>
+<td align="left">"false"</td>
+</tr>
+<tr>
 <td align="left"><a href="#forwarded-for-header">forwarded-for-header</a></td>
 <td align="left">string</td>
 <td align="left">"X-Forwarded-For"</td>
@@ -4538,6 +4557,8 @@ requests is made, the connection is closed.
 <h2 id="use-forwarded-headers">use-forwarded-headers<a class="headerlink" href="#use-forwarded-headers" title="Permanent link"> ¶</a></h2>
 <p>If true, NGINX passes the incoming <code>X-Forwarded-*</code> headers to upstreams. Use this option when NGINX is behind another L7 proxy / load balancer that is setting these headers.</p>
 <p>If false, NGINX ignores incoming <code>X-Forwarded-*</code> headers, filling them with the request information it sees. Use this option if NGINX is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.</p>
+<h2 id="enable-real-ip">enable-real-ip<a class="headerlink" href="#enable-real-ip" title="Permanent link"> ¶</a></h2>
+<p><code>enable-real-ip</code> enables the configuration of <a href="http://nginx.org/en/docs/http/ngx_http_realip_module.html">http://nginx.org/en/docs/http/ngx_http_realip_module.html</a>. Specific attributes of the module can be configured further by using <code>forwarded-for-header</code> and <code>proxy-real-ip-cidr</code> settings.</p>
 <h2 id="forwarded-for-header">forwarded-for-header<a class="headerlink" href="#forwarded-for-header" title="Permanent link"> ¶</a></h2>
 <p>Sets the header field for identifying the originating IP address of a client. <em><strong>default:</strong></em> X-Forwarded-For</p>
 <h2 id="compute-full-forwarded-for">compute-full-forwarded-for<a class="headerlink" href="#compute-full-forwarded-for" title="Permanent link"> ¶</a></h2>
