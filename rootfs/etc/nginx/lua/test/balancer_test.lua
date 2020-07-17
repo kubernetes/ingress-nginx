@@ -303,6 +303,22 @@ describe("Balancer", function()
             request_header_value = "bEn",
             expected_result = true,
           },
+          {
+            case_title = "returns true when header matches and weight is 0",
+            header_name = "canaryHeader",
+            header_weight = 0,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = false,
+          },
+          {
+            case_title = "returns false when header not matches",
+            header_name = "canaryHeaderNotMatchs",
+            header_weight = 100,
+            request_header_name = "canaryHeader",
+            request_header_value = "bEn",
+            expected_result = false,
+          },
         }
 
         for _, test_pattern in pairs(test_patterns) do
