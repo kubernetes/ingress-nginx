@@ -17,7 +17,7 @@ local tostring = tostring
 local pairs = pairs
 local math = math
 local ngx = ngx
-local hashcode = require("balancer.hashcode").str_hash_to_uint
+local hashcode = require("balancer.hashcode").str_hash_to_int
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers

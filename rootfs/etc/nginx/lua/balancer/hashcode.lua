@@ -1,6 +1,6 @@
 local _M = {}
 
-function _M.str_hash_to_uint(str)
+function _M.str_hash_to_int(str)
     local h = 0
     local l = #str
     if l > 0 then
