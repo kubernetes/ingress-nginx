@@ -37,7 +37,7 @@ type Config struct {
 	// Host contains the hostname defined in the URL
 	Host              string            `json:"host"`
 	SigninURL         string            `json:"signinUrl"`
-	SigninURLSnippet  string     		`json:"signinUrlSnippet"`
+	SigninURLSnippet  string            `json:"signinUrlSnippet"`
 	Method            string            `json:"method"`
 	ResponseHeaders   []string          `json:"responseHeaders,omitempty"`
 	RequestRedirect   string            `json:"requestRedirect"`

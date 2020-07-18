@@ -72,15 +72,15 @@ func TestAnnotations(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	tests := []struct {
-		title           string
-		url             string
-		signinURL       string
-		signinURLSnippet       string
-		method          string
-		requestRedirect string
-		authSnippet     string
-		authCacheKey    string
-		expErr          bool
+		title            string
+		url              string
+		signinURL        string
+		signinURLSnippet string
+		method           string
+		requestRedirect  string
+		authSnippet      string
+		authCacheKey     string
+		expErr           bool
 	}{
 		{"empty", "", "", "", "", "", "", "", true},
 		{"no scheme", "bar", "bar", "", "", "", "", "", true},

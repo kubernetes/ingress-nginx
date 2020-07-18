@@ -289,7 +289,7 @@ func TestGlobalExternalAuthSnippetParsing(t *testing.T) {
 func TestGlobalExternalSigninURLSnippetParsing(t *testing.T) {
 	testCases := map[string]struct {
 		signinURLSnippet string
-		expect      string
+		expect           string
 	}{
 		"empty":        {"", ""},
 		"auth snippet": {"proxy_set_header My-Custom-Header 42;", "proxy_set_header My-Custom-Header 42;"},
