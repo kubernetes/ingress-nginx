@@ -214,6 +214,25 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 				})
 		})
 
+		ginkgo.It(`should add custom error page when global-auth-signin and global-auth-signin-snippet url are configured`, func() {
+
+			globalExternalAuthSigninSetting := "global-auth-signin"
+			globalExternalAuthSignin := "http://foo.com/global-error-page"
+			globalExternalAuthSigninSnippetSetting := "global-auth-signin-snippet"
+			globalExternalAuthSigninSnippet := "ThisIsASnippet"
+
+			ginkgo.By("Adding a global-auth-signin to configMap")
+			f.UpdateNginxConfigMapData(globalExternalAuthSigninSetting, globalExternalAuthSignin)
+
+			ginkgo.By("global-auth-signin-snippet")
+			f.UpdateNginxConfigMapData(globalExternalAuthSigninSnippetSetting, globalExternalAuthSigninSnippet)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "proxy_set_header ThisIsSnippet 42;")
+				})
+		})
+
 		ginkgo.It(`should add auth headers when global-auth-response-headers is configured`, func() {
 
 			globalExternalAuthResponseHeadersSetting := "global-auth-response-headers"

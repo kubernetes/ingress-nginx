@@ -173,6 +173,7 @@ The following table shows a configuration option's name, type, and the default v
 |[global-auth-url](#global-auth-url)|string|""|
 |[global-auth-method](#global-auth-method)|string|""|
 |[global-auth-signin](#global-auth-signin)|string|""|
+|[global-auth-signin-snippet](#global-auth-signin-snippet)|string|""|
 |[global-auth-response-headers](#global-auth-response-headers)|string|""|
 |[global-auth-request-redirect](#global-auth-request-redirect)|string|""|
 |[global-auth-snippet](#global-auth-snippet)|string|""|
@@ -1027,6 +1028,13 @@ _**default:**_ ""
 
 Sets the location of the error page for an existing service that provides authentication for all the locations.
 Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-signin`.
+_**default:**_ ""
+
+## global-auth-signin-snippet
+
+Sets a custom snippet to use in the location that serves the error page for an existing service that provides authentication for all the locations.
+Applied to all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-signin-snippet`.
 _**default:**_ ""
 
 ## global-auth-response-headers

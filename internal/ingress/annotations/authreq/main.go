@@ -37,6 +37,7 @@ type Config struct {
 	// Host contains the hostname defined in the URL
 	Host              string            `json:"host"`
 	SigninURL         string            `json:"signinUrl"`
+	SigninURLSnippet  string     		`json:"signinUrlSnippet"`
 	Method            string            `json:"method"`
 	ResponseHeaders   []string          `json:"responseHeaders,omitempty"`
 	RequestRedirect   string            `json:"requestRedirect"`
@@ -83,6 +84,10 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	}
 
 	if e1.AuthCacheKey != e2.AuthCacheKey {
+		return false
+	}
+
+	if e1.SigninURLSnippet != e2.SigninURLSnippet {
 		return false
 	}
 
@@ -174,6 +179,11 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		klog.V(3).Infof("auth-signin annotation is undefined and will not be set")
 	}
 
+	signInSnippet, err := parser.GetStringAnnotation("auth-signin-snippet", ing)
+	if err != nil {
+		klog.V(3).Infof("auth-signin-snippet annotation is undefined and will not be set")
+	}
+
 	authSnippet, err := parser.GetStringAnnotation("auth-snippet", ing)
 	if err != nil {
 		klog.V(3).Infof("auth-snippet annotation is undefined and will not be set")
@@ -233,6 +243,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		URL:               urlString,
 		Host:              authURL.Hostname(),
 		SigninURL:         signIn,
+		SigninURLSnippet:  signInSnippet,
 		Method:            authMethod,
 		ResponseHeaders:   responseHeaders,
 		RequestRedirect:   requestRedirect,

@@ -75,27 +75,30 @@ func TestAnnotations(t *testing.T) {
 		title           string
 		url             string
 		signinURL       string
+		signinURLSnippet       string
 		method          string
 		requestRedirect string
 		authSnippet     string
 		authCacheKey    string
 		expErr          bool
 	}{
-		{"empty", "", "", "", "", "", "", true},
-		{"no scheme", "bar", "bar", "", "", "", "", true},
-		{"invalid host", "http://", "http://", "", "", "", "", true},
-		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", "", true},
-		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", "", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "", "", "", false},
-		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "http://foo.com/redirect-me", "", "", false},
-		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "proxy_set_header My-Custom-Header 42;", "", false},
-		{"auth cache ", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "$foo$bar", false},
+		{"empty", "", "", "", "", "", "", "", true},
+		{"no scheme", "bar", "bar", "", "", "", "", "", true},
+		{"invalid host", "http://", "http://", "", "", "", "", "", true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", "", "", true},
+		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", "", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "POST", "", "", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "", "", "", false},
+		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "http://foo.com/redirect-me", "", "", false},
+		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "proxy_set_header My-Custom-Header 42;", "", false},
+		{"auth cache ", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "", "$foo$bar", false},
+		{"signin snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "proxy_set_header My-Custom-Header 42;", "", "", "", "", false},
 	}
 
 	for _, test := range tests {
 		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
 		data[parser.GetAnnotationWithPrefix("auth-signin")] = test.signinURL
+		data[parser.GetAnnotationWithPrefix("auth-signin-snippet")] = test.signinURLSnippet
 		data[parser.GetAnnotationWithPrefix("auth-method")] = fmt.Sprintf("%v", test.method)
 		data[parser.GetAnnotationWithPrefix("auth-request-redirect")] = test.requestRedirect
 		data[parser.GetAnnotationWithPrefix("auth-snippet")] = test.authSnippet
@@ -121,6 +124,9 @@ func TestAnnotations(t *testing.T) {
 		}
 		if u.SigninURL != test.signinURL {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.signinURL, u.SigninURL)
+		}
+		if u.SigninURLSnippet != test.signinURLSnippet {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.signinURLSnippet, u.SigninURLSnippet)
 		}
 		if u.Method != test.method {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.method, u.Method)

@@ -55,6 +55,7 @@ const (
 	globalAuthURL             = "global-auth-url"
 	globalAuthMethod          = "global-auth-method"
 	globalAuthSignin          = "global-auth-signin"
+	globalAuthSigninSnippet   = "global-auth-signin-snippet"
 	globalAuthResponseHeaders = "global-auth-response-headers"
 	globalAuthRequestRedirect = "global-auth-request-redirect"
 	globalAuthSnippet         = "global-auth-snippet"
@@ -284,6 +285,11 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[globalAuthCacheKey]; ok {
 		delete(conf, globalAuthCacheKey)
 		to.GlobalExternalAuth.AuthCacheKey = val
+	}
+
+	if val, ok := conf[globalAuthSigninSnippet]; ok {
+		delete(conf, globalAuthSigninSnippet)
+		to.GlobalExternalAuth.SigninURLSnippet = val
 	}
 
 	// Verify that the configured global external authorization cache duration is valid

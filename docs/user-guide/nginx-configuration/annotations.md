@@ -420,6 +420,8 @@ Additionally it is possible to set:
   `<Method>` to specify the HTTP method to use.
 * `nginx.ingress.kubernetes.io/auth-signin`:
   `<SignIn_URL>` to specify the location of the error page.
+* `nginx.ingress.kubernetes.io/auth-signin-snippet`:
+  `<SignIn_URL_Snippet>` to specify a custom snippet in the location of the error page.  
 * `nginx.ingress.kubernetes.io/auth-response-headers`:
   `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authentication request completes.
 * `nginx.ingress.kubernetes.io/auth-proxy-set-headers`:
