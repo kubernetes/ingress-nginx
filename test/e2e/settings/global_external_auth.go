@@ -219,7 +219,7 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 			globalExternalAuthSigninSetting := "global-auth-signin"
 			globalExternalAuthSignin := "http://foo.com/global-error-page"
 			globalExternalAuthSigninSnippetSetting := "global-auth-signin-snippet"
-			globalExternalAuthSigninSnippet := "ThisIsASnippet"
+			globalExternalAuthSigninSnippet := "proxy_set_header ThisIsSnippet 42;"
 
 			ginkgo.By("Adding a global-auth-signin to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthSigninSetting, globalExternalAuthSignin)
