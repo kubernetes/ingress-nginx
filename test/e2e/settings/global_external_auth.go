@@ -224,7 +224,7 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 			ginkgo.By("Adding a global-auth-signin to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthSigninSetting, globalExternalAuthSignin)
 
-			ginkgo.By("global-auth-signin-snippet")
+			ginkgo.By("Adding a global-auth-signin-snippet to configMap")
 			f.UpdateNginxConfigMapData(globalExternalAuthSigninSnippetSetting, globalExternalAuthSigninSnippet)
 
 			f.WaitForNginxServer(host,
