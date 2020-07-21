@@ -274,7 +274,7 @@ end
 function _M.init_worker()
   -- when worker starts, sync backends without delay
   -- we call it in timer because for endpoints that require
-  -- DNS resolution it needs to use socket which is not avalable in
+  -- DNS resolution it needs to use socket which is not available in
   -- init_worker phase
   local ok, err = ngx.timer.at(0, sync_backends)
   if not ok then
