@@ -263,7 +263,7 @@ func (f *Framework) NewGRPCBinDeployment() {
 				{
 					Name:       "secure",
 					Port:       9001,
-					TargetPort: intstr.FromInt(9000),
+					TargetPort: intstr.FromInt(9001),
 					Protocol:   corev1.ProtocolTCP,
 				},
 			},

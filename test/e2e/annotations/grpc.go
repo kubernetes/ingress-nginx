@@ -122,8 +122,6 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	})
 
 	ginkgo.It("should return OK for service with backend protocol GRPCS", func() {
-		ginkgo.Skip("GRPCS test temporarily disabled")
-
 		f.NewGRPCBinDeployment()
 
 		host := "echo"
