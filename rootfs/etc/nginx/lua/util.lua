@@ -173,7 +173,7 @@ local function tablelength(T)
 end
 _M.tablelength = tablelength
 
--- replaces special character value a with value b for all occurences in a
+-- replaces special character value a with value b for all occurrences in a
 -- string
 local function replace_special_char(str, a, b)
   return string.gsub(str, "%" .. a, b)
