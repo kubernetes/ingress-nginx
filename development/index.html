@@ -373,6 +373,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-start" class="md-nav__link">
     Quick Start
   </a>
@@ -381,83 +388,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#getting-the-code" class="md-nav__link">
-    Getting the code
+  <a href="#local-build" class="md-nav__link">
+    Local build
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#initial-developer-environment-build" class="md-nav__link">
-    Initial developer environment build
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#updating-the-deployment" class="md-nav__link">
-    Updating the deployment
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    Dependencies
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#building" class="md-nav__link">
-    Building
-  </a>
-  
-    <nav class="md-nav" aria-label="Building">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#building-the-e2e-test-image" class="md-nav__link">
-    Building the e2e test image
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#nginx-controller" class="md-nav__link">
-    Nginx Controller
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#deploying" class="md-nav__link">
-    Deploying
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#testing" class="md-nav__link">
     Testing
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#releasing" class="md-nav__link">
-    Releasing
+        
+          <li class="md-nav__item">
+  <a href="#custom-docker-image" class="md-nav__link">
+    Custom docker image
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1237,6 +1189,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-start" class="md-nav__link">
     Quick Start
   </a>
@@ -1245,83 +1204,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#getting-the-code" class="md-nav__link">
-    Getting the code
+  <a href="#local-build" class="md-nav__link">
+    Local build
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#initial-developer-environment-build" class="md-nav__link">
-    Initial developer environment build
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#updating-the-deployment" class="md-nav__link">
-    Updating the deployment
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    Dependencies
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#building" class="md-nav__link">
-    Building
-  </a>
-  
-    <nav class="md-nav" aria-label="Building">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#building-the-e2e-test-image" class="md-nav__link">
-    Building the e2e test image
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#nginx-controller" class="md-nav__link">
-    Nginx Controller
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#deploying" class="md-nav__link">
-    Deploying
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#testing" class="md-nav__link">
     Testing
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#releasing" class="md-nav__link">
-    Releasing
+        
+          <li class="md-nav__item">
+  <a href="#custom-docker-image" class="md-nav__link">
+    Custom docker image
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1346,117 +1250,70 @@
                 
                 
                 <h1 id="developing-for-nginx-ingress-controller">Developing for NGINX Ingress Controller<a class="headerlink" href="#developing-for-nginx-ingress-controller" title="Permanent link"> ¶</a></h1>
-<p>This document explains how to get started with developing for NGINX Ingress controller.
-It includes how to build, test, and release ingress controllers.</p>
+<p>This document explains how to get started with developing for NGINX Ingress controller.</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link"> ¶</a></h2>
+<p>Install <a href="https://golang.org/dl/">Go 1.14</a> or later.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The project uses <a href="https://github.com/golang/go/wiki/Modules">Go Modules</a></p>
+</div>
+<p>Install <a href="https://docs.docker.com/engine/install/">Docker</a></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The majority of make tasks run as docker containers</p>
+</div>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link"> ¶</a></h2>
-<h3 id="getting-the-code">Getting the code<a class="headerlink" href="#getting-the-code" title="Permanent link"> ¶</a></h3>
-<p>The code must be checked out as a subdirectory of k8s.io, and not github.com.</p>
-<div class="highlight"><pre><span></span><code>mkdir -p $GOPATH/src/k8s.io
-cd $GOPATH/src/k8s.io
-# Replace &quot;$YOUR_GITHUB_USERNAME&quot; below with your github username
-git clone https://github.com/$YOUR_GITHUB_USERNAME/ingress-nginx.git
-cd ingress-nginx
+<ol>
+<li>Fork the repository</li>
+<li>Clone the repository to any location in your work station</li>
+<li>Add a <code>GO111MODULE</code> environment variable with <code>export GO111MODULE=on</code></li>
+<li>Run <code>go mod download</code> to install dependencies</li>
+</ol>
+<h3 id="local-build">Local build<a class="headerlink" href="#local-build" title="Permanent link"> ¶</a></h3>
+<p>Start a local Kubernetes cluster using <a href="https://kind.sigs.k8s.io/">kind</a>, build and deploy the ingress controller</p>
+<div class="highlight"><pre><span></span><code><span class="go">make dev-env</span>
 </code></pre></div>
 
-<h3 id="initial-developer-environment-build">Initial developer environment build<a class="headerlink" href="#initial-developer-environment-build" title="Permanent link"> ¶</a></h3>
-<div class="highlight"><pre><span></span><code>$ make dev-env
+<h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link"> ¶</a></h3>
+<p><strong>Run go unit tests</strong></p>
+<div class="highlight"><pre><span></span><code><span class="go">make test</span>
 </code></pre></div>
 
-<h3 id="updating-the-deployment">Updating the deployment<a class="headerlink" href="#updating-the-deployment" title="Permanent link"> ¶</a></h3>
-<p>The nginx controller container image can be rebuilt using:
-<div class="highlight"><pre><span></span><code>$ ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build image
-</code></pre></div></p>
-<p>The image will only be used by pods created after the rebuild. To delete old pods which will cause new ones to spin up:
-<div class="highlight"><pre><span></span><code>$ kubectl get pods -n ingress-nginx
-$ kubectl delete pod -n ingress-nginx ingress-nginx-controller-&lt;unique-pod-id&gt;
-</code></pre></div></p>
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link"> ¶</a></h2>
-<p>The build uses dependencies in the <code>vendor</code> directory, which
-must be installed before building a binary/image. Occasionally, you
-might need to update the dependencies.</p>
-<p>This guide requires you to install go 1.13 or newer.</p>
-<p>This will automatically save the dependencies to the <code>vendor/</code> directory.</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> go get
-<span class="gp">$</span> make dep-ensure
+<p><strong>Run unit-tests for lua code</strong></p>
+<div class="highlight"><pre><span></span><code><span class="go">make lua-test</span>
 </code></pre></div>
 
-<h2 id="building">Building<a class="headerlink" href="#building" title="Permanent link"> ¶</a></h2>
-<p>All ingress controllers are built through a Makefile. Depending on your
-requirements you can build a raw server binary, a local container image,
-or push an image to a remote repository.</p>
-<p>In order to use your local Docker, you may need to set the following environment variables:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">#</span> <span class="s2">&quot;gcloud docker&quot;</span> <span class="o">(</span>default<span class="o">)</span> or <span class="s2">&quot;docker&quot;</span>
-<span class="gp">$</span> <span class="nb">export</span> <span class="nv">DOCKER</span><span class="o">=</span>&lt;docker&gt;
-
-<span class="gp">#</span> <span class="s2">&quot;quay.io/kubernetes-ingress-controller&quot;</span> <span class="o">(</span>default<span class="o">)</span>, <span class="s2">&quot;index.docker.io&quot;</span>, or your own registry
-<span class="gp">$</span> <span class="nb">export</span> <span class="nv">REGISTRY</span><span class="o">=</span>&lt;your-docker-registry&gt;
+<p>Lua tests are located in the directory <code>rootfs/etc/nginx/lua/test</code></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Test files must follow the naming convention <code>&lt;mytest&gt;_test.lua</code> or it will be ignored</p>
+</div>
+<p><strong>Run e2e test suite</strong></p>
+<div class="highlight"><pre><span></span><code><span class="go">make kind-e2e-test</span>
 </code></pre></div>
 
-<p>To find the registry simply run: <code>docker system info | grep Registry</code></p>
-<h3 id="building-the-e2e-test-image">Building the e2e test image<a class="headerlink" href="#building-the-e2e-test-image" title="Permanent link"> ¶</a></h3>
-<p>The e2e test image can also be built through the Makefile.</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> make -C test/e2e-image build
+<p>To limit the scope of the tests to execute, we can use the environment variable <code>FOCUS</code></p>
+<div class="highlight"><pre><span></span><code><span class="go">FOCUS=&quot;no-auth-locations&quot; make kind-e2e-test</span>
 </code></pre></div>
 
-<p>Then you can load the docker image using kind:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> kind load docker-image --name<span class="o">=</span><span class="s2">&quot;ingress-nginx-dev&quot;</span> nginx-ingress-controller:e2e
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The variable <code>FOCUS</code> defines Ginkgo <a href="https://onsi.github.io/ginkgo/#focused-specs">Focused Specs</a></p>
+</div>
+<p>Valid values are defined in the describe definition of the e2e tests like <a href="https://github.com/kubernetes/ingress-nginx/blob/master/test/e2e/defaultbackend/default_backend.go#L29">Default Backend</a></p>
+<p>The compleete list of tests can be found <a href="../e2e-tests/">here</a></p>
+<h3 id="custom-docker-image">Custom docker image<a class="headerlink" href="#custom-docker-image" title="Permanent link"> ¶</a></h3>
+<p>In some cases, it can be useful to build a docker image and publish such an image to a private or custom registry location.</p>
+<p>This can be done setting two environment variables, <code>REGISTRY</code> and <code>TAG</code></p>
+<div class="highlight"><pre><span></span><code><span class="go">export TAG=&quot;dev&quot;</span>
+<span class="go">export REGISTRY=&quot;$USER&quot;</span>
+
+<span class="go">make build image</span>
 </code></pre></div>
 
-<h3 id="nginx-controller">Nginx Controller<a class="headerlink" href="#nginx-controller" title="Permanent link"> ¶</a></h3>
-<p>Build a raw server binary
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> make build
-</code></pre></div></p>
-<p><a href="https://github.com/kubernetes/ingress-nginx/issues/387">TODO</a>: add more specific instructions needed for raw server binary.</p>
-<p>Build a local container image</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make image
+<p>and then publish such version with</p>
+<div class="highlight"><pre><span></span><code><span class="go">docker push $REGISTRY/controller:$TAG</span>
 </code></pre></div>
-
-<h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link"> ¶</a></h2>
-<p>There are several ways to deploy the ingress controller onto a cluster.
-Please check the <a href="../deploy/">deployment guide</a></p>
-<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link"> ¶</a></h2>
-<p>To run unit-tests, just run</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
-<span class="gp">$</span> make <span class="nb">test</span>
-</code></pre></div>
-
-<p>If you have access to a Kubernetes cluster, you can also run e2e tests using ginkgo.</p>
-<p><div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
-<span class="gp">$</span> <span class="nv">KIND_CLUSTER_NAME</span><span class="o">=</span><span class="s2">&quot;ingress-nginx-test&quot;</span> make kind-e2e-test
-</code></pre></div>
-To set focus to a particular set of tests, a FOCUS flag can be set.</p>
-<div class="highlight"><pre><span></span><code><span class="go">KIND_CLUSTER_NAME=&quot;ingress-nginx-test&quot; FOCUS=&quot;no-auth-locations&quot; make kind-e2e-test</span>
-</code></pre></div>
-
-<p>NOTE: if your e2e pod keeps hanging in an ImagePullBackoff, make sure you've made your e2e nginx-ingress-controller image available to minikube as explained in the <strong>Building the e2e test image</strong> section</p>
-<p>To run unit-tests for lua code locally, run:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
-<span class="gp">$</span> ./rootfs/etc/nginx/lua/test/up.sh
-<span class="gp">$</span> make lua-test
-</code></pre></div>
-
-<p>Lua tests are located in <code>$GOPATH/src/k8s.io/ingress-nginx/rootfs/etc/nginx/lua/test</code>. When creating a new test file it must follow the naming convention <code>&lt;mytest&gt;_test.lua</code> or it will be ignored.</p>
-<h2 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link"> ¶</a></h2>
-<p>All Makefiles will produce a release binary, as shown above. To publish this
-to a wider Kubernetes user base, push the image to a container registry, like
-<a href="https://cloud.google.com/container-registry/">gcr.io</a>. All release images are hosted under <code>gcr.io/google_containers</code> and
-tagged according to a <a href="http://semver.org/">semver</a> scheme.</p>
-<p>An example release might look like:
-<div class="highlight"><pre><span></span><code>$ make release
-</code></pre></div></p>
-<p>Please follow these guidelines to cut a release:</p>
-<ul>
-<li>Update the <a href="https://help.github.com/articles/creating-releases/">release</a>
-page with a short description of the major changes that correspond to a given
-image tag.</li>
-<li>Cut a release branch, if appropriate. Release branches follow the format of
-<code>controller-release-version</code>. Typically, pre-releases are cut from HEAD.
-All major feature work is done in HEAD. Specific bug fixes are
-cherry-picked into a release branch.</li>
-<li>If you're not confident about the stability of the code,
-<a href="https://help.github.com/articles/working-with-tags/">tag</a> it as alpha or beta.
-Typically, a release branch should have stable code.</li>
-</ul>
                 
               
               
