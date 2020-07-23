@@ -39,6 +39,12 @@ have been tested.
 
 Other optional configuration options:
 ```
+# specifies the name to use for the server span
+opentracing-operation-name
+
+# specifies specifies the name to use for the location span
+opentracing-location-operation-name
+
 # specifies the port to use when uploading traces, Default: 9411
 zipkin-collector-port
 
