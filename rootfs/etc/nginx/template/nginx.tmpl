@@ -276,16 +276,6 @@ http {
     limit_req_status                {{ $cfg.LimitReqStatusCode }};
     limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
-    {{ if $cfg.EnableOpentracing }}
-    opentracing on;
-    {{ if not (empty $cfg.OpentracingOperationName) }}
-    opentracing_operation_name "{{ $cfg.OpentracingOperationName }}";
-    {{ end }}
-    {{ if not (empty $cfg.OpentracingLocationOperationName) }}
-    opentracing_location_operation_name "{{ $cfg.OpentracingLocationOperationName }}";
-    {{ end }}
-    {{ end }}
-
     {{ buildOpentracing $cfg $servers }}
 
     include /etc/nginx/mime.types;
