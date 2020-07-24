@@ -503,6 +503,12 @@ type Configuration struct {
 	// By default this is disabled
 	EnableOpentracing bool `json:"enable-opentracing"`
 
+	// OpentracingOperationName specifies a custom name for the server span
+	OpentracingOperationName string `json:"opentracing-operation-name"`
+
+	// OpentracingOperationName specifies a custom name for the location span
+	OpentracingLocationOperationName string `json:"opentracing-location-operation-name"`
+
 	// ZipkinCollectorHost specifies the host to use when uploading traces
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
 
