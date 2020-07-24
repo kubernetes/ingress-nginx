@@ -1193,6 +1193,21 @@ func TestBuildOpenTracing(t *testing.T) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
+	cfgOpenTracing := config.Configuration{
+		EnableOpentracing:                true,
+		DatadogCollectorHost:             "datadog-host.com",
+		OpentracingOperationName:         "my-operation-name",
+		OpentracingLocationOperationName: "my-location-operation-name",
+	}
+	expected = "opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
+	expected += "opentracing_operation_name \"my-operation-name\";\n"
+	expected += "opentracing_location_operation_name \"my-location-operation-name\";\n"
+	actual = buildOpentracing(cfgOpenTracing, []*ingress.Server{})
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 }
 
 func TestEnforceRegexModifier(t *testing.T) {

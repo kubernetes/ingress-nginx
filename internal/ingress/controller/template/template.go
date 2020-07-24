@@ -970,6 +970,13 @@ func buildOpentracing(c interface{}, s interface{}) string {
 
 	buf.WriteString("\r\n")
 
+	if cfg.OpentracingOperationName != "" {
+		buf.WriteString(fmt.Sprintf("opentracing_operation_name \"%s\";\n", cfg.OpentracingOperationName))
+	}
+	if cfg.OpentracingLocationOperationName != "" {
+		buf.WriteString(fmt.Sprintf("opentracing_location_operation_name \"%s\";\n", cfg.OpentracingLocationOperationName))
+	}
+
 	return buf.String()
 }
 
