@@ -1221,6 +1221,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#opentracing-operation-name" class="md-nav__link">
+    opentracing-operation-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opentracing-location-operation-name" class="md-nav__link">
+    opentracing-location-operation-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#zipkin-collector-host" class="md-nav__link">
     zipkin-collector-host
   </a>
@@ -2928,6 +2942,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#opentracing-operation-name" class="md-nav__link">
+    opentracing-operation-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opentracing-location-operation-name" class="md-nav__link">
+    opentracing-location-operation-name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#zipkin-collector-host" class="md-nav__link">
     zipkin-collector-host
   </a>
@@ -3895,6 +3923,16 @@ Same for numbers, like "100".</p>
 <td align="left">"false"</td>
 </tr>
 <tr>
+<td align="left"><a href="#opentracing-operation-name">opentracing-operation-name</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
+<td align="left"><a href="#opentracing-location-operation-name">opentracing-location-operation-name</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
 <td align="left"><a href="#zipkin-collector-host">zipkin-collector-host</a></td>
 <td align="left">string</td>
 <td align="left">""</td>
@@ -4571,6 +4609,12 @@ requests is made, the connection is closed.
 <p>Enables the nginx Opentracing extension. <em><strong>default:</strong></em> is disabled</p>
 <p><em>References:</em>
 <a href="https://github.com/opentracing-contrib/nginx-opentracing">https://github.com/opentracing-contrib/nginx-opentracing</a></p>
+<h2 id="opentracing-operation-name">opentracing-operation-name<a class="headerlink" href="#opentracing-operation-name" title="Permanent link"> ¶</a></h2>
+<p>Specifies a custom name for the server span. <em><strong>default:</strong></em> is empty</p>
+<p>For example, set to "HTTP $request_method $uri".</p>
+<h2 id="opentracing-location-operation-name">opentracing-location-operation-name<a class="headerlink" href="#opentracing-location-operation-name" title="Permanent link"> ¶</a></h2>
+<p>Specifies a custom name for the location span. <em><strong>default:</strong></em> is empty</p>
+<p>For example, set to "HTTP $request_method $uri".</p>
 <h2 id="zipkin-collector-host">zipkin-collector-host<a class="headerlink" href="#zipkin-collector-host" title="Permanent link"> ¶</a></h2>
 <p>Specifies the host to use when uploading traces. It must be a valid URL.</p>
 <h2 id="zipkin-collector-port">zipkin-collector-port<a class="headerlink" href="#zipkin-collector-port" title="Permanent link"> ¶</a></h2>
