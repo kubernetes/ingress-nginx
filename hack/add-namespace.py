@@ -24,7 +24,9 @@ yaml.indent(mapping=2, sequence=4, offset=2)
 for manifest in yaml.load_all(sys.stdin.read()):
     if manifest:
         # helm template does not have support for namespace declaration
-        if 'metadata' in manifest and 'namespace' not in manifest['metadata']:
+        if ('metadata' in manifest and 'namespace' not in manifest['metadata']
+                and manifest['kind'] != 'Namespace' and manifest['kind'] != 'ClusterRole'
+                and manifest['kind'] != 'ClusterRoleBinding' and manifest['kind'] != 'ValidatingWebhookConfiguration'):
             manifest['metadata']['namespace'] = sys.argv[1]
 
         # respect existing replicas definition
