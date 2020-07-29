@@ -166,7 +166,7 @@ func waitForPodsDeleted(kubeClientSet kubernetes.Interface, timeout time.Duratio
 	})
 }
 
-// WaitForEndpoints waits for a given amount of time until an endpoint contains.
+// WaitForEndpoints waits for a given amount of time until the number of endpoints = expectedEndpoints.
 func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration, name, ns string, expectedEndpoints int) error {
 	if expectedEndpoints == 0 {
 		return nil
@@ -180,21 +180,25 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 
 		assert.Nil(ginkgo.GinkgoT(), err, "getting endpoints")
 
-		if len(endpoint.Subsets) == 0 || len(endpoint.Subsets[0].Addresses) == 0 {
-			return false, nil
-		}
-
-		r := 0
-		for _, es := range endpoint.Subsets {
-			r += len(es.Addresses)
-		}
-
-		if r == expectedEndpoints {
+		if countReadyEndpoints(endpoint) == expectedEndpoints {
 			return true, nil
 		}
 
 		return false, nil
 	})
+}
+
+func countReadyEndpoints(e *core.Endpoints) int {
+	if e == nil || e.Subsets == nil {
+		return 0
+	}
+
+	num := 0
+	for _, sub := range e.Subsets {
+		num += len(sub.Addresses)
+	}
+
+	return num
 }
 
 // podRunningReady checks whether pod p's phase is running and it has a ready
