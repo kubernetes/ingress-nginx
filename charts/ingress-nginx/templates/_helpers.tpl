@@ -48,7 +48,7 @@ Users can provide an override for an explicit service they want bound via `.Valu
 
 */}}
 {{- define "ingress-nginx.controller.publishServicePath" -}}
-{{- $defServiceName := printf "%s/%s" .Release.Namespace (include "ingress-nginx.controller.fullname" .) -}}
+{{- $defServiceName := printf "%s/%s" "$(POD_NAMESPACE)" (include "ingress-nginx.controller.fullname" .) -}}
 {{- $servicePath := default $defServiceName .Values.controller.publishService.pathOverride }}
 {{- print $servicePath | trimSuffix "-" -}}
 {{- end -}}

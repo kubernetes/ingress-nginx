@@ -39,10 +39,15 @@ spec:
           args:
             - patch
             - --webhook-name={{ include "ingress-nginx.fullname" . }}-admission
-            - --namespace={{ .Release.Namespace }}
+            - --namespace=$(POD_NAMESPACE)
             - --patch-mutating=false
             - --secret-name={{ include "ingress-nginx.fullname" . }}-admission
             - --patch-failure-policy={{ .Values.controller.admissionWebhooks.failurePolicy }}
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       restartPolicy: OnFailure
       serviceAccountName: {{ include "ingress-nginx.fullname" . }}-admission
     {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
