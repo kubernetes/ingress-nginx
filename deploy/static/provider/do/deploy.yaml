@@ -341,10 +341,10 @@ spec:
                   - /wait-shutdown
           args:
             - /nginx-ingress-controller
-            - --publish-service=ingress-nginx/ingress-nginx-controller
+            - --publish-service=$(POD_NAMESPACE)/ingress-nginx-controller
             - --election-id=ingress-controller-leader
             - --ingress-class=nginx
-            - --configmap=ingress-nginx/ingress-nginx-controller
+            - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
             - --validating-webhook=:8443
             - --validating-webhook-certificate=/usr/local/certificates/cert
             - --validating-webhook-key=/usr/local/certificates/key
@@ -597,9 +597,14 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - create
-            - --host=ingress-nginx-controller-admission,ingress-nginx-controller-admission.ingress-nginx.svc
-            - --namespace=ingress-nginx
+            - --host=ingress-nginx-controller-admission,ingress-nginx-controller-admission.$(POD_NAMESPACE).svc
+            - --namespace=$(POD_NAMESPACE)
             - --secret-name=ingress-nginx-admission
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       restartPolicy: OnFailure
       serviceAccountName: ingress-nginx-admission
       securityContext:
@@ -641,10 +646,15 @@ spec:
           args:
             - patch
             - --webhook-name=ingress-nginx-admission
-            - --namespace=ingress-nginx
+            - --namespace=$(POD_NAMESPACE)
             - --patch-mutating=false
             - --secret-name=ingress-nginx-admission
             - --patch-failure-policy=Fail
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       restartPolicy: OnFailure
       serviceAccountName: ingress-nginx-admission
       securityContext:
