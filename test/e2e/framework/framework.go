@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -34,6 +33,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -502,14 +502,12 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		return err
 	}
 
-	rolloutStatsCmd := fmt.Sprintf("%v --namespace %s rollout status deployment/%s -w --timeout 5m", KubectlPath, namespace, deployment.Name)
-
 	if updateFunc != nil {
 		if err := updateFunc(deployment); err != nil {
 			return err
 		}
 
-		err = exec.Command("bash", "-c", rolloutStatsCmd).Run()
+		err = waitForDeploymentRollout(kubeClientSet, deployment)
 		if err != nil {
 			return err
 		}
@@ -522,7 +520,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 			return errors.Wrapf(err, "scaling the number of replicas to %v", replicas)
 		}
 
-		err = exec.Command("/bin/bash", "-c", rolloutStatsCmd).Run()
+		err = waitForDeploymentRollout(kubeClientSet, deployment)
 		if err != nil {
 			return err
 		}
@@ -536,6 +534,29 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 	}
 
 	return nil
+}
+
+func waitForDeploymentRollout(kubeClientSet kubernetes.Interface, resource *appsv1.Deployment) error {
+	return wait.Poll(Poll, 5*time.Minute, func() (bool, error) {
+		d, err := kubeClientSet.AppsV1().Deployments(resource.Namespace).Get(context.TODO(), resource.Name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, nil
+		}
+
+		if d.DeletionTimestamp != nil {
+			return false, fmt.Errorf("deployment %q is being deleted", resource.Name)
+		}
+
+		if d.Generation <= d.Status.ObservedGeneration && d.Status.UpdatedReplicas == d.Status.Replicas && d.Status.UnavailableReplicas == 0 {
+			return true, nil
+		}
+
+		return false, nil
+	})
 }
 
 // UpdateIngress runs the given updateFunc on the ingress

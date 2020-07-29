@@ -62,7 +62,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 	})
 
 	ginkgo.It("should shutdown after waiting 60 seconds for pending connections to be closed", func(done ginkgo.Done) {
-		defer ginkgo.GinkgoRecover()
+		defer close(done)
 
 		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
@@ -71,7 +71,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 				return err
 			})
-		assert.Nil(ginkgo.GinkgoT(), err)
+		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment")
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/proxy-send-timeout": "600",
@@ -87,26 +87,28 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 		startTime := time.Now()
 
 		result := make(chan int)
-		go func(host string, c chan int) {
-			defer ginkgo.GinkgoRecover()
-
+		go func() {
 			resp := f.HTTPTestClient().
 				GET("/sleep/70").
 				WithHeader("Host", host).
 				Expect().
 				Raw()
 
-			c <- resp.StatusCode
-		}(host, result)
+			result <- resp.StatusCode
+		}()
+
+		framework.Sleep(1)
 
 		f.ScaleDeploymentToZero("nginx-ingress-controller")
 
-		assert.Equal(ginkgo.GinkgoT(), <-result, http.StatusOK, "expecting a valid response from HTTP request")
+		statusCode := <-result
+		assert.Equal(ginkgo.GinkgoT(), http.StatusOK, statusCode, "expecting a valid response from HTTP request")
 		assert.GreaterOrEqual(ginkgo.GinkgoT(), int(time.Since(startTime).Seconds()), 60, "waiting shutdown")
-		close(done)
 	}, 100)
 
 	ginkgo.It("should shutdown after waiting 150 seconds for pending connections to be closed", func(done ginkgo.Done) {
+		defer close(done)
+
 		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1.Deployment) error {
 				grace := int64(3600)
@@ -130,22 +132,22 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 		startTime := time.Now()
 
 		result := make(chan int)
-		go func(host string, c chan int) {
-			defer ginkgo.GinkgoRecover()
-
+		go func() {
 			resp := f.HTTPTestClient().
 				GET("/sleep/150").
 				WithHeader("Host", host).
 				Expect().
 				Raw()
 
-			c <- resp.StatusCode
-		}(host, result)
+			result <- resp.StatusCode
+		}()
+
+		framework.Sleep(1)
 
 		f.ScaleDeploymentToZero("nginx-ingress-controller")
 
-		assert.Equal(ginkgo.GinkgoT(), <-result, http.StatusOK, "expecting a valid response from HTTP request")
+		statusCode := <-result
+		assert.Equal(ginkgo.GinkgoT(), http.StatusOK, statusCode, "expecting a valid response from HTTP request")
 		assert.GreaterOrEqual(ginkgo.GinkgoT(), int(time.Since(startTime).Seconds()), 150, "waiting shutdown")
-		close(done)
 	}, 200)
 })
