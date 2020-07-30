@@ -21,7 +21,7 @@ import (
 	"path"
 	"strings"
 
-	"gopkg.in/fsnotify/fsnotify.v1"
+	"github.com/fsnotify/fsnotify"
 )
 
 // FileWatcher is an interface we use to watch changes in files

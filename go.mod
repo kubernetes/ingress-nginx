@@ -6,6 +6,7 @@ require (
 	github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
 	github.com/eapache/channels v1.1.0
 	github.com/eapache/queue v1.1.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
 	github.com/gavv/httpexpect/v2 v2.1.0
 	github.com/imdario/mergo v0.3.7
@@ -30,7 +31,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
 	google.golang.org/grpc v1.26.0
-	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	k8s.io/api v0.18.5
