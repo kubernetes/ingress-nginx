@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -43,73 +44,61 @@ var _ = framework.DescribeAnnotation("Annotation - limit-connections", func() {
 			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 		})
 
-		// prerequisite
-		configKey := "variables-hash-bucket-size"
-		configValue := "256"
-		f.UpdateNginxConfigMapData(configKey, configValue)
-		f.WaitForNginxConfiguration(func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("variables_hash_bucket_size %s;", configValue))
-		})
-
 		// limit connections
-		annotations := make(map[string]string)
 		connectionLimit := 8
-		annotations["nginx.ingress.kubernetes.io/limit-connections"] = strconv.Itoa(connectionLimit)
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/limit-connections": strconv.Itoa(connectionLimit),
+		}
+
 		ing.SetAnnotations(annotations)
 		f.UpdateIngress(ing)
 		f.WaitForNginxConfiguration(func(server string) bool {
 			return strings.Contains(server, "limit_conn") && strings.Contains(server, fmt.Sprintf("conn %v;", connectionLimit))
 		})
 
-		type asyncResult struct {
-			index  int
-			status int
-		}
+		requests := 20
+		results := make(chan int, requests)
 
-		response := make(chan *asyncResult)
-		maxRequestNumber := 20
-		for currentRequestNumber := 0; currentRequestNumber < maxRequestNumber; currentRequestNumber++ {
-			go func(requestNumber int, responeChannel chan *asyncResult) {
-				resp := f.HTTPTestClient().
-					GET("/sleep/10").
-					WithHeader("Host", host).
-					Expect().
-					Raw()
+		worker := func(wg *sync.WaitGroup) {
+			defer wg.Done()
 
-				code := 0
-				if resp != nil {
-					code = resp.StatusCode
-				}
-				responeChannel <- &asyncResult{requestNumber, code}
-			}(currentRequestNumber, response)
+			resp := f.HTTPTestClient().
+				GET("/sleep/10").
+				WithHeader("Host", host).
+				Expect().
+				Raw()
 
-		}
-		var results []asyncResult
-		for {
-			res := <-response
-			results = append(results, *res)
-			if len(results) >= maxRequestNumber {
-				break
+			if resp != nil {
+				results <- resp.StatusCode
 			}
 		}
 
-		close(response)
+		var wg sync.WaitGroup
+		for currentRequest := 0; currentRequest < requests; currentRequest++ {
+			wg.Add(1)
+			go worker(&wg)
+		}
 
-		okRequest := 0
-		failedRequest := 0
-		requestError := 0
-		expectedFail := maxRequestNumber - connectionLimit
-		for _, result := range results {
-			if result.status == 200 {
-				okRequest++
-			} else if result.status == 503 {
-				failedRequest++
-			} else {
-				requestError++
+		wg.Wait()
+
+		ok := 0
+		failed := 0
+		errors := 0
+
+		close(results)
+		for status := range results {
+			switch status {
+			case 200:
+				ok++
+			case 503:
+				failed++
+			default:
+				errors++
 			}
 		}
-		assert.Equal(ginkgo.GinkgoT(), okRequest, connectionLimit, "expecting the ok (200) requests number should equal the connection limit")
-		assert.Equal(ginkgo.GinkgoT(), failedRequest, expectedFail, "expecting the failed (503) requests number should equal the expected to fail request number")
-		assert.Equal(ginkgo.GinkgoT(), requestError, 0, "expecting the failed (other than 503) requests number should equal zero")
+
+		assert.Equal(ginkgo.GinkgoT(), connectionLimit, ok, "expecting the ok (200) requests to be equal to the connection limit")
+		assert.Equal(ginkgo.GinkgoT(), requests-connectionLimit, failed, "expecting the failed (503) requests to be the total requests - connection limit")
+		assert.Equal(ginkgo.GinkgoT(), 0, errors, "expecting failed (other than 503) requests to ber zero")
 	})
 })
