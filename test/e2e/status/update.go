@@ -101,6 +101,8 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 		_, cmd, err = f.KubectlProxy(port)
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error starting kubectl proxy")
 		defer func() {
+			defer ginkgo.GinkgoRecover()
+
 			if cmd != nil {
 				err := cmd.Process.Kill()
 				assert.Nil(ginkgo.GinkgoT(), err, "unexpected error terminating kubectl proxy")
