@@ -162,6 +162,8 @@ func main() {
 	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
 
+	go handleSigchld()
+
 	go startHTTPServer(conf.ListenPorts.Health, mux)
 	go ngx.Start()
 
@@ -189,6 +191,23 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 
 	klog.Infof("Exiting with %v", exitCode)
 	exit(exitCode)
+}
+
+func handleSigchld() {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGCHLD)
+	for {
+		<-signalChan
+		klog.V(5).Infof("Children process terminated")
+
+		var wstatus syscall.WaitStatus
+		_, err := syscall.Wait4(-1, &wstatus, syscall.WNOHANG, nil)
+		if syscall.ECHILD == err {
+			continue
+		}
+		klog.V(5).Infof("Children cleanup. wstatus: %v\n", wstatus)
+	}
+
 }
 
 // createApiserverClient creates a new Kubernetes REST client. apiserverHost is
