@@ -751,11 +751,14 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			if anns.Canary.Enabled {
 				upstreams[defBackend].NoServer = true
 				upstreams[defBackend].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-					Weight:        anns.Canary.Weight,
-					Header:        anns.Canary.Header,
-					HeaderValue:   anns.Canary.HeaderValue,
-					HeaderPattern: anns.Canary.HeaderPattern,
-					Cookie:        anns.Canary.Cookie,
+					Weight:           anns.Canary.Weight,
+					Header:           anns.Canary.Header,
+					HeaderValue:      anns.Canary.HeaderValue,
+					HeaderPattern:    anns.Canary.HeaderPattern,
+					Cookie:           anns.Canary.Cookie,
+					HashHeader:       anns.Canary.HashHeader,
+					HashHeaderWeight: anns.Canary.HashHeaderWeight,
+					HashHeaderSeed:   anns.Canary.HashHeaderSeed,
 				}
 			}
 
@@ -815,11 +818,14 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				if anns.Canary.Enabled {
 					upstreams[name].NoServer = true
 					upstreams[name].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-						Weight:        anns.Canary.Weight,
-						Header:        anns.Canary.Header,
-						HeaderValue:   anns.Canary.HeaderValue,
-						HeaderPattern: anns.Canary.HeaderPattern,
-						Cookie:        anns.Canary.Cookie,
+						Weight:           anns.Canary.Weight,
+						Header:           anns.Canary.Header,
+						HeaderValue:      anns.Canary.HeaderValue,
+						HeaderPattern:    anns.Canary.HeaderPattern,
+						Cookie:           anns.Canary.Cookie,
+						HashHeader:       anns.Canary.HashHeader,
+						HashHeaderWeight: anns.Canary.HashHeaderWeight,
+						HashHeaderSeed:   anns.Canary.HashHeaderSeed,
 					}
 				}
 
