@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeAnnotation("permanen-redirect permanen-redirect-code", func() {
+var _ = framework.DescribeAnnotation("permanent-redirect permanent-redirect-code", func() {
 	f := framework.NewDefaultFramework("redirect")
 
 	ginkgo.It("should respond with a standard redirect code", func() {
