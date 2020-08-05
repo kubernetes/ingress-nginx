@@ -207,7 +207,6 @@ func handleSigchld() {
 		}
 		klog.V(5).Infof("Children cleanup. wstatus: %v\n", wstatus)
 	}
-
 }
 
 // createApiserverClient creates a new Kubernetes REST client. apiserverHost is

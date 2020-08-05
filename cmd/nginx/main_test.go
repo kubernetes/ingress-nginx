@@ -20,7 +20,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"testing"
 	"time"
@@ -106,6 +108,37 @@ func TestHandleSigterm(t *testing.T) {
 	err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 	if err != nil {
 		t.Error("Unexpected error sending SIGTERM signal.")
+	}
+}
+
+func TestHandleSigchld(t *testing.T) {
+	go handleSigchld()
+
+	cmd := exec.Command("sleep", "5m")
+	err := cmd.Start()
+	if err != nil {
+		t.Error("Cannot start children command: ", err)
+	}
+	pid := cmd.Process.Pid
+	time.Sleep(1 * time.Second)
+
+	err = syscall.Kill(pid, syscall.SIGKILL)
+	if err != nil {
+		t.Error("Unexpected error sending SIGKILL signal.")
+	}
+
+	checkZombie := time.Tick(1 * time.Second)
+	timeoutTimer := time.After(3 * time.Second)
+	for {
+		select {
+		case <-timeoutTimer:
+			t.Error("Timeout!. Zombie process still there")
+		case <-checkZombie:
+			if _, err := os.Stat("/proc/" + strconv.Itoa(pid)); os.IsNotExist(err) {
+				t.Log("Process cleaned")
+				return
+			}
+		}
 	}
 }
 
