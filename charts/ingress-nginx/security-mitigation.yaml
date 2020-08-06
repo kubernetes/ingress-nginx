@@ -1,0 +1,3 @@
+schemaVersion: v1
+summary: Security mitigation information for this application is tracked by the security-mitigation.yaml file that's part of this helm chart.
+mitigations: []
