@@ -133,6 +133,7 @@ func TestHandleSigchld(t *testing.T) {
 		select {
 		case <-timeoutTimer:
 			t.Error("Timeout!. Zombie process still there")
+			return
 		case <-checkZombie:
 			if _, err := os.Stat("/proc/" + strconv.Itoa(pid)); os.IsNotExist(err) {
 				t.Log("Process cleaned")
