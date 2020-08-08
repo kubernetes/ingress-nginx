@@ -724,6 +724,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    Caveats
+  </a>
+  
+    <nav class="md-nav" aria-label="Caveats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wildcard-ingresses" class="md-nav__link">
+    Wildcard ingresses
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1215,6 +1235,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    Caveats
+  </a>
+  
+    <nav class="md-nav" aria-label="Caveats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wildcard-ingresses" class="md-nav__link">
+    Wildcard ingresses
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1289,6 +1329,9 @@ According to the above example, this URL will be http://10.192.0.3:31086</p>
 <p>The username and password is <code>admin</code></p>
 <p>After the login you can import the Grafana dashboard from <a href="https://github.com/kubernetes/ingress-nginx/tree/master/deploy/grafana/dashboards">official dashboards</a></p>
 <p><img alt="Dashboard" src="../../images/grafana.png" /></p>
+<h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link"> ¶</a></h2>
+<h3 id="wildcard-ingresses">Wildcard ingresses<a class="headerlink" href="#wildcard-ingresses" title="Permanent link"> ¶</a></h3>
+<p>By default request metrics are labeled with the hostname. When you have a wildcard domain ingress, then there will be no metrics for that ingress (to prevent the metrics from exploding in cardinality). To get metrics in this case you need to run the ingress controller with <code>--metrics-per-host=false</code> (you will lose labeling by hostname, but still have labeling by ingress).</p>
                 
               
               
