@@ -41,7 +41,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/ingress-nginx/internal/k8s"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	kubeframework "k8s.io/kubernetes/test/e2e/framework"
 )
 
@@ -258,7 +258,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			return false, nil
 		}
 
-		if klog.V(10) && len(o) > 0 {
+		if klog.V(10).Enabled() && len(o) > 0 {
 			klog.Infof("nginx.conf:\n%v", o)
 		}
 
@@ -285,7 +285,7 @@ func (f *Framework) matchNginxCustomConditions(from string, to string, matcher f
 			return false, nil
 		}
 
-		if klog.V(10) && len(o) > 0 {
+		if klog.V(10).Enabled() && len(o) > 0 {
 			klog.Infof("nginx.conf:\n%v", o)
 		}
 

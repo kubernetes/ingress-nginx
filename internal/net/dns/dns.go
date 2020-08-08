@@ -21,7 +21,7 @@ import (
 	"net"
 	"strings"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 var defResolvConf = "/etc/resolv.conf"

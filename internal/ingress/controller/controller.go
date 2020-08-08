@@ -39,7 +39,7 @@ import (
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 const (

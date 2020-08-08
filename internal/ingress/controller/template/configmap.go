@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/mitchellh/hashstructure"
 	"github.com/mitchellh/mapstructure"
