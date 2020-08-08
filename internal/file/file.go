@@ -21,7 +21,7 @@ import (
 	"encoding/hex"
 	"io/ioutil"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // SHA1 returns the SHA1 of a file.

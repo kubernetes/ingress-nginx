@@ -28,7 +28,7 @@ import (
 	"time"
 
 	ps "github.com/mitchellh/go-ps"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // TODO: Check https://github.com/kubernetes/kubernetes/blob/master/pkg/master/ports/ports.go for ports already being used
@@ -144,7 +144,7 @@ func readFileToString(path string) (string, error) {
 func Version() string {
 	flag := "-v"
 
-	if klog.V(2) {
+	if klog.V(2).Enabled() {
 		flag = "-V"
 	}
 
