@@ -9,7 +9,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
 	github.com/gavv/httpexpect/v2 v2.1.0
-	github.com/imdario/mergo v0.3.7
+	github.com/imdario/mergo v0.3.9
 	github.com/json-iterator/go v1.1.10
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mitchellh/go-ps v1.0.0
@@ -33,18 +33,18 @@ require (
 	google.golang.org/grpc v1.26.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
-	k8s.io/api v0.18.5
-	k8s.io/apiextensions-apiserver v0.18.5
-	k8s.io/apimachinery v0.18.5
-	k8s.io/apiserver v0.18.5
-	k8s.io/cli-runtime v0.18.5
-	k8s.io/client-go v0.18.5
-	k8s.io/code-generator v0.18.5
-	k8s.io/component-base v0.18.5
-	k8s.io/klog/v2 v2.3.0
-	k8s.io/kubernetes v1.18.5
+	k8s.io/api v0.18.6
+	k8s.io/apiextensions-apiserver v0.18.6
+	k8s.io/apimachinery v0.18.6
+	k8s.io/apiserver v0.18.6
+	k8s.io/cli-runtime v0.18.6
+	k8s.io/client-go v0.18.6
+	k8s.io/code-generator v0.18.6
+	k8s.io/component-base v0.18.6
+	k8s.io/klog/v2 v2.1.0
+	k8s.io/kubernetes v1.18.6
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
-	sigs.k8s.io/controller-runtime v0.6.0
+	sigs.k8s.io/controller-runtime v0.6.2
 )
 
 replace (
