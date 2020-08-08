@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"strings"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	networking "k8s.io/api/networking/v1beta1"
 

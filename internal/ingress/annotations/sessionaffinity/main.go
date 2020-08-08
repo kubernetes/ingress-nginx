@@ -20,7 +20,7 @@ import (
 	"regexp"
 
 	networking "k8s.io/api/networking/v1beta1"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"

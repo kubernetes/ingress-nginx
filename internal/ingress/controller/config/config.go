@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	apiv1 "k8s.io/api/core/v1"
 
@@ -833,7 +833,7 @@ func NewDefault() Configuration {
 		DefaultType:                  "text/html",
 	}
 
-	if klog.V(5) {
+	if klog.V(5).Enabled() {
 		cfg.ErrorLogLevel = "debug"
 	}
 

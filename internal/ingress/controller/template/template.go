@@ -41,7 +41,7 @@ import (
 
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
@@ -96,7 +96,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	outCmdBuf := t.bp.Get()
 	defer t.bp.Put(outCmdBuf)
 
-	if klog.V(3) {
+	if klog.V(3).Enabled() {
 		b, err := json.Marshal(conf)
 		if err != nil {
 			klog.Errorf("unexpected error: %v", err)
