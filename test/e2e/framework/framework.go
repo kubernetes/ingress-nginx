@@ -213,6 +213,7 @@ func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) boo
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
+	Sleep(1 * time.Second)
 }
 
 // WaitForNginxCustomConfiguration waits until the nginx configuration given part (from, to) contains a particular configuration
