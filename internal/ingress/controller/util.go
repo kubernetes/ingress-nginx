@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"syscall"
 
@@ -92,9 +93,16 @@ type NginxCommand struct {
 // NewNginxCommand returns a new NginxCommand from which path
 // has been detected from environment variable NGINX_BINARY or default
 func NewNginxCommand() NginxCommand {
-	return NginxCommand{
+	command := NginxCommand{
 		Binary: defBinary,
 	}
+
+	binary := os.Getenv("NGINX_BINARY")
+	if binary != "" {
+		command.Binary = binary
+	}
+
+	return command
 }
 
 // ExecCommand instanciates an exec.Cmd object to call nginx program
