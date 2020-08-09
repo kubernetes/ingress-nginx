@@ -97,7 +97,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 			result <- resp.StatusCode
 		}()
 
-		framework.Sleep(1)
+		framework.Sleep(1 * time.Second)
 
 		f.ScaleDeploymentToZero("nginx-ingress-controller")
 
@@ -142,7 +142,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 			result <- resp.StatusCode
 		}()
 
-		framework.Sleep(1)
+		framework.Sleep(1 * time.Second)
 
 		f.ScaleDeploymentToZero("nginx-ingress-controller")
 
