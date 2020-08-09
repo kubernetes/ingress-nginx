@@ -24,6 +24,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
@@ -443,7 +444,7 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
 			assert.Nil(ginkgo.GinkgoT(), err)
 
-			framework.Sleep(1)
+			framework.Sleep(1 * time.Second)
 
 			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
