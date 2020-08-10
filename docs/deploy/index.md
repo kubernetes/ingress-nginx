@@ -60,23 +60,6 @@ For standard usage:
 minikube addons enable ingress
 ```
 
-For development:
-
-- Disable the ingress addon:
-
-```console
-minikube addons disable ingress
-```
-
-- Execute `make dev-env`
-- Confirm the `ingress-nginx-controller` deployment exists:
-
-```console
-$ kubectl get pods -n ingress-nginx
-NAME                                       READY     STATUS    RESTARTS   AGE
-ingress-nginx-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
-```
-
 #### AWS
 
 In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
