@@ -1479,22 +1479,6 @@ For this reason, there is an initial delay of up to two minutes until it is poss
 <div class="highlight"><pre><span></span><code><span class="go">minikube addons enable ingress</span>
 </code></pre></div>
 
-<p>For development:</p>
-<ul>
-<li>Disable the ingress addon:</li>
-</ul>
-<div class="highlight"><pre><span></span><code><span class="go">minikube addons disable ingress</span>
-</code></pre></div>
-
-<ul>
-<li>Execute <code>make dev-env</code></li>
-<li>Confirm the <code>ingress-nginx-controller</code> deployment exists:</li>
-</ul>
-<div class="highlight"><pre><span></span><code><span class="gp">$</span> kubectl get pods -n ingress-nginx
-<span class="go">NAME                                       READY     STATUS    RESTARTS   AGE</span>
-<span class="go">ingress-nginx-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s</span>
-</code></pre></div>
-
 <h4 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link"> ¶</a></h4>
 <p>In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of <code>Type=LoadBalancer</code>.</p>
 <h5 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link"> ¶</a></h5>
