@@ -354,10 +354,10 @@ func checkService(key string, kubeClient *kubernetes.Clientset) error {
 		}
 
 		if errors.IsNotFound(err) {
-			return fmt.Errorf("No service with name %v found in namespace %v: %v", ns, name, err)
+			return fmt.Errorf("No service with name %v found in namespace %v: %v", name, ns, err)
 		}
 
-		return fmt.Errorf("Unexpected error searching service with name %v in namespace %v: %v", ns, name, err)
+		return fmt.Errorf("Unexpected error searching service with name %v in namespace %v: %v", name, ns, err)
 	}
 
 	return nil
