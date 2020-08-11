@@ -8,49 +8,37 @@ metadata:
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  annotations:
-    # Assumes apparmor available
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: 'runtime/default'
-    apparmor.security.beta.kubernetes.io/defaultProfileName:  'runtime/default'
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'docker/default'
-    seccomp.security.alpha.kubernetes.io/defaultProfileName:  'docker/default'
   name: ingress-nginx
+  namespace: ingress-nginx
 spec:
   allowedCapabilities:
-  - NET_BIND_SERVICE
-  allowPrivilegeEscalation: true
-  fsGroup:
-    rule: 'MustRunAs'
-    ranges:
-    - min: 1
-      max: 65535
-  hostIPC: false
-  hostNetwork: false
-  hostPID: false
-  hostPorts:
-  - min: 80
-    max: 65535
+    - NET_BIND_SERVICE
   privileged: false
-  readOnlyRootFilesystem: false
-  runAsUser:
-    rule: 'MustRunAsNonRoot'
-    ranges:
-    - min: 101
-      max: 65535
-  seLinux:
-    rule: 'RunAsAny'
-  supplementalGroups:
-    rule: 'MustRunAs'
-    ranges:
-    # Forbid adding the root group.
-    - min: 1
-      max: 65535
+  allowPrivilegeEscalation: true
+  # Allow core volume types.
   volumes:
-  - 'configMap'
-  - 'downwardAPI'
-  - 'emptyDir'
-  - 'projected'
-  - 'secret'
+    - configMap
+    - secret
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    # Require the container to run without root privileges.
+    rule: MustRunAsNonRoot
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+  seLinux:
+    rule: RunAsAny
 
 ---
 
@@ -60,14 +48,10 @@ metadata:
   name: ingress-nginx-psp
   namespace: ingress-nginx
 rules:
-- apiGroups:
-  - policy
-  resourceNames:
-  - ingress-nginx
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
+- apiGroups: [policy]
+  resources: [podsecuritypolicies]
+  verbs: [use]
+  resourceNames: [ingress-nginx]
 
 ---
 
@@ -84,4 +68,5 @@ subjects:
 - kind: ServiceAccount
   name: default
 - kind: ServiceAccount
-  name: nginx-ingress-serviceaccount
+  name: ingress-nginx
+  namespace: ingress-nginx
