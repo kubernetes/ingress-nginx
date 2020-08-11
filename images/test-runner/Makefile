@@ -36,7 +36,7 @@ build: ensure-buildx
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
-		--build-arg BASE_IMAGE=us.gcr.io/k8s-artifacts-prod/ingress-nginx/nginx:v20200708-g00f4a215d@sha256:b0727cebafc35f5ab50f3fa0be5fda7f79937f1683f525f40982e75b882195d8 \
+		--build-arg BASE_IMAGE=us.gcr.io/k8s-artifacts-prod/ingress-nginx/nginx:v20200811-g4ecd38dca@sha256:d731d822e8a29627d91aac928a8c2b337c68d04b6abb248acbc1826f289f73d0 \
 		--build-arg GOLANG_VERSION=1.14.5 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
 		--build-arg K8S_RELEASE=v1.15.7 \
