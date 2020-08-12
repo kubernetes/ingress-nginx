@@ -564,7 +564,7 @@ make install
 
 # mimalloc
 cd "$BUILD_PATH"
-git clone --depth=1 -b v1.6.3 https://github.com/microsoft/mimalloc
+git clone --depth=1 -b v1.6.4 https://github.com/microsoft/mimalloc
 cd mimalloc
 
 mkdir -p out/release
