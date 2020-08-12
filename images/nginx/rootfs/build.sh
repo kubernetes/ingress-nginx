@@ -594,4 +594,6 @@ done
 
 rm -rf /etc/nginx/owasp-modsecurity-crs/.git
 rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
-rm -rf /usr/local/modsecurity/lib/libmodsecurity.a
+
+# remove .a files
+find /usr/local -name "*.a" -print | xargs /bin/rm
