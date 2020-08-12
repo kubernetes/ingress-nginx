@@ -1,4 +1,4 @@
-FROM us.gcr.io/k8s-artifacts-prod/ingress-nginx/e2e-test-runner@sha256:bf31d6f13984ef0818312f9247780e234a6d50322e362217dabe4b3299f202ef AS BASE
+FROM us.gcr.io/k8s-artifacts-prod/ingress-nginx/e2e-test-runner:v20200812-gf6dce060b@sha256:a2b6585d6badd2bbf8805cb1f576e7eb6be8fd1e5ece7c362eaa9610f22786ba AS BASE
 
 FROM alpine:3.12
 
