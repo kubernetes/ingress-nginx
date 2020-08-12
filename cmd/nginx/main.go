@@ -201,11 +201,11 @@ func handleSigchld() {
 		klog.V(5).Infof("Children process terminated")
 
 		var wstatus syscall.WaitStatus
-		_, err := syscall.Wait4(-1, &wstatus, syscall.WNOHANG, nil)
-		if syscall.ECHILD == err {
-			continue
+		wpid, err := syscall.Wait4(-1, &wstatus, syscall.WNOHANG, nil)
+		for syscall.ECHILD != err {
+			klog.V(5).Infof("Children cleanup.PID: %v, wstatus: %v\n", wpid, wstatus)
+			wpid, err = syscall.Wait4(-1, &wstatus, syscall.WNOHANG, nil)
 		}
-		klog.V(5).Infof("Children cleanup. wstatus: %v\n", wstatus)
 	}
 }
 
