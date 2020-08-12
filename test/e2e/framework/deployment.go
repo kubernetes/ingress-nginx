@@ -132,7 +132,7 @@ http {
 	}, metav1.CreateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
 
-	deployment := newDeployment(SlowEchoService, f.Namespace, "quay.io/kubernetes-ingress-controller/nginx:e3c49c52f4b74fe47ad65d6f3266a02e8b6b622f", 80, 1,
+	deployment := newDeployment(SlowEchoService, f.Namespace, "us.gcr.io/k8s-artifacts-prod/ingress-nginx/nginx:v20200812-g0673e5e17@sha256:3bafc6840f2477c05eb029580fa8ecf4bd33b0f0765e3cd9cc82ad91f817ccf3", 80, 1,
 		nil,
 		[]corev1.VolumeMount{
 			{
