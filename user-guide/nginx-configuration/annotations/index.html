@@ -2896,7 +2896,7 @@ Prometheus, etc.. (recommended)</li>
 an ip address to <code>nginx.ingress.kubernetes.io/influxdb-host</code>. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use <code>127.0.0.1</code>.</p>
 <h3 id="backend-protocol">Backend Protocol<a class="headerlink" href="#backend-protocol" title="Permanent link"> ¶</a></h3>
 <p>Using <code>backend-protocol</code> annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces <code>secure-backends</code> in older versions)
-Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
+Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP and FCGI</p>
 <p>By default NGINX uses <code>HTTP</code>.</p>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">nginx.ingress.kubernetes.io/backend-protocol</span><span class="p">:</span> <span class="s">&quot;HTTPS&quot;</span>
