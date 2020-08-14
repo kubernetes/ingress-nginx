@@ -773,7 +773,7 @@ an ip address to `nginx.ingress.kubernetes.io/influxdb-host`. If you deploy Infl
 ### Backend Protocol
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
-Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP
+Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP and FCGI
 
 By default NGINX uses `HTTP`.
 
