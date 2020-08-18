@@ -50,9 +50,10 @@ import (
 )
 
 const (
-	slash         = "/"
-	nonIdempotent = "non_idempotent"
-	defBufferSize = 65535
+	slash                      = "/"
+	nonIdempotent              = "non_idempotent"
+	defBufferSize              = 65535
+	defAuthSigninRedirectParam = "rd"
 )
 
 // TemplateWriter is the interface to render a template
@@ -903,18 +904,21 @@ func buildForwardedFor(input interface{}) string {
 	return fmt.Sprintf("$http_%v", ffh)
 }
 
-func buildAuthSignURL(authSignURL string) string {
+func buildAuthSignURL(authSignURL, authRedirectParam string) string {
 	u, _ := url.Parse(authSignURL)
 	q := u.Query()
+	if authRedirectParam == "" {
+		authRedirectParam = defaultGlobalAuthRedirectParam
+	}
 	if len(q) == 0 {
-		return fmt.Sprintf("%v?rd=$pass_access_scheme://$http_host$escaped_request_uri", authSignURL)
+		return fmt.Sprintf("%v?%v=$pass_access_scheme://$http_host$escaped_request_uri", authSignURL, authRedirectParam)
 	}
 
-	if q.Get("rd") != "" {
+	if q.Get(authRedirectParam) != "" {
 		return authSignURL
 	}
 
-	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$escaped_request_uri", authSignURL)
+	return fmt.Sprintf("%v&%v=$pass_access_scheme://$http_host$escaped_request_uri", authSignURL, authRedirectParam)
 }
 
 func buildAuthSignURLLocation(location, authSignURL string) string {
