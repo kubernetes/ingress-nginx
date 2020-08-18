@@ -766,16 +766,19 @@ func TestFilterRateLimits(t *testing.T) {
 
 func TestBuildAuthSignURL(t *testing.T) {
 	cases := map[string]struct {
-		Input, Output string
+		Input, RedirectParam, Output string
 	}{
-		"default url":       {"http://google.com", "http://google.com?rd=$pass_access_scheme://$http_host$escaped_request_uri"},
-		"with random field": {"http://google.com?cat=0", "http://google.com?cat=0&rd=$pass_access_scheme://$http_host$escaped_request_uri"},
-		"with rd field":     {"http://google.com?cat&rd=$request", "http://google.com?cat&rd=$request"},
+		"default url and redirect":              {"http://google.com", "rd", "http://google.com?rd=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"default url and custom redirect":       {"http://google.com", "orig", "http://google.com?orig=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"with random field":                     {"http://google.com?cat=0", "rd", "http://google.com?cat=0&rd=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"with random field and custom redirect": {"http://google.com?cat=0", "orig", "http://google.com?cat=0&orig=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"with rd field":                         {"http://google.com?cat&rd=$request", "rd", "http://google.com?cat&rd=$request"},
+		"with orig field":                       {"http://google.com?cat&orig=$request", "orig", "http://google.com?cat&orig=$request"},
 	}
 	for k, tc := range cases {
-		res := buildAuthSignURL(tc.Input)
+		res := buildAuthSignURL(tc.Input, tc.RedirectParam)
 		if res != tc.Output {
-			t.Errorf("%s: called buildAuthSignURL('%s'); expected '%v' but returned '%v'", k, tc.Input, tc.Output, res)
+			t.Errorf("%s: called buildAuthSignURL('%s','%s'); expected '%v' but returned '%v'", k, tc.Input, tc.RedirectParam, tc.Output, res)
 		}
 	}
 }
