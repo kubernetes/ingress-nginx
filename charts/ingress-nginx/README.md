@@ -71,7 +71,7 @@ There are two main ways to migrate a release from `stable/nginx-ingress` to `ing
     1. Redirect your DNS traffic from the old controller to the new controller
     1. Log traffic from both controllers during this changeover
     1. [Uninstall](#uninstall-chart) the old controller once traffic has fully drained from it
-    1. For details on all of these steps see [Upgrading With Zero Downtime in Production](https://medium.com/codecademy-engineering/kubernetes-nginx-and-zero-downtime-in-production-2c910c6a5ed8)
+    1. For details on all of these steps see [Upgrading With Zero Downtime in Production](#upgrading-with-zero-downtime-in-production)
 
 Note that there are some different and upgraded configurations between the two charts, described by Rimas Mocevicius from JFrog in the "Upgrading to ingress-nginx Helm chart" section of [Migrating from Helm chart nginx-ingress to ingress-nginx](https://rimusz.net/migrating-to-ingress-nginx). As the `ingress-nginx/ingress-nginx` chart continues to update, you will want to check current differences by running [helm configuration](#configuration) commands on both charts.
 
