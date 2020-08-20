@@ -378,7 +378,7 @@ func (f *Framework) waitForReload(fn func()) {
 	err := wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		// most of the cases reload the ingress controller
 		// in cases where the value is not modified we could wait forever
-		if count > 3 {
+		if count > 10 {
 			return true, nil
 		}
 
