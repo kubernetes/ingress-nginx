@@ -8,7 +8,6 @@ steps:
     entrypoint: bash
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
-      - GIT_COMMIT=$_GIT_TAG
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
       - REPO_INFO=https://github.com/kubernetes/ingress-nginx
       - HOME=/root
