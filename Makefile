@@ -38,7 +38,7 @@ E2E_NODES ?= 8
 E2E_CHECK_LEAKS ?=
 
 REPO_INFO ?= $(shell git config --get remote.origin.url)
-GIT_COMMIT ?= git-$(shell git rev-parse --short HEAD)
+COMMIT_SHA ?= git-$(shell git rev-parse --short HEAD)
 
 PKG = k8s.io/ingress-nginx
 
@@ -65,6 +65,7 @@ image: clean-image ## Build image for a particular arch.
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg TARGETARCH="$(ARCH)" \
+		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
 
 .PHONY: clean-image
@@ -77,7 +78,7 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
-		GIT_COMMIT=$(GIT_COMMIT) \
+		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
 		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
@@ -88,7 +89,7 @@ build-plugin:  ## Build ingress-nginx krew plugin.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
-		GIT_COMMIT=$(GIT_COMMIT) \
+		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
 		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
@@ -108,7 +109,7 @@ test:  ## Run go unit tests.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
-		GIT_COMMIT=$(GIT_COMMIT) \
+		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
 		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
@@ -213,4 +214,5 @@ release: ensure-buildx clean
 		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
+		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs

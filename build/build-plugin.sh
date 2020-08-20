@@ -26,7 +26,7 @@ declare -a mandatory
 mandatory=(
   PKG
   ARCH
-  GIT_COMMIT
+  COMMIT_SHA
   REPO_INFO
   TAG
 )
@@ -56,7 +56,7 @@ function build_for_arch(){
     "${GOBUILD_FLAGS}" \
     -ldflags "-s -w \
       -X ${PKG}/version.RELEASE=${TAG} \
-      -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
+      -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
       -X ${PKG}/version.REPO=${REPO_INFO}" \
     -o "${release}/kubectl-ingress_nginx${extension}" "${PKG}/cmd/plugin"
 
