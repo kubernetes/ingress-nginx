@@ -101,6 +101,10 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 
 			ginkgo.By("Adding a no-auth-locations for /bar to configMap")
 			f.UpdateNginxConfigMapData(noAuthSetting, noAuthLocations)
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, noAuthLocations)
+				})
 
 			ginkgo.By("Sending a request to protected service /foo")
 			f.HTTPTestClient().
