@@ -61,6 +61,7 @@ var _ = framework.DescribeAnnotation("Annotation - limit-connections", func() {
 
 		worker := func(wg *sync.WaitGroup) {
 			defer wg.Done()
+			defer ginkgo.GinkgoRecover()
 
 			resp := f.HTTPTestClient().
 				GET("/sleep/10").

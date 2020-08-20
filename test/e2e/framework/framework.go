@@ -115,6 +115,7 @@ func (f *Framework) BeforeEach() {
 func (f *Framework) AfterEach() {
 	defer func(kubeClient kubernetes.Interface, ns string) {
 		go func() {
+			defer ginkgo.GinkgoRecover()
 			err := deleteKubeNamespace(kubeClient, ns)
 			assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
 		}()
