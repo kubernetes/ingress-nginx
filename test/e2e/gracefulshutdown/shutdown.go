@@ -88,6 +88,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 
 		result := make(chan int)
 		go func() {
+			defer ginkgo.GinkgoRecover()
 			resp := f.HTTPTestClient().
 				GET("/sleep/70").
 				WithHeader("Host", host).
@@ -133,6 +134,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 
 		result := make(chan int)
 		go func() {
+			defer ginkgo.GinkgoRecover()
 			resp := f.HTTPTestClient().
 				GET("/sleep/150").
 				WithHeader("Host", host).
