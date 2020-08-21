@@ -205,21 +205,21 @@ func (f *Framework) GetURL(scheme RequestScheme) string {
 
 // WaitForNginxServer waits until the nginx configuration contains a particular server section
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
-	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 	Sleep(1 * time.Second)
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
-	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 	Sleep(1 * time.Second)
 }
 
 // WaitForNginxCustomConfiguration waits until the nginx configuration given part (from, to) contains a particular configuration
 func (f *Framework) WaitForNginxCustomConfiguration(from string, to string, matcher func(cfg string) bool) {
-	err := wait.PollImmediate(Poll, DefaultTimeout, f.matchNginxCustomConditions(from, to, matcher))
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxCustomConditions(from, to, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
 
@@ -428,7 +428,7 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(context.TODO(), pod.GetName(), *metav1.NewDeleteOptions(grace))
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting ingress nginx pod")
 
-	err = wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
+	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		pod, err := GetIngressNGINXPod(ns, f.KubeClientSet)
 		if err != nil || pod == nil {
 			return false, nil
