@@ -60,7 +60,7 @@ requests to the first port of this Service.`)
 		ingressClass = flags.String("ingress-class", "",
 			`Name of the ingress class this controller satisfies.
 The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.18.0 or higher or the annotation "kubernetes.io/ingress.class" (deprecated).
-If this parameter is not set it will handle ingresses with either an empty or "nginx" class name.`)
+If this parameter is not set, or set to the default value of "nginx", it will handle ingresses with either an empty or "nginx" class name.`)
 
 		configMap = flags.String("configmap", "",
 			`Name of the ConfigMap containing custom global configurations for the controller.`)
@@ -206,6 +206,8 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 
 		if *ingressClass != class.DefaultClass {
 			klog.Warningf("Only Ingresses with class %q will be processed by this Ingress controller", *ingressClass)
+		} else {
+			klog.Warning("Ingresses with an empty class will also be processed by this Ingress controller", *ingressClass)
 		}
 
 		class.IngressClass = *ingressClass
