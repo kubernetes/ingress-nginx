@@ -321,15 +321,16 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 
 		f.NewHttpbinDeployment()
 
-		var httpbinIP string
-
 		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		httpbinIP = e.Subsets[0].Addresses[0].IP
+		assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
+		assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
+
+		httpbinIP := e.Subsets[0].Addresses[0].IP
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbinIP),
@@ -361,15 +362,16 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 		ginkgo.BeforeEach(func() {
 			f.NewHttpbinDeployment()
 
-			var httpbinIP string
-
 			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
-			httpbinIP = e.Subsets[0].Addresses[0].IP
+			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
+			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
+
+			httpbinIP := e.Subsets[0].Addresses[0].IP
 
 			annotations = map[string]string{
 				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
@@ -439,8 +441,6 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 		ginkgo.BeforeEach(func() {
 			f.NewHttpbinDeployment()
 
-			var httpbinIP string
-
 			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
 			assert.Nil(ginkgo.GinkgoT(), err)
 
@@ -452,7 +452,7 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
 
-			httpbinIP = e.Subsets[0].Addresses[0].IP
+			httpbinIP := e.Subsets[0].Addresses[0].IP
 
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/auth-url":            fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),

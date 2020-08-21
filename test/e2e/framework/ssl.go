@@ -355,7 +355,7 @@ func matchTLSServerName(url string, tlsConfig *tls.Config) wait.ConditionFunc {
 			Logf("Unexpected TLS error: %v", err)
 			return false, nil
 		}
-		conn.Close()
+		defer conn.Close()
 
 		return true, nil
 	}
