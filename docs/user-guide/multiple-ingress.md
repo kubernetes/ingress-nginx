@@ -54,3 +54,5 @@ spec:
 
     When running multiple ingress-nginx controllers, it will only process an unset class annotation if one of the controllers uses the default
     `--ingress-class` value (see `IsValid` method in `internal/ingress/annotations/class/main.go`), otherwise the class annotation become required.
+
+    If `--ingress-class` is set to the default value of `nginx`, the controller will monitor Ingresses with no class annotation *and* Ingresses with annotation class set to `nginx`. Use a non-default value for `--ingress-class`, to ensure that the controller only satisfied the specific class of Ingresses.
