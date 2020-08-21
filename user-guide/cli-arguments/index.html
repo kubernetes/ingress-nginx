@@ -1220,7 +1220,7 @@
 </tr>
 <tr>
 <td><code>--ingress-class</code></td>
-<td>Name of the ingress class this controller satisfies. The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.18.0 or higher or the annotation "kubernetes.io/ingress.class" (deprecated). If this parameter is not set it will handle ingresses with either an empty or "nginx" class name.</td>
+<td>Name of the ingress class this controller satisfies. The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.18.0 or higher or the annotation "kubernetes.io/ingress.class" (deprecated). If this parameter is not set, or set to the default value of "nginx", it will handle ingresses with either an empty or "nginx" class name.</td>
 </tr>
 <tr>
 <td><code>--kubeconfig</code></td>

@@ -1224,6 +1224,7 @@ Here is a partial example:</p>
 result in both or all controllers fighting to satisfy the Ingress, and all of them racing to update Ingress status field in confusing ways.</p>
 <p>When running multiple ingress-nginx controllers, it will only process an unset class annotation if one of the controllers uses the default
 <code>--ingress-class</code> value (see <code>IsValid</code> method in <code>internal/ingress/annotations/class/main.go</code>), otherwise the class annotation become required.</p>
+<p>If <code>--ingress-class</code> is set to the default value of <code>nginx</code>, the controller will monitor Ingresses with no class annotation <em>and</em> Ingresses with annotation class set to <code>nginx</code>. Use a non-default value for <code>--ingress-class</code>, to ensure that the controller only satisfied the specific class of Ingresses.</p>
 </div>
                 
               
