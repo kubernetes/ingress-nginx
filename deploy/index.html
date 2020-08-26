@@ -1514,13 +1514,9 @@ For this reason, there is an initial delay of up to two minutes until it is poss
 </code></pre></div>
 
 <h5 id="nlb-idle-timeouts">NLB Idle Timeouts<a class="headerlink" href="#nlb-idle-timeouts" title="Permanent link"> ¶</a></h5>
-<p>In some scenarios users will need to modify the value of the NLB idle timeout. Users need to ensure the idle timeout is less than the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> that is configured for NGINX.
-By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
-<p>The default NLB idle timeout works for most scenarios, unless the NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> has been modified, in which case the annotation</p>
-<p><code>service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> value must be modified to ensure it is less than the configured <code>keepalive_timeout</code>.</p>
-<div class="admonition note">
-<p>An idle timeout of <code>3600</code> is recommended when using WebSockets</p>
-</div>
+<p>Idle timeout values for TCP flows is 350 seconds and <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout">cannot be modified</a>.</p>
+<p>For this reason, you need to ensure the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> configured value is less than 350 seconds to work as expected.</p>
+<p>By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
 <p>More information with regards to timeouts for can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout">official AWS documentation</a></p>
 <h4 id="gce-gke">GCE-GKE<a class="headerlink" href="#gce-gke" title="Permanent link"> ¶</a></h4>
 <div class="admonition info">
