@@ -75,10 +75,6 @@ controller:
       service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
       service.beta.kubernetes.io/aws-load-balancer-type: nlb
       service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-      # Ensure the ELB idle timeout is less than nginx keep-alive timeout. By default,
-      # NGINX keep-alive is set to 75s. If using WebSockets, the value will need to be
-      # increased to '3600' to avoid any potential issues.
-      service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
 EOF
 
 echo "${NAMESPACE_VAR}
