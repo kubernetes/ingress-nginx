@@ -100,15 +100,11 @@ kubectl apply -f deploy-tls-termination.yaml
 
 ##### NLB Idle Timeouts
 
-In some scenarios users will need to modify the value of the NLB idle timeout. Users need to ensure the idle timeout is less than the [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) that is configured for NGINX.
+Idle timeout values for TCP flows is 350 seconds and [cannot be modified](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout).
+
+For this reason, you need to ensure the [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) configured value is less than 350 seconds to work as expected.
+
 By default NGINX `keepalive_timeout` is set to `75s`.
-
-The default NLB idle timeout works for most scenarios, unless the NGINX [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) has been modified, in which case the annotation
-
-`service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` value must be modified to ensure it is less than the configured `keepalive_timeout`.
-
-!!! note ""
-    An idle timeout of `3600` is recommended when using WebSockets
 
 More information with regards to timeouts for can be found in the [official AWS documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout)
 
