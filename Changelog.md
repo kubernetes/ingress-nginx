@@ -1961,7 +1961,7 @@ _Changes:_
 - [x] [#2382](https://github.com/kubernetes/ingress-nginx/pull/2382) Accept ns/name Secret reference in annotations
 - [x] [#2383](https://github.com/kubernetes/ingress-nginx/pull/2383) Improve speed of e2e tests
 - [x] [#2385](https://github.com/kubernetes/ingress-nginx/pull/2385) include lua-resty-balancer in nginx image
-- [x] [#2386](https://github.com/kubernetes/ingress-nginx/pull/2386) upstream-hash-by annotation support for dynamic configuraton mode
+- [x] [#2386](https://github.com/kubernetes/ingress-nginx/pull/2386) upstream-hash-by annotation support for dynamic configuration mode
 - [x] [#2388](https://github.com/kubernetes/ingress-nginx/pull/2388) Silence unnecessary MissingAnnotations errors
 - [x] [#2392](https://github.com/kubernetes/ingress-nginx/pull/2392) Ensure dep fix fsnotify
 - [x] [#2395](https://github.com/kubernetes/ingress-nginx/pull/2395) Fix flaky test
