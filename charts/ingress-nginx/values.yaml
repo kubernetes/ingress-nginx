@@ -323,6 +323,8 @@ controller:
 
     type: LoadBalancer
 
+    externalTrafficPolicy: Cluster
+
     # type: NodePort
     # nodePorts:
     #   http: 32080

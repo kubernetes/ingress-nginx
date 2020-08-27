@@ -14,6 +14,7 @@ metadata:
   name: {{ include "ingress-nginx.controller.fullname" . }}
 spec:
   type: {{ .Values.controller.service.type }}
+  externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
 {{- if .Values.controller.service.clusterIP }}
   clusterIP: {{ .Values.controller.service.clusterIP }}
 {{- end }}
