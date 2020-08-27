@@ -3,7 +3,7 @@
 ##
 controller:
   image:
-    repository: us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller
+    repository: k8s.gcr.io/ingress-nginx/controller
     tag: "v0.34.1"
     digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
     pullPolicy: IfNotPresent
