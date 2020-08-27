@@ -48,7 +48,12 @@ inside the cluster and arrive "insecure").
 
 For your own application you may or may not want to do this.  If you prefer to
 forward encrypted traffic to your POD and terminate TLS at the gRPC server
-itself, add the ingress annotation `nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"`.
+itself, add the following ingress annotations:
+
+```yaml
+nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"
+nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+```
 
 ### Step 2: the kubernetes `Service`
 
