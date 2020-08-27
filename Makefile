@@ -39,6 +39,7 @@ E2E_CHECK_LEAKS ?=
 
 REPO_INFO ?= $(shell git config --get remote.origin.url)
 COMMIT_SHA ?= git-$(shell git rev-parse --short HEAD)
+BUILD_ID ?= "UNSET"
 
 PKG = k8s.io/ingress-nginx
 
@@ -66,6 +67,7 @@ image: clean-image ## Build image for a particular arch.
 		--build-arg VERSION="$(TAG)" \
 		--build-arg TARGETARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
 
 .PHONY: clean-image
@@ -215,4 +217,5 @@ release: ensure-buildx clean
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
