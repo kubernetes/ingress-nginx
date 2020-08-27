@@ -34,7 +34,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=${E2E_IMAGE:-us.gcr.io/k8s-artifacts-prod/ingress-nginx/e2e-test-runner:v20200812-gf6dce060b@sha256:a2b6585d6badd2bbf8805cb1f576e7eb6be8fd1e5ece7c362eaa9610f22786ba}
+E2E_IMAGE=${E2E_IMAGE:-k8s.gcr.io/ingress-nginx/e2e-test-runner:v20200812-gf6dce060b@sha256:a2b6585d6badd2bbf8805cb1f576e7eb6be8fd1e5ece7c362eaa9610f22786ba}
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 DOCKER_IN_DOCKER_ENABLED=${DOCKER_IN_DOCKER_ENABLED:-}
