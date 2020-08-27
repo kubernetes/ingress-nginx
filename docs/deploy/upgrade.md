@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: nginx-ingress-controller
-          image: us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.0@sha256:56633bd00dab33d92ba14c6e709126a762d54a75a6e72437adefeaaca0abb069
+          image: k8s.gcr.io/ingress-nginx/controller:v0.34.0@sha256:56633bd00dab33d92ba14c6e709126a762d54a75a6e72437adefeaaca0abb069
           args: ...
 ```
 
@@ -33,7 +33,7 @@ The easiest way to do this is e.g. (do note you may need to change the name para
 
 ```
 kubectl set image deployment/nginx-ingress-controller \
-  nginx-ingress-controller=us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.1@sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20 \
+  nginx-ingress-controller=k8s.gcr.io/ingress-nginx/controller:v0.34.1@sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20 \
   -n ingress-nginx
 ```
 
