@@ -1,5 +1,73 @@
 # Changelog
 
+### 0.35.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.35.0@sha256:fc4979d8b8443a831c9789b5155cded454cb7de737a8b727bc2ba0106d2eae8b`
+
+_New Features:_
+
+- NGINX 1.19.2
+- New configmap option `enable-real-ip` to enable [realip_module](http://nginx.org/en/docs/http/ngx_http_realip_module.html)
+- Use k8s.gcr.io vanity domain
+- Go 1.15
+- client-go v0.18.6
+- Migrate to klog v2
+
+_Changes:_
+
+- [X] [#5887](https://github.com/kubernetes/ingress-nginx/pull/5887) Add force-enable-realip-module
+- [X] [#5888](https://github.com/kubernetes/ingress-nginx/pull/5888) Update dev-env.sh script
+- [X] [#5923](https://github.com/kubernetes/ingress-nginx/pull/5923) Fix error in grpcbin deployment and enable e2e test
+- [X] [#5924](https://github.com/kubernetes/ingress-nginx/pull/5924) Validate endpoints are ready in e2e tests
+- [X] [#5931](https://github.com/kubernetes/ingress-nginx/pull/5931) Add opentracing operation name settings
+- [X] [#5933](https://github.com/kubernetes/ingress-nginx/pull/5933) Update opentracing nginx module
+- [X] [#5946](https://github.com/kubernetes/ingress-nginx/pull/5946) Do not add namespace to cluster-scoped resources
+- [X] [#5951](https://github.com/kubernetes/ingress-nginx/pull/5951) Use env expansion to provide namespace in container args
+- [X] [#5952](https://github.com/kubernetes/ingress-nginx/pull/5952) Refactor shutdown e2e tests
+- [X] [#5957](https://github.com/kubernetes/ingress-nginx/pull/5957) bump fsnotify to v1.4.9
+- [X] [#5958](https://github.com/kubernetes/ingress-nginx/pull/5958) Disable enable-access-log-for-default-backend e2e test
+- [X] [#5984](https://github.com/kubernetes/ingress-nginx/pull/5984) Fix panic in ingress class validation
+- [X] [#5986](https://github.com/kubernetes/ingress-nginx/pull/5986) Migrate to klog v2
+- [X] [#5987](https://github.com/kubernetes/ingress-nginx/pull/5987) Fix wait times in e2e tests
+- [X] [#5990](https://github.com/kubernetes/ingress-nginx/pull/5990) Fix nginx command env variable reference
+- [X] [#6004](https://github.com/kubernetes/ingress-nginx/pull/6004) Update nginx to 1.19.2
+- [X] [#6006](https://github.com/kubernetes/ingress-nginx/pull/6006) Update nginx image
+- [X] [#6007](https://github.com/kubernetes/ingress-nginx/pull/6007) Update e2e-test-runner image
+- [X] [#6008](https://github.com/kubernetes/ingress-nginx/pull/6008) Rollback update of Jaeger library to 0.5.0 and update datadog to 1.2.0
+- [X] [#6014](https://github.com/kubernetes/ingress-nginx/pull/6014) Update go dependencies
+- [X] [#6039](https://github.com/kubernetes/ingress-nginx/pull/6039) Add configurable serviceMonitor metricRelabelling and targetLabels
+- [X] [#6046](https://github.com/kubernetes/ingress-nginx/pull/6046) Add new Dockerfile label org.opencontainers.image.revision
+- [X] [#6047](https://github.com/kubernetes/ingress-nginx/pull/6047) Increase wait times in e2e tests
+- [X] [#6049](https://github.com/kubernetes/ingress-nginx/pull/6049) Improve docs and logging for --ingress-class usage
+- [X] [#6052](https://github.com/kubernetes/ingress-nginx/pull/6052) Fix flaky e2e test
+- [X] [#6056](https://github.com/kubernetes/ingress-nginx/pull/6056) Rollback to Poll instead of PollImmediate
+- [X] [#6062](https://github.com/kubernetes/ingress-nginx/pull/6062) Adjust e2e timeouts
+- [X] [#6063](https://github.com/kubernetes/ingress-nginx/pull/6063) Remove file system paths executables
+- [X] [#6080](https://github.com/kubernetes/ingress-nginx/pull/6080) Use k8s.gcr.io vanity domain
+
+_Documentation:_
+
+- [X] [#5911](https://github.com/kubernetes/ingress-nginx/pull/5911) Change image URL after switching to gcr.io in upgrade guide
+- [X] [#5926](https://github.com/kubernetes/ingress-nginx/pull/5926) fixed some typos
+- [X] [#5927](https://github.com/kubernetes/ingress-nginx/pull/5927) Simplify development doc
+- [X] [#5942](https://github.com/kubernetes/ingress-nginx/pull/5942) Fix default backend flaking e2e test for default
+- [X] [#5943](https://github.com/kubernetes/ingress-nginx/pull/5943) Add repo SECURITY.md
+- [X] [#5965](https://github.com/kubernetes/ingress-nginx/pull/5965) feat(baremetal): Add kustomization.yaml
+- [X] [#5971](https://github.com/kubernetes/ingress-nginx/pull/5971) Fixed typo "permanen"
+- [X] [#5980](https://github.com/kubernetes/ingress-nginx/pull/5980) fix for 5590
+- [X] [#5994](https://github.com/kubernetes/ingress-nginx/pull/5994) Clean up minikube installation instructions
+- [X] [#6000](https://github.com/kubernetes/ingress-nginx/pull/6000) Fix error message formatting
+- [X] [#6001](https://github.com/kubernetes/ingress-nginx/pull/6001) Update psp example
+- [X] [#6020](https://github.com/kubernetes/ingress-nginx/pull/6020) Added missing backend protocol.
+- [X] [#6022](https://github.com/kubernetes/ingress-nginx/pull/6022) fix typo in development.md
+- [X] [#6038](https://github.com/kubernetes/ingress-nginx/pull/6038) Document migration path to ingress-nginx chart from stable/nginx-ingress
+- [X] [#6042](https://github.com/kubernetes/ingress-nginx/pull/6042) Fix typo
+- [X] [#6044](https://github.com/kubernetes/ingress-nginx/pull/6044) Chart readme fixes
+- [X] [#6075](https://github.com/kubernetes/ingress-nginx/pull/6075) Sync helm chart affinity examples
+- [X] [#6076](https://github.com/kubernetes/ingress-nginx/pull/6076) Update NLB idle timeout information
+
 ### 0.34.1
 
 **Image:**
