@@ -4,8 +4,8 @@
 controller:
   image:
     repository: k8s.gcr.io/ingress-nginx/controller
-    tag: "v0.34.1"
-    digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
+    tag: "v0.35.0"
+    digest: sha256:fc4979d8b8443a831c9789b5155cded454cb7de737a8b727bc2ba0106d2eae8b
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
