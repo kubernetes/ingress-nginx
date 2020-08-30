@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 
 	pool "gopkg.in/go-playground/pool.v3"
@@ -339,26 +340,26 @@ func statusAddressFromService(service string, kubeClient clientset.Interface) ([
 	case apiv1.ServiceTypeClusterIP:
 		return []string{svc.Spec.ClusterIP}, nil
 	case apiv1.ServiceTypeNodePort:
-		addresses := []string{}
+		addresses := sets.NewString()
 		if svc.Spec.ExternalIPs != nil {
-			addresses = append(addresses, svc.Spec.ExternalIPs...)
+			addresses.Insert(svc.Spec.ExternalIPs...)
 		} else {
-			addresses = append(addresses, svc.Spec.ClusterIP)
+			addresses.Insert(svc.Spec.ClusterIP)
 		}
-		return addresses, nil
+		return addresses.List(), nil
 	case apiv1.ServiceTypeLoadBalancer:
-		addresses := []string{}
+		addresses := sets.NewString()
 		for _, ip := range svc.Status.LoadBalancer.Ingress {
 			if ip.IP == "" {
-				addresses = append(addresses, ip.Hostname)
+				addresses.Insert(ip.Hostname)
 			} else {
-				addresses = append(addresses, ip.IP)
+				addresses.Insert(ip.IP)
 			}
 		}
 
-		addresses = append(addresses, svc.Spec.ExternalIPs...)
+		addresses.Insert(svc.Spec.ExternalIPs...)
 
-		return addresses, nil
+		return addresses.List(), nil
 	}
 
 	return nil, fmt.Errorf("unable to extract IP address/es from service %v", service)
