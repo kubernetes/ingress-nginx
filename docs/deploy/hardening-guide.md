@@ -33,7 +33,7 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | __2 Basic Configuration__ ||| |
 | ||| |
 | __2.1 Minimize NGINX Modules__||| |
-| 2.1.1 Ensure only required modules are installed (Not Scored) | ??? | ??? | |
+| 2.1.1 Ensure only required modules are installed (Not Scored) | OK | Already only needed modules are installed, however proposals for further reduction are welcome | |
 | 2.1.2 Ensure HTTP WebDAV module is not installed (Scored) | RISK TO BE ACCEPTED | It is installed, see compile options [here](https://github.com/kubernetes/ingress-nginx/blob/master/images/nginx/rootfs/build.sh#L445). Disabling that would require building own image for nginx ingress controller. The effort is too high in comparison to the achieved effect | |
 | 2.1.3 Ensure modules with gzip functionality are disabled (Scored)| RISK TO BE ACCEPTED | See previous answer | |
 | 2.1.4 Ensure the autoindex module is disabled (Scored)| OK | No autoindex configs so far in ingress defaults| |
@@ -53,7 +53,7 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 2.4.1 Ensure NGINX only listens for network connections on authorized ports (Not Scored)| OK | Ensured by automatic nginx.conf configuration| |
 | 2.4.2 Ensure requests for unknown host names are rejected (Not Scored)| OK | They are not rejected but send to the "default backend" delivering approriate errors (mostly 404)| |
 | 2.4.3 Ensure keepalive_timeout is 10 seconds or less, but not 0 (Scored)| ACTION NEEDED| Default is 75s | configure keep-alive to 10 seconds [according to this documentation](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#keep-alive) |
-| 2.4.4 Ensure send_timeout is set to 10 seconds or less, but not 0 (Scored)| ???| ???| |
+| 2.4.4 Ensure send_timeout is set to 10 seconds or less, but not 0 (Scored)| RISK TO BE ACCEPTED| Not configured, however the nginx default is 60s| Not configurable|
 | ||| |
 | __2.5 Information Disclosure__||| |
 | 2.5.1 Ensure server_tokens directive is set to `off` (Scored) | OK | server_tokens is configured to off by defaukt| |
@@ -80,7 +80,7 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 4.1.4 Ensure only modern TLS protocols are used (Scored)| OK/ACTION NEEDED | Default is TLS 1.2 + 1.3, while this is okay for CIS Benchmark, cipherlist.eu only recommends 1.3. This may cut off old OS's | Set controller.config.ssl-protocols to "TLSv1.3"|
 | 4.1.5 Disable weak ciphers (Scored) | ACTION NEEDED| Default ciphers are already good, but cipherlist.eu recommends even stronger ciphers | Set controller.config.ssl-ciphers to "EECDH+AESGCM:EDH+AESGCM"|
 | 4.1.6 Ensure custom Diffie-Hellman parameters are used (Scored) | ACTION NEEDED| No custom DH parameters are generated| Generate dh parameters for each ingress deployment you use - [see here for a how to](https://kubernetes.github.io/ingress-nginx/examples/customization/ssl-dh-param/) |
-| 4.1.7 Ensure Online Certificate Status Protocol (OCSP) stapling is enabled (Scored) | ??? | [The](https://github.com/kubernetes/ingress-nginx/issues/4651), [situation](https://github.com/kubernetes/ingress-nginx/pull/5133), [is](https://github.com/kubernetes/ingress-nginx/issues/4864), [really](https://github.com/kubernetes/ingress-nginx/issues/4758), [very](https://github.com/kubernetes/ingress-nginx/pull/4868), [compicated](https://github.com/kubernetes/ingress-nginx/issues/416)| |
+| 4.1.7 Ensure Online Certificate Status Protocol (OCSP) stapling is enabled (Scored) | ACTION NEEDED | Not enabled | set via [this configuration parameter](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#enable-ocsp) |
 | 4.1.8 Ensure HTTP Strict Transport Security (HSTS) is enabled (Scored)| OK | HSTS is enabled by default | |
 | 4.1.9 Ensure HTTP Public Key Pinning is enabled (Not Scored)| ACTION NEEDED / RISK TO BE ACCEPTED | HKPK not enabled by default | If lets encrypt is not used, set correct HPKP header. There are several ways to implement this - with the helm charts it works via controller.add-headers. If lets encrypt is used, this is complicated, a solution here is yet unknown |
 | 4.1.10 Ensure upstream server traffic is authenticated with a client certificate (Scored) | DEPENDS ON BACKEND | Highly dependend on backends, not every backend allows configuring this, can also be mitigated via a service mesh| If backend allows it, [manual is here](https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/)|
@@ -99,8 +99,8 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 5.2.1 Ensure timeout values for reading the client header and body are set correctly (Scored) | ACTION NEEDED| Default timeout is 60s | Set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#client-header-timeout) and respective body aequivalent|
 | 5.2.2 Ensure the maximum request body size is set correctly (Scored)| ACTION NEEDED| Default is 1m| set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#proxy-body-size)|
 | 5.2.3 Ensure the maximum buffer size for URIs is defined (Scored) | ACTION NEEDED| Default is 4 8k| Set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#large-client-header-buffers)|
-| 5.2.4 Ensure the number of connections per IP address is limited (Not Scored) | ???| ???| |
-| 5.2.5 Ensure rate limits by IP address are set (Not Scored) | ???| ???| |
+| 5.2.4 Ensure the number of connections per IP address is limited (Not Scored) | OK/ACTION NEEDED| No limit set| Depends on use case, limit can be set via [these annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting)|
+| 5.2.5 Ensure rate limits by IP address are set (Not Scored) | OK/ACTION NEEDED| No limit set| Depends on use case, limit can be set via [these annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting)|
 | ||| |
 | __5.3 Browser Security__||| |
 | 5.3.1 Ensure X-Frame-Options header is configured and enabled (Scored)| ACTION NEEDED| Header not set by default| Several ways to implement this - with the helm charts it works via controller.add-headers |
