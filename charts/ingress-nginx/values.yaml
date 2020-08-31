@@ -135,6 +135,14 @@ controller:
   ## Annotations to be added to the controller Deployment or DaemonSet
   ##
   annotations: {}
+  #  keel.sh/pollSchedule: "@every 60m"
+
+  ## Labels to be added to the controller Deployment or DaemonSet
+  ##
+  labels: {}
+  #  keel.sh/policy: patch
+  #  keel.sh/trigger: poll
+
 
   # The update strategy to apply to the Deployment or DaemonSet
   ##
@@ -451,19 +459,35 @@ controller:
       # namespace: ""
       rules: []
         # # These are just examples rules, please adapt them to your needs
-        # - alert: TooMany500s
-        #   expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"5.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
-        #   for: 1m
+        # - alert: NGINXConfigFailed
+        #   expr: count(nginx_ingress_controller_config_last_reload_successful == 0) > 0
+        #   for: 1s
         #   labels:
         #     severity: critical
         #   annotations:
+        #     description: bad ingress config - nginx config test failed
+        #     summary: uninstall the latest ingress changes to allow config reloads to resume
+        # - alert: NGINXCertificateExpiry
+        #   expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds) by (host) - time()) < 604800
+        #   for: 1s
+        #   labels:
+        #     severity: critical
+        #   annotations:
+        #     description: ssl certificate(s) will expire in less then a week
+        #     summary: renew expiring certificates to avoid downtime
+        # - alert: NGINXTooMany500s
+        #   expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"5.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
+        #   for: 1m
+        #   labels:
+        #     severity: warning
+        #   annotations:
         #     description: Too many 5XXs
         #     summary: More than 5% of the all requests did return 5XX, this require your attention
-        # - alert: TooMany400s
+        # - alert: NGINXTooMany400s
         #   expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"4.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
         #   for: 1m
         #   labels:
-        #     severity: critical
+        #     severity: warning
         #   annotations:
         #     description: Too many 4XXs
         #     summary: More than 5% of the all requests did return 4XX, this require your attention
@@ -472,7 +496,7 @@ controller:
   ## With this new hook, we increased the default terminationGracePeriodSeconds from 30 seconds
   ## to 300, allowing the draining of connections up to five minutes.
   ## If the active connections end before that, the pod will terminate gracefully at that time.
-  ## To efectively take advantage of this feature, the Configmap feature
+  ## To effectively take advantage of this feature, the Configmap feature
   ## worker-shutdown-timeout new value is 240s instead of 10s.
   ##
   lifecycle:
