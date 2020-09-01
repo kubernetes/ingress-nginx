@@ -4,6 +4,8 @@ repo_url: https://github.com/kubernetes/ingress-nginx
 site_url: https://kubernetes.github.io/ingress-nginx
 
 markdown_extensions:
+  - attr_list
+  - pymdownx.emoji
   - admonition
   - codehilite
   - pymdownx.inlinehilite

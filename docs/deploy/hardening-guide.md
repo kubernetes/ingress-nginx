@@ -1,13 +1,14 @@
+
 # Hardening Guide
 
 ## Overview
-There are several ways to do hardening and securing of nginx. In this documentation two guides are used, the guides are 
+There are several ways to do hardening and securing of nginx. In this documentation two guides are used, the guides are
 overlapping in some points:
 
 - [nginx CIS Benchmark](https://www.cisecurity.org/benchmark/nginx/)
 - [cipherlist.eu](https://cipherlist.eu/) (one of many forks of the now dead project cipherli.st)
 
-This guide describes, what of the different configurations described in those guides is already implemented as default 
+This guide describes, what of the different configurations described in those guides is already implemented as default
 in the nginx implementation of kubernetes ingress, what needs to be configured, what is obsolete due to the fact that
 the nginx is running as container (the CIS benchmark relates to a non-containerized installation) and what is difficult
 or not possible.
@@ -18,6 +19,7 @@ lead to have specific clients unable to reach your site or similar consequences.
 This guide refers to chapters in the CIS Benchmark. For full explanation you should refer to the benchmark document itself
 
 ## Configuration Guide
+
 | Chapter in CIS benchmark | Status | Default | Action to do if not default|
 |:-------------------------|:-------|:--------|:---------------------------|
 | __1 Initial Setup__ ||| |
@@ -110,3 +112,15 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 5.3.5 Ensure the Referrer Policy is enabled and configured properly (Not Scored)| ACTION NEEDED | Depends on application. It should be handled in the applications webserver itself, not in the load balancing ingress | check backend webserver |
 | ||| |
 | __6 Mandatory Access Control__| n/a| too high level, depends on backends | |
+
+<style type="text/css" rel="stylesheet">
+@media only screen and (min-width: 768px) {
+	td:nth-child(1){
+		white-space:normal !important;
+    }
+
+    .md-typeset table:not([class]) td {
+        padding: .2rem .3rem;
+    }
+}
+</style>
