@@ -46,6 +46,7 @@ nav:
       - Bare-metal considerations: "deploy/baremetal.md"
       - Role Based Access Control (RBAC): "deploy/rbac.md"
       - Upgrade: "deploy/upgrade.md"
+      - Hardening guide: "deploy/hardening-guide.md"
   - User guide:
       - NGINX Configuration:
           - Introduction: "user-guide/nginx-configuration/index.md"
