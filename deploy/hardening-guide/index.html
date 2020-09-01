@@ -9,7 +9,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
       
-        <link rel="canonical" href="https://kubernetes.github.io/ingress-nginx/deploy/rbac/">
+        <link rel="canonical" href="https://kubernetes.github.io/ingress-nginx/deploy/hardening-guide/">
       
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
@@ -17,7 +17,7 @@
     
     
       
-        <title>Role Based Access Control (RBAC) - NGINX Ingress Controller</title>
+        <title>Hardening guide - NGINX Ingress Controller</title>
       
     
     
@@ -65,7 +65,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#role-based-access-control-rbac" class="md-skip">
+        <a href="#hardening-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -93,7 +93,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Role Based Access Control (RBAC)
+              Hardening guide
             
           </span>
         </div>
@@ -402,6 +402,30 @@
           
           
 
+
+  <li class="md-nav__item">
+    <a href="../rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
+      Role Based Access Control (RBAC)
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../upgrade/" title="Upgrade" class="md-nav__link">
+      Upgrade
+    </a>
+  </li>
+
+        
+          
+          
+          
+
   
 
 
@@ -413,14 +437,14 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Role Based Access Control (RBAC)
+        Hardening guide
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
         </span>
       </label>
     
-    <a href="./" title="Role Based Access Control (RBAC)" class="md-nav__link md-nav__link--active">
-      Role Based Access Control (RBAC)
+    <a href="./" title="Hardening guide" class="md-nav__link md-nav__link--active">
+      Hardening guide
     </a>
     
       
@@ -446,43 +470,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#service-accounts-created-in-this-example" class="md-nav__link">
-    Service Accounts created in this example
+  <a href="#configuration-guide" class="md-nav__link">
+    Configuration Guide
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#permissions-granted-in-this-example" class="md-nav__link">
-    Permissions Granted in this example
-  </a>
-  
-    <nav class="md-nav" aria-label="Permissions Granted in this example">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#cluster-permissions" class="md-nav__link">
-    Cluster Permissions
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#namespace-permissions" class="md-nav__link">
-    Namespace Permissions
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bindings" class="md-nav__link">
-    Bindings
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -490,30 +480,6 @@
   
 </nav>
     
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../upgrade/" title="Upgrade" class="md-nav__link">
-      Upgrade
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../hardening-guide/" title="Hardening guide" class="md-nav__link">
-      Hardening guide
-    </a>
   </li>
 
         
@@ -1215,43 +1181,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#service-accounts-created-in-this-example" class="md-nav__link">
-    Service Accounts created in this example
+  <a href="#configuration-guide" class="md-nav__link">
+    Configuration Guide
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#permissions-granted-in-this-example" class="md-nav__link">
-    Permissions Granted in this example
-  </a>
-  
-    <nav class="md-nav" aria-label="Permissions Granted in this example">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#cluster-permissions" class="md-nav__link">
-    Cluster Permissions
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#namespace-permissions" class="md-nav__link">
-    Namespace Permissions
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bindings" class="md-nav__link">
-    Bindings
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1267,7 +1199,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/deploy/rbac.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/deploy/hardening-guide.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
@@ -1275,70 +1207,574 @@
                   
                 
                 
-                <h1 id="role-based-access-control-rbac">Role Based Access Control (RBAC)<a class="headerlink" href="#role-based-access-control-rbac" title="Permanent link"> ¶</a></h1>
+                <h1 id="hardening-guide">Hardening Guide<a class="headerlink" href="#hardening-guide" title="Permanent link"> ¶</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link"> ¶</a></h2>
-<p>This example applies to nginx-ingress-controllers being deployed in an environment with RBAC enabled.</p>
-<p>Role Based Access Control is comprised of four layers:</p>
-<ol>
-<li><code>ClusterRole</code> - permissions assigned to a role that apply to an entire cluster</li>
-<li><code>ClusterRoleBinding</code> - binding a ClusterRole to a specific account</li>
-<li><code>Role</code> - permissions assigned to a role that apply to a specific namespace</li>
-<li><code>RoleBinding</code> - binding a Role to a specific account</li>
-</ol>
-<p>In order for RBAC to be applied to an nginx-ingress-controller, that controller
-should be assigned to a <code>ServiceAccount</code>.  That <code>ServiceAccount</code> should be
-bound to the <code>Role</code>s and <code>ClusterRole</code>s defined for the nginx-ingress-controller.</p>
-<h2 id="service-accounts-created-in-this-example">Service Accounts created in this example<a class="headerlink" href="#service-accounts-created-in-this-example" title="Permanent link"> ¶</a></h2>
-<p>One ServiceAccount is created in this example, <code>nginx-ingress-serviceaccount</code>.</p>
-<h2 id="permissions-granted-in-this-example">Permissions Granted in this example<a class="headerlink" href="#permissions-granted-in-this-example" title="Permanent link"> ¶</a></h2>
-<p>There are two sets of permissions defined in this example.  Cluster-wide
-permissions defined by the <code>ClusterRole</code> named <code>nginx-ingress-clusterrole</code>, and
-namespace specific permissions defined by the <code>Role</code> named <code>nginx-ingress-role</code>.</p>
-<h3 id="cluster-permissions">Cluster Permissions<a class="headerlink" href="#cluster-permissions" title="Permanent link"> ¶</a></h3>
-<p>These permissions are granted in order for the nginx-ingress-controller to be
-able to function as an ingress across the cluster.  These permissions are
-granted to the ClusterRole named <code>nginx-ingress-clusterrole</code></p>
+<p>There are several ways to do hardening and securing of nginx. In this documentation two guides are used, the guides are 
+overlapping in some points:</p>
 <ul>
-<li><code>configmaps</code>, <code>endpoints</code>, <code>nodes</code>, <code>pods</code>, <code>secrets</code>: list, watch</li>
-<li><code>nodes</code>: get</li>
-<li><code>services</code>, <code>ingresses</code>: get, list, watch</li>
-<li><code>events</code>: create, patch</li>
-<li><code>ingresses/status</code>: update</li>
+<li><a href="https://www.cisecurity.org/benchmark/nginx/">nginx CIS Benchmark</a></li>
+<li><a href="https://cipherlist.eu/">cipherlist.eu</a> (one of many forks of the now dead project cipherli.st)</li>
 </ul>
-<h3 id="namespace-permissions">Namespace Permissions<a class="headerlink" href="#namespace-permissions" title="Permanent link"> ¶</a></h3>
-<p>These permissions are granted specific to the nginx-ingress namespace.  These
-permissions are granted to the Role named <code>nginx-ingress-role</code></p>
-<ul>
-<li><code>configmaps</code>, <code>pods</code>, <code>secrets</code>: get</li>
-<li><code>endpoints</code>: get</li>
-</ul>
-<p>Furthermore to support leader-election, the nginx-ingress-controller needs to
-have access to a <code>configmap</code> using the resourceName <code>ingress-controller-leader-nginx</code></p>
-<blockquote>
-<p>Note that resourceNames can NOT be used to limit requests using the “create”
-verb because authorizers only have access to information that can be obtained
-from the request URL, method, and headers (resource names in a “create” request
-are part of the request body).</p>
-</blockquote>
-<ul>
-<li><code>configmaps</code>: get, update (for resourceName <code>ingress-controller-leader-nginx</code>)</li>
-<li><code>configmaps</code>: create</li>
-</ul>
-<p>This resourceName is the concatenation of the <code>election-id</code> and the
-<code>ingress-class</code> as defined by the ingress-controller, which defaults to:</p>
-<ul>
-<li><code>election-id</code>: <code>ingress-controller-leader</code></li>
-<li><code>ingress-class</code>: <code>nginx</code></li>
-<li><code>resourceName</code> : <code>&lt;election-id&gt;-&lt;ingress-class&gt;</code></li>
-</ul>
-<p>Please adapt accordingly if you overwrite either parameter when launching the
-nginx-ingress-controller.</p>
-<h3 id="bindings">Bindings<a class="headerlink" href="#bindings" title="Permanent link"> ¶</a></h3>
-<p>The ServiceAccount <code>nginx-ingress-serviceaccount</code> is bound to the Role
-<code>nginx-ingress-role</code> and the ClusterRole <code>nginx-ingress-clusterrole</code>.</p>
-<p>The serviceAccountName associated with the containers in the deployment must
-match the serviceAccount. The namespace references in the Deployment metadata, 
-container arguments, and POD_NAMESPACE should be in the nginx-ingress namespace.</p>
+<p>This guide describes, what of the different configurations described in those guides is already implemented as default 
+in the nginx implementation of kubernetes ingress, what needs to be configured, what is obsolete due to the fact that
+the nginx is running as container (the CIS benchmark relates to a non-containerized installation) and what is difficult
+or not possible.</p>
+<p>Be aware that this is only a guide and you are responsible for your own implementation. Some of the configurations may
+lead to have specific clients unable to reach your site or similar consequences.</p>
+<p>This guide refers to chapters in the CIS Benchmark. For full explanation you should refer to the benchmark document itself</p>
+<h2 id="configuration-guide">Configuration Guide<a class="headerlink" href="#configuration-guide" title="Permanent link"> ¶</a></h2>
+<table>
+<thead>
+<tr>
+<th align="left">Chapter in CIS benchmark</th>
+<th align="left">Status</th>
+<th align="left">Default</th>
+<th align="left">Action to do if not default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>1 Initial Setup</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>1.1 Installation</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">1.1.1 Ensure NGINX is installed (Scored)</td>
+<td align="left">OK</td>
+<td align="left">done through helm charts / following documentation to deploy nginx ingress</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">1.1.2 Ensure NGINX is installed from source (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">done through helm charts / following documentation to deploy nginx ingress</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>1.2 Configure Software Updates</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">1.2.1 Ensure package manager repositories are properly configured (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">done via helm, nginx version could be overwritten, however compability is not ensured then</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">1.2.2 Ensure the latest software package is installed (Not Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">done via helm, nginx version could be overwritten, however compability is not ensured then</td>
+<td align="left">Plan for periodic updates</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>2 Basic Configuration</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>2.1 Minimize NGINX Modules</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.1.1 Ensure only required modules are installed (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">Already only needed modules are installed, however proposals for further reduction are welcome</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.1.2 Ensure HTTP WebDAV module is not installed (Scored)</td>
+<td align="left">RISK TO BE ACCEPTED</td>
+<td align="left">It is installed, see compile options <a href="https://github.com/kubernetes/ingress-nginx/blob/master/images/nginx/rootfs/build.sh#L445">here</a>. Disabling that would require building own image for nginx ingress controller. The effort is too high in comparison to the achieved effect</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.1.3 Ensure modules with gzip functionality are disabled (Scored)</td>
+<td align="left">RISK TO BE ACCEPTED</td>
+<td align="left">See previous answer</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.1.4 Ensure the autoindex module is disabled (Scored)</td>
+<td align="left">OK</td>
+<td align="left">No autoindex configs so far in ingress defaults</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>2.2 Account Security</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.2.1 Ensure that NGINX is run using a non-privileged, dedicated service account (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">Pod configured as user www-data: <a href="https://github.com/kubernetes/ingress-nginx/blob/0cbe783f43a9313c9c26136e888324b1ee91a72f/charts/ingress-nginx/values.yaml#L10">See this line in helm chart values</a>. Compiled with user www-data: <a href="https://github.com/kubernetes/ingress-nginx/blob/5d67794f4fbf38ec6575476de46201b068eabf87/images/nginx/rootfs/build.sh#L529">See this line in build script</a></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.2.2 Ensure the NGINX service account is locked (Scored)</td>
+<td align="left">OK</td>
+<td align="left">Docker design ensures this</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.2.3 Ensure the NGINX service account has an invalid shell (Scored)</td>
+<td align="left">OK</td>
+<td align="left">Shell is nologin: <a href="https://github.com/kubernetes/ingress-nginx/blob/5d67794f4fbf38ec6575476de46201b068eabf87/images/nginx/rootfs/build.sh#L613">see this line in build script</a></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>2.3 Permissions and Ownership</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.3.1 Ensure NGINX directories and files are owned by root (Scored)</td>
+<td align="left">OK</td>
+<td align="left">Obsolete through docker-design and ingress controller needs to update the configs dynamically</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.3.2 Ensure access to NGINX directories and files is restricted (Scored)</td>
+<td align="left">OK</td>
+<td align="left">See previous answer</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.3.3 Ensure the NGINX process ID (PID) file is secured (Scored)</td>
+<td align="left">OK</td>
+<td align="left">No PID-File due to docker design</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.3.4 Ensure the core dump directory is secured (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">No working_directory configured by default</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>2.4 Network Configuration</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.4.1 Ensure NGINX only listens for network connections on authorized ports (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">Ensured by automatic nginx.conf configuration</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.4.2 Ensure requests for unknown host names are rejected (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">They are not rejected but send to the "default backend" delivering approriate errors (mostly 404)</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.4.3 Ensure keepalive_timeout is 10 seconds or less, but not 0 (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Default is 75s</td>
+<td align="left">configure keep-alive to 10 seconds <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#keep-alive">according to this documentation</a></td>
+</tr>
+<tr>
+<td align="left">2.4.4 Ensure send_timeout is set to 10 seconds or less, but not 0 (Scored)</td>
+<td align="left">RISK TO BE ACCEPTED</td>
+<td align="left">Not configured, however the nginx default is 60s</td>
+<td align="left">Not configurable</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>2.5 Information Disclosure</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.5.1 Ensure server_tokens directive is set to <code>off</code> (Scored)</td>
+<td align="left">OK</td>
+<td align="left">server_tokens is configured to off by defaukt</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">2.5.2 Ensure default error and index.html pages do not reference NGINX (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">404 shows no version at all, 503 and 403 show "nginx", which is hardcoded <a href="https://github.com/nginx/nginx/blob/master/src/http/ngx_http_special_response.c#L36">see this line in nginx source code</a></td>
+<td align="left">configure custom error pages at least for 403, 404 and 503 and 500</td>
+</tr>
+<tr>
+<td align="left">2.5.3 Ensure hidden file serving is disabled (Not Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">config not set</td>
+<td align="left">configure a config.server-snippet Snippet, but beware of .well-known challenges or similar. Refer to the benchmark here please</td>
+</tr>
+<tr>
+<td align="left">2.5.4 Ensure the NGINX reverse proxy does not enable information disclosure (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">hide not configured</td>
+<td align="left">configure hide-headers with array of "X-Powered-By" and "Server": <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#hide-headers">according to this documentation</a></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>3 Logging</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">3.1 Ensure detailed logging is enabled (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">Ningx ingress has a very detailled log format by default</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">3.2 Ensure access logging is enabled (Scored)</td>
+<td align="left">OK</td>
+<td align="left">Access log is enabled by default</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">3.3 Ensure error logging is enabled and set to the info logging level (Scored)</td>
+<td align="left">OK</td>
+<td align="left">Error log is configured by default. The log level does not matter, because it is all sent to STDOUT anyway</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">3.4 Ensure log files are rotated (Scored)</td>
+<td align="left">OBSOLETE</td>
+<td align="left">Log file handling is not part of the nginx ingress and should be handled separatly</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">3.5 Ensure error logs are sent to a remote syslog server (Not Scored)</td>
+<td align="left">OBSOLETE</td>
+<td align="left">See previous answer</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">3.6 Ensure access logs are sent to a remote syslog server (Not Scored)</td>
+<td align="left">OBSOLETE</td>
+<td align="left">See previous answer</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">3.7 Ensure proxies pass source IP information (Scored)</td>
+<td align="left">OK</td>
+<td align="left">Headers are set by default</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>4 Encryption</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>4.1 TLS / SSL Configuration</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">4.1.1 Ensure HTTP is redirected to HTTPS (Scored)</td>
+<td align="left">OK</td>
+<td align="left">Redirect to TLS is default</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">4.1.2 Ensure a trusted certificate and trust chain is installed (Not Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">For installing certs there are enough manuals in the web. A good way is to use lets encrypt through cert-manager</td>
+<td align="left">Install proper certificates or use lets encrypt with cert-manager</td>
+</tr>
+<tr>
+<td align="left">4.1.3 Ensure private key permissions are restricted (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">See previous answer</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">4.1.4 Ensure only modern TLS protocols are used (Scored)</td>
+<td align="left">OK/ACTION NEEDED</td>
+<td align="left">Default is TLS 1.2 + 1.3, while this is okay for CIS Benchmark, cipherlist.eu only recommends 1.3. This may cut off old OS's</td>
+<td align="left">Set controller.config.ssl-protocols to "TLSv1.3"</td>
+</tr>
+<tr>
+<td align="left">4.1.5 Disable weak ciphers (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Default ciphers are already good, but cipherlist.eu recommends even stronger ciphers</td>
+<td align="left">Set controller.config.ssl-ciphers to "EECDH+AESGCM:EDH+AESGCM"</td>
+</tr>
+<tr>
+<td align="left">4.1.6 Ensure custom Diffie-Hellman parameters are used (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">No custom DH parameters are generated</td>
+<td align="left">Generate dh parameters for each ingress deployment you use - <a href="https://kubernetes.github.io/ingress-nginx/examples/customization/ssl-dh-param/">see here for a how to</a></td>
+</tr>
+<tr>
+<td align="left">4.1.7 Ensure Online Certificate Status Protocol (OCSP) stapling is enabled (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Not enabled</td>
+<td align="left">set via <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#enable-ocsp">this configuration parameter</a></td>
+</tr>
+<tr>
+<td align="left">4.1.8 Ensure HTTP Strict Transport Security (HSTS) is enabled (Scored)</td>
+<td align="left">OK</td>
+<td align="left">HSTS is enabled by default</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">4.1.9 Ensure HTTP Public Key Pinning is enabled (Not Scored)</td>
+<td align="left">ACTION NEEDED / RISK TO BE ACCEPTED</td>
+<td align="left">HKPK not enabled by default</td>
+<td align="left">If lets encrypt is not used, set correct HPKP header. There are several ways to implement this - with the helm charts it works via controller.add-headers. If lets encrypt is used, this is complicated, a solution here is yet unknown</td>
+</tr>
+<tr>
+<td align="left">4.1.10 Ensure upstream server traffic is authenticated with a client certificate (Scored)</td>
+<td align="left">DEPENDS ON BACKEND</td>
+<td align="left">Highly dependend on backends, not every backend allows configuring this, can also be mitigated via a service mesh</td>
+<td align="left">If backend allows it, <a href="https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/">manual is here</a></td>
+</tr>
+<tr>
+<td align="left">4.1.11 Ensure the upstream traffic server certificate is trusted (Not Scored)</td>
+<td align="left">DEPENDS ON BACKEND</td>
+<td align="left">Highly dependend on backends, not every backend allows configuring this, can also be mitigated via a service mesh</td>
+<td align="left">If backend allows it, <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#backend-certificate-authentication">see configuration here</a></td>
+</tr>
+<tr>
+<td align="left">4.1.12 Ensure your domain is preloaded (Not Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Preload is not active by default</td>
+<td align="left">Set controller.config.hsts-preload to true</td>
+</tr>
+<tr>
+<td align="left">4.1.13 Ensure session resumption is disabled to enable perfect forward security (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Session tickets are enabled by default</td>
+<td align="left">Set controller.config.ssl-session-tickets to false</td>
+</tr>
+<tr>
+<td align="left">4.1.14 Ensure HTTP/2.0 is used (Not Scored)</td>
+<td align="left">OK</td>
+<td align="left">http2 is set by default</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>5 Request Filtering and Restrictions</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>5.1 Access Control</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">5.1.1 Ensure allow and deny filters limit access to specific IP addresses (Not Scored)</td>
+<td align="left">OK/ACTION NEEDED</td>
+<td align="left">Depends on use case, geo ip module is compiled into nginx ingress controller, there are several ways to use it</td>
+<td align="left">If needed set IP restrictions via annotations or work with config snippets (be careful with lets-encrypt-http-challenge!)</td>
+</tr>
+<tr>
+<td align="left">5.1.2 Ensure only whitelisted HTTP methods are allowed (Not Scored)</td>
+<td align="left">OK/ACTION NEEDED</td>
+<td align="left">Depends on use case</td>
+<td align="left">If required it can be set via config snippet</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>5.2 Request Limits</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">5.2.1 Ensure timeout values for reading the client header and body are set correctly (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Default timeout is 60s</td>
+<td align="left">Set via <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#client-header-timeout">this configuration parameter</a> and respective body aequivalent</td>
+</tr>
+<tr>
+<td align="left">5.2.2 Ensure the maximum request body size is set correctly (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Default is 1m</td>
+<td align="left">set via <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#proxy-body-size">this configuration parameter</a></td>
+</tr>
+<tr>
+<td align="left">5.2.3 Ensure the maximum buffer size for URIs is defined (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Default is 4 8k</td>
+<td align="left">Set via <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#large-client-header-buffers">this configuration parameter</a></td>
+</tr>
+<tr>
+<td align="left">5.2.4 Ensure the number of connections per IP address is limited (Not Scored)</td>
+<td align="left">OK/ACTION NEEDED</td>
+<td align="left">No limit set</td>
+<td align="left">Depends on use case, limit can be set via <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting">these annotations</a></td>
+</tr>
+<tr>
+<td align="left">5.2.5 Ensure rate limits by IP address are set (Not Scored)</td>
+<td align="left">OK/ACTION NEEDED</td>
+<td align="left">No limit set</td>
+<td align="left">Depends on use case, limit can be set via <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting">these annotations</a></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>5.3 Browser Security</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">5.3.1 Ensure X-Frame-Options header is configured and enabled (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Header not set by default</td>
+<td align="left">Several ways to implement this - with the helm charts it works via controller.add-headers</td>
+</tr>
+<tr>
+<td align="left">5.3.2 Ensure X-Content-Type-Options header is configured and enabled (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">See previous answer</td>
+<td align="left">See previous answer</td>
+</tr>
+<tr>
+<td align="left">5.3.3 Ensure the X-XSS-Protection Header is enabled and configured properly (Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">See previous answer</td>
+<td align="left">See previous answer</td>
+</tr>
+<tr>
+<td align="left">5.3.4 Ensure that Content Security Policy (CSP) is enabled and configured properly (Not Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">See previous answer</td>
+<td align="left">See previous answer</td>
+</tr>
+<tr>
+<td align="left">5.3.5 Ensure the Referrer Policy is enabled and configured properly (Not Scored)</td>
+<td align="left">ACTION NEEDED</td>
+<td align="left">Depends on application. It should be handled in the applications webserver itself, not in the load balancing ingress</td>
+<td align="left">check backend webserver</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>6 Mandatory Access Control</strong></td>
+<td align="left">n/a</td>
+<td align="left">too high level, depends on backends</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
                 
               
               
@@ -1357,7 +1793,7 @@ container arguments, and POD_NAMESPACE should be in the nginx-ingress namespace.
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../baremetal/" title="Bare-metal considerations" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../upgrade/" title="Upgrade" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1366,19 +1802,19 @@ container arguments, and POD_NAMESPACE should be in the nginx-ingress namespace.
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Bare-metal considerations
+                Upgrade
               </div>
             </div>
           </a>
         
         
-          <a href="../upgrade/" title="Upgrade" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../../user-guide/nginx-configuration/" title="Introduction" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Upgrade
+                Introduction
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
