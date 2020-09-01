@@ -483,6 +483,34 @@ func TestRunningAddresessWithPublishService(t *testing.T) {
 			[]string{"10.0.0.1", "foo"},
 			false,
 		},
+		"service type LoadBalancer with same externalIP and ingress IP": {
+			testclient.NewSimpleClientset(
+				&apiv1.ServiceList{Items: []apiv1.Service{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: apiv1.NamespaceDefault,
+						},
+						Spec: apiv1.ServiceSpec{
+							Type:        apiv1.ServiceTypeLoadBalancer,
+							ExternalIPs: []string{"10.0.0.1"},
+						},
+						Status: apiv1.ServiceStatus{
+							LoadBalancer: apiv1.LoadBalancerStatus{
+								Ingress: []apiv1.LoadBalancerIngress{
+									{
+										IP: "10.0.0.1",
+									},
+								},
+							},
+						},
+					},
+				},
+				},
+			),
+			[]string{"10.0.0.1"},
+			false,
+		},
 		"invalid service type": {
 			testclient.NewSimpleClientset(
 				&apiv1.ServiceList{Items: []apiv1.Service{
