@@ -26,6 +26,8 @@ RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 COPY --from=GO   /usr/local/go /usr/local/go
 COPY --from=etcd /usr/local/bin/etcd /usr/local/bin/etcd
 
+RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+
 RUN apk add --no-cache \
   bash \
   ca-certificates \
@@ -39,7 +41,8 @@ RUN apk add --no-cache \
   py-crcmod \
   py-pip \
   unzip \
-  openssl
+  openssl \
+  cfssl@testing
 
 ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
@@ -108,10 +111,6 @@ RUN wget -O /tmp/helm.tgz \
   && tar -C /tmp -xzf /tmp/helm.tgz \
   && cp /tmp/linux*/helm /usr/local/bin \
   && rm -rf /tmp/*
-
-RUN  wget -O /usr/local/bin/cfssl     https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssl_1.4.1_linux_${TARGETARCH} \
-  && wget -O /usr/local/bin/cfssljson https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssljson_1.4.1_linux_${TARGETARCH} \
-  && chmod +x /usr/local/bin/cfssl*
 
 # Install a YAML Linter
 ARG YAML_LINT_VERSION
