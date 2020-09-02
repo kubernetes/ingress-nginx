@@ -705,6 +705,12 @@ stream {
 
     error_log  {{ $cfg.ErrorLogPath }};
 
+    {{ if $cfg.EnableRealIp }}
+    {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
+    set_real_ip_from    {{ $trusted_ip }};
+    {{ end }}
+    {{ end }}
+
     upstream upstream_balancer {
         server 0.0.0.1:1234; # placeholder
 
