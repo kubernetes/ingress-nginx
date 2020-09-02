@@ -28,7 +28,6 @@ import (
 
 	"github.com/eapache/channels"
 	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -280,12 +279,7 @@ func New(
 		informers.WithNamespace(namespace),
 		informers.WithTweakListOptions(tweakListOptionsFunc))
 
-	if k8s.IsNetworkingIngressAvailable {
-		store.informers.Ingress = infFactory.Networking().V1beta1().Ingresses().Informer()
-	} else {
-		store.informers.Ingress = infFactory.Extensions().V1beta1().Ingresses().Informer()
-	}
-
+	store.informers.Ingress = infFactory.Networking().V1beta1().Ingresses().Informer()
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
 
 	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
@@ -960,34 +954,10 @@ func (s k8sStore) GetRunningControllerPodsCount() int {
 var runtimeScheme = k8sruntime.NewScheme()
 
 func init() {
-	utilruntime.Must(extensionsv1beta1.AddToScheme(runtimeScheme))
 	utilruntime.Must(networkingv1beta1.AddToScheme(runtimeScheme))
 }
 
-func fromExtensions(old *extensionsv1beta1.Ingress) (*networkingv1beta1.Ingress, error) {
-	networkingIngress := &networkingv1beta1.Ingress{}
-
-	err := runtimeScheme.Convert(old, networkingIngress, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return networkingIngress, nil
-}
-
 func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
-	oldVersion, inExtension := obj.(*extensionsv1beta1.Ingress)
-	if inExtension {
-		ing, err := fromExtensions(oldVersion)
-		if err != nil {
-			klog.Errorf("unexpected error converting Ingress from extensions package: %v", err)
-			return nil, false
-		}
-
-		k8s.SetDefaultNGINXPathType(ing)
-		return ing, true
-	}
-
 	if ing, ok := obj.(*networkingv1beta1.Ingress); ok {
 		k8s.SetDefaultNGINXPathType(ing)
 		return ing, true
