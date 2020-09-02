@@ -17,9 +17,13 @@ limitations under the License.
 package settings
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"net"
 	"strings"
 
@@ -146,5 +150,67 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=https"))
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-scheme=https"))
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=192.168.0.1"))
+	})
+
+	ginkgo.It("should enable PROXY Protocol for TCP", func() {
+		f.UpdateNginxConfigMapData(setting, "true")
+		f.UpdateNginxConfigMapData("enable-real-ip", "true")
+
+		config, err := f.KubeClientSet.
+			CoreV1().
+			ConfigMaps(f.Namespace).
+			Get(context.TODO(), "tcp-services", metav1.GetOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining tcp-services configmap")
+		assert.NotNil(ginkgo.GinkgoT(), config, "expected a configmap but none returned")
+
+		if config.Data == nil {
+			config.Data = map[string]string{}
+		}
+
+		config.Data["8080"] = fmt.Sprintf("%v/%v:80:PROXY", f.Namespace, framework.EchoService)
+
+		_, err = f.KubeClientSet.
+			CoreV1().
+			ConfigMaps(f.Namespace).
+			Update(context.TODO(), config, metav1.UpdateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating configmap")
+
+		svc, err := f.KubeClientSet.
+			CoreV1().
+			Services(f.Namespace).
+			Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining ingress-nginx service")
+		assert.NotNil(ginkgo.GinkgoT(), svc, "expected a service but none returned")
+
+		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
+			Name:       framework.EchoService,
+			Port:       8080,
+			TargetPort: intstr.FromInt(8080),
+		})
+		_, err = f.KubeClientSet.
+			CoreV1().
+			Services(f.Namespace).
+			Update(context.TODO(), svc, metav1.UpdateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
+
+		// wait for update and nginx reload and new endpoint is available
+		framework.Sleep()
+
+		ip := f.GetNginxIP()
+
+		conn, err := net.Dial("tcp", net.JoinHostPort(ip, "8080"))
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error creating connection to %s:8080", ip)
+		defer conn.Close()
+
+		header := "PROXY TCP4 192.168.0.1 192.168.0.11 56324 8080\r\n"
+		conn.Write([]byte(header))
+		conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
+
+		_, err = ioutil.ReadAll(conn)
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
+
+		logs, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.Contains(ginkgo.GinkgoT(), logs, `192.168.0.1`)
 	})
 })
