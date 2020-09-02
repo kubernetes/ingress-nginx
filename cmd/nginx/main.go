@@ -106,7 +106,7 @@ func main() {
 
 	k8s.IsNetworkingIngressAvailable, k8s.IsIngressV1Ready = k8s.NetworkingIngressAvailable(kubeClient)
 	if !k8s.IsNetworkingIngressAvailable {
-		klog.Warningf("Using deprecated \"k8s.io/api/extensions/v1beta1\" package because Kubernetes version is < v1.14.0")
+		klog.Fatalf("ingress-nginx requires Kubernetes v1.14.0 or higher")
 	}
 
 	if k8s.IsIngressV1Ready {

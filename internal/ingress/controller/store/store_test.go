@@ -17,7 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -30,7 +29,6 @@ import (
 
 	"github.com/eapache/channels"
 	v1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	networking "k8s.io/api/networking/v1beta1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1067,53 +1065,5 @@ func TestGetRunningControllerPodsCount(t *testing.T) {
 	podsCount := s.GetRunningControllerPodsCount()
 	if podsCount != 2 {
 		t.Errorf("Expected 1 controller Pods but got %v", s)
-	}
-}
-
-func TestIngressConversion(t *testing.T) {
-	ing := &extensions.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:              "old-ingress",
-			Namespace:         "demo",
-			CreationTimestamp: metav1.NewTime(time.Now()),
-		},
-		Spec: extensions.IngressSpec{
-			Rules: []extensions.IngressRule{
-				{
-					Host: "foo.bar",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
-								{
-									Backend: extensions.IngressBackend{
-										ServiceName: "demo",
-										ServicePort: intstr.FromInt(80),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	new, err := fromExtensions(ing)
-	if err != nil {
-		t.Fatalf("unexpected error converting ingress: %v", err)
-	}
-
-	m1, err := new.Marshal()
-	if err != nil {
-		t.Fatalf("unexpected error marshalling Ingress: %v", err)
-	}
-
-	m2, err := ing.Marshal()
-	if err != nil {
-		t.Fatalf("unexpected error marshalling Ingress: %v", err)
-	}
-
-	if !bytes.Equal(m1, m2) {
-		t.Fatalf("Expected marshalling of types should be equal")
 	}
 }

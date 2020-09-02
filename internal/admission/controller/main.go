@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"k8s.io/api/admission/v1beta1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -41,14 +40,8 @@ type IngressAdmission struct {
 }
 
 var (
-	extensionsResource = metav1.GroupVersionResource{
-		Group:    networking.GroupName,
-		Version:  "v1beta1",
-		Resource: "ingresses",
-	}
-
 	networkingResource = metav1.GroupVersionResource{
-		Group:    extensions.GroupName,
+		Group:    networking.GroupName,
 		Version:  "v1beta1",
 		Resource: "ingresses",
 	}
@@ -66,7 +59,7 @@ func (ia *IngressAdmission) HandleAdmission(ar *v1beta1.AdmissionReview) {
 		return
 	}
 
-	if ar.Request.Resource != extensionsResource && ar.Request.Resource != networkingResource {
+	if ar.Request.Resource != networkingResource {
 		err := fmt.Errorf("rejecting admission review because the request does not contains an Ingress resource but %s with name %s in namespace %s",
 			ar.Request.Resource.String(), ar.Request.Name, ar.Request.Namespace)
 		ar.Response = &v1beta1.AdmissionResponse{
