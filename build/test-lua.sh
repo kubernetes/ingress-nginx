@@ -23,7 +23,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-BUSTED_ARGS="-v --pattern=_test"
+BUSTED_ARGS="-v --pattern=_test --shuffle-tests"
 
 resty \
   -I ./rootfs/etc/nginx/lua \
