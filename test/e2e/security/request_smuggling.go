@@ -68,7 +68,8 @@ server {
 })
 
 func smugglingRequest(host, addr string, port int) (string, error) {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", addr, port))
+	hostPort := net.JoinHostPort(addr, fmt.Sprintf("%v", port))
+	conn, err := net.Dial("tcp", hostPort)
 	if err != nil {
 		return "", err
 	}
