@@ -52,3 +52,16 @@ TODO:
 - serverConfig:
 - isLocationAllowed:
 - isValidClientBodyBufferSize:
+
+## Accessing raw ingress data from custom templates
+
+It is possible to access raw ingress data from custom templates with the help of `getIngressInformation`.
+This function is already called at the top of the `location` directive:
+
+```nginx
+{{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
+```
+
+`$ing` can then be used as you please to process raw ingress data, for example `$ing.Annotations`.
+
+An example leveraging custom annotations to conditionally add headers (only if not already set by client) can be found [here](../../examples/customization/custom-annotations/README.md).

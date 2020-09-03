@@ -11,6 +11,7 @@ Auth | [Client certificate authentication](auth/client-certs/README.md) | secure
 Auth | [External authentication plugin](auth/external-auth/README.md) | defer to an external authentication service | Intermediate
 Auth | [OAuth external auth](auth/oauth-external-auth/README.md) | TODO | TODO
 Customization | [Configuration snippets](customization/configuration-snippets/README.md) | customize nginx location configuration using annotations | Advanced
+Customization | [Custom annotations](customization/custom-annotations/README.md) | process custom ingress annotations using custom templates | Advanced
 Customization | [Custom configuration](customization/custom-configuration/README.md) | TODO | TODO
 Customization | [Custom DH parameters for perfect forward secrecy](customization/ssl-dh-param/README.md) | TODO | TODO
 Customization | [Custom errors](customization/custom-errors/README.md) | serve custom error pages from the default backend | Intermediate

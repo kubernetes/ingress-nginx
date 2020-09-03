@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginx-custom-annotations
+  annotations:
+    my-annotations/custom-headers: |
+      headers = ngx.req.get_headers()
+      if not headers["foo"] then
+        ngx.req.set_header["foo"] = "bar"
+      end
+spec:
+  rules:
+    - host: custom.annotations.com
+      http:
+        paths:
+          - backend:
+              serviceName: http-svc
+              servicePort: 80
+            path: /
