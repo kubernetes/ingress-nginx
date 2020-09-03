@@ -335,8 +335,6 @@ mkdir .build
 cd .build
 
 cmake -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_SHARED=OFF \
-      -DBUILD_STATIC=ON \
       -DBUILD_TESTING=OFF \
       -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
       ..
