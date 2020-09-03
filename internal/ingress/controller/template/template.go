@@ -31,7 +31,6 @@ import (
 	"os/exec"
 	"reflect"
 	"regexp"
-	"runtime"
 	"sort"
 	"strings"
 	text_template "text/template"
@@ -956,16 +955,13 @@ func buildOpentracing(c interface{}, s interface{}) string {
 	}
 
 	buf := bytes.NewBufferString("")
-	if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;")
-	} else if cfg.JaegerCollectorHost != "" {
-		if runtime.GOARCH == "arm" {
-			buf.WriteString("# Jaeger tracer is not available for ARM https://github.com/jaegertracing/jaeger-client-cpp/issues/151")
-		} else {
-			buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
-		}
-	} else if cfg.DatadogCollectorHost != "" {
+
+	if cfg.DatadogCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;")
+	} else if cfg.ZipkinCollectorHost != "" {
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;")
+	} else if cfg.JaegerCollectorHost != "" {
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
 	}
 
 	buf.WriteString("\r\n")
