@@ -17,7 +17,7 @@ By defining functions with the following names, you can run your custom Lua code
  - `header_filter`: this is called when backend response header is received, it is useful for modifying response headers
  - `log`: this is called when request processing is commpleted and response is delivered to the client
 
-Check this [`hello_world`](https://github.com/kubernetes/ingress-nginx/tree/master/rootfs/etc/nginx/lua/plugins/hello_world) plugin as a simple example or refer to [OpenID Connect integration](https://github.com/ElvinEfendi/ingress-nginx-openidc/tree/master/rootfs/etc/nginx/lua/plugins/openidc) for more advanced usage.
+Check this [`hello_world`](hello_world) plugin as a simple example or refer to [OpenID Connect integration](https://github.com/ElvinEfendi/ingress-nginx-openidc/tree/master/rootfs/etc/nginx/lua/plugins/openidc) for more advanced usage.
 
 Do not forget to write tests for your plugin.
 
