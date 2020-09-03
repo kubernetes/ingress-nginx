@@ -485,7 +485,8 @@ func (f *Framework) WaitForNginxListening(port int) {
 
 	podIP := f.GetNginxIP()
 	err = wait.Poll(500*time.Millisecond, DefaultTimeout, func() (bool, error) {
-		conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", podIP, port))
+		hostPort := net.JoinHostPort(podIP, fmt.Sprintf("%v", port))
+		conn, err := net.Dial("tcp", hostPort)
 		if err != nil {
 			return false, nil
 		}

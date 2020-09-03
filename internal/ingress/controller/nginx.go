@@ -927,7 +927,8 @@ func updateStreamConfiguration(TCPEndpoints []ingress.L4Service, UDPEndpoints []
 		return err
 	}
 
-	conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%v", nginx.StreamPort))
+	hostPort := net.JoinHostPort("127.0.0.1", fmt.Sprintf("%v", nginx.StreamPort))
+	conn, err := net.Dial("tcp", hostPort)
 	if err != nil {
 		return err
 	}
