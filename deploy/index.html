@@ -1421,7 +1421,7 @@
 <p class="admonition-title">Attention</p>
 <p>The first time the ingress controller starts, two <a href="https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/">Jobs</a> create the SSL Certificate used by the admission webhook.
 For this reason, there is an initial delay of up to two minutes until it is possible to create and validate Ingress definitions.</p>
-<p>You can wait until is ready to running the next command:</p>
+<p>You can wait until it is ready to run the next command:</p>
 <div class="highlight"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">kubectl wait --namespace ingress-nginx \</span>
   <span class="l l-Scalar l-Scalar-Plain">--for=condition=ready pod \</span>
   <span class="l l-Scalar l-Scalar-Plain">--selector=app.kubernetes.io/component=controller \</span>
@@ -1489,10 +1489,10 @@ For this reason, there is an initial delay of up to two minutes until it is poss
 </code></pre></div>
 
 <h5 id="nlb-idle-timeouts">NLB Idle Timeouts<a class="headerlink" href="#nlb-idle-timeouts" title="Permanent link"> ¶</a></h5>
-<p>Idle timeout values for TCP flows is 350 seconds and <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout">cannot be modified</a>.</p>
-<p>For this reason, you need to ensure the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> configured value is less than 350 seconds to work as expected.</p>
+<p>Idle timeout value for TCP flows is 350 seconds and <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout">cannot be modified</a>.</p>
+<p>For this reason, you need to ensure the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> value is configured less than 350 seconds to work as expected.</p>
 <p>By default NGINX <code>keepalive_timeout</code> is set to <code>75s</code>.</p>
-<p>More information with regards to timeouts for can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout">official AWS documentation</a></p>
+<p>More information with regards to timeouts can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout">official AWS documentation</a></p>
 <h4 id="gce-gke">GCE-GKE<a class="headerlink" href="#gce-gke" title="Permanent link"> ¶</a></h4>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
@@ -1504,7 +1504,7 @@ For this reason, there is an initial delay of up to two minutes until it is poss
 </div>
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
-<p>For private clusters, you will need to either add an additional firewall rule that allows master nodes access port <code>8443/tcp</code> on worker nodes, or change the existing rule that allows access to ports <code>80/tcp</code>, <code>443/tcp</code> and <code>10254/tcp</code> to also allow access to port <code>8443/tcp</code>.</p>
+<p>For private clusters, you will need to either add an additional firewall rule that allows master nodes access to port <code>8443/tcp</code> on worker nodes, or change the existing rule that allows access to ports <code>80/tcp</code>, <code>443/tcp</code> and <code>10254/tcp</code> to also allow access to port <code>8443/tcp</code>.</p>
 <p>See the <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules">GKE documentation</a> on adding rules and the <a href="https://github.com/kubernetes/kubernetes/issues/79739">Kubernetes issue</a> for more detail.</p>
 </div>
 <div class="highlight"><pre><span></span><code><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.35.0/deploy/static/provider/cloud/deploy.yaml</span>
