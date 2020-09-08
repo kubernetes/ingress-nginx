@@ -16,6 +16,19 @@ pid {{ .PID }};
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
 
+{{ if $cfg.EnableBrotli }}
+load_module /etc/nginx/modules/ngx_http_brotli_filter_module.so;
+load_module /etc/nginx/modules/ngx_http_brotli_static_module.so;
+{{ end }}
+
+{{ if (shouldLoadInfluxDBModule $servers) }}
+load_module /etc/nginx/modules/ngx_http_influxdb_module.so;
+{{ end }}
+
+{{ if (shouldLoadAuthDigestModule $servers) }}
+load_module /etc/nginx/modules/ngx_http_auth_digest_module.so;
+{{ end }}
+
 {{ if (shouldLoadModSecurityModule $cfg $servers) }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
