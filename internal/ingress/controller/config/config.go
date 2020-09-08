@@ -736,7 +736,7 @@ func NewDefault() Configuration {
 		HSTSMaxAge:                       hstsMaxAge,
 		HSTSPreload:                      false,
 		IgnoreInvalidHeaders:             true,
-		GzipLevel:                        5,
+		GzipLevel:                        1,
 		GzipMinLength:                    256,
 		GzipTypes:                        gzipTypes,
 		KeepAlive:                        75,
