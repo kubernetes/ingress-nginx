@@ -180,6 +180,8 @@ var (
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
+		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
+		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
 	}
 )
 
@@ -1414,4 +1416,46 @@ proxy_pass %v;
 	}
 
 	return buffer.String()
+}
+
+// shouldLoadAuthDigestModule determines whether or not the ngx_http_auth_digest_module module needs to be loaded.
+func shouldLoadAuthDigestModule(s interface{}) bool {
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if !location.BasicDigestAuth.Secured {
+				continue
+			}
+
+			if location.BasicDigestAuth.Type == "digest" {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// shouldLoadInfluxDBModule determines whether or not the ngx_http_auth_digest_module module needs to be loaded.
+func shouldLoadInfluxDBModule(s interface{}) bool {
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.InfluxDB.InfluxDBEnabled {
+				return true
+			}
+		}
+	}
+
+	return false
 }

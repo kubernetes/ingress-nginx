@@ -652,11 +652,6 @@ type Configuration struct {
 	// +optional
 	GlobalExternalAuth GlobalExternalAuth `json:"global-external-auth"`
 
-	// EnableInfluxDB enables the nginx InfluxDB extension
-	// http://github.com/influxdata/nginx-influxdb-module/
-	// By default this is disabled
-	EnableInfluxDB bool `json:"enable-influxdb"`
-
 	// Checksum contains a checksum of the configmap configuration
 	Checksum string `json:"-"`
 
