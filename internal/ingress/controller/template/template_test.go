@@ -1175,7 +1175,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		EnableOpentracing:   true,
 		ZipkinCollectorHost: "zipkin-host.com",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgZipkin, []*ingress.Server{})
 
 	if expected != actual {
