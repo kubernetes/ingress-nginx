@@ -1116,7 +1116,7 @@
 <p>Ingress does not support TCP or UDP services. For this reason this Ingress controller uses the flags <code>--tcp-services-configmap</code> and <code>--udp-services-configmap</code> to point to an existing config map where the key is the external port to use and the value indicates the service to expose using the format:
 <code>&lt;namespace/service name&gt;:&lt;service port&gt;:[PROXY]:[PROXY]</code></p>
 <p>It is also possible to use a number or the name of the port. The two last fields are optional.
-Adding <code>PROXY</code> in either or both of the two last fields we can use Proxy Protocol decoding (listen) and/or encoding (proxy_pass) in a TCP service https://www.nginx.com/resources/admin-guide/proxy-protocol</p>
+Adding <code>PROXY</code> in either or both of the two last fields we can use <a href="https://www.nginx.com/resources/admin-guide/proxy-protocol">Proxy Protocol</a> decoding (listen) and/or encoding (proxy_pass) in a TCP service </p>
 <p>The next example shows how to expose the service <code>example-go</code> running in the namespace <code>default</code> in the port <code>8080</code> using the port <code>9000</code></p>
 <div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
