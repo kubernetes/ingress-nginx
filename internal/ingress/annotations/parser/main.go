@@ -28,9 +28,12 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 )
 
+// DefaultAnnotationsPrefix defines the common prefix used in the nginx ingress controller
+const DefaultAnnotationsPrefix = "nginx.ingress.kubernetes.io"
+
 var (
-	// AnnotationsPrefix defines the common prefix used in the nginx ingress controller
-	AnnotationsPrefix = "nginx.ingress.kubernetes.io"
+	// AnnotationsPrefix is the mutable attribute that the controller explicitly refers to
+	AnnotationsPrefix = DefaultAnnotationsPrefix
 )
 
 // IngressAnnotation has a method to parse annotations located in Ingress
