@@ -42,6 +42,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -240,6 +241,18 @@ func TestCheckIngress(t *testing.T) {
 			}
 			if nginx.CheckIngress(ing) == nil {
 				t.Errorf("with a new ingress with an error, an error should be returned")
+			}
+		})
+
+		t.Run("When the default annotation prefix is used despite an override", func(t *testing.T) {
+			parser.AnnotationsPrefix = "ingress.kubernetes.io"
+			ing.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC"
+			nginx.command = testNginxTestCommand{
+				t:   t,
+				err: nil,
+			}
+			if nginx.CheckIngress(ing) == nil {
+				t.Errorf("with a custom annotation prefix, ingresses using the default should be rejected")
 			}
 		})
 

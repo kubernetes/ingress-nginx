@@ -126,7 +126,7 @@ Requires the update-status parameter.`)
 		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false,
 			`Enable SSL Passthrough.`)
 
-		annotationsPrefix = flags.String("annotations-prefix", "nginx.ingress.kubernetes.io",
+		annotationsPrefix = flags.String("annotations-prefix", parser.DefaultAnnotationsPrefix,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
