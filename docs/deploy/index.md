@@ -35,6 +35,7 @@
   - [GCE - GKE](#gce-gke)
   - [Azure](#azure)
   - [Digital Ocean](#digital-ocean)
+  - [Scaleway](#scaleway)
   - [Bare-metal](#bare-metal)
   - [Verify installation](#verify-installation)
   - [Detect installed version](#detect-installed-version)
@@ -141,6 +142,12 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.35.0/deploy/static/provider/do/deploy.yaml
+```
+
+#### Scaleway
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/scw/deploy.yaml
 ```
 
 #### Bare-metal
