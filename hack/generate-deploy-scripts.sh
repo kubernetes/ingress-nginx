@@ -166,5 +166,22 @@ controller:
 
 EOF
 
+# Scaleway
+echo "${NAMESPACE_VAR}
+$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
+
+OUTPUT_FILE="${DIR}/deploy/static/provider/scw/deploy.yaml"
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+controller:
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+    annotations:
+      service.beta.kubernetes.io/scw-loadbalancer-proxy-protocol-v2: "true"
+  config:
+    use-proxy-protocol: "true"
+
+EOF
+
 echo "${NAMESPACE_VAR}
 $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
