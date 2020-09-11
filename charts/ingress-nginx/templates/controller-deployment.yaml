@@ -228,6 +228,9 @@ spec:
     {{- if .Values.controller.affinity }}
       affinity: {{ toYaml .Values.controller.affinity | nindent 8 }}
     {{- end }}
+    {{- if .Values.controller.topologySpreadConstraints }}
+      topologySpreadConstraints: {{ toYaml .Values.controller.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
     {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes) }}
