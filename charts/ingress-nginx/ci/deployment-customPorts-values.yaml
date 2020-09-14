@@ -1,0 +1,8 @@
+controller:
+  service:
+    type: ClusterIP
+    customPorts:
+     - name: custom-8080-port
+       port: 8080
+       targetPort: http
+       protocol: TCP
