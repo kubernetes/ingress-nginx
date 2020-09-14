@@ -326,7 +326,7 @@ controller:
       https: 443
 
     ## Add custom listen ports to the controller service
-    #customPorts:
+    # customPorts:
     #  - name: 8080-http
     #    port: 8080
     #    targetPort: http
