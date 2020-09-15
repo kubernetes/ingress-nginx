@@ -498,7 +498,7 @@ controller:
         #     severity: warning
         #   annotations:
         #     description: Too many 5XXs
-        #     summary: More than 5% of the all requests did return 5XX, this require your attention
+        #     summary: More than 5% of all requests returned 5XX, this requires your attention
         # - alert: NGINXTooMany400s
         #   expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"4.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
         #   for: 1m
@@ -506,7 +506,7 @@ controller:
         #     severity: warning
         #   annotations:
         #     description: Too many 4XXs
-        #     summary: More than 5% of the all requests did return 4XX, this require your attention
+        #     summary: More than 5% of all requests returned 4XX, this requires your attention
 
   ## Improve connection draining when ingress controller pod is deleted using a lifecycle hook:
   ## With this new hook, we increased the default terminationGracePeriodSeconds from 30 seconds
