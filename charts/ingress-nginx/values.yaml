@@ -293,7 +293,7 @@ controller:
   ## Enable mimalloc as a drop-in replacement for malloc.
   ## ref: https://github.com/microsoft/mimalloc
   ##
-  enableMimalloc: false
+  enableMimalloc: true
 
   ## Override NGINX template
   customTemplate:
@@ -423,7 +423,7 @@ controller:
       enabled: true
       image:
         repository: docker.io/jettech/kube-webhook-certgen
-        tag: v1.2.2
+        tag: v1.3.0
         pullPolicy: IfNotPresent
       ## Provide a priority class name to the webhook patching job
       ##
