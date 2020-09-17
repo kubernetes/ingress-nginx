@@ -40,10 +40,10 @@ require (
 	k8s.io/client-go v0.19.1
 	k8s.io/code-generator v0.19.1
 	k8s.io/component-base v0.19.1
-	k8s.io/klog/v2 v2.2.0
+	k8s.io/klog/v2 v2.3.0
 	k8s.io/kubernetes v1.19.1
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
-	sigs.k8s.io/controller-runtime v0.6.3
+	sigs.k8s.io/controller-runtime v0.6.1-0.20200915205919-20af9010491c
 )
 
 replace (
