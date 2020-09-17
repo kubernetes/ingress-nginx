@@ -40,9 +40,15 @@ type IngressAdmission struct {
 }
 
 var (
-	networkingResource = metav1.GroupVersionResource{
+	networkingV1Beta1Resource = metav1.GroupVersionResource{
 		Group:    networking.GroupName,
 		Version:  "v1beta1",
+		Resource: "ingresses",
+	}
+
+	networkingV1Resource = metav1.GroupVersionResource{
+		Group:    networking.GroupName,
+		Version:  "v1",
 		Resource: "ingresses",
 	}
 )
@@ -59,7 +65,7 @@ func (ia *IngressAdmission) HandleAdmission(ar *v1beta1.AdmissionReview) {
 		return
 	}
 
-	if ar.Request.Resource != networkingResource {
+	if ar.Request.Resource != networkingV1Beta1Resource && ar.Request.Resource != networkingV1Resource {
 		err := fmt.Errorf("rejecting admission review because the request does not contains an Ingress resource but %s with name %s in namespace %s",
 			ar.Request.Resource.String(), ar.Request.Name, ar.Request.Namespace)
 		ar.Response = &v1beta1.AdmissionResponse{
