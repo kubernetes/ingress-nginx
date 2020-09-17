@@ -58,7 +58,7 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 2.4.4 Ensure send_timeout is set to 10 seconds or less, but not 0 (Scored)| RISK TO BE ACCEPTED| Not configured, however the nginx default is 60s| Not configurable|
 | ||| |
 | __2.5 Information Disclosure__||| |
-| 2.5.1 Ensure server_tokens directive is set to `off` (Scored) | OK | server_tokens is configured to off by defaukt| |
+| 2.5.1 Ensure server_tokens directive is set to `off` (Scored) | OK | server_tokens is configured to off by default| |
 | 2.5.2 Ensure default error and index.html pages do not reference NGINX (Scored) | ACTION NEEDED| 404 shows no version at all, 503 and 403 show "nginx", which is hardcoded [see this line in nginx source code](https://github.com/nginx/nginx/blob/master/src/http/ngx_http_special_response.c#L36) | configure custom error pages at least for 403, 404 and 503 and 500|
 | 2.5.3 Ensure hidden file serving is disabled (Not Scored) | ACTION NEEDED | config not set | configure a config.server-snippet Snippet, but beware of .well-known challenges or similar. Refer to the benchmark here please |
 | 2.5.4 Ensure the NGINX reverse proxy does not enable information disclosure (Scored)| ACTION NEEDED| hide not configured| configure hide-headers with array of "X-Powered-By" and "Server": [according to this documentation](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#hide-headers) |
