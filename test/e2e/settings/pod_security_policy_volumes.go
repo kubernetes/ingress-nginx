@@ -102,7 +102,7 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with vo
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, "server_tokens on")
+				return strings.Contains(cfg, "server_tokens off")
 			})
 
 		f.HTTPTestClient().

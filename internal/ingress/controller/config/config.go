@@ -753,7 +753,7 @@ func NewDefault() Configuration {
 		ProxyHeadersHashBucketSize:       64,
 		ProxyStreamResponses:             1,
 		ReusePort:                        true,
-		ShowServerTokens:                 true,
+		ShowServerTokens:                 false,
 		SSLBufferSize:                    sslBufferSize,
 		SSLCiphers:                       sslCiphers,
 		SSLECDHCurve:                     "auto",
