@@ -182,7 +182,7 @@ local function fetch_and_cache_ocsp_response(uid, der_cert)
   end
   if forcible then
     ngx.log(ngx.NOTICE, "removed an existing item when saving OCSP response, ",
-      "consider increasing shared dictionary size for 'ocsp_reponse_cache'")
+      "consider increasing shared dictionary size for 'ocsp_response_cache'")
   end
 end
 
