@@ -102,7 +102,7 @@ local function handle_servers()
 
   for uid, cert in pairs(configuration.certificates) do
     local old_cert = certificate_data:get(uid)
-    if old_cert ~= cert then
+    if old_cert ~= nil and old_cert ~= cert then
         ocsp_response_cache:delete(uid)
     end
 
