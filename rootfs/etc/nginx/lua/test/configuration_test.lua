@@ -4,6 +4,7 @@ local configuration = require("configuration")
 local unmocked_ngx = _G.ngx
 local certificate_data = ngx.shared.certificate_data
 local certificate_servers = ngx.shared.certificate_servers
+local ocsp_response_cache = ngx.shared.ocsp_response_cache
 
 function get_backends()
   return {
@@ -182,6 +183,56 @@ describe("Configuration", function()
       assert.has_no.errors(configuration.handle_servers)
       assert.spy(s).was_called_with("Only POST requests are allowed!")
       assert.same(ngx.status, ngx.HTTP_BAD_REQUEST)
+    end)
+
+    it("should not delete ocsp_response_cache if certificate remain the same", function()
+      ngx.shared.certificate_data.get = function(self, uid)
+        return "pemCertKey"
+      end
+
+      mock_ssl_configuration({
+        servers = { ["hostname"] = UUID },
+        certificates = { [UUID] = "pemCertKey" }
+      })
+
+      local s = spy.on(ngx.shared.ocsp_response_cache, "delete")
+      assert.has_no.errors(configuration.handle_servers)
+      assert.spy(s).was_not_called_with(UUID)
+    end)
+
+    it("should not delete ocsp_response_cache if certificate is empty", function()
+      ngx.shared.certificate_data.get = function(self, uid)
+          return nil
+      end
+
+      mock_ssl_configuration({
+        servers = { ["hostname"] = UUID },
+        certificates = { [UUID] = "pemCertKey" }
+      })
+
+      local s = spy.on(ngx.shared.ocsp_response_cache, "delete")
+      assert.has_no.errors(configuration.handle_servers)
+      assert.spy(s).was_not_called_with(UUID)
+    end)
+
+    it("should delete ocsp_response_cache if certificate changed", function()
+      local stored_entries = {
+          [UUID] = "pemCertKey"
+      }
+
+      ngx.shared.certificate_data.get = function(self, uid)
+          return stored_entries[uid]
+      end
+
+      mock_ssl_configuration({
+        servers = { ["hostname"] = UUID },
+        certificates = { [UUID] = "pemCertKey2" }
+      })
+
+      local s = spy.on(ngx.shared.ocsp_response_cache, "delete")
+
+      assert.has_no.errors(configuration.handle_servers)
+      assert.spy(s).was.called_with(ocsp_response_cache, UUID)
     end)
 
     it("deletes server with empty UID without touching the corresponding certificate", function()
