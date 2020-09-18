@@ -197,7 +197,7 @@ describe("Configuration", function()
 
       local s = spy.on(ngx.shared.ocsp_response_cache, "delete")
       assert.has_no.errors(configuration.handle_servers)
-      assert.spy(s).was_not_called_with(UUID)
+      assert.spy(s).was_not_called()
     end)
 
     it("should not delete ocsp_response_cache if certificate is empty", function()
@@ -212,7 +212,7 @@ describe("Configuration", function()
 
       local s = spy.on(ngx.shared.ocsp_response_cache, "delete")
       assert.has_no.errors(configuration.handle_servers)
-      assert.spy(s).was_not_called_with(UUID)
+      assert.spy(s).was_not_called()
     end)
 
     it("should delete ocsp_response_cache if certificate changed", function()
