@@ -86,7 +86,7 @@ The following table shows a configuration option's name, type, and the default v
 |[ssl-protocols](#ssl-protocols)|string|"TLSv1.2 TLSv1.3"|
 |[ssl-session-cache](#ssl-session-cache)|bool|"true"|
 |[ssl-session-cache-size](#ssl-session-cache-size)|string|"10m"|
-|[ssl-session-tickets](#ssl-session-tickets)|bool|"true"|
+|[ssl-session-tickets](#ssl-session-tickets)|bool|"false"|
 |[ssl-session-ticket-key](#ssl-session-ticket-key)|string|`<Randomly Generated>`
 |[ssl-session-timeout](#ssl-session-timeout)|string|"10m"|
 |[ssl-buffer-size](#ssl-buffer-size)|string|"4k"|

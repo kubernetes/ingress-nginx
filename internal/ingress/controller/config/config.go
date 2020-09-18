@@ -761,7 +761,7 @@ func NewDefault() Configuration {
 		SSLEarlyData:                     sslEarlyData,
 		SSLSessionCache:                  true,
 		SSLSessionCacheSize:              sslSessionCacheSize,
-		SSLSessionTickets:                true,
+		SSLSessionTickets:                false,
 		SSLSessionTimeout:                sslSessionTimeout,
 		EnableBrotli:                     false,
 		UseGzip:                          true,

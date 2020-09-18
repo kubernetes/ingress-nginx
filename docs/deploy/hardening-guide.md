@@ -88,7 +88,7 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 4.1.10 Ensure upstream server traffic is authenticated with a client certificate (Scored) | DEPENDS ON BACKEND | Highly dependend on backends, not every backend allows configuring this, can also be mitigated via a service mesh| If backend allows it, [manual is here](https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/)|
 | 4.1.11 Ensure the upstream traffic server certificate is trusted (Not Scored) | DEPENDS ON BACKEND | Highly dependend on backends, not every backend allows configuring this, can also be mitigated via a service mesh| If backend allows it, [see configuration here](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#backend-certificate-authentication) |
 | 4.1.12 Ensure your domain is preloaded (Not Scored) | ACTION NEEDED| Preload is not active by default | Set controller.config.hsts-preload to true|
-| 4.1.13 Ensure session resumption is disabled to enable perfect forward security (Scored)| ACTION NEEDED| Session tickets are enabled by default | Set controller.config.ssl-session-tickets to false|
+| 4.1.13 Ensure session resumption is disabled to enable perfect forward security (Scored)| OK | Session tickets are disabled by default | |
 | 4.1.14 Ensure HTTP/2.0 is used (Not Scored) | OK | http2 is set by default| |
 | ||| |
 | __5 Request Filtering and Restrictions__||| |
