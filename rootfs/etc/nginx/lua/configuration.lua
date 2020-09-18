@@ -11,6 +11,7 @@ local pairs = pairs
 local configuration_data = ngx.shared.configuration_data
 local certificate_data = ngx.shared.certificate_data
 local certificate_servers = ngx.shared.certificate_servers
+local ocsp_response_cache = ngx.shared.ocsp_response_cache
 
 local EMPTY_UID = "-1"
 
@@ -100,6 +101,11 @@ local function handle_servers()
   end
 
   for uid, cert in pairs(configuration.certificates) do
+    local old_cert = certificate_data:get(uid)
+    if old_cert ~= cert then
+        ocsp_response_cache:delete(uid)
+    end
+
     local success, set_err, forcible = certificate_data:set(uid, cert)
     if not success then
       local err_msg = string.format("error setting certificate for %s: %s\n",
