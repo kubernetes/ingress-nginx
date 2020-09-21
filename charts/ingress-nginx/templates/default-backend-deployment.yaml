@@ -43,10 +43,11 @@ spec:
         {{- if .Values.defaultBackend.extraArgs }}
           args:
           {{- range $key, $value := .Values.defaultBackend.extraArgs }}
-            {{- if $value }}
-            - --{{ $key }}={{ $value }}
-            {{- else }}
+            {{- /* Accept keys without values or with false as value */}}
+            {{- if eq ($value | quote | len) 2 }}
             - --{{ $key }}
+            {{- else }}
+            - --{{ $key }}={{ $value }}
             {{- end }}
           {{- end }}
         {{- end }}
