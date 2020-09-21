@@ -26,10 +26,17 @@ spec:
 {{- if .Values.controller.metrics.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.controller.metrics.service.loadBalancerSourceRanges | nindent 4 }}
 {{- end }}
+{{- if .Values.controller.metrics.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.controller.metrics.service.externalTrafficPolicy }}
+{{- end }}
   ports:
     - name: metrics
       port: {{ .Values.controller.metrics.service.servicePort }}
       targetPort: metrics
+    {{- $setNodePorts := (or (eq .Values.controller.metrics.service.type "NodePort") (eq .Values.controller.metrics.service.type "LoadBalancer")) }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.metrics.service.nodePort))) }}
+      nodePort: {{ .Values.controller.metrics.service.nodePort }}
+    {{- end }}
   selector:
     {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: controller

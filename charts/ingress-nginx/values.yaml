@@ -454,6 +454,8 @@ controller:
       loadBalancerSourceRanges: []
       servicePort: 9913
       type: ClusterIP
+      # externalTrafficPolicy: ""
+      # nodePort: ""
 
     serviceMonitor:
       enabled: false
