@@ -72,46 +72,50 @@ get_src()
   rm -rf "$f"
 }
 
-apk update
-apk upgrade
+# setup nginx user and group
+userdel  www-data -f || true
+groupdel www-data -f || true
+addgroup --gid 101 www-data
+adduser  --gid 101 \
+  --disabled-password --disabled-login \
+  --gecos '' \
+  --shell /usr/sbin/nologin \
+  --uid 101 \
+  --home /usr/local/nginx www-data
+
+apt-get update && apt-get dist-upgrade -y
 
 # install required packages to build
-apk add \
+apt install -y \
   bash \
-  gcc \
-  clang \
-  libc-dev \
-  make \
-  automake \
-  openssl-dev \
-  pcre-dev \
-  zlib-dev \
-  linux-headers \
-  libxslt-dev \
-  gd-dev \
-  geoip-dev \
-  perl-dev \
-  libedit-dev \
-  mercurial \
-  alpine-sdk \
-  findutils \
+  build-essential \
   curl ca-certificates \
+  libgeoip1 \
+  libgeoip-dev \
   patch \
+  libpcre3 \
+  libpcre3-dev \
+  libssl-dev \
+  zlib1g \
+  zlib1g-dev \
+  libaio1 \
   libaio-dev \
   openssl \
+  libperl-dev \
   cmake \
   util-linux \
-  lmdb-tools \
+  lmdb-utils \
   wget \
-  curl-dev \
-  libprotobuf \
-  git g++ pkgconf flex bison doxygen yajl-dev lmdb-dev libtool autoconf libxml2 libxml2-dev \
-  python3 \
+  libcurl4-openssl-dev \
+  libprotobuf-dev protobuf-compiler \
+  libz-dev \
+  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
+  python \
   libmaxminddb-dev \
   bc \
   unzip \
-  dos2unix \
-  yaml-cpp
+  dos2unix mercurial \
+  libyaml-cpp0.6
 
 mkdir -p /etc/nginx
 
@@ -227,7 +231,7 @@ export LUA_LIB_DIR="$LUAJIT_LIB/lua"
 export LUAJIT_INC=/usr/local/include/luajit-2.1
 
 cd "$BUILD_PATH/luajit2-$LUAJIT_VERSION"
-make CCDEBUG=-g
+make CCDEBUG=-g XCFLAGS="-DLUAJIT_DISABLE_GC64"
 make install
 
 ln -s /usr/local/bin/luajit /usr/local/bin/lua
@@ -611,9 +615,6 @@ writeDirs=( \
   /var/log/audit \
   /var/log/nginx \
 );
-
-addgroup -Sg 101 www-data
-adduser -S -D -H -u 101 -h /usr/local/nginx -s /sbin/nologin -G www-data -g www-data www-data
 
 for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};
