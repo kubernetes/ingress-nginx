@@ -63,52 +63,55 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 
 	length, err := conn.Read(data)
 	if err != nil {
-		klog.V(4).Infof("Error reading the first 4k of the connection: %v", err)
+		klog.V(4).ErrorS(err, "Error reading the first 4k of the connection")
 		return
 	}
 
 	proxy := p.Default
 	hostname, err := parser.GetHostname(data[:])
 	if err == nil {
-		klog.V(4).Infof("Parsed hostname from TLS Client Hello: %s", hostname)
+		klog.V(4).InfoS("TLS Client Hello", "host", hostname)
 		proxy = p.Get(hostname)
 	}
 
 	if proxy == nil {
-		klog.V(4).Info("There is no configured proxy for SSL connections.")
+		klog.V(4).InfoS("There is no configured proxy for SSL connections.")
 		return
 	}
 
 	hostPort := net.JoinHostPort(proxy.IP, fmt.Sprintf("%v", proxy.Port))
-	clientConn, err := net.Dial("tcp", hostPort)
+	remoteAddr := conn.RemoteAddr().(*net.TCPAddr)
+
+	d := net.Dialer{LocalAddr: remoteAddr}
+	clientConn, err := d.Dial("tcp", hostPort)
 	if err != nil {
 		return
 	}
 	defer clientConn.Close()
 
 	if proxy.ProxyProtocol {
-		// write out the Proxy Protocol header
-		localAddr := conn.LocalAddr().(*net.TCPAddr)
-		remoteAddr := conn.RemoteAddr().(*net.TCPAddr)
 		protocol := "UNKNOWN"
 		if remoteAddr.IP.To4() != nil {
 			protocol = "TCP4"
 		} else if remoteAddr.IP.To16() != nil {
 			protocol = "TCP6"
 		}
+
+		// write out the Proxy Protocol header
+		localAddr := conn.LocalAddr().(*net.TCPAddr)
 		proxyProtocolHeader := fmt.Sprintf("PROXY %s %s %s %d %d\r\n", protocol, remoteAddr.IP.String(), localAddr.IP.String(), remoteAddr.Port, localAddr.Port)
-		klog.V(4).Infof("Writing Proxy Protocol header: %s", proxyProtocolHeader)
+		klog.V(4).InfoS("Writing Proxy Protocol", "header", proxyProtocolHeader)
 		_, err = fmt.Fprintf(clientConn, proxyProtocolHeader)
-	}
-	if err != nil {
-		klog.Errorf("Error writing Proxy Protocol header: %v", err)
-		clientConn.Close()
-	} else {
-		_, err = clientConn.Write(data[:length])
 		if err != nil {
-			klog.Errorf("Error writing the first 4k of proxy data: %v", err)
-			clientConn.Close()
+			klog.ErrorS(err, "Error writing Proxy Protocol header")
+			return
 		}
+	}
+
+	_, err = clientConn.Write(data[:length])
+	if err != nil {
+		klog.Errorf("Error writing the first 4k of proxy data: %v", err)
+		return
 	}
 
 	pipe(clientConn, conn)
