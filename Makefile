@@ -163,7 +163,7 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 	@kind delete cluster --name ingress-nginx-dev
 
 .PHONY: live-docs
-live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
+live-docs: ## Build and launch a local copy of the documentation website in http://localhost:8000
 	@docker run --rm -it \
 		-p 8000:8000 \
 		-v ${PWD}:/docs \
