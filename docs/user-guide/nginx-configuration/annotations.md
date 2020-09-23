@@ -233,6 +233,8 @@ This configuration setting allows you to control the value for host in the follo
 
 It is possible to enable Client Certificate Authentication using additional annotations in Ingress Rule.
 
+Client Certificate Authentication is applied per host and it is not possible to specify rules that differ for individual paths.
+
 The annotations are:
 
 * `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`:
@@ -241,11 +243,22 @@ The annotations are:
 * `nginx.ingress.kubernetes.io/auth-tls-verify-depth`:
   The validation depth between the provided client certificate and the Certification Authority chain.
 * `nginx.ingress.kubernetes.io/auth-tls-verify-client`:
-  Enables verification of client certificates.
+  Enables verification of client certificates. Possible values are:
+  * `off`: Don't request client certificates and don't do client certificate verification. (default)
+  * `on`: Request a client certificate that must be signed by a certificate that is included in the secret key `ca.crt` of the secret specified by `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`. Failed certificate verification will result in a status code 400 (Bad Request).
+  * `optional`: Do optional client certificate validation against the CAs from `auth-tls-secret`. The request fails with status code 400 (Bad Request) when a certificate is provided that is not signed by the CA. When no or an otherwise invalid certificate is provided, the request does not fail, but instead the verification result is sent to the upstream service.
+  * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the usptream service.
 * `nginx.ingress.kubernetes.io/auth-tls-error-page`:
   The URL/Page that user should be redirected in case of a Certificate Authentication Error
 * `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`:
-  Indicates if the received certificates should be passed or not to the upstream server.  By default this is disabled.
+  Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
+
+The following headers are sent to the upstream service according to the `auth-tls-*` annotations:
+
+* `ssl-client-issuer-dn`: The issuer information of the client certificate. Example: "CN=My CA"
+* `ssl-client-subject-dn`: The subject information of the client certificate. Example: "CN=My Client"
+* `ssl-client-verify`: The result of the client verification. Possible values: "SUCCESS", "FAILED: <description, why the verification failed>"
+* `ssl-client-cert`: The full client certificate in PEM format. Will only be sent when `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream` is set to "true". Example: `-----BEGIN%20CERTIFICATE-----%0A...---END%20CERTIFICATE-----%0A`
 
 !!! example
     Please check the [client-certs](../../examples/auth/client-certs/README.md) example.
