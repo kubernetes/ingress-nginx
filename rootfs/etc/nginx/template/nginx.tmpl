@@ -830,6 +830,7 @@ stream {
         {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
         more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
         more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
+        {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
         more_set_headers 'Access-Control-Max-Age: {{ $cors.CorsMaxAge }}';
         more_set_headers 'Content-Type: text/plain charset=UTF-8';
         more_set_headers 'Content-Length: 0';
@@ -840,6 +841,7 @@ stream {
         {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
         more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
         more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
+        {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
 
 {{ end }}
 
