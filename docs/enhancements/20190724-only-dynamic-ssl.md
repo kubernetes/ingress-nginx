@@ -32,7 +32,7 @@ superseded-by:
 
 ## Summary
 
-Since release [0.19.0](https://github.com/kubernetes/ingress-nginx/releases/tag/nginx-0.19.0) is possible to configure SSL certificates without the need of NGINX reloads (thanks to lua) and after release [0.24.0](https://github.com/kubernetes/ingress-nginx/releases/tag/nginx-0.19.0) the default enabled mode is dynamic.
+Since release [0.19.0](https://github.com/kubernetes/ingress-nginx/releases/tag/nginx-0.19.0) is possible to configure SSL certificates without the need of NGINX reloads (thanks to lua) and after release [0.24.0](https://github.com/kubernetes/ingress-nginx/releases/tag/nginx-0.24.0) the default enabled mode is dynamic.
 
 ## Motivation
 
