@@ -63,7 +63,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"access-log-params":             "buffer=4k gzip",
 		"access-log-path":               "/var/log/test/access.log",
 		"error-log-path":                "/var/log/test/error.log",
-		"use-gzip":                      "true",
+		"use-gzip":                      "false",
 		"gzip-level":                    "9",
 		"gzip-min-length":               "1024",
 		"gzip-types":                    "text/html",
