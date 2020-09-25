@@ -92,7 +92,7 @@ The following table shows a configuration option's name, type, and the default v
 |[ssl-buffer-size](#ssl-buffer-size)|string|"4k"|
 |[use-proxy-protocol](#use-proxy-protocol)|bool|"false"|
 |[proxy-protocol-header-timeout](#proxy-protocol-header-timeout)|string|"5s"|
-|[use-gzip](#use-gzip)|bool|"true"|
+|[use-gzip](#use-gzip)|bool|"false"|
 |[use-geoip](#use-geoip)|bool|"true"|
 |[use-geoip2](#use-geoip2)|bool|"false"|
 |[enable-brotli](#enable-brotli)|bool|"false"|
@@ -587,7 +587,7 @@ _**default:**_ 5s
 
 ## use-gzip
 
-Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html). MIME types to compress are controlled by [gzip-types](#gzip-types). _**default:**_ true
+Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html). MIME types to compress are controlled by [gzip-types](#gzip-types). _**default:**_ false
 
 ## use-geoip
 
@@ -694,7 +694,7 @@ _References:_
 Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle
 keepalive connections to upstream servers that are preserved in the cache of each worker process. When this number is
 exceeded, the least recently used connections are closed.
-_**default:**_ 32
+_**default:**_ 320
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive)
@@ -713,7 +713,7 @@ _References:_
 
 Sets the maximum number of requests that can be served through one keepalive connection. After the maximum number of
 requests is made, the connection is closed.
-_**default:**_ 100
+_**default:**_ 10000
 
 
 _References:_
