@@ -839,8 +839,6 @@ stream {
 
         more_set_headers 'Access-Control-Allow-Origin: {{ $cors.CorsAllowOrigin }}';
         {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
-        more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
-        more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
         {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
 
 {{ end }}
