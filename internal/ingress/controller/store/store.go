@@ -79,7 +79,7 @@ type Storer interface {
 	GetServiceEndpoints(key string) (*corev1.Endpoints, error)
 
 	// ListIngresses returns a list of all Ingresses in the store.
-	ListIngresses(IngressFilterFunc) []*ingress.Ingress
+	ListIngresses() []*ingress.Ingress
 
 	// GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods.
 	GetRunningControllerPodsCount() int
@@ -804,20 +804,7 @@ func (s *k8sStore) getIngress(key string) (*networkingv1beta1.Ingress, error) {
 	return &ing.Ingress, nil
 }
 
-// ListIngresses returns the list of Ingresses
-func (s *k8sStore) ListIngresses(filter IngressFilterFunc) []*ingress.Ingress {
-	// filter ingress rules
-	ingresses := make([]*ingress.Ingress, 0)
-	for _, item := range s.listers.IngressWithAnnotation.List() {
-		ing := item.(*ingress.Ingress)
-
-		if filter != nil && filter(ing) {
-			continue
-		}
-
-		ingresses = append(ingresses, ing)
-	}
-
+func sortIngressSlice(ingresses []*ingress.Ingress) {
 	// sort Ingresses using the CreationTimestamp field
 	sort.SliceStable(ingresses, func(i, j int) bool {
 		ir := ingresses[i].CreationTimestamp
@@ -830,6 +817,18 @@ func (s *k8sStore) ListIngresses(filter IngressFilterFunc) []*ingress.Ingress {
 		}
 		return ir.Before(&jr)
 	})
+}
+
+// ListIngresses returns the list of Ingresses
+func (s *k8sStore) ListIngresses() []*ingress.Ingress {
+	// filter ingress rules
+	ingresses := make([]*ingress.Ingress, 0)
+	for _, item := range s.listers.IngressWithAnnotation.List() {
+		ing := item.(*ingress.Ingress)
+		ingresses = append(ingresses, ing)
+	}
+
+	sortIngressSlice(ingresses)
 
 	return ingresses
 }

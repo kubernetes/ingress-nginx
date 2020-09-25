@@ -19,6 +19,7 @@ package store
 import (
 	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/ingress-nginx/internal/ingress"
 )
 
 // IngressLister makes a Store that lists Ingress.
@@ -36,4 +37,17 @@ func (il IngressLister) ByKey(key string) (*networking.Ingress, error) {
 		return nil, NotExistsError(key)
 	}
 	return i.(*networking.Ingress), nil
+}
+
+// FilterIngresses returns the list of Ingresses
+func FilterIngresses(ingresses []*ingress.Ingress, filterFunc IngressFilterFunc) []*ingress.Ingress {
+	afterFilter := make([]*ingress.Ingress, 0)
+	for _, ingress := range ingresses {
+		if !filterFunc(ingress) {
+			afterFilter = append(afterFilter, ingress)
+		}
+	}
+
+	sortIngressSlice(afterFilter)
+	return afterFilter
 }

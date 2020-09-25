@@ -37,7 +37,6 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -55,7 +54,7 @@ type Syncer interface {
 
 type ingressLister interface {
 	// ListIngresses returns the list of Ingresses
-	ListIngresses(store.IngressFilterFunc) []*ingress.Ingress
+	ListIngresses() []*ingress.Ingress
 }
 
 // Config ...
@@ -236,7 +235,7 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 
 // updateStatus changes the status information of Ingress rules
 func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
-	ings := s.IngressLister.ListIngresses(nil)
+	ings := s.IngressLister.ListIngresses()
 
 	p := pool.NewLimited(10)
 	defer p.Close()

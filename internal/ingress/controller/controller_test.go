@@ -78,8 +78,12 @@ func (fakeIngressStore) GetServiceEndpoints(key string) (*corev1.Endpoints, erro
 	return nil, fmt.Errorf("test error")
 }
 
-func (fis fakeIngressStore) ListIngresses(store.IngressFilterFunc) []*ingress.Ingress {
+func (fis fakeIngressStore) ListIngresses() []*ingress.Ingress {
 	return fis.ingresses
+}
+
+func (fis fakeIngressStore) FilterIngresses(ingresses []*ingress.Ingress, filterFunc store.IngressFilterFunc) []*ingress.Ingress {
+	return ingresses
 }
 
 func (fakeIngressStore) GetRunningControllerPodsCount() int {

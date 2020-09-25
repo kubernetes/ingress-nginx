@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -53,8 +53,8 @@ func TestHandleAdmission(t *testing.T) {
 	adm := &IngressAdmission{
 		Checker: failTestChecker{t: t},
 	}
-	review := &v1beta1.AdmissionReview{
-		Request: &v1beta1.AdmissionRequest{
+	review := &admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
 			Resource: v1.GroupVersionResource{Group: "", Version: "v1", Resource: "pod"},
 		},
 	}
