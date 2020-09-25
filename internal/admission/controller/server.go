@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -36,7 +36,7 @@ var (
 // AdmissionController checks if an object
 // is allowed in the cluster
 type AdmissionController interface {
-	HandleAdmission(*v1beta1.AdmissionReview)
+	HandleAdmission(*admissionv1.AdmissionReview)
 }
 
 // AdmissionControllerServer implements an HTTP server
@@ -71,8 +71,8 @@ func (acs *AdmissionControllerServer) ServeHTTP(w http.ResponseWriter, r *http.R
 	}
 }
 
-func parseAdmissionReview(decoder runtime.Decoder, r io.Reader) (*v1beta1.AdmissionReview, error) {
-	review := &v1beta1.AdmissionReview{}
+func parseAdmissionReview(decoder runtime.Decoder, r io.Reader) (*admissionv1.AdmissionReview, error) {
+	review := &admissionv1.AdmissionReview{}
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func parseAdmissionReview(decoder runtime.Decoder, r io.Reader) (*v1beta1.Admiss
 	return review, err
 }
 
-func writeAdmissionReview(w io.Writer, ar *v1beta1.AdmissionReview) error {
+func writeAdmissionReview(w io.Writer, ar *admissionv1.AdmissionReview) error {
 	e := json.NewEncoder(w)
 	return e.Encode(ar)
 }

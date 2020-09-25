@@ -38,6 +38,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/controller/store"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/klog/v2"
@@ -126,7 +128,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return nil
 	}
 
-	ings := n.store.ListIngresses(nil)
+	ings := n.store.ListIngresses()
 	hosts, servers, pcfg := n.getConfiguration(ings)
 
 	n.metricCollector.SetSSLExpireTime(servers)
@@ -225,23 +227,30 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		}
 	}
 
+	k8s.SetDefaultNGINXPathType(ing)
+
+	allIngresses := n.store.ListIngresses()
+
 	filter := func(toCheck *ingress.Ingress) bool {
 		return toCheck.ObjectMeta.Namespace == ing.ObjectMeta.Namespace &&
 			toCheck.ObjectMeta.Name == ing.ObjectMeta.Name
 	}
-
-	k8s.SetDefaultNGINXPathType(ing)
-
-	ings := n.store.ListIngresses(filter)
+	ings := store.FilterIngresses(allIngresses, filter)
 	ings = append(ings, &ingress.Ingress{
 		Ingress:           *ing,
 		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
 	})
 
-	_, _, pcfg := n.getConfiguration(ings)
-
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
+
+	_, servers, pcfg := n.getConfiguration(ings)
+
+	err := checkOverlap(ing, allIngresses, servers)
+	if err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+		return err
+	}
 
 	content, err := n.generateTemplate(cfg, *pcfg)
 	if err != nil {
@@ -252,11 +261,11 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	err = n.testTemplate(content)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
-	} else {
-		n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
+		return err
 	}
 
-	return err
+	n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
+	return nil
 }
 
 func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Protocol) []ingress.L4Service {
@@ -1518,4 +1527,80 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 		Port:       int32(port),
 		TargetPort: intstr.FromInt(port),
 	}
+}
+
+func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers []*ingress.Server) error {
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			continue
+		}
+
+		if rule.Host == "" {
+			rule.Host = defServerName
+		}
+
+		for _, path := range rule.HTTP.Paths {
+			if path.Path == "" {
+				path.Path = rootLocation
+			}
+
+			existingIngresses := ingressForHostPath(rule.Host, path.Path, servers)
+
+			// no previous ingress
+			if len(existingIngresses) == 0 {
+				continue
+			}
+
+			// same ingress
+			skipValidation := false
+			for _, existing := range existingIngresses {
+				if existing.ObjectMeta.Namespace == ing.ObjectMeta.Namespace && existing.ObjectMeta.Name == ing.ObjectMeta.Name {
+					return nil
+				}
+			}
+
+			if skipValidation {
+				continue
+			}
+
+			// path overlap. Check if one of the ingresses has a canary annotation
+			isCanaryEnabled, annotationErr := parser.GetBoolAnnotation("canary", ing)
+			for _, existing := range existingIngresses {
+				isExistingCanaryEnabled, existingAnnotationErr := parser.GetBoolAnnotation("canary", existing)
+
+				if isCanaryEnabled && isExistingCanaryEnabled {
+					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
+				}
+
+				if annotationErr == errors.ErrMissingAnnotations && existingAnnotationErr == existingAnnotationErr {
+					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
+				}
+			}
+
+			// no overlap
+			return nil
+		}
+	}
+
+	return nil
+}
+
+func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*networking.Ingress {
+	ingresses := make([]*networking.Ingress, 0)
+
+	for _, server := range servers {
+		if hostname != server.Hostname {
+			continue
+		}
+
+		for _, location := range server.Locations {
+			if location.Path != path {
+				continue
+			}
+
+			ingresses = append(ingresses, &location.Ingress.Ingress)
+		}
+	}
+
+	return ingresses
 }

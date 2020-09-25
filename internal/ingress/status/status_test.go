@@ -30,7 +30,6 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -234,7 +233,7 @@ func buildExtensionsIngresses() []networking.Ingress {
 type testIngressLister struct {
 }
 
-func (til *testIngressLister) ListIngresses(store.IngressFilterFunc) []*ingress.Ingress {
+func (til *testIngressLister) ListIngresses() []*ingress.Ingress {
 	var ingresses []*ingress.Ingress
 	ingresses = append(ingresses, &ingress.Ingress{
 		Ingress: networking.Ingress{

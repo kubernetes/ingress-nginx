@@ -24,7 +24,7 @@ webhooks:
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
-      - v1beta1
+      - v1
     clientConfig:
       service:
         namespace: {{ .Release.Namespace }}
