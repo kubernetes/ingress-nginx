@@ -24,13 +24,13 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 )
 
 type testAdmissionHandler struct{}
 
-func (testAdmissionHandler) HandleAdmission(ar *v1beta1.AdmissionReview) {
-	ar.Response = &v1beta1.AdmissionResponse{
+func (testAdmissionHandler) HandleAdmission(ar *admissionv1.AdmissionReview) {
+	ar.Response = &admissionv1.AdmissionResponse{
 		Allowed: true,
 	}
 }
@@ -56,7 +56,7 @@ func (errorWriter) WriteHeader(statusCode int) {}
 func TestServer(t *testing.T) {
 	w := httptest.NewRecorder()
 	b := bytes.NewBuffer(nil)
-	writeAdmissionReview(b, &v1beta1.AdmissionReview{})
+	writeAdmissionReview(b, &admissionv1.AdmissionReview{})
 
 	// Happy path
 	r := httptest.NewRequest("GET", "http://test.ns.svc", b)
