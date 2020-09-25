@@ -3755,7 +3755,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#use-gzip">use-gzip</a></td>
 <td align="left">bool</td>
-<td align="left">"true"</td>
+<td align="left">"false"</td>
 </tr>
 <tr>
 <td align="left"><a href="#use-geoip">use-geoip</a></td>
@@ -4465,7 +4465,7 @@ To create a ticket: <code>openssl rand 80 | openssl enc -A -base64</code></p>
 <p>Sets the timeout value for receiving the proxy-protocol headers. The default of 5 seconds prevents the TLS passthrough handler from waiting indefinitely on a dropped connection.
 <em><strong>default:</strong></em> 5s</p>
 <h2 id="use-gzip">use-gzip<a class="headerlink" href="#use-gzip" title="Permanent link"> ¶</a></h2>
-<p>Enables or disables compression of HTTP responses using the <a href="http://nginx.org/en/docs/http/ngx_http_gzip_module.html">"gzip" module</a>. MIME types to compress are controlled by <a href="#gzip-types">gzip-types</a>. <em><strong>default:</strong></em> true</p>
+<p>Enables or disables compression of HTTP responses using the <a href="http://nginx.org/en/docs/http/ngx_http_gzip_module.html">"gzip" module</a>. MIME types to compress are controlled by <a href="#gzip-types">gzip-types</a>. <em><strong>default:</strong></em> false</p>
 <h2 id="use-geoip">use-geoip<a class="headerlink" href="#use-geoip" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_geoip_module.html">"geoip" module</a> that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
 <em><strong>default:</strong></em> true</p>
@@ -4541,7 +4541,7 @@ The value can either be:</p>
 <p>Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle
 keepalive connections to upstream servers that are preserved in the cache of each worker process. When this number is
 exceeded, the least recently used connections are closed.
-<em><strong>default:</strong></em> 32</p>
+<em><strong>default:</strong></em> 320</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive">http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive</a></p>
 <h2 id="upstream-keepalive-timeout">upstream-keepalive-timeout<a class="headerlink" href="#upstream-keepalive-timeout" title="Permanent link"> ¶</a></h2>
@@ -4552,7 +4552,7 @@ exceeded, the least recently used connections are closed.
 <h2 id="upstream-keepalive-requests">upstream-keepalive-requests<a class="headerlink" href="#upstream-keepalive-requests" title="Permanent link"> ¶</a></h2>
 <p>Sets the maximum number of requests that can be served through one keepalive connection. After the maximum number of
 requests is made, the connection is closed.
-<em><strong>default:</strong></em> 100</p>
+<em><strong>default:</strong></em> 10000</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests">http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests</a></p>
 <h2 id="limit-conn-zone-variable">limit-conn-zone-variable<a class="headerlink" href="#limit-conn-zone-variable" title="Permanent link"> ¶</a></h2>
