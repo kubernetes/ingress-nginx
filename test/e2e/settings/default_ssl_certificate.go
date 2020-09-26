@@ -47,15 +47,14 @@ var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", f
 			f.Namespace)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1.Deployment) error {
-				args := deployment.Spec.Template.Spec.Containers[0].Args
-				args = append(args, "--default-ssl-certificate=$(POD_NAMESPACE)/"+secretName)
-				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+		err = f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--default-ssl-certificate=$(POD_NAMESPACE)/"+secretName)
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 
-				return err
-			})
+			return err
+		})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 
 		// this asserts that it configures default custom ssl certificate without an ingress at all

@@ -55,12 +55,7 @@ func (f *Framework) GetLbAlgorithm(serviceName string, servicePort int) (string,
 
 // ExecIngressPod executes a command inside the first container in ingress controller running pod
 func (f *Framework) ExecIngressPod(command string) (string, error) {
-	pod, err := GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
-	if err != nil {
-		return "", err
-	}
-
-	return f.ExecCommand(pod, command)
+	return f.ExecCommand(f.pod, command)
 }
 
 // ExecCommand executes a command inside a the first container in a running pod

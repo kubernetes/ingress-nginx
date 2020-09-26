@@ -75,6 +75,9 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 	return defaultOrInternalIP
 }
 
+// IngressNGINXPod hold information about the ingress-nginx pod
+var IngressNGINXPod *apiv1.Pod
+
 // PodInfo contains runtime information about the pod running the Ingres controller
 type PodInfo struct {
 	Name      string
@@ -84,25 +87,34 @@ type PodInfo struct {
 	Labels map[string]string
 }
 
-// GetPodDetails returns runtime information about the pod:
-// name, namespace and IP of the node where it is running
-func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
+// GetIngressPod load the ingress-nginx pod
+func GetIngressPod(kubeClient clientset.Interface) error {
 	podName := os.Getenv("POD_NAME")
 	podNs := os.Getenv("POD_NAMESPACE")
 
 	if podName == "" || podNs == "" {
-		return nil, fmt.Errorf("unable to get POD information (missing POD_NAME or POD_NAMESPACE environment variable")
+		return fmt.Errorf("unable to get POD information (missing POD_NAME or POD_NAMESPACE environment variable")
 	}
 
-	pod, _ := kubeClient.CoreV1().Pods(podNs).Get(context.TODO(), podName, metav1.GetOptions{})
-	if pod == nil {
-		return nil, fmt.Errorf("unable to get POD information")
+	IngressNGINXPod, _ = kubeClient.CoreV1().Pods(podNs).Get(context.TODO(), podName, metav1.GetOptions{})
+	if IngressNGINXPod == nil {
+		return fmt.Errorf("unable to get POD information")
+	}
+
+	return nil
+}
+
+// GetPodDetails returns runtime information about the pod:
+// name, namespace and IP of the node where it is running
+func GetPodDetails() (*PodInfo, error) {
+	if IngressNGINXPod == nil {
+		return nil, fmt.Errorf("no ingress-nginx pod details available")
 	}
 
 	return &PodInfo{
-		Name:      podName,
-		Namespace: podNs,
-		Labels:    pod.GetLabels(),
+		Name:      IngressNGINXPod.Name,
+		Namespace: IngressNGINXPod.Namespace,
+		Labels:    IngressNGINXPod.GetLabels(),
 	}, nil
 }
 

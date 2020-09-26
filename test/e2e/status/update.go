@@ -44,30 +44,29 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 		port, cmd, err := f.KubectlProxy(0)
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error starting kubectl proxy")
 
-		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1.Deployment) error {
-				args := []string{}
-				// flags --publish-service and --publish-status-address are mutually exclusive
+		err = f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := []string{}
+			// flags --publish-service and --publish-status-address are mutually exclusive
 
-				for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
-					if strings.Contains(v, "--publish-service") {
-						continue
-					}
-
-					if strings.Contains(v, "--update-status") {
-						continue
-					}
-
-					args = append(args, v)
+			for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
+				if strings.Contains(v, "--publish-service") {
+					continue
 				}
 
-				args = append(args, fmt.Sprintf("--apiserver-host=http://%s:%d", address.String(), port))
-				args = append(args, "--publish-status-address=1.1.0.0")
+				if strings.Contains(v, "--update-status") {
+					continue
+				}
 
-				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
-				return err
-			})
+				args = append(args, v)
+			}
+
+			args = append(args, fmt.Sprintf("--apiserver-host=http://%s:%d", address.String(), port))
+			args = append(args, "--publish-status-address=1.1.0.0")
+
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating ingress controller deployment flags")
 
 		f.NewEchoDeploymentWithReplicas(1)

@@ -218,7 +218,7 @@ func TestGetPodDetails(t *testing.T) {
 	// POD_NAME & POD_NAMESPACE not exist
 	os.Setenv("POD_NAME", "")
 	os.Setenv("POD_NAMESPACE", "")
-	_, err1 := GetPodDetails(testclient.NewSimpleClientset())
+	err1 := GetIngressPod(testclient.NewSimpleClientset())
 	if err1 == nil {
 		t.Errorf("expected an error but returned nil")
 	}
@@ -226,7 +226,7 @@ func TestGetPodDetails(t *testing.T) {
 	// POD_NAME not exist
 	os.Setenv("POD_NAME", "")
 	os.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
-	_, err2 := GetPodDetails(testclient.NewSimpleClientset())
+	err2 := GetIngressPod(testclient.NewSimpleClientset())
 	if err2 == nil {
 		t.Errorf("expected an error but returned nil")
 	}
@@ -234,7 +234,7 @@ func TestGetPodDetails(t *testing.T) {
 	// POD_NAMESPACE not exist
 	os.Setenv("POD_NAME", "testpod")
 	os.Setenv("POD_NAMESPACE", "")
-	_, err3 := GetPodDetails(testclient.NewSimpleClientset())
+	err3 := GetIngressPod(testclient.NewSimpleClientset())
 	if err3 == nil {
 		t.Errorf("expected an error but returned nil")
 	}
@@ -242,7 +242,7 @@ func TestGetPodDetails(t *testing.T) {
 	// POD not exist
 	os.Setenv("POD_NAME", "testpod")
 	os.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
-	_, err4 := GetPodDetails(testclient.NewSimpleClientset())
+	err4 := GetIngressPod(testclient.NewSimpleClientset())
 	if err4 == nil {
 		t.Errorf("expected an error but returned nil")
 	}
@@ -273,13 +273,9 @@ func TestGetPodDetails(t *testing.T) {
 			},
 		}}})
 
-	epi, err5 := GetPodDetails(fkClient)
+	err5 := GetIngressPod(fkClient)
 	if err5 != nil {
 		t.Errorf("expected a PodInfo but returned error")
 		return
-	}
-
-	if epi == nil {
-		t.Errorf("expected a PodInfo but returned nil")
 	}
 }

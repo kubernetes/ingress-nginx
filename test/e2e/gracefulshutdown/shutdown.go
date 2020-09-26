@@ -64,13 +64,12 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 	ginkgo.It("should shutdown after waiting 60 seconds for pending connections to be closed", func(done ginkgo.Done) {
 		defer close(done)
 
-		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1.Deployment) error {
-				grace := int64(3600)
-				deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
-				return err
-			})
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			grace := int64(3600)
+			deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment")
 
 		annotations := map[string]string{
@@ -110,13 +109,12 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 	ginkgo.It("should shutdown after waiting 150 seconds for pending connections to be closed", func(done ginkgo.Done) {
 		defer close(done)
 
-		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1.Deployment) error {
-				grace := int64(3600)
-				deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
-				return err
-			})
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			grace := int64(3600)
+			deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		annotations := map[string]string{

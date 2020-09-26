@@ -82,9 +82,6 @@ type Config struct {
 type statusSync struct {
 	Config
 
-	// pod contains runtime information about this pod
-	pod *k8s.PodInfo
-
 	// workqueue used to keep in sync the status IP/s
 	// in the Ingress rules
 	syncQueue *task.Queue
@@ -158,10 +155,8 @@ func (s statusSync) keyfunc(input interface{}) (interface{}, error) {
 }
 
 // NewStatusSyncer returns a new Syncer instance
-func NewStatusSyncer(podInfo *k8s.PodInfo, config Config) Syncer {
+func NewStatusSyncer(config Config) Syncer {
 	st := statusSync{
-		pod: podInfo,
-
 		Config: config,
 	}
 	st.syncQueue = task.NewCustomTaskQueue(st.sync, st.keyfunc)
@@ -180,9 +175,14 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		return statusAddressFromService(s.PublishService, s.Client)
 	}
 
+	ingressPod, err := k8s.GetPodDetails()
+	if err != nil {
+		return nil, err
+	}
+
 	// get information about all the pods running the ingress controller
-	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
+	pods, err := s.Client.CoreV1().Pods(ingressPod.Namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(ingressPod.Labels).String(),
 	})
 	if err != nil {
 		return nil, err
@@ -205,8 +205,13 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 }
 
 func (s *statusSync) isRunningMultiplePods() bool {
-	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
+	ingressPod, err := k8s.GetPodDetails()
+	if err != nil {
+		return false
+	}
+
+	pods, err := s.Client.CoreV1().Pods(ingressPod.Namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(ingressPod.Labels).String(),
 	})
 	if err != nil {
 		return false

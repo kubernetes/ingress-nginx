@@ -47,11 +47,13 @@ import (
 func TestStore(t *testing.T) {
 	k8s.IsNetworkingIngressAvailable = true
 
-	pod := &k8s.PodInfo{
-		Name:      "testpod",
-		Namespace: v1.NamespaceDefault,
-		Labels: map[string]string{
-			"pod-template-hash": "1234",
+	k8s.IngressNGINXPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpod",
+			Namespace: v1.NamespaceDefault,
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
 		},
 	}
 
@@ -94,7 +96,6 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			updateCh,
-			pod,
 			false)
 
 		storer.Run(stopCh)
@@ -172,7 +173,6 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			updateCh,
-			pod,
 			false)
 
 		storer.Run(stopCh)
@@ -320,7 +320,6 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			updateCh,
-			pod,
 			false)
 
 		storer.Run(stopCh)
@@ -424,7 +423,6 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			updateCh,
-			pod,
 			false)
 
 		storer.Run(stopCh)
@@ -511,7 +509,6 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			updateCh,
-			pod,
 			false)
 
 		storer.Run(stopCh)
@@ -620,7 +617,6 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			updateCh,
-			pod,
 			false)
 
 		storer.Run(stopCh)
@@ -777,11 +773,13 @@ func deleteIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, 
 // newStore creates a new mock object store for tests which do not require the
 // use of Informers.
 func newStore(t *testing.T) *k8sStore {
-	pod := &k8s.PodInfo{
-		Name:      "ingress-1",
-		Namespace: v1.NamespaceDefault,
-		Labels: map[string]string{
-			"pod-template-hash": "1234",
+	k8s.IngressNGINXPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ingress-1",
+			Namespace: v1.NamespaceDefault,
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
 		},
 	}
 
@@ -797,7 +795,6 @@ func newStore(t *testing.T) *k8sStore {
 		syncSecretMu:     new(sync.Mutex),
 		backendConfigMu:  new(sync.RWMutex),
 		secretIngressMap: NewObjectRefMap(),
-		pod:              pod,
 	}
 }
 
@@ -1011,14 +1008,17 @@ func TestGetRunningControllerPodsCount(t *testing.T) {
 	os.Setenv("POD_NAMESPACE", "testns")
 	os.Setenv("POD_NAME", "ingress-1")
 
-	s := newStore(t)
-	s.pod = &k8s.PodInfo{
-		Name:      "ingress-1",
-		Namespace: "testns",
-		Labels: map[string]string{
-			"pod-template-hash": "1234",
+	k8s.IngressNGINXPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ingress-1",
+			Namespace: "testns",
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
 		},
 	}
+
+	s := newStore(t)
 
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

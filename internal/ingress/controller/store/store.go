@@ -220,8 +220,6 @@ type k8sStore struct {
 	backendConfigMu *sync.RWMutex
 
 	defaultSSLCertificate string
-
-	pod *k8s.PodInfo
 }
 
 // New creates a new object store to be used in the ingress controller
@@ -230,7 +228,6 @@ func New(
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	updateCh *channels.RingChannel,
-	pod *k8s.PodInfo,
 	disableCatchAll bool) Storer {
 
 	store := &k8sStore{
@@ -243,7 +240,6 @@ func New(
 		backendConfigMu:       &sync.RWMutex{},
 		secretIngressMap:      NewObjectRefMap(),
 		defaultSSLCertificate: defaultSSLCertificate,
-		pod:                   pod,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -294,16 +290,17 @@ func New(
 	store.informers.Service = infFactory.Core().V1().Services().Informer()
 	store.listers.Service.Store = store.informers.Service.GetStore()
 
-	labelSelector := labels.SelectorFromSet(store.pod.Labels)
+	ingressPodInfo, _ := k8s.GetPodDetails()
+	labelSelector := labels.SelectorFromSet(ingressPodInfo.Labels)
 	store.informers.Pod = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (k8sruntime.Object, error) {
 				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(store.pod.Namespace).List(context.TODO(), options)
+				return client.CoreV1().Pods(ingressPodInfo.Namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(store.pod.Namespace).Watch(context.TODO(), options)
+				return client.CoreV1().Pods(ingressPodInfo.Namespace).Watch(context.TODO(), options)
 			},
 		},
 		&corev1.Pod{},

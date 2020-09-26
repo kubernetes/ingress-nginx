@@ -100,23 +100,22 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 
 	ginkgo.Context("With a specific ingress-class", func() {
 		ginkgo.BeforeEach(func() {
-			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-				func(deployment *appsv1.Deployment) error {
-					args := []string{}
-					for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
-						if strings.Contains(v, "--ingress-class") {
-							continue
-						}
-
-						args = append(args, v)
+			err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+				args := []string{}
+				for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
+					if strings.Contains(v, "--ingress-class") {
+						continue
 					}
 
-					args = append(args, "--ingress-class=testclass")
-					deployment.Spec.Template.Spec.Containers[0].Args = args
-					_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+					args = append(args, v)
+				}
 
-					return err
-				})
+				args = append(args, "--ingress-class=testclass")
+				deployment.Spec.Template.Spec.Containers[0].Args = args
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+
+				return err
+			})
 			assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 		})
 
@@ -214,8 +213,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			assert.Nil(ginkgo.GinkgoT(), err, "creating IngressClass")
 		}
 
-		pod, err := framework.GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
-		assert.Nil(ginkgo.GinkgoT(), err, "searching ingress controller pod")
+		pod := f.GetIngressNGINXPod()
 		serviceAccount := pod.Spec.ServiceAccountName
 
 		crb, err := f.KubeClientSet.RbacV1().ClusterRoleBindings().Get(context.Background(), "ingress-nginx-class", metav1.GetOptions{})
@@ -232,22 +230,21 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		_, err = f.KubeClientSet.RbacV1().ClusterRoleBindings().Update(context.Background(), crb, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "searching cluster role binding")
 
-		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1.Deployment) error {
-				args := []string{}
-				for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
-					if strings.Contains(v, "--ingress-class") {
-						continue
-					}
-
-					args = append(args, v)
+		err = f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := []string{}
+			for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
+				if strings.Contains(v, "--ingress-class") {
+					continue
 				}
 
-				args = append(args, fmt.Sprintf("--ingress-class=%v", ingressClassName))
-				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
-				return err
-			})
+				args = append(args, v)
+			}
+
+			args = append(args, fmt.Sprintf("--ingress-class=%v", ingressClassName))
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 
 		host := "ingress.class"
