@@ -48,6 +48,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|
+|[nginx.ingress.kubernetes.io/cors-expose-headers](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
@@ -335,6 +336,12 @@ CORS can be controlled with the following annotations:
   numbers, _ and -.
   - Default: `DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization`
   - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
+
+* `nginx.ingress.kubernetes.io/cors-expose-headers`
+  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts 
+  letters, numbers, _, - and *.
+  - Default: *empty*
+  - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
 
 * `nginx.ingress.kubernetes.io/cors-allow-origin`
   controls what's the accepted Origin for CORS.
