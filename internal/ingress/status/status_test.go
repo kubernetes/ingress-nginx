@@ -24,6 +24,7 @@ import (
 	"time"
 
 	apiv1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
@@ -264,13 +265,6 @@ func buildIngressLister() ingressLister {
 
 func buildStatusSync() statusSync {
 	return statusSync{
-		pod: &k8s.PodInfo{
-			Name:      "foo_base_pod",
-			Namespace: apiv1.NamespaceDefault,
-			Labels: map[string]string{
-				"lable_sig": "foo_pod",
-			},
-		},
 		syncQueue: task.NewTaskQueue(fakeSynFn),
 		Config: Config{
 			Client:         buildSimpleClientSet(),
@@ -291,14 +285,18 @@ func TestStatusActions(t *testing.T) {
 		UpdateStatusOnShutdown: true,
 	}
 
-	// create object
-	fkSync := NewStatusSyncer(&k8s.PodInfo{
-		Name:      "foo_base_pod",
-		Namespace: apiv1.NamespaceDefault,
-		Labels: map[string]string{
-			"lable_sig": "foo_pod",
+	k8s.IngressNGINXPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "foo_base_pod",
+			Namespace: apiv1.NamespaceDefault,
+			Labels: map[string]string{
+				"lable_sig": "foo_pod",
+			},
 		},
-	}, c)
+	}
+
+	// create object
+	fkSync := NewStatusSyncer(c)
 	if fkSync == nil {
 		t.Fatalf("expected a valid Sync")
 	}

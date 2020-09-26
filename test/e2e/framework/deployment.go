@@ -409,3 +409,13 @@ func (f *Framework) ScaleDeploymentToZero(name string) {
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 0)
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for no endpoints")
 }
+
+// UpdateIngressControllerDeployment updates the ingress-nginx deployment
+func (f *Framework) UpdateIngressControllerDeployment(fn func(deployment *appsv1.Deployment) error) error {
+	err := UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1, fn)
+	if err != nil {
+		return err
+	}
+
+	return f.updateIngressNGINXPod()
+}

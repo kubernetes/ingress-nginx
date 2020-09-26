@@ -17,36 +17,23 @@ limitations under the License.
 package framework
 
 import (
-	"bytes"
-	"fmt"
-	"os/exec"
+	"context"
 
-	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Logs returns the log entries of a given Pod.
-func Logs(pod *corev1.Pod) (string, error) {
-	var (
-		execOut bytes.Buffer
-		execErr bytes.Buffer
-	)
-
-	if len(pod.Spec.Containers) != 1 {
-		return "", fmt.Errorf("could not determine which container to use")
-	}
-
-	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v logs --namespace %s %s", KubectlPath, pod.Namespace, pod.Name))
-	cmd.Stdout = &execOut
-	cmd.Stderr = &execErr
-
-	err := cmd.Run()
+func Logs(client kubernetes.Interface, namespace, podName string) (string, error) {
+	logs, err := client.CoreV1().RESTClient().Get().
+		Resource("pods").
+		Namespace(namespace).
+		Name(podName).SubResource("log").
+		Param("container", "controller").
+		Do(context.TODO()).
+		Raw()
 	if err != nil {
-		return "", fmt.Errorf("could not execute '%s %s': %v", cmd.Path, cmd.Args, err)
+		return "", err
 	}
 
-	if execErr.Len() > 0 {
-		return "", fmt.Errorf("stderr: %v", execErr.String())
-	}
-
-	return execOut.String(), nil
+	return string(logs), nil
 }

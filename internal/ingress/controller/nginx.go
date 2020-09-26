@@ -56,7 +56,6 @@ import (
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/ingress/status"
-	"k8s.io/ingress-nginx/internal/k8s"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/net/ssl"
@@ -118,12 +117,6 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		}
 	}
 
-	pod, err := k8s.GetPodDetails(config.Client)
-	if err != nil {
-		klog.Fatalf("unexpected error obtaining pod information: %v", err)
-	}
-	n.podInfo = pod
-
 	n.store = store.New(
 		config.Namespace,
 		config.ConfigMapName,
@@ -133,13 +126,12 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		config.ResyncPeriod,
 		config.Client,
 		n.updateCh,
-		pod,
 		config.DisableCatchAll)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
 	if config.UpdateStatus {
-		n.syncStatus = status.NewStatusSyncer(pod, status.Config{
+		n.syncStatus = status.NewStatusSyncer(status.Config{
 			Client:                 config.Client,
 			PublishService:         config.PublishService,
 			PublishStatusAddress:   config.PublishStatusAddress,
@@ -213,8 +205,6 @@ Error loading new template: %v
 
 // NGINXController describes a NGINX Ingress controller.
 type NGINXController struct {
-	podInfo *k8s.PodInfo
-
 	cfg *Configuration
 
 	recorder record.EventRecorder
@@ -287,8 +277,6 @@ func (n *NGINXController) Start() {
 		OnStoppedLeading: func() {
 			n.metricCollector.OnStoppedLeading(electionID)
 		},
-		PodName:      n.podInfo.Name,
-		PodNamespace: n.podInfo.Namespace,
 	})
 
 	cmd := n.command.ExecCommand()

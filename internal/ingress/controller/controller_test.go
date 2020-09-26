@@ -1662,13 +1662,6 @@ func testConfigMap(ns string) *v1.ConfigMap {
 
 func newNGINXController(t *testing.T) *NGINXController {
 	ns := v1.NamespaceDefault
-	pod := &k8s.PodInfo{
-		Name:      "testpod",
-		Namespace: ns,
-		Labels: map[string]string{
-			"pod-template-hash": "1234",
-		},
-	}
 
 	clientSet := fake.NewSimpleClientset()
 
@@ -1684,6 +1677,16 @@ func newNGINXController(t *testing.T) *NGINXController {
 		t.Fatalf("error creating the configuration map: %v", err)
 	}
 
+	k8s.IngressNGINXPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpod",
+			Namespace: ns,
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
+		},
+	}
+
 	storer := store.New(
 		ns,
 		fmt.Sprintf("%v/config", ns),
@@ -1693,7 +1696,6 @@ func newNGINXController(t *testing.T) *NGINXController {
 		10*time.Minute,
 		clientSet,
 		channels.NewRingChannel(10),
-		pod,
 		false)
 
 	sslCert := ssl.GetFakeSSLCert()
@@ -1724,13 +1726,6 @@ func fakeX509Cert(dnsNames []string) *x509.Certificate {
 
 func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.ConfigMap) *NGINXController {
 	ns := v1.NamespaceDefault
-	pod := &k8s.PodInfo{
-		Name:      "testpod",
-		Namespace: ns,
-		Labels: map[string]string{
-			"pod-template-hash": "1234",
-		},
-	}
 
 	clientSet := fake.NewSimpleClientset()
 	configMap := setConfigMap(ns)
@@ -1738,6 +1733,16 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("error creating the configuration map: %v", err)
+	}
+
+	k8s.IngressNGINXPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpod",
+			Namespace: ns,
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
+		},
 	}
 
 	storer := store.New(
@@ -1749,7 +1754,6 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		10*time.Minute,
 		clientSet,
 		channels.NewRingChannel(10),
-		pod,
 		false)
 
 	sslCert := ssl.GetFakeSSLCert()

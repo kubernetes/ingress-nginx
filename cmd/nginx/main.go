@@ -135,6 +135,11 @@ func main() {
 
 	conf.Client = kubeClient
 
+	err = k8s.GetIngressPod(kubeClient)
+	if err != nil {
+		klog.Fatalf("Unexpected error obtaining ingress-nginx pod: %v", err)
+	}
+
 	reg := prometheus.NewRegistry()
 
 	reg.MustRegister(prometheus.NewGoCollector())

@@ -207,7 +207,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.Equal(ginkgo.GinkgoT(), output, `{"controllerPodsCount":1}`)
 
-		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 3, nil)
+		err = f.UpdateIngressControllerDeployment(nil)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		output, err = f.ExecIngressPod(curlCmd)
