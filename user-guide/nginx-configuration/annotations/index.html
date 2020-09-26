@@ -2064,6 +2064,10 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#enable-cors">nginx.ingress.kubernetes.io/cors-expose-headers</a></td>
+<td>string</td>
+</tr>
+<tr>
 <td><a href="#enable-cors">nginx.ingress.kubernetes.io/cors-allow-credentials</a></td>
 <td>"true" or "false"</td>
 </tr>
@@ -2523,6 +2527,15 @@ location enabling this functionality.</p>
 <li>Default: <code>DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization</code></li>
 <li>
 <p>Example: <code>nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"</code></p>
+</li>
+<li>
+<p><code>nginx.ingress.kubernetes.io/cors-expose-headers</code>
+  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts 
+  letters, numbers, _, - and *.</p>
+</li>
+<li>Default: <em>empty</em></li>
+<li>
+<p>Example: <code>nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"</code></p>
 </li>
 <li>
 <p><code>nginx.ingress.kubernetes.io/cors-allow-origin</code>
