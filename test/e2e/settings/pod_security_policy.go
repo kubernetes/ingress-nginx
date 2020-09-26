@@ -62,15 +62,14 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies", func(
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller cluster role to use a pod security policy")
 
 		// update the deployment just to trigger a rolling update and the use of the security policy
-		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1.Deployment) error {
-				args := deployment.Spec.Template.Spec.Containers[0].Args
-				args = append(args, "--v=2")
-				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+		err = f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--v=2")
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 
-				return err
-			})
+			return err
+		})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating ingress controller deployment flags")
 
 		f.WaitForNginxListening(80)

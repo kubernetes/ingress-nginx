@@ -43,6 +43,7 @@ import (
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/apis/core"
 )
 
 const (
@@ -154,12 +155,15 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			n.metricCollector.IncReloadErrorCount()
 			n.metricCollector.ConfigSuccess(hash, false)
 			klog.Errorf("Unexpected failure reloading the backend:\n%v", err)
+			n.recorder.Eventf(k8s.IngressNGINXPod, core.EventTypeWarning, "RELOAD", fmt.Sprintf("Error reloading NGINX: %v", err))
 			return err
 		}
 
 		klog.Infof("Backend successfully reloaded.")
 		n.metricCollector.ConfigSuccess(hash, true)
 		n.metricCollector.IncReloadCount()
+
+		n.recorder.Eventf(k8s.IngressNGINXPod, core.EventTypeNormal, "RELOAD", "NGINX reload triggered due to a change in configuration")
 	}
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
