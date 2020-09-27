@@ -73,9 +73,6 @@ type Configuration struct {
 
 	// ConfigurationChecksum contains the particular checksum of a Configuration object
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
-
-	// ControllerPodsCount contains the list of running ingress controller Pod(s)
-	ControllerPodsCount int `json:"controllerPodsCount,omitempty"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -390,5 +387,4 @@ type Ingress struct {
 
 // GeneralConfig holds the definition of lua general configuration data
 type GeneralConfig struct {
-	ControllerPodsCount int `json:"controllerPodsCount"`
 }

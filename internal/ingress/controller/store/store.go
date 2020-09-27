@@ -30,11 +30,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -81,9 +79,6 @@ type Storer interface {
 	// ListIngresses returns a list of all Ingresses in the store.
 	ListIngresses() []*ingress.Ingress
 
-	// GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods.
-	GetRunningControllerPodsCount() int
-
 	// GetLocalSSLCert returns the local copy of a SSLCert
 	GetLocalSSLCert(name string) (*ingress.SSLCert, error)
 
@@ -129,7 +124,6 @@ type Informer struct {
 	Service   cache.SharedIndexInformer
 	Secret    cache.SharedIndexInformer
 	ConfigMap cache.SharedIndexInformer
-	Pod       cache.SharedIndexInformer
 }
 
 // Lister contains object listers (stores).
@@ -140,7 +134,6 @@ type Lister struct {
 	Secret                SecretLister
 	ConfigMap             ConfigMapLister
 	IngressWithAnnotation IngressWithAnnotationsLister
-	Pod                   PodLister
 }
 
 // NotExistsError is returned when an object does not exist in a local store.
@@ -157,7 +150,6 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	go i.Endpoint.Run(stopCh)
 	go i.Service.Run(stopCh)
 	go i.ConfigMap.Run(stopCh)
-	go i.Pod.Run(stopCh)
 
 	// wait for all involved caches to be synced before processing items
 	// from the queue
@@ -166,7 +158,6 @@ func (i *Informer) Run(stopCh chan struct{}) {
 		i.Service.HasSynced,
 		i.Secret.HasSynced,
 		i.ConfigMap.HasSynced,
-		i.Pod.HasSynced,
 	) {
 		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
@@ -289,25 +280,6 @@ func New(
 
 	store.informers.Service = infFactory.Core().V1().Services().Informer()
 	store.listers.Service.Store = store.informers.Service.GetStore()
-
-	ingressPodInfo, _ := k8s.GetPodDetails()
-	labelSelector := labels.SelectorFromSet(ingressPodInfo.Labels)
-	store.informers.Pod = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (k8sruntime.Object, error) {
-				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(ingressPodInfo.Namespace).List(context.TODO(), options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(ingressPodInfo.Namespace).Watch(context.TODO(), options)
-			},
-		},
-		&corev1.Pod{},
-		resyncPeriod,
-		cache.Indexers{},
-	)
-	store.listers.Pod.Store = store.informers.Pod.GetStore()
 
 	ingDeleteHandler := func(obj interface{}) {
 		ing, ok := toIngress(obj)
@@ -592,34 +564,6 @@ func New(
 		},
 	}
 
-	podEventHandler := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			updateCh.In() <- Event{
-				Type: CreateEvent,
-				Obj:  obj,
-			}
-		},
-		UpdateFunc: func(old, cur interface{}) {
-			oldPod := old.(*corev1.Pod)
-			curPod := cur.(*corev1.Pod)
-
-			if oldPod.Status.Phase == curPod.Status.Phase {
-				return
-			}
-
-			updateCh.In() <- Event{
-				Type: UpdateEvent,
-				Obj:  cur,
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			updateCh.In() <- Event{
-				Type: DeleteEvent,
-				Obj:  obj,
-			}
-		},
-	}
-
 	serviceHandler := cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(old, cur interface{}) {
 			oldSvc := old.(*corev1.Service)
@@ -641,7 +585,6 @@ func New(
 	store.informers.Secret.AddEventHandler(secrEventHandler)
 	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
 	store.informers.Service.AddEventHandler(serviceHandler)
-	store.informers.Pod.AddEventHandler(podEventHandler)
 
 	// do not wait for informers to read the configmap configuration
 	ns, name, _ := k8s.ParseNameNS(configmap)
@@ -928,23 +871,6 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 func (s *k8sStore) Run(stopCh chan struct{}) {
 	// start informers
 	s.informers.Run(stopCh)
-}
-
-// GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods
-func (s k8sStore) GetRunningControllerPodsCount() int {
-	count := 0
-
-	for _, i := range s.listers.Pod.List() {
-		pod := i.(*corev1.Pod)
-
-		if pod.Status.Phase != corev1.PodRunning {
-			continue
-		}
-
-		count++
-	}
-
-	return count
 }
 
 var runtimeScheme = k8sruntime.NewScheme()

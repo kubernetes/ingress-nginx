@@ -47,16 +47,6 @@ import (
 func TestStore(t *testing.T) {
 	k8s.IsNetworkingIngressAvailable = true
 
-	k8s.IngressNGINXPod = &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testpod",
-			Namespace: v1.NamespaceDefault,
-			Labels: map[string]string{
-				"pod-template-hash": "1234",
-			},
-		},
-	}
-
 	//TODO: move env definition to docker image?
 	os.Setenv("KUBEBUILDER_ASSETS", "/usr/local/bin")
 
@@ -773,22 +763,11 @@ func deleteIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, 
 // newStore creates a new mock object store for tests which do not require the
 // use of Informers.
 func newStore(t *testing.T) *k8sStore {
-	k8s.IngressNGINXPod = &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ingress-1",
-			Namespace: v1.NamespaceDefault,
-			Labels: map[string]string{
-				"pod-template-hash": "1234",
-			},
-		},
-	}
-
 	return &k8sStore{
 		listers: &Lister{
 			// add more listers if needed
 			Ingress:               IngressLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
 			IngressWithAnnotation: IngressWithAnnotationsLister{cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)},
-			Pod:                   PodLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
 		},
 		sslStore:         NewSSLCertTracker(),
 		updateCh:         channels.NewRingChannel(10),
@@ -1001,69 +980,5 @@ func TestWriteSSLSessionTicketKey(t *testing.T) {
 		if test != encodedContent {
 			t.Fatalf("expected %v but returned %s", test, encodedContent)
 		}
-	}
-}
-
-func TestGetRunningControllerPodsCount(t *testing.T) {
-	os.Setenv("POD_NAMESPACE", "testns")
-	os.Setenv("POD_NAME", "ingress-1")
-
-	k8s.IngressNGINXPod = &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ingress-1",
-			Namespace: "testns",
-			Labels: map[string]string{
-				"pod-template-hash": "1234",
-			},
-		},
-	}
-
-	s := newStore(t)
-
-	pod := &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ingress-1",
-			Namespace: "testns",
-			Labels: map[string]string{
-				"pod-template-hash": "1234",
-			},
-		},
-		Status: v1.PodStatus{
-			Phase: v1.PodRunning,
-		},
-	}
-	s.listers.Pod.Add(pod)
-
-	pod = &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ingress-2",
-			Namespace: "testns",
-			Labels: map[string]string{
-				"pod-template-hash": "1234",
-			},
-		},
-		Status: v1.PodStatus{
-			Phase: v1.PodRunning,
-		},
-	}
-	s.listers.Pod.Add(pod)
-
-	pod = &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ingress-3",
-			Namespace: "testns",
-			Labels: map[string]string{
-				"pod-template-hash": "1234",
-			},
-		},
-		Status: v1.PodStatus{
-			Phase: v1.PodFailed,
-		},
-	}
-	s.listers.Pod.Add(pod)
-
-	podsCount := s.GetRunningControllerPodsCount()
-	if podsCount != 2 {
-		t.Errorf("Expected 1 controller Pods but got %v", s)
 	}
 }

@@ -86,10 +86,6 @@ func (fis fakeIngressStore) FilterIngresses(ingresses []*ingress.Ingress, filter
 	return ingresses
 }
 
-func (fakeIngressStore) GetRunningControllerPodsCount() int {
-	return 0
-}
-
 func (fakeIngressStore) GetLocalSSLCert(name string) (*ingress.SSLCert, error) {
 	return nil, fmt.Errorf("test error")
 }

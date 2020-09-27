@@ -29,7 +29,6 @@ import (
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -197,22 +196,6 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 
 			assert.Equal(ginkgo.GinkgoT(), nginxConfig, newNginxConfig)
 		})
-	})
-
-	ginkgo.It("sets controllerPodsCount in Lua general configuration", func() {
-		// https://github.com/curl/curl/issues/936
-		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/general", nginx.StatusPort)
-
-		output, err := f.ExecIngressPod(curlCmd)
-		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.Equal(ginkgo.GinkgoT(), output, `{"controllerPodsCount":1}`)
-
-		err = f.UpdateIngressControllerDeployment(nil)
-		assert.Nil(ginkgo.GinkgoT(), err)
-
-		output, err = f.ExecIngressPod(curlCmd)
-		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.Equal(ginkgo.GinkgoT(), output, `{"controllerPodsCount":3}`)
 	})
 })
 
