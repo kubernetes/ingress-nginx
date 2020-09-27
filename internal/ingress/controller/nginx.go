@@ -828,9 +828,6 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 	clearL4serviceEndpoints(&copyOfRunningConfig)
 	clearL4serviceEndpoints(&copyOfPcfg)
 
-	copyOfRunningConfig.ControllerPodsCount = 0
-	copyOfPcfg.ControllerPodsCount = 0
-
 	clearCertificates(&copyOfRunningConfig)
 	clearCertificates(&copyOfPcfg)
 
@@ -853,18 +850,6 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 		err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
 		if err != nil {
 			return err
-		}
-	}
-
-	if n.runningConfig.ControllerPodsCount != pcfg.ControllerPodsCount {
-		statusCode, _, err := nginx.NewPostStatusRequest("/configuration/general", "application/json", ingress.GeneralConfig{
-			ControllerPodsCount: pcfg.ControllerPodsCount,
-		})
-		if err != nil {
-			return err
-		}
-		if statusCode != http.StatusCreated {
-			return fmt.Errorf("unexpected error code: %d", statusCode)
 		}
 	}
 
