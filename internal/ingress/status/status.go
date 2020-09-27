@@ -177,7 +177,7 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 
 	ingressPod, err := k8s.GetPodDetails()
 	if err != nil {
-		return nil, err
+		return []string{}, err
 	}
 
 	// get information about all the pods running the ingress controller

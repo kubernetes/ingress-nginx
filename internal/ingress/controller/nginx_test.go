@@ -199,14 +199,11 @@ func TestConfigureDynamically(t *testing.T) {
 					}
 				case "/configuration/general":
 					{
-						if !strings.Contains(body, "controllerPodsCount") {
-							t.Errorf("controllerPodsCount should be present in JSON content: %v", body)
-						}
 					}
 				case "/configuration/servers":
 					{
 						if !strings.Contains(body, `{"certificates":{},"servers":{"myapp.fake":"-1"}}`) {
-							t.Errorf("controllerPodsCount should be present in JSON content: %v", body)
+							t.Errorf("should be present in JSON content: %v", body)
 						}
 					}
 				default:
@@ -249,9 +246,8 @@ func TestConfigureDynamically(t *testing.T) {
 	}}
 
 	commonConfig := &ingress.Configuration{
-		Backends:            backends,
-		Servers:             servers,
-		ControllerPodsCount: 2,
+		Backends: backends,
+		Servers:  servers,
 	}
 
 	n := &NGINXController{
@@ -266,11 +262,6 @@ func TestConfigureDynamically(t *testing.T) {
 	if commonConfig.Backends[0].Endpoints[0].Target != target {
 		t.Errorf("unexpected change in the configuration object after configureDynamically invocation")
 	}
-	for endpoint, count := range endpointStats {
-		if count != 1 {
-			t.Errorf("Expected %v to receive %d requests but received %d.", endpoint, 1, count)
-		}
-	}
 
 	resetEndpointStats()
 	n.runningConfig.Backends = backends
@@ -283,8 +274,6 @@ func TestConfigureDynamically(t *testing.T) {
 			if count != 0 {
 				t.Errorf("Expected %v to receive %d requests but received %d.", endpoint, 0, count)
 			}
-		} else if count != 1 {
-			t.Errorf("Expected %v to receive %d requests but received %d.", endpoint, 1, count)
 		}
 	}
 
@@ -300,12 +289,8 @@ func TestConfigureDynamically(t *testing.T) {
 	if count := endpointStats["/configuration/servers"]; count != 0 {
 		t.Errorf("Expected %v to receive %d requests but received %d.", "/configuration/servers", 0, count)
 	}
-	if count := endpointStats["/configuration/general"]; count != 1 {
-		t.Errorf("Expected %v to receive %d requests but received %d.", "/configuration/general", 0, count)
-	}
 
 	resetEndpointStats()
-	n.runningConfig.ControllerPodsCount = commonConfig.ControllerPodsCount
 	err = n.configureDynamically(commonConfig)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic configuration: %v", err)

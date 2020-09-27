@@ -212,17 +212,6 @@ owasp-modsecurity-crs
 template
 ```
 
-### general
-
-`kubectl ingress-nginx general` dumps miscellaneous controller state as a JSON object. Currently it just shows the number of controller pods known to a particular controller pod.
-
-```console
-$ kubectl ingress-nginx general -n ingress-nginx
-{
-  "controllerPodsCount": 1
-}
-```
-
 ### info
 
 Shows the internal and external IP/CNAMES for an `ingress-nginx` service.

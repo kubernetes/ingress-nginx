@@ -76,10 +76,6 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		return false
 	}
 
-	if c1.ControllerPodsCount != c2.ControllerPodsCount {
-		return false
-	}
-
 	return true
 }
 

@@ -211,18 +211,21 @@ func certGet(host string) {
 }
 
 func general() {
-	statusCode, body, requestErr := nginx.NewGetStatusRequest(generalPath)
-	if requestErr != nil {
-		fmt.Println(requestErr)
-		return
-	}
-	if statusCode != 200 {
-		fmt.Printf("Nginx returned code %v\n", statusCode)
-		return
-	}
+	//TODO: refactor to obtain ingress-nginx pod count from the api server
+	/*
+		statusCode, body, requestErr := nginx.NewGetStatusRequest(generalPath)
+		if requestErr != nil {
+			fmt.Println(requestErr)
+			return
+		}
+		if statusCode != 200 {
+			fmt.Printf("Nginx returned code %v\n", statusCode)
+			return
+		}
+	*/
 
 	var prettyBuffer bytes.Buffer
-	indentErr := json.Indent(&prettyBuffer, body, "", "  ")
+	indentErr := json.Indent(&prettyBuffer, []byte("{}"), "", "  ")
 	if indentErr != nil {
 		fmt.Println(indentErr)
 		return
