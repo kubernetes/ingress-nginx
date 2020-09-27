@@ -259,7 +259,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		}
 
 		if klog.V(10).Enabled() && len(o) > 0 {
-			klog.Infof("nginx.conf:\n%v", o)
+			klog.InfoS("NGINX", "configuration", o)
 		}
 
 		// passes the nginx config to the passed function
@@ -281,7 +281,7 @@ func (f *Framework) matchNginxCustomConditions(from string, to string, matcher f
 		}
 
 		if klog.V(10).Enabled() && len(o) > 0 {
-			klog.Infof("nginx.conf:\n%v", o)
+			klog.InfoS("NGINX", "configuration", o)
 		}
 
 		// passes the nginx config to the passed function

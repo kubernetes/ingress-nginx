@@ -165,7 +165,7 @@ func parse(data string) *basicStatus {
 
 // nginxStatusCollector scrape the nginx status
 func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
-	klog.V(3).Infof("start scraping socket: %v", nginx.StatusPath)
+	klog.V(3).InfoS("starting scraping socket", "path", nginx.StatusPath)
 	status, data, err := nginx.NewGetStatusRequest(nginx.StatusPath)
 	if err != nil {
 		log.Printf("%v", err)

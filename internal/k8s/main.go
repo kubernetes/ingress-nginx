@@ -46,7 +46,7 @@ func ParseNameNS(input string) (string, string, error) {
 func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP bool) string {
 	node, err := kubeClient.CoreV1().Nodes().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
-		klog.Errorf("Error getting node %v: %v", name, err)
+		klog.ErrorS(err, "Error getting node", "name", name)
 		return ""
 	}
 
@@ -155,7 +155,7 @@ func NetworkingIngressAvailable(client clientset.Interface) (bool, bool) {
 
 	runningVersion, err := version.ParseGeneric(serverVersion.String())
 	if err != nil {
-		klog.Errorf("unexpected error parsing running Kubernetes version: %v", err)
+		klog.ErrorS(err, "unexpected error parsing running Kubernetes version")
 		return false, false
 	}
 

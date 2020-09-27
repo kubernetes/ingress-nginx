@@ -112,32 +112,30 @@ func (s statusSync) Shutdown() {
 		return
 	}
 
-	klog.Info("updating status of Ingress rules (remove)")
-
 	addrs, err := s.runningAddresses()
 	if err != nil {
-		klog.Errorf("error obtaining running IPs: %v", addrs)
+		klog.ErrorS(err, "error obtaining running IP address")
 		return
 	}
 
 	if len(addrs) > 1 {
 		// leave the job to the next leader
-		klog.Infof("leaving status update for next leader (%v)", len(addrs))
+		klog.InfoS("leaving status update for next leader")
 		return
 	}
 
 	if s.isRunningMultiplePods() {
-		klog.V(2).Infof("skipping Ingress status update (multiple pods running - another one will be elected as master)")
+		klog.V(2).InfoS("skipping Ingress status update (multiple pods running - another one will be elected as master)")
 		return
 	}
 
-	klog.Infof("removing address from ingress status (%v)", addrs)
+	klog.InfoS("removing value from ingress status", "address", addrs)
 	s.updateStatus([]apiv1.LoadBalancerIngress{})
 }
 
 func (s *statusSync) sync(key interface{}) error {
 	if s.syncQueue.IsShuttingDown() {
-		klog.V(2).Infof("skipping Ingress status update (shutting down in progress)")
+		klog.V(2).InfoS("skipping Ingress status update (shutting down in progress)")
 		return nil
 	}
 
@@ -252,7 +250,7 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 		curIPs := ing.Status.LoadBalancer.Ingress
 		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
 		if ingressSliceEqual(curIPs, newIngressPoint) {
-			klog.V(3).Infof("skipping update of Ingress %v/%v (no change)", ing.Namespace, ing.Name)
+			klog.V(3).InfoS("skipping update of Ingress (no change)", "namespace", ing.Namespace, "ingress", ing.Name)
 			continue
 		}
 
@@ -276,7 +274,7 @@ func runUpdate(ing *ingress.Ingress, status []apiv1.LoadBalancerIngress,
 			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
 		}
 
-		klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
+		klog.InfoS("updating Ingress status", "namespace", currIng.Namespace, "ingress", currIng.Name, "currentValue", currIng.Status.LoadBalancer.Ingress, "newValue", status)
 		currIng.Status.LoadBalancer.Ingress = status
 		_, err = ingClient.UpdateStatus(context.TODO(), currIng, metav1.UpdateOptions{})
 		if err != nil {
