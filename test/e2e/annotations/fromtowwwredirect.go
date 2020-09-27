@@ -49,7 +49,7 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, `server_name www.fromtowwwredirect.bar.com;`) &&
-					strings.Contains(cfg, `return 308 $scheme://fromtowwwredirect.bar.com$request_uri;`)
+					strings.Contains(cfg, `return 308 $redirect_to;`)
 			})
 
 		ginkgo.By("sending request to www.fromtowwwredirect.bar.com")
@@ -85,7 +85,7 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 		f.WaitForNginxServer(toHost,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf(`server_name %v;`, toHost)) &&
-					strings.Contains(server, fmt.Sprintf(`return 308 $scheme://%v$request_uri;`, fromHost))
+					strings.Contains(server, `return 308 $redirect_to;`)
 			})
 
 		ginkgo.By("sending request to www should redirect to domain")
@@ -98,7 +98,7 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 			WithHeader("Host", toHost).
 			Expect().
 			Status(http.StatusPermanentRedirect).
-			Header("Location").Equal(fmt.Sprintf("https://%v/", fromHost))
+			Header("Location").Equal(fmt.Sprintf("https://%v", fromHost))
 
 		ginkgo.By("sending request to domain should not redirect to www")
 		f.HTTPTestClientWithTLSConfig(&tls.Config{
