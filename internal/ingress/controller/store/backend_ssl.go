@@ -38,7 +38,7 @@ func (s *k8sStore) syncSecret(key string) {
 	s.syncSecretMu.Lock()
 	defer s.syncSecretMu.Unlock()
 
-	klog.V(3).Infof("Syncing Secret %q", key)
+	klog.V(3).InfoS("Syncing Secret", "name", key)
 
 	cert, err := s.getPemCertificate(key)
 	if err != nil {
@@ -55,7 +55,7 @@ func (s *k8sStore) syncSecret(key string) {
 			// no need to update
 			return
 		}
-		klog.Infof("Updating Secret %q in the local store", key)
+		klog.InfoS("Updating secret in local store", "name", key)
 		s.sslStore.Update(key, cert)
 		// this update must trigger an update
 		// (like an update event from a change in Ingress)
@@ -63,7 +63,7 @@ func (s *k8sStore) syncSecret(key string) {
 		return
 	}
 
-	klog.Infof("Adding Secret %q to the local store", key)
+	klog.InfoS("Adding secret to local store", "name", key)
 	s.sslStore.Add(key, cert)
 	// this update must trigger an update
 	// (like an update event from a change in Ingress)
@@ -142,7 +142,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			msg += " and CRL"
 		}
 
-		klog.V(3).Info(msg)
+		klog.V(3).InfoS(msg)
 	} else if len(ca) > 0 {
 		sslCert, err = ssl.CreateCACert(ca)
 		if err != nil {
@@ -162,7 +162,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		}
 		// makes this secret in 'syncSecret' to be used for Certificate Authentication
 		// this does not enable Certificate Authentication
-		klog.V(3).Infof("Configuring Secret %q for TLS authentication", secretName)
+		klog.V(3).InfoS("Configuring Secret for TLS authentication", "secret", secretName)
 	} else {
 		if auth != nil {
 			return nil, ErrSecretForAuth

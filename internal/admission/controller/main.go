@@ -80,8 +80,7 @@ func (ia *IngressAdmission) HandleAdmission(ar *admissionv1.AdmissionReview) {
 	ingress := networking.Ingress{}
 	deserializer := codecs.UniversalDeserializer()
 	if _, _, err := deserializer.Decode(ar.Request.Object.Raw, nil, &ingress); err != nil {
-		klog.Errorf("failed to decode ingress %s in namespace %s: %s, refusing it",
-			ar.Request.Name, ar.Request.Namespace, err.Error())
+		klog.ErrorS(err, "failed to decode ingress", "ingress", ar.Request.Name, "namespace", ar.Request.Namespace)
 
 		ar.Response = &admissionv1.AdmissionResponse{
 			UID:     ar.Request.UID,
@@ -97,8 +96,7 @@ func (ia *IngressAdmission) HandleAdmission(ar *admissionv1.AdmissionReview) {
 	}
 
 	if err := ia.Checker.CheckIngress(&ingress); err != nil {
-		klog.Errorf("failed to generate configuration for ingress %s in namespace %s: %s, refusing it",
-			ar.Request.Name, ar.Request.Namespace, err.Error())
+		klog.ErrorS(err, "failed to generate configuration for ingress", "ingress", ar.Request.Name, "namespace", ar.Request.Namespace)
 		ar.Response = &admissionv1.AdmissionResponse{
 			UID:     ar.Request.UID,
 			Allowed: false,
@@ -111,8 +109,7 @@ func (ia *IngressAdmission) HandleAdmission(ar *admissionv1.AdmissionReview) {
 		return
 	}
 
-	klog.Infof("successfully validated configuration, accepting ingress %s in namespace %s",
-		ar.Request.Name, ar.Request.Namespace)
+	klog.InfoS("successfully validated configuration, accepting", "ingress", ar.Request.Name, "namespace", ar.Request.Namespace)
 	ar.Response = &admissionv1.AdmissionResponse{
 		UID:     ar.Request.UID,
 		Allowed: true,

@@ -135,14 +135,14 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	n.metricCollector.SetSSLExpireTime(servers)
 
 	if n.runningConfig.Equal(pcfg) {
-		klog.V(3).Infof("No configuration change detected, skipping backend reload.")
+		klog.V(3).Infof("No configuration change detected, skipping backend reload")
 		return nil
 	}
 
 	n.metricCollector.SetHosts(hosts)
 
 	if !n.IsDynamicConfigurationEnough(pcfg) {
-		klog.Infof("Configuration changes detected, backend reload required.")
+		klog.InfoS("Configuration changes detected, backend reload required")
 
 		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
 			TagName: "json",
@@ -159,7 +159,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			return err
 		}
 
-		klog.Infof("Backend successfully reloaded.")
+		klog.InfoS("Backend successfully reloaded")
 		n.metricCollector.ConfigSuccess(hash, true)
 		n.metricCollector.IncReloadCount()
 
@@ -170,7 +170,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	if isFirstSync {
 		// For the initial sync it always takes some time for NGINX to start listening
 		// For large configurations it might take a while so we loop and back off
-		klog.Info("Initial sync, sleeping for 1 second.")
+		klog.InfoS("Initial sync, sleeping for 1 second")
 		time.Sleep(1 * time.Second)
 	}
 
@@ -1142,7 +1142,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
 			if tlsSecretName == "" {
-				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
+				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate", host)
 				servers[host].SSLCert = n.getDefaultSSLCertificate()
 				continue
 			}
@@ -1165,13 +1165,12 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			err = cert.Certificate.VerifyHostname(host)
 			if err != nil {
 				klog.Warningf("Unexpected error validating SSL certificate %q for server %q: %v", secrKey, host, err)
-				klog.Warning("Validating certificate against DNS names. This will be deprecated in a future version.")
+				klog.Warning("Validating certificate against DNS names. This will be deprecated in a future version")
 				// check the Common Name field
 				// https://github.com/golang/go/issues/22922
 				err := verifyHostname(host, cert.Certificate)
 				if err != nil {
-					klog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
-						secrKey, host, err)
+					klog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v", secrKey, host, err)
 					klog.Warningf("Using default certificate")
 					servers[host].SSLCert = n.getDefaultSSLCertificate()
 					continue

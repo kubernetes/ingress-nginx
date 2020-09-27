@@ -163,9 +163,9 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 
 			expectedFailureResponseCode := resp.StatusCode
 
-			assert.Equal(ginkgo.GinkgoT(), originalResponseCode, 503, "Expected empty service to return 503 response.")
-			assert.Equal(ginkgo.GinkgoT(), expectedFailureResponseCode, 503, "Expected downscaled replicaset to return 503 response.")
-			assert.Equal(ginkgo.GinkgoT(), expectedSuccessResponseCode, 200, "Expected intermediate scaled replicaset to return a 200 response.")
+			assert.Equal(ginkgo.GinkgoT(), originalResponseCode, 503, "Expected empty service to return 503 response")
+			assert.Equal(ginkgo.GinkgoT(), expectedFailureResponseCode, 503, "Expected downscaled replicaset to return 503 response")
+			assert.Equal(ginkgo.GinkgoT(), expectedSuccessResponseCode, 200, "Expected intermediate scaled replicaset to return a 200 response")
 		})
 
 		ginkgo.It("handles an annotation change", func() {

@@ -135,7 +135,7 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 			response = request.WithCookies(cookies).Expect()
 			try++
 		}
-		assert.LessOrEqual(ginkgo.GinkgoT(), try, 29, "Tries reached it's maximum, backends did not deployed in time.")
+		assert.LessOrEqual(ginkgo.GinkgoT(), try, 29, "Tries reached it's maximum, backends did not deployed in time")
 
 		// brand new backends equals new hostname
 		newHostName := getHostnameFromResponseBody(response.Body().Raw())

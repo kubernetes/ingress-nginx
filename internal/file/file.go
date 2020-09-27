@@ -29,7 +29,7 @@ func SHA1(filename string) string {
 	hasher := sha1.New()
 	s, err := ioutil.ReadFile(filename)
 	if err != nil {
-		klog.Errorf("Error reading file %v", err)
+		klog.ErrorS(err, "Error reading file", "path", filename)
 		return ""
 	}
 

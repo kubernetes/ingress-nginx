@@ -175,7 +175,7 @@ func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 	data := make(map[string]interface{})
 	for name, annotationParser := range e.annotations {
 		val, err := annotationParser.Parse(ing)
-		klog.V(5).Infof("annotation %v in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), val)
+		klog.V(5).InfoS("Parsing Ingress annotation", "name", name, "namespace", ing.GetNamespace(), "ingress", ing.GetName(), "value", val)
 		if err != nil {
 			if errors.IsMissingAnnotations(err) {
 				continue
@@ -197,11 +197,11 @@ func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 			if !alreadyDenied {
 				errString := err.Error()
 				data[DeniedKeyName] = &errString
-				klog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
+				klog.ErrorS(err, "error reading Ingress annotation", "name", name, "namespace", ing.GetNamespace(), "ingress", ing.GetName())
 				continue
 			}
 
-			klog.V(5).Infof("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
+			klog.V(5).ErrorS(err, "error reading Ingress annotation", "name", name, "namespace", ing.GetNamespace(), "ingress", ing.GetName())
 		}
 
 		if val != nil {
@@ -211,7 +211,7 @@ func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 
 	err := mergo.MapWithOverwrite(pia, data)
 	if err != nil {
-		klog.Errorf("unexpected error merging extracted annotations: %v", err)
+		klog.ErrorS(err, "unexpected error merging extracted annotations")
 	}
 
 	return pia

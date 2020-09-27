@@ -287,7 +287,7 @@ func New(
 			// If we reached here it means the ingress was deleted but its final state is unrecorded.
 			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 			if !ok {
-				klog.Errorf("couldn't get object from tombstone %#v", obj)
+				klog.ErrorS(nil, "Error obtaining object from tombstone", "key", obj)
 				return
 			}
 			ing, ok = tombstone.Obj.(*networkingv1beta1.Ingress)
@@ -298,13 +298,14 @@ func New(
 		}
 
 		if !class.IsValid(ing) {
-			klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
 			return
 		}
+
 		if isCatchAllIngress(ing.Spec) && disableCatchAll {
-			klog.Infof("ignoring delete for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
+			klog.InfoS("Ignoring delete for catch-all because of --disable-catch-all", "namespace", ing.Namespace, "ingress", ing.Name)
 			return
 		}
+
 		recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 
 		store.listers.IngressWithAnnotation.Delete(ing)
@@ -323,11 +324,11 @@ func New(
 			ing, _ := toIngress(obj)
 			if !class.IsValid(ing) {
 				a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
-				klog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
+				klog.InfoS("Ignoring add for ingress based on annotation", "namespace", ing.Namespace, "ingress", ing.Name, "annotation", a)
 				return
 			}
 			if isCatchAllIngress(ing.Spec) && disableCatchAll {
-				klog.Infof("ignoring add for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
+				klog.InfoS("Ignoring add for catch-all ingress because of --disable-catch-all", "namespace", ing.Namespace, "ingress", ing.Name)
 				return
 			}
 			recorder.Eventf(ing, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
@@ -350,26 +351,26 @@ func New(
 			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
 				if isCatchAllIngress(curIng.Spec) && disableCatchAll {
-					klog.Infof("ignoring update for catch-all ingress %v/%v because of --disable-catch-all", curIng.Namespace, curIng.Name)
+					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "namespace", curIng.Namespace, "ingress", curIng.Name)
 					return
 				}
 
-				klog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				klog.InfoS("creating ingress", "namespace", curIng.Namespace, "ingress", curIng.Name, "class", class.IngressKey)
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validOld && !validCur {
-				klog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				klog.InfoS("removing ingress", "namespace", curIng.Namespace, "ingress", curIng.Name, "class", class.IngressKey)
 				ingDeleteHandler(old)
 				return
 			} else if validCur && !reflect.DeepEqual(old, cur) {
 				if isCatchAllIngress(curIng.Spec) && disableCatchAll {
-					klog.Infof("ignoring update for catch-all ingress %v/%v and delete old one because of --disable-catch-all", curIng.Namespace, curIng.Name)
+					klog.InfoS("ignoring update for catch-all ingress and delete old one because of --disable-catch-all", "namespace", curIng.Namespace, "ingress", curIng.Name)
 					ingDeleteHandler(old)
 					return
 				}
 
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else {
-				klog.V(3).Infof("No changes on ingress %v/%v. Skipping update", curIng.Namespace, curIng.Name)
+				klog.V(3).InfoS("No changes on ingress. Skipping update", "namespace", curIng.Namespace, "ingress", curIng.Name)
 				return
 			}
 
@@ -395,7 +396,7 @@ func New(
 
 			// find references in ingresses and update local ssl certs
 			if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
-				klog.Infof("secret %v was added and it is used in ingress annotations. Parsing...", key)
+				klog.InfoS("Secret was added and it is used in ingress annotations. Parsing", "secret", key)
 				for _, ingKey := range ings {
 					ing, err := store.getIngress(ingKey)
 					if err != nil {
@@ -422,11 +423,11 @@ func New(
 
 				// find references in ingresses and update local ssl certs
 				if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
-					klog.Infof("secret %v was updated and it is used in ingress annotations. Parsing...", key)
+					klog.InfoS("secret was updated and it is used in ingress annotations. Parsing", "secret", key)
 					for _, ingKey := range ings {
 						ing, err := store.getIngress(ingKey)
 						if err != nil {
-							klog.Errorf("could not find Ingress %v in local store", ingKey)
+							klog.ErrorS(err, "could not find Ingress in local store", "ingress", ingKey)
 							continue
 						}
 						store.syncIngress(ing)
@@ -445,12 +446,11 @@ func New(
 				// If we reached here it means the secret was deleted but its final state is unrecorded.
 				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 				if !ok {
-					klog.Errorf("couldn't get object from tombstone %#v", obj)
 					return
 				}
+
 				sec, ok = tombstone.Obj.(*corev1.Secret)
 				if !ok {
-					klog.Errorf("Tombstone contained object that is not a Secret: %#v", obj)
 					return
 				}
 			}
@@ -461,7 +461,7 @@ func New(
 
 			// find references in ingresses
 			if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
-				klog.Infof("secret %v was deleted and it is used in ingress annotations. Parsing...", key)
+				klog.InfoS("secret was deleted and it is used in ingress annotations. Parsing", "secret", key)
 				for _, ingKey := range ings {
 					ing, err := store.getIngress(ingKey)
 					if err != nil {
@@ -859,7 +859,7 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
 	if s.backendConfig.UseGeoIP2 && !nginx.GeoLite2DBExists() {
-		klog.Warning("The GeoIP2 feature is enabled but the databases are missing. Disabling.")
+		klog.Warning("The GeoIP2 feature is enabled but the databases are missing. Disabling")
 		s.backendConfig.UseGeoIP2 = false
 	}
 

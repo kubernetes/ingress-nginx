@@ -73,7 +73,7 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 	if ngx_config.EnableSSLChainCompletion {
 		data, err := fullChainCert(cert)
 		if err != nil {
-			klog.Errorf("Error generating certificate chain for Secret: %v", err)
+			klog.ErrorS(err, "Error generating certificate chain for Secret")
 		} else {
 			pemCertBuffer.Reset()
 			pemCertBuffer.Write(data)
@@ -109,7 +109,7 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 	}
 
 	if len(pemCert.Extensions) > 0 {
-		klog.V(3).Info("parsing ssl certificate extensions")
+		klog.V(3).InfoS("parsing ssl certificate extensions")
 		for _, ext := range getExtension(pemCert, oidExtensionSubjectAltName) {
 			dns, _, _, err := parseSANExtension(ext.Value)
 			if err != nil {
@@ -257,7 +257,7 @@ func ConfigureCACert(name string, ca []byte, sslCert *ingress.SSLCert) error {
 
 	sslCert.CAFileName = fileName
 
-	klog.V(3).Infof("Created CA Certificate for Authentication: %v", fileName)
+	klog.V(3).InfoS("Created CA Certificate for Authentication", "path", fileName)
 
 	return nil
 }
@@ -334,7 +334,7 @@ func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
 
 	tempPemFile, err := ioutil.TempFile(file.DefaultSSLDirectory, pemName)
 
-	klog.V(3).Infof("Creating temp file %v for DH param: %v", tempPemFile.Name(), pemName)
+	klog.V(3).InfoS("Creating temporal file for DH", "path", tempPemFile.Name(), "name", pemName)
 	if err != nil {
 		return "", fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
 	}
@@ -525,7 +525,7 @@ func (tl *TLSListener) TLSConfig() *tls.Config {
 }
 
 func (tl *TLSListener) load() {
-	klog.Infof("loading tls certificate from certificate path %s and key path %s", tl.certificatePath, tl.keyPath)
+	klog.InfoS("loading tls certificate", "path", tl.certificatePath, "key", tl.keyPath)
 	certBytes, err := ioutil.ReadFile(tl.certificatePath)
 	if err != nil {
 		tl.certificate = nil

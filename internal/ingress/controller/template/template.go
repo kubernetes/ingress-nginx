@@ -100,7 +100,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 		if err != nil {
 			klog.Errorf("unexpected error: %v", err)
 		}
-		klog.Infof("NGINX configuration: %v", string(b))
+		klog.InfoS("NGINX", "configuration", string(b))
 	}
 
 	err := t.tmpl.Execute(tmplBuf, conf)
