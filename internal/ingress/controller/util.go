@@ -54,7 +54,7 @@ func upstreamName(namespace string, service string, port intstr.IntOrString) str
 func sysctlSomaxconn() int {
 	maxConns, err := sysctl.New().GetSysctl("net/core/somaxconn")
 	if err != nil || maxConns < 512 {
-		klog.V(3).Infof("net.core.somaxconn=%v (using system default)", maxConns)
+		klog.V(3).InfoS("Using default net.core.somaxconn", "value", maxConns)
 		return 511
 	}
 
@@ -66,10 +66,9 @@ func rlimitMaxNumFiles() int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		klog.Errorf("Error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
+		klog.ErrorS(err, "Error reading system maximum number of open file descriptors (RLIMIT_NOFILE)")
 		return 0
 	}
-	klog.V(2).Infof("rlimit.max=%v", rLimit.Max)
 	return int(rLimit.Max)
 }
 

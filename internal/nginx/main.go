@@ -151,7 +151,7 @@ func Version() string {
 	cmd := exec.Command("nginx", flag)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		klog.Errorf("unexpected error obtaining NGINX version: %v", err)
+		klog.ErrorS(err, "unexpected error obtaining NGINX version")
 		return "N/A"
 	}
 

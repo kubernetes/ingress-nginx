@@ -60,14 +60,14 @@ func NewAdmissionControllerServer(ac AdmissionController) *AdmissionControllerSe
 func (acs *AdmissionControllerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	review, err := parseAdmissionReview(acs.Decoder, r.Body)
 	if err != nil {
-		klog.Errorf("Unexpected error decoding request: %v", err)
+		klog.ErrorS(err, "Unexpected error decoding request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	acs.AdmissionController.HandleAdmission(review)
 	if err := writeAdmissionReview(w, review); err != nil {
-		klog.Errorf("Unexpected returning admission review: %v", err)
+		klog.ErrorS(err, "Unexpected returning admission review")
 	}
 }
 

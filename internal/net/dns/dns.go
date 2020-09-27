@@ -53,6 +53,6 @@ func GetSystemNameServers() ([]net.IP, error) {
 		}
 	}
 
-	klog.V(3).Infof("nameservers IP address/es to use: %v", nameservers)
+	klog.V(3).InfoS("Nameservers", "hosts", nameservers)
 	return nameservers, nil
 }
