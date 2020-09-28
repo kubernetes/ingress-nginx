@@ -338,7 +338,7 @@ http {
         default 1;
     }
 
-    {{ if $cfg.DisableAccessLog }}
+    {{ if or $cfg.DisableAccessLog $cfg.DisableHTTPAccessLog }}
     access_log off;
     {{ else }}
     {{ if $cfg.EnableSyslog }}
@@ -702,7 +702,7 @@ stream {
 
     log_format log_stream '{{ $cfg.LogFormatStream }}';
 
-    {{ if $cfg.DisableAccessLog }}
+    {{ if or $cfg.DisableAccessLog $cfg.DisableStreamAccessLog }}
     access_log off;
     {{ else }}
     access_log {{ or $cfg.StreamAccessLogPath $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
