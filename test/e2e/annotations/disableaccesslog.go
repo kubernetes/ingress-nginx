@@ -33,49 +33,25 @@ var _ = framework.DescribeAnnotation("disable-access-log disable-http-access-log
 
 	ginkgo.It("disable-access-log set access_log off", func() {
 		host := "disableaccesslog.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/disable-access-log": "true",
-		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.UpdateNginxConfigMapData("disable-access-log", "true")
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				str := `
-                                multiline
-                                string.`
-				return strings.Contains(server, `access_log off;`)
-			})
+		f.WaitForNginxConfiguration(func(ngx string) bool {
+			return strings.Contains(ngx, `access_log off;`)
+		})
 	})
 
 	ginkgo.It("disable-http-access-log set access_log off", func() {
 		host := "disablehttpaccesslog.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/disable-http-access-log": "true",
-		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.UpdateNginxConfigMapData("disable-http-access-log", "true")
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, `access_log off;`)
-			})
-	})
-
-	ginkgo.It("disable-stream-access-log set access_log off", func() {
-		host := "disablehttpaccesslog.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/disable-stream-access-log": "true",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, `access_log off;`)
-			})
+		f.WaitForNginxConfiguration(func(ngx string) bool {
+			return strings.Contains(ngx, `access_log off;`)
+		})
 	})
 })
