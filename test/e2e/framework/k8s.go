@@ -129,7 +129,7 @@ func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Depl
 
 // waitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
 func waitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration, expectedReplicas int, namespace string, opts metav1.ListOptions) error {
-	return wait.Poll(Poll, timeout, func() (bool, error) {
+	return wait.PollImmediate(1*time.Second, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(context.TODO(), opts)
 		if err != nil {
 			return false, nil
@@ -172,7 +172,7 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 		return nil
 	}
 
-	return wait.Poll(Poll, timeout, func() (bool, error) {
+	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
 		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(context.TODO(), name, metav1.GetOptions{})
 		if k8sErrors.IsNotFound(err) {
 			return false, nil
@@ -220,7 +220,7 @@ func podRunningReady(p *core.Pod) (bool, error) {
 // getIngressNGINXPod returns the ingress controller running pod
 func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
 	var pod *core.Pod
-	err := wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
+	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
 		l, err := kubeClientSet.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 		})

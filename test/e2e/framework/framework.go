@@ -25,9 +25,6 @@ import (
 	"github.com/gavv/httpexpect/v2"
 	"github.com/onsi/ginkgo"
 	"github.com/pkg/errors"
-	dto "github.com/prometheus/client_model/go"
-	"github.com/prometheus/common/expfmt"
-	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -364,21 +361,22 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 }
 
 func (f *Framework) waitForReload(fn func()) {
-	reloadCount := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
+	initialReloadCount := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
 
 	fn()
 
 	count := 0
-	err := wait.Poll(2*time.Second, DefaultTimeout, func() (bool, error) {
+	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
+		reloads := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
 		// most of the cases reload the ingress controller
 		// in cases where the value is not modified we could wait forever
-		if count > 3 {
+		if count > 5 && reloads == initialReloadCount {
 			return true, nil
 		}
 
 		count++
 
-		return (getReloadCount(f.pod, f.Namespace, f.KubeClientSet) > reloadCount), nil
+		return (reloads > initialReloadCount), nil
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "while waiting for ingress controller reload")
 }
@@ -395,18 +393,6 @@ func getReloadCount(pod *corev1.Pod, namespace string, client kubernetes.Interfa
 	}
 
 	return reloadCount
-}
-
-func extractReloadCount(mf *dto.MetricFamily) (float64, error) {
-	vec, err := expfmt.ExtractSamples(&expfmt.DecodeOptions{
-		Timestamp: model.Now(),
-	}, mf)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(vec[0].Value), nil
 }
 
 // DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.

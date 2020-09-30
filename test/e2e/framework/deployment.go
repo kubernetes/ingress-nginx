@@ -280,10 +280,11 @@ func (f *Framework) NewGRPCBinDeployment() {
 func newDeployment(name, namespace, image string, port int32, replicas int32, command []string,
 	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume) *appsv1.Deployment {
 	probe := &corev1.Probe{
-		InitialDelaySeconds: 1,
+		InitialDelaySeconds: 2,
 		PeriodSeconds:       1,
 		SuccessThreshold:    1,
-		TimeoutSeconds:      1,
+		TimeoutSeconds:      2,
+		FailureThreshold:    6,
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Port: intstr.FromString("http"),
