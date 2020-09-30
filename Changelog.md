@@ -1,5 +1,107 @@
 # Changelog
 
+### 0.40.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.40.0@sha256:b954d8ff1466eb236162c644bd64e9027a212c82b484cbe47cc21da45fe8bc59`
+
+_Breaking Changes:_
+
+Kubernetes v1.16 or higher is required.
+Only ValidatingWebhookConfiguration AdmissionReviewVersions v1 is supported.
+
+Following the [Ingress extensions/v1beta1](https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16) deprecation, please use `networking.k8s.io/v1beta1` or `networking.k8s.io/v1` (Kubernetes v1.19 or higher) for new Ingress definitions
+
+
+_New Features:_
+
+- NGINX 1.19.3
+- Go 1.15.2
+- client-go v0.19.2
+- New annotation `nginx.ingress.kubernetes.io/limit-burst-multiplier` to set value for burst multiplier on rate limit
+- Switch to [structured logging](https://github.com/kubernetes/enhancements/tree/master/keps/sig-instrumentation/1602-structured-logging)
+- NGINX reloads create Kubernetes events
+
+
+_New defaults:_
+
+- [server-tokens](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#server-tokens) is disabled
+- [ssl-session-tickets](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#ssl-session-tickets) is disabled
+- [use-gzip](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#use-gzip) is disabled
+- [upstream-keepalive-requests](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#upstream-keepalive-requests) is now 10000
+- [upstream-keepalive-connections](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#upstream-keepalive-connections) is now 320
+
+
+_Changes:_
+
+- [X] [#5348](https://github.com/kubernetes/ingress-nginx/pull/5348) Ability to separately disable access log in http and stream contexts
+- [X] [#6087](https://github.com/kubernetes/ingress-nginx/pull/6087) Adding parameter for externalTrafficPolicy in internal controller service spec.
+- [X] [#6097](https://github.com/kubernetes/ingress-nginx/pull/6097) Return unique addresses from service
+- [X] [#6098](https://github.com/kubernetes/ingress-nginx/pull/6098) Update kubernetes kind e2e versions
+- [X] [#6099](https://github.com/kubernetes/ingress-nginx/pull/6099) Update go dependencies
+- [X] [#6101](https://github.com/kubernetes/ingress-nginx/pull/6101) Add annotation to set value for burst multiplier on rate limit
+- [X] [#6104](https://github.com/kubernetes/ingress-nginx/pull/6104) Misc fixes for nginx-ingress chart for better keel and prom-oper
+- [X] [#6111](https://github.com/kubernetes/ingress-nginx/pull/6111) Update kind node version to v1.19.0
+- [X] [#6112](https://github.com/kubernetes/ingress-nginx/pull/6112) Update go dependencies to fix build logr errors
+- [X] [#6113](https://github.com/kubernetes/ingress-nginx/pull/6113) Require Kubernetes v1.14 or higher and deprecate extensions
+- [X] [#6114](https://github.com/kubernetes/ingress-nginx/pull/6114) Update go to 1.5.1 and add arm64
+- [X] [#6115](https://github.com/kubernetes/ingress-nginx/pull/6115) Increase cloudbuild timeout value
+- [X] [#6116](https://github.com/kubernetes/ingress-nginx/pull/6116) Update e2e image
+- [X] [#6118](https://github.com/kubernetes/ingress-nginx/pull/6118) Cleanup github actions
+- [X] [#6120](https://github.com/kubernetes/ingress-nginx/pull/6120) Use net.JoinHostPort to avoid IPV6 issues
+- [X] [#6122](https://github.com/kubernetes/ingress-nginx/pull/6122) Update trace modules
+- [X] [#6123](https://github.com/kubernetes/ingress-nginx/pull/6123) Add e2e tests to verify opentracing libraries
+- [X] [#6125](https://github.com/kubernetes/ingress-nginx/pull/6125) Library dd-opentracing cannot be static
+- [X] [#6129](https://github.com/kubernetes/ingress-nginx/pull/6129) Update test runner image
+- [X] [#6143](https://github.com/kubernetes/ingress-nginx/pull/6143) Update default gzip level
+- [X] [#6145](https://github.com/kubernetes/ingress-nginx/pull/6145) Switch modules to dynamic and remove http_dav_module
+- [X] [#6146](https://github.com/kubernetes/ingress-nginx/pull/6146) Use dynamic load of modules
+- [X] [#6148](https://github.com/kubernetes/ingress-nginx/pull/6148) Update cloudbuild jobs
+- [X] [#6149](https://github.com/kubernetes/ingress-nginx/pull/6149) Update qemu-user-static image
+- [X] [#6150](https://github.com/kubernetes/ingress-nginx/pull/6150) Reject ingresses that use the default annotation if a custom one was provided
+- [X] [#6166](https://github.com/kubernetes/ingress-nginx/pull/6166) Update kind and kindest/node images
+- [X] [#6167](https://github.com/kubernetes/ingress-nginx/pull/6167) Update chart requirements
+- [X] [#6170](https://github.com/kubernetes/ingress-nginx/pull/6170) delete redundant NGINX config about X-Forwarded-Proto
+- [X] [#6172](https://github.com/kubernetes/ingress-nginx/pull/6172) Update OSFileWatcher to support symlinks
+- [X] [#6176](https://github.com/kubernetes/ingress-nginx/pull/6176) Update go modules
+- [X] [#6184](https://github.com/kubernetes/ingress-nginx/pull/6184) Update static manifest yaml files
+- [X] [#6186](https://github.com/kubernetes/ingress-nginx/pull/6186) Fix logr dependency issue
+- [X] [#6187](https://github.com/kubernetes/ingress-nginx/pull/6187) Add validation support for networking.k8s.io/v1
+- [X] [#6190](https://github.com/kubernetes/ingress-nginx/pull/6190) Change server-tokens default value to false
+- [X] [#6196](https://github.com/kubernetes/ingress-nginx/pull/6196) disable session tickets by default
+- [X] [#6198](https://github.com/kubernetes/ingress-nginx/pull/6198) Delete OCSP Response cache when certificate renewed
+- [X] [#6200](https://github.com/kubernetes/ingress-nginx/pull/6200) Move ocsp_response_cache:delete after certificate_data:set
+- [X] [#6203](https://github.com/kubernetes/ingress-nginx/pull/6203) Refactor key/value parsing
+- [X] [#6211](https://github.com/kubernetes/ingress-nginx/pull/6211) Migrate to structured logging (klog)
+- [X] [#6217](https://github.com/kubernetes/ingress-nginx/pull/6217) Add annotation to configure CORS Access-Control-Expose-Headers
+- [X] [#6226](https://github.com/kubernetes/ingress-nginx/pull/6226) Change defaults
+- [X] [#6231](https://github.com/kubernetes/ingress-nginx/pull/6231) Clear redundant Cross-Origin-Allow- headers from response
+- [X] [#6233](https://github.com/kubernetes/ingress-nginx/pull/6233) Add admission controller e2e test
+- [X] [#6234](https://github.com/kubernetes/ingress-nginx/pull/6234) Add events for NGINX reloads
+- [X] [#6235](https://github.com/kubernetes/ingress-nginx/pull/6235) Update go dependencies
+
+_Documentation:_
+
+- [X] [#5757](https://github.com/kubernetes/ingress-nginx/pull/5757) feat: support to define trusted addresses for proxy protocol in stream block
+- [X] [#5881](https://github.com/kubernetes/ingress-nginx/pull/5881) Doc: Adding initial hardening guide
+- [X] [#6109](https://github.com/kubernetes/ingress-nginx/pull/6109) Fix documentation table layout
+- [X] [#6127](https://github.com/kubernetes/ingress-nginx/pull/6127) AKS example of adding an internal loadbalancer
+- [X] [#6128](https://github.com/kubernetes/ingress-nginx/pull/6128) Fixed proxy protocol link
+- [X] [#6130](https://github.com/kubernetes/ingress-nginx/pull/6130) Update deploy instructions with corrections
+- [X] [#6153](https://github.com/kubernetes/ingress-nginx/pull/6153) Add install command for Scaleway
+- [X] [#6154](https://github.com/kubernetes/ingress-nginx/pull/6154) chart: add `topologySpreadConstraint` to controller
+- [X] [#6162](https://github.com/kubernetes/ingress-nginx/pull/6162) Add helm chart options to expose metrics service as NodePort
+- [X] [#6169](https://github.com/kubernetes/ingress-nginx/pull/6169) Fix Typo in example prometheus rules
+- [X] [#6171](https://github.com/kubernetes/ingress-nginx/pull/6171) Docs: remove redundant --election-id arg from Multiple Ingresses
+- [X] [#6177](https://github.com/kubernetes/ingress-nginx/pull/6177) Fix make help task to display options
+- [X] [#6180](https://github.com/kubernetes/ingress-nginx/pull/6180) Fix helm chart admissionReviewVersions regression
+- [X] [#6181](https://github.com/kubernetes/ingress-nginx/pull/6181) Improve prerequisite instructions
+- [X] [#6214](https://github.com/kubernetes/ingress-nginx/pull/6214) Update annotations.md - improvements to the documentation of Client Certificate Authentication
+- [X] [#6215](https://github.com/kubernetes/ingress-nginx/pull/6215) Update the comment for Makefile taks live-docs
+- [X] [#6221](https://github.com/kubernetes/ingress-nginx/pull/6221) corrected reference for release
+
+
 ### 0.35.0
 
 **Image:**
