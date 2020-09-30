@@ -36,10 +36,10 @@ build: ensure-buildx
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
-		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:v20200903-g333288e75@sha256:ef38aa45e7ae82b311f3287e53c4e0b3f1c000b6394ffe5cdb74d25aa149c567 \
-		--build-arg GOLANG_VERSION=1.15.1 \
+		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:v20200929-gc8c69df30@sha256:edaa16fa38c9c638180e9e71952f464fadebf11d450a0647146b33d05236879b \
+		--build-arg GOLANG_VERSION=1.15.2 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
-		--build-arg K8S_RELEASE=v1.18.6 \
+		--build-arg K8S_RELEASE=v1.19.2 \
 		--build-arg RESTY_CLI_VERSION=0.25 \
 		--build-arg RESTY_CLI_SHA=7c3d1317d7ddab2030b49610c89e301995d4ae0f815f16466c48144d05ec7bcb \
 		--build-arg LUAROCKS_VERSION=3.3.1 \
@@ -47,7 +47,7 @@ build: ensure-buildx
 		--build-arg CHART_TESTING_VERSION=3.0.0 \
 		--build-arg YAML_LINT_VERSION=1.13.0 \
 		--build-arg YAMALE_VERSION=1.8.0 \
-		--build-arg HELM_VERSION=v3.3.1 \
+		--build-arg HELM_VERSION=v3.3.4 \
 		-t $(IMAGE):$(TAG) rootfs
 
 # push the cross built image
