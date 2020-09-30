@@ -34,7 +34,6 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
-		f.UpdateNginxConfigMapData("use-forwarded-headers", "false")
 	})
 
 	ginkgo.Context("should configure TLS protocol", func() {
@@ -111,16 +110,16 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 
 	ginkgo.Context("should configure HSTS policy header", func() {
 		var (
-			tlsConfig             *tls.Config
-			hstsMaxAge            string
-			hstsIncludeSubdomains string
-			hstsPreload           string
+			tlsConfig *tls.Config
+		)
+
+		const (
+			hstsMaxAge            = "hsts-max-age"
+			hstsIncludeSubdomains = "hsts-include-subdomains"
+			hstsPreload           = "hsts-preload"
 		)
 
 		ginkgo.BeforeEach(func() {
-			hstsMaxAge = "hsts-max-age"
-			hstsIncludeSubdomains = "hsts-include-subdomains"
-			hstsPreload = "hsts-preload"
 			ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 			tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 				ing.Spec.TLS[0].Hosts,
@@ -246,5 +245,4 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				Header("Location").Equal("https://example.com/")
 		})
 	})
-
 })
