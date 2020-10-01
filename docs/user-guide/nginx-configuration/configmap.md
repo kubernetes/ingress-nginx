@@ -140,8 +140,9 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-trace-baggage-header-prefix](#jaeger-trace-baggage-header-prefix)|string|uberctx-|
 |[datadog-collector-host](#datadog-collector-host)|string|""|
 |[datadog-collector-port](#datadog-collector-port)|int|8126|
-|[datadog-service-name](#datadog-service-name)|service|"nginx"|
-|[datadog-operation-name-override](#datadog-operation-name-override)|service|"nginx.handle"|
+|[datadog-service-name](#datadog-service-name)|string|"nginx"|
+|[datadog-environment](#datadog-environment)|string|"prod"|
+|[datadog-operation-name-override](#datadog-operation-name-override)|string|"nginx.handle"|
 |[datadog-priority-sampling](#datadog-priority-sampling)|bool|"true"|
 |[datadog-sample-rate](#datadog-sample-rate)|float|1.0|
 |[main-snippet](#main-snippet)|string|""|
@@ -860,6 +861,10 @@ Specifies the port to use when uploading traces. _**default:**_ 8126
 ## datadog-service-name
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
+
+## datadog-environment
+
+Specifies the environment this trace belongs to. _**default:**_ prod
 
 ## datadog-operation-name-override
 
