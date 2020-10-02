@@ -1,5 +1,18 @@
 # Changelog
 
+### 0.40.1
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.40.1@sha256:b954d8ff1466eb236162c644bd64e9027a212c82b484cbe47cc21da45fe8bc59`
+
+Fix regression with clusters running v1.16 where AdmissionReview V1 is available but not enabled.
+
+_Changes:_
+
+- [X] [#6265](https://github.com/kubernetes/ingress-nginx/pull/6265) Add support for admission review v1beta1
+
+
 ### 0.40.0
 
 **Image:**
