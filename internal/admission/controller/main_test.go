@@ -23,6 +23,7 @@ import (
 	admissionv1 "k8s.io/api/admission/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
@@ -53,21 +54,33 @@ func TestHandleAdmission(t *testing.T) {
 	adm := &IngressAdmission{
 		Checker: failTestChecker{t: t},
 	}
-	review := &admissionv1.AdmissionReview{
+
+	result, err := adm.HandleAdmission(&admissionv1.AdmissionReview{
 		Request: &admissionv1.AdmissionRequest{
 			Resource: v1.GroupVersionResource{Group: "", Version: "v1", Resource: "pod"},
 		},
-	}
-
-	adm.HandleAdmission(review)
-	if review.Response.Allowed {
+	})
+	if err == nil {
 		t.Fatalf("with a non ingress resource, the check should not pass")
 	}
 
-	review.Request.Resource = v1.GroupVersionResource{Group: networking.GroupName, Version: "v1beta1", Resource: "ingresses"}
-	review.Request.Object.Raw = []byte{0xff}
+	result, err = adm.HandleAdmission(&admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
+			Resource: v1.GroupVersionResource{Group: networking.GroupName, Version: "v1beta1", Resource: "ingresses"},
+			Object: runtime.RawExtension{
+				Raw: []byte{0xff},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-	adm.HandleAdmission(review)
+	review, isV1 := (result).(*admissionv1.AdmissionReview)
+	if !isV1 {
+		t.Fatalf("expected AdmissionReview V1 object but %T returned", result)
+	}
+
 	if review.Response.Allowed {
 		t.Fatalf("when the request object is not decodable, the request should not be allowed")
 	}
