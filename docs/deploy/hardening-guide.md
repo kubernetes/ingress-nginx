@@ -36,8 +36,8 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | ||| |
 | __2.1 Minimize NGINX Modules__||| |
 | 2.1.1 Ensure only required modules are installed (Not Scored) | OK | Already only needed modules are installed, however proposals for further reduction are welcome | |
-| 2.1.2 Ensure HTTP WebDAV module is not installed (Scored) | RISK TO BE ACCEPTED | It is installed, see compile options [here](https://github.com/kubernetes/ingress-nginx/blob/master/images/nginx/rootfs/build.sh#L445). Disabling that would require building own image for nginx ingress controller. The effort is too high in comparison to the achieved effect | |
-| 2.1.3 Ensure modules with gzip functionality are disabled (Scored)| RISK TO BE ACCEPTED | See previous answer | |
+| 2.1.2 Ensure HTTP WebDAV module is not installed (Scored) | OK | | |
+| 2.1.3 Ensure modules with gzip functionality are disabled (Scored)| OK | | |
 | 2.1.4 Ensure the autoindex module is disabled (Scored)| OK | No autoindex configs so far in ingress defaults| |
 | ||| |
 | __2.2 Account Security__||| |
