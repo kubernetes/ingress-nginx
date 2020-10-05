@@ -3790,7 +3790,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#gzip-level">gzip-level</a></td>
 <td align="left">int</td>
-<td align="left">5</td>
+<td align="left">1</td>
 </tr>
 <tr>
 <td align="left"><a href="#gzip-types">gzip-types</a></td>
@@ -3830,7 +3830,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#upstream-keepalive-connections">upstream-keepalive-connections</a></td>
 <td align="left">int</td>
-<td align="left">32</td>
+<td align="left">320</td>
 </tr>
 <tr>
 <td align="left"><a href="#upstream-keepalive-timeout">upstream-keepalive-timeout</a></td>
@@ -3840,7 +3840,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#upstream-keepalive-requests">upstream-keepalive-requests</a></td>
 <td align="left">int</td>
-<td align="left">100</td>
+<td align="left">10000</td>
 </tr>
 <tr>
 <td align="left"><a href="#limit-conn-zone-variable">limit-conn-zone-variable</a></td>
@@ -4496,7 +4496,7 @@ The default mime type list to compress is: <code>application/xml+rss application
 <h2 id="use-http2">use-http2<a class="headerlink" href="#use-http2" title="Permanent link"> ¶</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_v2_module.html">HTTP/2</a> support in secure connections.</p>
 <h2 id="gzip-level">gzip-level<a class="headerlink" href="#gzip-level" title="Permanent link"> ¶</a></h2>
-<p>Sets the gzip Compression Level that will be used. <em><strong>default:</strong></em> 5</p>
+<p>Sets the gzip Compression Level that will be used. <em><strong>default:</strong></em> 1</p>
 <h2 id="gzip-min-length">gzip-min-length<a class="headerlink" href="#gzip-min-length" title="Permanent link"> ¶</a></h2>
 <p>Minimum length of responses to be returned to the client before it is eligible for gzip compression, in bytes. <em><strong>default:</strong></em> 256</p>
 <h2 id="gzip-types">gzip-types<a class="headerlink" href="#gzip-types" title="Permanent link"> ¶</a></h2>
