@@ -64,9 +64,6 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 
 	review, isV1 := obj.(*admissionv1.AdmissionReview)
 
-	status := &admissionv1.AdmissionResponse{}
-	status.UID = review.Request.UID
-
 	if !isV1 {
 		outputVersion = admissionv1beta1.SchemeGroupVersion
 		reviewv1beta1, isv1beta1 := obj.(*admissionv1beta1.AdmissionReview)
@@ -79,9 +76,12 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 	}
 
 	if review.Request.Resource != networkingV1Beta1Resource && review.Request.Resource != networkingV1Resource {
-		return nil, fmt.Errorf("rejecting admission review because the request does not contains an Ingress resource but %s with name %s in namespace %s",
+		return nil, fmt.Errorf("rejecting admission review because the request does not contain an Ingress resource but %s with name %s in namespace %s",
 			review.Request.Resource.String(), review.Request.Name, review.Request.Namespace)
 	}
+
+	status := &admissionv1.AdmissionResponse{}
+	status.UID = review.Request.UID
 
 	ingress := networking.Ingress{}
 
