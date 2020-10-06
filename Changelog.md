@@ -1,10 +1,22 @@
 # Changelog
 
+### 0.40.2
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.40.2@sha256:46ba23c3fbaafd9e5bd01ea85b2f921d9f2217be082580edc22e6c704a83f02f`
+
+Improve HandleAdmission resiliency
+
+_Changes:_
+
+- [X] [#6284](https://github.com/kubernetes/ingress-nginx/pull/6284) Improve HandleAdmission resiliency
+
 ### 0.40.1
 
 **Image:**
 
-- `k8s.gcr.io/ingress-nginx/controller:v0.40.1@sha256:b954d8ff1466eb236162c644bd64e9027a212c82b484cbe47cc21da45fe8bc59`
+- `k8s.gcr.io/ingress-nginx/controller:v0.40.1@sha256:abffcf2d25e3e7c7b67a315a7c664ec79a1588c9c945d3c7a75637c2f55caec6`
 
 Fix regression with clusters running v1.16 where AdmissionReview V1 is available but not enabled.
 
