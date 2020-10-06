@@ -25,6 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 const testIngressName = "testIngressName"
@@ -62,6 +63,20 @@ func TestHandleAdmission(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatalf("with a non ingress resource, the check should not pass")
+	}
+
+	result, err = adm.HandleAdmission(nil)
+	if err == nil {
+		t.Fatalf("with a nil AdmissionReview request, the check should not pass")
+	}
+
+	result, err = adm.HandleAdmission(&admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
+			Resource: v1.GroupVersionResource{Group: extensions.GroupName, Version: "v1beta1", Resource: "ingresses"},
+		},
+	})
+	if err == nil {
+		t.Fatalf("with extensions/v1beta1 Ingress resource, the check should not pass")
 	}
 
 	result, err = adm.HandleAdmission(&admissionv1.AdmissionReview{
