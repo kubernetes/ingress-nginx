@@ -25,6 +25,8 @@ controller:
 
   admissionWebhooks:
     enabled: true
+    certificate: "/usr/local/certificates/cert"
+    key: "/usr/local/certificates/key"
 
 defaultBackend:
   enabled: false

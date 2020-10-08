@@ -4,6 +4,9 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
+  {{- if .Values.controller.admissionWebhooks.annotations }}
+  annotations: {{ toYaml .Values.controller.admissionWebhooks.annotations | nindent 4 }}
+  {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: admission-webhook
@@ -31,4 +34,13 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ include "ingress-nginx.controller.fullname" . }}-admission
         path: /networking/v1beta1/ingresses
+    {{- if .Values.controller.admissionWebhooks.timeoutSeconds }}
+    timeoutSeconds: {{ .Values.controller.admissionWebhooks.timeoutSeconds }}
+    {{- end }}
+    {{- if .Values.controller.admissionWebhooks.namespaceSelector }}
+    namespaceSelector: {{ toYaml .Values.controller.admissionWebhooks.namespaceSelector | nindent 6 }}
+    {{- end }}
+    {{- if .Values.controller.admissionWebhooks.objectSelector }}
+    objectSelector: {{ toYaml .Values.controller.admissionWebhooks.objectSelector | nindent 6 }}
+    {{- end }}
 {{- end }}
