@@ -554,12 +554,21 @@ http {
         }
         {{ end }}
 
-        {{ if ne $all.ListenPorts.HTTPS 443 }}
-        {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $redirect.To }}{{ $redirect_port }}$request_uri;
-        {{ else }}
-        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $redirect.To }}$request_uri;
-        {{ end }}
+        set_by_lua_block $redirect_to {
+            local request_uri = ngx.var.request_uri
+            if string.sub(request_uri, -1) == "/" then
+                request_uri = string.sub(request_uri, 1, -2)
+            end
+
+            {{ if ne $all.ListenPorts.HTTPS 443 }}
+            {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
+            return string.format("%s://%s%s%s", ngx.var.scheme, "{{ $redirect.To }}", "{{ $redirect_port }}", request_uri)
+            {{ else }}
+            return string.format("%s://%s%s", ngx.var.scheme, "{{ $redirect.To }}", request_uri)
+            {{ end }}
+        }
+
+        return {{ $all.Cfg.HTTPRedirectCode }} $redirect_to;
     }
     ## end server {{ $redirect.From }}
     {{ end }}
