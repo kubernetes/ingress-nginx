@@ -46,6 +46,6 @@ var _ = framework.DescribeAnnotation("force-ssl-redirect", func() {
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusPermanentRedirect).
-			Header("Location").Equal("https://forcesslredirect.bar.com/")
+			Header("Location").Equal("https://forcesslredirect.bar.com")
 	})
 })

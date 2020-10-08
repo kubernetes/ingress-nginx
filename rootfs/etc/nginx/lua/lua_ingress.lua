@@ -145,11 +145,17 @@ function _M.rewrite(location_config)
   end
 
   if redirect_to_https(location_config) then
-    local uri = string_format("https://%s%s", redirect_host(), ngx.var.request_uri)
+    local request_uri = ngx.var.request_uri
+    -- do not append a trailing slash on redirects
+    if string.sub(request_uri, -1) == "/" then
+      request_uri = string.sub(request_uri, 1, -2)
+    end
+
+    local uri = string_format("https://%s%s", redirect_host(), request_uri)
 
     if location_config.use_port_in_redirects then
       uri = string_format("https://%s:%s%s", redirect_host(),
-        config.listen_ports.https, ngx.var.request_uri)
+        config.listen_ports.https, request_uri)
     end
 
     ngx_redirect(uri, config.http_redirect_code)
