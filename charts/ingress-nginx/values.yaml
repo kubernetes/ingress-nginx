@@ -406,9 +406,15 @@ controller:
   #   command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
 
   admissionWebhooks:
+    annotations: {}
     enabled: true
     failurePolicy: Fail
+    # timeoutSeconds: 10
     port: 8443
+    certificate: "/usr/local/certificates/cert"
+    key: "/usr/local/certificates/key"
+    namespaceSelector: {}
+    objectSelector: {}
 
     service:
       annotations: {}
