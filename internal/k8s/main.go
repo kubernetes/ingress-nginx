@@ -101,6 +101,10 @@ func GetIngressPod(kubeClient clientset.Interface) error {
 		return fmt.Errorf("unable to get POD information")
 	}
 
+	if IngressNGINXPod.Namespace == "" {
+		IngressNGINXPod.Namespace = apiv1.NamespaceDefault
+	}
+
 	return nil
 }
 
