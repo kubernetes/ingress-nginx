@@ -26,7 +26,10 @@ spec:
   template:
     metadata:
     {{- if .Values.controller.podAnnotations }}
-      annotations: {{ toYaml .Values.controller.podAnnotations | nindent 8 }}
+      annotations: 
+      {{- range $key, $value := .Values.controller.podAnnotations }}
+        {{ $key }}: {{ $value | quote }}
+      {{- end }}      
     {{- end }}
       labels:
         {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
