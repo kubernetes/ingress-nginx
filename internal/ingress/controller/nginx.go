@@ -1046,6 +1046,7 @@ const datadogTmpl = `{
   "service": "{{ .DatadogServiceName }}",
   "agent_host": "{{ .DatadogCollectorHost }}",
   "agent_port": {{ .DatadogCollectorPort }},
+  "environment": "{{ .DatadogEnvironment }}",
   "operation_name_override": "{{ .DatadogOperationNameOverride }}",
   "sample_rate": {{ .DatadogSampleRate }},
   "dd.priority.sampling": {{ .DatadogPrioritySampling }}

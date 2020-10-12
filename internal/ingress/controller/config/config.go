@@ -584,6 +584,10 @@ type Configuration struct {
 	// Default: 8126
 	DatadogCollectorPort int `json:"datadog-collector-port"`
 
+	// DatadogEnvironment specifies the environment this trace belongs to.
+	// Default: prod
+	DatadogEnvironment string `json:"datadog-environment"`
+
 	// DatadogServiceName specifies the service name to use for any traces created
 	// Default: nginx
 	DatadogServiceName string `json:"datadog-service-name"`
@@ -823,6 +827,7 @@ func NewDefault() Configuration {
 		JaegerSamplerPort:            5778,
 		JaegerSamplerHost:            "http://127.0.0.1",
 		DatadogServiceName:           "nginx",
+		DatadogEnvironment:           "prod",
 		DatadogCollectorPort:         8126,
 		DatadogOperationNameOverride: "nginx.handle",
 		DatadogSampleRate:            1.0,
