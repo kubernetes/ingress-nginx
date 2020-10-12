@@ -3,6 +3,26 @@ entries:
   ingress-nginx:
   - apiVersion: v1
     appVersion: 0.40.2
+    created: "2020-10-12T19:01:49.912498143Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: 924f82cc2f46225eba4424fe696cdbf13e18ba00cd2ab4a5b20e516a7697a0ab
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-3.7.0/ingress-nginx-3.7.0.tgz
+    version: 3.7.0
+  - apiVersion: v1
+    appVersion: 0.40.2
     created: "2020-10-09T20:03:58.141787497Z"
     description: Ingress controller for Kubernetes using NGINX as a reverse proxy
       and load balancer
