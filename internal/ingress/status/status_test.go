@@ -72,6 +72,12 @@ func buildSimpleClientSet() *testclient.Clientset {
 				},
 				Status: apiv1.PodStatus{
 					Phase: apiv1.PodRunning,
+					Conditions: []apiv1.PodCondition{
+						{
+							Type:   apiv1.PodReady,
+							Status: apiv1.ConditionTrue,
+						},
+					},
 				},
 			},
 			{
@@ -108,6 +114,12 @@ func buildSimpleClientSet() *testclient.Clientset {
 				},
 				Status: apiv1.PodStatus{
 					Phase: apiv1.PodRunning,
+					Conditions: []apiv1.PodCondition{
+						{
+							Type:   apiv1.PodReady,
+							Status: apiv1.ConditionTrue,
+						},
+					},
 				},
 			},
 		}},
