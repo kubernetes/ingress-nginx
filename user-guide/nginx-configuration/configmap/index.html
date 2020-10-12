@@ -1354,6 +1354,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#datadog-environment" class="md-nav__link">
+    datadog-environment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#datadog-operation-name-override" class="md-nav__link">
     datadog-operation-name-override
   </a>
@@ -3057,6 +3064,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#datadog-environment" class="md-nav__link">
+    datadog-environment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#datadog-operation-name-override" class="md-nav__link">
     datadog-operation-name-override
   </a>
@@ -3994,12 +4008,17 @@ Same for numbers, like "100".</p>
 </tr>
 <tr>
 <td align="left"><a href="#datadog-service-name">datadog-service-name</a></td>
-<td align="left">service</td>
+<td align="left">string</td>
 <td align="left">"nginx"</td>
 </tr>
 <tr>
+<td align="left"><a href="#datadog-environment">datadog-environment</a></td>
+<td align="left">string</td>
+<td align="left">"prod"</td>
+</tr>
+<tr>
 <td align="left"><a href="#datadog-operation-name-override">datadog-operation-name-override</a></td>
-<td align="left">service</td>
+<td align="left">string</td>
 <td align="left">"nginx.handle"</td>
 </tr>
 <tr>
@@ -4628,6 +4647,8 @@ Leave blank to use default value (localhost). <em><strong>default:</strong></em>
 <p>Specifies the port to use when uploading traces. <em><strong>default:</strong></em> 8126</p>
 <h2 id="datadog-service-name">datadog-service-name<a class="headerlink" href="#datadog-service-name" title="Permanent link"> ¶</a></h2>
 <p>Specifies the service name to use for any traces created. <em><strong>default:</strong></em> nginx</p>
+<h2 id="datadog-environment">datadog-environment<a class="headerlink" href="#datadog-environment" title="Permanent link"> ¶</a></h2>
+<p>Specifies the environment this trace belongs to. <em><strong>default:</strong></em> prod</p>
 <h2 id="datadog-operation-name-override">datadog-operation-name-override<a class="headerlink" href="#datadog-operation-name-override" title="Permanent link"> ¶</a></h2>
 <p>Overrides the operation naem to use for any traces crated. <em><strong>default:</strong></em> nginx.handle</p>
 <h2 id="datadog-priority-sampling">datadog-priority-sampling<a class="headerlink" href="#datadog-priority-sampling" title="Permanent link"> ¶</a></h2>
