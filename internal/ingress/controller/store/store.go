@@ -30,6 +30,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -253,7 +254,7 @@ func New(
 	// If you happen to have a lot of HELM releases in the cluster it will make
 	// the memory consumption of nginx-ingress-controller explode.
 	// In order to avoid that we filter out labels OWNER=TILLER.
-	tweakListOptionsFunc := func(options *metav1.ListOptions) {
+	labelsTweakListOptionsFunc := func(options *metav1.ListOptions) {
 		if len(options.LabelSelector) > 0 {
 			options.LabelSelector += ",OWNER!=TILLER"
 		} else {
@@ -261,10 +262,35 @@ func New(
 		}
 	}
 
+	// As of HELM >= v3 helm releases are stored using Secrets instead of ConfigMaps.
+	// In order to avoid listing those secrets we discard type "helm.sh/release.v1"
+	secretsTweakListOptionsFunc := func(options *metav1.ListOptions) {
+		helmAntiSelector := fields.OneTermNotEqualSelector("type", "helm.sh/release.v1")
+		baseSelector, err := fields.ParseSelector(options.FieldSelector)
+
+		if err != nil {
+			options.FieldSelector = helmAntiSelector.String()
+		} else {
+			options.FieldSelector = fields.AndSelectors(baseSelector, helmAntiSelector).String()
+		}
+	}
+
 	// create informers factory, enable and assign required informers
 	infFactory := informers.NewSharedInformerFactoryWithOptions(client, resyncPeriod,
 		informers.WithNamespace(namespace),
-		informers.WithTweakListOptions(tweakListOptionsFunc))
+	)
+
+	// create informers factory for configmaps
+	infFactoryConfigmaps := informers.NewSharedInformerFactoryWithOptions(client, resyncPeriod,
+		informers.WithNamespace(namespace),
+		informers.WithTweakListOptions(labelsTweakListOptionsFunc),
+	)
+
+	// create informers factory for secrets
+	infFactorySecrets := informers.NewSharedInformerFactoryWithOptions(client, resyncPeriod,
+		informers.WithNamespace(namespace),
+		informers.WithTweakListOptions(secretsTweakListOptionsFunc),
+	)
 
 	store.informers.Ingress = infFactory.Networking().V1beta1().Ingresses().Informer()
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
@@ -272,10 +298,10 @@ func New(
 	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
 	store.listers.Endpoint.Store = store.informers.Endpoint.GetStore()
 
-	store.informers.Secret = infFactory.Core().V1().Secrets().Informer()
+	store.informers.Secret = infFactorySecrets.Core().V1().Secrets().Informer()
 	store.listers.Secret.Store = store.informers.Secret.GetStore()
 
-	store.informers.ConfigMap = infFactory.Core().V1().ConfigMaps().Informer()
+	store.informers.ConfigMap = infFactoryConfigmaps.Core().V1().ConfigMaps().Informer()
 	store.listers.ConfigMap.Store = store.informers.ConfigMap.GetStore()
 
 	store.informers.Service = infFactory.Core().V1().Services().Informer()
