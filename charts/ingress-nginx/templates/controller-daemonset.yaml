@@ -138,7 +138,7 @@ spec:
           {{- end }}
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: {{ .Values.controller.healthCheckPath }}
               port: {{ .Values.controller.livenessProbe.port }}
               scheme: HTTP
             initialDelaySeconds: {{ .Values.controller.livenessProbe.initialDelaySeconds }}
@@ -148,7 +148,7 @@ spec:
             failureThreshold: {{ .Values.controller.livenessProbe.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: {{ .Values.controller.healthCheckPath }}
               port: {{ .Values.controller.readinessProbe.port }}
               scheme: HTTP
             initialDelaySeconds: {{ .Values.controller.readinessProbe.initialDelaySeconds }}
