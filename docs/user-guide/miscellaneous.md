@@ -10,6 +10,11 @@ Another option is to enable proxy protocol using `use-proxy-protocol: "true"`.
 
 In this mode NGINX does not use the content of the header to get the source IP address of the connection.
 
+## Path types
+
+Each path in an Ingress is required to have a corresponding path type. Paths that do not include an explicit pathType will fail validation.
+By default NGINX path type is Prefix to not break existing definitions
+
 ## Proxy Protocol
 
 If you are using a L4 proxy to forward the traffic to the NGINX pods and terminate HTTP/HTTPS there, you will lose the remote endpoint's IP address. To prevent this you could use the [Proxy Protocol](http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt) for forwarding traffic, this will send the connection details before forwarding the actual TCP connection itself.
