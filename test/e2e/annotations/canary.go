@@ -814,4 +814,43 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				return strings.Contains(server, "server_name foo")
 			})
 	})
+
+	ginkgo.It("routes requests to canary with only matching paths", func() {
+		host := "foo"
+		canaryIngName := fmt.Sprintf("%v-canary", host)
+		canaryAnnotations := map[string]string{
+			"nginx.ingress.kubernetes.io/canary":           "true",
+			"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+		}
+
+		paths := []string{"/foo", "/bar"}
+		main := framework.NewSingleIngressWithMultiplePaths(host, paths, host, f.Namespace,
+			framework.EchoService, 80, nil)
+		f.EnsureIngress(main)
+
+		canary := framework.NewSingleIngress(canaryIngName, "/foo", host,
+			f.Namespace, canaryService, 80, canaryAnnotations)
+		f.EnsureIngress(canary)
+
+		f.HTTPTestClient().
+			GET("/foo").
+			WithHeader("Host", host).
+			WithHeader("CanaryByHeader", "always").
+			Expect().
+			Status(http.StatusOK).
+			Body().
+			Contains(canaryService).
+			NotContains(framework.EchoService)
+
+		f.HTTPTestClient().
+			GET("/bar").
+			WithHeader("Host", host).
+			WithHeader("CanaryByHeader", "always").
+			Expect().
+			Status(http.StatusOK).
+			Body().
+			Contains(framework.EchoService).
+			NotContains(canaryService)
+
+	})
 })
