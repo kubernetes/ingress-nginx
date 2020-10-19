@@ -1448,3 +1448,24 @@ func TestModSecurityForLocation(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildServerName(t *testing.T) {
+
+	testCases := []struct {
+		title    string
+		hostname string
+		expected string
+	}{
+		{"simple domain", "foo.bar", "foo.bar"},
+		{"simple www domain", "www.foo.bar", "www.foo.bar"},
+		{"wildcard domain", "*.foo.bar", "~^(?<subdomain>[\\w-]+)\\.foo\\.bar$"},
+		{"wildcard two levels domain", "*.sub.foo.bar", "~^(?<subdomain>[\\w-]+)\\.sub\\.foo\\.bar$"},
+	}
+
+	for _, testCase := range testCases {
+		result := buildServerName(testCase.hostname)
+		if result != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+		}
+	}
+}
