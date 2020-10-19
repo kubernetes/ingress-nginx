@@ -182,6 +182,7 @@ var (
 		"buildMirrorLocations":               buildMirrorLocations,
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
 		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
+		"buildServerName":                    buildServerName,
 	}
 )
 
@@ -1458,4 +1459,16 @@ func shouldLoadInfluxDBModule(s interface{}) bool {
 	}
 
 	return false
+}
+
+// buildServerName ensures wildcard hostnames are valid
+func buildServerName(hostname string) string {
+	if !strings.HasPrefix(hostname, "*") {
+		return hostname
+	}
+
+	hostname = strings.Replace(hostname, "*.", "", 1)
+	parts := strings.Split(hostname, ".")
+
+	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
 }
