@@ -405,6 +405,10 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 		return fmt.Sprintf(`~* "^%s"`, path)
 	}
 
+	if path != "/" && !strings.HasSuffix(path, "/") {
+		path = path + "/"
+	}
+
 	if location.PathType != nil && *location.PathType == networkingv1beta1.PathTypeExact {
 		return fmt.Sprintf(`= %s`, path)
 	}
