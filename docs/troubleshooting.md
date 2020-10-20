@@ -191,7 +191,7 @@ root@test:/# curl -k https://10.100.0.1
 Unauthorized
 
 # connect using tokens
-root@test:/# curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/)" https://10.100.0.1
+root@test:/# curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://10.100.0.1 && echo
 {
   "paths": [
     "/api",
