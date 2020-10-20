@@ -45,4 +45,4 @@ jobs:
       - name: Deploy
         uses: ./.github/actions/mkdocs
         env:
-          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
