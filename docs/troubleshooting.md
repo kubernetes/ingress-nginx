@@ -180,11 +180,6 @@ kubernetes   10.100.0.1     <none>        443/TCP   1d
 # start a container that contains curl
 $ kubectl run -i --tty --rm test --image=tutum/curl --restart=Never
 
-# check that container is running
-$ kubectl get pods
-NAME                   READY     STATUS    RESTARTS   AGE
-test-701078429-s5kca   1/1       Running   0          16s
-
 # check if secret exists
 root@test:/# ls /var/run/secrets/kubernetes.io/serviceaccount/
 ca.crt
