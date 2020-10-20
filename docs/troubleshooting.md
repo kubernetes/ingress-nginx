@@ -172,8 +172,13 @@ token that is required to authenticate with the API server.
 Verify with the following commands:
 
 ```console
+# get service IP of master
+$ kubectl get services kuberentes
+NAME         CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   10.100.0.1     <none>        443/TCP   1d
+
 # start a container that contains curl
-$ kubectl run test --image=tutum/curl -- sleep 10000
+$ kubectl run -i --tty --rm test --image=tutum/curl --restart=Never
 
 # check that container is running
 $ kubectl get pods
@@ -181,25 +186,17 @@ NAME                   READY     STATUS    RESTARTS   AGE
 test-701078429-s5kca   1/1       Running   0          16s
 
 # check if secret exists
-$ kubectl exec test-701078429-s5kca -- ls /var/run/secrets/kubernetes.io/serviceaccount/
+root@test:/# ls /var/run/secrets/kubernetes.io/serviceaccount/
 ca.crt
 namespace
 token
 
-# get service IP of master
-$ kubectl get services
-NAME         CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
-kubernetes   10.0.0.1     <none>        443/TCP   1d
-
 # check base connectivity from cluster inside
-$ kubectl exec test-701078429-s5kca -- curl -k https://10.0.0.1
+root@test:/# curl -k https://10.100.0.1
 Unauthorized
 
 # connect using tokens
-$ TOKEN_VALUE=$(kubectl exec test-701078429-s5kca -- cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-$ echo $TOKEN_VALUE
-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi....9A
-$ kubectl exec test-701078429-s5kca -- curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  "Authorization: Bearer $TOKEN_VALUE" https://10.0.0.1
+root@test:/# curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/)" https://10.100.0.1
 {
   "paths": [
     "/api",
@@ -235,6 +232,8 @@ $ kubectl exec test-701078429-s5kca -- curl --cacert /var/run/secrets/kubernetes
     "/version"
   ]
 }
+
+# when you type `exit` or `^D` the test container will be destroyed.
 ```
 
 If it is not working, there are two possible reasons:
