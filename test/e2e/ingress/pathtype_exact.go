@@ -60,7 +60,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, host) &&
-					strings.Contains(server, "location = /exact") &&
+					strings.Contains(server, "location ~ ^/exact$") &&
 					strings.Contains(server, "location /exact")
 			})
 
@@ -98,7 +98,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, host) &&
-					strings.Contains(server, "location = /exact") &&
+					strings.Contains(server, "location ~ ^/exact$") &&
 					strings.Contains(server, "location /exact")
 			})
 

@@ -406,7 +406,7 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	}
 
 	if location.PathType != nil && *location.PathType == networkingv1beta1.PathTypeExact {
-		return fmt.Sprintf(`= %s`, path)
+		return fmt.Sprintf(`~ ^%s$`, path)
 	}
 
 	return path
