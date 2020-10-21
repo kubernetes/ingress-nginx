@@ -228,7 +228,7 @@ root@test:/# curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt 
   ]
 }
 
-# when you type `exit` or `^D` the test pod will be destroyed.
+# when you type `exit` or `^D` the test pod will be deleted.
 ```
 
 If it is not working, there are two possible reasons:
