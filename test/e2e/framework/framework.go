@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/klog/v2"
@@ -63,7 +64,8 @@ var (
 type Framework struct {
 	BaseName string
 
-	IsIngressV1Ready bool
+	IsIngressV1Ready      bool
+	IsIngressV1Beta1Ready bool
 
 	// A Kubernetes and Service Catalog client
 	KubeClientSet          kubernetes.Interface
@@ -97,11 +99,14 @@ func (f *Framework) BeforeEach() {
 	if f.KubeClientSet == nil {
 		f.KubeConfig, err = kubeframework.LoadConfig()
 		assert.Nil(ginkgo.GinkgoT(), err, "loading a kubernetes client configuration")
+
+		// TODO: remove after k8s v1.22
+		f.KubeConfig.WarningHandler = rest.NoWarnings{}
+
 		f.KubeClientSet, err = kubernetes.NewForConfig(f.KubeConfig)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating a kubernetes client")
 
-		_, isIngressV1Ready := k8s.NetworkingIngressAvailable(f.KubeClientSet)
-		f.IsIngressV1Ready = isIngressV1Ready
+		_, f.IsIngressV1Beta1Ready, f.IsIngressV1Ready = k8s.NetworkingIngressAvailable(f.KubeClientSet)
 	}
 
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)

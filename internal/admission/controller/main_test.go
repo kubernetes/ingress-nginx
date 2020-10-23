@@ -25,7 +25,6 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
-	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 const testIngressName = "testIngressName"
@@ -58,7 +57,7 @@ func TestHandleAdmission(t *testing.T) {
 
 	result, err := adm.HandleAdmission(&admissionv1.AdmissionReview{
 		Request: &admissionv1.AdmissionRequest{
-			Resource: v1.GroupVersionResource{Group: "", Version: "v1", Resource: "pod"},
+			Kind: v1.GroupVersionKind{Group: "", Version: "v1", Kind: "Pod"},
 		},
 	})
 	if err == nil {
@@ -72,16 +71,7 @@ func TestHandleAdmission(t *testing.T) {
 
 	result, err = adm.HandleAdmission(&admissionv1.AdmissionReview{
 		Request: &admissionv1.AdmissionRequest{
-			Resource: v1.GroupVersionResource{Group: extensions.GroupName, Version: "v1beta1", Resource: "ingresses"},
-		},
-	})
-	if err == nil {
-		t.Fatalf("with extensions/v1beta1 Ingress resource, the check should not pass")
-	}
-
-	result, err = adm.HandleAdmission(&admissionv1.AdmissionReview{
-		Request: &admissionv1.AdmissionRequest{
-			Resource: v1.GroupVersionResource{Group: networking.GroupName, Version: "v1beta1", Resource: "ingresses"},
+			Kind: v1.GroupVersionKind{Group: networking.GroupName, Version: "v1beta1", Kind: "Ingress"},
 			Object: runtime.RawExtension{
 				Raw: []byte{0xff},
 			},

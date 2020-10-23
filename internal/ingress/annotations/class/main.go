@@ -53,7 +53,7 @@ func IsValid(ing *networking.Ingress) bool {
 	}
 
 	// 2. k8s < v1.18. Check default annotation
-	if !k8s.IsIngressV1Ready {
+	if !k8s.IsIngressV1Beta1Ready {
 		return IngressClass == DefaultClass
 	}
 
