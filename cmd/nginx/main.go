@@ -104,12 +104,14 @@ func main() {
 	conf.FakeCertificate = ssl.GetFakeSSLCert()
 	klog.InfoS("SSL fake certificate created", "file", conf.FakeCertificate.PemFileName)
 
-	k8s.IsNetworkingIngressAvailable, k8s.IsIngressV1Ready = k8s.NetworkingIngressAvailable(kubeClient)
-	if !k8s.IsNetworkingIngressAvailable {
+	var isNetworkingIngressAvailable bool
+
+	isNetworkingIngressAvailable, k8s.IsIngressV1Beta1Ready, _ = k8s.NetworkingIngressAvailable(kubeClient)
+	if !isNetworkingIngressAvailable {
 		klog.Fatalf("ingress-nginx requires Kubernetes v1.14.0 or higher")
 	}
 
-	if k8s.IsIngressV1Ready {
+	if k8s.IsIngressV1Beta1Ready {
 		klog.InfoS("Enabling new Ingress features available since Kubernetes v1.18")
 		k8s.IngressClass, err = kubeClient.NetworkingV1beta1().IngressClasses().
 			Get(context.TODO(), class.IngressClass, metav1.GetOptions{})
@@ -206,10 +208,12 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 // the in-cluster config is missing or fails, we fallback to the default config.
 func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kubernetes.Clientset, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags(apiserverHost, kubeConfig)
-
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: remove after k8s v1.22
+	cfg.WarningHandler = rest.NoWarnings{}
 
 	// Configure the User-Agent used for the HTTP requests made to the API server.
 	cfg.UserAgent = fmt.Sprintf(

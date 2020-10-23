@@ -40,13 +40,10 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 func TestStore(t *testing.T) {
-	k8s.IsNetworkingIngressAvailable = true
-
 	//TODO: move env definition to docker image?
 	os.Setenv("KUBEBUILDER_ASSETS", "/usr/local/bin")
 
