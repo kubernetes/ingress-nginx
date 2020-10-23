@@ -301,9 +301,6 @@ func TestStatusActions(t *testing.T) {
 		t.Fatalf("expected a valid Sync")
 	}
 
-	// assume k8s >= 1.14 as the rest of the test
-	k8s.IsNetworkingIngressAvailable = true
-
 	fk := fkSync.(statusSync)
 
 	// start it and wait for the election and syn actions

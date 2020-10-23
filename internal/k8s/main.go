@@ -128,10 +128,10 @@ func MetaNamespaceKey(obj interface{}) string {
 	return key
 }
 
-// IsNetworkingIngressAvailable indicates if package "k8s.io/api/networking/v1beta1" is available or not
-var IsNetworkingIngressAvailable bool
+// IsIngressV1Beta1Ready indicates if the running Kubernetes version is at least v1.18.0
+var IsIngressV1Beta1Ready bool
 
-// IsIngressV1Ready indicates if the running Kubernetes version is at least v1.18.0
+// IsIngressV1Ready indicates if the running Kubernetes version is at least v1.19.0
 var IsIngressV1Ready bool
 
 // IngressClass indicates the class of the Ingress to use as filter
@@ -143,23 +143,24 @@ const IngressNGINXController = "k8s.io/ingress-nginx"
 
 // NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1beta1"
 // is available or not and if Ingress V1 is supported (k8s >= v1.18.0)
-func NetworkingIngressAvailable(client clientset.Interface) (bool, bool) {
+func NetworkingIngressAvailable(client clientset.Interface) (bool, bool, bool) {
 	// check kubernetes version to use new ingress package or not
 	version114, _ := version.ParseGeneric("v1.14.0")
 	version118, _ := version.ParseGeneric("v1.18.0")
+	version119, _ := version.ParseGeneric("v1.19.0")
 
 	serverVersion, err := client.Discovery().ServerVersion()
 	if err != nil {
-		return false, false
+		return false, false, false
 	}
 
 	runningVersion, err := version.ParseGeneric(serverVersion.String())
 	if err != nil {
 		klog.ErrorS(err, "unexpected error parsing running Kubernetes version")
-		return false, false
+		return false, false, false
 	}
 
-	return runningVersion.AtLeast(version114), runningVersion.AtLeast(version118)
+	return runningVersion.AtLeast(version114), runningVersion.AtLeast(version118), runningVersion.AtLeast(version119)
 }
 
 // default path type is Prefix to not break existing definitions

@@ -28,6 +28,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
@@ -39,6 +40,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 	f := framework.NewDefaultFramework("ingress-class")
 
 	var doOnce sync.Once
+
+	testIngressClassName := "test-new-ingress-class"
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
@@ -63,6 +66,20 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 					Name:     "ingress-nginx-class",
 				},
 			}, metav1.CreateOptions{})
+
+			_, err := f.KubeClientSet.NetworkingV1beta1().IngressClasses().
+				Create(context.TODO(), &networking.IngressClass{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: testIngressClassName,
+					},
+					Spec: networking.IngressClassSpec{
+						Controller: k8s.IngressNGINXController,
+					},
+				}, metav1.CreateOptions{})
+
+			if !apierrors.IsAlreadyExists(err) {
+				assert.Nil(ginkgo.GinkgoT(), err, "creating IngressClass")
+			}
 		})
 	})
 
@@ -193,28 +210,11 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 	})
 
 	ginkgo.It("check scenarios for IngressClass and ingress.class annotation", func() {
-		if !f.IsIngressV1Ready {
+		if !f.IsIngressV1Beta1Ready {
 			ginkgo.Skip("Test requires Kubernetes v1.18 or higher")
 		}
 
-		ingressClassName := "test-new-ingress-class"
-
-		ingressClass, err := f.KubeClientSet.NetworkingV1beta1().IngressClasses().
-			Create(context.TODO(), &networking.IngressClass{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: ingressClassName,
-				},
-				Spec: networking.IngressClassSpec{
-					Controller: k8s.IngressNGINXController,
-				},
-			}, metav1.CreateOptions{})
-
-		if ingressClass == nil {
-			assert.Nil(ginkgo.GinkgoT(), err, "creating IngressClass")
-		}
-
 		pod := f.GetIngressNGINXPod()
-		serviceAccount := pod.Spec.ServiceAccountName
 
 		crb, err := f.KubeClientSet.RbacV1().ClusterRoleBindings().Get(context.Background(), "ingress-nginx-class", metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "searching cluster role binding")
@@ -223,7 +223,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		crb.Subjects = append(crb.Subjects, rbacv1.Subject{
 			APIGroup:  "",
 			Kind:      "ServiceAccount",
-			Name:      serviceAccount,
+			Name:      pod.Spec.ServiceAccountName,
 			Namespace: f.Namespace,
 		})
 
@@ -240,7 +240,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				args = append(args, v)
 			}
 
-			args = append(args, fmt.Sprintf("--ingress-class=%v", ingressClassName))
+			args = append(args, fmt.Sprintf("--ingress-class=%v", testIngressClassName))
 			deployment.Spec.Template.Spec.Containers[0].Args = args
 			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 			return err
@@ -251,10 +251,10 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 
 		ginkgo.By("only having IngressClassName")
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
-		ing.Spec.IngressClassName = &ingressClassName
+		ing.Spec.IngressClassName = &testIngressClassName
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host, func(cfg string) bool {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
 			return strings.Contains(cfg, fmt.Sprintf("server_name %v", host))
 		})
 
@@ -269,7 +269,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		ing.Annotations = map[string]string{
-			class.IngressKey: ingressClassName,
+			class.IngressKey: testIngressClassName,
 		}
 		ing.Spec.IngressClassName = nil
 
