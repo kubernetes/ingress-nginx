@@ -175,7 +175,7 @@ func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 	data := make(map[string]interface{})
 	for name, annotationParser := range e.annotations {
 		val, err := annotationParser.Parse(ing)
-		klog.V(5).InfoS("Parsing Ingress annotation", "name", name, "namespace", ing.GetNamespace(), "ingress", ing.GetName(), "value", val)
+		klog.V(5).InfoS("Parsing Ingress annotation", "name", name, "ingress", klog.KObj(ing), "value", val)
 		if err != nil {
 			if errors.IsMissingAnnotations(err) {
 				continue
@@ -197,11 +197,11 @@ func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 			if !alreadyDenied {
 				errString := err.Error()
 				data[DeniedKeyName] = &errString
-				klog.ErrorS(err, "error reading Ingress annotation", "name", name, "namespace", ing.GetNamespace(), "ingress", ing.GetName())
+				klog.ErrorS(err, "error reading Ingress annotation", "name", name, "ingress", klog.KObj(ing))
 				continue
 			}
 
-			klog.V(5).ErrorS(err, "error reading Ingress annotation", "name", name, "namespace", ing.GetNamespace(), "ingress", ing.GetName())
+			klog.V(5).ErrorS(err, "error reading Ingress annotation", "name", name, "ingress", klog.KObj(ing))
 		}
 
 		if val != nil {

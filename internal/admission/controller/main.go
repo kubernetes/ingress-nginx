@@ -63,7 +63,7 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 		outputVersion = admissionv1beta1.SchemeGroupVersion
 		reviewv1beta1, isv1beta1 := obj.(*admissionv1beta1.AdmissionReview)
 		if !isv1beta1 {
-			return nil, fmt.Errorf("request is not of type apiextensions v1 or v1beta1")
+			return nil, fmt.Errorf("request is not of type AdmissionReview v1 or v1beta1")
 		}
 
 		review = &admissionv1.AdmissionReview{}
@@ -98,7 +98,7 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 	}
 
 	if err := ia.Checker.CheckIngress(&ingress); err != nil {
-		klog.ErrorS(err, "invalid ingress configuration", "ingress", review.Request.Name, "namespace", review.Request.Namespace)
+		klog.ErrorS(err, "invalid ingress configuration", "ingress", fmt.Sprintf("%v/%v", review.Request.Name, review.Request.Namespace))
 		status.Allowed = false
 		status.Result = &metav1.Status{
 			Status: metav1.StatusFailure, Code: http.StatusBadRequest, Reason: metav1.StatusReasonBadRequest,
@@ -109,7 +109,7 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 		return convertResponse(review, outputVersion), nil
 	}
 
-	klog.InfoS("successfully validated configuration, accepting", "ingress", review.Request.Name, "namespace", review.Request.Namespace)
+	klog.InfoS("successfully validated configuration, accepting", "ingress", fmt.Sprintf("%v/%v", review.Request.Name, review.Request.Namespace))
 	status.Allowed = true
 	review.Response = status
 
