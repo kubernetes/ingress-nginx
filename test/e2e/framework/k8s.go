@@ -34,7 +34,6 @@ import (
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 )
 
 // EnsureSecret creates a Secret object or returns it if it already exists.
@@ -210,11 +209,24 @@ func podRunningReady(p *core.Pod) (bool, error) {
 			p.ObjectMeta.Name, p.Spec.NodeName, core.PodRunning, p.Status.Phase)
 	}
 	// Check the ready condition is true.
-	if !podutil.IsPodReady(p) {
+
+	if !isPodReady(p) {
 		return false, fmt.Errorf("pod '%s' on '%s' didn't have condition {%v %v}; conditions: %v",
 			p.ObjectMeta.Name, p.Spec.NodeName, core.PodReady, core.ConditionTrue, p.Status.Conditions)
 	}
 	return true, nil
+}
+
+func isPodReady(p *core.Pod) bool {
+	for _, condition := range p.Status.Conditions {
+		if condition.Type != core.ContainersReady {
+			continue
+		}
+
+		return condition.Status == core.ConditionTrue
+	}
+
+	return false
 }
 
 // getIngressNGINXPod returns the ingress controller running pod
