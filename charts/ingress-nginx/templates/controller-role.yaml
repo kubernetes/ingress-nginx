@@ -87,6 +87,9 @@ rules:
     verbs:
       - create
       - patch
+{{- if .Values.rbac.extraRoleRules }}
+  {{- toYaml .Values.rbac.extraRoleRules | nindent 2 }}
+{{- end }}
 {{- if .Values.podSecurityPolicy.enabled }}
   - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']

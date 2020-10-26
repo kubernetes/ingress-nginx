@@ -642,6 +642,10 @@ defaultBackend:
 rbac:
   create: true
   scope: false
+  # Extra RBAC rules for role used by the ingress controller
+  extraRoleRules: []
+  # Extra RBAC rules for cluster role used by the ingress controller
+  extraClusterRoleRules: []
 
 # If true, create & use Pod Security Policy resources
 # https://kubernetes.io/docs/concepts/policy/pod-security-policy/

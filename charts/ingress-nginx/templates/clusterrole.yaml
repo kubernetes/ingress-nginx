@@ -73,4 +73,7 @@ rules:
       - get
       - list
       - watch
+{{- if .Values.rbac.extraClusterRoleRules }}
+  {{- toYaml .Values.rbac.extraClusterRoleRules | nindent 2 }}
+{{- end }}
 {{- end }}
