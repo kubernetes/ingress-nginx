@@ -1069,6 +1069,24 @@ stream {
             mirror_request_body {{ $location.Mirror.RequestBody }};
             {{ end }}
 
+            {{ if not (eq $location.Path "/") }}
+            set_by_lua_block $invalid_prefix {
+                local byte = string.byte
+                local matched_uri, _ = ngx.re.gsub(ngx.var.uri, '{{ $location.Path }}', '');
+                if #matched_uri == 0 then
+                    return 0;
+                end
+                if byte(matched_uri, 1) == byte("/") then
+                    return 0;
+                else
+                    return 1;
+                end
+            }
+            if ($invalid_prefix) {
+                return 404;
+            }
+            {{ end }}
+
             rewrite_by_lua_block {
                 lua_ingress.rewrite({{ locationConfigForLua $location $all }})
                 balancer.rewrite()
