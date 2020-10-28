@@ -317,16 +317,26 @@ func locationConfigForLua(l interface{}, a interface{}) string {
 		return "{}"
 	}
 
+	pathType := ""
+	if location.PathType != nil {
+		pathType = fmt.Sprintf("%v", *location.PathType)
+	}
+	if needsRewrite(location) || location.Rewrite.UseRegex {
+		pathType = ""
+	}
+
 	return fmt.Sprintf(`{
 		force_ssl_redirect = %t,
 		ssl_redirect = %t,
 		force_no_ssl_redirect = %t,
 		use_port_in_redirects = %t,
+		path_type = "%v",
 	}`,
 		location.Rewrite.ForceSSLRedirect,
 		location.Rewrite.SSLRedirect,
 		isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations),
 		location.UsePortInRedirects,
+		pathType,
 	)
 }
 
