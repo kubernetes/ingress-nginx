@@ -97,6 +97,25 @@ local function parse_x_forwarded_host()
   return hosts[1]
 end
 
+local function k8s_matches_pathtype_prefix(current_uri, prefix)
+  if prefix == "/" then
+    return true
+  end
+  if current_uri == prefix then
+    return true
+  end
+  if #current_uri < #prefix then
+    return false
+  end
+
+  local _, to = string.find(current_uri, prefix)
+  if to == nil then
+    return false
+  end
+
+  return string.sub(current_uri, to + 1, to + 1) == "/"
+end
+
 function _M.init_worker()
   randomseed()
 end
@@ -109,6 +128,12 @@ end
 -- This is where we do variable assignments to be used in subsequent
 -- phases or redirection
 function _M.rewrite(location_config)
+  if location_config.path_type == "Prefix" and
+    not k8s_matches_pathtype_prefix(ngx.var.uri, ngx.var.location_path) then
+
+    return ngx.exit(ngx.HTTP_NOT_FOUND)
+  end
+
   ngx.var.pass_access_scheme = ngx.var.scheme
 
   ngx.var.best_http_host = ngx.var.http_host or ngx.var.host
@@ -158,7 +183,7 @@ function _M.rewrite(location_config)
         config.listen_ports.https, request_uri)
     end
 
-    ngx_redirect(uri, config.http_redirect_code)
+    return ngx_redirect(uri, config.http_redirect_code)
   end
 end
 
