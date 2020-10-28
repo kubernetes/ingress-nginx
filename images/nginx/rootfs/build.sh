@@ -18,23 +18,23 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.19.3
+export NGINX_VERSION=1.19.4
 export NDK_VERSION=0.3.1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.9.0
+export NGINX_OPENTRACING_VERSION=0.10.0
 export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=0.4.2
 export MSGPACK_VERSION=3.2.1
 export DATADOG_CPP_VERSION=1.2.0
-export MODSECURITY_VERSION=b55a5778c539529ae1aa10ca49413771d52bb62e
+export MODSECURITY_VERSION=22e53aba4e3ae8c7d59a3672d6727e49246afe96
 export MODSECURITY_LIB_VERSION=v3.0.4
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.0
-export LUA_NGX_VERSION=0.10.17
-export LUA_STREAM_NGX_VERSION=0.0.8
+export LUA_NGX_VERSION=0.10.18rc4
+export LUA_STREAM_NGX_VERSION=0.0.9rc3
 export LUA_UPSTREAM_VERSION=0.07
 export LUA_BRIDGE_TRACER_VERSION=0.1.1
 export LUA_CJSON_VERSION=2.1.0.8
@@ -42,11 +42,11 @@ export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 
-export LUAJIT_VERSION=31116c4d25c4283a52b2d87fed50101cf20f5b77
+export LUAJIT_VERSION=2.1-20201027
 
 export LUA_RESTY_BALANCER=0.03
 export LUA_RESTY_CACHE=0.10
-export LUA_RESTY_CORE=0.1.19
+export LUA_RESTY_CORE=0.1.20rc3
 export LUA_RESTY_COOKIE_VERSION=766ad8c15e498850ac77f5e0265f1d3f30dc4027
 export LUA_RESTY_DNS=0.21
 export LUA_RESTY_HTTP=0.15
@@ -119,7 +119,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 91e5b74fa17879d2463294e93ad8f6ffc066696ae32ad0478ffe15ba0e9e8df0 \
+get_src 61df546927905a0d624f9396bb7a8bc7ca7fd26522ce9714d56a78b73284000e \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 0e971105e210d272a497567fa2e2c256f4e39b845a5ba80d373e26ba1abfbd85 \
@@ -137,7 +137,7 @@ get_src fe683831f832aae4737de1e1026a4454017c2d5f98cb88b08c5411dc380062f8 \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 4fc410d7aef0c8a6371afa9f249d2c6cec50ea88785d05052f8f457c35b69c18 \
+get_src d580efc71809cc1cd9138c1940f4f20766a0631cacf45b99c07facd93583260d \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
@@ -146,7 +146,7 @@ get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
 get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src 3f943d1ac7bbf64b010a57b8738107c1412cb31c55c73f0772b4148614493b7b \
+get_src 38f2ae43fceda683f652065e13a80b14a580ede476a4b44eb0ddd85665380360 \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
 get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
@@ -155,17 +155,17 @@ get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
 get_src 464f46744a6be778626d11452c4db3c2d09461080c6db42e358e21af19d542f6 \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src 1ebdcb041ca3bd238813ef6de352285e7418e6001c41a0a260b447260e37716e \
+get_src 0407cd1a71c60dc192dc2bfe87f89aea9351c69e815758b375770a958e8e1823 \
         "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
 
-get_src f2c4b7966dbb5c88edb5692616bf0eeca330ee2d43ae04c1cb96ef8fb072ba46 \
+get_src 3a92710da33a177dee5db1cc4c76a37661c064543bfb309e66400df7a0641058 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
 
-get_src 82bf1af1ee89887648b53c9df566f8b52ec10400f1641c051970a7540b7bf06a \
-        "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
+get_src f74a0821b079ea1fd63dd8659064356fc3f421ff4b35c17877140d2b2841cc3b \
+        "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 
 get_src 3e6fe45f467d653870985cc52a1c2cf81a8a2c7a7bcf7ffcfedfd305a47a1eca \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
@@ -191,7 +191,7 @@ get_src bfd8c4b6c90aa9dcbe047ac798593a41a3f21edcb71904d50d8ac0e8c77d1132 \
 get_src 82209d5a5d9545c6dde3db7857f84345db22162fdea9743d5e2b2094d8d407f8 \
         "https://github.com/openresty/lua-resty-balancer/archive/v$LUA_RESTY_BALANCER.tar.gz"
 
-get_src 040878ed9a485ca7f0f8128e4e979280bcf501af875704c8830bec6a68f128f7 \
+get_src 467e6e0cade66d74a9f8e789d1045bc033a646cee904ba758be8191b61fa6ecc \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 
 get_src bd6bee4ccc6cf3307ab6ca0eea693a921fab9b067ba40ae12a652636da588ff7 \
@@ -567,22 +567,9 @@ make install
 cd "$BUILD_PATH/lua-resty-string-$LUA_RESTY_STRING_VERSION"
 make install
 
-# build Lua bridge tracer
-#cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"
-#mkdir .build
-#cd .build
-#
-#cmake -DCMAKE_BUILD_TYPE=Release \
-#      -DBUILD_SHARED=OFF \
-#      -WITH_BOOST_STATIC=ON \
-#      ..
-#
-#make
-#make install
-
 # mimalloc
 cd "$BUILD_PATH"
-git clone --depth=1 -b v1.6.4 https://github.com/microsoft/mimalloc
+git clone --depth=1 -b v1.6.7 https://github.com/microsoft/mimalloc
 cd mimalloc
 
 mkdir -p out/release
@@ -592,16 +579,6 @@ cmake ../..
 
 make
 make install
-
-# check libraries are ok
-#echo "Checking libraries..."
-#for LIB in $(find /usr/local/lib -name "*.so");do
-#  ldd $LIB | grep 'not found'
-#  if [ $? -eq 0 ]; then
-#    echo "Dependencies is missing for $LIB"
-#    exit 1
-#  fi
-#done
 
 # update image permissions
 writeDirs=( \
