@@ -37,7 +37,7 @@ RUN apk add --no-cache \
   git \
   musl-dev \
   perl \
-  python \
+  python3 \
   py-crcmod \
   py-pip \
   unzip \
