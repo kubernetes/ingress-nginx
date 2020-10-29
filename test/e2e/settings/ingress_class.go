@@ -67,6 +67,10 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				},
 			}, metav1.CreateOptions{})
 
+			if !f.IsIngressV1Beta1Ready {
+				return
+			}
+
 			_, err := f.KubeClientSet.NetworkingV1beta1().IngressClasses().
 				Create(context.TODO(), &networking.IngressClass{
 					ObjectMeta: metav1.ObjectMeta{
