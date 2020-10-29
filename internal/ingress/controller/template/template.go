@@ -1479,6 +1479,10 @@ func shouldRenderPrefixValidation(location *ingress.Location) bool {
 		return false
 	}
 
+	if needsRewrite(location) || location.Rewrite.UseRegex {
+		return false
+	}
+
 	if location.PathType == nil {
 		return true
 	}
