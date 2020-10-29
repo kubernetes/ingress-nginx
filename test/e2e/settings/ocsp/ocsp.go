@@ -216,9 +216,9 @@ func prepareCertificates(namespace string) error {
 
 	for _, command := range commands {
 		ginkgo.By(fmt.Sprintf("running %v", command))
-		out, err := exec.Command("bash", "-c", command).Output()
+		out, err := exec.Command("bash", "-c", command).CombinedOutput()
 		if err != nil {
-			framework.Logf("Command error: %v\n%v\n%v", command, err, out)
+			framework.Logf("Command error: %v\n%v\n%v", command, err, string(out))
 			return err
 		}
 	}
@@ -238,9 +238,9 @@ func prepareCertificates(namespace string) error {
 
 	command = "cfssl gencert -remote=localhost -profile=server leaf_csr.json | cfssljson -bare leaf"
 	ginkgo.By(fmt.Sprintf("running %v", command))
-	out, err := exec.Command("bash", "-c", command).Output()
+	out, err := exec.Command("bash", "-c", command).CombinedOutput()
 	if err != nil {
-		framework.Logf("Command error: %v\n%v\n%v", command, err, out)
+		framework.Logf("Command error: %v\n%v\n%v", command, err, string(out))
 		return err
 	}
 
@@ -252,9 +252,9 @@ func prepareCertificates(namespace string) error {
 
 	command = "cfssl ocsprefresh -ca intermediate_ca.pem -responder=ocsp.pem -responder-key=ocsp-key.pem -db-config=db-config.json"
 	ginkgo.By(fmt.Sprintf("running %v", command))
-	out, err = exec.Command("bash", "-c", command).Output()
+	out, err = exec.Command("bash", "-c", command).CombinedOutput()
 	if err != nil {
-		framework.Logf("Command error: %v\n%v\n%v", command, err, out)
+		framework.Logf("Command error: %v\n%v\n%v", command, err, string(out))
 		return err
 	}
 
