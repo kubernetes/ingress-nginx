@@ -33,6 +33,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -506,7 +507,29 @@ func NewTLSListener(certificate, key string) *TLSListener {
 	}
 	l.load()
 	watch.NewFileWatcher(certificate, l.load)
+	// In case we are mounting key/cert as secret in k8s they will be a symlink to files in `..data/`,
+	// in that case we have to watch also for the content as that is the expected behavior.
+	// This is a widely used scenario in k8s to implement automatic renewal of certificates
+	// using cert-manager for instance.
+	if fi, err := os.Stat(certificate); err == nil && fi.Mode() == os.ModeSymlink {
+		if tgt, err := filepath.EvalSymlinks(certificate); err != nil {
+			watch.NewFileWatcher(tgt, l.load)
+		} else {
+			klog.Errorf("Failed to watch for certificate symlink target (%s): %v", certificate, err)
+		}
+	} else if err != nil {
+		klog.Errorf("Failed to get stat of certificate file (%s): %v", certificate, err)
+	}
 	watch.NewFileWatcher(key, l.load)
+	if fi, err := os.Stat(key); err == nil && fi.Mode() == os.ModeSymlink {
+		if tgt, err := filepath.EvalSymlinks(key); err != nil {
+			watch.NewFileWatcher(tgt, l.load)
+		} else {
+			klog.Errorf("Failed to watch for key symlink target (%s): %v", key, err)
+		}
+	} else if err != nil {
+		klog.Errorf("Failed to get stat of key file (%s): %v", certificate, err)
+	}
 	return &l
 }
 
