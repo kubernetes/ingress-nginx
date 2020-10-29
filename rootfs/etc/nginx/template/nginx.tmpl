@@ -1069,7 +1069,7 @@ stream {
             mirror_request_body {{ $location.Mirror.RequestBody }};
             {{ end }}
 
-            {{ if not (eq $location.Path "/") }}
+            {{ if shouldRenderPrefixValidation $location }}
             set_by_lua_block $invalid_prefix {
                 local byte = string.byte
                 local matched_uri, _ = ngx.re.gsub(ngx.var.uri, '{{ $location.Path }}', '');

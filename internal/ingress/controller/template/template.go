@@ -183,6 +183,7 @@ var (
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
 		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
 		"buildServerName":                    buildServerName,
+		"shouldRenderPrefixValidation":       shouldRenderPrefixValidation,
 	}
 )
 
@@ -1471,4 +1472,20 @@ func buildServerName(hostname string) string {
 	parts := strings.Split(hostname, ".")
 
 	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
+}
+
+func shouldRenderPrefixValidation(location *ingress.Location) bool {
+	if location.Path == "/" {
+		return false
+	}
+
+	if location.PathType == nil {
+		return true
+	}
+
+	if *location.PathType == networkingv1beta1.PathTypePrefix {
+		return true
+	}
+
+	return false
 }
