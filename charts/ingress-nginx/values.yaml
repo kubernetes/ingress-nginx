@@ -257,6 +257,10 @@ controller:
   ##
   podAnnotations: {}
 
+  # Add Config Checksum to pod Annotations
+  # This will trigger Rolling Updates on configuration changes
+  podAnnotationConfigChecksum: false
+
   replicaCount: 1
 
   minAvailable: 1

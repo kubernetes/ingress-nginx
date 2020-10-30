@@ -29,10 +29,13 @@ spec:
   minReadySeconds: {{ .Values.controller.minReadySeconds }}
   template:
     metadata:
-    {{- if .Values.controller.podAnnotations }}
+    {{- if or .Values.controller.podAnnotations .Values.controller.podAnnotationConfigChecksum }}
       annotations: 
       {{- range $key, $value := .Values.controller.podAnnotations }}
         {{ $key }}: {{ $value | quote }}
+      {{- end }}
+      {{- if .Values.controller.podAnnotationConfigChecksum }}
+        checksum/config: {{ tpl (toYaml .Values.controller) . | sha256sum }}
       {{- end }}
     {{- end }}
       labels:
