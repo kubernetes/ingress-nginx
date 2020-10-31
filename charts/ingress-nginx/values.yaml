@@ -337,6 +337,18 @@ controller:
       http: 80
       https: 443
 
+      additionalHttp: []
+      ## Additional ports for http service
+      #  - port: 8000
+      #    name: http-8000
+      #    nodePort: ""
+
+      additionalHttps: []
+      ## Additional ports for https service
+      #  - port: 8443
+      #    name: https-8443
+      #    nodePort: ""
+
     targetPorts:
       http: http
       https: https

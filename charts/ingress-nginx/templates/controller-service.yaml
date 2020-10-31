@@ -46,6 +46,24 @@ spec:
       nodePort: {{ .Values.controller.service.nodePorts.http }}
     {{- end }}
   {{- end }}
+  {{- range $additional := .Values.controller.service.ports.additionalHttp }}
+    - name: {{ $additional.name }}
+      port: {{ $additional.port }}
+      protocol: TCP
+      targetPort: {{ $.Values.controller.service.targetPorts.http }}
+    {{- if $additional.nodePort }}
+      nodePort: {{ $additional.nodePort }}
+    {{- end }}
+  {{- end }}
+  {{- range $additional := .Values.controller.service.ports.additionalHttps }}
+    - name: {{ $additional.name }}
+      port: {{ $additional.port }}
+      protocol: TCP
+      targetPort: {{ $.Values.controller.service.targetPorts.https }}
+    {{- if $additional.nodePort }}
+      nodePort: {{ $additional.nodePort }}
+    {{- end }}
+  {{- end }}
   {{- if .Values.controller.service.enableHttps }}
     - name: https
       port: {{ .Values.controller.service.ports.https }}
