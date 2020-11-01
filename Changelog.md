@@ -702,7 +702,7 @@ _Changes:_
 
 _New Features:_
 
-- Validating webhook for ingress sanity check [documentation](https://kubernetes.github.io/ingress-nginx/deploy/validating-webhook/)
+- rbac for ingress sanity check [documentation](https://kubernetes.github.io/ingress-nginx/deploy/rbac/)
 - Migration from NGINX to [OpenResty](https://openresty.org/en/) 1.15.8
 - [ARM image](https://quay.io/repository/kubernetes-ingress-controller/nginx-ingress-controller-arm?tab=logs)
 - Improve external authorization concept from opt-in to secure-by-default [3506](https://github.com/kubernetes/ingress-nginx/pull/3506)
