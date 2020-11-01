@@ -2,9 +2,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-{{- if .Values.controller.service.annotations }}
-  annotations: {{ toYaml .Values.controller.service.annotations | nindent 4 }}
-{{- end }}
+  annotations:
+  {{- range $key, $value := .Values.controller.service.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
