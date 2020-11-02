@@ -6,6 +6,7 @@
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
+{{ $useRealIpInProxyProto := or .IsSSLPassthroughEnabled .Cfg.UseProxyProtocol }}
 
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
@@ -132,11 +133,11 @@ http {
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
-    {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIp }}
-    {{ if $cfg.UseProxyProtocol }}
-    real_ip_header      proxy_protocol;
-    {{ else }}
+    {{ if or (or $cfg.UseForwardedHeaders $useRealIpInProxyProto) $cfg.EnableRealIp }}
+    {{ if $cfg.UseForwardedHeaders }}
     real_ip_header      {{ $cfg.ForwardedForHeader }};
+    {{ else }}
+    real_ip_header      proxy_protocol;
     {{ end }}
 
     real_ip_recursive   on;
@@ -379,14 +380,17 @@ http {
     {{ if and $cfg.UseForwardedHeaders $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
-    map $http_x_forwarded_for $full_x_forwarded_for {
-        {{ if $all.Cfg.UseProxyProtocol }}
+    map $http_x_forwarded_for $full_x_forwarded_for_proxy_proto {
         default          "$http_x_forwarded_for, $proxy_protocol_addr";
         ''               "$proxy_protocol_addr";
-        {{ else }}
+    }
+    map $http_x_forwarded_for $full_x_forwarded_for {
         default          "$http_x_forwarded_for, $realip_remote_addr";
         ''               "$realip_remote_addr";
-        {{ end}}
+    }
+    map $http_x_forwarded_for $real_ip_for_proxy_proto {
+        default          "$remote_addr";
+        ''               "$proxy_protocol_addr";
     }
 
     {{ end }}
@@ -987,11 +991,19 @@ stream {
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Original-Method       $request_method;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
-            proxy_set_header            X-Real-IP               $remote_addr;
-            {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
-            proxy_set_header            X-Forwarded-For        $full_x_forwarded_for;
+            {{ if and $location.Rewrite.ForceSSLRedirect ( or $all.IsSSLPassthroughEnabled $all.Cfg.UseProxyProtocol ) }}
+            proxy_set_header X-Real-IP              $proxy_protocol_addr;
             {{ else }}
-            proxy_set_header            X-Forwarded-For        $remote_addr;
+            proxy_set_header X-Real-IP              $remote_addr;
+            {{ end }}
+            {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
+            {{ if and $location.Rewrite.ForceSSLRedirect ( or $all.IsSSLPassthroughEnabled $all.Cfg.UseProxyProtocol ) }}
+            proxy_set_header X-Forwarded-For        $full_x_forwarded_for_proxy_proto;
+            {{ else }}
+            proxy_set_header X-Forwarded-For        $full_x_forwarded_for;
+            {{ end }}
+            {{ else }}
+            proxy_set_header X-Forwarded-For        $remote_addr;
             {{ end }}
 
             {{ if $externalAuth.RequestRedirect }}
@@ -1117,7 +1129,7 @@ stream {
             set $proxy_host          $proxy_upstream_name;
             set $pass_access_scheme  $scheme;
 
-            {{ if $all.Cfg.UseProxyProtocol }}
+            {{ if and $location.Rewrite.ForceSSLRedirect ( or $all.IsSSLPassthroughEnabled $all.Cfg.UseProxyProtocol ) }}
             set $pass_server_port    $proxy_protocol_server_port;
             {{ else }}
             set $pass_server_port    $server_port;
@@ -1211,9 +1223,17 @@ stream {
             {{ end }}
 
             {{ $proxySetHeader }} X-Request-ID           $req_id;
+            {{ if and ( and $location.Rewrite.ForceSSLRedirect ( or $all.IsSSLPassthroughEnabled $all.Cfg.UseProxyProtocol )) ( and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor ) }}
+            {{ $proxySetHeader }} X-Real-IP              $real_ip_for_proxy_proto;
+            {{ else }}
             {{ $proxySetHeader }} X-Real-IP              $remote_addr;
+            {{ end }}
             {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
+            {{ if and $location.Rewrite.ForceSSLRedirect ( or $all.IsSSLPassthroughEnabled $all.Cfg.UseProxyProtocol ) }}
+            {{ $proxySetHeader }} X-Forwarded-For        $full_x_forwarded_for_proxy_proto;
+            {{ else }}
             {{ $proxySetHeader }} X-Forwarded-For        $full_x_forwarded_for;
+            {{ end }}
             {{ else }}
             {{ $proxySetHeader }} X-Forwarded-For        $remote_addr;
             {{ end }}
