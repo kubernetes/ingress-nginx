@@ -555,6 +555,9 @@ defaultBackend:
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
     runAsUser: 65534
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
 
   extraArgs: {}
 
