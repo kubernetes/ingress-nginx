@@ -131,6 +131,7 @@ func main() {
 		}
 
 		if k8s.IngressClass != nil && k8s.IngressClass.Spec.Controller != k8s.IngressNGINXController {
+			klog.Errorf(`Invalid IngressClass (Spec.Controller) value "%v". Should be "%v"`, k8s.IngressClass.Spec.Controller, k8s.IngressNGINXController)
 			klog.Fatalf("IngressClass with name %v is not valid for ingress-nginx (invalid Spec.Controller)", class.IngressClass)
 		}
 	}
