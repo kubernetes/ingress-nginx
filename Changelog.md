@@ -1,5 +1,64 @@
 # Changelog
 
+### 0.41.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.41.0@sha256:e6019e536cfb921afb99408d5292fa88b017c49dd29d05fc8dbc456aa770d590`
+
+_New Features:_
+
+- NGINX 1.19.4
+- Go 1.15.3
+- client-go v0.19.3
+- alpine 3.12
+- jettech/kube-webhook-certgen v1.5.0
+
+_Changes:_
+
+- [X] [#6037](https://github.com/kubernetes/ingress-nginx/pull/6037) Do not append a trailing slash on redirects
+- [X] [#6255](https://github.com/kubernetes/ingress-nginx/pull/6255) Update datadog opentracing plugin to v1.2.0
+- [X] [#6260](https://github.com/kubernetes/ingress-nginx/pull/6260) Allow Helm Chart to customize admission webhook's annotations, timeoutSeconds, namespaceSelector, objectSelector and cert files locations
+- [X] [#6261](https://github.com/kubernetes/ingress-nginx/pull/6261) Add datadog environment as a configuration option
+- [X] [#6268](https://github.com/kubernetes/ingress-nginx/pull/6268) Update helm chart
+- [X] [#6282](https://github.com/kubernetes/ingress-nginx/pull/6282) Enable e2e tests for k8s v1.16
+- [X] [#6283](https://github.com/kubernetes/ingress-nginx/pull/6283) Start v0.41.0 cycle
+- [X] [#6299](https://github.com/kubernetes/ingress-nginx/pull/6299) Fix helm chart release
+- [X] [#6304](https://github.com/kubernetes/ingress-nginx/pull/6304) Update nginx image
+- [X] [#6305](https://github.com/kubernetes/ingress-nginx/pull/6305) Add default linux nodeSelector
+- [X] [#6316](https://github.com/kubernetes/ingress-nginx/pull/6316) Numerals in podAnnotations in quotes #6315
+- [X] [#6319](https://github.com/kubernetes/ingress-nginx/pull/6319) Update static manifests
+- [X] [#6325](https://github.com/kubernetes/ingress-nginx/pull/6325) Filter out secrets that belong to Helm v3
+- [X] [#6326](https://github.com/kubernetes/ingress-nginx/pull/6326) Fix liveness and readiness probe path in daemonset chart
+- [X] [#6331](https://github.com/kubernetes/ingress-nginx/pull/6331) fix for 6219
+- [X] [#6348](https://github.com/kubernetes/ingress-nginx/pull/6348) Add validation for wildcard server names
+- [X] [#6349](https://github.com/kubernetes/ingress-nginx/pull/6349) Refactor Exact path matching
+- [X] [#6356](https://github.com/kubernetes/ingress-nginx/pull/6356) Add securitycontext settings on defaultbackend
+- [X] [#6366](https://github.com/kubernetes/ingress-nginx/pull/6366) Enable validation of ingress definitions from extensions package
+- [X] [#6372](https://github.com/kubernetes/ingress-nginx/pull/6372) Check pod is ready
+- [X] [#6373](https://github.com/kubernetes/ingress-nginx/pull/6373) Remove k8s.io/kubernetes dependency
+- [X] [#6375](https://github.com/kubernetes/ingress-nginx/pull/6375) Improve log messages
+- [X] [#6377](https://github.com/kubernetes/ingress-nginx/pull/6377) Added loadBalancerSourceRanges for internal lbs
+- [X] [#6382](https://github.com/kubernetes/ingress-nginx/pull/6382) fix: OWASP CoreRuleSet rules for NodeJS and Java
+- [X] [#6383](https://github.com/kubernetes/ingress-nginx/pull/6383) Update nginx to 1.19.4
+- [X] [#6384](https://github.com/kubernetes/ingress-nginx/pull/6384) Update nginx image to 1.19.4
+- [X] [#6385](https://github.com/kubernetes/ingress-nginx/pull/6385) Update helm stable repo
+- [X] [#6388](https://github.com/kubernetes/ingress-nginx/pull/6388) Update nginx image in project images
+- [X] [#6389](https://github.com/kubernetes/ingress-nginx/pull/6389) Support prefix pathtype
+- [X] [#6390](https://github.com/kubernetes/ingress-nginx/pull/6390) Update go to 1.15.3
+- [X] [#6391](https://github.com/kubernetes/ingress-nginx/pull/6391) Update alpine packages
+- [X] [#6392](https://github.com/kubernetes/ingress-nginx/pull/6392) Update test images
+- [X] [#6395](https://github.com/kubernetes/ingress-nginx/pull/6395) Update jettech/kube-webhook-certgen image
+- [X] [#6401](https://github.com/kubernetes/ingress-nginx/pull/6401) Fix controller service annotations
+- [X] [#6412](https://github.com/kubernetes/ingress-nginx/pull/6412) Improve ingress class error message
+
+_Documentation:_
+
+- [X] [#6272](https://github.com/kubernetes/ingress-nginx/pull/6272) Update hardening guide doc
+- [X] [#6278](https://github.com/kubernetes/ingress-nginx/pull/6278) Sync user guide with config defaults changes
+- [X] [#6321](https://github.com/kubernetes/ingress-nginx/pull/6321) Fix typo
+- [X] [#6403](https://github.com/kubernetes/ingress-nginx/pull/6403) Initial helm chart changelog
+
 ### 0.40.2
 
 **Image:**
