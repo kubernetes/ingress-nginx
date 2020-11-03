@@ -1,7 +1,7 @@
 apiVersion: v1
 name: ingress-nginx
-version: 3.7.1
-appVersion: 0.40.2
+version: 3.8.0
+appVersion: 0.41.0
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -14,3 +14,10 @@ maintainers:
   - name: ChiefAlexander
 engine: gotpl
 kubeVersion: ">=1.16.0-0"
+annotations:
+  artifacthub.io/changes: |
+    - Update jettech/kube-webhook-certgen image
+    - Added loadBalancerSourceRanges for internal lbs
+    - Add securitycontext settings on defaultbackend
+    - Fix controller service annotations
+    - Initial helm chart changelog
