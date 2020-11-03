@@ -94,6 +94,24 @@ func TestL4ServiceElementsMatch(t *testing.T) {
 				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.2"}, {Address: "1.1.1.1"}}}},
 			true,
 		},
+		{
+			[]L4Service{
+				{Port: 80, Backend: L4Backend{Name: "test", Namespace: "default", Protocol: "TCP", ProxyProtocol: ProxyProtocol{Decode: false, Encode: false}}},
+			},
+			[]L4Service{
+				{Port: 80, Backend: L4Backend{Name: "test", Namespace: "default", Protocol: "TCP", ProxyProtocol: ProxyProtocol{Decode: false, Encode: false}}},
+			},
+			true,
+		},
+		{
+			[]L4Service{
+				{Port: 80, Backend: L4Backend{Name: "test", Namespace: "default", Protocol: "TCP", ProxyProtocol: ProxyProtocol{Decode: false, Encode: false}}},
+			},
+			[]L4Service{
+				{Port: 80, Backend: L4Backend{Name: "test", Namespace: "default", Protocol: "TCP", ProxyProtocol: ProxyProtocol{Decode: false, Encode: true}}},
+			},
+			false,
+		},
 	}
 
 	for _, testCase := range testCases {
