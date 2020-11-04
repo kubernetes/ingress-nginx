@@ -24,7 +24,9 @@ webhooks:
           - UPDATE
         resources:
           - ingresses
-    failurePolicy: Fail
+    {{- if .Values.controller.admissionWebhooks.failurePolicy }}
+    failurePolicy: {{ .Values.controller.admissionWebhooks.failurePolicy }}
+    {{- end }}
     sideEffects: None
     admissionReviewVersions:
       - v1
