@@ -627,6 +627,13 @@ defaultBackend:
   #   cpu: 10m
   #   memory: 20Mi
 
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+
   service:
     annotations: {}
 
