@@ -941,6 +941,10 @@ stream {
         }
         {{ end }}
 
+        {{ if isValidByteSize $location.Proxy.BodySize true }}
+        client_max_body_size        {{ $location.Proxy.BodySize }};
+        {{ end }}
+
         {{ if $authPath }}
         location = {{ $authPath }} {
             internal;
@@ -1012,9 +1016,6 @@ stream {
 
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
-            {{ if isValidByteSize $location.Proxy.BodySize true }}
-            client_max_body_size        {{ $location.Proxy.BodySize }};
-            {{ end }}
             {{ if isValidByteSize $location.ClientBodyBufferSize false }}
             client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
             {{ end }}
@@ -1176,9 +1177,6 @@ stream {
 
             {{ buildInfluxDB $location.InfluxDB }}
 
-            {{ if isValidByteSize $location.Proxy.BodySize true }}
-            client_max_body_size                    {{ $location.Proxy.BodySize }};
-            {{ end }}
             {{ if isValidByteSize $location.ClientBodyBufferSize false }}
             client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
             {{ end }}
