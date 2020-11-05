@@ -914,6 +914,7 @@ stream {
         {{ end }}
 
         {{ if not (empty $server.ServerSnippet) }}
+        # Custom code snippet configured for host {{ $server.Hostname }}
         {{ $server.ServerSnippet }}
         {{ end }}
 
