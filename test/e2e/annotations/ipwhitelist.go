@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo"
@@ -47,5 +48,55 @@ var _ = framework.DescribeAnnotation("whitelist-source-range", func() {
 					strings.Contains(server, "allow 56.0.0.0/8;") &&
 					strings.Contains(server, "deny all;")
 			})
+	})
+
+	ginkgo.It("should block all request not comming from whitelist CIDR defined in annotation", func() {
+		host := "ipwhitelist.foo.com"
+		nameSpace := f.Namespace
+		paths := []string{"/", "/foo", "/bar"}
+		restrictedPath := "/"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/whitelist-source-range": "18.0.0.0/8, 56.0.0.0/8",
+		}
+
+		ing := framework.NewSingleIngress(host, restrictedPath, host, nameSpace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		for _, path := range paths {
+			f.HTTPTestClient().
+				GET(path).
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusForbidden)
+		}
+	})
+
+	ginkgo.It("should return not found for not defined paths when whitelist CIDR defined only for /restricted path", func() {
+		host := "ipwhitelist.foo.com"
+		nameSpace := f.Namespace
+		paths := []string{"/", "/foo", "/bar"}
+		restrictedPath := "/restricted"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/whitelist-source-range": "18.0.0.0/8, 56.0.0.0/8",
+		}
+
+		ing := framework.NewSingleIngress(host, restrictedPath, host, nameSpace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		for _, path := range paths {
+			f.HTTPTestClient().
+				GET(path).
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusNotFound)
+		}
+
+		f.HTTPTestClient().
+			GET(restrictedPath).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusForbidden)
 	})
 })
