@@ -1131,7 +1131,7 @@ stream {
             {{ buildModSecurityForLocation $all.Cfg $location }}
 
             {{ if isLocationAllowed $location }}
-            {{ if gt (len $location.Whitelist.CIDR) 0 }}
+            {{ if and (gt (len $location.Whitelist.CIDR) 0) (not (eq (buildUpstreamName $location) "upstream-default-backend")) }}
             {{ range $ip := $location.Whitelist.CIDR }}
             allow {{ $ip }};{{ end }}
             deny all;
