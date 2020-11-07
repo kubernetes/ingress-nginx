@@ -116,6 +116,8 @@ controller:
   terminationGracePeriodSeconds: 0
   service:
     type: NodePort
+  extraArgs:
+    v: "2"
 EOF
 
 cat <<EOF
