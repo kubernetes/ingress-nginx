@@ -1651,7 +1651,7 @@ func TestGetBackendServers(t *testing.T) {
 
 	for _, testCase := range testCases {
 		nginxController := newDynamicNginxController(t, testCase.SetConfigMap)
-		upstreams, servers := nginxController.getBackendServers(testCase.Ingresses)
+		upstreams, servers := nginxController.backendConfiguration(testCase.Ingresses)
 		testCase.Validate(testCase.Ingresses, upstreams, servers)
 	}
 }

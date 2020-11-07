@@ -85,15 +85,15 @@ type Backend struct {
 	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
-	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	Endpoints []Endpoint `json:"endpoints"`
 	// StickySessionAffinitySession contains the StickyConfig object with stickyness configuration
 	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
 	// Consistent hashing by NGINX variable
 	UpstreamHashBy UpstreamHashByConfig `json:"upstreamHashByConfig,omitempty"`
 	// LB algorithm configuration per ingress
 	LoadBalancing string `json:"load-balance,omitempty"`
-	// Denotes if a backend has no server. The backend instead shares a server with another backend and acts as an
-	// alternative backend.
+	// Denotes if a backend has no server.
+	// The backend instead shares a server with another backend and acts as an alternative backend.
 	// This can be used to share multiple upstreams in the sam nginx server block.
 	NoServer bool `json:"noServer"`
 	// Policies to describe the characteristics of an alternative backend.
@@ -101,7 +101,7 @@ type Backend struct {
 	TrafficShapingPolicy TrafficShapingPolicy `json:"trafficShapingPolicy,omitempty"`
 	// Contains a list of backends without servers that are associated with this backend.
 	// +optional
-	AlternativeBackends []string `json:"alternativeBackends,omitempty"`
+	AlternativeBackends []string `json:"alternativeBackends"`
 }
 
 // TrafficShapingPolicy describes the policies to put in place when a backend has no server and is used as an

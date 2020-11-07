@@ -680,7 +680,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				}
 			}
 
-			klog.InfoS("NGINX configuration change", "diff", string(diffOutput))
+			klog.Infof("NGINX configuration change:\n%v", string(diffOutput))
 
 			// we do not defer the deletion of temp files in order
 			// to keep them around for inspection in case of error
