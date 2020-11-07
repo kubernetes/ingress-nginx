@@ -57,6 +57,11 @@ passthrough proxy port (default: 442), which proxies the request to the default 
     Unlike HTTP backends, traffic to Passthrough backends is sent to the *clusterIP* of the backing Service instead of
     individual Endpoints.
 
+!!! note
+    If you route traffic directly to the controller without using the proxy_protocol, nginx will set the real-ip to the $remote_addr. The $remote_addr contains 127.0.0.1 as value, as this is the local TCP proxy address. 
+    In order to use the actual source ip connecting to the local TCP proxy, the following flags need to be added in the configuration [ConfigMap][ConfigMap].:  
+    `enable-real-ip: true` and `forwarded-for-header: proxy_protocol`
+
 ## HTTP Strict Transport Security
 
 HTTP Strict Transport Security (HSTS) is an opt-in security enhancement specified
