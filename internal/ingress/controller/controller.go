@@ -771,7 +771,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			if anns.ServiceUpstream {
 				endpoint, err := n.getServiceClusterEndpoint(svcKey, ing.Spec.Backend)
 				if err != nil {
-					klog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)
+					klog.ErrorS(err, "failed to determine a suitable ClusterIP Endpoint", "service", svcKey)
 				} else {
 					upstreams[defBackend].Endpoints = []ingress.Endpoint{endpoint}
 				}
@@ -793,7 +793,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String())
 				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
 				if err != nil {
-					klog.Warningf("Error creating upstream %q: %v", defBackend, err)
+					klog.ErrorS(err, "creating upstream", "name", defBackend)
 				}
 			}
 
@@ -1047,13 +1047,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
-					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q",
-						ingKey, defServerName)
+					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q", ingKey, defServerName)
 
 					defLoc.IsDefBackend = false
 					defLoc.Backend = backendUpstream.Name
-					defLoc.Service = k8s.MetaNamespaceKey(backendUpstream.Service)
 					defLoc.Ingress = k8s.MetaNamespaceKey(ing)
+					if backendUpstream.Service != nil {
+						defLoc.Service = k8s.MetaNamespaceKey(backendUpstream.Service)
+					}
 
 					// TODO: Redirect and rewrite can affect the catch all behavior, skip for now
 					originalRedirect := defLoc.Redirect
