@@ -477,6 +477,14 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 	upstreams := n.createUpstreams(ingresses, du)
 	servers := n.createServers(ingresses, upstreams, du)
 
+	hostnames := extractServers(ingresses)
+	hostnameLocations := buildServerLocations(hostnames, ingresses)
+
+	klog.InfoS("Servers", "hostnames", hostnames)
+	klog.InfoS("Hostname Locations", "hostnameLocations", hostnameLocations)
+
+	// servers := buildServerMap(ingresses)
+
 	var canaryIngresses []*ingress.Ingress
 
 	for _, ing := range ingresses {
