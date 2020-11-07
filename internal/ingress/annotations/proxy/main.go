@@ -100,7 +100,6 @@ func (l1 *Config) Equal(l2 *Config) bool {
 	if l1.ProxyHTTPVersion != l2.ProxyHTTPVersion {
 		return false
 	}
-
 	if l1.ProxyMaxTempFileSize != l2.ProxyMaxTempFileSize {
 		return false
 	}

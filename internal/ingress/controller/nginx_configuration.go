@@ -27,6 +27,8 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/k8s"
 )
 
@@ -66,9 +68,12 @@ func extractServers(ingresses []*ingress.Ingress) []string {
 	return sorterServers
 }
 
-func buildServerLocations(servers []string, ingresses []*ingress.Ingress) map[string]map[string][]*ingress.Location {
-	var pathPrefix = networking.PathTypePrefix
-
+func buildServerLocations(
+	enableAccessLogForDefaultBackend bool,
+	defaults proxy.Config,
+	defaultUpstream *ingress.Backend,
+	servers []string,
+	ingresses []*ingress.Ingress) map[string]map[string][]*ingress.Location {
 	withLocations := make(map[string]map[string][]*ingress.Location)
 
 	for _, hostname := range servers {
@@ -80,7 +85,7 @@ func buildServerLocations(servers []string, ingresses []*ingress.Ingress) map[st
 
 			annotationsToLocation(location, nil)
 
-			if *location.PathType != pathPrefix {
+			if *location.PathType != pathTypePrefix {
 				continue
 			}
 
@@ -101,16 +106,35 @@ func buildServerLocations(servers []string, ingresses []*ingress.Ingress) map[st
 			// }
 		}
 
+		// the server contains at least one path but not /
+		// we need to configure one and point to the default backend.
 		if _, isRootMapped := withLocations[hostname][rootLocation]; !isRootMapped {
-			// the server contains at least one path but not /
-			// we need to configure one and point to the default backend.
+			var svcKey string
+			if defaultUpstream.Service != nil {
+				svcKey = k8s.MetaNamespaceKey(defaultUpstream.Service)
+			}
+
+			withLocations[hostname][rootLocation] = append(withLocations[hostname][rootLocation], &ingress.Location{
+				Path:         rootLocation,
+				PathType:     &pathTypePrefix,
+				IsDefBackend: true,
+				Backend:      defaultUpstream.Name,
+				Proxy:        defaults,
+				Service:      svcKey,
+				Port:         defaultUpstream.Port,
+				Logs: log.Config{
+					Access:  enableAccessLogForDefaultBackend,
+					Rewrite: false,
+				},
+			})
 		}
 	}
 
 	return withLocations
 }
 
-func buildServerConfiguration(proxySSLLocationOnly bool,
+func buildServerConfiguration(
+	proxySSLLocationOnly bool,
 	serverLocations map[string]map[string][]*ingress.Location,
 	ingresses []*ingress.Ingress,
 	ingressByKey func(key string) (*annotations.Ingress, error)) map[string]*ingress.Server {

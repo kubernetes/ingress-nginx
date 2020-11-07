@@ -888,6 +888,7 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 		defer func() {
 			os.Remove(sslSessionTicketKey)
 		}()
+
 		return
 	}
 
