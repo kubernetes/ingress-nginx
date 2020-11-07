@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -168,7 +168,12 @@ func TestServerLocations(t *testing.T) {
 					ParsedAnnotations: &annotations.Ingress{},
 				},
 			},
-			[]*ingress.Location{},
+			[]*ingress.Location{
+				{
+					Path:     "/",
+					PathType: &pathPrefix,
+				},
+			},
 		},
 		{
 			"multiple ingresses with multiple hosts without duplication",

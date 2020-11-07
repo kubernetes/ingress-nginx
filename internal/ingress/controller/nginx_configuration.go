@@ -108,7 +108,7 @@ func serverLocations(hostname string, ingresses []*ingress.Ingress) []*ingress.L
 		}
 
 		for _, rule := range ingressDefinition.Spec.Rules {
-			if hostname != rule.Host {
+			if hostname != defServerName && hostname != rule.Host {
 				continue
 			}
 
