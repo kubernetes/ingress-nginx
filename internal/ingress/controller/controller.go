@@ -510,34 +510,6 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				continue
 			}
 
-			if server.AuthTLSError == "" && anns.CertificateAuth.AuthTLSError != "" {
-				server.AuthTLSError = anns.CertificateAuth.AuthTLSError
-			}
-
-			if server.CertificateAuth.CAFileName == "" {
-				server.CertificateAuth = anns.CertificateAuth
-				if server.CertificateAuth.Secret != "" && server.CertificateAuth.CAFileName == "" {
-					klog.V(3).Infof("Secret %q has no 'ca.crt' key, mutual authentication disabled for Ingress %q",
-						server.CertificateAuth.Secret, ingKey)
-				}
-			} else {
-				klog.V(3).Infof("Server %q is already configured for mutual authentication (Ingress %q)",
-					server.Hostname, ingKey)
-			}
-
-			if !n.store.GetBackendConfiguration().ProxySSLLocationOnly {
-				if server.ProxySSL.CAFileName == "" {
-					server.ProxySSL = anns.ProxySSL
-					if server.ProxySSL.Secret != "" && server.ProxySSL.CAFileName == "" {
-						klog.V(3).Infof("Secret %q has no 'ca.crt' key, client cert authentication disabled for Ingress %q",
-							server.ProxySSL.Secret, ingKey)
-					}
-				} else {
-					klog.V(3).Infof("Server %q is already configured for client cert authentication (Ingress %q)",
-						server.Hostname, ingKey)
-				}
-			}
-
 			if rule.HTTP == nil {
 				klog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
 				continue
@@ -1047,7 +1019,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
-					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q", ingKey, defServerName)
+					klog.V(2).InfoS("Ingress with a backend but no rule. Using it to configure the catch-all server", "ingress", ingKey)
 
 					defLoc.IsDefBackend = false
 					defLoc.Backend = backendUpstream.Name
@@ -1063,8 +1035,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					defLoc.Redirect = originalRedirect
 					defLoc.Rewrite = originalRewrite
 				} else {
-					klog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
-						ingKey)
+					klog.V(3).InfoS("Ingress with both, backend and rules. Using its backend as default upstream for all its rules.", "ingress", ingKey)
 				}
 			}
 		}

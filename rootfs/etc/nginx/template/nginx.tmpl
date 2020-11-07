@@ -414,6 +414,7 @@ http {
     ssl_session_tickets {{ if $cfg.SSLSessionTickets }}on{{ else }}off{{ end }};
 
     {{ if not (empty $cfg.SSLSessionTicketKey ) }}
+    # sha: {{ $cfg.SSLSessionTicketKey }}
     ssl_session_ticket_key /etc/nginx/tickets.key;
     {{ end }}
 

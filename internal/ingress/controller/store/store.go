@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"sort"
 	"sync"
@@ -849,34 +850,6 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 	}, nil
 }
 
-func (s *k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName string) {
-	ticketString := ngx_template.ReadConfig(cmap.Data).SSLSessionTicketKey
-	s.backendConfig.SSLSessionTicketKey = ""
-
-	if ticketString != "" {
-		ticketBytes := base64.StdEncoding.WithPadding(base64.StdPadding).DecodedLen(len(ticketString))
-
-		// 81 used instead of 80 because of padding
-		if !(ticketBytes == 48 || ticketBytes == 81) {
-			klog.Warningf("ssl-session-ticket-key must contain either 48 or 80 bytes")
-		}
-
-		decodedTicket, err := base64.StdEncoding.DecodeString(ticketString)
-		if err != nil {
-			klog.Errorf("unexpected error decoding ssl-session-ticket-key: %v", err)
-			return
-		}
-
-		err = ioutil.WriteFile(fileName, decodedTicket, file.ReadWriteByUser)
-		if err != nil {
-			klog.Errorf("unexpected error writing ssl-session-ticket-key to %s: %v", fileName, err)
-			return
-		}
-
-		s.backendConfig.SSLSessionTicketKey = ticketString
-	}
-}
-
 // GetDefaultBackend returns the default backend
 func (s *k8sStore) GetDefaultBackend() defaults.Backend {
 	return s.GetBackendConfiguration().Backend
@@ -888,6 +861,10 @@ func (s *k8sStore) GetBackendConfiguration() ngx_config.Configuration {
 
 	return s.backendConfig
 }
+
+var (
+	sslSessionTicketKey = "/etc/nginx/tickets.key"
+)
 
 func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	s.backendConfigMu.Lock()
@@ -903,7 +880,25 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 		s.backendConfig.UseGeoIP2 = false
 	}
 
-	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
+	ticketString := ngx_template.ReadConfig(cmap.Data).SSLSessionTicketKey
+	if ticketString == "" {
+		// update
+		s.backendConfig.SSLSessionTicketKey = ""
+		// remove old file
+		defer func() {
+			os.Remove(sslSessionTicketKey)
+		}()
+		return
+	}
+
+	ticketKey := decodeSSLSessionTicket(ticketString)
+	err := ioutil.WriteFile(sslSessionTicketKey, ticketKey, file.ReadWriteByUser)
+	if err != nil {
+		klog.ErrorS(err, "unexpected error writing ssl-session-ticket-key", "file", sslSessionTicketKey)
+		return
+	}
+
+	s.backendConfig.SSLSessionTicketKey = file.SHA1(sslSessionTicketKey)
 }
 
 // Run initiates the synchronization of the informers and the initial
@@ -926,4 +921,21 @@ func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
 	}
 
 	return nil, false
+}
+
+func decodeSSLSessionTicket(ticketString string) []byte {
+	ticketBytes := base64.StdEncoding.WithPadding(base64.StdPadding).DecodedLen(len(ticketString))
+
+	// 81 used instead of 80 because of padding
+	if !(ticketBytes == 48 || ticketBytes == 81) {
+		klog.Warningf("ssl-session-ticket-key must contain either 48 or 80 bytes")
+	}
+
+	decodedTicket, err := base64.StdEncoding.DecodeString(ticketString)
+	if err != nil {
+		klog.Errorf("unexpected error decoding ssl-session-ticket-key: %v", err)
+		return nil
+	}
+
+	return decodedTicket
 }

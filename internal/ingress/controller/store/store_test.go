@@ -18,9 +18,7 @@ package store
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -941,41 +939,5 @@ func TestListIngresses(t *testing.T) {
 
 	if ingresses[2].Name != "test-4" {
 		t.Errorf("Expected Ingress test-4 but got %v", ingresses[2].Name)
-	}
-}
-
-func TestWriteSSLSessionTicketKey(t *testing.T) {
-	tests := []string{
-		"9DyULjtYWz520d1rnTLbc4BOmN2nLAVfd3MES/P3IxWuwXkz9Fby0lnOZZUdNEMV",
-		"9SvN1C9AB5DvNde5fMKoJwAwICpqdjiMyxR+cv6NpAWv22rFd3gKt4wMyGxCm7l9Wh6BQPG0+csyBZSHHr2NOWj52Wx8xCegXf4NsSMBUqA=",
-	}
-
-	for _, test := range tests {
-		s := newStore(t)
-
-		cmap := &v1.ConfigMap{
-			Data: map[string]string{
-				"ssl-session-ticket-key": test,
-			},
-		}
-
-		f, err := ioutil.TempFile("", "ssl-session-ticket-test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		s.writeSSLSessionTicketKey(cmap, f.Name())
-
-		content, err := ioutil.ReadFile(f.Name())
-		if err != nil {
-			t.Fatal(err)
-		}
-		encodedContent := base64.StdEncoding.EncodeToString(content)
-
-		f.Close()
-
-		if test != encodedContent {
-			t.Fatalf("expected %v but returned %s", test, encodedContent)
-		}
 	}
 }
