@@ -74,6 +74,10 @@ func (fakeIngressStore) GetIngress(key string) (*networking.Ingress, error) {
 	return nil, fmt.Errorf("test error")
 }
 
+func (fakeIngressStore) GetIngressAnnotations(key string) (*annotations.Ingress, error) {
+	return nil, fmt.Errorf("test error")
+}
+
 func (fakeIngressStore) GetService(key string) (*corev1.Service, error) {
 	return nil, fmt.Errorf("test error")
 }

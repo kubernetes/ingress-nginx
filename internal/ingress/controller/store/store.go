@@ -71,6 +71,9 @@ type Storer interface {
 	// GetIngress returns the Ingress matching key.
 	GetIngress(key string) (*networkingv1beta1.Ingress, error)
 
+	// GetIngressAnnotations returns the Ingress extracted annotations.
+	GetIngressAnnotations(key string) (*annotations.Ingress, error)
+
 	// GetSecret returns the Secret matching key.
 	GetSecret(key string) (*corev1.Secret, error)
 
@@ -769,6 +772,16 @@ func (s *k8sStore) GetIngress(key string) (*networkingv1beta1.Ingress, error) {
 	}
 
 	return &ing.Ingress, nil
+}
+
+// GetIngress returns the Ingress matching key.
+func (s *k8sStore) GetIngressAnnotations(key string) (*annotations.Ingress, error) {
+	ing, err := s.listers.IngressWithAnnotation.ByKey(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return ing.ParsedAnnotations, nil
 }
 
 func sortIngressSlice(ingresses []*ingress.Ingress) {

@@ -18,30 +18,41 @@ package controller
 
 import (
 	"fmt"
+	"sort"
 
 	networking "k8s.io/api/networking/v1beta1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/k8s"
 )
 
-// extractServers build a list of unique hostnames
+// extractServers build a list of unique hostnames from a list of ingresses
 func extractServers(ingresses []*ingress.Ingress) []string {
 	servers := sets.NewString()
 
 	for _, ingressDefinition := range ingresses {
+		annotations := ingressDefinition.ParsedAnnotations
+
 		for _, rule := range ingressDefinition.Spec.Rules {
 			host := rule.Host
 			if host == "" {
 				host = defServerName
 			}
 
-			if !servers.Has(host) {
-				servers.Insert(host)
+			// Ingresses marked as canary cannot create a server
+			if annotations.Canary.Enabled {
+				continue
 			}
+
+			if servers.Has(host) {
+				continue
+			}
+
+			servers.Insert(host)
 		}
 	}
 
@@ -49,7 +60,10 @@ func extractServers(ingresses []*ingress.Ingress) []string {
 		servers.Insert(defServerName)
 	}
 
-	return servers.List()
+	sorterServers := servers.List()
+	sort.Strings(sorterServers)
+
+	return sorterServers
 }
 
 func buildServerLocations(servers []string, ingresses []*ingress.Ingress) map[string]map[string][]*ingress.Location {
@@ -94,6 +108,63 @@ func buildServerLocations(servers []string, ingresses []*ingress.Ingress) map[st
 	}
 
 	return withLocations
+}
+
+func buildServerConfiguration(proxySSLLocationOnly bool,
+	serverLocations map[string]map[string][]*ingress.Location,
+	ingresses []*ingress.Ingress,
+	ingressByKey func(key string) (*annotations.Ingress, error)) map[string]*ingress.Server {
+
+	servers := map[string]*ingress.Server{}
+
+	for serverName, pathLocations := range serverLocations {
+		_, ok := servers[serverName]
+		if !ok {
+			servers[serverName] = &ingress.Server{}
+		}
+
+		server := servers[serverName]
+
+		for _, locations := range pathLocations {
+			for _, location := range locations {
+				ingKey := location.Ingress
+
+				anns, err := ingressByKey(ingKey)
+				if err != nil {
+					// TODO: logs
+					continue
+				}
+
+				if server.AuthTLSError == "" && anns.CertificateAuth.AuthTLSError != "" {
+					server.AuthTLSError = anns.CertificateAuth.AuthTLSError
+				}
+
+				if server.CertificateAuth.CAFileName == "" {
+					server.CertificateAuth = anns.CertificateAuth
+					if server.CertificateAuth.Secret != "" && server.CertificateAuth.CAFileName == "" {
+						klog.V(3).InfoS("Secret has no 'ca.crt' key, mutual authentication disabled for Ingress", "hostname", server.CertificateAuth.Secret, "ingress", ingKey)
+					}
+				} else {
+					klog.V(3).InfoS("Server already configured for mutual authentication", "hostname", "ingress", ingKey)
+				}
+
+				if proxySSLLocationOnly {
+					continue
+				}
+
+				if server.ProxySSL.CAFileName == "" {
+					server.ProxySSL = anns.ProxySSL
+					if server.ProxySSL.Secret != "" && server.ProxySSL.CAFileName == "" {
+						klog.V(3).InfoS("Secret has no 'ca.crt' key, client cert authentication disabled", "secret", server.ProxySSL.Secret, "ingress", ingKey)
+					}
+				} else {
+					klog.V(3).InfoS("Server already configured for client cert authentication", "hostname", server.Hostname, "ingress", ingKey)
+				}
+			}
+		}
+	}
+
+	return servers
 }
 
 // serverLocations builds a list of locations for a hostname

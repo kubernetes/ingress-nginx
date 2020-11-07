@@ -478,12 +478,14 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 	servers := n.createServers(ingresses, upstreams, du)
 
 	hostnames := extractServers(ingresses)
-	hostnameLocations := buildServerLocations(hostnames, ingresses)
+	serverLocations := buildServerLocations(hostnames, ingresses)
+	serverConfiguration := buildServerConfiguration(n.store.GetBackendConfiguration().ProxySSLLocationOnly, serverLocations, ingresses, n.store.GetIngressAnnotations)
 
 	klog.InfoS("Servers", "hostnames", hostnames)
-	klog.InfoS("Hostname Locations", "hostnameLocations", hostnameLocations)
+	klog.InfoS("Server Locations", "locations", serverLocations)
+	klog.InfoS("Server Configurations", "configurations", serverConfiguration)
 
-	// servers := buildServerMap(ingresses)
+	// assemble final configuration
 
 	var canaryIngresses []*ingress.Ingress
 
