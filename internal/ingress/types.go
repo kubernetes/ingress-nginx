@@ -215,6 +215,7 @@ type Server struct {
 // - BasicDigestAuth
 // - ExternalAuth
 // - Redirect
+// +k8s:deepcopy-gen=true
 type Location struct {
 	// Path is an extended POSIX regex as defined by IEEE Std 1003.1,
 	// (i.e this follows the egrep/unix syntax, not the perl syntax)
