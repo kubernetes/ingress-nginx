@@ -425,11 +425,10 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 
 // generateTemplate returns the nginx configuration file content
 func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
-
 	if n.cfg.EnableSSLPassthrough {
 		servers := []*TCPServer{}
 		for _, pb := range ingressCfg.PassthroughBackends {
-			svc := pb.Service
+			svc, _ := n.store.GetService(pb.Service)
 			if svc == nil {
 				klog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
 				continue

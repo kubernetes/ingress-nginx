@@ -240,7 +240,6 @@ func TestConfigureDynamically(t *testing.T) {
 			{
 				Path:    "/",
 				Backend: "fakenamespace-myapp-80",
-				Service: &apiv1.Service{},
 			},
 		},
 	}}

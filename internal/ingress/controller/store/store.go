@@ -68,6 +68,9 @@ type Storer interface {
 	// GetConfigMap returns the ConfigMap matching key.
 	GetConfigMap(key string) (*corev1.ConfigMap, error)
 
+	// GetIngress returns the Ingress matching key.
+	GetIngress(key string) (*networkingv1beta1.Ingress, error)
+
 	// GetSecret returns the Secret matching key.
 	GetSecret(key string) (*corev1.Secret, error)
 
@@ -422,7 +425,7 @@ func New(
 			if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
 				klog.InfoS("Secret was added and it is used in ingress annotations. Parsing", "secret", key)
 				for _, ingKey := range ings {
-					ing, err := store.getIngress(ingKey)
+					ing, err := store.GetIngress(ingKey)
 					if err != nil {
 						klog.Errorf("could not find Ingress %v in local store", ingKey)
 						continue
@@ -449,7 +452,7 @@ func New(
 				if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
 					klog.InfoS("secret was updated and it is used in ingress annotations. Parsing", "secret", key)
 					for _, ingKey := range ings {
-						ing, err := store.getIngress(ingKey)
+						ing, err := store.GetIngress(ingKey)
 						if err != nil {
 							klog.ErrorS(err, "could not find Ingress in local store", "ingress", ingKey)
 							continue
@@ -487,7 +490,7 @@ func New(
 			if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
 				klog.InfoS("secret was deleted and it is used in ingress annotations. Parsing", "secret", key)
 				for _, ingKey := range ings {
-					ing, err := store.getIngress(ingKey)
+					ing, err := store.GetIngress(ingKey)
 					if err != nil {
 						klog.Errorf("could not find Ingress %v in local store", ingKey)
 						continue
@@ -547,7 +550,7 @@ func New(
 		ings := store.listers.IngressWithAnnotation.List()
 		for _, ingKey := range ings {
 			key := k8s.MetaNamespaceKey(ingKey)
-			ing, err := store.getIngress(key)
+			ing, err := store.GetIngress(key)
 			if err != nil {
 				klog.Errorf("could not find Ingress %v in local store: %v", key, err)
 				continue
@@ -758,8 +761,8 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 	return s.listers.Service.ByKey(key)
 }
 
-// getIngress returns the Ingress matching key.
-func (s *k8sStore) getIngress(key string) (*networkingv1beta1.Ingress, error) {
+// GetIngress returns the Ingress matching key.
+func (s *k8sStore) GetIngress(key string) (*networkingv1beta1.Ingress, error) {
 	ing, err := s.listers.IngressWithAnnotation.ByKey(key)
 	if err != nil {
 		return nil, err

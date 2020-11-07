@@ -29,7 +29,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -39,6 +38,7 @@ import (
 	"github.com/pkg/errors"
 
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 
@@ -815,7 +815,6 @@ type ingressInformation struct {
 	Rule        string
 	Service     string
 	ServicePort string
-	Annotations map[string]string
 }
 
 func (info *ingressInformation) Equal(other *ingressInformation) bool {
@@ -831,75 +830,60 @@ func (info *ingressInformation) Equal(other *ingressInformation) bool {
 	if info.ServicePort != other.ServicePort {
 		return false
 	}
-	if !reflect.DeepEqual(info.Annotations, other.Annotations) {
-		return false
-	}
 
 	return true
 }
 
-func getIngressInformation(i, h, p interface{}) *ingressInformation {
-	ing, ok := i.(*ingress.Ingress)
+// getIngressInformation $location.Ingress $location.Service $location.Port
+func getIngressInformation(i, s, p interface{}) *ingressInformation {
+	ingress, ok := i.(string)
 	if !ok {
-		klog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
+		klog.Errorf("expected a 'string' type but %T was returned", i)
 		return &ingressInformation{}
 	}
 
-	hostname, ok := h.(string)
+	service, ok := s.(string)
 	if !ok {
-		klog.Errorf("expected a 'string' type but %T was returned", h)
+		klog.Errorf("expected a 'string' type but %T was returned", s)
 		return &ingressInformation{}
 	}
 
-	path, ok := p.(string)
+	port, ok := p.(intstr.IntOrString)
 	if !ok {
-		klog.Errorf("expected a 'string' type but %T was returned", p)
+		klog.Errorf("expected a 'intstr.IntOrString' type but %T was returned", p)
 		return &ingressInformation{}
 	}
 
-	if ing == nil {
-		return &ingressInformation{}
-	}
-
-	info := &ingressInformation{
-		Namespace:   ing.GetNamespace(),
-		Rule:        ing.GetName(),
-		Annotations: ing.Annotations,
-	}
-
-	if ing.Spec.Backend != nil {
-		info.Service = ing.Spec.Backend.ServiceName
-		if ing.Spec.Backend.ServicePort.String() != "0" {
-			info.ServicePort = ing.Spec.Backend.ServicePort.String()
-		}
-	}
-
-	for _, rule := range ing.Spec.Rules {
-		if rule.HTTP == nil {
-			continue
-		}
-
-		if hostname != "_" && rule.Host == "" {
-			continue
-		}
-
-		if hostname != rule.Host {
-			continue
-		}
-
-		for _, rPath := range rule.HTTP.Paths {
-			if path == rPath.Path {
-				info.Service = rPath.Backend.ServiceName
-				if rPath.Backend.ServicePort.String() != "0" {
-					info.ServicePort = rPath.Backend.ServicePort.String()
-				}
-
-				return info
+	/*
+			if ing.Spec.Backend != nil {
+			info.Service = ing.Spec.Backend.ServiceName
+			if ing.Spec.Backend.ServicePort.String() != "0" {
+				info.ServicePort = ing.Spec.Backend.ServicePort.String()
 			}
 		}
-	}
+	*/
 
-	return info
+	ingNamespace, ingName := parseNamespaceName(ingress, "")
+	_, svcName := parseNamespaceName(service, ingNamespace)
+
+	return &ingressInformation{
+		Namespace:   ingNamespace,
+		Rule:        ingName,
+		Service:     svcName,
+		ServicePort: port.String(),
+	}
+}
+
+func parseNamespaceName(key string, defaultNS string) (string, string) {
+	comps := strings.Split(key, "/")
+	switch len(comps) {
+	case 1:
+		return defaultNS, comps[0]
+	case 2:
+		return comps[0], comps[1]
+	default:
+		return "", ""
+	}
 }
 
 func buildForwardedFor(input interface{}) string {

@@ -249,7 +249,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 
 	_, servers, pcfg := n.getConfiguration(ings)
 
-	err := checkOverlap(ing, allIngresses, servers)
+	err := checkOverlap(ing, allIngresses, servers, n.store.GetIngress)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
@@ -579,8 +579,8 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						loc.Backend = ups.Name
 						loc.IsDefBackend = false
 						loc.Port = ups.Port
-						loc.Service = ups.Service
-						loc.Ingress = ing
+						loc.Service = k8s.MetaNamespaceKey(ups.Service)
+						loc.Ingress = k8s.MetaNamespaceKey(ing)
 
 						locationApplyAnnotations(loc, anns)
 
@@ -600,9 +600,9 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						PathType:     path.PathType,
 						Backend:      ups.Name,
 						IsDefBackend: false,
-						Service:      ups.Service,
+						Service:      k8s.MetaNamespaceKey(ups.Service),
 						Port:         ups.Port,
-						Ingress:      ing,
+						Ingress:      k8s.MetaNamespaceKey(ing),
 					}
 					locationApplyAnnotations(loc, anns)
 
@@ -996,6 +996,11 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		ProxyMaxTempFileSize: bdef.ProxyMaxTempFileSize,
 	}
 
+	var svcKey string
+	if du.Service != nil {
+		svcKey = k8s.MetaNamespaceKey(du.Service)
+	}
+
 	// initialize default server and root location
 	pathTypePrefix := networking.PathTypePrefix
 	servers[defServerName] = &ingress.Server{
@@ -1008,7 +1013,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				IsDefBackend: true,
 				Backend:      du.Name,
 				Proxy:        ngxProxy,
-				Service:      du.Service,
+				Service:      svcKey,
+				//Port: du.Service.Spec.Ports[0].TargetPort,
 				Logs: log.Config{
 					Access:  n.store.GetBackendConfiguration().EnableAccessLogForDefaultBackend,
 					Rewrite: false,
@@ -1044,8 +1050,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 					defLoc.IsDefBackend = false
 					defLoc.Backend = backendUpstream.Name
-					defLoc.Service = backendUpstream.Service
-					defLoc.Ingress = ing
+					defLoc.Service = k8s.MetaNamespaceKey(backendUpstream.Service)
+					defLoc.Ingress = k8s.MetaNamespaceKey(ing)
 
 					// TODO: Redirect and rewrite can affect the catch all behavior, skip for now
 					originalRedirect := defLoc.Redirect
@@ -1077,7 +1083,6 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				PathType:     &pathTypePrefix,
 				IsDefBackend: true,
 				Backend:      un,
-				Service:      &apiv1.Service{},
 			}
 			locationApplyAnnotations(loc, anns)
 
@@ -1457,7 +1462,7 @@ func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 
 	for _, server := range rucfg.Servers {
 		for _, location := range server.Locations {
-			if location.Ingress == nil {
+			if location.Ingress == "" {
 				continue
 			}
 
@@ -1470,7 +1475,7 @@ func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 
 	for _, server := range newcfg.Servers {
 		for _, location := range server.Locations {
-			if location.Ingress == nil {
+			if location.Ingress == "" {
 				continue
 			}
 
@@ -1538,7 +1543,7 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 	}
 }
 
-func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers []*ingress.Server) error {
+func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers []*ingress.Server, ingressByKey func(key string) (*networking.Ingress, error)) error {
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
 			continue
@@ -1553,7 +1558,7 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 				path.Path = rootLocation
 			}
 
-			existingIngresses := ingressForHostPath(rule.Host, path.Path, servers)
+			existingIngresses := ingressForHostPath(rule.Host, path.Path, servers, ingressByKey)
 
 			// no previous ingress
 			if len(existingIngresses) == 0 {
@@ -1594,7 +1599,7 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 	return nil
 }
 
-func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*networking.Ingress {
+func ingressForHostPath(hostname, path string, servers []*ingress.Server, ingressByKey func(key string) (*networking.Ingress, error)) []*networking.Ingress {
 	ingresses := make([]*networking.Ingress, 0)
 
 	for _, server := range servers {
@@ -1607,7 +1612,8 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 				continue
 			}
 
-			ingresses = append(ingresses, &location.Ingress.Ingress)
+			ing, _ := ingressByKey(location.Ingress)
+			ingresses = append(ingresses, ing)
 		}
 	}
 

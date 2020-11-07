@@ -29,9 +29,6 @@ import (
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
-	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -911,87 +908,24 @@ func TestGetIngressInformation(t *testing.T) {
 		Path     interface{}
 		Expected *ingressInformation
 	}{
-		"wrong ingress type": {
-			"wrongtype",
-			"host1",
-			"/ok",
-			&ingressInformation{},
-		},
-		"wrong path type": {
-			&ingress.Ingress{},
-			"host1",
-			10,
-			&ingressInformation{},
-		},
 		"valid ingress definition with name validIng in namespace default": {
-			&ingress.Ingress{
-				Ingress: networking.Ingress{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "validIng",
-						Namespace: apiv1.NamespaceDefault,
-						Annotations: map[string]string{
-							"ingress.annotation": "ok",
-						},
-					},
-					Spec: networking.IngressSpec{
-						Backend: &networking.IngressBackend{
-							ServiceName: "a-svc",
-						},
-					},
-				},
-			},
-			"host1",
-			"",
+			"default/validIng",
+			"default/a-svc",
+			intstr.FromInt(81),
 			&ingressInformation{
-				Namespace: "default",
-				Rule:      "validIng",
-				Annotations: map[string]string{
-					"ingress.annotation": "ok",
-				},
-				Service: "a-svc",
+				Namespace:   "default",
+				Rule:        "validIng",
+				Service:     "a-svc",
+				ServicePort: "81",
 			},
 		},
-		"valid ingress definition with name demo in namespace something and path /ok using a service with name b-svc port 80": {
-			&ingress.Ingress{
-				Ingress: networking.Ingress{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "demo",
-						Namespace: "something",
-						Annotations: map[string]string{
-							"ingress.annotation": "ok",
-						},
-					},
-					Spec: networking.IngressSpec{
-						Rules: []networking.IngressRule{
-							{
-								Host: "foo.bar",
-								IngressRuleValue: networking.IngressRuleValue{
-									HTTP: &networking.HTTPIngressRuleValue{
-										Paths: []networking.HTTPIngressPath{
-											{
-												Path: "/ok",
-												Backend: networking.IngressBackend{
-													ServiceName: "b-svc",
-													ServicePort: intstr.FromInt(80),
-												},
-											},
-										},
-									},
-								},
-							},
-							{},
-						},
-					},
-				},
-			},
-			"foo.bar",
-			"/ok",
+		"valid ingress definition with name demo in namespace something using a service with name b-svc port 80": {
+			"something/demo",
+			"b-svc",
+			intstr.FromInt(80),
 			&ingressInformation{
-				Namespace: "something",
-				Rule:      "demo",
-				Annotations: map[string]string{
-					"ingress.annotation": "ok",
-				},
+				Namespace:   "something",
+				Rule:        "demo",
 				Service:     "b-svc",
 				ServicePort: "80",
 			},

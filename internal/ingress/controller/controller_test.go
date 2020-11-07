@@ -70,6 +70,10 @@ func (fakeIngressStore) GetSecret(key string) (*corev1.Secret, error) {
 	return nil, fmt.Errorf("test error")
 }
 
+func (fakeIngressStore) GetIngress(key string) (*networking.Ingress, error) {
+	return nil, fmt.Errorf("test error")
+}
+
 func (fakeIngressStore) GetService(key string) (*corev1.Service, error) {
 	return nil, fmt.Errorf("test error")
 }

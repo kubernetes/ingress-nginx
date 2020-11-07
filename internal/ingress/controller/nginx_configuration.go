@@ -17,12 +17,15 @@ limitations under the License.
 package controller
 
 import (
+	"fmt"
+
 	networking "k8s.io/api/networking/v1beta1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
+	"k8s.io/ingress-nginx/internal/k8s"
 )
 
 // extractServers build a list of unique hostnames
@@ -73,8 +76,8 @@ func buildServerLocations(servers []string, ingresses []*ingress.Ingress) map[st
 			// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of
 			// proxy_pass, fastcgi_pass, uwsgi_pass, scgi_pass, memcached_pass, or grpc_pass, then the special processing is performed.
 			// In response to a request with URI equal to // this string, but without the trailing slash, a permanent redirect with the
-			// code 301 will be returned to the requested URI with the slash appended. If this is not desired, an exact match of the
-			// URIand location could be defined like this:
+			// code 301 will be returned to the requested URI with the slash appended.
+			// If this is not desired, an exact match of the URI and location could be defined like this:
 			//
 			// location /user/ {
 			//     proxy_pass http://user.example.com;
@@ -124,7 +127,9 @@ func serverLocations(hostname string, ingresses []*ingress.Ingress) []*ingress.L
 				location := &ingress.Location{
 					Path:         httpPath.Path,
 					PathType:     httpPath.PathType,
-					Ingress:      ingressDefinition,
+					Ingress:      k8s.MetaNamespaceKey(ingressDefinition),
+					Service:      fmt.Sprintf("%v/%v", ingressDefinition.Namespace, httpPath.Backend.ServiceName),
+					Port:         httpPath.Backend.ServicePort,
 					IsDefBackend: false,
 				}
 

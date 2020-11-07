@@ -342,19 +342,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.Backend != l2.Backend {
 		return false
 	}
-
 	if l1.Service != l2.Service {
-		if l1.Service == nil || l2.Service == nil {
-			return false
-		}
-		if l1.Service.GetNamespace() != l2.Service.GetNamespace() {
-			return false
-		}
-		if l1.Service.GetName() != l2.Service.GetName() {
-			return false
-		}
+		return false
 	}
-
 	if l1.Port.String() != l2.Port.String() {
 		return false
 	}
@@ -472,15 +462,7 @@ func (ptb1 *SSLPassthroughBackend) Equal(ptb2 *SSLPassthroughBackend) bool {
 	}
 
 	if ptb1.Service != ptb2.Service {
-		if ptb1.Service == nil || ptb2.Service == nil {
-			return false
-		}
-		if ptb1.Service.GetNamespace() != ptb2.Service.GetNamespace() {
-			return false
-		}
-		if ptb1.Service.GetName() != ptb2.Service.GetName() {
-			return false
-		}
+		return false
 	}
 
 	return true
