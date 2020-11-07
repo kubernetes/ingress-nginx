@@ -135,6 +135,11 @@ func buildServerConfiguration(proxySSLLocationOnly bool,
 					continue
 				}
 
+				// one location configured Redirect from-to-www
+				if location.Redirect.FromToWWW {
+					server.RedirectFromToWWW = true
+				}
+
 				if server.AuthTLSError == "" && anns.CertificateAuth.AuthTLSError != "" {
 					server.AuthTLSError = anns.CertificateAuth.AuthTLSError
 				}
