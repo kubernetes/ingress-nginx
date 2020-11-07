@@ -271,6 +271,7 @@ func TestCheckIngress(t *testing.T) {
 }
 
 var pathPrefix = networking.PathTypePrefix
+var pathExact = networking.PathTypeExact
 
 func TestMergeAlternativeBackends(t *testing.T) {
 	testCases := map[string]struct {
