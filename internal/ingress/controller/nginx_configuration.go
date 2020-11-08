@@ -23,7 +23,6 @@ import (
 
 	"github.com/mitchellh/copystructure"
 	apiv1 "k8s.io/api/core/v1"
-	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -33,6 +32,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
+	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 )
 
@@ -72,13 +72,8 @@ func extractServers(ingresses []*ingress.Ingress) []string {
 	return sorterServers
 }
 
-func buildServerLocations(
-	enableAccessLogForDefaultBackend bool,
-	defaults proxy.Config,
-	defaultUpstream *ingress.Backend,
-	servers []string,
-	ingresses []*ingress.Ingress,
-	ingressByKey func(key string) (*annotations.Ingress, error)) map[string]map[string][]*ingress.Location {
+func buildServerLocations(enableAccessLogForDefaultBackend bool, defaults proxy.Config, defaultUpstream *ingress.Backend,
+	servers []string, ingresses []*ingress.Ingress, store store.Storer) map[string]map[string][]*ingress.Location {
 
 	withLocations := make(map[string]map[string][]*ingress.Location)
 
@@ -87,7 +82,7 @@ func buildServerLocations(
 
 		locations := serverLocations(hostname, ingresses)
 		for _, location := range locations {
-			ing, _ := ingressByKey(location.Ingress)
+			ing, _ := store.GetIngressAnnotations(location.Ingress)
 			annotationsToLocation(location, ing)
 
 			if *location.PathType != pathTypePrefix {
@@ -165,12 +160,8 @@ func buildServerLocations(
 	return withLocations
 }
 
-func buildServerConfiguration(
-	proxySSLLocationOnly bool,
-	serverLocations map[string]map[string][]*ingress.Location,
-	ingresses []*ingress.Ingress,
-	ingressByKey func(key string) (*annotations.Ingress, error)) map[string]*ingress.Server {
-
+func buildServerConfiguration(proxySSLLocationOnly bool, serverLocations map[string]map[string][]*ingress.Location,
+	ingresses []*ingress.Ingress, store store.Storer) map[string]*ingress.Server {
 	servers := map[string]*ingress.Server{}
 
 	for serverName, pathLocations := range serverLocations {
@@ -184,15 +175,18 @@ func buildServerConfiguration(
 
 		for _, locations := range pathLocations {
 			for _, location := range locations {
-				ingKey := location.Ingress
+				server.Locations = append(server.Locations, location)
 
-				anns, err := ingressByKey(ingKey)
+				ingKey := location.Ingress
+				if ingKey == "" {
+					continue
+				}
+
+				anns, err := store.GetIngressAnnotations(ingKey)
 				if err != nil {
 					klog.ErrorS(err, "searching ingress by key")
 					continue
 				}
-
-				server.Locations = append(server.Locations, location)
 
 				// one location configured Redirect from-to-www
 				if location.Redirect.FromToWWW {
@@ -362,10 +356,7 @@ func needsRewrite(location *ingress.Location) bool {
 	return false
 }
 
-func buildUpstreamsWithDefaultBackend(
-	upstreams map[string]*ingress.Backend,
-	servers map[string]*ingress.Server,
-	getServiceEndpoints func(key string) (*corev1.Endpoints, error)) []*ingress.Backend {
+func buildUpstreamsWithDefaultBackend(upstreams map[string]*ingress.Backend, servers map[string]*ingress.Server, store store.Storer) []*ingress.Backend {
 	upstreamsWithDefaultBackend := make([]*ingress.Backend, 0, len(upstreams))
 
 	for _, upstream := range upstreams {
@@ -389,7 +380,7 @@ func buildUpstreamsWithDefaultBackend(
 				}
 
 				sp := location.DefaultBackend.Spec.Ports[0]
-				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, getServiceEndpoints)
+				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, store.GetServiceEndpoints)
 				// custom backend is valid only if contains at least one endpoint
 				if len(endps) > 0 {
 					name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
@@ -434,4 +425,15 @@ func buildUpstreamsWithDefaultBackend(
 	})
 
 	return upstreamsWithDefaultBackend
+}
+
+// checks conditions for whether or not an upstream should be created for a custom default backend
+func shouldCreateUpstreamForLocationDefaultBackend(upstream *ingress.Backend, location *ingress.Location) bool {
+	return (upstream.Name == location.Backend) &&
+		(len(upstream.Endpoints) == 0 || len(location.CustomHTTPErrors) != 0) &&
+		location.DefaultBackend != nil
+}
+
+func updateUpstreamsWithCanaries(backends []*ingress.Backend) []*ingress.Backend {
+	return backends
 }

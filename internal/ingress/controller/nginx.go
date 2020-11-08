@@ -586,7 +586,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		RedirectServers:          buildRedirects(ingressCfg.Servers),
 		IsSSLPassthroughEnabled:  n.cfg.EnableSSLPassthrough,
 		ListenPorts:              n.cfg.ListenPorts,
-		PublishService:           n.GetPublishService(),
+		PublishService:           n.getPublishService(),
 		EnableMetrics:            n.cfg.EnableMetrics,
 		MaxmindEditionFiles:      n.cfg.MaxmindEditionFiles,
 		HealthzURI:               nginx.HealthPath,

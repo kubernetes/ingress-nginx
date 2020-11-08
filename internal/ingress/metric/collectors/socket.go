@@ -350,7 +350,10 @@ func (sc *SocketCollector) RemoveMetrics(ingresses []string, registry prometheus
 	}
 
 	// 1. remove metrics of removed ingresses
-	klog.V(2).InfoS("removing metrics", "ingresses", ingresses)
+	if len(ingresses) > 0 {
+		klog.V(2).InfoS("removing metrics", "ingresses", ingresses)
+	}
+
 	for _, mf := range mfs {
 		metricName := mf.GetName()
 		metric, ok := sc.metricMapping[metricName]
