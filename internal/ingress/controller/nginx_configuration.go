@@ -19,7 +19,11 @@ package controller
 import (
 	"fmt"
 	"sort"
+	"strings"
 
+	"github.com/mitchellh/copystructure"
+	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -73,7 +77,9 @@ func buildServerLocations(
 	defaults proxy.Config,
 	defaultUpstream *ingress.Backend,
 	servers []string,
-	ingresses []*ingress.Ingress) map[string]map[string][]*ingress.Location {
+	ingresses []*ingress.Ingress,
+	ingressByKey func(key string) (*annotations.Ingress, error)) map[string]map[string][]*ingress.Location {
+
 	withLocations := make(map[string]map[string][]*ingress.Location)
 
 	for _, hostname := range servers {
@@ -81,12 +87,28 @@ func buildServerLocations(
 
 		locations := serverLocations(hostname, ingresses)
 		for _, location := range locations {
-			withLocations[hostname][location.Path] = []*ingress.Location{location}
-
-			annotationsToLocation(location, nil)
+			ing, _ := ingressByKey(location.Ingress)
+			annotationsToLocation(location, ing)
 
 			if *location.PathType != pathTypePrefix {
 				continue
+			}
+
+			if location.Path == rootLocation {
+				continue
+			}
+
+			if needsRewrite(location) || location.Rewrite.UseRegex {
+				// TODO: review. we cannot change the path.
+				withLocations[hostname][location.Path] = []*ingress.Location{location}
+				klog.Warningf("Ingress path %v in Ingress %v for host %v cannot be processed", location.Path, location.Backend, hostname)
+				continue
+			}
+
+			// copy location before any change
+			el, err := copystructure.Copy(location)
+			if err != nil {
+				klog.ErrorS(err, "copying location")
 			}
 
 			// normalize path. Must end in /
@@ -104,6 +126,16 @@ func buildServerLocations(
 			// location = /user {
 			//     proxy_pass http://login.example.com;
 			// }
+			location.Path = normalizePrefixPath(location.Path)
+			withLocations[hostname][location.Path] = []*ingress.Location{location}
+
+			// add exact location
+			exactLocation := el.(*ingress.Location)
+			exactLocation.PathType = &pathTypeExact
+
+			if _, ok := withLocations[hostname][exactLocation.Path]; !ok {
+				withLocations[hostname][exactLocation.Path] = []*ingress.Location{exactLocation}
+			}
 		}
 
 		// the server contains at least one path but not /
@@ -123,8 +155,7 @@ func buildServerLocations(
 				Service:      svcKey,
 				Port:         defaultUpstream.Port,
 				Logs: log.Config{
-					Access:  enableAccessLogForDefaultBackend,
-					Rewrite: false,
+					Access: enableAccessLogForDefaultBackend,
 				},
 			})
 		}
@@ -238,6 +269,15 @@ func serverLocations(hostname string, ingresses []*ingress.Ingress) []*ingress.L
 		}
 	}
 
+	// return a sorted list by Path and number of locations
+	sort.SliceStable(locations, func(i, j int) bool {
+		return locations[i].Path > locations[j].Path
+	})
+
+	sort.SliceStable(locations, func(i, j int) bool {
+		return len(locations[i].Path) > len(locations[j].Path)
+	})
+
 	return locations
 }
 
@@ -297,4 +337,97 @@ func annotationsToLocation(location *ingress.Location, ingressAnnotations *annot
 
 	location.DefaultBackend = ingressAnnotations.DefaultBackend
 	location.DefaultBackendUpstreamName = defUpstreamName
+}
+
+func normalizePrefixPath(path string) string {
+	if path == rootLocation {
+		return rootLocation
+	}
+
+	if !strings.HasSuffix(path, "/") {
+		return fmt.Sprintf("%v/", path)
+	}
+
+	return path
+}
+
+func needsRewrite(location *ingress.Location) bool {
+	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != location.Path {
+		return true
+	}
+	return false
+}
+
+func buildUpstreamsWithDefaultBackend(
+	upstreams map[string]*ingress.Backend,
+	servers map[string]*ingress.Server,
+	getServiceEndpoints func(key string) (*corev1.Endpoints, error)) []*ingress.Backend {
+	upstreamsWithDefaultBackend := make([]*ingress.Backend, 0, len(upstreams))
+
+	for _, upstream := range upstreams {
+		upstreamsWithDefaultBackend = append(upstreamsWithDefaultBackend, upstream)
+		if upstream.Name == defUpstreamName {
+			continue
+		}
+
+		isHTTPSfrom := []*ingress.Server{}
+
+		for _, server := range servers {
+			for _, location := range server.Locations {
+				// use default backend
+				if !shouldCreateUpstreamForLocationDefaultBackend(upstream, location) {
+					continue
+				}
+
+				if len(location.DefaultBackend.Spec.Ports) == 0 {
+					klog.Errorf("Custom default backend service %v/%v has no ports. Ignoring", location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+					continue
+				}
+
+				sp := location.DefaultBackend.Spec.Ports[0]
+				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, getServiceEndpoints)
+				// custom backend is valid only if contains at least one endpoint
+				if len(endps) > 0 {
+					name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
+					klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
+
+					nb := upstream.DeepCopy()
+					nb.Name = name
+					nb.Endpoints = endps
+
+					upstreamsWithDefaultBackend = append(upstreamsWithDefaultBackend, nb)
+
+					location.DefaultBackendUpstreamName = name
+
+					if len(upstream.Endpoints) == 0 {
+						klog.V(3).Infof("Upstream %q has no active Endpoint, so using custom default backend for location %q in server %q (Service \"%v/%v\")",
+							upstream.Name, location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+
+						location.Backend = name
+					}
+				}
+
+				if server.SSLPassthrough {
+					if location.Path == rootLocation {
+						if location.Backend == defUpstreamName {
+							klog.Warningf("Server %q has no default backend, ignoring SSL Passthrough.", server.Hostname)
+							continue
+						}
+						isHTTPSfrom = append(isHTTPSfrom, server)
+					}
+				}
+			}
+		}
+
+		if len(isHTTPSfrom) > 0 {
+			upstream.SSLPassthrough = true
+		}
+	}
+
+	// sort upstreams by name
+	sort.SliceStable(upstreamsWithDefaultBackend, func(a, b int) bool {
+		return upstreamsWithDefaultBackend[a].Name < upstreamsWithDefaultBackend[b].Name
+	})
+
+	return upstreamsWithDefaultBackend
 }

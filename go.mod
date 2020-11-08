@@ -11,6 +11,7 @@ require (
 	github.com/imdario/mergo v0.3.10
 	github.com/json-iterator/go v1.1.10
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
+	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/mitchellh/mapstructure v1.3.2
