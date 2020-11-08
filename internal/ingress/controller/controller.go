@@ -518,17 +518,9 @@ func (n *NGINXController) backendConfiguration(ingresses []*ingress.Ingress) ([]
 	klog.InfoS("Server Configurations", "configurations", serverConfiguration)
 
 	// assemble final configuration
-
 	servers := []*ingress.Server{}
-	for _, value := range servers {
-		sort.SliceStable(value.Locations, func(i, j int) bool {
-			return value.Locations[i].Path > value.Locations[j].Path
-		})
-
-		sort.SliceStable(value.Locations, func(i, j int) bool {
-			return len(value.Locations[i].Path) > len(value.Locations[j].Path)
-		})
-		servers = append(servers, value)
+	for _, server := range serverConfiguration {
+		servers = append(servers, server)
 	}
 
 	return upstreamsWithDefaultBackends, servers

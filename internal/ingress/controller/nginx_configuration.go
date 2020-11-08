@@ -173,9 +173,10 @@ func buildServerConfiguration(
 	servers := map[string]*ingress.Server{}
 
 	for serverName, pathLocations := range serverLocations {
-		_, ok := servers[serverName]
-		if !ok {
-			servers[serverName] = &ingress.Server{}
+		if _, ok := servers[serverName]; !ok {
+			servers[serverName] = &ingress.Server{
+				Hostname: serverName,
+			}
 		}
 
 		server := servers[serverName]
@@ -186,9 +187,11 @@ func buildServerConfiguration(
 
 				anns, err := ingressByKey(ingKey)
 				if err != nil {
-					// TODO: logs
+					klog.ErrorS(err, "searching ingress by key")
 					continue
 				}
+
+				server.Locations = append(server.Locations, location)
 
 				// one location configured Redirect from-to-www
 				if location.Redirect.FromToWWW {
