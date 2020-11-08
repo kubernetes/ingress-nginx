@@ -270,8 +270,6 @@ func TestCheckIngress(t *testing.T) {
 	})
 }
 
-var pathPrefix = networking.PathTypePrefix
-
 func TestMergeAlternativeBackends(t *testing.T) {
 	testCases := map[string]struct {
 		ingress      *ingress.Ingress
@@ -295,7 +293,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 										Paths: []networking.HTTPIngressPath{
 											{
 												Path:     "/",
-												PathType: &pathPrefix,
+												PathType: &pathTypePrefix,
 												Backend: networking.IngressBackend{
 													ServiceName: "http-svc-canary",
 													ServicePort: intstr.IntOrString{
@@ -331,7 +329,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "example-http-svc-80",
 						},
 					},
@@ -357,7 +355,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "example-http-svc-80",
 						},
 					},
@@ -379,7 +377,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 										Paths: []networking.HTTPIngressPath{
 											{
 												Path:     "/",
-												PathType: &pathPrefix,
+												PathType: &pathTypePrefix,
 												Backend: networking.IngressBackend{
 													ServiceName: "foo-http-svc-canary",
 													ServicePort: intstr.IntOrString{
@@ -399,7 +397,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 										Paths: []networking.HTTPIngressPath{
 											{
 												Path:     "/",
-												PathType: &pathPrefix,
+												PathType: &pathTypePrefix,
 												Backend: networking.IngressBackend{
 													ServiceName: "http-svc-canary",
 													ServicePort: intstr.IntOrString{
@@ -447,7 +445,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "example-foo-http-svc-80",
 						},
 					},
@@ -457,7 +455,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "example-http-svc-80",
 						},
 					},
@@ -495,7 +493,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "example-http-svc-80",
 						},
 					},
@@ -517,7 +515,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 										Paths: []networking.HTTPIngressPath{
 											{
 												Path:     "/",
-												PathType: &pathPrefix,
+												PathType: &pathTypePrefix,
 												Backend: networking.IngressBackend{
 													ServiceName: "http-svc-canary",
 													ServicePort: intstr.IntOrString{
@@ -582,7 +580,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "example-http-svc-80",
 						},
 					},
@@ -608,7 +606,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "example-http-svc-80",
 						},
 					},
@@ -650,7 +648,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "upstream-default-backend",
 						},
 					},
@@ -663,7 +661,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					Locations: []*ingress.Location{
 						{
 							Path:     "/",
-							PathType: &pathPrefix,
+							PathType: &pathTypePrefix,
 							Backend:  "upstream-default-backend",
 						},
 					},
@@ -999,7 +997,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-canary",
 														ServicePort: intstr.IntOrString{
@@ -1059,7 +1057,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc",
 														ServicePort: intstr.IntOrString{
@@ -1096,7 +1094,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-canary",
 														ServicePort: intstr.IntOrString{
@@ -1165,7 +1163,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/a",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-1",
 														ServicePort: intstr.IntOrString{
@@ -1202,7 +1200,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/a",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-2",
 														ServicePort: intstr.IntOrString{
@@ -1239,7 +1237,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/b",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-2",
 														ServicePort: intstr.IntOrString{
@@ -1276,7 +1274,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/b",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-1",
 														ServicePort: intstr.IntOrString{
@@ -1313,7 +1311,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/c",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-1",
 														ServicePort: intstr.IntOrString{
@@ -1350,7 +1348,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/c",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "http-svc-2",
 														ServicePort: intstr.IntOrString{
@@ -1435,7 +1433,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/path1",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "path1-svc",
 														ServicePort: intstr.IntOrString{
@@ -1475,7 +1473,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/path2",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "path2-svc",
 														ServicePort: intstr.IntOrString{
@@ -1540,7 +1538,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/path1",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "path1-svc",
 														ServicePort: intstr.IntOrString{
@@ -1580,7 +1578,7 @@ func TestGetBackendServers(t *testing.T) {
 											Paths: []networking.HTTPIngressPath{
 												{
 													Path:     "/path2",
-													PathType: &pathPrefix,
+													PathType: &pathTypePrefix,
 													Backend: networking.IngressBackend{
 														ServiceName: "path2-svc",
 														ServicePort: intstr.IntOrString{

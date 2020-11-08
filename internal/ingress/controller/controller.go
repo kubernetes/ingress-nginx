@@ -430,6 +430,20 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 	hosts := sets.NewString()
 
 	for _, server := range servers {
+		// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of
+		// proxy_pass, fastcgi_pass, uwsgi_pass, scgi_pass, memcached_pass, or grpc_pass, then the special processing is performed.
+		// In response to a request with URI equal to // this string, but without the trailing slash, a permanent redirect with the
+		// code 301 will be returned to the requested URI with the slash appended. If this is not desired, an exact match of the
+		// URIand location could be defined like this:
+		//
+		// location /user/ {
+		//     proxy_pass http://user.example.com;
+		// }
+		// location = /user {
+		//     proxy_pass http://login.example.com;
+		// }
+		server.Locations = updateServerLocations(server.Locations)
+
 		if !hosts.Has(server.Hostname) {
 			hosts.Insert(server.Hostname)
 		}
