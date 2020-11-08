@@ -111,7 +111,6 @@ func buildServerLocations(
 				klog.ErrorS(err, "copying location")
 			}
 
-			// normalize path. Must end in /
 			// add a new location of type Exact
 			// this is required to pass conformance tests
 			// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of
@@ -126,6 +125,8 @@ func buildServerLocations(
 			// location = /user {
 			//     proxy_pass http://login.example.com;
 			// }
+
+			// normalize path. Must end in /
 			location.Path = normalizePrefixPath(location.Path)
 			withLocations[hostname][location.Path] = []*ingress.Location{location}
 
