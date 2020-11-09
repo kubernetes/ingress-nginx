@@ -41,6 +41,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/pointer"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -347,14 +348,16 @@ func New(
 		AddFunc: func(obj interface{}) {
 			ing, _ := toIngress(obj)
 			if !class.IsValid(ing) {
-				a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
-				klog.InfoS("Ignoring add for ingress based on annotation", "ingress", klog.KObj(ing), "annotation", a)
+				ingressClass, _ := parser.GetStringAnnotation(class.IngressKey, ing)
+				klog.InfoS("Ignoring ingress", "ingress", klog.KObj(ing), "kubernetes.io/ingress.class", ingressClass, "ingressClassName", pointer.StringPtrDerefOr(ing.Spec.IngressClassName, ""))
 				return
 			}
+
 			if isCatchAllIngress(ing.Spec) && disableCatchAll {
 				klog.InfoS("Ignoring add for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(ing))
 				return
 			}
+
 			recorder.Eventf(ing, corev1.EventTypeNormal, "Sync", "Scheduled for sync")
 
 			store.syncIngress(ing)
