@@ -11,7 +11,9 @@ spec:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: default-backend
+{{- if not .Values.defaultBackend.autoscaling.enabled }}
   replicas: {{ .Values.defaultBackend.replicaCount }}
+{{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   template:
     metadata:
