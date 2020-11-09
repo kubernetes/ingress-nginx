@@ -39,28 +39,32 @@ func TestIsValidClass(t *testing.T) {
 	}()
 
 	tests := []struct {
-		ingress    string
-		controller string
-		defClass   string
-		annotation bool
-		k8sClass   *networking.IngressClass
-		v1Ready    bool
-		isValid    bool
+		ingress          string
+		controller       string
+		defClass         string
+		annotation       bool
+		ingressClassName bool
+		k8sClass         *networking.IngressClass
+		v1Ready          bool
+		isValid          bool
 	}{
-		{"", "", "nginx", true, nil, false, true},
-		{"", "nginx", "nginx", true, nil, false, true},
-		{"nginx", "nginx", "nginx", true, nil, false, true},
-		{"custom", "custom", "nginx", true, nil, false, true},
-		{"", "killer", "nginx", true, nil, false, false},
-		{"custom", "nginx", "nginx", true, nil, false, false},
-		{"", "custom", "nginx", false,
+		{"", "", "nginx", true, false, nil, false, true},
+		{"", "nginx", "nginx", true, false, nil, false, true},
+		{"nginx", "nginx", "nginx", true, false, nil, false, true},
+		{"custom", "custom", "nginx", true, false, nil, false, true},
+		{"", "killer", "nginx", true, false, nil, false, false},
+		{"custom", "nginx", "nginx", true, false, nil, false, false},
+		{"nginx", "nginx", "nginx", false, true, nil, false, true},
+		{"custom", "nginx", "nginx", false, true, nil, true, false},
+		{"nginx", "nginx", "nginx", false, true, nil, true, true},
+		{"", "custom", "nginx", false, false,
 			&networking.IngressClass{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name: "custom",
 				},
 			},
 			false, false},
-		{"", "custom", "nginx", false,
+		{"", "custom", "nginx", false, false,
 			&networking.IngressClass{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name: "custom",
@@ -81,6 +85,9 @@ func TestIsValidClass(t *testing.T) {
 		ing.SetAnnotations(data)
 		if test.annotation {
 			ing.Annotations[IngressKey] = test.ingress
+		}
+		if test.ingressClassName {
+			ing.Spec.IngressClassName = &[]string{test.ingress}[0]
 		}
 
 		IngressClass = test.controller
