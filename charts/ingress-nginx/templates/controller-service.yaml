@@ -13,6 +13,9 @@ metadata:
     {{- toYaml .Values.controller.service.labels | nindent 4 }}
   {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
+{{- if .Values.controller.service.namespace }}
+  namespace: {{ .Values.controller.service.namespace }}
+{{- end }}
 spec:
   type: {{ .Values.controller.service.type }}
 {{- if .Values.controller.service.clusterIP }}
