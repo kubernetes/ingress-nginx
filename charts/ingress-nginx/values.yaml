@@ -303,6 +303,7 @@ controller:
 
   service:
     enabled: true
+    namespace: ""
 
     annotations: {}
     labels: {}
