@@ -1,5 +1,23 @@
 # Changelog
 
+### 0.41.1
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.41.1@sha256:595f5c08aaa2bdfd1afdfb2e0f1a668bc85d96f80c097ddb3d4241f0c9122549`
+
+Fix routing regression introduced in 0.41.0 with PathType Exact
+
+_Changes:_
+
+- [X] [#6417](https://github.com/kubernetes/ingress-nginx/pull/6417) Reload nginx when L4 proxy protocol change
+- [X] [#6422](https://github.com/kubernetes/ingress-nginx/pull/6422) Add comment indicating server-snippet section
+- [X] [#6423](https://github.com/kubernetes/ingress-nginx/pull/6423) Add Default backend HPA autoscaling.
+- [X] [#6426](https://github.com/kubernetes/ingress-nginx/pull/6426) Alternate to respecting setting admissionWebhooks.failurePolicy in values.yaml
+- [X] [#6443](https://github.com/kubernetes/ingress-nginx/pull/6443) Refactor handling of path Prefix and Exact
+- [X] [#6445](https://github.com/kubernetes/ingress-nginx/pull/6445) fix: empty IngressClassName, Error handling
+- [X] [#6447](https://github.com/kubernetes/ingress-nginx/pull/6447) Improve class.IsValid logs
+
 ### 0.41.0
 
 **Image:**
