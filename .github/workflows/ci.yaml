@@ -120,7 +120,7 @@ jobs:
 
       - name: Create Kubernetes cluster
         id: kind
-        uses: engineerd/setup-kind@v0.4.0
+        uses: engineerd/setup-kind@v0.5.0
         with:
           version: v0.9.0
           image: kindest/node:v1.18.8
@@ -158,7 +158,7 @@ jobs:
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@v0.4.0
+        uses: engineerd/setup-kind@v0.5.0
         with:
           version: v0.9.0
           config: test/e2e/kind.yaml
