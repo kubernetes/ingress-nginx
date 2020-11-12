@@ -427,7 +427,13 @@ func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
 	str := base64.URLEncoding.EncodeToString([]byte(location.Path))
 	// removes "=" after encoding
 	str = strings.Replace(str, "=", "", -1)
-	return fmt.Sprintf("/_external-auth-%v", str)
+
+	pathType := "default"
+	if location.PathType != nil {
+		pathType = fmt.Sprintf("%v", *location.PathType)
+	}
+
+	return fmt.Sprintf("/_external-auth-%v-%v", str, pathType)
 }
 
 // shouldApplyGlobalAuth returns true only in case when ExternalAuth.URL is not set and
