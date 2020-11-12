@@ -4,6 +4,10 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.10.1
+
+- Fix regression introduced in 0.41.0 with external authentication
+
 ### 3.10.0
 
 - Fix routing regression introduced in 0.41.0 with PathType Exact
