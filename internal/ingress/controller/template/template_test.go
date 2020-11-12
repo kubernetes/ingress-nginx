@@ -355,7 +355,7 @@ func TestBuildAuthLocation(t *testing.T) {
 	}
 
 	encodedAuthURL := strings.Replace(base64.URLEncoding.EncodeToString([]byte(loc.Path)), "=", "", -1)
-	externalAuthPath := fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
+	externalAuthPath := fmt.Sprintf("/_external-auth-%v-default", encodedAuthURL)
 
 	testCases := []struct {
 		title                    string
