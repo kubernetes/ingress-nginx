@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Fix routing regression introduced in 0.41.0 with PathType Exact
+    apiVersion: v1
+    appVersion: 0.41.1
+    created: "2020-11-12T15:37:45.28389953Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: ad988537e2859760f0237a4e3ef2e11086ab6c96add4de5a94596f22bdef34fc
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-3.10.0/ingress-nginx-3.10.0.tgz
+    version: 3.10.0
+  - annotations:
+      artifacthub.io/changes: |
         - Add Default backend HPA autoscaling
     apiVersion: v1
     appVersion: 0.41.0
