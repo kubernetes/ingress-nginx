@@ -1,7 +1,14 @@
 ## nginx configuration
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/master/controllers/nginx/configuration.md
 ##
+
+## Overrides for generated resource names
+# See templates/_helpers.tpl
+# nameOverride:
+# fullnameOverride:
+
 controller:
+  name: controller
   image:
     repository: k8s.gcr.io/ingress-nginx/controller
     tag: "v0.41.2"
@@ -584,6 +591,7 @@ defaultBackend:
   ##
   enabled: false
 
+  name: defaultbackend
   image:
     repository: k8s.gcr.io/defaultbackend-amd64
     tag: "1.5"
