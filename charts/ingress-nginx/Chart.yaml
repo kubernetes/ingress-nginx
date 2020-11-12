@@ -1,7 +1,7 @@
 apiVersion: v1
 name: ingress-nginx
-version: 3.10.0
-appVersion: 0.41.1
+version: 3.10.1
+appVersion: 0.41.2
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -16,4 +16,4 @@ engine: gotpl
 kubeVersion: ">=1.16.0-0"
 annotations:
   artifacthub.io/changes: |
-    - Fix routing regression introduced in 0.41.0 with PathType Exact
+    - Update ingress-nginx image to v0.41.2
