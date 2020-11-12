@@ -314,15 +314,39 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It("retains cookie set by external authentication server", func() {
-		ginkgo.Skip("Skipping test until refactoring")
-		// TODO: this test should look like https://gist.github.com/aledbf/250645d76c080677c695929273f8fd22
+		host := "auth-check-cookies"
 
-		host := "auth"
+		cfg := `#
+events {
+	worker_connections  1024;
+	multi_accept on;
+}
 
-		f.NewHttpbinDeployment()
+http {
+	default_type 'text/plain';
+	client_max_body_size 0;
 
-		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
-		assert.Nil(ginkgo.GinkgoT(), err)
+	server {
+		access_log on;
+		access_log /dev/stdout;
+
+		listen 80;
+
+		location ~ ^/cookies/set/(?<key>.*)/(?<value>.*) {
+			content_by_lua_block {
+				ngx.header['Set-Cookie'] = {ngx.var.key.."="..ngx.var.value}
+				ngx.say("OK")
+			}
+		}
+
+		location / {
+			return 200;
+		}
+	}
+}
+`
+
+		f.NGINXWithConfigDeployment(framework.HTTPBinService, cfg)
 
 		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
