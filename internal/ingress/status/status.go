@@ -172,14 +172,9 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		return statusAddressFromService(s.PublishService, s.Client)
 	}
 
-	ingressPod, err := k8s.GetPodDetails()
-	if err != nil {
-		return []string{}, err
-	}
-
 	// get information about all the pods running the ingress controller
-	pods, err := s.Client.CoreV1().Pods(ingressPod.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(ingressPod.Labels).String(),
+	pods, err := s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(k8s.IngressPodDetails.Labels).String(),
 	})
 	if err != nil {
 		return nil, err
@@ -216,13 +211,8 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 }
 
 func (s *statusSync) isRunningMultiplePods() bool {
-	ingressPod, err := k8s.GetPodDetails()
-	if err != nil {
-		return false
-	}
-
-	pods, err := s.Client.CoreV1().Pods(ingressPod.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(ingressPod.Labels).String(),
+	pods, err := s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(k8s.IngressPodDetails.Labels).String(),
 	})
 	if err != nil {
 		return false
