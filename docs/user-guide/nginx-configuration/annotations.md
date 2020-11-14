@@ -492,7 +492,7 @@ The client IP address will be set based on the use of [PROXY protocol](./configm
 
 ### Permanent Redirect
 
-This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example `nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com` would redirect everything to Google.
+This annotation allows to return a permanent redirect (Return Code 301) instead of sending data to the upstream.  For example `nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com` would redirect everything to Google.
 
 ### Permanent Redirect Code
 
