@@ -154,7 +154,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			n.metricCollector.IncReloadErrorCount()
 			n.metricCollector.ConfigSuccess(hash, false)
 			klog.Errorf("Unexpected failure reloading the backend:\n%v", err)
-			n.recorder.Eventf(k8s.IngressNGINXPod, apiv1.EventTypeWarning, "RELOAD", fmt.Sprintf("Error reloading NGINX: %v", err))
+			n.recorder.Eventf(k8s.IngressPodDetails, apiv1.EventTypeWarning, "RELOAD", fmt.Sprintf("Error reloading NGINX: %v", err))
 			return err
 		}
 
@@ -162,7 +162,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		n.metricCollector.ConfigSuccess(hash, true)
 		n.metricCollector.IncReloadCount()
 
-		n.recorder.Eventf(k8s.IngressNGINXPod, apiv1.EventTypeNormal, "RELOAD", "NGINX reload triggered due to a change in configuration")
+		n.recorder.Eventf(k8s.IngressPodDetails, apiv1.EventTypeNormal, "RELOAD", "NGINX reload triggered due to a change in configuration")
 	}
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
