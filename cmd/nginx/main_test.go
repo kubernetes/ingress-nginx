@@ -26,7 +26,6 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -58,7 +57,7 @@ func TestHandleSigterm(t *testing.T) {
 		namespace = "test"
 	)
 
-	k8s.IngressNGINXPod = &v1.Pod{
+	k8s.IngressPodDetails = &k8s.PodInfo{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
 			Namespace: namespace,

@@ -1671,7 +1671,7 @@ func newNGINXController(t *testing.T) *NGINXController {
 		t.Fatalf("error creating the configuration map: %v", err)
 	}
 
-	k8s.IngressNGINXPod = &v1.Pod{
+	k8s.IngressPodDetails = &k8s.PodInfo{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "testpod",
 			Namespace: ns,
@@ -1729,7 +1729,7 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		t.Fatalf("error creating the configuration map: %v", err)
 	}
 
-	k8s.IngressNGINXPod = &v1.Pod{
+	k8s.IngressPodDetails = &k8s.PodInfo{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "testpod",
 			Namespace: ns,

@@ -93,23 +93,18 @@ func setupLeaderElection(config *leaderElectionConfig) {
 		Host:      hostname,
 	})
 
-	ingressPod, err := k8s.GetPodDetails()
-	if err != nil {
-		klog.Fatalf("unexpected error starting leader election: %v", err)
-	}
-
 	lock := resourcelock.ConfigMapLock{
-		ConfigMapMeta: metav1.ObjectMeta{Namespace: ingressPod.Namespace, Name: config.ElectionID},
+		ConfigMapMeta: metav1.ObjectMeta{Namespace: k8s.IngressPodDetails.Namespace, Name: config.ElectionID},
 		Client:        config.Client.CoreV1(),
 		LockConfig: resourcelock.ResourceLockConfig{
-			Identity:      ingressPod.Name,
+			Identity:      k8s.IngressPodDetails.Name,
 			EventRecorder: recorder,
 		},
 	}
 
 	ttl := 30 * time.Second
 
-	elector, err = leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
+	elector, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
 		Lock:          &lock,
 		LeaseDuration: ttl,
 		RenewDeadline: ttl / 2,
