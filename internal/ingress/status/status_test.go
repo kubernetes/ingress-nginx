@@ -24,7 +24,6 @@ import (
 	"time"
 
 	apiv1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
@@ -297,7 +296,7 @@ func TestStatusActions(t *testing.T) {
 		UpdateStatusOnShutdown: true,
 	}
 
-	k8s.IngressNGINXPod = &v1.Pod{
+	k8s.IngressPodDetails = &k8s.PodInfo{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo_base_pod",
 			Namespace: apiv1.NamespaceDefault,

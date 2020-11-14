@@ -75,16 +75,22 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 	return defaultOrInternalIP
 }
 
-// IngressNGINXPod hold information about the ingress-nginx pod
-var IngressNGINXPod *apiv1.Pod
+var (
+	// IngressPodDetails hold information about the ingress-nginx pod
+	IngressPodDetails *PodInfo
+
+	selectorLabelKeys = []string{
+		"app.kubernetes.io/component",
+		"app.kubernetes.io/instance",
+		"app.kubernetes.io/name",
+	}
+)
 
 // PodInfo contains runtime information about the pod running the Ingres controller
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type PodInfo struct {
-	Name      string
-	Namespace string
-	// Labels selectors of the running pod
-	// This is used to search for other Ingress controller pods
-	Labels map[string]string
+	metav1.TypeMeta
+	metav1.ObjectMeta
 }
 
 // GetIngressPod load the ingress-nginx pod
@@ -96,26 +102,24 @@ func GetIngressPod(kubeClient clientset.Interface) error {
 		return fmt.Errorf("unable to get POD information (missing POD_NAME or POD_NAMESPACE environment variable")
 	}
 
-	IngressNGINXPod, _ = kubeClient.CoreV1().Pods(podNs).Get(context.TODO(), podName, metav1.GetOptions{})
-	if IngressNGINXPod == nil {
-		return fmt.Errorf("unable to get POD information")
+	pod, err := kubeClient.CoreV1().Pods(podNs).Get(context.TODO(), podName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("unable to get POD information: %v", err)
 	}
+
+	labels := map[string]string{}
+	for _, key := range selectorLabelKeys {
+		labels[key] = pod.GetLabels()[key]
+	}
+
+	IngressPodDetails = &PodInfo{
+		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"},
+	}
+
+	pod.ObjectMeta.DeepCopyInto(&IngressPodDetails.ObjectMeta)
+	IngressPodDetails.SetLabels(labels)
 
 	return nil
-}
-
-// GetPodDetails returns runtime information about the pod:
-// name, namespace and IP of the node where it is running
-func GetPodDetails() (*PodInfo, error) {
-	if IngressNGINXPod == nil {
-		return nil, fmt.Errorf("no ingress-nginx pod details available")
-	}
-
-	return &PodInfo{
-		Name:      IngressNGINXPod.Name,
-		Namespace: IngressNGINXPod.Namespace,
-		Labels:    IngressNGINXPod.GetLabels(),
-	}, nil
 }
 
 // MetaNamespaceKey knows how to make keys for API objects which implement meta.Interface.
