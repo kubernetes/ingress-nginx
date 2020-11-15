@@ -2684,7 +2684,7 @@ applied to each location provided in the ingress rule.</p>
 <p>To configure settings globally for all Ingress rules, the <code>limit-rate-after</code> and <code>limit-rate</code> values may be set in the <a href="../configmap/#limit-rate">NGINX ConfigMap</a>.  The value set in an Ingress annotation will override the global setting.</p>
 <p>The client IP address will be set based on the use of <a href="../configmap/#use-proxy-protocol">PROXY protocol</a> or from the <code>X-Forwarded-For</code> header value when <a href="../configmap/#use-forwarded-headers">use-forwarded-headers</a> is enabled.</p>
 <h3 id="permanent-redirect">Permanent Redirect<a class="headerlink" href="#permanent-redirect" title="Permanent link"> ¶</a></h3>
-<p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code>nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
+<p>This annotation allows to return a permanent redirect (Return Code 301) instead of sending data to the upstream.  For example <code>nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
 <h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link"> ¶</a></h3>
 <p>This annotation allows you to modify the status code used for permanent redirects.  For example <code>nginx.ingress.kubernetes.io/permanent-redirect-code: '308'</code> would return your permanent-redirect with a 308.</p>
 <h3 id="temporal-redirect">Temporal Redirect<a class="headerlink" href="#temporal-redirect" title="Permanent link"> ¶</a></h3>
