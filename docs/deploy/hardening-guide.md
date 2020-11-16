@@ -16,7 +16,7 @@ or not possible.
 Be aware that this is only a guide and you are responsible for your own implementation. Some of the configurations may
 lead to have specific clients unable to reach your site or similar consequences.
 
-This guide refers to chapters in the CIS Benchmark. For full explanation you should refer to the benchmark document itself
+This guide refers to chapters behaviourin the CIS Benchmark. For full explanation you should refer to the benchmark document itself
 
 ## Configuration Guide
 
@@ -29,8 +29,8 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 1.1.2 Ensure NGINX is installed from source (Not Scored)| OK | done through helm charts / following documentation to deploy nginx ingress | |
 | ||| |
 | __1.2 Configure Software Updates__||| |
-| 1.2.1 Ensure package manager repositories are properly configured (Not Scored) | OK | done via helm, nginx version could be overwritten, however compability is not ensured then| |
-| 1.2.2 Ensure the latest software package is installed (Not Scored)| ACTION NEEDED | done via helm, nginx version could be overwritten, however compability is not ensured then| Plan for periodic updates |
+| 1.2.1 Ensure package manager repositories are properly configured (Not Scored) | OK | done via helm, nginx version could be overwritten, however compatibility is not ensured then| |
+| 1.2.2 Ensure the latest software package is installed (Not Scored)| ACTION NEEDED | done via helm, nginx version could be overwritten, however compatibility is not ensured then| Plan for periodic updates |
 | ||| |
 | __2 Basic Configuration__ ||| |
 | ||| |
