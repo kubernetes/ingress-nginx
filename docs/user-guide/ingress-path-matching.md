@@ -116,7 +116,7 @@ The following request URI's would match the corresponding location blocks:
 
 ## Warning
 
-The following example describes a case that may inflict unwanted path matching behaviour.
+The following example describes a case that may inflict unwanted path matching behavior.
 
 This case is expected and a result of NGINX's a first match policy for paths that use the regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location). For more information about how a path is chosen, please read the following article: ["Understanding Nginx Server and Location Block Selection Algorithms"](https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms).
 

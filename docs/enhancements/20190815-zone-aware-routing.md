@@ -63,7 +63,7 @@ The idea here is to have the controller part of ingress-nginx
 (2) detect the zone for every endpoint it knows about.
 After that, it will post that data as part of endpoints to Lua land.
 When picking an endpoint, the Lua balancer will try to pick zone-local endpoint first and
-if there is no zone-local endpoint then it will fall back to current behaviour.
+if there is no zone-local endpoint then it will fall back to current behavior.
 
 Initially, this feature should be optional since it is going to make it harder to reason about the load balancing and not everyone might want that.
 
