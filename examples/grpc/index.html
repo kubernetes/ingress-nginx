@@ -1344,14 +1344,14 @@ to help make it easier for your users to consume your API.</p>
 </blockquote>
 <h3 id="notes-on-using-responserequest-streams">Notes on using response/request streams<a class="headerlink" href="#notes-on-using-responserequest-streams" title="Permanent link"> ¶</a></h3>
 <ol>
-<li>If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the <code>grpc_read_timeout</code> to acommodate for this.</li>
+<li>If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the <code>grpc_read_timeout</code> to accommodate for this.</li>
 <li>If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the
 <code>grpc_send_timeout</code> and the <code>client_body_timeout</code>.</li>
 <li>If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: <code>grpc_read_timeout</code>, <code>grpc_send_timeout</code> and <code>client_body_timeout</code>.</li>
 </ol>
 <p>Values for the timeouts must be specified as e.g. <code>"1200s"</code>.</p>
 <blockquote>
-<p>On the most recent versions of nginx-ingress, changing these timeouts requires using the <code>nginx.ingress.kubernetes.io/server-snippet</code> annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout seperately.</p>
+<p>On the most recent versions of nginx-ingress, changing these timeouts requires using the <code>nginx.ingress.kubernetes.io/server-snippet</code> annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout separately.</p>
 </blockquote>
                 
               

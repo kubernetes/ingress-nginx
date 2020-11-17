@@ -1211,7 +1211,7 @@ According to https://datapath.io/resources/blog/what-are-aws-data-transfer-costs
 (2) detect the zone for every endpoint it knows about.
 After that, it will post that data as part of endpoints to Lua land.
 When picking an endpoint, the Lua balancer will try to pick zone-local endpoint first and
-if there is no zone-local endpoint then it will fall back to current behaviour.</p>
+if there is no zone-local endpoint then it will fall back to current behavior.</p>
 <p>Initially, this feature should be optional since it is going to make it harder to reason about the load balancing and not everyone might want that.</p>
 <p><strong>How does controller know what zone it runs in?</strong>
 We can have the pod spec pass the node name using downward API as an environment variable.
