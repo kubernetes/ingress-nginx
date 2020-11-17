@@ -16,7 +16,7 @@ or not possible.
 Be aware that this is only a guide and you are responsible for your own implementation. Some of the configurations may
 lead to have specific clients unable to reach your site or similar consequences.
 
-This guide refers to chapters behaviourin the CIS Benchmark. For full explanation you should refer to the benchmark document itself
+This guide refers to chapters in the CIS Benchmark. For full explanation you should refer to the benchmark document itself
 
 ## Configuration Guide
 
