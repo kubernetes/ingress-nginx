@@ -273,6 +273,7 @@ controller:
       cpu: 100m
       memory: 90Mi
 
+  # Mutually exclusive with keda autoscaling
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -290,6 +291,40 @@ controller:
   #     target:
   #       type: AverageValue
   #       averageValue: 10000m
+
+  # Mutually exclusive with hpa autoscaling
+  keda:
+    apiVersion: "keda.sh/v1alpha1"
+  # apiVersion changes with keda 1.x vs 2.x
+  # 2.x = keda.sh/v1alpha1
+  # 1.x = keda.k8s.io/v1alpha1
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 11
+    pollingInterval: 30
+    cooldownPeriod: 300
+    restoreToOriginalReplicaCount: false
+    triggers: []
+ #     - type: prometheus
+ #       metadata:
+ #         serverAddress: http://<prometheus-host>:9090
+ #         metricName: http_requests_total
+ #         threshold: '100'
+ #         query: sum(rate(http_requests_total{deployment="my-deployment"}[2m]))
+
+    behavior: {}
+ #     scaleDown:
+ #       stabilizationWindowSeconds: 300
+ #       policies:
+ #       - type: Pods
+ #         value: 1
+ #         periodSeconds: 180
+ #     scaleUp:
+ #       stabilizationWindowSeconds: 300
+ #       policies:
+ #       - type: Pods
+ #         value: 2
+ #         periodSeconds: 60
 
   ## Enable mimalloc as a drop-in replacement for malloc.
   ## ref: https://github.com/microsoft/mimalloc

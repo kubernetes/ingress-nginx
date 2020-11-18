@@ -1,0 +1,33 @@
+{{- if .Values.controller.keda.enabled }}
+# https://keda.sh/docs/
+
+apiVersion: {{ .Values.controller.keda.apiVersion }}
+kind: ScaledObject
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.controller.fullname" . }}
+
+spec:
+  scaleTargetRef:
+    deploymentName: {{ include "ingress-nginx.controller.fullname" . }}
+  pollingInterval: {{ .Values.controller.keda.pollingInterval }}
+  cooldownPeriod: {{ .Values.controller.keda.cooldownPeriod }}
+  minReplicaCount: {{ .Values.controller.keda.minReplicas }}
+  maxReplicaCount: {{ .Values.controller.keda.maxReplicas }}
+  triggers:
+{{- with .Values.controller.keda.triggers }}
+{{ toYaml . | indent 2 }}
+{{ end }}
+  advanced:
+    restoreToOriginalReplicaCount: {{ .Values.controller.keda.restoreToOriginalReplicaCount }}
+{{- if .Values.controller.keda.behavior }}
+    horizontalPodAutoscalerConfig:
+      behavior:
+{{ with .Values.controller.keda.behavior -}}
+{{ toYaml . | indent 8 }}
+{{ end }}
+
+{{- end }}
+{{- end }}
