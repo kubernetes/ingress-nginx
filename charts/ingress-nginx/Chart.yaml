@@ -16,4 +16,4 @@ engine: gotpl
 kubeVersion: ">=1.16.0-0"
 annotations:
   artifacthub.io/changes: |
-    - Update ingress-nginx image to v0.41.2
+    - Support Keda Autoscaling
