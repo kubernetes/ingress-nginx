@@ -9,7 +9,7 @@ Install [Go 1.14](https://golang.org/dl/) or later.
 !!! note
     The project uses [Go Modules](https://github.com/golang/go/wiki/Modules)
 
-Install [Docker](https://docs.docker.com/engine/install/)
+Install [Docker](https://docs.docker.com/engine/install/) (v19.03.0 or later with experimental feature on)
 
 !!! important
     The majority of make tasks run as docker containers
