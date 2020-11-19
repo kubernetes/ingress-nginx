@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Support Keda Autoscaling
+    apiVersion: v1
+    appVersion: 0.41.2
+    created: "2020-11-19T20:29:53.701721878Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: c332a5b8ededca9b585d592ab4b509bc18f25d0ad776771688056e91bc0e9510
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-3.11.0/ingress-nginx-3.11.0.tgz
+    version: 3.11.0
+  - annotations:
+      artifacthub.io/changes: |
         - Update ingress-nginx image to v0.41.2
     apiVersion: v1
     appVersion: 0.41.2
