@@ -1,5 +1,7 @@
 apiVersion: v1
 name: ingress-nginx
+# When the version is modified, make sure the artifacthub.io/changes list is updated
+# Also update CHANGELOG.md
 version: 3.11.0
 appVersion: 0.41.2
 home: https://github.com/kubernetes/ingress-nginx
@@ -15,5 +17,7 @@ maintainers:
 engine: gotpl
 kubeVersion: ">=1.16.0-0"
 annotations:
+  # List of changes for the release in artifacthub.io
+  # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
     - Support Keda Autoscaling
