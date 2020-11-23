@@ -2636,6 +2636,8 @@ applied to each location provided in the ingress rule.</p>
   <code>&lt;Method&gt;</code> to specify the HTTP method to use.</li>
 <li><code>nginx.ingress.kubernetes.io/auth-signin</code>:
   <code>&lt;SignIn_URL&gt;</code> to specify the location of the error page.</li>
+<li><code>nginx.ingress.kubernetes.io/auth-signin-redirect-param</code>:
+  <code>&lt;SignIn_URL&gt;</code> to specify the URL parameter in the error page which should contain the original URL for a failed signin request.</li>
 <li><code>nginx.ingress.kubernetes.io/auth-response-headers</code>:
   <code>&lt;Response_Header_1, ..., Response_Header_n&gt;</code> to specify headers to pass to backend once authentication request completes.</li>
 <li><code>nginx.ingress.kubernetes.io/auth-proxy-set-headers</code>:

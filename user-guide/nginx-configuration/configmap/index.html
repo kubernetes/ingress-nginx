@@ -1606,6 +1606,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#global-auth-signin-redirect-param" class="md-nav__link">
+    global-auth-signin-redirect-param
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#global-auth-response-headers" class="md-nav__link">
     global-auth-response-headers
   </a>
@@ -3316,6 +3323,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#global-auth-signin-redirect-param" class="md-nav__link">
+    global-auth-signin-redirect-param
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#global-auth-response-headers" class="md-nav__link">
     global-auth-response-headers
   </a>
@@ -4192,6 +4206,11 @@ Same for numbers, like "100".</p>
 <td align="left">""</td>
 </tr>
 <tr>
+<td align="left"><a href="#global-auth-signin-redirect-param">global-auth-signin-redirect-param</a></td>
+<td align="left">string</td>
+<td align="left">"rd"</td>
+</tr>
+<tr>
 <td align="left"><a href="#global-auth-response-headers">global-auth-response-headers</a></td>
 <td align="left">string</td>
 <td align="left">""</td>
@@ -4756,6 +4775,10 @@ Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-me
 <p>Sets the location of the error page for an existing service that provides authentication for all the locations.
 Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-signin</code>.
 <em><strong>default:</strong></em> ""</p>
+<h2 id="global-auth-signin-redirect-param">global-auth-signin-redirect-param<a class="headerlink" href="#global-auth-signin-redirect-param" title="Permanent link"> ¶</a></h2>
+<p>Sets the query parameter in the error page signin URL which contains the original URL of the request that failed authentication.
+Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-signin-redirect-param</code>.
+<em><strong>default:</strong></em> "rd"</p>
 <h2 id="global-auth-response-headers">global-auth-response-headers<a class="headerlink" href="#global-auth-response-headers" title="Permanent link"> ¶</a></h2>
 <p>Sets the headers to pass to backend once authentication request completes. Applied to all the locations.
 Similar to the Ingress rule annotation <code>nginx.ingress.kubernetes.io/auth-response-headers</code>.
