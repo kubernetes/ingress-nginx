@@ -1050,7 +1050,7 @@ stream {
 
             add_header Set-Cookie $auth_cookie;
 
-            return 302 {{ buildAuthSignURL $externalAuth.SigninURL }};
+            return 302 {{ buildAuthSignURL $externalAuth.SigninURL $externalAuth.SigninURLRedirectParam }};
         }
         {{ end }}
         {{ end }}

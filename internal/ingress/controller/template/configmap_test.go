@@ -229,6 +229,28 @@ func TestGlobalExternalAuthSigninParsing(t *testing.T) {
 	}
 }
 
+func TestGlobalExternalAuthSigninRedirectParamParsing(t *testing.T) {
+	testCases := map[string]struct {
+		param  string
+		signin string
+		expect string
+	}{
+		"no param":      {"", "http://bar.foo.com/auth-error-page", ""},
+		"valid param":   {"orig", "http://bar.foo.com/auth-error-page", "orig"},
+		"no signin url": {"orig", "", ""},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{
+			"global-auth-signin":                tc.signin,
+			"global-auth-signin-redirect-param": tc.param,
+		})
+		if cfg.GlobalExternalAuth.SigninURLRedirectParam != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.SigninURLRedirectParam)
+		}
+	}
+}
+
 func TestGlobalExternalAuthResponseHeadersParsing(t *testing.T) {
 	testCases := map[string]struct {
 		headers string
