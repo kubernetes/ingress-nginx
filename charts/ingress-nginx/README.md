@@ -14,18 +14,15 @@ This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kuber
 
 ```console
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo add stable https://charts.helm.sh/stable
-helm repo update
+helm update
 ```
 
 ## Install Chart
 
-```console
-# Helm 3
-$ helm install [RELEASE_NAME] ingress-nginx/ingress-nginx
+**Important:** only helm3 is supported
 
-# Helm 2
-$ helm install --name [RELEASE_NAME] ingress-nginx/ingress-nginx
+```console
+helm install [RELEASE_NAME] ingress-nginx/ingress-nginx
 ```
 
 The command deploys ingress-nginx on the Kubernetes cluster in the default configuration.
@@ -37,11 +34,7 @@ _See [helm install](https://helm.sh/docs/helm/helm_install/) for command documen
 ## Uninstall Chart
 
 ```console
-# Helm 3
-$ helm uninstall [RELEASE_NAME]
-
-# Helm 2
-# helm delete --purge [RELEASE_NAME]
+helm uninstall [RELEASE_NAME]
 ```
 
 This removes all the Kubernetes components associated with the chart and deletes the release.
@@ -51,8 +44,7 @@ _See [helm uninstall](https://helm.sh/docs/helm/helm_uninstall/) for command doc
 ## Upgrading Chart
 
 ```console
-# Helm 3 or 2
-$ helm upgrade [RELEASE_NAME] [CHART] --install
+helm upgrade [RELEASE_NAME] [CHART] --install
 ```
 
 _See [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) for command documentation._
@@ -80,11 +72,7 @@ Note that there are some different and upgraded configurations between the two c
 See [Customizing the Chart Before Installing](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing). To see all configurable options with detailed comments, visit the chart's [values.yaml](./values.yaml), or run these configuration commands:
 
 ```console
-# Helm 2
-$ helm inspect values ingress-nginx/ingress-nginx
-
-# Helm 3
-$ helm show values ingress-nginx/ingress-nginx
+helm show values ingress-nginx/ingress-nginx
 ```
 
 ### PodDisruptionBudget
