@@ -4,6 +4,10 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.11.1
+
+- [X] [#6505](https://github.com/kubernetes/ingress-nginx/pull/6505) Reorder HPA resource list to work with GitOps tooling
+
 ### 3.11.0
 
 - Support Keda Autoscaling
