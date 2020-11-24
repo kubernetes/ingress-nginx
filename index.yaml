@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Reorder HPA resource list to work with GitOps tooling
+    apiVersion: v1
+    appVersion: 0.41.2
+    created: "2020-11-24T14:32:11.095003146Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: fdbf20ba639c04bba3939e0598c3925f709dfe533eb277e3690cc8db6f9dea27
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-3.11.1/ingress-nginx-3.11.1.tgz
+    version: 3.11.1
+  - annotations:
+      artifacthub.io/changes: |
         - Support Keda Autoscaling
     apiVersion: v1
     appVersion: 0.41.2
