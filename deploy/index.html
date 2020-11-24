@@ -1571,15 +1571,16 @@ For this reason, there is an initial delay of up to two minutes until it is poss
 </code></pre></div>
 
 <h2 id="using-helm">Using Helm<a class="headerlink" href="#using-helm" title="Permanent link"> ¶</a></h2>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Only helm3 is supported</p>
+</div>
 <p>NGINX Ingress controller can be installed via <a href="https://helm.sh/">Helm</a> using the chart from the project repository.
 To install the chart with the release name <code>ingress-nginx</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="go">helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx</span>
-<span class="go">helm install my-release ingress-nginx/ingress-nginx</span>
-</code></pre></div>
+<span class="go">helm update</span>
 
-<p>If you are using <a href="https://v2.helm.sh/">Helm 2</a> then specify release name using <code>--name</code> flag</p>
-<div class="highlight"><pre><span></span><code><span class="go">helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/</span>
-<span class="go">helm install --name ingress-nginx ingress-nginx/ingress-nginx</span>
+<span class="go">helm install my-release ingress-nginx/ingress-nginx</span>
 </code></pre></div>
 
 <h2 id="detect-installed-version_1">Detect installed version:<a class="headerlink" href="#detect-installed-version_1" title="Permanent link"> ¶</a></h2>
