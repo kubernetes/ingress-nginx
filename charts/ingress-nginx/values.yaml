@@ -396,6 +396,14 @@ controller:
       enabled: false
       annotations: {}
 
+      labels: {}
+      # clusterIP: ""
+
+      ## List of IP addresses at which the controller services are available
+      ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+      ##
+      externalIPs: []
+
       ## Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
       loadBalancerSourceRanges: []
 
@@ -403,6 +411,40 @@ controller:
       ## providers supporting it
       ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
       # externalTrafficPolicy: ""
+
+      # Must be either "None" or "ClientIP" if set. Kubernetes will default to "None".
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
+      # sessionAffinity: ""
+
+      # specifies the health check node port (numeric port number) for the service. If healthCheckNodePort isn’t specified,
+      # the service controller allocates a port from your cluster’s NodePort range.
+      # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+      # healthCheckNodePort: 0
+
+      enableHttp: true
+      enableHttps: true
+
+      ports:
+        http: 80
+        https: 443
+
+      targetPorts:
+        http: http
+        https: https
+
+      type: LoadBalancer
+
+      # type: NodePort
+      # nodePorts:
+      #   http: 32080
+      #   https: 32443
+      #   tcp:
+      #     8080: 32808
+      nodePorts:
+        http: ""
+        https: ""
+        tcp: {}
+        udp: {}
 
   extraContainers: []
   ## Additional containers to be added to the controller pod.

@@ -9,12 +9,12 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
-  {{- if .Values.controller.service.labels }}
-    {{- toYaml .Values.controller.service.labels | nindent 4 }}
+  {{- if .Values.controller.service.internal.labels }}
+    {{- toYaml .Values.controller.service.internal.labels | nindent 4 }}
   {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}-internal
 spec:
-  type: "{{ .Values.controller.service.type }}"
+  type: "{{ .Values.controller.service.internal.type }}"
 {{- if .Values.controller.service.internal.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.controller.service.internal.loadBalancerSourceRanges | nindent 4 }}
 {{- end }}
@@ -22,23 +22,23 @@ spec:
   externalTrafficPolicy: {{ .Values.controller.service.internal.externalTrafficPolicy }}
 {{- end }}
   ports:
-  {{- $setNodePorts := (or (eq .Values.controller.service.type "NodePort") (eq .Values.controller.service.type "LoadBalancer")) }}
-  {{- if .Values.controller.service.enableHttp }}
+  {{- $setNodePorts := (or (eq .Values.controller.service.internal.type "NodePort") (eq .Values.controller.service.internal.type "LoadBalancer")) }}
+  {{- if .Values.controller.service.internal.enableHttp }}
     - name: http
-      port: {{ .Values.controller.service.ports.http }}
+      port: {{ .Values.controller.service.internal.ports.http }}
       protocol: TCP
-      targetPort: {{ .Values.controller.service.targetPorts.http }}
-    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.http))) }}
-      nodePort: {{ .Values.controller.service.nodePorts.http }}
+      targetPort: {{ .Values.controller.service.internal.targetPorts.http }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.internal.nodePorts.http))) }}
+      nodePort: {{ .Values.controller.service.internal.nodePorts.http }}
     {{- end }}
   {{- end }}
-  {{- if .Values.controller.service.enableHttps }}
+  {{- if .Values.controller.service.internal.enableHttps }}
     - name: https
-      port: {{ .Values.controller.service.ports.https }}
+      port: {{ .Values.controller.service.internal.ports.https }}
       protocol: TCP
-      targetPort: {{ .Values.controller.service.targetPorts.https }}
-    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}
-      nodePort: {{ .Values.controller.service.nodePorts.https }}
+      targetPort: {{ .Values.controller.service.internal.targetPorts.https }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.internal.nodePorts.https))) }}
+      nodePort: {{ .Values.controller.service.internal.nodePorts.https }}
     {{- end }}
   {{- end }}
   selector:
