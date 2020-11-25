@@ -112,7 +112,6 @@ server_version=nginx: 1.9.11 - lua: 10001
 
 HEADERS RECEIVED:
 accept=*/*
-authorization=Basic Zm9vOmJhcg==
 connection=close
 host=foo.bar.com
 user-agent=curl/7.43.0
