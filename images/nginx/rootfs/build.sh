@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.19.4
+export NGINX_VERSION=1.19.5
 export NDK_VERSION=0.3.1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -33,10 +33,9 @@ export DATADOG_CPP_VERSION=1.2.0
 export MODSECURITY_VERSION=22e53aba4e3ae8c7d59a3672d6727e49246afe96
 export MODSECURITY_LIB_VERSION=v3.0.4
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.0
-export LUA_NGX_VERSION=0.10.18rc4
-export LUA_STREAM_NGX_VERSION=0.0.9rc3
+export LUA_NGX_VERSION=0.10.19
+export LUA_STREAM_NGX_VERSION=0.0.9
 export LUA_UPSTREAM_VERSION=0.07
-export LUA_BRIDGE_TRACER_VERSION=0.1.1
 export LUA_CJSON_VERSION=2.1.0.8
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
@@ -44,9 +43,9 @@ export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 
 export LUAJIT_VERSION=2.1-20201027
 
-export LUA_RESTY_BALANCER=0.03
+export LUA_RESTY_BALANCER=af4508f7aa5560c7d810922c2515b557f9e5d51a
 export LUA_RESTY_CACHE=0.10
-export LUA_RESTY_CORE=0.1.20rc3
+export LUA_RESTY_CORE=0.1.21
 export LUA_RESTY_COOKIE_VERSION=766ad8c15e498850ac77f5e0265f1d3f30dc4027
 export LUA_RESTY_DNS=0.21
 export LUA_RESTY_HTTP=0.15
@@ -119,7 +118,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 61df546927905a0d624f9396bb7a8bc7ca7fd26522ce9714d56a78b73284000e \
+get_src 5c0a46afd6c452d4443f6ec0767f4d5c3e7c499e55a60cd6542b35a61eda799c \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 0e971105e210d272a497567fa2e2c256f4e39b845a5ba80d373e26ba1abfbd85 \
@@ -155,10 +154,10 @@ get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
 get_src 464f46744a6be778626d11452c4db3c2d09461080c6db42e358e21af19d542f6 \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src 0407cd1a71c60dc192dc2bfe87f89aea9351c69e815758b375770a958e8e1823 \
+get_src 242d60b97eb7459cd0c0d58083cf7f3195d46181829da45ab8b09a857bb0ed01 \
         "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
 
-get_src 3a92710da33a177dee5db1cc4c76a37661c064543bfb309e66400df7a0641058 \
+get_src 6fcf7054f412a19c23c1ac3c0663f42f40bccc907d98c5d1657ae5cab9973ee9 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
@@ -169,9 +168,6 @@ get_src f74a0821b079ea1fd63dd8659064356fc3f421ff4b35c17877140d2b2841cc3b \
 
 get_src 3e6fe45f467d653870985cc52a1c2cf81a8a2c7a7bcf7ffcfedfd305a47a1eca \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
-
-get_src 6faab57557bd9cc9fc38208f6bc304c1c13cf048640779f98812cf1f9567e202 \
-        "https://github.com/opentracing/lua-bridge-tracer/archive/v$LUA_BRIDGE_TRACER_VERSION.tar.gz"
 
 get_src 1af5a5632dc8b00ae103d51b7bf225de3a7f0df82f5c6a401996c080106e600e \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
@@ -188,10 +184,10 @@ get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
 get_src bfd8c4b6c90aa9dcbe047ac798593a41a3f21edcb71904d50d8ac0e8c77d1132 \
         "https://github.com/openresty/lua-resty-string/archive/v$LUA_RESTY_STRING_VERSION.tar.gz"
 
-get_src 82209d5a5d9545c6dde3db7857f84345db22162fdea9743d5e2b2094d8d407f8 \
-        "https://github.com/openresty/lua-resty-balancer/archive/v$LUA_RESTY_BALANCER.tar.gz"
+get_src a21ec0d78a5dc5856df2374890a8a58e51de866b3d5978aceb0109a094367630 \
+        "https://github.com/openresty/lua-resty-balancer/archive/$LUA_RESTY_BALANCER.tar.gz"
 
-get_src 467e6e0cade66d74a9f8e789d1045bc033a646cee904ba758be8191b61fa6ecc \
+get_src a377fbce78ba10f3ed3a8b5173ea318f8cf8da9d2ab127bb1e1f263078bf7da0 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 
 get_src bd6bee4ccc6cf3307ab6ca0eea693a921fab9b067ba40ae12a652636da588ff7 \
@@ -214,7 +210,7 @@ get_src 987d5754a366d3ccbf745d2765f82595dcff5b94ba6c755eeb6d310447996f32 \
 
 
 # improve compilation times
-CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
+CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
 
 export MAKEFLAGS=-j${CORES}
 export CTEST_BUILD_FLAGS=${MAKEFLAGS}
@@ -231,6 +227,7 @@ make CCDEBUG=-g
 make install
 
 ln -s /usr/local/bin/luajit /usr/local/bin/lua
+ln -s "$LUAJIT_INC" /usr/local/include/lua
 
 cd "$BUILD_PATH"
 
@@ -367,6 +364,10 @@ git submodule init
 git submodule update
 
 sh build.sh
+
+# https://github.com/SpiderLabs/ModSecurity/issues/1909#issuecomment-465926762
+sed -i '115i LUA_CFLAGS="${LUA_CFLAGS} -DWITH_LUA_JIT_2_1"' build/lua.m4
+sed -i '117i AC_SUBST(LUA_CFLAGS)' build/lua.m4
 
 ./configure \
   --disable-doxygen-doc \
