@@ -396,6 +396,8 @@ controller:
       enabled: false
       annotations: {}
 
+      # loadBalancerIP: ""
+
       ## Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
       loadBalancerSourceRanges: []
 
