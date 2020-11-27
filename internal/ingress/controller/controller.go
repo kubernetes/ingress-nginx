@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -49,6 +50,11 @@ const (
 	defUpstreamName = "upstream-default-backend"
 	defServerName   = "_"
 	rootLocation    = "/"
+)
+
+const (
+	// ProtocolMQTT is the MQTT protocol.
+	ProtocolMQTT apiv1.Protocol = "MQTT"
 )
 
 // Configuration contains all the settings required by an Ingress controller
@@ -302,7 +308,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 	}
 
 	reserverdPorts := sets.NewInt(rp...)
-	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
+	// svcRef format: <(str)protocol>://<(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]?option1=var1&option2=var2
 	for port, svcRef := range configmap.Data {
 		externalPort, err := strconv.Atoi(port)
 		if err != nil {
@@ -312,6 +318,35 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		if reserverdPorts.Has(externalPort) {
 			klog.Warningf("Port %d cannot be used for %v stream services. It is reserved for the Ingress controller.", externalPort, proto)
 			continue
+		}
+		upperLayerProtocol := proto
+		protoSvc := strings.Split(svcRef, "://")
+		if len(protoSvc) == 2 {
+			upperLayerProtocol = apiv1.Protocol(strings.ToUpper(protoSvc[0]))
+			svcRef = protoSvc[1]
+		}
+
+		var upstreamHashByConfig ingress.UpstreamHashByConfig
+		svcOptions := strings.Split(svcRef, "?")
+		if len(svcOptions) == 2 {
+			svcRef = svcOptions[0]
+			options, err := url.ParseQuery(svcOptions[1])
+			if err != nil {
+				klog.Warningf("Parse stream service %q backend options err, options is %q, err is %v", svcRef, svcOptions[1], err)
+				continue
+			}
+			upstreamHashBy := options.Get("upstream-hash-by")
+			upstreamHashBySubset := false
+			upstreamHashBySubsetSize := 0
+			if options.Get("upstream-hash-by-subset") == "true" {
+				upstreamHashBySubset = true
+				upstreamHashBySubsetSize, err = strconv.Atoi(options.Get("upstream-hash-by-subset-size"))
+				if err != nil {
+					klog.Warningf("Parse stream service %q upstream-hash-by-subset-size err, err is %v", svcRef, err)
+					continue
+				}
+			}
+			upstreamHashByConfig = ingress.UpstreamHashByConfig{UpstreamHashBy: upstreamHashBy, UpstreamHashBySubset: upstreamHashBySubset, UpstreamHashBySubsetSize: upstreamHashBySubsetSize}
 		}
 		nsSvcPort := strings.Split(svcRef, ":")
 		if len(nsSvcPort) < 2 {
@@ -374,11 +409,13 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		svcs = append(svcs, ingress.L4Service{
 			Port: externalPort,
 			Backend: ingress.L4Backend{
-				Name:          svcName,
-				Namespace:     svcNs,
-				Port:          intstr.FromString(svcPort),
-				Protocol:      proto,
-				ProxyProtocol: svcProxyProtocol,
+				Name:               svcName,
+				Namespace:          svcNs,
+				Port:               intstr.FromString(svcPort),
+				Protocol:           proto,
+				UpperLayerProtocol: upperLayerProtocol,
+				UpstreamHashBy:     upstreamHashByConfig,
+				ProxyProtocol:      svcProxyProtocol,
 			},
 			Endpoints: endps,
 			Service:   svc,

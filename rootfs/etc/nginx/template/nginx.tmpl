@@ -701,6 +701,13 @@ stream {
         else
           tcp_udp_balancer = res
         end
+
+        ok, res = pcall(require, "protocol_parser")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          protocol_parser = res
+        end
     }
 
     init_worker_by_lua_block {
@@ -708,6 +715,13 @@ stream {
     }
 
     lua_add_variable $proxy_upstream_name;
+
+    # specific protocol variable
+    lua_add_variable $mqtt_protocol_name;
+    lua_add_variable $mqtt_protocol_version;
+    lua_add_variable $mqtt_client_id;
+    lua_add_variable $mqtt_user_name;
+    lua_add_variable $mqtt_password;
 
     log_format log_stream '{{ $cfg.LogFormatStream }}';
 
@@ -746,8 +760,16 @@ stream {
     # TCP services
     {{ range $tcpServer := .TCPBackends }}
     server {
+
+        {{ if ne $tcpServer.Backend.UpperLayerProtocol "TCP" }}
+        preread_buffer_size 4k;
+        {{ end }}
+
         preread_by_lua_block {
             ngx.var.proxy_upstream_name="tcp-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }}";
+            {{ if ne $tcpServer.Backend.UpperLayerProtocol "TCP" }}
+            protocol_parser.parse("{{ $tcpServer.Backend.UpperLayerProtocol }}")
+            {{ end }}
         }
 
         {{ range $address := $all.Cfg.BindAddressIpv4 }}

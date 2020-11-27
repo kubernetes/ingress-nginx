@@ -365,10 +365,12 @@ type L4Service struct {
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
 type L4Backend struct {
-	Port      intstr.IntOrString `json:"port"`
-	Name      string             `json:"name"`
-	Namespace string             `json:"namespace"`
-	Protocol  apiv1.Protocol     `json:"protocol"`
+	Port               intstr.IntOrString   `json:"port"`
+	Name               string               `json:"name"`
+	Namespace          string               `json:"namespace"`
+	Protocol           apiv1.Protocol       `json:"protocol"`
+	UpperLayerProtocol apiv1.Protocol       `json:"upperLayerProtocol"`
+	UpstreamHashBy     UpstreamHashByConfig `json:"upstreamHashByConfig,omitempty"`
 	// +optional
 	ProxyProtocol ProxyProtocol `json:"proxyProtocol"`
 }

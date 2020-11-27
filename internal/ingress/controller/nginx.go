@@ -871,10 +871,11 @@ func updateStreamConfiguration(TCPEndpoints []ingress.L4Service, UDPEndpoints []
 
 		key := fmt.Sprintf("tcp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
 		streams = append(streams, ingress.Backend{
-			Name:      key,
-			Endpoints: ep.Endpoints,
-			Port:      intstr.FromInt(ep.Port),
-			Service:   service,
+			Name:           key,
+			Endpoints:      ep.Endpoints,
+			Port:           intstr.FromInt(ep.Port),
+			Service:        service,
+			UpstreamHashBy: ep.Backend.UpstreamHashBy,
 		})
 	}
 	for _, ep := range UDPEndpoints {

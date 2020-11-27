@@ -4,6 +4,8 @@ local util = require("util")
 local dns_lookup = require("util.dns").lookup
 local configuration = require("tcp_udp_configuration")
 local round_robin = require("balancer.round_robin")
+local chash = require("balancer.chash")
+local chashsubset = require("balancer.chashsubset")
 
 local ngx = ngx
 local table = table
@@ -22,7 +24,9 @@ local BACKENDS_FORCE_SYNC_INTERVAL = 30
 
 local DEFAULT_LB_ALG = "round_robin"
 local IMPLEMENTATIONS = {
-  round_robin = round_robin
+  round_robin = round_robin,
+  chash = chash,
+  chashsubset = chashsubset,
 }
 
 local _M = {}
@@ -32,6 +36,15 @@ local backends_last_synced_at = 0
 
 local function get_implementation(backend)
   local name = backend["load-balance"] or DEFAULT_LB_ALG
+
+  if backend["upstreamHashByConfig"] and
+          backend["upstreamHashByConfig"]["upstream-hash-by"] then
+    if backend["upstreamHashByConfig"]["upstream-hash-by-subset"] then
+      name = "chashsubset"
+    else
+      name = "chash"
+    end
+  end
 
   local implementation = IMPLEMENTATIONS[name]
   if not implementation then
@@ -79,7 +92,7 @@ local function sync_backend(backend)
     return
   end
 
-  ngx.log(ngx.INFO, string.format("backend ", backend.name))
+  ngx.log(ngx.INFO, string.format("backend %s", backend.name))
   local implementation = get_implementation(backend)
   local balancer = balancers[backend.name]
 
