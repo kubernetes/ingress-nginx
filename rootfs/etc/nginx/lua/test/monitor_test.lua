@@ -54,7 +54,7 @@ describe("Monitor", function()
   end)
 
   describe("flush", function()
-    it("short circuits when premmature is true (when worker is shutting down)", function()
+    it("short circuits when premature is true (when worker is shutting down)", function()
       local tcp_mock = mock_ngx_socket_tcp()
       mock_ngx({ var = {} })
       local monitor = require("monitor")

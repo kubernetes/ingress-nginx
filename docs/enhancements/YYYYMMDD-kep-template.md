@@ -18,7 +18,7 @@ see-also:
 replaces:
   - "/docs/enhancements/20181231-replaced-kep.md"
 superseded-by:
-  - "/docs/enhancements/20190104-superceding-kep.md"
+  - "/docs/enhancements/20190104-superseding-kep.md"
 ---
 
 # Title
@@ -81,7 +81,7 @@ Ensure the TOC is wrapped with <code>&lt;!-- toc --&rt;&lt;!-- /toc --&rt;</code
 ## Summary
 
 The `Summary` section is incredibly important for producing high quality user-focused documentation such as release notes or a development roadmap.
-It should be possible to collect this information before implementation begins in order to avoid requiring implementors to split their attention between writing release notes and implementing the feature itself.
+It should be possible to collect this information before implementation begins in order to avoid requiring implementers to split their attention between writing release notes and implementing the feature itself.
 
 A good summary is probably at least a paragraph in length.
 
@@ -122,7 +122,7 @@ The goal here is to make this feel real for users without getting bogged down.
 What are the caveats to the implementation?
 What are some important details that didn't come across above.
 Go in to as much detail as necessary here.
-This might be a good place to talk about core concepts and how they releate.
+This might be a good place to talk about core concepts and how they relate.
 
 ### Risks and Mitigations
 

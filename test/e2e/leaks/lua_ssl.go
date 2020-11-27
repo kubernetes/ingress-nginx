@@ -69,7 +69,7 @@ var _ = framework.IngressNginxDescribe("[Memory Leak] Dynamic Certificates", fun
 	})
 })
 
-func privisionIngress(hostname string, f *framework.Framework) {
+func provisionIngress(hostname string, f *framework.Framework) {
 	ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(hostname, "/", hostname, []string{hostname}, f.Namespace, framework.EchoService, 80, nil))
 	_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 		ing.Spec.TLS[0].Hosts,
@@ -114,7 +114,7 @@ func run(host string, f *framework.Framework) pool.WorkFunc {
 		}
 
 		ginkgo.By(fmt.Sprintf("\tcreating ingress for host %v", host))
-		privisionIngress(host, f)
+		provisionIngress(host, f)
 
 		framework.Sleep(100 * time.Millisecond)
 

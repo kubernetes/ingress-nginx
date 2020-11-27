@@ -199,7 +199,7 @@ local function route_to_alternative_balancer(balancer)
 
   local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
   if not traffic_shaping_policy then
-    ngx.log(ngx.ERR, "traffic shaping policy is not set for balanacer ",
+    ngx.log(ngx.ERR, "traffic shaping policy is not set for balancer ",
             "of backend: ", tostring(backend_name))
     return false
   end

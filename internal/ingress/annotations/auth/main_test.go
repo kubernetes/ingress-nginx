@@ -147,7 +147,7 @@ func TestIngressAuth(t *testing.T) {
 
 	i, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err != nil {
-		t.Errorf("Uxpected error with ingress: %v", err)
+		t.Errorf("Unexpected error with ingress: %v", err)
 	}
 	auth, ok := i.(*Config)
 	if !ok {
