@@ -97,7 +97,7 @@ func TestAnnotations(t *testing.T) {
 	fakeSecret := &mockSecret{}
 	i, err := NewParser(fakeSecret).Parse(ing)
 	if err != nil {
-		t.Errorf("Uxpected error with ingress: %v", err)
+		t.Errorf("Unexpected error with ingress: %v", err)
 	}
 
 	u, ok := i.(*Config)
@@ -163,7 +163,7 @@ func TestInvalidAnnotations(t *testing.T) {
 
 	i, err := NewParser(fakeSecret).Parse(ing)
 	if err != nil {
-		t.Errorf("Uxpected error with ingress: %v", err)
+		t.Errorf("Unexpected error with ingress: %v", err)
 	}
 	u, ok := i.(*Config)
 	if !ok {

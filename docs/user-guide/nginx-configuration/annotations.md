@@ -157,7 +157,7 @@ If the Application Root is exposed in a different path and needs to be redirecte
 The annotation `nginx.ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is `cookie`.
 
-The annotation `nginx.ingress.kubernetes.io/affinity-mode` defines the stickyness of a session. Setting this to `balanced` (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to `persistent` will not rebalance sessions to new servers, therefore providing maximum stickyness.
+The annotation `nginx.ingress.kubernetes.io/affinity-mode` defines the stickiness of a session. Setting this to `balanced` (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to `persistent` will not rebalance sessions to new servers, therefore providing maximum stickiness.
 
 !!! attention
     If more than one Ingress is defined for a host and at least one Ingress uses `nginx.ingress.kubernetes.io/affinity: cookie`, then only paths on the Ingress using `nginx.ingress.kubernetes.io/affinity` will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server.
@@ -248,7 +248,7 @@ The annotations are:
   * `off`: Don't request client certificates and don't do client certificate verification. (default)
   * `on`: Request a client certificate that must be signed by a certificate that is included in the secret key `ca.crt` of the secret specified by `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`. Failed certificate verification will result in a status code 400 (Bad Request).
   * `optional`: Do optional client certificate validation against the CAs from `auth-tls-secret`. The request fails with status code 400 (Bad Request) when a certificate is provided that is not signed by the CA. When no or an otherwise invalid certificate is provided, the request does not fail, but instead the verification result is sent to the upstream service.
-  * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the usptream service.
+  * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the upstream service.
 * `nginx.ingress.kubernetes.io/auth-tls-error-page`:
   The URL/Page that user should be redirected in case of a Certificate Authentication Error
 * `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`:

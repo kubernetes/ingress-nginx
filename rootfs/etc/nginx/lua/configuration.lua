@@ -83,7 +83,7 @@ local function handle_servers()
   for server, uid in pairs(configuration.servers) do
     if uid == EMPTY_UID then
       -- notice that we do not delete certificate corresponding to this server
-      -- this is becase a certificate can be used by multiple servers/hostnames
+      -- this is because a certificate can be used by multiple servers/hostnames
       certificate_servers:delete(server)
     else
       local success, set_err, forcible = certificate_servers:set(server, uid)

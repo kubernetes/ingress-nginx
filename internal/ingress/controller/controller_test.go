@@ -1404,7 +1404,7 @@ func TestGetBackendServers(t *testing.T) {
 				}
 
 				if upstreams[0].Name != "example-http-svc-1-80" {
-					t.Errorf("example-http-svc-1-80 should be frist upstream, got %s", upstreams[0].Name)
+					t.Errorf("example-http-svc-1-80 should be first upstream, got %s", upstreams[0].Name)
 					return
 				}
 				if upstreams[0].NoServer {

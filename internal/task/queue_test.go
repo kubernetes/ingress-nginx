@@ -66,7 +66,7 @@ func TestEnqueueSuccess(t *testing.T) {
 	stopCh := make(chan struct{})
 	// run queue
 	go q.Run(5*time.Second, stopCh)
-	// mock object whichi will be enqueue
+	// mock object which will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
 		v: "testValue",
@@ -89,7 +89,7 @@ func TestEnqueueFailed(t *testing.T) {
 	stopCh := make(chan struct{})
 	// run queue
 	go q.Run(5*time.Second, stopCh)
-	// mock object whichi will be enqueue
+	// mock object which will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
 		v: "testValue",
@@ -115,7 +115,7 @@ func TestEnqueueKeyError(t *testing.T) {
 	stopCh := make(chan struct{})
 	// run queue
 	go q.Run(5*time.Second, stopCh)
-	// mock object whichi will be enqueue
+	// mock object which will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
 		v: "testValue",
@@ -137,7 +137,7 @@ func TestSkipEnqueue(t *testing.T) {
 	atomic.StoreUint32(&sr, 0)
 	q := NewCustomTaskQueue(mockSynFn, mockKeyFn)
 	stopCh := make(chan struct{})
-	// mock object whichi will be enqueue
+	// mock object which will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
 		v: "testValue",

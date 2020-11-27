@@ -134,28 +134,28 @@ func TestRateLimiting(t *testing.T) {
 		t.Errorf("expected a RateLimit type")
 	}
 	if rateLimit.Connections.Limit != 5 {
-		t.Errorf("expected 5 in limit by ip but %v was returend", rateLimit.Connections)
+		t.Errorf("expected 5 in limit by ip but %v was returned", rateLimit.Connections)
 	}
 	if rateLimit.Connections.Burst != 5*5 {
-		t.Errorf("expected %d in burst limit by ip but %v was returend", 5*3, rateLimit.Connections)
+		t.Errorf("expected %d in burst limit by ip but %v was returned", 5*3, rateLimit.Connections)
 	}
 	if rateLimit.RPS.Limit != 100 {
-		t.Errorf("expected 100 in limit by rps but %v was returend", rateLimit.RPS)
+		t.Errorf("expected 100 in limit by rps but %v was returned", rateLimit.RPS)
 	}
 	if rateLimit.RPS.Burst != 100*5 {
-		t.Errorf("expected %d in burst limit by rps but %v was returend", 100*3, rateLimit.RPS)
+		t.Errorf("expected %d in burst limit by rps but %v was returned", 100*3, rateLimit.RPS)
 	}
 	if rateLimit.RPM.Limit != 10 {
-		t.Errorf("expected 10 in limit by rpm but %v was returend", rateLimit.RPM)
+		t.Errorf("expected 10 in limit by rpm but %v was returned", rateLimit.RPM)
 	}
 	if rateLimit.RPM.Burst != 10*5 {
-		t.Errorf("expected %d in burst limit by rpm but %v was returend", 10*3, rateLimit.RPM)
+		t.Errorf("expected %d in burst limit by rpm but %v was returned", 10*3, rateLimit.RPM)
 	}
 	if rateLimit.LimitRateAfter != 100 {
-		t.Errorf("expected 100 in limit by limitrateafter but %v was returend", rateLimit.LimitRateAfter)
+		t.Errorf("expected 100 in limit by limitrateafter but %v was returned", rateLimit.LimitRateAfter)
 	}
 	if rateLimit.LimitRate != 10 {
-		t.Errorf("expected 10 in limit by limitrate but %v was returend", rateLimit.LimitRate)
+		t.Errorf("expected 10 in limit by limitrate but %v was returned", rateLimit.LimitRate)
 	}
 
 	data = map[string]string{}
@@ -177,27 +177,27 @@ func TestRateLimiting(t *testing.T) {
 		t.Errorf("expected a RateLimit type")
 	}
 	if rateLimit.Connections.Limit != 5 {
-		t.Errorf("expected 5 in limit by ip but %v was returend", rateLimit.Connections)
+		t.Errorf("expected 5 in limit by ip but %v was returned", rateLimit.Connections)
 	}
 	if rateLimit.Connections.Burst != 5*3 {
-		t.Errorf("expected %d in burst limit by ip but %v was returend", 5*3, rateLimit.Connections)
+		t.Errorf("expected %d in burst limit by ip but %v was returned", 5*3, rateLimit.Connections)
 	}
 	if rateLimit.RPS.Limit != 100 {
-		t.Errorf("expected 100 in limit by rps but %v was returend", rateLimit.RPS)
+		t.Errorf("expected 100 in limit by rps but %v was returned", rateLimit.RPS)
 	}
 	if rateLimit.RPS.Burst != 100*3 {
-		t.Errorf("expected %d in burst limit by rps but %v was returend", 100*3, rateLimit.RPS)
+		t.Errorf("expected %d in burst limit by rps but %v was returned", 100*3, rateLimit.RPS)
 	}
 	if rateLimit.RPM.Limit != 10 {
-		t.Errorf("expected 10 in limit by rpm but %v was returend", rateLimit.RPM)
+		t.Errorf("expected 10 in limit by rpm but %v was returned", rateLimit.RPM)
 	}
 	if rateLimit.RPM.Burst != 10*3 {
-		t.Errorf("expected %d in burst limit by rpm but %v was returend", 10*3, rateLimit.RPM)
+		t.Errorf("expected %d in burst limit by rpm but %v was returned", 10*3, rateLimit.RPM)
 	}
 	if rateLimit.LimitRateAfter != 100 {
-		t.Errorf("expected 100 in limit by limitrateafter but %v was returend", rateLimit.LimitRateAfter)
+		t.Errorf("expected 100 in limit by limitrateafter but %v was returned", rateLimit.LimitRateAfter)
 	}
 	if rateLimit.LimitRate != 10 {
-		t.Errorf("expected 10 in limit by limitrate but %v was returend", rateLimit.LimitRate)
+		t.Errorf("expected 10 in limit by limitrate but %v was returned", rateLimit.LimitRate)
 	}
 }
