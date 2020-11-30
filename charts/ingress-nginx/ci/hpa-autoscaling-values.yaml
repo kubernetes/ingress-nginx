@@ -1,0 +1,4 @@
+defaultBackend:
+  enabled: true
+  autoscaling:
+    enabled: true
