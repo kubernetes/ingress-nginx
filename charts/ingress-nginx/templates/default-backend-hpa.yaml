@@ -5,12 +5,12 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend
-  name: {{ template "nginx-ingress.defaultBackend.fullname" . }}
+  name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
 spec:
   scaleTargetRef:
-    apiVersion: {{ template "deployment.apiVersion" . }}
+    apiVersion: apps/v1
     kind: Deployment
-    name: {{ template "nginx-ingress.defaultBackend.fullname" . }}
+    name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
   minReplicas: {{ .Values.defaultBackend.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.defaultBackend.autoscaling.maxReplicas }}
   metrics:
