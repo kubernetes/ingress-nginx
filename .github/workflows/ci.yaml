@@ -36,7 +36,7 @@ jobs:
               - 'test/e2e/**/*'
             charts:
               - 'charts/ingress-nginx/Chart.yaml'
-              - 'charts/ingress-nginx/*'
+              - 'charts/ingress-nginx/**/*'
 
   build:
     name: Build
