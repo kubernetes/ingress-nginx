@@ -122,8 +122,8 @@ _Changes:_
 
 _Breaking Changes:_
 
-Kubernetes v1.16 or higher is required.
-Only ValidatingWebhookConfiguration AdmissionReviewVersions v1 is supported.
+- Kubernetes v1.14 or higher is required.
+- Only ValidatingWebhookConfiguration AdmissionReviewVersions v1 is supported.
 
 Following the [Ingress extensions/v1beta1](https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16) deprecation, please use `networking.k8s.io/v1beta1` or `networking.k8s.io/v1` (Kubernetes v1.19 or higher) for new Ingress definitions
 
