@@ -4458,6 +4458,7 @@ The default of 0 means "max open files (system's limit) / <a href="#worker-proce
 <p>The default cipher list is:
  <code>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384</code>.</p>
 <p>The ordering of a ciphersuite is very important because it decides which algorithms are going to be selected in priority. The recommendation above prioritizes algorithms that provide perfect <a href="https://wiki.mozilla.org/Security/Server_Side_TLS#Forward_Secrecy">forward secrecy</a>.</p>
+<p>DHE-based cyphers will not be available until DH parameter is configured <a href="https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/ssl-dh-param">Custom DH parameters for perfect forward secrecy</a></p>
 <p>Please check the <a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla SSL Configuration Generator</a>.</p>
 <p><strong>Note:</strong> ssl_prefer_server_ciphers directive will be enabled by default for http context.</p>
 <h2 id="ssl-ecdh-curve">ssl-ecdh-curve<a class="headerlink" href="#ssl-ecdh-curve" title="Permanent link"> ¶</a></h2>
