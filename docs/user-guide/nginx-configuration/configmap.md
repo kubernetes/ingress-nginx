@@ -112,6 +112,9 @@ The following table shows a configuration option's name, type, and the default v
 |[upstream-keepalive-requests](#upstream-keepalive-requests)|int|10000|
 |[limit-conn-zone-variable](#limit-conn-zone-variable)|string|"$binary_remote_addr"|
 |[proxy-stream-timeout](#proxy-stream-timeout)|string|"600s"|
+|[proxy-stream-next-upstream](#proxy-stream-next-upstream)|bool|"true"|
+|[proxy-stream-next-upstream-timeout](#proxy-stream-next-upstream-timeout)|string|"600s"|
+|[proxy-stream-next-upstream-tries](#proxy-stream-next-upstream-tries)|int|3|
 |[proxy-stream-responses](#proxy-stream-responses)|int|1|
 |[bind-address](#bind-address)|[]string|""|
 |[use-forwarded-headers](#use-forwarded-headers)|bool|"false"|
@@ -732,6 +735,27 @@ Sets the timeout between two successive read or write operations on client or pr
 
 _References:_
 [http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout)
+
+## proxy-stream-next-upstream
+
+When a connection to the proxied server cannot be established, determines whether a client connection will be passed to the next server.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream)
+
+## proxy-stream-next-upstream-timeout
+
+Limits the time allowed to pass a connection to the next server. The 0 value turns off this limitation.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout)
+
+## proxy-stream-next-upstream-tries
+
+Limits the number of possible tries a request should be passed to the next server. The 0 value turns off this limitation.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_tries](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout)
 
 ## proxy-stream-responses
 
