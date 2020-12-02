@@ -1151,6 +1151,27 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-stream-next-upstream" class="md-nav__link">
+    proxy-stream-next-upstream
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-stream-next-upstream-timeout" class="md-nav__link">
+    proxy-stream-next-upstream-timeout
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-stream-next-upstream-tries" class="md-nav__link">
+    proxy-stream-next-upstream-tries
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-stream-responses" class="md-nav__link">
     proxy-stream-responses
   </a>
@@ -2868,6 +2889,27 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-stream-next-upstream" class="md-nav__link">
+    proxy-stream-next-upstream
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-stream-next-upstream-timeout" class="md-nav__link">
+    proxy-stream-next-upstream-timeout
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-stream-next-upstream-tries" class="md-nav__link">
+    proxy-stream-next-upstream-tries
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-stream-responses" class="md-nav__link">
     proxy-stream-responses
   </a>
@@ -3881,6 +3923,21 @@ Same for numbers, like "100".</p>
 <td align="left">"600s"</td>
 </tr>
 <tr>
+<td align="left"><a href="#proxy-stream-next-upstream">proxy-stream-next-upstream</a></td>
+<td align="left">bool</td>
+<td align="left">"true"</td>
+</tr>
+<tr>
+<td align="left"><a href="#proxy-stream-next-upstream-timeout">proxy-stream-next-upstream-timeout</a></td>
+<td align="left">string</td>
+<td align="left">"600s"</td>
+</tr>
+<tr>
+<td align="left"><a href="#proxy-stream-next-upstream-tries">proxy-stream-next-upstream-tries</a></td>
+<td align="left">int</td>
+<td align="left">3</td>
+</tr>
+<tr>
 <td align="left"><a href="#proxy-stream-responses">proxy-stream-responses</a></td>
 <td align="left">int</td>
 <td align="left">1</td>
@@ -4600,6 +4657,18 @@ requests is made, the connection is closed.
 <p>Sets the timeout between two successive read or write operations on client or proxied server connections. If no data is transmitted within this time, the connection is closed.</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout">http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout</a></p>
+<h2 id="proxy-stream-next-upstream">proxy-stream-next-upstream<a class="headerlink" href="#proxy-stream-next-upstream" title="Permanent link"> ¶</a></h2>
+<p>When a connection to the proxied server cannot be established, determines whether a client connection will be passed to the next server.</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream">http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream</a></p>
+<h2 id="proxy-stream-next-upstream-timeout">proxy-stream-next-upstream-timeout<a class="headerlink" href="#proxy-stream-next-upstream-timeout" title="Permanent link"> ¶</a></h2>
+<p>Limits the time allowed to pass a connection to the next server. The 0 value turns off this limitation.</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout">http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout</a></p>
+<h2 id="proxy-stream-next-upstream-tries">proxy-stream-next-upstream-tries<a class="headerlink" href="#proxy-stream-next-upstream-tries" title="Permanent link"> ¶</a></h2>
+<p>Limits the number of possible tries a request should be passed to the next server. The 0 value turns off this limitation.</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout">http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_tries</a></p>
 <h2 id="proxy-stream-responses">proxy-stream-responses<a class="headerlink" href="#proxy-stream-responses" title="Permanent link"> ¶</a></h2>
 <p>Sets the number of datagrams expected from the proxied server in response to the client request if the UDP protocol is used.</p>
 <p><em>References:</em>
