@@ -763,6 +763,10 @@ stream {
         {{ end }}
         {{ end }}
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
+        proxy_next_upstream     {{ if $cfg.ProxyStreamNextUpstream }}on{{ else }}off{{ end }};
+        proxy_next_upstream_timeout {{ $cfg.ProxyStreamNextUpstreamTimeout }};
+        proxy_next_upstream_tries   {{ $cfg.ProxyStreamNextUpstreamTries }};
+
         proxy_pass              upstream_balancer;
         {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
         proxy_protocol          on;
@@ -791,6 +795,9 @@ stream {
         {{ end }}
         proxy_responses         {{ $cfg.ProxyStreamResponses }};
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
+        proxy_next_upstream     {{ if $cfg.ProxyStreamNextUpstream }}on{{ else }}off{{ end }};
+        proxy_next_upstream_timeout {{ $cfg.ProxyStreamNextUpstreamTimeout }};
+        proxy_next_upstream_tries   {{ $cfg.ProxyStreamNextUpstreamTries }};
         proxy_pass              upstream_balancer;
     }
     {{ end }}

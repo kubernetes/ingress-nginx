@@ -469,6 +469,21 @@ type Configuration struct {
 	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
 	ProxyStreamTimeout string `json:"proxy-stream-timeout,omitempty"`
 
+	// When a connection to the proxied server cannot be established, determines whether
+	// a client connection will be passed to the next server.
+	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream
+	ProxyStreamNextUpstream bool `json:"proxy-stream-next-upstream,omitempty"`
+
+	// Limits the time allowed to pass a connection to the next server.
+	// The 0 value turns off this limitation.
+	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout
+	ProxyStreamNextUpstreamTimeout string `json:"proxy-stream-next-upstream-timeout,omitempty"`
+
+	// Limits the number of possible tries a request should be passed to the next server.
+	// The 0 value turns off this limitation.
+	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_tries
+	ProxyStreamNextUpstreamTries int `json:"proxy-stream-next-upstream-tries,omitempty"`
+
 	// Sets the number of datagrams expected from the proxied server in response
 	// to the client request if the UDP protocol is used.
 	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses
@@ -786,6 +801,9 @@ func NewDefault() Configuration {
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,
 		ProxyStreamTimeout:               "600s",
+		ProxyStreamNextUpstream:          true,
+		ProxyStreamNextUpstreamTimeout:   "600s",
+		ProxyStreamNextUpstreamTries:     3,
 		Backend: defaults.Backend{
 			ProxyBodySize:            bodySize,
 			ProxyConnectTimeout:      5,
