@@ -51,7 +51,7 @@ endif
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-BASE_IMAGE ?= docker.io/aledbf/nginx:0.30
+BASE_IMAGE ?= docker.io/aledbf/nginx:0.31
 
 GOARCH=$(ARCH)
 
