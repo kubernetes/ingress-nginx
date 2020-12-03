@@ -53,6 +53,8 @@ export LUA_RESTY_LOCK=0.08
 export LUA_RESTY_UPLOAD_VERSION=0.10
 export LUA_RESTY_STRING_VERSION=0.12
 
+export FIPS_CHECK_VERSION=40753183e8eee3c17952d7eb9cc8a773b2819123
+
 export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
@@ -71,6 +73,9 @@ get_src()
   rm -rf "$f"
 }
 
+# Add egde community repository for Go 1.15
+echo "@community http://nl.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+
 apk update
 apk upgrade
 
@@ -82,7 +87,6 @@ apk add \
   libc-dev \
   make \
   automake \
-  openssl-dev \
   pcre-dev \
   zlib-dev \
   linux-headers \
@@ -97,7 +101,6 @@ apk add \
   curl ca-certificates \
   patch \
   libaio-dev \
-  openssl \
   cmake \
   util-linux \
   lmdb-tools \
@@ -110,7 +113,9 @@ apk add \
   bc \
   unzip \
   dos2unix \
-  yaml-cpp
+  yaml-cpp \
+  libunwind-dev \
+  go@community
 
 mkdir -p /etc/nginx
 
@@ -208,6 +213,8 @@ get_src 4aca34f324d543754968359672dcf5f856234574ee4da360ce02c778d244572a \
 get_src 987d5754a366d3ccbf745d2765f82595dcff5b94ba6c755eeb6d310447996f32 \
         "https://github.com/ledgetech/lua-resty-http/archive/v$LUA_RESTY_HTTP.tar.gz"
 
+get_src 3c4d04ac2d3c0fcc99caea1c620543240622bbbb303e10fb655ef152922f74a2 \
+        "https://github.com/ogarrett/nginx-fips-check-module/archive/$FIPS_CHECK_VERSION.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
@@ -216,6 +223,29 @@ export MAKEFLAGS=-j${CORES}
 export CTEST_BUILD_FLAGS=${MAKEFLAGS}
 export HUNTER_JOBS_NUMBER=${CORES}
 export HUNTER_USE_CACHE_SERVERS=true
+
+cd "$BUILD_PATH"
+
+git clone --depth=1 https://boringssl.googlesource.com/boringssl /usr/src/boringssl
+
+sed -i 's@out \([>=]\) TLS1_2_VERSION@out \1 TLS1_3_VERSION@' /usr/src/boringssl/ssl/ssl_lib.cc
+sed -i 's@ssl->version[ ]*=[ ]*TLS1_2_VERSION@ssl->version = TLS1_3_VERSION@' /usr/src/boringssl/ssl/s3_lib.cc
+sed -i 's@(SSL3_VERSION, TLS1_2_VERSION@(SSL3_VERSION, TLS1_3_VERSION@' /usr/src/boringssl/ssl/ssl_test.cc
+sed -i 's@\$shaext[ ]*=[ ]*0;@\$shaext = 1;@' /usr/src/boringssl/crypto/*/asm/*.pl
+sed -i 's@\$avx[ ]*=[ ]*[0|1];@\$avx = 2;@' /usr/src/boringssl/crypto/*/asm/*.pl
+sed -i 's@\$addx[ ]*=[ ]*0;@\$addx = 1;@' /usr/src/boringssl/crypto/*/asm/*.pl
+
+mkdir -p /usr/src/boringssl/build /usr/src/boringssl/.openssl/lib /usr/src/boringssl/.openssl/include
+ln -sf /usr/src/boringssl/include/openssl /usr/src/boringssl/.openssl/include/openssl
+touch /usr/src/boringssl/.openssl/include/openssl/ssl.h
+
+CFCXX_FLAGS="-O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2"
+CPPFLAGS='-D_FORTIFY_SOURCE=2' CFLAGS=${CFCXX_FLAGS} CXXFLAGS=${CFCXX_FLAGS} \
+  cmake -B/usr/src/boringssl/build -H/usr/src/boringssl -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+make -C/usr/src/boringssl/build -j${CORES}
+
+cp /usr/src/boringssl/build/crypto/libcrypto.a /usr/src/boringssl/build/ssl/libssl.a /usr/src/boringssl/.openssl/lib
 
 # Install luajit from openresty fork
 export LUAJIT_LIB=/usr/local/lib
@@ -464,7 +494,7 @@ WITH_FLAGS="--with-debug \
 
 # "Combining -flto with -g is currently experimental and expected to produce unexpected results."
 # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
-CC_OPT="-g -Og -fPIE -fstack-protector-strong \
+CC_OPT="-g -Og -fPIE -fstack-protector-all \
   -Wformat \
   -Werror=format-security \
   -Wno-deprecated-declarations \
@@ -474,9 +504,16 @@ CC_OPT="-g -Og -fPIE -fstack-protector-strong \
   -DTCP_FASTOPEN=23 \
   -fPIC \
   -I$HUNTER_INSTALL_DIR/include \
-  -Wno-cast-function-type"
+  -Wno-cast-function-type \
+  -I/usr/src/boringssl/.openssl/include"
 
-LD_OPT="-fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
+LD_OPT="-fPIE \
+  -fPIC -pie \
+  -Wl,-Bsymbolic-functions \
+  -Wl,-z,relro \
+  -Wl,-z,now \
+  -L$HUNTER_INSTALL_DIR/lib \
+  -L/usr/src/boringssl/.openssl/lib"
 
 if [[ ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
@@ -500,7 +537,8 @@ WITH_MODULES=" \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
-  --add-dynamic-module=$BUILD_PATH/ngx_brotli"
+  --add-dynamic-module=$BUILD_PATH/ngx_brotli \
+  --add-dynamic-module=$BUILD_PATH/nginx-fips-check-module-${FIPS_CHECK_VERSION}"
 
 ./configure \
   --prefix=/usr/local/nginx \
@@ -523,6 +561,7 @@ WITH_MODULES=" \
   --without-http_scgi_module \
   --with-cc-opt="${CC_OPT}" \
   --with-ld-opt="${LD_OPT}" \
+  --with-openssl-opt=enable-tls1_3 \
   --user=www-data \
   --group=www-data \
   ${WITH_MODULES}
