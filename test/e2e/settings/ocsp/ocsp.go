@@ -47,6 +47,8 @@ var _ = framework.DescribeSetting("OCSP", func() {
 	})
 
 	ginkgo.It("should enable OCSP and contain stapling information in the connection", func() {
+		ginkgo.Skip("OCSP is not available in BoringSSL")
+
 		host := "www.example.com"
 
 		f.UpdateNginxConfigMapData("enable-ocsp", "true")
