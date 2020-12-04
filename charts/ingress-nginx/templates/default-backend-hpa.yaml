@@ -8,7 +8,7 @@ metadata:
   name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
 spec:
   scaleTargetRef:
-    apiVersion: {{ template "deployment.apiVersion" . }}
+    apiVersion: apps/v1
     kind: Deployment
     name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
   minReplicas: {{ .Values.defaultBackend.autoscaling.minReplicas }}
