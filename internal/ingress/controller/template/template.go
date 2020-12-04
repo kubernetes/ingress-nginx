@@ -18,13 +18,13 @@ package template
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
+	"math/rand" // #nosec
 	"net"
 	"net/url"
 	"os"
@@ -929,7 +929,7 @@ func buildAuthSignURL(authSignURL, authRedirectParam string) string {
 }
 
 func buildAuthSignURLLocation(location, authSignURL string) string {
-	hasher := sha1.New()
+	hasher := sha1.New() // #nosec
 	hasher.Write([]byte(location))
 	hasher.Write([]byte(authSignURL))
 	return "@" + hex.EncodeToString(hasher.Sum(nil))
@@ -944,7 +944,7 @@ func init() {
 func randomString() string {
 	b := make([]rune, 32)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[rand.Intn(len(letters))] // #nosec
 	}
 
 	return string(b)

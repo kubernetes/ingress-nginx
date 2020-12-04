@@ -40,7 +40,7 @@ func convertV1beta1AdmissionReviewToAdmissionAdmissionReview(in *admissionv1beta
 	} else {
 		out.Request = nil
 	}
-	out.Response = (*admissionv1.AdmissionResponse)(unsafe.Pointer(in.Response))
+	out.Response = (*admissionv1.AdmissionResponse)(unsafe.Pointer(in.Response)) // #nosec
 }
 
 func convertV1beta1AdmissionRequestToAdmissionAdmissionRequest(in *admissionv1beta1.AdmissionRequest, out *admissionv1.AdmissionRequest) {
@@ -48,8 +48,8 @@ func convertV1beta1AdmissionRequestToAdmissionAdmissionRequest(in *admissionv1be
 	out.Kind = in.Kind
 	out.Resource = in.Resource
 	out.SubResource = in.SubResource
-	out.RequestKind = (*metav1.GroupVersionKind)(unsafe.Pointer(in.RequestKind))
-	out.RequestResource = (*metav1.GroupVersionResource)(unsafe.Pointer(in.RequestResource))
+	out.RequestKind = (*metav1.GroupVersionKind)(unsafe.Pointer(in.RequestKind))             // #nosec
+	out.RequestResource = (*metav1.GroupVersionResource)(unsafe.Pointer(in.RequestResource)) // #nosec
 	out.RequestSubResource = in.RequestSubResource
 	out.Name = in.Name
 	out.Namespace = in.Namespace
@@ -70,7 +70,7 @@ func convertAdmissionAdmissionReviewToV1beta1AdmissionReview(in *admissionv1.Adm
 	} else {
 		out.Request = nil
 	}
-	out.Response = (*admissionv1beta1.AdmissionResponse)(unsafe.Pointer(in.Response))
+	out.Response = (*admissionv1beta1.AdmissionResponse)(unsafe.Pointer(in.Response)) // #nosec
 }
 
 func convertAdmissionAdmissionRequestToV1beta1AdmissionRequest(in *admissionv1.AdmissionRequest, out *admissionv1beta1.AdmissionRequest) {
@@ -78,8 +78,8 @@ func convertAdmissionAdmissionRequestToV1beta1AdmissionRequest(in *admissionv1.A
 	out.Kind = in.Kind
 	out.Resource = in.Resource
 	out.SubResource = in.SubResource
-	out.RequestKind = (*metav1.GroupVersionKind)(unsafe.Pointer(in.RequestKind))
-	out.RequestResource = (*metav1.GroupVersionResource)(unsafe.Pointer(in.RequestResource))
+	out.RequestKind = (*metav1.GroupVersionKind)(unsafe.Pointer(in.RequestKind))             // #nosec
+	out.RequestResource = (*metav1.GroupVersionResource)(unsafe.Pointer(in.RequestResource)) // #nosec
 	out.RequestSubResource = in.RequestSubResource
 	out.Name = in.Name
 	out.Namespace = in.Namespace
