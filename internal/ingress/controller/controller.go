@@ -304,7 +304,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 	reserverdPorts := sets.NewInt(rp...)
 	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
 	for port, svcRef := range configmap.Data {
-		externalPort, err := strconv.Atoi(port)
+		externalPort, err := strconv.Atoi(port) // #nosec
 		if err != nil {
 			klog.Warningf("%q is not a valid %v port number", port, proto)
 			continue
@@ -342,11 +342,13 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			continue
 		}
 		var endps []ingress.Endpoint
-		targetPort, err := strconv.Atoi(svcPort)
+		/* #nosec */
+		targetPort, err := strconv.Atoi(svcPort) // #nosec
 		if err != nil {
 			// not a port number, fall back to using port name
 			klog.V(3).Infof("Searching Endpoints with %v port name %q for Service %q", proto, svcPort, nsName)
-			for _, sp := range svc.Spec.Ports {
+			for i := range svc.Spec.Ports {
+				sp := svc.Spec.Ports[i]
 				if sp.Name == svcPort {
 					if sp.Protocol == proto {
 						endps = getEndpoints(svc, &sp, proto, n.store.GetServiceEndpoints)
@@ -356,7 +358,8 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			}
 		} else {
 			klog.V(3).Infof("Searching Endpoints with %v port number %d for Service %q", proto, targetPort, nsName)
-			for _, sp := range svc.Spec.Ports {
+			for i := range svc.Spec.Ports {
+				sp := svc.Spec.Ports[i]
 				if sp.Port == int32(targetPort) {
 					if sp.Protocol == proto {
 						endps = getEndpoints(svc, &sp, proto, n.store.GetServiceEndpoints)
@@ -939,7 +942,8 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 		return upstreams, nil
 	}
 
-	for _, servicePort := range svc.Spec.Ports {
+	for i := range svc.Spec.Ports {
+		servicePort := svc.Spec.Ports[i]
 		// targetPort could be a string, use either the port name or number (int)
 		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
 			servicePort.TargetPort.String() == backendPort ||
@@ -1498,7 +1502,7 @@ func shouldCreateUpstreamForLocationDefaultBackend(upstream *ingress.Backend, lo
 }
 
 func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
-	port, err := strconv.Atoi(name)
+	port, err := strconv.Atoi(name) // #nosec
 	if err != nil {
 		// not a number. check port names.
 		for _, svcPort := range svc.Spec.Ports {
