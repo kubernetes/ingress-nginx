@@ -434,7 +434,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 				klog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
 				continue
 			}
-			port, err := strconv.Atoi(pb.Port.String())
+			port, err := strconv.Atoi(pb.Port.String()) // #nosec
 			if err != nil {
 				for _, sp := range svc.Spec.Ports {
 					if sp.Name == pb.Port.String() {

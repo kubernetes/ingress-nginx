@@ -181,7 +181,8 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 	}
 
 	addrs := make([]string, 0)
-	for _, pod := range pods.Items {
+	for i := range pods.Items {
+		pod := pods.Items[i]
 		// only Running pods are valid
 		if pod.Status.Phase != apiv1.PodRunning {
 			continue

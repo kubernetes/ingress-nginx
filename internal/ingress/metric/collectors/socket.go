@@ -110,7 +110,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 		return nil, err
 	}
 
-	err = os.Chmod(socket, 0777)
+	err = os.Chmod(socket, 0777) // #nosec
 	if err != nil {
 		return nil, err
 	}

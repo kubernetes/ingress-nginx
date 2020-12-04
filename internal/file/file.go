@@ -17,7 +17,7 @@ limitations under the License.
 package file
 
 import (
-	"crypto/sha1"
+	"crypto/sha1" // #nosec
 	"encoding/hex"
 	"io/ioutil"
 
@@ -26,7 +26,7 @@ import (
 
 // SHA1 returns the SHA1 of a file.
 func SHA1(filename string) string {
-	hasher := sha1.New()
+	hasher := sha1.New() // #nosec
 	s, err := ioutil.ReadFile(filename)
 	if err != nil {
 		klog.ErrorS(err, "Error reading file", "path", filename)
