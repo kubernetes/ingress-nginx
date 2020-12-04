@@ -4,6 +4,10 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.13.0
+
+- [X] [#6544](https://github.com/kubernetes/ingress-nginx/pull/6544) Fix default backend HPA name variable
+
 ### 3.12.0
 
 - [X] [#6514](https://github.com/kubernetes/ingress-nginx/pull/6514) Remove helm2 support and update docs
