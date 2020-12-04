@@ -130,6 +130,10 @@ jobs:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
         run: |
+          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.6/components.yaml
+          kubectl patch deployment metrics-server -n kube-system \
+            -p '{"spec":{"template":{"spec":{"containers":[{"name":"metrics-server","args":["--cert-dir=/tmp", "--secure-port=4443", "--kubelet-insecure-tls","--kubelet-preferred-address-types=InternalIP"]}]}}}}'
+
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-chart-tests
 
