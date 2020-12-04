@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Fix default backend HPA name variable
+    apiVersion: v2
+    appVersion: 0.41.2
+    created: "2020-12-04T23:03:37.278739515Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 65c6cc3155ca7c72b68eaf996b822fce4139ba512adb35ce57b717c768e4f3c7
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-3.13.0/ingress-nginx-3.13.0.tgz
+    version: 3.13.0
+  - annotations:
+      artifacthub.io/changes: |
         - Remove helm2 support and update docs
     apiVersion: v2
     appVersion: 0.41.2
