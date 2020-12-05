@@ -890,14 +890,21 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 		}
 
 		for _, rPath := range rule.HTTP.Paths {
-			if path == rPath.Path {
-				info.Service = rPath.Backend.ServiceName
-				if rPath.Backend.ServicePort.String() != "0" {
-					info.ServicePort = rPath.Backend.ServicePort.String()
-				}
+			if path != rPath.Path {
+				continue
+			}
 
+			if info.Service != "" && rPath.Backend.ServiceName == "" {
+				// empty rule. Only contains a Path and PathType
 				return info
 			}
+
+			info.Service = rPath.Backend.ServiceName
+			if rPath.Backend.ServicePort.String() != "0" {
+				info.ServicePort = rPath.Backend.ServicePort.String()
+			}
+
+			return info
 		}
 	}
 

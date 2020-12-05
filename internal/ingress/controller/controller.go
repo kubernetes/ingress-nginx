@@ -567,37 +567,40 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 
 				addLoc := true
 				for _, loc := range server.Locations {
-					if loc.Path == nginxPath {
-						// Same paths but different types are allowed
-						// (same type means overlap in the path definition)
-						if !apiequality.Semantic.DeepEqual(loc.PathType, path.PathType) {
-							break
-						}
+					if loc.Path != nginxPath {
+						continue
+					}
 
-						addLoc = false
-
-						if !loc.IsDefBackend {
-							klog.V(3).Infof("Location %q already configured for server %q with upstream %q (Ingress %q)",
-								loc.Path, server.Hostname, loc.Backend, ingKey)
-							break
-						}
-
-						klog.V(3).Infof("Replacing location %q for server %q with upstream %q to use upstream %q (Ingress %q)",
-							loc.Path, server.Hostname, loc.Backend, ups.Name, ingKey)
-
-						loc.Backend = ups.Name
-						loc.IsDefBackend = false
-						loc.Port = ups.Port
-						loc.Service = ups.Service
-						loc.Ingress = ing
-
-						locationApplyAnnotations(loc, anns)
-
-						if loc.Redirect.FromToWWW {
-							server.RedirectFromToWWW = true
-						}
+					// Same paths but different types are allowed
+					// (same type means overlap in the path definition)
+					if !apiequality.Semantic.DeepEqual(loc.PathType, path.PathType) {
 						break
 					}
+
+					addLoc = false
+
+					if !loc.IsDefBackend {
+						klog.V(3).Infof("Location %q already configured for server %q with upstream %q (Ingress %q)",
+							loc.Path, server.Hostname, loc.Backend, ingKey)
+						break
+					}
+
+					klog.V(3).Infof("Replacing location %q for server %q with upstream %q to use upstream %q (Ingress %q)",
+						loc.Path, server.Hostname, loc.Backend, ups.Name, ingKey)
+
+					loc.Backend = ups.Name
+					loc.IsDefBackend = false
+					loc.Port = ups.Port
+					loc.Service = ups.Service
+					loc.Ingress = ing
+
+					locationApplyAnnotations(loc, anns)
+
+					if loc.Redirect.FromToWWW {
+						server.RedirectFromToWWW = true
+					}
+
+					break
 				}
 
 				// new location
@@ -1048,14 +1051,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
+				defLoc.Backend = backendUpstream.Name
+				defLoc.Service = backendUpstream.Service
+				defLoc.Ingress = ing
+
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
-					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q",
-						ingKey, defServerName)
+					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q", ingKey, defServerName)
 
 					defLoc.IsDefBackend = false
-					defLoc.Backend = backendUpstream.Name
-					defLoc.Service = backendUpstream.Service
-					defLoc.Ingress = ing
 
 					// TODO: Redirect and rewrite can affect the catch all behavior, skip for now
 					originalRedirect := defLoc.Redirect
@@ -1064,8 +1067,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					defLoc.Redirect = originalRedirect
 					defLoc.Rewrite = originalRewrite
 				} else {
-					klog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
-						ingKey)
+					klog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.", ingKey)
 				}
 			}
 		}
@@ -1081,12 +1083,12 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				continue
 			}
 
-			pathTypePrefix := networking.PathTypePrefix
 			loc := &ingress.Location{
 				Path:         rootLocation,
 				PathType:     &pathTypePrefix,
 				IsDefBackend: true,
 				Backend:      un,
+				Ingress:      ing,
 				Service:      &apiv1.Service{},
 			}
 			locationApplyAnnotations(loc, anns)
