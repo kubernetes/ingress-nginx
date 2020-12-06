@@ -21,4 +21,4 @@ annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - Fix default backend HPA name variable
+    - Allow custom service names for controller and backend
