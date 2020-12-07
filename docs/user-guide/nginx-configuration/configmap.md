@@ -112,6 +112,9 @@ The following table shows a configuration option's name, type, and the default v
 |[upstream-keepalive-requests](#upstream-keepalive-requests)|int|10000|
 |[limit-conn-zone-variable](#limit-conn-zone-variable)|string|"$binary_remote_addr"|
 |[proxy-stream-timeout](#proxy-stream-timeout)|string|"600s"|
+|[proxy-stream-next-upstream](#proxy-stream-next-upstream)|bool|"true"|
+|[proxy-stream-next-upstream-timeout](#proxy-stream-next-upstream-timeout)|string|"600s"|
+|[proxy-stream-next-upstream-tries](#proxy-stream-next-upstream-tries)|int|3|
 |[proxy-stream-responses](#proxy-stream-responses)|int|1|
 |[bind-address](#bind-address)|[]string|""|
 |[use-forwarded-headers](#use-forwarded-headers)|bool|"false"|
@@ -408,8 +411,8 @@ Example for json output:
 
 ```json
 
-log-format-upstream: '{"time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$req_id",
-  "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":$status, "vhost": "$host", "request_proto": "$server_protocol",
+log-format-upstream: '{"time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", "x_forward_for": "$proxy_add_x_forwarded_for", "request_id": "$req_id",
+  "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status": $status, "vhost": "$host", "request_proto": "$server_protocol",
   "path": "$uri", "request_query": "$args", "request_length": $request_length, "duration": $request_time,"method": "$request_method", "http_referrer": "$http_referer",
   "http_user_agent": "$http_user_agent" }'
 ```
@@ -510,6 +513,8 @@ The default cipher list is:
  `ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384`.
 
 The ordering of a ciphersuite is very important because it decides which algorithms are going to be selected in priority. The recommendation above prioritizes algorithms that provide perfect [forward secrecy](https://wiki.mozilla.org/Security/Server_Side_TLS#Forward_Secrecy).
+
+DHE-based cyphers will not be available until DH parameter is configured [Custom DH parameters for perfect forward secrecy](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/ssl-dh-param)
 
 Please check the [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/).
 
@@ -732,6 +737,27 @@ Sets the timeout between two successive read or write operations on client or pr
 
 _References:_
 [http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout)
+
+## proxy-stream-next-upstream
+
+When a connection to the proxied server cannot be established, determines whether a client connection will be passed to the next server.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream)
+
+## proxy-stream-next-upstream-timeout
+
+Limits the time allowed to pass a connection to the next server. The 0 value turns off this limitation.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout)
+
+## proxy-stream-next-upstream-tries
+
+Limits the number of possible tries a request should be passed to the next server. The 0 value turns off this limitation.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_tries](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout)
 
 ## proxy-stream-responses
 

@@ -4,9 +4,17 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
-### 3.13.0
+### 3.15.0
 
 - [X] [#6518](https://github.com/kubernetes/ingress-nginx/pull/6518) Allow custom settings for internal service
+
+### 3.14.0
+
+- [X] [#6469](https://github.com/kubernetes/ingress-nginx/pull/6469) Allow custom service names for controller and backend
+
+### 3.13.0
+
+- [X] [#6544](https://github.com/kubernetes/ingress-nginx/pull/6544) Fix default backend HPA name variable
 
 ### 3.12.0
 

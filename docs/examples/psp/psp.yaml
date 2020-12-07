@@ -70,3 +70,6 @@ subjects:
 - kind: ServiceAccount
   name: ingress-nginx
   namespace: ingress-nginx
+- kind: ServiceAccount
+  name: ingress-nginx-admission
+  namespace: ingress-nginx

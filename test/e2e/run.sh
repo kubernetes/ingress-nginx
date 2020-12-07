@@ -39,12 +39,6 @@ trap cleanup EXIT
 
 export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 
-# Disable execution if running as a Prow job
-#if [[ ! -z ${PROW_JOB_ID:-} ]]; then
-#  echo "skipping execution..."
-#  exit 0
-#fi
-
 if ! command -v kind --version &> /dev/null; then
   echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
   exit 1
@@ -64,7 +58,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.19.1@sha256:98cf5288864662e37115e362b23e4369c8c4a408f99cbc06e58ac30ddc721600}
+  export K8S_VERSION=${K8S_VERSION:-v1.19.4@sha256:796d09e217d93bed01ecf8502633e48fd806fe42f9d02fdd468b81cd4e3bd40b}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -87,9 +81,6 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   make -C ${DIR}/../e2e-image image
 fi
 
-#make -C ${DIR}/../../images/fastcgi-helloserver/ build image
-#make -C ${DIR}/../../images/echo/ image
-
 # Preload images used in e2e tests
 KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
 
@@ -97,8 +88,6 @@ echo "[dev-env] copying docker images to cluster..."
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
-#kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/fastcgi-helloserver:${TAG}
-#kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/echo:${TAG}
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
