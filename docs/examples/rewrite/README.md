@@ -63,7 +63,7 @@ For example, the ingress definition above will result in the following rewrites:
 
 ### App Root
 
-Create an Ingress rule with a app-root annotation:
+Create an Ingress rule with an app-root annotation:
 ```
 $ echo "
 apiVersion: networking.k8s.io/v1beta1
