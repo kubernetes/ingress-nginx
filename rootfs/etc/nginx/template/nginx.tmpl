@@ -159,6 +159,7 @@ http {
     {{ if $all.Cfg.EnableOWASPCoreRules }}
     modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
     {{ end }}
+    {{ end }}
 
     {{ if $cfg.UseGeoIP }}
     {{/* databases used to determine the country depending on the client IP address */}}
