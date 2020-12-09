@@ -50,6 +50,6 @@ jobs:
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.1.0
+        uses: helm/chart-releaser-action@v1.0.0
         env:
           CR_TOKEN: "${{ secrets.PERSONAL_TOKEN }}"
