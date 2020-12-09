@@ -20,13 +20,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - uses: dorny/paths-filter@v2.2.0
+      - uses: dorny/paths-filter@v2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           filters: |
             charts:
               - 'charts/ingress-nginx/Chart.yaml'
+              - 'charts/ingress-nginx/**/*'
 
   chart:
     name: Release Chart
