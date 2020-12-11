@@ -51,6 +51,8 @@ func updateServerLocations(locations []*ingress.Location) []*ingress.Location {
 			continue
 		}
 
+		location.IngressPath = location.Path
+
 		// only Prefix locations could require an additional location block
 		if *location.PathType != pathTypePrefix {
 			newLocations = append(newLocations, location)
