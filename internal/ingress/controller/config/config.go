@@ -592,6 +592,9 @@ type Configuration struct {
 	// Default: uberctx-
 	JaegerTraceBaggageHeaderPrefix string `json:"jaeger-tracer-baggage-header-prefix"`
 
+	// PropagationFormat specifies the propagation format used by the tracer
+	JaegerPropagationFormat string `json:"jaeger-propagation-format"`
+
 	// DatadogCollectorHost specifies the datadog agent host to use when uploading traces
 	DatadogCollectorHost string `json:"datadog-collector-host"`
 

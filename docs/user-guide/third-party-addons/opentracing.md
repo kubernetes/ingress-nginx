@@ -86,6 +86,9 @@ jaeger-baggage-header
 # Specifies the header prefix used to propagate baggage. Must be a string. Default: uberctx-
 jaeger-tracer-baggage-header-prefix
 
+# Specifies the propagation format used by the tracer
+jaeger-propagation-format
+
 # specifies the port to use when uploading traces, Default 8126
 datadog-collector-port
 

@@ -141,6 +141,7 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-debug-header](#jaeger-debug-header)|string|uber-debug-id|
 |[jaeger-baggage-header](#jaeger-baggage-header)|string|jaeger-baggage|
 |[jaeger-trace-baggage-header-prefix](#jaeger-trace-baggage-header-prefix)|string|uberctx-|
+|[jaeger-propagation-format](#jaeger-propagation-format)|string|""|
 |[datadog-collector-host](#datadog-collector-host)|string|""|
 |[datadog-collector-port](#datadog-collector-port)|int|8126|
 |[datadog-service-name](#datadog-service-name)|string|"nginx"|
