@@ -6,7 +6,7 @@ local certificate_data = ngx.shared.certificate_data
 local certificate_servers = ngx.shared.certificate_servers
 local ocsp_response_cache = ngx.shared.ocsp_response_cache
 
-function get_backends()
+local function get_backends()
   return {
     {
       name = "my-dummy-backend-1", ["load-balance"] = "sticky",
@@ -30,7 +30,7 @@ function get_backends()
   }
 end
 
-function get_mocked_ngx_env()
+local function get_mocked_ngx_env()
   local _ngx = {
     status = ngx.HTTP_OK,
     var = {},
@@ -281,9 +281,7 @@ describe("Configuration", function()
 
       local s = spy.on(ngx, "log")
       assert.has_no.errors(configuration.handle_servers)
-      assert.spy(s).was_called_with(ngx.ERR,
-      string.format("error setting certificate for %s: error\nerror setting certificate for %s: error\n", UUID, uuid2))
-      assert.same(ngx.status, ngx.HTTP_INTERNAL_SERVER_ERROR)
+      assert.same(ngx.HTTP_INTERNAL_SERVER_ERROR, ngx.status)
     end)
 
     it("logs a warning when entry is forcibly stored", function()
