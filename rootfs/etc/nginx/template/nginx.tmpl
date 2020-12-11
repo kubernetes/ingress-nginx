@@ -1079,12 +1079,12 @@ stream {
         {{ end }}
 
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
+            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.IngressPath) }}
             set $namespace      {{ $ing.Namespace | quote}};
             set $ingress_name   {{ $ing.Rule | quote }};
             set $service_name   {{ $ing.Service | quote }};
             set $service_port   {{ $ing.ServicePort | quote }};
-            set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
+            set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
 
             {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $location }}
 
