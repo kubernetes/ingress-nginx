@@ -79,9 +79,9 @@ type Configuration struct {
 // +k8s:deepcopy-gen=true
 type Backend struct {
 	// Name represents an unique apiv1.Service name formatted as <namespace>-<name>-<port>
-	Name    string             `json:"name"`
-	Service *apiv1.Service     `json:"service,omitempty"`
-	Port    intstr.IntOrString `json:"port"`
+	Name    string         `json:"name"`
+	Service *apiv1.Service `json:"service,omitempty"`
+	Port    int            `json:"port"`
 	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
@@ -230,14 +230,10 @@ type Location struct {
 	// contains active endpoints or not. Returning true means the location
 	// uses the default backend.
 	IsDefBackend bool `json:"isDefBackend"`
+	// Context holds location details related to the Ingress and Service
+	Context *LocationSource `json:"context"`
 	// Ingress returns the ingress from which this location was generated
-	Ingress *Ingress `json:"ingress"`
-	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
-	// Service describes the referenced services from the ingress
-	Service *apiv1.Service `json:"-"`
-	// Port describes to which port from the service
-	Port intstr.IntOrString `json:"port"`
 	// Overwrite the Host header passed into the backend. Defaults to
 	// vhost of the incoming request.
 	// +optional
@@ -343,10 +339,11 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *apiv1.Service     `json:"-"`
-	Port    intstr.IntOrString `json:"port"`
+	Namespace string `json:"namespace"`
+	Service   string `json:"service"`
+	Port      int    `json:"port"`
 	// Backend describes the endpoints to use.
-	Backend string `json:"namespace,omitempty"`
+	Backend string `json:"backend,omitempty"`
 	// Hostname returns the FQDN of the server
 	Hostname string `json:"hostname"`
 }
@@ -387,4 +384,14 @@ type Ingress struct {
 
 // GeneralConfig holds the definition of lua general configuration data
 type GeneralConfig struct {
+}
+
+// LocationSource holds location details related to the Ingress and Service
+type LocationSource struct {
+	Namespace   string
+	Ingress     string
+	Service     string
+	Port        int
+	Path        string
+	Annotations map[string]string
 }

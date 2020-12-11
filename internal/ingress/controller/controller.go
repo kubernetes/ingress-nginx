@@ -25,6 +25,7 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -249,7 +250,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 
 	_, servers, pcfg := n.getConfiguration(ings)
 
-	err := checkOverlap(ing, allIngresses, servers)
+	err := checkOverlap(ing, allIngresses, servers, n.store.GetIngress)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
@@ -467,10 +468,11 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 				continue
 			}
 			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
-				Backend:  loc.Backend,
-				Hostname: server.Hostname,
-				Service:  loc.Service,
-				Port:     loc.Port,
+				Backend:   loc.Backend,
+				Hostname:  server.Hostname,
+				Namespace: loc.Context.Namespace,
+				Service:   loc.Context.Service,
+				Port:      loc.Context.Port,
 			})
 			break
 		}
@@ -590,9 +592,17 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 
 					loc.Backend = ups.Name
 					loc.IsDefBackend = false
-					loc.Port = ups.Port
-					loc.Service = ups.Service
-					loc.Ingress = ing
+
+					if loc.Context == nil {
+						loc.Context = &ingress.LocationSource{}
+					}
+
+					loc.Context.Port = ups.Port
+					loc.Context.Namespace = ing.Namespace
+					loc.Context.Service = ups.Service.Name
+					loc.Context.Ingress = ing.Name
+					loc.Context.Path = loc.Path
+					loc.Context.Annotations = ing.Annotations
 
 					locationApplyAnnotations(loc, anns)
 
@@ -612,9 +622,14 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						PathType:     path.PathType,
 						Backend:      ups.Name,
 						IsDefBackend: false,
-						Service:      ups.Service,
-						Port:         ups.Port,
-						Ingress:      ing,
+						Context: &ingress.LocationSource{
+							Namespace:   ing.Namespace,
+							Ingress:     ing.Name,
+							Service:     ups.Service.Name,
+							Port:        ups.Port,
+							Path:        nginxPath,
+							Annotations: ing.Annotations,
+						},
 					}
 					locationApplyAnnotations(loc, anns)
 
@@ -690,6 +705,10 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				}
 
 				sp := location.DefaultBackend.Spec.Ports[0]
+				// set custom default backend service variables
+				location.Context.Service = location.DefaultBackend.Name
+				location.Context.Port = int(sp.Port)
+
 				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 				// custom backend is valid only if contains at least one endpoint
 				if len(endps) > 0 {
@@ -812,6 +831,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				klog.Warningf("Error obtaining Service %q: %v", svcKey, err)
 			}
 			upstreams[defBackend].Service = s
+			upstreams[defBackend].Port = extractServiceIntPort(ing.Spec.Backend.ServicePort, s)
 		}
 
 		for _, rule := range ing.Spec.Rules {
@@ -828,7 +848,6 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 				klog.V(3).Infof("Creating upstream %q", name)
 				upstreams[name] = newUpstream(name)
-				upstreams[name].Port = path.Backend.ServicePort
 
 				upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
@@ -879,6 +898,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				}
 
 				upstreams[name].Service = s
+				upstreams[name].Port = extractServiceIntPort(path.Backend.ServicePort, s)
 			}
 		}
 	}
@@ -1021,7 +1041,9 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				IsDefBackend: true,
 				Backend:      du.Name,
 				Proxy:        ngxProxy,
-				Service:      du.Service,
+				Context: &ingress.LocationSource{
+					Path: rootLocation,
+				},
 				Logs: log.Config{
 					Access:  n.store.GetBackendConfiguration().EnableAccessLogForDefaultBackend,
 					Rewrite: false,
@@ -1052,8 +1074,18 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
 				defLoc.Backend = backendUpstream.Name
-				defLoc.Service = backendUpstream.Service
-				defLoc.Ingress = ing
+
+				if defLoc.Context == nil {
+					defLoc.Context = &ingress.LocationSource{}
+				}
+
+				defLoc.Context.Namespace = ing.Namespace
+				defLoc.Context.Ingress = ing.Name
+				defLoc.Context.Annotations = ing.Annotations
+				defLoc.Context.Service = ing.Spec.Backend.ServiceName
+
+				svc, _ := n.store.GetService(fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.Backend.ServiceName))
+				defLoc.Context.Port = extractServiceIntPort(ing.Spec.Backend.ServicePort, svc)
 
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
 					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q", ingKey, defServerName)
@@ -1088,8 +1120,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				PathType:     &pathTypePrefix,
 				IsDefBackend: true,
 				Backend:      un,
-				Ingress:      ing,
-				Service:      &apiv1.Service{},
+				Context:      &ingress.LocationSource{},
 			}
 			locationApplyAnnotations(loc, anns)
 
@@ -1469,11 +1500,11 @@ func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 
 	for _, server := range rucfg.Servers {
 		for _, location := range server.Locations {
-			if location.Ingress == nil {
+			if location.Context == nil {
 				continue
 			}
 
-			ingKey := k8s.MetaNamespaceKey(location.Ingress)
+			ingKey := fmt.Sprintf("%v/%v", location.Context.Namespace, location.Context.Ingress)
 			if !oldIngresses.Has(ingKey) {
 				oldIngresses.Insert(ingKey)
 			}
@@ -1482,11 +1513,11 @@ func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 
 	for _, server := range newcfg.Servers {
 		for _, location := range server.Locations {
-			if location.Ingress == nil {
+			if location.Context == nil {
 				continue
 			}
 
-			ingKey := k8s.MetaNamespaceKey(location.Ingress)
+			ingKey := fmt.Sprintf("%v/%v", location.Context.Namespace, location.Context.Ingress)
 			if !newIngresses.Has(ingKey) {
 				newIngresses.Insert(ingKey)
 			}
@@ -1550,7 +1581,7 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 	}
 }
 
-func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers []*ingress.Server) error {
+func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers []*ingress.Server, getIngress func(key string) (*networking.Ingress, error)) error {
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
 			continue
@@ -1565,7 +1596,7 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 				path.Path = rootLocation
 			}
 
-			existingIngresses := ingressForHostPath(rule.Host, path.Path, servers)
+			existingIngresses := ingressForHostPath(rule.Host, path.Path, servers, getIngress)
 
 			// no previous ingress
 			if len(existingIngresses) == 0 {
@@ -1606,7 +1637,7 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 	return nil
 }
 
-func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*networking.Ingress {
+func ingressForHostPath(hostname, path string, servers []*ingress.Server, getIngress func(key string) (*networking.Ingress, error)) []*networking.Ingress {
 	ingresses := make([]*networking.Ingress, 0)
 
 	for _, server := range servers {
@@ -1619,9 +1650,30 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 				continue
 			}
 
-			ingresses = append(ingresses, &location.Ingress.Ingress)
+			ingKey := fmt.Sprintf("%v/%v", location.Context.Namespace, location.Context.Ingress)
+			ing, err := getIngress(ingKey)
+			if err != nil {
+				continue
+			}
+
+			ingresses = append(ingresses, ing)
 		}
 	}
 
 	return ingresses
+}
+
+func extractServiceIntPort(port intstr.IntOrString, service *corev1.Service) int {
+	intPort, err := strconv.Atoi(port.String()) // #nosec
+	if err != nil {
+		// not a port number, fall back to using port name
+		for i := range service.Spec.Ports {
+			sp := service.Spec.Ports[i]
+			if sp.Name == port.String() && sp.Protocol == apiv1.ProtocolTCP {
+				return int(sp.Port)
+			}
+		}
+	}
+
+	return intPort
 }

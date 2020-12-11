@@ -29,7 +29,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -160,7 +159,6 @@ var (
 		"formatIP":                        formatIP,
 		"quote":                           quote,
 		"buildNextUpstream":               buildNextUpstream,
-		"getIngressInformation":           getIngressInformation,
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
@@ -805,110 +803,6 @@ func isValidByteSize(input interface{}, isOffset bool) bool {
 	}
 
 	return nginxSizeRegex.MatchString(s)
-}
-
-type ingressInformation struct {
-	Namespace   string
-	Rule        string
-	Service     string
-	ServicePort string
-	Annotations map[string]string
-}
-
-func (info *ingressInformation) Equal(other *ingressInformation) bool {
-	if info.Namespace != other.Namespace {
-		return false
-	}
-	if info.Rule != other.Rule {
-		return false
-	}
-	if info.Service != other.Service {
-		return false
-	}
-	if info.ServicePort != other.ServicePort {
-		return false
-	}
-	if !reflect.DeepEqual(info.Annotations, other.Annotations) {
-		return false
-	}
-
-	return true
-}
-
-func getIngressInformation(i, h, p interface{}) *ingressInformation {
-	ing, ok := i.(*ingress.Ingress)
-	if !ok {
-		klog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
-		return &ingressInformation{}
-	}
-
-	hostname, ok := h.(string)
-	if !ok {
-		klog.Errorf("expected a 'string' type but %T was returned", h)
-		return &ingressInformation{}
-	}
-
-	path, ok := p.(string)
-	if !ok {
-		klog.Errorf("expected a 'string' type but %T was returned", p)
-		return &ingressInformation{}
-	}
-
-	if ing == nil {
-		return &ingressInformation{}
-	}
-
-	info := &ingressInformation{
-		Namespace:   ing.GetNamespace(),
-		Rule:        ing.GetName(),
-		Annotations: ing.Annotations,
-	}
-
-	if ing.Spec.Backend != nil {
-		info.Service = ing.Spec.Backend.ServiceName
-		if ing.Spec.Backend.ServicePort.String() != "0" {
-			info.ServicePort = ing.Spec.Backend.ServicePort.String()
-		}
-	}
-
-	for _, rule := range ing.Spec.Rules {
-		if rule.HTTP == nil {
-			continue
-		}
-
-		if hostname != "_" && rule.Host == "" {
-			continue
-		}
-
-		host := "_"
-		if rule.Host != "" {
-			host = rule.Host
-		}
-
-		if hostname != host {
-			continue
-		}
-
-		for _, rPath := range rule.HTTP.Paths {
-			if path != rPath.Path {
-				continue
-			}
-
-			if info.Service != "" && rPath.Backend.ServiceName == "" {
-				// empty rule. Only contains a Path and PathType
-				return info
-			}
-
-			info.Service = rPath.Backend.ServiceName
-			if rPath.Backend.ServicePort.String() != "0" {
-				info.ServicePort = rPath.Backend.ServicePort.String()
-			}
-
-			return info
-		}
-	}
-
-	return info
 }
 
 func buildForwardedFor(input interface{}) string {

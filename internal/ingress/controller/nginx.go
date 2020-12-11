@@ -39,7 +39,6 @@ import (
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -430,37 +429,25 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 
 // generateTemplate returns the nginx configuration file content
 func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
-
 	if n.cfg.EnableSSLPassthrough {
 		servers := []*TCPServer{}
 		for _, pb := range ingressCfg.PassthroughBackends {
-			svc := pb.Service
-			if svc == nil {
+			if pb.Service == "" {
 				klog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
 				continue
 			}
-			port, err := strconv.Atoi(pb.Port.String()) // #nosec
+
+			svc, err := n.store.GetService(fmt.Sprintf("%v/%v", pb.Namespace, pb.Service))
 			if err != nil {
-				for _, sp := range svc.Spec.Ports {
-					if sp.Name == pb.Port.String() {
-						port = int(sp.Port)
-						break
-					}
-				}
-			} else {
-				for _, sp := range svc.Spec.Ports {
-					if sp.Port == int32(port) {
-						port = int(sp.Port)
-						break
-					}
-				}
+				klog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
+				continue
 			}
 
 			// TODO: Allow PassthroughBackends to specify they support proxy-protocol
 			servers = append(servers, &TCPServer{
 				Hostname:      pb.Hostname,
 				IP:            svc.Spec.ClusterIP,
-				Port:          port,
+				Port:          pb.Port,
 				ProxyProtocol: false,
 			})
 		}
@@ -878,7 +865,7 @@ func updateStreamConfiguration(TCPEndpoints []ingress.L4Service, UDPEndpoints []
 		streams = append(streams, ingress.Backend{
 			Name:      key,
 			Endpoints: ep.Endpoints,
-			Port:      intstr.FromInt(ep.Port),
+			Port:      ep.Port,
 			Service:   service,
 		})
 	}
@@ -892,7 +879,7 @@ func updateStreamConfiguration(TCPEndpoints []ingress.L4Service, UDPEndpoints []
 		streams = append(streams, ingress.Backend{
 			Name:      key,
 			Endpoints: ep.Endpoints,
-			Port:      intstr.FromInt(ep.Port),
+			Port:      ep.Port,
 			Service:   service,
 		})
 	}

@@ -32,7 +32,6 @@ func (in *Backend) DeepCopyInto(out *Backend) {
 		*out = new(v1.Service)
 		(*in).DeepCopyInto(*out)
 	}
-	out.Port = in.Port
 	if in.Endpoints != nil {
 		in, out := &in.Endpoints, &out.Endpoints
 		*out = make([]Endpoint, len(*in))

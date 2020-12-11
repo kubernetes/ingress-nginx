@@ -1079,12 +1079,19 @@ stream {
         {{ end }}
 
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
-            set $namespace      {{ $ing.Namespace | quote}};
-            set $ingress_name   {{ $ing.Rule | quote }};
-            set $service_name   {{ $ing.Service | quote }};
-            set $service_port   {{ $ing.ServicePort | quote }};
-            set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
+            {{ if not $location.Context }}
+            set $namespace      "";
+            set $ingress_name   "";
+            set $service_name   "";
+            set $service_port   "";
+            set $location_path  "";
+            {{ else }}
+            set $namespace      {{ $location.Context.Namespace | quote}};
+            set $ingress_name   {{ $location.Context.Ingress | quote }};
+            set $service_name   {{ $location.Context.Service | quote }};
+            set $service_port   {{ $location.Context.Port | quote }};
+            set $location_path  {{ $location.Context.Path | escapeLiteralDollar | quote }};
+            {{ end }}
 
             {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $location }}
 

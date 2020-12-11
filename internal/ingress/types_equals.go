@@ -17,6 +17,8 @@ limitations under the License.
 package ingress
 
 import (
+	"reflect"
+
 	"k8s.io/ingress-nginx/internal/sets"
 )
 
@@ -342,22 +344,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.Backend != l2.Backend {
 		return false
 	}
-
-	if l1.Service != l2.Service {
-		if l1.Service == nil || l2.Service == nil {
-			return false
-		}
-		if l1.Service.GetNamespace() != l2.Service.GetNamespace() {
-			return false
-		}
-		if l1.Service.GetName() != l2.Service.GetName() {
-			return false
-		}
-	}
-
-	if l1.Port.String() != l2.Port.String() {
-		return false
-	}
 	if !(&l1.BasicDigestAuth).Equal(&l2.BasicDigestAuth) {
 		return false
 	}
@@ -450,6 +436,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if !l1.Context.Equal(l2.Context) {
+		return false
+	}
+
 	return true
 }
 
@@ -470,17 +460,8 @@ func (ptb1 *SSLPassthroughBackend) Equal(ptb2 *SSLPassthroughBackend) bool {
 	if ptb1.Port != ptb2.Port {
 		return false
 	}
-
 	if ptb1.Service != ptb2.Service {
-		if ptb1.Service == nil || ptb2.Service == nil {
-			return false
-		}
-		if ptb1.Service.GetNamespace() != ptb2.Service.GetNamespace() {
-			return false
-		}
-		if ptb1.Service.GetName() != ptb2.Service.GetName() {
-			return false
-		}
+		return false
 	}
 
 	return true
@@ -628,4 +609,31 @@ var compareL4ServiceFunc = func(e1, e2 interface{}) bool {
 
 func compareL4Service(a, b []L4Service) bool {
 	return sets.Compare(a, b, compareL4ServiceFunc)
+}
+
+// Equal tests for equality between two LocationSource types
+func (ls1 *LocationSource) Equal(ls2 *LocationSource) bool {
+	if ls1 == ls2 {
+		return true
+	}
+	if ls1 == nil || ls2 == nil {
+		return false
+	}
+	if ls1.Namespace != ls2.Namespace {
+		return false
+	}
+	if ls1.Ingress != ls2.Ingress {
+		return false
+	}
+	if ls1.Service != ls2.Service {
+		return false
+	}
+	if ls1.Port != ls2.Port {
+		return false
+	}
+	if !reflect.DeepEqual(ls1.Annotations, ls2.Annotations) {
+		return false
+	}
+
+	return true
 }
