@@ -10,7 +10,7 @@ require (
 	github.com/gavv/httpexpect/v2 v2.1.0
 	github.com/imdario/mergo v0.3.10
 	github.com/json-iterator/go v1.1.10
-	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
+	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/hashstructure v1.0.0
@@ -23,26 +23,26 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.14.0
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	github.com/tallclair/mdtoc v1.0.0
 	github.com/zakjan/cert-chain-resolver v0.0.0-20200729110141-6b99e360f97a
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-	google.golang.org/grpc v1.27.0
+	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+	google.golang.org/grpc v1.27.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
-	k8s.io/api v0.19.3
-	k8s.io/apiextensions-apiserver v0.19.3
-	k8s.io/apimachinery v0.19.3
-	k8s.io/apiserver v0.19.3
-	k8s.io/cli-runtime v0.19.3
-	k8s.io/client-go v0.19.3
-	k8s.io/code-generator v0.19.3
-	k8s.io/component-base v0.19.3
-	k8s.io/klog/v2 v2.3.0
-	k8s.io/utils v0.0.0-20201104234853-8146046b121e
+	k8s.io/api v0.20.0
+	k8s.io/apiextensions-apiserver v0.20.0
+	k8s.io/apimachinery v0.20.0
+	k8s.io/apiserver v0.20.0
+	k8s.io/cli-runtime v0.20.0
+	k8s.io/client-go v0.20.0
+	k8s.io/code-generator v0.20.0
+	k8s.io/component-base v0.20.0
+	k8s.io/klog/v2 v2.4.0
+	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
-	sigs.k8s.io/controller-runtime v0.6.1-0.20200925153312-fdc6658a141b
+	sigs.k8s.io/controller-runtime v0.7.0
 )
