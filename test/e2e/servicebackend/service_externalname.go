@@ -218,6 +218,37 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			Status(http.StatusOK)
 	})
 
+	ginkgo.It("should return 200 for service type=ExternalName using FQDN with trailing dot", func() {
+		host := "echo"
+
+		svc := &core.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      framework.HTTPBinService,
+				Namespace: f.Namespace,
+			},
+			Spec: corev1.ServiceSpec{
+				ExternalName: "httpbin.org.",
+				Type:         corev1.ServiceTypeExternalName,
+			},
+		}
+
+		f.EnsureService(svc)
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
+			})
+
+		f.HTTPTestClient().
+			GET("/get").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+	})
+
 	ginkgo.It("should update the external name after a service update", func() {
 		host := "echo"
 
