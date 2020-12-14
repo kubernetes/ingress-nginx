@@ -193,6 +193,9 @@ function _M.after_balance(_)
 end
 
 function _M.sync(self, backend)
+  self.traffic_shaping_policy = backend.trafficShapingPolicy
+  self.alternative_backends = backend.alternativeBackends
+
   local normalized_endpoints_added, normalized_endpoints_removed =
     util.diff_endpoints(self.peers, backend.endpoints)
 
@@ -203,8 +206,6 @@ function _M.sync(self, backend)
 
   ngx_log(INFO, string_format("[%s] peers have changed for backend %s", self.name, backend.name))
 
-  self.traffic_shaping_policy = backend.trafficShapingPolicy
-  self.alternative_backends = backend.alternativeBackends
   self.peers = backend.endpoints
 
   for _, endpoint_string in ipairs(normalized_endpoints_removed) do

@@ -232,6 +232,8 @@ type Location struct {
 	IsDefBackend bool `json:"isDefBackend"`
 	// Ingress returns the ingress from which this location was generated
 	Ingress *Ingress `json:"ingress"`
+	// IngressPath original path defined in the ingress rule
+	IngressPath string `json:"ingressPath"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
