@@ -651,6 +651,15 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						locs[host] = []string{}
 					}
 					locs[host] = append(locs[host], path.Path)
+
+					if len(server.Aliases) > 0 {
+						for _, alias := range server.Aliases {
+							if _, ok := locs[alias]; !ok {
+								locs[alias] = []string{}
+							}
+							locs[alias] = append(locs[alias], path.Path)
+						}
+					}
 				}
 			}
 		}
