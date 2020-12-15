@@ -2380,7 +2380,7 @@ Set the annotation <code>nginx.ingress.kubernetes.io/rewrite-target</code> to th
 <h3 id="session-affinity">Session Affinity<a class="headerlink" href="#session-affinity" title="Permanent link"> ¶</a></h3>
 <p>The annotation <code>nginx.ingress.kubernetes.io/affinity</code> enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is <code>cookie</code>.</p>
-<p>The annotation <code>nginx.ingress.kubernetes.io/affinity-mode</code> defines the stickyness of a session. Setting this to <code>balanced</code> (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to <code>persistent</code> will not rebalance sessions to new servers, therefore providing maximum stickyness.</p>
+<p>The annotation <code>nginx.ingress.kubernetes.io/affinity-mode</code> defines the stickiness of a session. Setting this to <code>balanced</code> (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to <code>persistent</code> will not rebalance sessions to new servers, therefore providing maximum stickiness.</p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>If more than one Ingress is defined for a host and at least one Ingress uses <code>nginx.ingress.kubernetes.io/affinity: cookie</code>, then only paths on the Ingress using <code>nginx.ingress.kubernetes.io/affinity</code> will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server.</p>
@@ -2448,7 +2448,7 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <li><code>off</code>: Don't request client certificates and don't do client certificate verification. (default)</li>
 <li><code>on</code>: Request a client certificate that must be signed by a certificate that is included in the secret key <code>ca.crt</code> of the secret specified by <code>nginx.ingress.kubernetes.io/auth-tls-secret: secretName</code>. Failed certificate verification will result in a status code 400 (Bad Request).</li>
 <li><code>optional</code>: Do optional client certificate validation against the CAs from <code>auth-tls-secret</code>. The request fails with status code 400 (Bad Request) when a certificate is provided that is not signed by the CA. When no or an otherwise invalid certificate is provided, the request does not fail, but instead the verification result is sent to the upstream service.</li>
-<li><code>optional_no_ca</code>: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from <code>auth-tls-secret</code>. Certificate verification result is sent to the usptream service.</li>
+<li><code>optional_no_ca</code>: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from <code>auth-tls-secret</code>. Certificate verification result is sent to the upstream service.</li>
 <li><code>nginx.ingress.kubernetes.io/auth-tls-error-page</code>:
   The URL/Page that user should be redirected in case of a Certificate Authentication Error</li>
 <li><code>nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream</code>:

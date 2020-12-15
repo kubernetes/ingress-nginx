@@ -1385,7 +1385,7 @@ lead to have specific clients unable to reach your site or similar consequences.
 <tr>
 <td align="left">2.4.2 Ensure requests for unknown host names are rejected (Not Scored)</td>
 <td align="left">OK</td>
-<td align="left">They are not rejected but send to the "default backend" delivering approriate errors (mostly 404)</td>
+<td align="left">They are not rejected but send to the "default backend" delivering appropriate errors (mostly 404)</td>
 <td align="left"></td>
 </tr>
 <tr>
@@ -1475,7 +1475,7 @@ lead to have specific clients unable to reach your site or similar consequences.
 <tr>
 <td align="left">3.4 Ensure log files are rotated (Scored)</td>
 <td align="left">OBSOLETE</td>
-<td align="left">Log file handling is not part of the nginx ingress and should be handled separatly</td>
+<td align="left">Log file handling is not part of the nginx ingress and should be handled separately</td>
 <td align="left"></td>
 </tr>
 <tr>
@@ -1577,13 +1577,13 @@ lead to have specific clients unable to reach your site or similar consequences.
 <tr>
 <td align="left">4.1.10 Ensure upstream server traffic is authenticated with a client certificate (Scored)</td>
 <td align="left">DEPENDS ON BACKEND</td>
-<td align="left">Highly dependend on backends, not every backend allows configuring this, can also be mitigated via a service mesh</td>
+<td align="left">Highly dependent on backends, not every backend allows configuring this, can also be mitigated via a service mesh</td>
 <td align="left">If backend allows it, <a href="https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/">manual is here</a></td>
 </tr>
 <tr>
 <td align="left">4.1.11 Ensure the upstream traffic server certificate is trusted (Not Scored)</td>
 <td align="left">DEPENDS ON BACKEND</td>
-<td align="left">Highly dependend on backends, not every backend allows configuring this, can also be mitigated via a service mesh</td>
+<td align="left">Highly dependent on backends, not every backend allows configuring this, can also be mitigated via a service mesh</td>
 <td align="left">If backend allows it, <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#backend-certificate-authentication">see configuration here</a></td>
 </tr>
 <tr>
@@ -1656,7 +1656,7 @@ lead to have specific clients unable to reach your site or similar consequences.
 <td align="left">5.2.1 Ensure timeout values for reading the client header and body are set correctly (Scored)</td>
 <td align="left">ACTION NEEDED</td>
 <td align="left">Default timeout is 60s</td>
-<td align="left">Set via <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#client-header-timeout">this configuration parameter</a> and respective body aequivalent</td>
+<td align="left">Set via <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#client-header-timeout">this configuration parameter</a> and respective body equivalent</td>
 </tr>
 <tr>
 <td align="left">5.2.2 Ensure the maximum request body size is set correctly (Scored)</td>
