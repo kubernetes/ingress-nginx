@@ -122,7 +122,7 @@ The goal here is to make this feel real for users without getting bogged down.
 What are the caveats to the implementation?
 What are some important details that didn't come across above.
 Go in to as much detail as necessary here.
-This might be a good place to talk about core concepts and how they releate.
+This might be a good place to talk about core concepts and how they relate.
 
 ### Risks and Mitigations
 
