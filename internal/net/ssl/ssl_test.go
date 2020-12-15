@@ -381,7 +381,7 @@ func encodePrivateKeyPEM(key *rsa.PrivateKey) []byte {
 	return pem.EncodeToMemory(&block)
 }
 
-// encodeCertPEM returns PEM-endcoded certificate data
+// encodeCertPEM returns PEM-encoded certificate data
 func encodeCertPEM(cert *x509.Certificate) []byte {
 	block := pem.Block{
 		Type:  certutil.CertificateBlockType,
