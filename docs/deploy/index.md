@@ -158,7 +158,7 @@ Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.41.2/deploy/static/provider/baremetal/deploy.yaml
 ```
 !!! tip
-    Applicable on kubernetes clusteres deployed on bare-metal with generic Linux distro(Such as CentOs, Ubuntu ...).
+    Applicable on kubernetes clusters deployed on bare-metal with generic Linux distro(Such as CentOs, Ubuntu ...).
 !!! tip
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
 
