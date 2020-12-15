@@ -145,7 +145,7 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 										},
 									},
 									{
-										Path: "/somewhereelese",
+										Path: "/somewhereelse",
 										Backend: networking.IngressBackend{
 											ServiceName: framework.EchoService,
 											ServicePort: intstr.FromInt(80),
@@ -172,11 +172,11 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 			Header("Set-Cookie").Contains("Path=/something")
 
 		f.HTTPTestClient().
-			GET("/somewhereelese").
+			GET("/somewhereelse").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).
-			Header("Set-Cookie").Contains("Path=/somewhereelese")
+			Header("Set-Cookie").Contains("Path=/somewhereelse")
 	})
 
 	ginkgo.It("should set cookie with expires", func() {

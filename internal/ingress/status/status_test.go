@@ -63,7 +63,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 					Name:      "foo1",
 					Namespace: apiv1.NamespaceDefault,
 					Labels: map[string]string{
-						"lable_sig": "foo_pod",
+						"label_sig": "foo_pod",
 					},
 				},
 				Spec: apiv1.PodSpec{
@@ -96,7 +96,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 					Name:      "foo2",
 					Namespace: apiv1.NamespaceDefault,
 					Labels: map[string]string{
-						"lable_sig": "foo_no",
+						"label_sig": "foo_no",
 					},
 				},
 			},
@@ -105,7 +105,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 					Name:      "foo3",
 					Namespace: metav1.NamespaceSystem,
 					Labels: map[string]string{
-						"lable_sig": "foo_pod",
+						"label_sig": "foo_pod",
 					},
 				},
 				Spec: apiv1.PodSpec{
@@ -301,7 +301,7 @@ func TestStatusActions(t *testing.T) {
 			Name:      "foo_base_pod",
 			Namespace: apiv1.NamespaceDefault,
 			Labels: map[string]string{
-				"lable_sig": "foo_pod",
+				"label_sig": "foo_pod",
 			},
 		},
 	}
@@ -379,7 +379,7 @@ func TestKeyfunc(t *testing.T) {
 	}
 }
 
-func TestRunningAddresessWithPublishService(t *testing.T) {
+func TestRunningAddressesWithPublishService(t *testing.T) {
 	testCases := map[string]struct {
 		fakeClient  *testclient.Clientset
 		expected    []string
@@ -559,7 +559,7 @@ func TestRunningAddresessWithPublishService(t *testing.T) {
 	}
 }
 
-func TestRunningAddresessWithPods(t *testing.T) {
+func TestRunningAddressesWithPods(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishService = ""
 
@@ -577,7 +577,7 @@ func TestRunningAddresessWithPods(t *testing.T) {
 	}
 }
 
-func TestRunningAddresessWithPublishStatusAddress(t *testing.T) {
+func TestRunningAddressesWithPublishStatusAddress(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishStatusAddress = "127.0.0.1"
 

@@ -301,7 +301,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		nginx.StreamPort,
 	}
 
-	reserverdPorts := sets.NewInt(rp...)
+	reservedPorts := sets.NewInt(rp...)
 	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
 	for port, svcRef := range configmap.Data {
 		externalPort, err := strconv.Atoi(port) // #nosec
@@ -309,7 +309,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			klog.Warningf("%q is not a valid %v port number", port, proto)
 			continue
 		}
-		if reserverdPorts.Has(externalPort) {
+		if reservedPorts.Has(externalPort) {
 			klog.Warningf("Port %d cannot be used for %v stream services. It is reserved for the Ingress controller.", externalPort, proto)
 			continue
 		}
@@ -1451,7 +1451,7 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 	return ""
 }
 
-// getRemovedHosts returns a list of the hostsnames
+// getRemovedHosts returns a list of the hostnames
 // that are not associated anymore to the NGINX configuration.
 func getRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
 	old := sets.NewString()
