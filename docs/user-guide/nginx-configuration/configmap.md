@@ -259,7 +259,7 @@ Enables the OWASP ModSecurity Core Rule Set (CRS). _**default:**_ is disabled
 
 ## modsecurity-snippet
 
-Adds custom rules to modsecurity section of nginx configration
+Adds custom rules to modsecurity section of nginx configuration
 
 ## client-header-buffer-size
 
@@ -895,7 +895,7 @@ Specifies the environment this trace belongs to. _**default:**_ prod
 
 ## datadog-operation-name-override
 
-Overrides the operation naem to use for any traces crated. _**default:**_ nginx.handle
+Overrides the operation name to use for any traces crated. _**default:**_ nginx.handle
 
 ## datadog-priority-sampling
 
