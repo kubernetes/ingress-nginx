@@ -52,7 +52,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int) {
 // replicas is configurable and
 // name is configurable
 func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas int) {
-	deployment := newDeployment(name, f.Namespace, "k8s.gcr.io/ingress-nginx/e2e-test-echo@sha256:41c043188a499d460e7425883a3b196e13f10bf40c395895dbdf06caf3324536", 80, int32(replicas),
+	deployment := newDeployment(name, f.Namespace, "k8s.gcr.io/ingress-nginx/e2e-test-echo@sha256:fda9a88ff1d4d22fda6b0220118252da79ff0c7cd06d4f736a89bc28b64890eb", 80, int32(replicas),
 		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
