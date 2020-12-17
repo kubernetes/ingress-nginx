@@ -69,6 +69,18 @@ describe("Balancer ewma", function()
       assert.are.equals(expected_ewma, ngx.shared.balancer_ewma:get(ngx.var.upstream_addr))
       assert.are.equals(ngx_now, ngx.shared.balancer_ewma_last_touched_at:get(ngx.var.upstream_addr))
     end)
+
+    it("updates EWMA stats with the latest result", function()
+      ngx.var = { upstream_addr = "10.10.10.1:8080, 10.10.10.2:8080", upstream_connect_time = "0.05, 0.02", upstream_response_time = "0.2, 0.1" }
+
+      instance:after_balance()
+
+      local weight = math.exp(-5 / 10)
+      local expected_ewma = 0.3 * weight + 0.12 * (1.0 - weight)
+
+      assert.are.equals(expected_ewma, ngx.shared.balancer_ewma:get("10.10.10.2:8080"))
+      assert.are.equals(ngx_now, ngx.shared.balancer_ewma_last_touched_at:get("10.10.10.2:8080"))
+    end)
   end)
 
   describe("balance()", function()
@@ -95,6 +107,24 @@ describe("Balancer ewma", function()
       -- algorithm picks 10.10.10.3:8080 because its decayed score is even lower
       assert.equal("10.10.10.3:8080", peer)
       assert.are.equals(0.16240233988393523723, ngx.var.balancer_ewma_score)
+    end)
+
+    it("doesn't pick the tried endpoint while retry", function()
+      local two_endpoints_backend = util.deepcopy(backend)
+      table.remove(two_endpoints_backend.endpoints, 2)
+      local two_endpoints_instance = balancer_ewma:new(two_endpoints_backend)
+
+      local peer = two_endpoints_instance:balance()
+      assert.equal("10.10.10.1:8080", peer)
+    end)
+
+    it("all the endpoints are tried, pick the one with lowest score", function()
+      local two_endpoints_backend = util.deepcopy(backend)
+      table.remove(two_endpoints_backend.endpoints, 2)
+      local two_endpoints_instance = balancer_ewma:new(two_endpoints_backend)
+
+      local peer = two_endpoints_instance:balance()
+      assert.equal("10.10.10.3:8080", peer)
     end)
   end)
 
