@@ -15,6 +15,9 @@ metadata:
   name: {{ include "ingress-nginx.controller.fullname" . }}-internal
 spec:
   type: "{{ .Values.controller.service.type }}"
+{{- if .Values.controller.service.internal.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.controller.service.internal.loadBalancerIP }}
+{{- end }}
 {{- if .Values.controller.service.internal.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.controller.service.internal.loadBalancerSourceRanges | nindent 4 }}
 {{- end }}
