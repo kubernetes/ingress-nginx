@@ -2,7 +2,7 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 3.16.0
+version: 3.16.1
 appVersion: 0.41.2
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
@@ -22,3 +22,4 @@ annotations:
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
     - Added LoadBalancerIP value for internal service
+    - Fix chart-releaser action
