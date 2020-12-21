@@ -4,9 +4,13 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.16.1
+
+- Fix chart-releaser action
+
 ### 3.16.0
 
-- [ ] [#6646](https://github.com/kubernetes/ingress-nginx/pull/6646) Added LoadBalancerIP value for internal service
+- [X] [#6646](https://github.com/kubernetes/ingress-nginx/pull/6646) Added LoadBalancerIP value for internal service
 
 ### 3.15.1
 
