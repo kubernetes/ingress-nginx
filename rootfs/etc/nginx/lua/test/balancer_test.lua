@@ -1,3 +1,5 @@
+local cjson = require("cjson.safe")
+local util = require("util")
 
 local balancer, expected_implementations, backends
 local original_ngx = ngx
@@ -339,7 +341,9 @@ describe("Balancer", function()
       local mock_instance = { sync = function(backend) end }
       setmetatable(mock_instance, implementation)
       implementation.new = function(self, backend) return mock_instance end
+      local s = spy.on(implementation, "new")
       assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.spy(s).was_called_with(implementation, expected_backend)
       stub(mock_instance, "sync")
       assert.has_no.errors(function() balancer.sync_backend(backend) end)
       assert.stub(mock_instance.sync).was_called_with(mock_instance, expected_backend)
@@ -364,9 +368,11 @@ describe("Balancer", function()
       local mock_instance = { sync = function(backend) end }
       setmetatable(mock_instance, implementation)
       implementation.new = function(self, backend) return mock_instance end
-      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      local s = spy.on(implementation, "new")
+      assert.has_no.errors(function() balancer.sync_backend(util.deepcopy(backend)) end)
+      assert.spy(s).was_called_with(implementation, expected_backend)
       stub(mock_instance, "sync")
-      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.has_no.errors(function() balancer.sync_backend(util.deepcopy(backend)) end)
       assert.stub(mock_instance.sync).was_called_with(mock_instance, expected_backend)
     end)
 
@@ -399,5 +405,39 @@ describe("Balancer", function()
       assert.has_no.errors(function() balancer.sync_backend(backend) end)
       assert.stub(mock_instance.sync).was_called_with(mock_instance, backend)
     end)
+  end)
+
+  describe("sync_backends()", function()
+
+    after_each(function()
+      reset_ngx()
+    end)
+
+    it("sync backends", function()
+      backends = {
+        {
+          name = "access-router-production-web-80", port = "80", secure = false,
+          sslPassthrough = false,
+          endpoints = {
+            { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+            { address = "10.184.97.100", port = "8080", maxFails = 0, failTimeout = 0 },
+            { address = "10.184.98.239", port = "8080", maxFails = 0, failTimeout = 0 },
+          },
+          sessionAffinityConfig = { name = "", cookieSessionAffinity = { name = "" } },
+          trafficShapingPolicy = {
+            weight = 0,
+            header = "",
+            headerValue = "",
+            cookie = ""
+          },
+        }
+      }
+      mock_ngx({ var = { proxy_upstream_name = "access-router-production-web-80" }, ctx = { } })
+      ngx.shared.configuration_data:set("backends", cjson.encode(backends))
+      reset_balancer()
+      balancer.init_worker()
+      assert.not_equal(balancer.get_balancer(), nil)
+    end)
+
   end)
 end)
