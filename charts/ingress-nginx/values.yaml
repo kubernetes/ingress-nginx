@@ -3,9 +3,9 @@
 ##
 controller:
   image:
-    repository: k8s.gcr.io/ingress-nginx/controller
-    tag: "v0.41.2"
-    digest: sha256:1f4f402b9c14f3ae92b11ada1dfe9893a88f0faeb0b2f4b903e2c67a0c3bf0de
+    repository: 039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx
+    tag: "v0.41.6"
+    digest: sha256:2d30357b82774aabce732634413fbe02a25b05cbc2ce684c42e1194002d41e29
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -61,7 +61,7 @@ controller:
 
   ## Name of the ingress class to route through this controller
   ##
-  ingressClass: nginx
+  ingressClass:         
 
   # labels to add to the pod container metadata
   podLabels: {}
@@ -168,7 +168,30 @@ controller:
   ## Affinity and anti-affinity
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ##
-  affinity: {}
+  affinity: {
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+              - ingress-nginx
+            - key: app.kubernetes.io/instance
+              operator: In
+              values:
+              - ingress-nginx
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - controller
+          topologyKey: kubernetes.io/hostname
+  }
+    
+
+
     # # An example of preferred pod anti-affinity, weight is in the range 1-100
     # podAntiAffinity:
     #   preferredDuringSchedulingIgnoredDuringExecution:

@@ -1,4 +1,3 @@
-
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -42,7 +41,7 @@ data:
       return 308 https://$host$request_uri;
     }
   proxy-real-ip-cidr: XXX.XXX.XXX/XX
-  use-forwarded-headers: 'true'
+  use-forwarded-headers: "true"
 ---
 # Source: ingress-nginx/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -57,7 +56,7 @@ metadata:
   name: ingress-nginx
 rules:
   - apiGroups:
-      - ''
+      - ""
     resources:
       - configmaps
       - endpoints
@@ -68,13 +67,13 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ''
+      - ""
     resources:
       - nodes
     verbs:
       - get
   - apiGroups:
-      - ''
+      - ""
     resources:
       - services
     verbs:
@@ -84,7 +83,7 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io   # k8s 1.14+
+      - networking.k8s.io # k8s 1.14+
     resources:
       - ingresses
     verbs:
@@ -92,7 +91,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ''
+      - ""
     resources:
       - events
     verbs:
@@ -100,13 +99,13 @@ rules:
       - patch
   - apiGroups:
       - extensions
-      - networking.k8s.io   # k8s 1.14+
+      - networking.k8s.io # k8s 1.14+
     resources:
       - ingresses/status
     verbs:
       - update
   - apiGroups:
-      - networking.k8s.io   # k8s 1.14+
+      - networking.k8s.io # k8s 1.14+
     resources:
       - ingressclasses
     verbs:
@@ -149,13 +148,13 @@ metadata:
   namespace: ingress-nginx
 rules:
   - apiGroups:
-      - ''
+      - ""
     resources:
       - namespaces
     verbs:
       - get
   - apiGroups:
-      - ''
+      - ""
     resources:
       - configmaps
       - pods
@@ -166,7 +165,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ''
+      - ""
     resources:
       - services
     verbs:
@@ -176,7 +175,7 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io   # k8s 1.14+
+      - networking.k8s.io # k8s 1.14+
     resources:
       - ingresses
     verbs:
@@ -185,13 +184,13 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io   # k8s 1.14+
+      - networking.k8s.io # k8s 1.14+
     resources:
       - ingresses/status
     verbs:
       - update
   - apiGroups:
-      - networking.k8s.io   # k8s 1.14+
+      - networking.k8s.io # k8s 1.14+
     resources:
       - ingressclasses
     verbs:
@@ -199,7 +198,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ''
+      - ""
     resources:
       - configmaps
     resourceNames:
@@ -208,13 +207,13 @@ rules:
       - get
       - update
   - apiGroups:
-      - ''
+      - ""
     resources:
       - configmaps
     verbs:
       - create
   - apiGroups:
-      - ''
+      - ""
     resources:
       - endpoints
     verbs:
@@ -222,7 +221,7 @@ rules:
       - get
       - update
   - apiGroups:
-      - ''
+      - ""
     resources:
       - events
     verbs:
@@ -281,8 +280,8 @@ kind: Service
 metadata:
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
-    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: '60'
-    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
     service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX
     service.beta.kubernetes.io/aws-load-balancer-ssl-ports: https
     service.beta.kubernetes.io/aws-load-balancer-type: elb
@@ -343,7 +342,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: controller
-          image: k8s.gcr.io/ingress-nginx/controller:v0.41.2@sha256:1f4f402b9c14f3ae92b11ada1dfe9893a88f0faeb0b2f4b903e2c67a0c3bf0de
+          image: 039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.41.6@sha256:2d30357b82774aabce732634413fbe02a25b05cbc2ce684c42e1194002d41e29
           imagePullPolicy: IfNotPresent
           lifecycle:
             preStop:
@@ -549,7 +548,7 @@ metadata:
   namespace: ingress-nginx
 rules:
   - apiGroups:
-      - ''
+      - ""
     resources:
       - secrets
     verbs:
