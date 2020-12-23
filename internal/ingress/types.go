@@ -86,7 +86,7 @@ type Backend struct {
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
-	// StickySessionAffinitySession contains the StickyConfig object with stickyness configuration
+	// StickySessionAffinitySession contains the StickyConfig object with stickiness configuration
 	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
 	// Consistent hashing by NGINX variable
 	UpstreamHashBy UpstreamHashByConfig `json:"upstreamHashByConfig,omitempty"`
@@ -232,6 +232,8 @@ type Location struct {
 	IsDefBackend bool `json:"isDefBackend"`
 	// Ingress returns the ingress from which this location was generated
 	Ingress *Ingress `json:"ingress"`
+	// IngressPath original path defined in the ingress rule
+	IngressPath string `json:"ingressPath"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress

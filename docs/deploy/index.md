@@ -150,6 +150,8 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.41.6/deploy/static/provider/scw/deploy.yaml
 ```
 
+More information with regards to Azure annotations for ingress controller can be found in the [official AKS documentation](https://docs.microsoft.com/en-us/azure/aks/ingress-internal-ip#create-an-ingress-controller).
+
 #### Bare-metal
 
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
@@ -157,7 +159,8 @@ Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.41.6/deploy/static/provider/baremetal/deploy.yaml
 ```
-
+!!! tip
+    Applicable on kubernetes clusters deployed on bare-metal with generic Linux distro(Such as CentOs, Ubuntu ...).
 !!! tip
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
 

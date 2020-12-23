@@ -192,7 +192,7 @@ end
 -- This design tradeoffs lack of OCSP response in the first request with better latency.
 --
 -- Serving stale response ensures that we don't serve another request without OCSP response
--- when the cache entry expires. Instead we serve the signle request with stale response
+-- when the cache entry expires. Instead we serve the single request with stale response
 -- and enqueue fetch_and_cache_ocsp_response for refetch.
 local function ocsp_staple(uid, der_cert)
   local response, _, is_stale = ocsp_response_cache:get_stale(uid)

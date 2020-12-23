@@ -37,7 +37,8 @@ Thanks for taking the time to join our community and start contributing!
 ## Changelog
 
 See [the list of releases](https://github.com/kubernetes/ingress-nginx/releases) to find out about feature changes
-For detailed changes for each release; please check the [Changelog.md](Changelog.md)
+For detailed changes for each release; please check the [Changelog.md](Changelog.md)  
+For detailed changes on the `ingress-nginx` helm chart, please check the following [CHANGELOG.md](charts/ingress-nginx/CHANGELOG.md) file.
 
 # Get Involved
 

@@ -86,7 +86,7 @@ var (
 			true,
 			false,
 		},
-		"when secure backend, stickeness and dynamic config enabled": {
+		"when secure backend, stickiness and dynamic config enabled": {
 			"/",
 			"/",
 			"/",
@@ -874,10 +874,10 @@ func TestEscapeLiteralDollar(t *testing.T) {
 		t.Errorf("Expected %v but returned %v", expected, escapedPath)
 	}
 
-	leaveUnchagned := "/leave-me/unchagned"
-	escapedPath = escapeLiteralDollar(leaveUnchagned)
-	if escapedPath != leaveUnchagned {
-		t.Errorf("Expected %v but returned %v", leaveUnchagned, escapedPath)
+	leaveUnchanged := "/leave-me/unchanged"
+	escapedPath = escapeLiteralDollar(leaveUnchanged)
+	if escapedPath != leaveUnchanged {
+		t.Errorf("Expected %v but returned %v", leaveUnchanged, escapedPath)
 	}
 
 	escapedPath = escapeLiteralDollar(false)

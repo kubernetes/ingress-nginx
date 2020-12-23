@@ -18,6 +18,7 @@ package controller
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -114,6 +115,10 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 			Addr:      config.ValidationWebhook,
 			Handler:   adm_controller.NewAdmissionControllerServer(&adm_controller.IngressAdmission{Checker: n}),
 			TLSConfig: ssl.NewTLSListener(n.cfg.ValidationWebhookCertPath, n.cfg.ValidationWebhookKeyPath).TLSConfig(),
+			// disable http/2
+			// https://github.com/kubernetes/kubernetes/issues/80313
+			// https://github.com/kubernetes/ingress-nginx/issues/6323#issuecomment-737239159
+			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 		}
 	}
 
@@ -434,7 +439,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 				klog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
 				continue
 			}
-			port, err := strconv.Atoi(pb.Port.String())
+			port, err := strconv.Atoi(pb.Port.String()) // #nosec
 			if err != nil {
 				for _, sp := range svc.Spec.Ports {
 					if sp.Name == pb.Port.String() {

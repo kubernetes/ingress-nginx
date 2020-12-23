@@ -108,6 +108,35 @@ func TestGetEndpoints(t *testing.T) {
 			},
 		},
 		{
+			"a service type ServiceTypeExternalName with an trailing dot ExternalName value should return one endpoints",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:         corev1.ServiceTypeExternalName,
+					ExternalName: "www.google.com.",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromInt(80),
+						},
+					},
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "default",
+				TargetPort: intstr.FromInt(80),
+			},
+			corev1.ProtocolTCP,
+			func(string) (*corev1.Endpoints, error) {
+				return &corev1.Endpoints{}, nil
+			},
+			[]ingress.Endpoint{
+				{
+					Address: "www.google.com",
+					Port:    "443",
+				},
+			},
+		},
+		{
 			"a service type ServiceTypeExternalName with an invalid ExternalName value should no return endpoints",
 			&corev1.Service{
 				Spec: corev1.ServiceSpec{

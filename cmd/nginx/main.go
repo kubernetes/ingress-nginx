@@ -19,7 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"math/rand" // #nosec
 	"net/http"
 	"net/http/pprof"
 	"os"

@@ -111,6 +111,31 @@ describe("Balancer ewma", function()
       assert_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 20)
     end)
 
+    it("resets alternative backends and traffic shaping policy even if endpoints do not change", function()
+      assert.are.same(nil, instance.alternativeBackends)
+      assert.are.same(nil, instance.trafficShapingPolicy)
+
+      local new_backend = util.deepcopy(backend)
+      new_backend.alternativeBackends = {"my-canary-namespace-my-canary-service-my-port"}
+      new_backend.trafficShapingPolicy = {
+        cookie = "",
+        header = "",
+        headerPattern = "",
+        headerValue = "",
+        weight = 20,
+      }
+
+      instance:sync(new_backend)
+
+      assert.are.same(new_backend.alternativeBackends, instance.alternative_backends)
+      assert.are.same(new_backend.trafficShapingPolicy, instance.traffic_shaping_policy)
+      assert.are.same(new_backend.endpoints, instance.peers)
+
+      assert_ewma_stats("10.10.10.1:8080", 0.2, ngx_now - 1)
+      assert_ewma_stats("10.10.10.2:8080", 0.3, ngx_now - 5)
+      assert_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 20)
+    end)
+
     it("updates peers, deletes stats for old endpoints and sets average ewma score to new ones", function()
       local new_backend = util.deepcopy(backend)
 

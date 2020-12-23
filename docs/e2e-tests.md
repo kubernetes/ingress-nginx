@@ -540,7 +540,7 @@
 
 ### [[Service] Type ExternalName](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L37)
 
-- [works with external name set to incomplete fdqn](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L40)
+- [works with external name set to incomplete fqdn](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L40)
 - [should return 200 for service type=ExternalName without a port defined](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L73)
 - [should return 200 for service type=ExternalName with a port defined](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L107)
 - [should return status 502 for service type=ExternalName with an invalid host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L148)

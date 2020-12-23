@@ -301,15 +301,15 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		nginx.StreamPort,
 	}
 
-	reserverdPorts := sets.NewInt(rp...)
+	reservedPorts := sets.NewInt(rp...)
 	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
 	for port, svcRef := range configmap.Data {
-		externalPort, err := strconv.Atoi(port)
+		externalPort, err := strconv.Atoi(port) // #nosec
 		if err != nil {
 			klog.Warningf("%q is not a valid %v port number", port, proto)
 			continue
 		}
-		if reserverdPorts.Has(externalPort) {
+		if reservedPorts.Has(externalPort) {
 			klog.Warningf("Port %d cannot be used for %v stream services. It is reserved for the Ingress controller.", externalPort, proto)
 			continue
 		}
@@ -342,11 +342,13 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			continue
 		}
 		var endps []ingress.Endpoint
-		targetPort, err := strconv.Atoi(svcPort)
+		/* #nosec */
+		targetPort, err := strconv.Atoi(svcPort) // #nosec
 		if err != nil {
 			// not a port number, fall back to using port name
 			klog.V(3).Infof("Searching Endpoints with %v port name %q for Service %q", proto, svcPort, nsName)
-			for _, sp := range svc.Spec.Ports {
+			for i := range svc.Spec.Ports {
+				sp := svc.Spec.Ports[i]
 				if sp.Name == svcPort {
 					if sp.Protocol == proto {
 						endps = getEndpoints(svc, &sp, proto, n.store.GetServiceEndpoints)
@@ -356,7 +358,8 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			}
 		} else {
 			klog.V(3).Infof("Searching Endpoints with %v port number %d for Service %q", proto, targetPort, nsName)
-			for _, sp := range svc.Spec.Ports {
+			for i := range svc.Spec.Ports {
+				sp := svc.Spec.Ports[i]
 				if sp.Port == int32(targetPort) {
 					if sp.Protocol == proto {
 						endps = getEndpoints(svc, &sp, proto, n.store.GetServiceEndpoints)
@@ -564,37 +567,40 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 
 				addLoc := true
 				for _, loc := range server.Locations {
-					if loc.Path == nginxPath {
-						// Same paths but different types are allowed
-						// (same type means overlap in the path definition)
-						if !apiequality.Semantic.DeepEqual(loc.PathType, path.PathType) {
-							break
-						}
+					if loc.Path != nginxPath {
+						continue
+					}
 
-						addLoc = false
-
-						if !loc.IsDefBackend {
-							klog.V(3).Infof("Location %q already configured for server %q with upstream %q (Ingress %q)",
-								loc.Path, server.Hostname, loc.Backend, ingKey)
-							break
-						}
-
-						klog.V(3).Infof("Replacing location %q for server %q with upstream %q to use upstream %q (Ingress %q)",
-							loc.Path, server.Hostname, loc.Backend, ups.Name, ingKey)
-
-						loc.Backend = ups.Name
-						loc.IsDefBackend = false
-						loc.Port = ups.Port
-						loc.Service = ups.Service
-						loc.Ingress = ing
-
-						locationApplyAnnotations(loc, anns)
-
-						if loc.Redirect.FromToWWW {
-							server.RedirectFromToWWW = true
-						}
+					// Same paths but different types are allowed
+					// (same type means overlap in the path definition)
+					if !apiequality.Semantic.DeepEqual(loc.PathType, path.PathType) {
 						break
 					}
+
+					addLoc = false
+
+					if !loc.IsDefBackend {
+						klog.V(3).Infof("Location %q already configured for server %q with upstream %q (Ingress %q)",
+							loc.Path, server.Hostname, loc.Backend, ingKey)
+						break
+					}
+
+					klog.V(3).Infof("Replacing location %q for server %q with upstream %q to use upstream %q (Ingress %q)",
+						loc.Path, server.Hostname, loc.Backend, ups.Name, ingKey)
+
+					loc.Backend = ups.Name
+					loc.IsDefBackend = false
+					loc.Port = ups.Port
+					loc.Service = ups.Service
+					loc.Ingress = ing
+
+					locationApplyAnnotations(loc, anns)
+
+					if loc.Redirect.FromToWWW {
+						server.RedirectFromToWWW = true
+					}
+
+					break
 				}
 
 				// new location
@@ -645,6 +651,15 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						locs[host] = []string{}
 					}
 					locs[host] = append(locs[host], path.Path)
+
+					if len(server.Aliases) > 0 {
+						for _, alias := range server.Aliases {
+							if _, ok := locs[alias]; !ok {
+								locs[alias] = []string{}
+							}
+							locs[alias] = append(locs[alias], path.Path)
+						}
+					}
 				}
 			}
 		}
@@ -939,7 +954,8 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 		return upstreams, nil
 	}
 
-	for _, servicePort := range svc.Spec.Ports {
+	for i := range svc.Spec.Ports {
+		servicePort := svc.Spec.Ports[i]
 		// targetPort could be a string, use either the port name or number (int)
 		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
 			servicePort.TargetPort.String() == backendPort ||
@@ -1044,14 +1060,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
+				defLoc.Backend = backendUpstream.Name
+				defLoc.Service = backendUpstream.Service
+				defLoc.Ingress = ing
+
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
-					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q",
-						ingKey, defServerName)
+					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q", ingKey, defServerName)
 
 					defLoc.IsDefBackend = false
-					defLoc.Backend = backendUpstream.Name
-					defLoc.Service = backendUpstream.Service
-					defLoc.Ingress = ing
 
 					// TODO: Redirect and rewrite can affect the catch all behavior, skip for now
 					originalRedirect := defLoc.Redirect
@@ -1060,8 +1076,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					defLoc.Redirect = originalRedirect
 					defLoc.Rewrite = originalRewrite
 				} else {
-					klog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
-						ingKey)
+					klog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.", ingKey)
 				}
 			}
 		}
@@ -1077,12 +1092,12 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				continue
 			}
 
-			pathTypePrefix := networking.PathTypePrefix
 			loc := &ingress.Location{
 				Path:         rootLocation,
 				PathType:     &pathTypePrefix,
 				IsDefBackend: true,
 				Backend:      un,
+				Ingress:      ing,
 				Service:      &apiv1.Service{},
 			}
 			locationApplyAnnotations(loc, anns)
@@ -1436,7 +1451,7 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 	return ""
 }
 
-// getRemovedHosts returns a list of the hostsnames
+// getRemovedHosts returns a list of the hostnames
 // that are not associated anymore to the NGINX configuration.
 func getRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
 	old := sets.NewString()
@@ -1498,7 +1513,7 @@ func shouldCreateUpstreamForLocationDefaultBackend(upstream *ingress.Backend, lo
 }
 
 func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
-	port, err := strconv.Atoi(name)
+	port, err := strconv.Atoi(name) // #nosec
 	if err != nil {
 		// not a number. check port names.
 		for _, svcPort := range svc.Spec.Ports {

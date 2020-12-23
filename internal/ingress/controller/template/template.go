@@ -18,13 +18,13 @@ package template
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
+	"math/rand" // #nosec
 	"net"
 	"net/url"
 	"os"
@@ -809,6 +809,7 @@ func isValidByteSize(input interface{}, isOffset bool) bool {
 
 type ingressInformation struct {
 	Namespace   string
+	Path        string
 	Rule        string
 	Service     string
 	ServicePort string
@@ -848,7 +849,7 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 		return &ingressInformation{}
 	}
 
-	path, ok := p.(string)
+	ingressPath, ok := p.(string)
 	if !ok {
 		klog.Errorf("expected a 'string' type but %T was returned", p)
 		return &ingressInformation{}
@@ -862,6 +863,12 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 		Namespace:   ing.GetNamespace(),
 		Rule:        ing.GetName(),
 		Annotations: ing.Annotations,
+		Path:        ingressPath,
+	}
+
+	if ingressPath == "" {
+		ingressPath = "/"
+		info.Path = "/"
 	}
 
 	if ing.Spec.Backend != nil {
@@ -880,19 +887,31 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 			continue
 		}
 
-		if hostname != rule.Host {
+		host := "_"
+		if rule.Host != "" {
+			host = rule.Host
+		}
+
+		if hostname != host {
 			continue
 		}
 
 		for _, rPath := range rule.HTTP.Paths {
-			if path == rPath.Path {
-				info.Service = rPath.Backend.ServiceName
-				if rPath.Backend.ServicePort.String() != "0" {
-					info.ServicePort = rPath.Backend.ServicePort.String()
-				}
+			if ingressPath != rPath.Path {
+				continue
+			}
 
+			if info.Service != "" && rPath.Backend.ServiceName == "" {
+				// empty rule. Only contains a Path and PathType
 				return info
 			}
+
+			info.Service = rPath.Backend.ServiceName
+			if rPath.Backend.ServicePort.String() != "0" {
+				info.ServicePort = rPath.Backend.ServicePort.String()
+			}
+
+			return info
 		}
 	}
 
@@ -929,7 +948,7 @@ func buildAuthSignURL(authSignURL, authRedirectParam string) string {
 }
 
 func buildAuthSignURLLocation(location, authSignURL string) string {
-	hasher := sha1.New()
+	hasher := sha1.New() // #nosec
 	hasher.Write([]byte(location))
 	hasher.Write([]byte(authSignURL))
 	return "@" + hex.EncodeToString(hasher.Sum(nil))
@@ -944,7 +963,7 @@ func init() {
 func randomString() string {
 	b := make([]rune, 32)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[rand.Intn(len(letters))] // #nosec
 	}
 
 	return string(b)
