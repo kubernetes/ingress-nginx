@@ -1,5 +1,89 @@
 # Changelog
 
+### 0.42.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.42.0@sha256:f7187418c647af4a0039938b0ab36c2322ac3662d16be69f9cc178bfd25f7eee`
+
+_New Features:_
+
+- NGINX 1.19.6
+- Go 1.15.6
+- client-go v0.20.0
+- Support [Keda Autoscaling](https://github.com/kubernetes/ingress-nginx/pull/6493) in helm chart
+- Support custom redirect URL parameter in external authentication [#6294](https://github.com/kubernetes/ingress-nginx/pull/6294)
+
+_Changes:_
+
+- [X] [#6294](https://github.com/kubernetes/ingress-nginx/pull/6294) Allow customisation of redirect URL parameter in external auth redirects
+- [X] [#6461](https://github.com/kubernetes/ingress-nginx/pull/6461) Update kind github action
+- [X] [#6469](https://github.com/kubernetes/ingress-nginx/pull/6469) Allow custom service names for controller and backend (#6457)
+- [X] [#6470](https://github.com/kubernetes/ingress-nginx/pull/6470) Added role binding for 'ingress-nginx-admission' to PSP example (#6018)
+- [X] [#6473](https://github.com/kubernetes/ingress-nginx/pull/6473) Enable external auth e2e tests
+- [X] [#6480](https://github.com/kubernetes/ingress-nginx/pull/6480) Refactor extraction of ingress pod details
+- [X] [#6485](https://github.com/kubernetes/ingress-nginx/pull/6485) Fix sum value of nginx process connections
+- [X] [#6493](https://github.com/kubernetes/ingress-nginx/pull/6493) Support Keda Autoscaling
+- [X] [#6499](https://github.com/kubernetes/ingress-nginx/pull/6499) Fix opentracing propagation on auth-url
+- [X] [#6505](https://github.com/kubernetes/ingress-nginx/pull/6505) Reorder HPA resource list to work with GitOps tooling
+- [X] [#6514](https://github.com/kubernetes/ingress-nginx/pull/6514) Remove helm2 support and update docs
+- [X] [#6526](https://github.com/kubernetes/ingress-nginx/pull/6526) Fix helm repo update command
+- [X] [#6529](https://github.com/kubernetes/ingress-nginx/pull/6529) Fix ErrorLogLevel in stream contexts
+- [X] [#6533](https://github.com/kubernetes/ingress-nginx/pull/6533) Update nginx to 1.19.5
+- [X] [#6544](https://github.com/kubernetes/ingress-nginx/pull/6544) Fix the name of default backend variable
+- [X] [#6546](https://github.com/kubernetes/ingress-nginx/pull/6546) bugfix: update trafficShapingPolicy not working in ewma load-balance
+- [X] [#6550](https://github.com/kubernetes/ingress-nginx/pull/6550) Ensure any change in the charts directory trigger ci tests
+- [X] [#6553](https://github.com/kubernetes/ingress-nginx/pull/6553) fixes: allow user to specify the maxmium number of retries in stream block
+- [X] [#6558](https://github.com/kubernetes/ingress-nginx/pull/6558) Update kindest image
+- [X] [#6560](https://github.com/kubernetes/ingress-nginx/pull/6560) Fix nginx ingress variables for definitions without hosts
+- [X] [#6561](https://github.com/kubernetes/ingress-nginx/pull/6561) Disable HTTP/2 in the webhook server
+- [X] [#6571](https://github.com/kubernetes/ingress-nginx/pull/6571) Add gosec action
+- [X] [#6574](https://github.com/kubernetes/ingress-nginx/pull/6574) Release helm chart v3.13.0
+- [X] [#6576](https://github.com/kubernetes/ingress-nginx/pull/6576) Fix nginx ingress variables for definitions with Backend
+- [X] [#6577](https://github.com/kubernetes/ingress-nginx/pull/6577) Update build TAG
+- [X] [#6578](https://github.com/kubernetes/ingress-nginx/pull/6578) Update helm chart-testing image
+- [X] [#6580](https://github.com/kubernetes/ingress-nginx/pull/6580) fix for 6564
+- [X] [#6586](https://github.com/kubernetes/ingress-nginx/pull/6586) fix(chart): Move 'maxmindLicenseKey' to `controller.maxmindLicenseKey`
+- [X] [#6587](https://github.com/kubernetes/ingress-nginx/pull/6587) feat(nginx.tmpl): Add support for GeoLite2-Country and GeoIP2-Country databases
+- [X] [#6592](https://github.com/kubernetes/ingress-nginx/pull/6592) Update github actions
+- [X] [#6593](https://github.com/kubernetes/ingress-nginx/pull/6593) Rollback chart-releaser action
+- [X] [#6594](https://github.com/kubernetes/ingress-nginx/pull/6594) Fix chart-releaser action
+- [X] [#6595](https://github.com/kubernetes/ingress-nginx/pull/6595) Fix helm chart releaser action
+- [X] [#6596](https://github.com/kubernetes/ingress-nginx/pull/6596) Fix helm chart releaser action
+- [X] [#6600](https://github.com/kubernetes/ingress-nginx/pull/6600) Bugfix: some requests fail with 503 when nginx reload
+- [X] [#6607](https://github.com/kubernetes/ingress-nginx/pull/6607) fix flaky lua tests
+- [X] [#6608](https://github.com/kubernetes/ingress-nginx/pull/6608) make sure canary attributes are reset on ewma backend sync
+- [X] [#6614](https://github.com/kubernetes/ingress-nginx/pull/6614) Refactor ingress nginx variables
+- [X] [#6617](https://github.com/kubernetes/ingress-nginx/pull/6617) Allow FQDN for ExternalName Service
+- [X] [#6620](https://github.com/kubernetes/ingress-nginx/pull/6620) Fix sticky session not set for host in server-alias annotation (#6448)
+- [X] [#6621](https://github.com/kubernetes/ingress-nginx/pull/6621) Update go dependencies
+- [X] [#6627](https://github.com/kubernetes/ingress-nginx/pull/6627) Update nginx to 1.19.6
+- [X] [#6628](https://github.com/kubernetes/ingress-nginx/pull/6628) Update nginx image
+- [X] [#6629](https://github.com/kubernetes/ingress-nginx/pull/6629) Add kind e2e tests support for k8s v1.20.0
+- [X] [#6635](https://github.com/kubernetes/ingress-nginx/pull/6635) Update test images and go to 1.15.6
+- [X] [#6638](https://github.com/kubernetes/ingress-nginx/pull/6638) Update test images
+- [X] [#6639](https://github.com/kubernetes/ingress-nginx/pull/6639) Don't pick tried endpoint & count the latest in ewma balancer
+- [X] [#6646](https://github.com/kubernetes/ingress-nginx/pull/6646) Adding LoadBalancerIP value for internal service to Helm chart
+- [X] [#6652](https://github.com/kubernetes/ingress-nginx/pull/6652) Change helm chart tag name to disambiguate purpose
+- [X] [#6660](https://github.com/kubernetes/ingress-nginx/pull/6660) Fix chart-releaser action
+
+_Documentation:_
+
+- [X] [#6481](https://github.com/kubernetes/ingress-nginx/pull/6481) docs(annotations): explicit redirect status code
+- [X] [#6486](https://github.com/kubernetes/ingress-nginx/pull/6486) Fix typo
+- [X] [#6528](https://github.com/kubernetes/ingress-nginx/pull/6528) Spelling
+- [X] [#6494](https://github.com/kubernetes/ingress-nginx/pull/6494) Update development.md with docker version and experimental feature requirment
+- [X] [#6501](https://github.com/kubernetes/ingress-nginx/pull/6501) Add Chart changelog instructions
+- [X] [#6541](https://github.com/kubernetes/ingress-nginx/pull/6541) fixed misspell
+- [X] [#6551](https://github.com/kubernetes/ingress-nginx/pull/6551) Add documentation to activate DHE based ciphers
+- [X] [#6566](https://github.com/kubernetes/ingress-nginx/pull/6566) fix docs  log-format-upstream sample
+- [X] [#6579](https://github.com/kubernetes/ingress-nginx/pull/6579) Update README.md
+- [X] [#6598](https://github.com/kubernetes/ingress-nginx/pull/6598) Add a link to the helm ingress-nginx `CHANGELOG.md` file to the `README.md` file
+- [X] [#6623](https://github.com/kubernetes/ingress-nginx/pull/6623) fix typo
+- [X] [#6636](https://github.com/kubernetes/ingress-nginx/pull/6636) Fix link to kustomize docs
+- [X] [#6642](https://github.com/kubernetes/ingress-nginx/pull/6642) Update README.md
+- [X] [#6665](https://github.com/kubernetes/ingress-nginx/pull/6665) added AKS specific documentation
+
 ### 0.41.2
 
 **Image:**
