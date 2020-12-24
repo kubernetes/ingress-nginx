@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Update ingress-nginx v0.42.0
+    apiVersion: v2
+    appVersion: 0.42.0
+    created: "2020-12-24T19:11:58.359434862Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: b6b928d4a96bcade471071c7477da17c340976aeb413241bbb8e4d56061c0aa6
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.17.0/ingress-nginx-3.17.0.tgz
+    version: 3.17.0
+  - annotations:
+      artifacthub.io/changes: |
         - Added LoadBalancerIP value for internal service
         - Fix chart-releaser action
     apiVersion: v2
