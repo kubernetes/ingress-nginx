@@ -4,6 +4,10 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.17.0
+
+- Update ingress-nginx v0.42.0
+
 ### 3.16.1
 
 - Fix chart-releaser action
