@@ -176,7 +176,6 @@ function _M.balance(self)
 
   if #peers > 1 then
     local k = (#peers < PICK_SET_SIZE) and #peers or PICK_SET_SIZE
-    local peer_copy = util.deepcopy(peers)
 
     local tried_endpoints
     if not ngx.ctx.balancer_ewma_tried_endpoints then
@@ -187,7 +186,7 @@ function _M.balance(self)
     end
 
     local filtered_peers
-    for _, peer in ipairs(peer_copy) do
+    for _, peer in ipairs(peers) do
       if not tried_endpoints[get_upstream_name(peer)] then
         if not filtered_peers then
           filtered_peers = {}
@@ -198,7 +197,7 @@ function _M.balance(self)
 
     if not filtered_peers then
       ngx.log(ngx.WARN, "all endpoints have been retried")
-      filtered_peers = peer_copy
+      filtered_peers = util.deepcopy(peers)
     end
 
     if #filtered_peers > 1 then

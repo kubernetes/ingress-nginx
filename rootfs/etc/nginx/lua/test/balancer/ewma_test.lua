@@ -106,6 +106,7 @@ describe("Balancer ewma", function()
       -- even though 10.10.10.1:8080 has a lower ewma score
       -- algorithm picks 10.10.10.3:8080 because its decayed score is even lower
       assert.equal("10.10.10.3:8080", peer)
+      assert.equal(true, ngx.ctx.balancer_ewma_tried_endpoints["10.10.10.3:8080"])
       assert.are.equals(0.16240233988393523723, ngx.var.balancer_ewma_score)
     end)
 
@@ -114,8 +115,12 @@ describe("Balancer ewma", function()
       table.remove(two_endpoints_backend.endpoints, 2)
       local two_endpoints_instance = balancer_ewma:new(two_endpoints_backend)
 
+      ngx.ctx.balancer_ewma_tried_endpoints = {
+        ["10.10.10.3:8080"] = true,
+      }
       local peer = two_endpoints_instance:balance()
       assert.equal("10.10.10.1:8080", peer)
+      assert.equal(true, ngx.ctx.balancer_ewma_tried_endpoints["10.10.10.1:8080"])
     end)
 
     it("all the endpoints are tried, pick the one with lowest score", function()
@@ -123,6 +128,10 @@ describe("Balancer ewma", function()
       table.remove(two_endpoints_backend.endpoints, 2)
       local two_endpoints_instance = balancer_ewma:new(two_endpoints_backend)
 
+      ngx.ctx.balancer_ewma_tried_endpoints = {
+        ["10.10.10.1:8080"] = true,
+        ["10.10.10.3:8080"] = true,
+      }
       local peer = two_endpoints_instance:balance()
       assert.equal("10.10.10.3:8080", peer)
     end)
