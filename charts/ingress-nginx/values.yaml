@@ -3,7 +3,7 @@
 ##
 controller:
   image:
-    repository: 039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx
+    repository: k8s.gcr.io/ingress-nginx/controller
     tag: "v0.41.6"
     digest: sha256:2d30357b82774aabce732634413fbe02a25b05cbc2ce684c42e1194002d41e29
     pullPolicy: IfNotPresent

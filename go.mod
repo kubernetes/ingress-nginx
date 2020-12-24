@@ -17,7 +17,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
 	github.com/ncabatoff/process-exporter v0.7.2
-	github.com/onsi/ginkgo v1.14.1
+	github.com/onsi/ginkgo v1.14.2
 	github.com/opencontainers/runc v1.0.0-rc91.0.20200707015106-819fcc687efb
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1

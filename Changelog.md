@@ -4,7 +4,7 @@
 
 **Image:**
 
-- `039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.41.6@sha256:2d30357b82774aabce732634413fbe02a25b05cbc2ce684c42e1194002d41e29`
+- `k8s.gcr.io/ingress-nginx/controller:v0.41.2@sha256:1f4f402b9c14f3ae92b11ada1dfe9893a88f0faeb0b2f4b903e2c67a0c3bf0de`
 
 Fix regression introduced in 0.41.0 with external authentication
 
@@ -16,7 +16,7 @@ _Changes:_
 
 **Image:**
 
-- `039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.41.1@sha256:595f5c08aaa2bdfd1afdfb2e0f1a668bc85d96f80c097ddb3d4241f0c9122549`
+- `k8s.gcr.io/ingress-nginx/controller:v0.41.1@sha256:595f5c08aaa2bdfd1afdfb2e0f1a668bc85d96f80c097ddb3d4241f0c9122549`
 
 Fix routing regression introduced in 0.41.0 with PathType Exact
 
@@ -34,7 +34,7 @@ _Changes:_
 
 **Image:**
 
-- `039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.41.0@sha256:e6019e536cfb921afb99408d5292fa88b017c49dd29d05fc8dbc456aa770d590`
+- `k8s.gcr.io/ingress-nginx/controller:v0.41.0@sha256:e6019e536cfb921afb99408d5292fa88b017c49dd29d05fc8dbc456aa770d590`
 
 _New Features:_
 
@@ -93,7 +93,7 @@ _Documentation:_
 
 **Image:**
 
-- `039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.40.2@sha256:46ba23c3fbaafd9e5bd01ea85b2f921d9f2217be082580edc22e6c704a83f02f`
+- `k8s.gcr.io/ingress-nginx/controller:v0.40.2@sha256:46ba23c3fbaafd9e5bd01ea85b2f921d9f2217be082580edc22e6c704a83f02f`
 
 Improve HandleAdmission resiliency
 
@@ -105,7 +105,7 @@ _Changes:_
 
 **Image:**
 
-- `039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.40.1@sha256:abffcf2d25e3e7c7b67a315a7c664ec79a1588c9c945d3c7a75637c2f55caec6`
+- `k8s.gcr.io/ingress-nginx/controller:v0.40.1@sha256:abffcf2d25e3e7c7b67a315a7c664ec79a1588c9c945d3c7a75637c2f55caec6`
 
 Fix regression with clusters running v1.16 where AdmissionReview V1 is available but not enabled.
 
@@ -118,7 +118,7 @@ _Changes:_
 
 **Image:**
 
-- `039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.40.0@sha256:b954d8ff1466eb236162c644bd64e9027a212c82b484cbe47cc21da45fe8bc59`
+- `k8s.gcr.io/ingress-nginx/controller:v0.40.0@sha256:b954d8ff1466eb236162c644bd64e9027a212c82b484cbe47cc21da45fe8bc59`
 
 _Breaking Changes:_
 
@@ -220,7 +220,7 @@ _Documentation:_
 
 **Image:**
 
-- `039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.35.0@sha256:fc4979d8b8443a831c9789b5155cded454cb7de737a8b727bc2ba0106d2eae8b`
+- `k8s.gcr.io/ingress-nginx/controller:v0.35.0@sha256:fc4979d8b8443a831c9789b5155cded454cb7de737a8b727bc2ba0106d2eae8b`
 
 _New Features:_
 

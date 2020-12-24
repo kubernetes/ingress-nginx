@@ -329,7 +329,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: controller
-          image: 039078816435.dkr.ecr.eu-west-1.amazonaws.com/nginx:v0.41.6@sha256:2d30357b82774aabce732634413fbe02a25b05cbc2ce684c42e1194002d41e29
+          image: k8s.gcr.io/ingress-nginx/controller:v0.41.2@sha256:1f4f402b9c14f3ae92b11ada1dfe9893a88f0faeb0b2f4b903e2c67a0c3bf0de
           imagePullPolicy: IfNotPresent
           lifecycle:
             preStop:
