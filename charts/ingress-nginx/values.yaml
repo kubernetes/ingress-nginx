@@ -68,7 +68,7 @@ controller:
 
   ## Name of the ingress class to route through this controller
   ##
-  ingressClass: nginx  
+  ingressClass: nginx
 
   # labels to add to the pod container metadata
   podLabels: {}
@@ -179,27 +179,7 @@ controller:
   ## Affinity and anti-affinity
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ##
-  affinity: {
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 100
-        podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-            - key: app.kubernetes.io/name
-              operator: In
-              values:
-              - ingress-nginx
-            - key: app.kubernetes.io/instance
-              operator: In
-              values:
-              - ingress-nginx
-            - key: app.kubernetes.io/component
-              operator: In
-              values:
-              - controller
-          topologyKey: kubernetes.io/hostname
-  }
+  affinity: {}
     
 
 
