@@ -11,8 +11,8 @@ controller:
   name: controller
   image:
     repository: k8s.gcr.io/ingress-nginx/controller
-    tag: "v0.41.6"
-    digest: sha256:2d30357b82774aabce732634413fbe02a25b05cbc2ce684c42e1194002d41e29
+    tag: "v0.41.2"
+    digest: sha256:1f4f402b9c14f3ae92b11ada1dfe9893a88f0faeb0b2f4b903e2c67a0c3bf0de
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -68,7 +68,7 @@ controller:
 
   ## Name of the ingress class to route through this controller
   ##
-  ingressClass:         
+  ingressClass: nginx  
 
   # labels to add to the pod container metadata
   podLabels: {}
