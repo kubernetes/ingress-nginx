@@ -175,6 +175,22 @@ http {
     # https://github.com/leev/ngx_http_geoip2_module#example-usage
 
     {{ range $index, $file := $all.MaxmindEditionFiles }}
+    {{ if eq $file "GeoLite2-Country.mmdb" }}
+    geoip2 /etc/nginx/geoip/GeoLite2-Country.mmdb {
+        $geoip2_country_code source=$remote_addr country iso_code;
+        $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_continent_name source=$remote_addr continent names en;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-Country.mmdb" }}
+    geoip2 /etc/nginx/geoip/GeoIP2-Country.mmdb {
+        $geoip2_country_code source=$remote_addr country iso_code;
+        $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_continent_name source=$remote_addr continent names en;
+    }
+    {{ end }}
+
     {{ if eq $file "GeoLite2-City.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoLite2-City.mmdb {
         $geoip2_city_country_code source=$remote_addr country iso_code;
@@ -1064,12 +1080,12 @@ stream {
         {{ end }}
 
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
+            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.IngressPath) }}
             set $namespace      {{ $ing.Namespace | quote}};
             set $ingress_name   {{ $ing.Rule | quote }};
             set $service_name   {{ $ing.Service | quote }};
             set $service_port   {{ $ing.ServicePort | quote }};
-            set $location_path  {{ $location.Path | escapeLiteralDollar | quote }};
+            set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
 
             {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $location }}
 

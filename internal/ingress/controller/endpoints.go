@@ -21,6 +21,7 @@ import (
 	"net"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/klog/v2"
@@ -53,7 +54,8 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 		targetPort := port.TargetPort.IntValue()
 		// if the externalName is not an IP address we need to validate is a valid FQDN
 		if net.ParseIP(s.Spec.ExternalName) == nil {
-			if errs := validation.IsDNS1123Subdomain(s.Spec.ExternalName); len(errs) > 0 {
+			externalName := strings.TrimSuffix(s.Spec.ExternalName, ".")
+			if errs := validation.IsDNS1123Subdomain(externalName); len(errs) > 0 {
 				klog.Errorf("Invalid DNS name %s: %v", s.Spec.ExternalName, errs)
 				return upsServers
 			}

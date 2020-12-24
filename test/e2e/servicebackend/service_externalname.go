@@ -37,7 +37,7 @@ import (
 var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	f := framework.NewDefaultFramework("type-externalname")
 
-	ginkgo.It("works with external name set to incomplete fdqn", func() {
+	ginkgo.It("works with external name set to incomplete fqdn", func() {
 		f.NewEchoDeployment()
 
 		host := "echo"
@@ -204,6 +204,37 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		}
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
 		ing.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort = intstr.FromString(host)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
+			})
+
+		f.HTTPTestClient().
+			GET("/get").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+	})
+
+	ginkgo.It("should return 200 for service type=ExternalName using FQDN with trailing dot", func() {
+		host := "echo"
+
+		svc := &core.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      framework.HTTPBinService,
+				Namespace: f.Namespace,
+			},
+			Spec: corev1.ServiceSpec{
+				ExternalName: "httpbin.org.",
+				Type:         corev1.ServiceTypeExternalName,
+			},
+		}
+
+		f.EnsureService(svc)
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

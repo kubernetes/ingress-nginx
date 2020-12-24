@@ -107,6 +107,12 @@ local function sync_backend(backend)
     return
   end
 
+  if is_backend_with_external_name(backend) then
+    backend = resolve_external_names(backend)
+  end
+
+  backend.endpoints = format_ipv6_endpoints(backend.endpoints)
+
   local implementation = get_implementation(backend)
   local balancer = balancers[backend.name]
 
@@ -126,13 +132,13 @@ local function sync_backend(backend)
     return
   end
 
-  if is_backend_with_external_name(backend) then
-    backend = resolve_external_names(backend)
-  end
-
-  backend.endpoints = format_ipv6_endpoints(backend.endpoints)
-
   balancer:sync(backend)
+end
+
+local function sync_backends_with_external_name()
+  for _, backend_with_external_name in pairs(backends_with_external_name) do
+    sync_backend(backend_with_external_name)
+  end
 end
 
 local function sync_backends()
@@ -141,9 +147,6 @@ local function sync_backends()
   local current_timestamp = ngx.time()
   if current_timestamp - backends_last_synced_at < BACKENDS_FORCE_SYNC_INTERVAL
       and raw_backends_last_synced_at <= backends_last_synced_at then
-    for _, backend_with_external_name in pairs(backends_with_external_name) do
-      sync_backend(backend_with_external_name)
-    end
     return
   end
 
@@ -161,12 +164,13 @@ local function sync_backends()
 
   local balancers_to_keep = {}
   for _, new_backend in ipairs(new_backends) do
-    sync_backend(new_backend)
-    balancers_to_keep[new_backend.name] = balancers[new_backend.name]
     if is_backend_with_external_name(new_backend) then
       local backend_with_external_name = util.deepcopy(new_backend)
       backends_with_external_name[backend_with_external_name.name] = backend_with_external_name
+    else
+      sync_backend(new_backend)
     end
+    balancers_to_keep[new_backend.name] = true
   end
 
   for backend_name, _ in pairs(balancers) do
@@ -199,7 +203,7 @@ local function route_to_alternative_balancer(balancer)
 
   local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
   if not traffic_shaping_policy then
-    ngx.log(ngx.ERR, "traffic shaping policy is not set for balanacer ",
+    ngx.log(ngx.ERR, "traffic shaping policy is not set for balancer ",
             "of backend: ", tostring(backend_name))
     return false
   end
@@ -272,11 +276,12 @@ local function get_balancer()
 end
 
 function _M.init_worker()
-  -- when worker starts, sync backends without delay
-  -- we call it in timer because for endpoints that require
+  -- when worker starts, sync non ExternalName backends without delay
+  sync_backends()
+  -- we call sync_backends_with_external_name in timer because for endpoints that require
   -- DNS resolution it needs to use socket which is not available in
   -- init_worker phase
-  local ok, err = ngx.timer.at(0, sync_backends)
+  local ok, err = ngx.timer.at(0, sync_backends_with_external_name)
   if not ok then
     ngx.log(ngx.ERR, "failed to create timer: ", err)
   end
@@ -284,6 +289,11 @@ function _M.init_worker()
   ok, err = ngx.timer.every(BACKENDS_SYNC_INTERVAL, sync_backends)
   if not ok then
     ngx.log(ngx.ERR, "error when setting up timer.every for sync_backends: ", err)
+  end
+  ok, err = ngx.timer.every(BACKENDS_SYNC_INTERVAL, sync_backends_with_external_name)
+  if not ok then
+    ngx.log(ngx.ERR, "error when setting up timer.every for sync_backends_with_external_name: ",
+            err)
   end
 end
 

@@ -1,3 +1,4 @@
+local cjson = require("cjson.safe")
 
 local original_ngx = ngx
 local function reset_ngx()
@@ -53,7 +54,7 @@ describe("Monitor", function()
   end)
 
   describe("flush", function()
-    it("short circuits when premmature is true (when worker is shutting down)", function()
+    it("short circuits when premature is true (when worker is shutting down)", function()
       local tcp_mock = mock_ngx_socket_tcp()
       mock_ngx({ var = {} })
       local monitor = require("monitor")
@@ -107,7 +108,42 @@ describe("Monitor", function()
 
       monitor.flush()
 
-      local expected_payload = '[{"requestLength":256,"ingress":"example","status":"200","service":"http-svc","requestTime":0.04,"namespace":"default","host":"example.com","method":"GET","upstreamResponseTime":0.02,"upstreamResponseLength":456,"upstreamLatency":0.01,"path":"\\/","responseLength":512},{"requestLength":256,"ingress":"example","status":"201","service":"http-svc","requestTime":0.04,"namespace":"default","host":"example.com","method":"POST","upstreamResponseTime":0.02,"upstreamResponseLength":456,"upstreamLatency":0.01,"path":"\\/","responseLength":512}]'
+      local expected_payload = cjson.encode({
+        {
+          host = "example.com",
+          namespace = "default",
+          ingress = "example",
+          service = "http-svc",
+          path = "/",
+
+          method = "GET",
+          status = "200",
+          requestLength = 256,
+          requestTime = 0.04,
+          responseLength = 512,
+
+          upstreamLatency = 0.01,
+          upstreamResponseTime = 0.02,
+          upstreamResponseLength = 456,
+        },
+        {
+          host = "example.com",
+          namespace = "default",
+          ingress = "example",
+          service = "http-svc",
+          path = "/",
+
+          method = "POST",
+          status = "201",
+          requestLength = 256,
+          requestTime = 0.04,
+          responseLength = 512,
+
+          upstreamLatency = 0.01,
+          upstreamResponseTime = 0.02,
+          upstreamResponseLength = 456,
+        },
+      })
 
       assert.stub(tcp_mock.connect).was_called_with(tcp_mock, "unix:/tmp/prometheus-nginx.socket")
       assert.stub(tcp_mock.send).was_called_with(tcp_mock, expected_payload)

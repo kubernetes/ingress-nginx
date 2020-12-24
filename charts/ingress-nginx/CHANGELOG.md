@@ -4,6 +4,30 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.16.1
+
+- Fix chart-releaser action
+
+### 3.16.0
+
+- [X] [#6646](https://github.com/kubernetes/ingress-nginx/pull/6646) Added LoadBalancerIP value for internal service
+
+### 3.15.1
+
+- Fix chart-releaser action
+
+### 3.15.0
+
+- [X] [#6586](https://github.com/kubernetes/ingress-nginx/pull/6586) Fix 'maxmindLicenseKey' location in values.yaml
+
+### 3.14.0
+
+- [X] [#6469](https://github.com/kubernetes/ingress-nginx/pull/6469) Allow custom service names for controller and backend
+
+### 3.13.0
+
+- [X] [#6544](https://github.com/kubernetes/ingress-nginx/pull/6544) Fix default backend HPA name variable
+
 ### 3.12.0
 
 - [X] [#6514](https://github.com/kubernetes/ingress-nginx/pull/6514) Remove helm2 support and update docs

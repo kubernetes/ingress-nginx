@@ -118,7 +118,7 @@ func downloadDatabase(dbName string) error {
 
 			defer outFile.Close()
 
-			if _, err := io.Copy(outFile, tarReader); err != nil {
+			if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
 				return err
 			}
 

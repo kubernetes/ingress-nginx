@@ -154,7 +154,7 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 		at = ""
 	}
 
-	// Check the afinity mode that will be used
+	// Check the affinity mode that will be used
 	am, err := parser.GetStringAnnotation(annotationAffinityMode, ing)
 	if err != nil {
 		am = ""

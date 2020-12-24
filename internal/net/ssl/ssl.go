@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -125,7 +125,7 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 		}
 	}
 
-	hasher := sha1.New()
+	hasher := sha1.New() // #nosec
 	hasher.Write(pemCert.Raw)
 
 	return &ingress.SSLCert{
@@ -504,9 +504,12 @@ func NewTLSListener(certificate, key string) *TLSListener {
 		keyPath:         key,
 		lock:            sync.Mutex{},
 	}
+
 	l.load()
-	watch.NewFileWatcher(certificate, l.load)
-	watch.NewFileWatcher(key, l.load)
+
+	_, _ = watch.NewFileWatcher(certificate, l.load)
+	_, _ = watch.NewFileWatcher(key, l.load)
+
 	return &l
 }
 
@@ -521,6 +524,7 @@ func (tl *TLSListener) GetCertificate(*tls.ClientHelloInfo) (*tls.Certificate, e
 func (tl *TLSListener) TLSConfig() *tls.Config {
 	return &tls.Config{
 		GetCertificate: tl.GetCertificate,
+		MinVersion:     tls.VersionTLS12,
 	}
 }
 

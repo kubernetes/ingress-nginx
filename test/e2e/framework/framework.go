@@ -385,11 +385,11 @@ func (f *Framework) waitForReload(fn func()) {
 }
 
 func getReloadCount(pod *corev1.Pod, namespace string, client kubernetes.Interface) int {
-	evnts, err := client.CoreV1().Events(namespace).Search(scheme.Scheme, pod)
+	events, err := client.CoreV1().Events(namespace).Search(scheme.Scheme, pod)
 	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX Pod")
 
 	reloadCount := 0
-	for _, e := range evnts.Items {
+	for _, e := range events.Items {
 		if e.Reason == "RELOAD" && e.Type == corev1.EventTypeNormal {
 			reloadCount++
 		}

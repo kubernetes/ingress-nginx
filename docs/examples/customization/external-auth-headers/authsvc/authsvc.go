@@ -18,17 +18,18 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
 // Sample authentication service returning several HTTP headers in response
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if strings.ContainsAny(r.Header.Get("User"), "internal") {
-			w.Header().Add("UserID", strconv.Itoa(rand.Int()))
+			w.Header().Add("UserID", fmt.Sprintf("%v", uuid.NewUUID()))
 			w.Header().Add("UserRole", "admin")
 			w.Header().Add("Other", "not used")
 			fmt.Fprint(w, "ok")

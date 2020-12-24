@@ -1,7 +1,14 @@
 ## nginx configuration
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/master/controllers/nginx/configuration.md
 ##
+
+## Overrides for generated resource names
+# See templates/_helpers.tpl
+# nameOverride:
+# fullnameOverride:
+
 controller:
+  name: controller
   image:
     repository: k8s.gcr.io/ingress-nginx/controller
     tag: "v0.41.6"
@@ -112,6 +119,10 @@ controller:
     configMapNamespace: ""   # defaults to .Release.Namespace
     ## Annotations to be added to the udp config configmap
     annotations: {}
+
+  # Maxmind license key to download GeoLite2 Databases
+  # https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
+  maxmindLicenseKey: ""
 
   ## Additional command line arguments to pass to nginx-ingress-controller
   ## E.g. to specify the default SSL certificate you can use
@@ -419,6 +430,8 @@ controller:
       enabled: false
       annotations: {}
 
+      # loadBalancerIP: ""
+
       ## Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
       loadBalancerSourceRanges: []
 
@@ -597,16 +610,13 @@ controller:
 ##
 revisionHistoryLimit: 10
 
-# Maxmind license key to download GeoLite2 Databases
-# https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
-maxmindLicenseKey: ""
-
 ## Default 404 backend
 ##
 defaultBackend:
   ##
   enabled: false
 
+  name: defaultbackend
   image:
     repository: k8s.gcr.io/defaultbackend-amd64
     tag: "1.5"

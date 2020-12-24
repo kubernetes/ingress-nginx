@@ -61,7 +61,7 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 	return cm, nil
 }
 
-// GetIngress gets an Ingress object from the given namespace, name and retunrs it, throws error if it does not exists.
+// GetIngress gets an Ingress object from the given namespace, name and returns it, throws error if it does not exists.
 func (f *Framework) GetIngress(namespace string, name string) *networking.Ingress {
 	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "getting ingress")
@@ -69,7 +69,7 @@ func (f *Framework) GetIngress(namespace string, name string) *networking.Ingres
 	return ing
 }
 
-// EnsureIngress creates an Ingress object and retunrs it, throws error if it already exists.
+// EnsureIngress creates an Ingress object and returns it, throws error if it already exists.
 func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingress {
 	fn := func() {
 		err := createIngressWithRetries(f.KubeClientSet, f.Namespace, ingress)
@@ -102,7 +102,7 @@ func (f *Framework) UpdateIngress(ingress *networking.Ingress) *networking.Ingre
 	return ing
 }
 
-// EnsureService creates a Service object and retunrs it, throws error if it already exists.
+// EnsureService creates a Service object and returns it, throws error if it already exists.
 func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	err := createServiceWithRetries(f.KubeClientSet, f.Namespace, service)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating service")
@@ -114,7 +114,7 @@ func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	return s
 }
 
-// EnsureDeployment creates a Deployment object and retunrs it, throws error if it already exists.
+// EnsureDeployment creates a Deployment object and returns it, throws error if it already exists.
 func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Deployment {
 	err := createDeploymentWithRetries(f.KubeClientSet, f.Namespace, deployment)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating deployment")
