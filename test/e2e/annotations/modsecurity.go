@@ -217,42 +217,4 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 			Status(http.StatusForbidden)
 	})
 
-	ginkgo.It("trying to move modsec conf to nginx conf", func() {
-		host := "modsecurity.foo.com"
-		nameSpace := f.Namespace
-
-		snippet := `SecAuditLogParts ABIJDEFHZ`
-
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/modsecurity-snippet": snippet,
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		f.UpdateNginxConfigMapData("enable-modsecurity", "true")
-		f.UpdateNginxConfigMapData("SecRuleEngine", "On")
-		f.UpdateNginxConfigMapData("SecRequestBodyAccess", "RelevantOnly")
-		f.UpdateNginxConfigMapData("SecAuditLogParts", "ABIJDEFHZ")
-		f.UpdateNginxConfigMapData("SecAuditLog", "/dev/stdout")
-		f.UpdateNginxConfigMapData("SecAuditLogType", "Serial")
-		f.UpdateNginxConfigMapData("SecRule", "REQUEST_HEADERS:User-Agent \"block-ua\" \"log,deny,id:107,status:403,msg:'UA blocked'\"")
-
-
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "SecRuleEngine On")
-			})
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("User-Agent", "block-ua").
-			Expect().
-			Status(http.StatusForbidden)
-	})
-
-
-
 })
