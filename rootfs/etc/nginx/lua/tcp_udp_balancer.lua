@@ -79,7 +79,7 @@ local function sync_backend(backend)
     return
   end
 
-  ngx.log(ngx.INFO, string.format("backend ", backend.name))
+  ngx.log(ngx.INFO, "sync tcp/udp backend: ", backend.name)
   local implementation = get_implementation(backend)
   local balancer = balancers[backend.name]
 
