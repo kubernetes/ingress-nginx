@@ -6,6 +6,8 @@ approvers:
   - ElvinEfendi
 
 reviewers:
-  - aledbf
   - ElvinEfendi
   - cmluciano
+
+emeritus_approvers:
+  - aledbf  # 2020-04-02
