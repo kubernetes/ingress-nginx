@@ -52,6 +52,8 @@ export LUA_RESTY_HTTP=0.15
 export LUA_RESTY_LOCK=0.08
 export LUA_RESTY_UPLOAD_VERSION=0.10
 export LUA_RESTY_STRING_VERSION=0.12
+export LUA_RESTY_MEMCACHED_VERSION=0.15
+export LUA_RESTY_REDIS_VERSION=0.29
 
 export BUILD_PATH=/tmp/build
 
@@ -208,6 +210,11 @@ get_src 4aca34f324d543754968359672dcf5f856234574ee4da360ce02c778d244572a \
 get_src 987d5754a366d3ccbf745d2765f82595dcff5b94ba6c755eeb6d310447996f32 \
         "https://github.com/ledgetech/lua-resty-http/archive/v$LUA_RESTY_HTTP.tar.gz"
 
+get_src 8257e8fbf78eb2cc2cf2fdca2fda3c2e755f7d3222e7d15cc322111a0f720f9c \
+        "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
+
+get_src 3f602af507aacd1f7aaeddfe7b77627fcde095fe9f115cb9d6ad8de2a52520e1 \
+        "https://github.com/openresty/lua-resty-redis/archive/v$LUA_RESTY_REDIS_VERSION.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
@@ -566,6 +573,12 @@ cd "$BUILD_PATH/lua-resty-upload-$LUA_RESTY_UPLOAD_VERSION"
 make install
 
 cd "$BUILD_PATH/lua-resty-string-$LUA_RESTY_STRING_VERSION"
+make install
+
+cd "$BUILD_PATH/lua-resty-memcached-$LUA_RESTY_MEMCACHED_VERSION"
+make install
+
+cd "$BUILD_PATH/lua-resty-redis-$LUA_RESTY_REDIS_VERSION"
 make install
 
 # mimalloc
