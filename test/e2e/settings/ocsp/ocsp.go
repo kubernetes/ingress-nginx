@@ -267,15 +267,6 @@ func prepareCertificates(namespace string) error {
 	return nil
 }
 
-func commandExists(name string) bool {
-	_, err := exec.Command(name, "version").Output()
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
 func ocspserveDeployment(namespace string) (*appsv1.Deployment, *corev1.Service) {
 	name := "ocspserve"
 	return &appsv1.Deployment{
