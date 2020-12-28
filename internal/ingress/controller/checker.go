@@ -56,7 +56,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 		return errors.Wrapf(err, "reading NGINX PID from file %v", nginx.PID)
 	}
 
-	_, err = fs.NewProc(pid)
+	_, err = fs.Proc(pid)
 	if err != nil {
 		return errors.Wrapf(err, "checking for NGINX process with PID %v", pid)
 	}
