@@ -30,7 +30,6 @@ import (
 )
 
 var (
-	annotationSecureVerifyCACert   = parser.GetAnnotationWithPrefix("secure-verify-ca-secret")
 	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
 	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
 	annotationAffinityMode         = parser.GetAnnotationWithPrefix("affinity-mode")
@@ -39,7 +38,6 @@ var (
 	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
 	annotationCorsExposeHeaders    = parser.GetAnnotationWithPrefix("cors-expose-headers")
 	annotationCorsAllowCredentials = parser.GetAnnotationWithPrefix("cors-allow-credentials")
-	backendProtocol                = parser.GetAnnotationWithPrefix("backend-protocol")
 	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
 	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
