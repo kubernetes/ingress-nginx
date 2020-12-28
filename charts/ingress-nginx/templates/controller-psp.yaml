@@ -20,7 +20,7 @@ spec:
   # Allow core volume types.
   volumes:
     - 'configMap'
-    #- 'emptyDir'
+    - 'emptyDir'
     #- 'projected'
     - 'secret'
     #- 'downwardAPI'
