@@ -152,6 +152,7 @@ var (
 		"buildDenyVariable":               buildDenyVariable,
 		"getenv":                          os.Getenv,
 		"contains":                        strings.Contains,
+		"split":                           strings.Split,
 		"hasPrefix":                       strings.HasPrefix,
 		"hasSuffix":                       strings.HasSuffix,
 		"trimSpace":                       strings.TrimSpace,
