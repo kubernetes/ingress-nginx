@@ -15,6 +15,7 @@ data:
 {{- if or .Values.controller.proxySetHeaders .Values.controller.headers }}
   proxy-set-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
 {{- end }}
-{{- if .Values.controller.config }}
-  {{ toYaml .Values.controller.config | nindent 2 }}
+{{- range $key, $value := .Values.controller.config }}
+    {{ $key | nindent 2 }}: {{ $value | quote }}
 {{- end }}
+
