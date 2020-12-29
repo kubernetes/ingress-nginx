@@ -3,6 +3,30 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Allow volume-type emptyDir in controller podsecuritypolicy
+        - Improve parsing of helm parameters
+    apiVersion: v2
+    appVersion: 0.42.0
+    created: "2020-12-29T14:42:10.526202515Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 966a6fc9bf7099c977d05de70ca354b911b9a4d40a48153baf1d80d3d4931636
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.18.0/ingress-nginx-3.18.0.tgz
+    version: 3.18.0
+  - annotations:
+      artifacthub.io/changes: |
         - Update ingress-nginx v0.42.0
     apiVersion: v2
     appVersion: 0.42.0
