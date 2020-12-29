@@ -293,10 +293,6 @@ func (f *Framework) matchNginxCustomConditions(from string, to string, matcher f
 	}
 }
 
-func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
-	return f.getConfigMap("nginx-ingress-controller")
-}
-
 func (f *Framework) getConfigMap(name string) (*v1.ConfigMap, error) {
 	if f.KubeClientSet == nil {
 		return nil, fmt.Errorf("KubeClientSet not initialized")

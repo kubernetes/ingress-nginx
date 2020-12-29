@@ -630,9 +630,6 @@ func isCatchAllIngress(spec networkingv1beta1.IngressSpec) bool {
 	return spec.Backend != nil && len(spec.Rules) == 0
 }
 
-// Default path type is Prefix to not break existing definitions
-var defaultPathType = networkingv1beta1.PathTypePrefix
-
 // syncIngress parses ingress annotations converting the value of the
 // annotation to a go struct
 func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {

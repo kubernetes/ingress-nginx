@@ -18,6 +18,12 @@ function _M.get_first_value(var)
   return t[1]
 end
 
+function _M.get_last_value(var)
+  local t = _M.split_upstream_var(var) or {}
+  if #t == 0 then return nil end
+  return t[#t]
+end
+
 -- http://nginx.org/en/docs/http/ngx_http_upstream_module.html#example
 -- CAVEAT: nginx is giving out : instead of , so the docs are wrong
 -- 127.0.0.1:26157 : 127.0.0.1:26157 , ngx.var.upstream_addr

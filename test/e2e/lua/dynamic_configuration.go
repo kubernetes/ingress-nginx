@@ -33,11 +33,8 @@ import (
 )
 
 const (
-	logDynamicConfigSuccess = "Dynamic reconfiguration succeeded"
-	logDynamicConfigFailure = "Dynamic reconfiguration failed"
 	logRequireBackendReload = "Configuration changes detected, backend reload required"
 	logBackendReloadSuccess = "Backend successfully reloaded"
-	logInitialConfigSync    = "Initial synchronization of the NGINX configuration"
 
 	waitForLuaSync = 5 * time.Second
 )
