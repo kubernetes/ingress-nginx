@@ -217,7 +217,7 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 			Status(http.StatusForbidden)
 	})
 
-	ginkgo.It(" ", func() {
+	ginkgo.It("should enable modsecurity when enable-owasp-modsecurity-crs is set to true", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
 
@@ -237,6 +237,8 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 		f.EnsureIngress(ing)
 
 		f.UpdateNginxConfigMapData("enable-modsecurity", "true")
+		f.UpdateNginxConfigMapData("enable-owasp-modsecurity-crs", "true")
+
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
