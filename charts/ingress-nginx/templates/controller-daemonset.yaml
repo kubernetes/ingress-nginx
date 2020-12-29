@@ -98,6 +98,9 @@ spec:
             - --validating-webhook-certificate={{ .Values.controller.admissionWebhooks.certificate }}
             - --validating-webhook-key={{ .Values.controller.admissionWebhooks.key }}
           {{- end }}
+          {{- if .Values.controller.maxmindMirror }}
+            - --maxmind-mirror={{ .Values.controller.maxmindMirror }}
+          {{- end}}
           {{- if .Values.controller.maxmindLicenseKey }}
             - --maxmind-license-key={{ .Values.controller.maxmindLicenseKey }}
           {{- end }}

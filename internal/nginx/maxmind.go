@@ -36,6 +36,9 @@ var MaxmindEditionIDs = ""
 // MaxmindEditionFiles maxmind databases on disk
 var MaxmindEditionFiles []string
 
+// MaxmindMirror maxmind database mirror url (http://geoip.local)
+var MaxmindMirror = ""
+
 const (
 	geoIPPath   = "/etc/nginx/geoip"
 	dbExtension = ".mmdb"
@@ -68,8 +71,15 @@ func DownloadGeoLite2DB() error {
 	return nil
 }
 
+func createURL(mirror, licenseKey, dbName string) string {
+	if len(mirror) > 0 {
+		return fmt.Sprintf("%s/%s.tar.gz", mirror, dbName)
+	}
+	return fmt.Sprintf(maxmindURL, licenseKey, dbName)
+}
+
 func downloadDatabase(dbName string) error {
-	url := fmt.Sprintf(maxmindURL, MaxmindLicenseKey, dbName)
+	url := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
