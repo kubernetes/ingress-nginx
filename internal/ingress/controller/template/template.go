@@ -50,10 +50,9 @@ import (
 )
 
 const (
-	slash                      = "/"
-	nonIdempotent              = "non_idempotent"
-	defBufferSize              = 65535
-	defAuthSigninRedirectParam = "rd"
+	slash         = "/"
+	nonIdempotent = "non_idempotent"
+	defBufferSize = 65535
 )
 
 // TemplateWriter is the interface to render a template
