@@ -18,12 +18,12 @@
     For this reason, there is an initial delay of up to two minutes until it is possible to create and validate Ingress definitions.
     You can wait until it is ready to run the next command:
 
-    ```yaml
-    kubectl wait --namespace ingress-nginx \
-      --for=condition=ready pod \
-      --selector=app.kubernetes.io/component=controller \
-      --timeout=120s
-    ```
+```yaml
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=120s
+```
 
 ## Contents
 
