@@ -78,12 +78,6 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 var (
 	// IngressPodDetails hold information about the ingress-nginx pod
 	IngressPodDetails *PodInfo
-
-	selectorLabelKeys = []string{
-		"app.kubernetes.io/component",
-		"app.kubernetes.io/instance",
-		"app.kubernetes.io/name",
-	}
 )
 
 // PodInfo contains runtime information about the pod running the Ingres controller
@@ -107,22 +101,12 @@ func GetIngressPod(kubeClient clientset.Interface) error {
 		return fmt.Errorf("unable to get POD information: %v", err)
 	}
 
-	labels := map[string]string{}
-	for _, key := range selectorLabelKeys {
-		value, ok := pod.GetLabels()[key]
-		if !ok {
-			return fmt.Errorf("label %v is missing. Please do not remove", key)
-		}
-
-		labels[key] = value
-	}
-
 	IngressPodDetails = &PodInfo{
 		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"},
 	}
 
 	pod.ObjectMeta.DeepCopyInto(&IngressPodDetails.ObjectMeta)
-	IngressPodDetails.SetLabels(labels)
+	IngressPodDetails.SetLabels(pod.GetLabels())
 
 	return nil
 }
