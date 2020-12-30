@@ -114,7 +114,8 @@ apk add \
   bc \
   unzip \
   dos2unix \
-  yaml-cpp
+  yaml-cpp \
+  coreutils
 
 mkdir -p /etc/nginx
 
@@ -590,6 +591,9 @@ cd "$BUILD_PATH/lua-resty-redis-$LUA_RESTY_REDIS_VERSION"
 make install
 
 cd "$BUILD_PATH/lua-resty-ipmatcher-$LUA_RESTY_IPMATCHER_VERSION"
+# temporal fix for make install - remove line 22
+sed -i '22d' Makefile
+
 make install
 
 cd "$BUILD_PATH/lua-resty-global-throttle-$LUA_RESTY_GLOBAL_THROTTLE_VERSION"
