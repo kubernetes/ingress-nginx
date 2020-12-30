@@ -4,6 +4,10 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.19.0
+
+- Update ingress-nginx v0.43.0
+
 ### 3.18.0
 
 - [X] [#6688](https://github.com/kubernetes/ingress-nginx/pull/6688) Allow volume-type emptyDir in controller podsecuritypolicy
