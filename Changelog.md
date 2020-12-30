@@ -1,5 +1,28 @@
 # Changelog
 
+### 0.43.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.43.0@sha256:9bba603b99bf25f6d117cf1235b6598c16033ad027b143c90fa5b3cc583c5713`
+
+_New Features:_
+
+- Support local GeoIP database mirror [#6685](https://github.com/kubernetes/ingress-nginx/pull/6685)
+
+_Changes:_
+
+- [X] [#6676](https://github.com/kubernetes/ingress-nginx/pull/6676) include new resty lua libs in base image
+- [X] [#6680](https://github.com/kubernetes/ingress-nginx/pull/6680) Update cloudbuild gcb-docker-gcloud image
+- [X] [#6682](https://github.com/kubernetes/ingress-nginx/pull/6682) Update nginx image
+- [X] [#6683](https://github.com/kubernetes/ingress-nginx/pull/6683) Remove dead code
+- [X] [#6684](https://github.com/kubernetes/ingress-nginx/pull/6684) Update ingress-nginx test image
+- [X] [#6685](https://github.com/kubernetes/ingress-nginx/pull/6685) Add GeoIP Local mirror support
+- [X] [#6688](https://github.com/kubernetes/ingress-nginx/pull/6688) feat: allow volume-type emptyDir in controller podsecuritypolicy
+- [X] [#6691](https://github.com/kubernetes/ingress-nginx/pull/6691) Helm: Ingress config change
+- [X] [#6692](https://github.com/kubernetes/ingress-nginx/pull/6692) add string split function to template funcMap
+- [X] [#6694](https://github.com/kubernetes/ingress-nginx/pull/6694) Release helm chart
+
 ### 0.42.0
 
 **Image:**
