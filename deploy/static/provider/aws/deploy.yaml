@@ -49,7 +49,7 @@ metadata:
   name: ingress-nginx
 rules:
   - apiGroups:
-      - ""
+      - ''
     resources:
       - configmaps
       - endpoints
@@ -60,13 +60,13 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - ''
     resources:
       - nodes
     verbs:
       - get
   - apiGroups:
-      - ""
+      - ''
     resources:
       - services
     verbs:
@@ -76,7 +76,7 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingresses
     verbs:
@@ -84,7 +84,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - ''
     resources:
       - events
     verbs:
@@ -92,13 +92,13 @@ rules:
       - patch
   - apiGroups:
       - extensions
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingresses/status
     verbs:
       - update
   - apiGroups:
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingressclasses
     verbs:
@@ -141,13 +141,13 @@ metadata:
   namespace: ingress-nginx
 rules:
   - apiGroups:
-      - ""
+      - ''
     resources:
       - namespaces
     verbs:
       - get
   - apiGroups:
-      - ""
+      - ''
     resources:
       - configmaps
       - pods
@@ -158,7 +158,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - ''
     resources:
       - services
     verbs:
@@ -168,7 +168,7 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingresses
     verbs:
@@ -177,13 +177,13 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingresses/status
     verbs:
       - update
   - apiGroups:
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingressclasses
     verbs:
@@ -191,7 +191,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - ''
     resources:
       - configmaps
     resourceNames:
@@ -200,13 +200,13 @@ rules:
       - get
       - update
   - apiGroups:
-      - ""
+      - ''
     resources:
       - configmaps
     verbs:
       - create
   - apiGroups:
-      - ""
+      - ''
     resources:
       - endpoints
     verbs:
@@ -214,7 +214,7 @@ rules:
       - get
       - update
   - apiGroups:
-      - ""
+      - ''
     resources:
       - events
     verbs:
@@ -273,7 +273,7 @@ kind: Service
 metadata:
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
   labels:
     helm.sh/chart: ingress-nginx-3.17.0
@@ -535,7 +535,7 @@ metadata:
   namespace: ingress-nginx
 rules:
   - apiGroups:
-      - ""
+      - ''
     resources:
       - secrets
     verbs:

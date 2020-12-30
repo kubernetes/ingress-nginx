@@ -35,7 +35,7 @@ metadata:
   name: ingress-nginx-controller
   namespace: ingress-nginx
 data:
-  use-proxy-protocol: "true"
+  use-proxy-protocol: 'true'
 ---
 # Source: ingress-nginx/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -50,7 +50,7 @@ metadata:
   name: ingress-nginx
 rules:
   - apiGroups:
-      - ""
+      - ''
     resources:
       - configmaps
       - endpoints
@@ -61,13 +61,13 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - ''
     resources:
       - nodes
     verbs:
       - get
   - apiGroups:
-      - ""
+      - ''
     resources:
       - services
     verbs:
@@ -77,7 +77,7 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingresses
     verbs:
@@ -85,7 +85,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - ''
     resources:
       - events
     verbs:
@@ -93,13 +93,13 @@ rules:
       - patch
   - apiGroups:
       - extensions
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingresses/status
     verbs:
       - update
   - apiGroups:
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingressclasses
     verbs:
@@ -142,13 +142,13 @@ metadata:
   namespace: ingress-nginx
 rules:
   - apiGroups:
-      - ""
+      - ''
     resources:
       - namespaces
     verbs:
       - get
   - apiGroups:
-      - ""
+      - ''
     resources:
       - configmaps
       - pods
@@ -159,7 +159,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - ''
     resources:
       - services
     verbs:
@@ -169,7 +169,7 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingresses
     verbs:
@@ -178,13 +178,13 @@ rules:
       - watch
   - apiGroups:
       - extensions
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingresses/status
     verbs:
       - update
   - apiGroups:
-      - networking.k8s.io # k8s 1.14+
+      - networking.k8s.io   # k8s 1.14++
     resources:
       - ingressclasses
     verbs:
@@ -192,7 +192,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - ''
     resources:
       - configmaps
     resourceNames:
@@ -201,13 +201,13 @@ rules:
       - get
       - update
   - apiGroups:
-      - ""
+      - ''
     resources:
       - configmaps
     verbs:
       - create
   - apiGroups:
-      - ""
+      - ''
     resources:
       - endpoints
     verbs:
@@ -215,7 +215,7 @@ rules:
       - get
       - update
   - apiGroups:
-      - ""
+      - ''
     resources:
       - events
     verbs:
@@ -273,7 +273,7 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
+    service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: 'true'
   labels:
     helm.sh/chart: ingress-nginx-3.17.0
     app.kubernetes.io/name: ingress-nginx
@@ -534,7 +534,7 @@ metadata:
   namespace: ingress-nginx
 rules:
   - apiGroups:
-      - ""
+      - ''
     resources:
       - secrets
     verbs:
