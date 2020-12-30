@@ -787,6 +787,15 @@ stream {
         {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
         proxy_protocol          on;
         {{ end }}
+
+        {{ if $tcpServer.Service }}
+        {{ if not (empty (index $tcpServer.Service.Annotations "allowlist-source-range")) }}
+        {{ range $cidr := split (index $tcpServer.Service.Annotations "allowlist-source-range") "," }}
+        allow {{ $cidr }};{{ end }}{{ end }}
+        {{ if not (empty (index $tcpServer.Service.Annotations "denylist-source-range")) }}
+        {{ range $cidr := split (index $tcpServer.Service.Annotations "denylist-source-range") "," }}
+        deny {{ $cidr }};{{ end }}{{ end }}
+        {{ end }}
     }
     {{ end }}
 

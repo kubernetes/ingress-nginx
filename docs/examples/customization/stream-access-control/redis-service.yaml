@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    allowlist-source-range: 192.168.1.1,192.168.2.0/24
+    denylist-source-range: 192.168.3.1,192.168.4.0/24,all
+  name: redis
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    protocol: TCP
+  selector:
+    app: redis
