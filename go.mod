@@ -3,7 +3,6 @@ module k8s.io/ingress-nginx
 go 1.15
 
 require (
-	github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
 	github.com/eapache/channels v1.1.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
@@ -19,6 +18,7 @@ require (
 	github.com/ncabatoff/process-exporter v0.7.2
 	github.com/onsi/ginkgo v1.14.1
 	github.com/opencontainers/runc v1.0.0-rc91.0.20200707015106-819fcc687efb
+	github.com/pires/go-proxyproto v0.3.3
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/client_model v0.2.0
