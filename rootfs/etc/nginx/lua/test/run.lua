@@ -11,6 +11,8 @@ do
   -- if there's more constants need to be whitelisted for test runs, add here.
   local GLOBALS_ALLOWED_IN_TEST = {
     helpers = true,
+    require_without_cache = true,
+    reset_ngx = true,
   }
   local newindex = function(table, key, value)
     rawset(table, key, value)
@@ -69,6 +71,15 @@ end
 
 ngx.log = function(...) end
 ngx.print = function(...) end
+local original_ngx = ngx
+_G.reset_ngx = function()
+  ngx = original_ngx
+end
+
+_G.require_without_cache = function(module)
+  package.loaded[module] = nil
+  return require(module)
+end
 
 lua_ingress.init_worker()
 
