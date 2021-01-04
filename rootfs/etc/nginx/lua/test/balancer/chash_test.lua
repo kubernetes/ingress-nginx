@@ -1,15 +1,12 @@
-function mock_ngx(mock)
-  local _ngx = mock
-  setmetatable(_ngx, {__index = _G.ngx})
-  _G.ngx = _ngx
-end
-
 describe("Balancer chash", function()
+  after_each(function()
+    reset_ngx()
+  end)
 
   describe("balance()", function()
     it("uses correct key for given backend", function()
-      mock_ngx({var = { request_uri = "/alma/armud"}})
-      local balancer_chash = require("balancer.chash")
+      ngx.var = { request_uri = "/alma/armud"}
+      local balancer_chash = require_without_cache("balancer.chash")
 
       local resty_chash = package.loaded["resty.chash"]
       resty_chash.new = function(self, nodes)

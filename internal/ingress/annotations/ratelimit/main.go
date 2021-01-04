@@ -19,7 +19,6 @@ package ratelimit
 import (
 	"encoding/base64"
 	"fmt"
-	"sort"
 	"strings"
 
 	networking "k8s.io/api/networking/v1beta1"
@@ -164,7 +163,7 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	val, _ := parser.GetStringAnnotation("limit-whitelist", ing)
 
-	cidrs, err := parseCIDRs(val)
+	cidrs, err := net.ParseCIDRs(val)
 	if err != nil {
 		return nil, err
 	}
@@ -206,32 +205,6 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		ID:             encode(zoneName),
 		Whitelist:      cidrs,
 	}, nil
-}
-
-func parseCIDRs(s string) ([]string, error) {
-	if s == "" {
-		return []string{}, nil
-	}
-
-	values := strings.Split(s, ",")
-
-	ipnets, ips, err := net.ParseIPNets(values...)
-	if err != nil {
-		return nil, err
-	}
-
-	cidrs := []string{}
-	for k := range ipnets {
-		cidrs = append(cidrs, k)
-	}
-
-	for k := range ips {
-		cidrs = append(cidrs, k)
-	}
-
-	sort.Strings(cidrs)
-
-	return cidrs, nil
 }
 
 func encode(s string) string {
