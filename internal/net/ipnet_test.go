@@ -17,6 +17,8 @@ limitations under the License.
 package net
 
 import (
+	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -30,5 +32,22 @@ func TestNewIPSet(t *testing.T) {
 	}
 	if len(ips) != 1 {
 		t.Errorf("Expected len=1: %d", len(ips))
+	}
+}
+
+func TestParseCIDRs(t *testing.T) {
+	cidr, _ := ParseCIDRs("invalid.com")
+	if cidr != nil {
+		t.Errorf("expected %v but got %v", nil, cidr)
+	}
+
+	expected := []string{"192.0.0.1", "192.0.1.0/24"}
+	cidr, err := ParseCIDRs("192.0.0.1, 192.0.1.0/24")
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+	sort.Strings(cidr)
+	if !reflect.DeepEqual(expected, cidr) {
+		t.Errorf("expected %v but got %v", expected, cidr)
 	}
 }

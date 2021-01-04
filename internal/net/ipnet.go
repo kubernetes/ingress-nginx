@@ -18,6 +18,7 @@ package net
 
 import (
 	"net"
+	"sort"
 	"strings"
 )
 
@@ -50,4 +51,31 @@ func ParseIPNets(specs ...string) (IPNet, IP, error) {
 	}
 
 	return ipnetset, ipset, nil
+}
+
+// ParseCIDRs parses comma separated CIDRs into a sorted string array
+func ParseCIDRs(s string) ([]string, error) {
+	if s == "" {
+		return []string{}, nil
+	}
+
+	values := strings.Split(s, ",")
+
+	ipnets, ips, err := ParseIPNets(values...)
+	if err != nil {
+		return nil, err
+	}
+
+	cidrs := []string{}
+	for k := range ipnets {
+		cidrs = append(cidrs, k)
+	}
+
+	for k := range ips {
+		cidrs = append(cidrs, k)
+	}
+
+	sort.Strings(cidrs)
+
+	return cidrs, nil
 }
