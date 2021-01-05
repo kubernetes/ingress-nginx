@@ -2726,7 +2726,7 @@ it is impossible to configure a proper rate limit using stock NGINX functionalit
 Global Rate Limiting overcome this by using <a href="https://github.com/ElvinEfendi/lua-resty-global-throttle">lua-resty-global-throttle</a>. <code>lua-resty-global-throttle</code> shares its counters via a central store such as <code>memcached</code>.
 The obvious shortcoming of this is users have to deploy and operate a <code>memcached</code> instance
 in order to benefit from this functionality. Configure the <code>memcached</code>
-using <a href="../configmap/#memcached">these configmap settings</a>.</p>
+using <a href="../configmap/#global-rate-limit">these configmap settings</a>.</p>
 <p><strong>Here are a few remarks for ingress-nginx integration of <code>lua-resty-global-throttle</code>:</strong></p>
 <ol>
 <li>We minimize <code>memcached</code> access by caching exceeding limit decisions. The expiry of
