@@ -690,7 +690,14 @@
       
         <li class="md-nav__item">
   <a href="#rate-limiting" class="md-nav__link">
-    Rate limiting
+    Rate Limiting
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-rate-limiting" class="md-nav__link">
+    Global Rate Limiting
   </a>
   
 </li>
@@ -1660,7 +1667,14 @@
       
         <li class="md-nav__item">
   <a href="#rate-limiting" class="md-nav__link">
-    Rate limiting
+    Rate Limiting
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-rate-limiting" class="md-nav__link">
+    Global Rate Limiting
   </a>
   
 </li>
@@ -2094,6 +2108,22 @@ table below.</p>
 <tr>
 <td><a href="#rate-limiting">nginx.ingress.kubernetes.io/limit-rps</a></td>
 <td>number</td>
+</tr>
+<tr>
+<td><a href="#global-rate-limiting">nginx.ingress.kubernetes.io/global-rate-limit</a></td>
+<td>number</td>
+</tr>
+<tr>
+<td><a href="#global-rate-limiting">nginx.ingress.kubernetes.io/global-rate-limit-window</a></td>
+<td>duration</td>
+</tr>
+<tr>
+<td><a href="#global-rate-limiting">nginx.ingress.kubernetes.io/global-rate-limit-key</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#global-rate-limiting">nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs</a></td>
+<td>string</td>
 </tr>
 <tr>
 <td><a href="#permanent-redirect">nginx.ingress.kubernetes.io/permanent-redirect</a></td>
@@ -2671,7 +2701,7 @@ applied to each location provided in the ingress rule.</p>
 <p class="admonition-title">Note</p>
 <p>For more information please see <a href="../configmap/#global-auth-url">global-auth-url</a>.</p>
 </div>
-<h3 id="rate-limiting">Rate limiting<a class="headerlink" href="#rate-limiting" title="Permanent link"> ¶</a></h3>
+<h3 id="rate-limiting">Rate Limiting<a class="headerlink" href="#rate-limiting" title="Permanent link"> ¶</a></h3>
 <p>These annotations define limits on connections and transmission rates.  These can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus">DDoS Attacks</a>.</p>
 <ul>
 <li><code>nginx.ingress.kubernetes.io/limit-connections</code>: number of concurrent connections allowed from a single IP address. A 503 error is returned when exceeding this limit.</li>
@@ -2685,6 +2715,45 @@ applied to each location provided in the ingress rule.</p>
 <p>If you specify multiple annotations in a single Ingress rule, limits are applied in the order <code>limit-connections</code>, <code>limit-rpm</code>, <code>limit-rps</code>.</p>
 <p>To configure settings globally for all Ingress rules, the <code>limit-rate-after</code> and <code>limit-rate</code> values may be set in the <a href="../configmap/#limit-rate">NGINX ConfigMap</a>.  The value set in an Ingress annotation will override the global setting.</p>
 <p>The client IP address will be set based on the use of <a href="../configmap/#use-proxy-protocol">PROXY protocol</a> or from the <code>X-Forwarded-For</code> header value when <a href="../configmap/#use-forwarded-headers">use-forwarded-headers</a> is enabled.</p>
+<h3 id="global-rate-limiting">Global Rate Limiting<a class="headerlink" href="#global-rate-limiting" title="Permanent link"> ¶</a></h3>
+<p><strong>Note:</strong> Be careful when configuring both (Local) Rate Limiting and Global Rate Limiting at the same time.
+They are two completely different rate limiting implementations. Whichever limit exceeds first will reject the
+requests. It might be a good idea to configure both of them to ease load on Global Rate Limiting backend
+in cases of spike in traffic.</p>
+<p>The stock NGINX rate limiting does not share its counters among different NGINX instances.
+Given that most ingress-nginx deployments are elastic and number of replicas can change any day
+it is impossible to configure a proper rate limit using stock NGINX functionalities.
+Global Rate Limiting overcome this by using <a href="https://github.com/ElvinEfendi/lua-resty-global-throttle">lua-resty-global-throttle</a>. <code>lua-resty-global-throttle</code> shares its counters via a central store such as <code>memcached</code>.
+The obvious shortcoming of this is users have to deploy and operate a <code>memcached</code> instance
+in order to benefit from this functionality. Configure the <code>memcached</code>
+using <a href="../configmap/#memcached">these configmap settings</a>.</p>
+<p><strong>Here are a few remarks for ingress-nginx integration of <code>lua-resty-global-throttle</code>:</strong></p>
+<ol>
+<li>We minimize <code>memcached</code> access by caching exceeding limit decisions. The expiry of
+cache entry is the desired delay <code>lua-resty-global-throttle</code> calculates for us.
+The Lua Shared Dictionary used for that is <code>global_throttle_cache</code>. Currently its size defaults to 10M.
+Customize it as per your needs using <a href="../configmap/#lua-shared-dicts">lua-shared-dicts</a>.
+When we fail to cache the exceeding limit decision then we log an NGINX error. You can monitor
+for that error to decide if you need to bump the cache size. Without cache the cost of processing a
+request is two memcached commands: <code>GET</code>, and <code>INCR</code>. With the cache it is only <code>INCR</code>.</li>
+<li>Log NGINX variable <code>$global_rate_limit_exceeding</code>'s value to have some visibility into
+what portion of requests are rejected (value <code>y</code>), whether they are rejected using cached decision (value <code>c</code>),
+or if they are not rejeced (default value <code>n</code>). You can use <a href="../configmap/#log-format-upstream">log-format-upstream</a>
+to include that in access logs.</li>
+<li>In case of an error it will log the error message and <strong>fail open</strong>.</li>
+<li>
+<p>The annotations below creates Global Rate Limiting instance per ingress.
+That means if there are multuple paths configured under the same ingress,
+the Global Rate Limiting will count requests to all the paths under the same counter.
+Extract a path out into its own ingres if you need to isolate a certain path.</p>
+</li>
+<li>
+<p><code>nginx.ingress.kubernetes.io/global-rate-limit</code>: Configures maximum allowed number of requests per window. Required.</p>
+</li>
+<li><code>nginx.ingress.kubernetes.io/global-rate-limit-window</code>: Configures a time window (i.e <code>1m</code>) that the limit is applied. Required.</li>
+<li><code>nginx.ingress.kubernetes.io/global-rate-limit-key</code>: Configures a key for counting the samples. Defaults to <code>$remote_addr</code>. You can also combine multiple NGINX variables here, like <code>${remote_addr}-${http_x_api_client}</code> which would mean the limit will be applied to requests coming from the same API client (indicated by <code>X-API-Client</code> HTTP request header) with the same source IP address.</li>
+<li><code>nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs</code>: comma separated list of IPs and CIDRs to match client IP against. When there's a match request is not considered for rate limiting.</li>
+</ol>
 <h3 id="permanent-redirect">Permanent Redirect<a class="headerlink" href="#permanent-redirect" title="Permanent link"> ¶</a></h3>
 <p>This annotation allows to return a permanent redirect (Return Code 301) instead of sending data to the upstream.  For example <code>nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
 <h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link"> ¶</a></h3>

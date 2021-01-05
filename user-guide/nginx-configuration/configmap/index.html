@@ -1710,6 +1710,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#global-rate-limit" class="md-nav__link">
+    global-rate-limit
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3448,6 +3455,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#global-rate-limit" class="md-nav__link">
+    global-rate-limit
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4322,6 +4336,36 @@ Same for numbers, like "100".</p>
 <td align="left">string</td>
 <td align="left">"text/html"</td>
 </tr>
+<tr>
+<td align="left"><a href="#global-rate-limit">global-rate-limit-memcached-host</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
+<td align="left"><a href="#global-rate-limit">global-rate-limit-memcached-port</a></td>
+<td align="left">int</td>
+<td align="left">11211</td>
+</tr>
+<tr>
+<td align="left"><a href="#global-rate-limit">global-rate-limit-memcached-connect-timeout</a></td>
+<td align="left">int</td>
+<td align="left">50</td>
+</tr>
+<tr>
+<td align="left"><a href="#global-rate-limit">global-rate-limit-memcached-max-idle-timeout</a></td>
+<td align="left">int</td>
+<td align="left">10000</td>
+</tr>
+<tr>
+<td align="left"><a href="#global-rate-limit">global-rate-limit-memcached-pool-size</a></td>
+<td align="left">int</td>
+<td align="left">50</td>
+</tr>
+<tr>
+<td align="left"><a href="#global-rate-limit">global-rate-limit-status-code</a></td>
+<td align="left">int</td>
+<td align="left">429</td>
+</tr>
 </tbody>
 </table>
 <h2 id="add-headers">add-headers<a class="headerlink" href="#add-headers" title="Permanent link"> ¶</a></h2>
@@ -4890,6 +4934,21 @@ It's possible to use here full strings and regular expressions. More details abo
 <em><strong>default:</strong></em> text/html</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type">http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type</a></p>
+<h2 id="global-rate-limit">global-rate-limit<a class="headerlink" href="#global-rate-limit" title="Permanent link"> ¶</a></h2>
+<ul>
+<li><code>global-rate-limit-status-code</code>: configure HTTP status code to return when rejecting requests. Defaults to 429.</li>
+</ul>
+<p>Configure <code>memcached</code> client for <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#global-rate-limiting">Global Rate Limiting</a>.</p>
+<ul>
+<li><code>global-rate-limit-memcached-host</code>: IP/FQDN of memcached server to use. Required to enable Global Rate Limiting.</li>
+<li><code>global-rate-limit-memcached-port</code>: port of memcached server to use. Defaults default memcached port of <code>11211</code>.</li>
+<li><code>global-rate-limit-memcached-connect-timeout</code>: configure timeout for connect, send and receive operations. Unit is millisecond. Defaults to 50ms.</li>
+<li><code>global-rate-limit-memcached-max-idle-timeout</code>: configure timeout for cleaning idle connections. Unit is millisecond. Defaults to 50ms. </li>
+<li><code>global-rate-limit-memcached-pool-size</code>: configure number of max connections to keep alive. Make sure your <code>memcached</code> server can handle
+<code>global-rate-limit-memcached-pool-size * worker-processes * &lt;number of ingress-nginx replicas&gt;</code> simultaneous connections.</li>
+</ul>
+<p>These settings get used by <a href="https://github.com/ElvinEfendi/lua-resty-global-throttle">lua-resty-global-throttle</a>
+that ingress-nginx includes. Refer to the link to learn more about <code>lua-resty-global-throttle</code>.</p>
                 
               
               
