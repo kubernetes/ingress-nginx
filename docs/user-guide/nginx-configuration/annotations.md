@@ -244,7 +244,7 @@ The annotations are:
 
 * `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`:
   The name of the Secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
-  This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.
+  This annotation expects the Secret name in the form "namespace/secretName".
 * `nginx.ingress.kubernetes.io/auth-tls-verify-depth`:
   The validation depth between the provided client certificate and the Certification Authority chain.
 * `nginx.ingress.kubernetes.io/auth-tls-verify-client`:
@@ -281,7 +281,7 @@ It is possible to authenticate to a proxied HTTPS backend with certificate using
 
 * `nginx.ingress.kubernetes.io/proxy-ssl-secret: secretName`:
   Specifies a Secret with the certificate `tls.crt`, key `tls.key` in PEM format used for authentication to a proxied HTTPS server. It should also contain trusted CA certificates `ca.crt` in PEM format used to verify the certificate of the proxied HTTPS server.
-  This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.
+  This annotation expects the Secret name in the form "namespace/secretName".
 * `nginx.ingress.kubernetes.io/proxy-ssl-verify`:
   Enables or disables verification of the proxied HTTPS server certificate. (default: off)
 * `nginx.ingress.kubernetes.io/proxy-ssl-verify-depth`:
