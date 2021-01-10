@@ -1,7 +1,7 @@
 # Installation Guide
 
 !!! attention
-    The default configuration watches Ingress object from **all the namespaces**.
+    The default configuration watches Ingress object from **all namespaces**.
 
     To change this behavior use the flag `--watch-namespace` to limit the scope to a particular namespace.
 
@@ -46,8 +46,6 @@
 #### Docker for Mac
 
 Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018))
-
-[enable]: https://docs.docker.com/docker-for-mac/#kubernetes
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/cloud/deploy.yaml
@@ -182,7 +180,7 @@ Now, you are ready to create your first ingress.
 
 ### Detect installed version
 
-To detect which version of the ingress controller is running, exec into the pod and run `nginx-ingress-controller version` command.
+To detect which version of the ingress controller is running, exec into the pod and run `nginx-ingress-controller --version`.
 
 ```console
 POD_NAMESPACE=ingress-nginx
@@ -194,7 +192,7 @@ kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --vers
 ## Using Helm
 
 !!! attention
-    Only helm3 is supported
+    Only Helm v3 is supported
 
 NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart from the project repository.
 To install the chart with the release name `ingress-nginx`:
@@ -203,7 +201,7 @@ To install the chart with the release name `ingress-nginx`:
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
-helm install my-release ingress-nginx/ingress-nginx
+helm install ingress-nginx ingress-nginx/ingress-nginx
 ```
 
 ## Detect installed version:
