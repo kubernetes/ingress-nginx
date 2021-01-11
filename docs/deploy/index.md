@@ -31,6 +31,7 @@
 - [Provider Specific Steps](#provider-specific-steps)
   - [Docker for Mac](#docker-for-mac)
   - [minikube](#minikube)
+  - [microk8s](#microk8s)
   - [AWS](#aws)
   - [GCE - GKE](#gce-gke)
   - [Azure](#azure)
@@ -58,6 +59,16 @@ For standard usage:
 ```console
 minikube addons enable ingress
 ```
+
+#### microk8s
+
+For standard usage:
+
+```console
+microk8s enable ingress
+```
+
+Please check the microk8s [documentation page](https://microk8s.io/docs/addon-ingress)
 
 #### AWS
 
@@ -157,9 +168,11 @@ Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/baremetal/deploy.yaml
 ```
+
 !!! tip
     Applicable on kubernetes clusters deployed on bare-metal with generic Linux distro(Such as CentOs, Ubuntu ...).
-!!! tip
+
+!!! info
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
 
 ### Verify installation
