@@ -1,4 +1,6 @@
-FROM squidfunk/mkdocs-material:5.5.12
+FROM squidfunk/mkdocs-material:6.2.4
+
+RUN pip install mkdocs-awesome-pages-plugin
 
 COPY action.sh /action.sh
 
