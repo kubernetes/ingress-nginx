@@ -136,6 +136,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Name:        "response_duration_seconds",
 				Help:        "The time spent on receiving the response from the upstream server",
 				Namespace:   PrometheusNamespace,
+				Buckets:     append(prometheus.DefBuckets, []float64{10, 20, 30, 60}...),
 				ConstLabels: constLabels,
 			},
 			requestTags,
