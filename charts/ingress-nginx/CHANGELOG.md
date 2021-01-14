@@ -4,6 +4,11 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.20.1
+
+- Do not create KEDA in case of DaemonSets.
+- Fix KEDA v2 definition
+
 ### 3.20.0
 
 - [] [#6730](https://github.com/kubernetes/ingress-nginx/pull/6730) Do not create HPA for defaultBackend if not enabled.
