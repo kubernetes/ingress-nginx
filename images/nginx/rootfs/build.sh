@@ -75,9 +75,6 @@ get_src()
   rm -rf "$f"
 }
 
-apk update
-apk upgrade
-
 # install required packages to build
 apk add \
   bash \
