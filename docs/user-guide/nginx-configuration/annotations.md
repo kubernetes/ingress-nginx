@@ -342,7 +342,7 @@ CORS can be controlled with the following annotations:
   - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
 
 * `nginx.ingress.kubernetes.io/cors-expose-headers`
-  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts 
+  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts
   letters, numbers, _, - and *.
   - Default: *empty*
   - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
@@ -559,7 +559,8 @@ the User guide.
 
 !!! attention
     Because SSL Passthrough works on layer 4 of the OSI model (TCP) and not on the layer 7 (HTTP), using SSL Passthrough
-    invalidates all the other annotations set on an Ingress object.
+    invalidates all the other annotations set on an Ingress object except the `backend-protocol`.
+    Indeed, if your backend is not in HTTP (e.g.: HTTPS), you have to specify it with the annotation [nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)
 
 ### Service Upstream
 
