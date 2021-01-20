@@ -18,7 +18,7 @@ require (
 	github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
 	github.com/ncabatoff/process-exporter v0.7.2
 	github.com/onsi/ginkgo v1.14.1
-	github.com/opencontainers/runc v1.0.0-rc91.0.20200707015106-819fcc687efb
+	github.com/opencontainers/runc v1.0.0-rc92
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/client_model v0.2.0
@@ -33,16 +33,16 @@ require (
 	google.golang.org/grpc v1.27.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
-	k8s.io/api v0.20.0
-	k8s.io/apiextensions-apiserver v0.20.0
-	k8s.io/apimachinery v0.20.0
-	k8s.io/apiserver v0.20.0
-	k8s.io/cli-runtime v0.20.0
-	k8s.io/client-go v0.20.0
-	k8s.io/code-generator v0.20.0
-	k8s.io/component-base v0.20.0
+	k8s.io/api v0.20.2
+	k8s.io/apiextensions-apiserver v0.20.2
+	k8s.io/apimachinery v0.20.2
+	k8s.io/apiserver v0.20.2
+	k8s.io/cli-runtime v0.20.2
+	k8s.io/client-go v0.20.2
+	k8s.io/code-generator v0.20.2
+	k8s.io/component-base v0.20.2
 	k8s.io/klog/v2 v2.4.0
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
-	sigs.k8s.io/controller-runtime v0.7.0
+	sigs.k8s.io/controller-runtime v0.8.0
 )
