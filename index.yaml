@@ -3,6 +3,32 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Add custom annotations to ScaledObject
+        - Adding quotes in the serviceAccount name in Helm values
+        - Remove ClusterRole when scope option is enabled
+        - Update kube-webhook-certgen image to v1.5.1
+    apiVersion: v2
+    appVersion: 0.43.0
+    created: "2021-01-20T18:51:15.626180939Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 04d64852d144673a920602a5598ddd7e78f9a852605bbe0f9f0c68e5c7910f9b
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.21.0/ingress-nginx-3.21.0.tgz
+    version: 3.21.0
+  - annotations:
+      artifacthub.io/changes: |
         - Do not create KEDA in case of DaemonSets.
         - Fix KEDA v2 definition
     apiVersion: v2
