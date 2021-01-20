@@ -8,7 +8,9 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
   name: {{ include "ingress-nginx.controller.fullname" . }}
-
+  {{- if .Values.controller.keda.scaledObject.annotations }}
+  annotations: {{ toYaml .Values.controller.keda.scaledObject.annotations | nindent 4 }}
+  {{- end }}
 spec:
   scaleTargetRef:
 {{- if eq .Values.controller.keda.apiVersion "keda.k8s.io/v1alpha1" }}
