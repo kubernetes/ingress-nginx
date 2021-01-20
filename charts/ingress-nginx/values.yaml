@@ -315,6 +315,11 @@ controller:
     pollingInterval: 30
     cooldownPeriod: 300
     restoreToOriginalReplicaCount: false
+    scaledObject:
+      annotations: {}
+      # Custom annotations for ScaledObject resource
+      #  annotations:
+      # key: value
     triggers: []
  #     - type: prometheus
  #       metadata:
