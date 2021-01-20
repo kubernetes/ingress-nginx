@@ -608,7 +608,7 @@ defaultBackend:
 
   serviceAccount:
     create: true
-    name:
+    name: ""
   ## Additional environment variables to set for defaultBackend pods
   extraEnvs: []
 
@@ -708,7 +708,7 @@ podSecurityPolicy:
 
 serviceAccount:
   create: true
-  name:
+  name: ""
 
 ## Optional array of imagePullSecrets containing private registry credentials
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
