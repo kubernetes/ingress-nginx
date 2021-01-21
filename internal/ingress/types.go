@@ -74,6 +74,8 @@ type Configuration struct {
 
 	// ConfigurationChecksum contains the particular checksum of a Configuration object
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
+
+	DefaultSSLCertificate *SSLCert `json:"-"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -125,7 +127,12 @@ type TrafficShapingPolicy struct {
 
 // HashInclude defines if a field should be used or not to calculate the hash
 func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
-	return (field != "Endpoints"), nil
+	switch field {
+	case "Endpoints":
+		return false, nil
+	default:
+		return true, nil
+	}
 }
 
 // SessionAffinityConfig describes different affinity configurations for new sessions.
