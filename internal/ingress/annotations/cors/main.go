@@ -43,6 +43,9 @@ var (
 	// Headers must contain valid values only (X-HEADER12, X-ABC)
 	// May contain or not spaces between each Header
 	corsHeadersRegex = regexp.MustCompile(`^([A-Za-z0-9\-\_]+,?\s?)+$`)
+	// Expose Headers must contain valid values only (*, X-HEADER12, X-ABC)
+	// May contain or not spaces between each Header
+	corsExposeHeadersRegex = regexp.MustCompile(`^(([A-Za-z0-9\-\_]+|\*),?\s?)+$`)
 )
 
 type cors struct {
@@ -56,6 +59,7 @@ type Config struct {
 	CorsAllowMethods     string `json:"corsAllowMethods"`
 	CorsAllowHeaders     string `json:"corsAllowHeaders"`
 	CorsAllowCredentials bool   `json:"corsAllowCredentials"`
+	CorsExposeHeaders    string `json:"corsExposeHeaders"`
 	CorsMaxAge           int    `json:"corsMaxAge"`
 }
 
@@ -73,6 +77,9 @@ func (c1 *Config) Equal(c2 *Config) bool {
 		return false
 	}
 	if c1.CorsMaxAge != c2.CorsMaxAge {
+		return false
+	}
+	if c1.CorsExposeHeaders != c2.CorsExposeHeaders {
 		return false
 	}
 	if c1.CorsAllowCredentials != c2.CorsAllowCredentials {
@@ -123,6 +130,11 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.CorsAllowCredentials, err = parser.GetBoolAnnotation("cors-allow-credentials", ing)
 	if err != nil {
 		config.CorsAllowCredentials = true
+	}
+
+	config.CorsExposeHeaders, err = parser.GetStringAnnotation("cors-expose-headers", ing)
+	if err != nil || !corsExposeHeadersRegex.MatchString(config.CorsExposeHeaders) {
+		config.CorsExposeHeaders = ""
 	}
 
 	config.CorsMaxAge, err = parser.GetIntAnnotation("cors-max-age", ing)

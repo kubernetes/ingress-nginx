@@ -37,31 +37,32 @@ import (
 )
 
 const (
-	customHTTPErrors          = "custom-http-errors"
-	skipAccessLogUrls         = "skip-access-log-urls"
-	whitelistSourceRange      = "whitelist-source-range"
-	proxyRealIPCIDR           = "proxy-real-ip-cidr"
-	bindAddress               = "bind-address"
-	httpRedirectCode          = "http-redirect-code"
-	blockCIDRs                = "block-cidrs"
-	blockUserAgents           = "block-user-agents"
-	blockReferers             = "block-referers"
-	proxyStreamResponses      = "proxy-stream-responses"
-	hideHeaders               = "hide-headers"
-	nginxStatusIpv4Whitelist  = "nginx-status-ipv4-whitelist"
-	nginxStatusIpv6Whitelist  = "nginx-status-ipv6-whitelist"
-	proxyHeaderTimeout        = "proxy-protocol-header-timeout"
-	workerProcesses           = "worker-processes"
-	globalAuthURL             = "global-auth-url"
-	globalAuthMethod          = "global-auth-method"
-	globalAuthSignin          = "global-auth-signin"
-	globalAuthResponseHeaders = "global-auth-response-headers"
-	globalAuthRequestRedirect = "global-auth-request-redirect"
-	globalAuthSnippet         = "global-auth-snippet"
-	globalAuthCacheKey        = "global-auth-cache-key"
-	globalAuthCacheDuration   = "global-auth-cache-duration"
-	luaSharedDictsKey         = "lua-shared-dicts"
-	plugins                   = "plugins"
+	customHTTPErrors              = "custom-http-errors"
+	skipAccessLogUrls             = "skip-access-log-urls"
+	whitelistSourceRange          = "whitelist-source-range"
+	proxyRealIPCIDR               = "proxy-real-ip-cidr"
+	bindAddress                   = "bind-address"
+	httpRedirectCode              = "http-redirect-code"
+	blockCIDRs                    = "block-cidrs"
+	blockUserAgents               = "block-user-agents"
+	blockReferers                 = "block-referers"
+	proxyStreamResponses          = "proxy-stream-responses"
+	hideHeaders                   = "hide-headers"
+	nginxStatusIpv4Whitelist      = "nginx-status-ipv4-whitelist"
+	nginxStatusIpv6Whitelist      = "nginx-status-ipv6-whitelist"
+	proxyHeaderTimeout            = "proxy-protocol-header-timeout"
+	workerProcesses               = "worker-processes"
+	globalAuthURL                 = "global-auth-url"
+	globalAuthMethod              = "global-auth-method"
+	globalAuthSignin              = "global-auth-signin"
+	globalAuthSigninRedirectParam = "global-auth-signin-redirect-param"
+	globalAuthResponseHeaders     = "global-auth-response-headers"
+	globalAuthRequestRedirect     = "global-auth-request-redirect"
+	globalAuthSnippet             = "global-auth-snippet"
+	globalAuthCacheKey            = "global-auth-cache-key"
+	globalAuthCacheDuration       = "global-auth-cache-duration"
+	luaSharedDictsKey             = "lua-shared-dicts"
+	plugins                       = "plugins"
 )
 
 var (
@@ -74,7 +75,9 @@ var (
 		"balancer_ewma_locks":           1,
 		"certificate_servers":           5,
 		"ocsp_response_cache":           5, // keep this same as certificate_servers
+		"global_throttle_cache":         10,
 	}
+	defaultGlobalAuthRedirectParam = "rd"
 )
 
 const (
@@ -251,6 +254,19 @@ func ReadConfig(src map[string]string) config.Configuration {
 			klog.Warningf("Global auth location denied - %v.", "global-auth-signin setting is undefined and will not be set")
 		} else {
 			to.GlobalExternalAuth.SigninURL = val
+		}
+	}
+
+	// Verify that the configured global external authorization error page redirection URL parameter is set and valid. if not, set the default value
+	if val, ok := conf[globalAuthSigninRedirectParam]; ok {
+		delete(conf, globalAuthSigninRedirectParam)
+
+		redirectParam := strings.TrimSpace(val)
+		dummySigninURL, _ := parser.StringToURL(fmt.Sprintf("%s?%s=dummy", to.GlobalExternalAuth.SigninURL, redirectParam))
+		if dummySigninURL == nil {
+			klog.Warningf("Global auth redirect parameter denied - %v.", "global-auth-signin-redirect-param setting is invalid and will not be set")
+		} else {
+			to.GlobalExternalAuth.SigninURLRedirectParam = redirectParam
 		}
 	}
 

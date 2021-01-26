@@ -92,14 +92,14 @@ The following table shows a configuration option's name, type, and the default v
 |[ssl-buffer-size](#ssl-buffer-size)|string|"4k"|
 |[use-proxy-protocol](#use-proxy-protocol)|bool|"false"|
 |[proxy-protocol-header-timeout](#proxy-protocol-header-timeout)|string|"5s"|
-|[use-gzip](#use-gzip)|bool|"true"|
+|[use-gzip](#use-gzip)|bool|"false"|
 |[use-geoip](#use-geoip)|bool|"true"|
 |[use-geoip2](#use-geoip2)|bool|"false"|
 |[enable-brotli](#enable-brotli)|bool|"false"|
 |[brotli-level](#brotli-level)|int|4|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
-|[gzip-level](#gzip-level)|int|5|
+|[gzip-level](#gzip-level)|int|1|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
@@ -107,11 +107,14 @@ The following table shows a configuration option's name, type, and the default v
 |[load-balance](#load-balance)|string|"round_robin"|
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128|
 |[variables-hash-max-size](#variables-hash-max-size)|int|2048|
-|[upstream-keepalive-connections](#upstream-keepalive-connections)|int|32|
+|[upstream-keepalive-connections](#upstream-keepalive-connections)|int|320|
 |[upstream-keepalive-timeout](#upstream-keepalive-timeout)|int|60|
-|[upstream-keepalive-requests](#upstream-keepalive-requests)|int|100|
+|[upstream-keepalive-requests](#upstream-keepalive-requests)|int|10000|
 |[limit-conn-zone-variable](#limit-conn-zone-variable)|string|"$binary_remote_addr"|
 |[proxy-stream-timeout](#proxy-stream-timeout)|string|"600s"|
+|[proxy-stream-next-upstream](#proxy-stream-next-upstream)|bool|"true"|
+|[proxy-stream-next-upstream-timeout](#proxy-stream-next-upstream-timeout)|string|"600s"|
+|[proxy-stream-next-upstream-tries](#proxy-stream-next-upstream-tries)|int|3|
 |[proxy-stream-responses](#proxy-stream-responses)|int|1|
 |[bind-address](#bind-address)|[]string|""|
 |[use-forwarded-headers](#use-forwarded-headers)|bool|"false"|
@@ -140,8 +143,9 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-trace-baggage-header-prefix](#jaeger-trace-baggage-header-prefix)|string|uberctx-|
 |[datadog-collector-host](#datadog-collector-host)|string|""|
 |[datadog-collector-port](#datadog-collector-port)|int|8126|
-|[datadog-service-name](#datadog-service-name)|service|"nginx"|
-|[datadog-operation-name-override](#datadog-operation-name-override)|service|"nginx.handle"|
+|[datadog-service-name](#datadog-service-name)|string|"nginx"|
+|[datadog-environment](#datadog-environment)|string|"prod"|
+|[datadog-operation-name-override](#datadog-operation-name-override)|string|"nginx.handle"|
 |[datadog-priority-sampling](#datadog-priority-sampling)|bool|"true"|
 |[datadog-sample-rate](#datadog-sample-rate)|float|1.0|
 |[main-snippet](#main-snippet)|string|""|
@@ -176,6 +180,7 @@ The following table shows a configuration option's name, type, and the default v
 |[global-auth-url](#global-auth-url)|string|""|
 |[global-auth-method](#global-auth-method)|string|""|
 |[global-auth-signin](#global-auth-signin)|string|""|
+|[global-auth-signin-redirect-param](#global-auth-signin-redirect-param)|string|"rd"|
 |[global-auth-response-headers](#global-auth-response-headers)|string|""|
 |[global-auth-request-redirect](#global-auth-request-redirect)|string|""|
 |[global-auth-snippet](#global-auth-snippet)|string|""|
@@ -187,6 +192,12 @@ The following table shows a configuration option's name, type, and the default v
 |[block-referers](#block-referers)|[]string|""|
 |[proxy-ssl-location-only](#proxy-ssl-location-only)|bool|"false"|
 |[default-type](#default-type)|string|"text/html"|
+|[global-rate-limit-memcached-host](#global-rate-limit)|string|""|
+|[global-rate-limit-memcached-port](#global-rate-limit)|int|11211|
+|[global-rate-limit-memcached-connect-timeout](#global-rate-limit)|int|50|
+|[global-rate-limit-memcached-max-idle-timeout](#global-rate-limit)|int|10000|
+|[global-rate-limit-memcached-pool-size](#global-rate-limit)|int|50|
+|[global-rate-limit-status-code](#global-rate-limit)|int|429|
 
 ## add-headers
 
@@ -254,7 +265,7 @@ Enables the OWASP ModSecurity Core Rule Set (CRS). _**default:**_ is disabled
 
 ## modsecurity-snippet
 
-Adds custom rules to modsecurity section of nginx configration
+Adds custom rules to modsecurity section of nginx configuration
 
 ## client-header-buffer-size
 
@@ -406,8 +417,8 @@ Example for json output:
 
 ```json
 
-log-format-upstream: '{"time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$req_id",
-  "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":$status, "vhost": "$host", "request_proto": "$server_protocol",
+log-format-upstream: '{"time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", "x_forward_for": "$proxy_add_x_forwarded_for", "request_id": "$req_id",
+  "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status": $status, "vhost": "$host", "request_proto": "$server_protocol",
   "path": "$uri", "request_query": "$args", "request_length": $request_length, "duration": $request_time,"method": "$request_method", "http_referrer": "$http_referer",
   "http_user_agent": "$http_user_agent" }'
 ```
@@ -509,6 +520,8 @@ The default cipher list is:
 
 The ordering of a ciphersuite is very important because it decides which algorithms are going to be selected in priority. The recommendation above prioritizes algorithms that provide perfect [forward secrecy](https://wiki.mozilla.org/Security/Server_Side_TLS#Forward_Secrecy).
 
+DHE-based cyphers will not be available until DH parameter is configured [Custom DH parameters for perfect forward secrecy](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/ssl-dh-param)
+
 Please check the [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/).
 
 __Note:__ ssl_prefer_server_ciphers directive will be enabled by default for http context.
@@ -587,7 +600,7 @@ _**default:**_ 5s
 
 ## use-gzip
 
-Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html). MIME types to compress are controlled by [gzip-types](#gzip-types). _**default:**_ true
+Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html). MIME types to compress are controlled by [gzip-types](#gzip-types). _**default:**_ false
 
 ## use-geoip
 
@@ -630,7 +643,7 @@ Enables or disables [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.ht
 
 ## gzip-level
 
-Sets the gzip Compression Level that will be used. _**default:**_ 5
+Sets the gzip Compression Level that will be used. _**default:**_ 1
 
 ## gzip-min-length
 
@@ -694,7 +707,7 @@ _References:_
 Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle
 keepalive connections to upstream servers that are preserved in the cache of each worker process. When this number is
 exceeded, the least recently used connections are closed.
-_**default:**_ 32
+_**default:**_ 320
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive)
@@ -713,7 +726,7 @@ _References:_
 
 Sets the maximum number of requests that can be served through one keepalive connection. After the maximum number of
 requests is made, the connection is closed.
-_**default:**_ 100
+_**default:**_ 10000
 
 
 _References:_
@@ -730,6 +743,27 @@ Sets the timeout between two successive read or write operations on client or pr
 
 _References:_
 [http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout)
+
+## proxy-stream-next-upstream
+
+When a connection to the proxied server cannot be established, determines whether a client connection will be passed to the next server.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream)
+
+## proxy-stream-next-upstream-timeout
+
+Limits the time allowed to pass a connection to the next server. The 0 value turns off this limitation.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout)
+
+## proxy-stream-next-upstream-tries
+
+Limits the number of possible tries a request should be passed to the next server. The 0 value turns off this limitation.
+
+_References:_
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_tries](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout)
 
 ## proxy-stream-responses
 
@@ -860,6 +894,10 @@ Specifies the port to use when uploading traces. _**default:**_ 8126
 ## datadog-service-name
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
+
+## datadog-environment
+
+Specifies the environment this trace belongs to. _**default:**_ prod
 
 ## datadog-operation-name-override
 
@@ -1048,6 +1086,12 @@ Sets the location of the error page for an existing service that provides authen
 Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-signin`.
 _**default:**_ ""
 
+## global-auth-signin-redirect-param
+
+Sets the query parameter in the error page signin URL which contains the original URL of the request that failed authentication.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-signin-redirect-param`.
+_**default:**_ "rd"
+
 ## global-auth-response-headers
 
 Sets the headers to pass to backend once authentication request completes. Applied to all the locations.
@@ -1114,3 +1158,19 @@ _**default:**_ text/html
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type](http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type)
+
+## global-rate-limit
+
+* `global-rate-limit-status-code`: configure HTTP status code to return when rejecting requests. Defaults to 429.
+
+Configure `memcached` client for [Global Rate Limiting](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#global-rate-limiting).
+
+* `global-rate-limit-memcached-host`: IP/FQDN of memcached server to use. Required to enable Global Rate Limiting.
+* `global-rate-limit-memcached-port`: port of memcached server to use. Defaults default memcached port of `11211`.
+* `global-rate-limit-memcached-connect-timeout`: configure timeout for connect, send and receive operations. Unit is millisecond. Defaults to 50ms.
+* `global-rate-limit-memcached-max-idle-timeout`: configure timeout for cleaning idle connections. Unit is millisecond. Defaults to 50ms. 
+* `global-rate-limit-memcached-pool-size`: configure number of max connections to keep alive. Make sure your `memcached` server can handle
+`global-rate-limit-memcached-pool-size * worker-processes * <number of ingress-nginx replicas>` simultaneous connections.
+
+These settings get used by [lua-resty-global-throttle](https://github.com/ElvinEfendi/lua-resty-global-throttle)
+that ingress-nginx includes. Refer to the link to learn more about `lua-resty-global-throttle`.

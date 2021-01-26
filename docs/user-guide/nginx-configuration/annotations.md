@@ -48,6 +48,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|
+|[nginx.ingress.kubernetes.io/cors-expose-headers](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
@@ -55,6 +56,10 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
+|[nginx.ingress.kubernetes.io/global-rate-limit](#global-rate-limiting)|number|
+|[nginx.ingress.kubernetes.io/global-rate-limit-window](#global-rate-limiting)|duration|
+|[nginx.ingress.kubernetes.io/global-rate-limit-key](#global-rate-limiting)|string|
+|[nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs](#global-rate-limiting)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|
@@ -156,7 +161,7 @@ If the Application Root is exposed in a different path and needs to be redirecte
 The annotation `nginx.ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is `cookie`.
 
-The annotation `nginx.ingress.kubernetes.io/affinity-mode` defines the stickyness of a session. Setting this to `balanced` (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to `persistent` will not rebalance sessions to new servers, therefore providing maximum stickyness.
+The annotation `nginx.ingress.kubernetes.io/affinity-mode` defines the stickiness of a session. Setting this to `balanced` (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to `persistent` will not rebalance sessions to new servers, therefore providing maximum stickiness.
 
 !!! attention
     If more than one Ingress is defined for a host and at least one Ingress uses `nginx.ingress.kubernetes.io/affinity: cookie`, then only paths on the Ingress using `nginx.ingress.kubernetes.io/affinity` will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server.
@@ -233,19 +238,32 @@ This configuration setting allows you to control the value for host in the follo
 
 It is possible to enable Client Certificate Authentication using additional annotations in Ingress Rule.
 
+Client Certificate Authentication is applied per host and it is not possible to specify rules that differ for individual paths.
+
 The annotations are:
 
 * `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`:
   The name of the Secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
-  This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.
+  This annotation expects the Secret name in the form "namespace/secretName".
 * `nginx.ingress.kubernetes.io/auth-tls-verify-depth`:
   The validation depth between the provided client certificate and the Certification Authority chain.
 * `nginx.ingress.kubernetes.io/auth-tls-verify-client`:
-  Enables verification of client certificates.
+  Enables verification of client certificates. Possible values are:
+  * `off`: Don't request client certificates and don't do client certificate verification. (default)
+  * `on`: Request a client certificate that must be signed by a certificate that is included in the secret key `ca.crt` of the secret specified by `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`. Failed certificate verification will result in a status code 400 (Bad Request).
+  * `optional`: Do optional client certificate validation against the CAs from `auth-tls-secret`. The request fails with status code 400 (Bad Request) when a certificate is provided that is not signed by the CA. When no or an otherwise invalid certificate is provided, the request does not fail, but instead the verification result is sent to the upstream service.
+  * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the upstream service.
 * `nginx.ingress.kubernetes.io/auth-tls-error-page`:
   The URL/Page that user should be redirected in case of a Certificate Authentication Error
 * `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`:
-  Indicates if the received certificates should be passed or not to the upstream server.  By default this is disabled.
+  Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
+
+The following headers are sent to the upstream service according to the `auth-tls-*` annotations:
+
+* `ssl-client-issuer-dn`: The issuer information of the client certificate. Example: "CN=My CA"
+* `ssl-client-subject-dn`: The subject information of the client certificate. Example: "CN=My Client"
+* `ssl-client-verify`: The result of the client verification. Possible values: "SUCCESS", "FAILED: <description, why the verification failed>"
+* `ssl-client-cert`: The full client certificate in PEM format. Will only be sent when `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream` is set to "true". Example: `-----BEGIN%20CERTIFICATE-----%0A...---END%20CERTIFICATE-----%0A`
 
 !!! example
     Please check the [client-certs](../../examples/auth/client-certs/README.md) example.
@@ -263,7 +281,7 @@ It is possible to authenticate to a proxied HTTPS backend with certificate using
 
 * `nginx.ingress.kubernetes.io/proxy-ssl-secret: secretName`:
   Specifies a Secret with the certificate `tls.crt`, key `tls.key` in PEM format used for authentication to a proxied HTTPS server. It should also contain trusted CA certificates `ca.crt` in PEM format used to verify the certificate of the proxied HTTPS server.
-  This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.
+  This annotation expects the Secret name in the form "namespace/secretName".
 * `nginx.ingress.kubernetes.io/proxy-ssl-verify`:
   Enables or disables verification of the proxied HTTPS server certificate. (default: off)
 * `nginx.ingress.kubernetes.io/proxy-ssl-verify-depth`:
@@ -322,6 +340,12 @@ CORS can be controlled with the following annotations:
   numbers, _ and -.
   - Default: `DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization`
   - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
+
+* `nginx.ingress.kubernetes.io/cors-expose-headers`
+  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts 
+  letters, numbers, _, - and *.
+  - Default: *empty*
+  - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
 
 * `nginx.ingress.kubernetes.io/cors-allow-origin`
   controls what's the accepted Origin for CORS.
@@ -420,6 +444,8 @@ Additionally it is possible to set:
   `<Method>` to specify the HTTP method to use.
 * `nginx.ingress.kubernetes.io/auth-signin`:
   `<SignIn_URL>` to specify the location of the error page.
+* `nginx.ingress.kubernetes.io/auth-signin-redirect-param`:
+  `<SignIn_URL>` to specify the URL parameter in the error page which should contain the original URL for a failed signin request.
 * `nginx.ingress.kubernetes.io/auth-response-headers`:
   `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authentication request completes.
 * `nginx.ingress.kubernetes.io/auth-proxy-set-headers`:
@@ -452,7 +478,7 @@ By default the controller redirects all requests to an existing service that pro
 !!! note
     For more information please see [global-auth-url](./configmap.md#global-auth-url).
 
-### Rate limiting
+### Rate Limiting
 
 These annotations define limits on connections and transmission rates.  These can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
 
@@ -470,9 +496,49 @@ To configure settings globally for all Ingress rules, the `limit-rate-after` and
 
 The client IP address will be set based on the use of [PROXY protocol](./configmap.md#use-proxy-protocol) or from the `X-Forwarded-For` header value when [use-forwarded-headers](./configmap.md#use-forwarded-headers) is enabled.
 
+### Global Rate Limiting
+
+**Note:** Be careful when configuring both (Local) Rate Limiting and Global Rate Limiting at the same time.
+They are two completely different rate limiting implementations. Whichever limit exceeds first will reject the
+requests. It might be a good idea to configure both of them to ease load on Global Rate Limiting backend
+in cases of spike in traffic.
+
+The stock NGINX rate limiting does not share its counters among different NGINX instances.
+Given that most ingress-nginx deployments are elastic and number of replicas can change any day
+it is impossible to configure a proper rate limit using stock NGINX functionalities.
+Global Rate Limiting overcome this by using [lua-resty-global-throttle](https://github.com/ElvinEfendi/lua-resty-global-throttle). `lua-resty-global-throttle` shares its counters via a central store such as `memcached`.
+The obvious shortcoming of this is users have to deploy and operate a `memcached` instance
+in order to benefit from this functionality. Configure the `memcached`
+using [these configmap settings](./configmap.md#global-rate-limit).
+
+**Here are a few remarks for ingress-nginx integration of `lua-resty-global-throttle`:**
+
+1. We minimize `memcached` access by caching exceeding limit decisions. The expiry of
+cache entry is the desired delay `lua-resty-global-throttle` calculates for us.
+The Lua Shared Dictionary used for that is `global_throttle_cache`. Currently its size defaults to 10M.
+Customize it as per your needs using [lua-shared-dicts](./configmap.md#lua-shared-dicts).
+When we fail to cache the exceeding limit decision then we log an NGINX error. You can monitor
+for that error to decide if you need to bump the cache size. Without cache the cost of processing a
+request is two memcached commands: `GET`, and `INCR`. With the cache it is only `INCR`.
+1. Log NGINX variable `$global_rate_limit_exceeding`'s value to have some visibility into
+what portion of requests are rejected (value `y`), whether they are rejected using cached decision (value `c`),
+or if they are not rejeced (default value `n`). You can use [log-format-upstream](./configmap.md#log-format-upstream)
+to include that in access logs.
+1. In case of an error it will log the error message and **fail open**.
+1. The annotations below creates Global Rate Limiting instance per ingress.
+That means if there are multuple paths configured under the same ingress,
+the Global Rate Limiting will count requests to all the paths under the same counter.
+Extract a path out into its own ingres if you need to isolate a certain path.
+
+
+* `nginx.ingress.kubernetes.io/global-rate-limit`: Configures maximum allowed number of requests per window. Required.
+* `nginx.ingress.kubernetes.io/global-rate-limit-window`: Configures a time window (i.e `1m`) that the limit is applied. Required.
+* `nginx.ingress.kubernetes.io/global-rate-limit-key`: Configures a key for counting the samples. Defaults to `$remote_addr`. You can also combine multiple NGINX variables here, like `${remote_addr}-${http_x_api_client}` which would mean the limit will be applied to requests coming from the same API client (indicated by `X-API-Client` HTTP request header) with the same source IP address.
+* `nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs`: comma separated list of IPs and CIDRs to match client IP against. When there's a match request is not considered for rate limiting.
+
 ### Permanent Redirect
 
-This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example `nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com` would redirect everything to Google.
+This annotation allows to return a permanent redirect (Return Code 301) instead of sending data to the upstream.  For example `nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com` would redirect everything to Google.
 
 ### Permanent Redirect Code
 

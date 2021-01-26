@@ -30,15 +30,14 @@ import (
 )
 
 var (
-	annotationSecureVerifyCACert   = parser.GetAnnotationWithPrefix("secure-verify-ca-secret")
 	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
 	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
 	annotationAffinityMode         = parser.GetAnnotationWithPrefix("affinity-mode")
 	annotationCorsEnabled          = parser.GetAnnotationWithPrefix("enable-cors")
 	annotationCorsAllowMethods     = parser.GetAnnotationWithPrefix("cors-allow-methods")
 	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
+	annotationCorsExposeHeaders    = parser.GetAnnotationWithPrefix("cors-expose-headers")
 	annotationCorsAllowCredentials = parser.GetAnnotationWithPrefix("cors-allow-credentials")
-	backendProtocol                = parser.GetAnnotationWithPrefix("backend-protocol")
 	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
 	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
@@ -201,12 +200,13 @@ func TestCors(t *testing.T) {
 		headers     string
 		origin      string
 		credentials bool
+		expose      string
 	}{
-		{map[string]string{annotationCorsEnabled: "true"}, true, defaultCorsMethods, defaultCorsHeaders, "*", true},
-		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowMethods: "POST, GET, OPTIONS", annotationCorsAllowHeaders: "$nginx_version", annotationCorsAllowCredentials: "false"}, true, "POST, GET, OPTIONS", defaultCorsHeaders, "*", false},
-		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowCredentials: "false"}, true, defaultCorsMethods, defaultCorsHeaders, "*", false},
-		{map[string]string{}, false, defaultCorsMethods, defaultCorsHeaders, "*", true},
-		{nil, false, defaultCorsMethods, defaultCorsHeaders, "*", true},
+		{map[string]string{annotationCorsEnabled: "true"}, true, defaultCorsMethods, defaultCorsHeaders, "*", true, ""},
+		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowMethods: "POST, GET, OPTIONS", annotationCorsAllowHeaders: "$nginx_version", annotationCorsAllowCredentials: "false", annotationCorsExposeHeaders: "X-CustomResponseHeader"}, true, "POST, GET, OPTIONS", defaultCorsHeaders, "*", false, "X-CustomResponseHeader"},
+		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowCredentials: "false"}, true, defaultCorsMethods, defaultCorsHeaders, "*", false, ""},
+		{map[string]string{}, false, defaultCorsMethods, defaultCorsHeaders, "*", true, ""},
+		{nil, false, defaultCorsMethods, defaultCorsHeaders, "*", true, ""},
 	}
 
 	for _, foo := range fooAnns {

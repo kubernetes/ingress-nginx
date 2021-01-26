@@ -29,16 +29,12 @@ import (
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 const (
-	logDynamicConfigSuccess = "Dynamic reconfiguration succeeded"
-	logDynamicConfigFailure = "Dynamic reconfiguration failed"
 	logRequireBackendReload = "Configuration changes detected, backend reload required"
 	logBackendReloadSuccess = "Backend successfully reloaded"
-	logInitialConfigSync    = "Initial synchronization of the NGINX configuration"
 
 	waitForLuaSync = 5 * time.Second
 )
@@ -164,9 +160,9 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 
 			expectedFailureResponseCode := resp.StatusCode
 
-			assert.Equal(ginkgo.GinkgoT(), originalResponseCode, 503, "Expected empty service to return 503 response.")
-			assert.Equal(ginkgo.GinkgoT(), expectedFailureResponseCode, 503, "Expected downscaled replicaset to return 503 response.")
-			assert.Equal(ginkgo.GinkgoT(), expectedSuccessResponseCode, 200, "Expected intermediate scaled replicaset to return a 200 response.")
+			assert.Equal(ginkgo.GinkgoT(), originalResponseCode, 503, "Expected empty service to return 503 response")
+			assert.Equal(ginkgo.GinkgoT(), expectedFailureResponseCode, 503, "Expected downscaled replicaset to return 503 response")
+			assert.Equal(ginkgo.GinkgoT(), expectedSuccessResponseCode, 200, "Expected intermediate scaled replicaset to return a 200 response")
 		})
 
 		ginkgo.It("handles an annotation change", func() {
@@ -197,22 +193,6 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 
 			assert.Equal(ginkgo.GinkgoT(), nginxConfig, newNginxConfig)
 		})
-	})
-
-	ginkgo.It("sets controllerPodsCount in Lua general configuration", func() {
-		// https://github.com/curl/curl/issues/936
-		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/general", nginx.StatusPort)
-
-		output, err := f.ExecIngressPod(curlCmd)
-		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.Equal(ginkgo.GinkgoT(), output, `{"controllerPodsCount":1}`)
-
-		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 3, nil)
-		assert.Nil(ginkgo.GinkgoT(), err)
-
-		output, err = f.ExecIngressPod(curlCmd)
-		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.Equal(ginkgo.GinkgoT(), output, `{"controllerPodsCount":3}`)
 	})
 })
 

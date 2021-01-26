@@ -18,41 +18,44 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.19.2
+export NGINX_VERSION=1.19.6
 export NDK_VERSION=0.3.1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.9.0
+export NGINX_OPENTRACING_VERSION=0.10.0
 export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=0.4.2
 export MSGPACK_VERSION=3.2.1
-export DATADOG_CPP_VERSION=1.1.5
-export MODSECURITY_VERSION=b55a5778c539529ae1aa10ca49413771d52bb62e
+export DATADOG_CPP_VERSION=1.2.0
+export MODSECURITY_VERSION=22e53aba4e3ae8c7d59a3672d6727e49246afe96
 export MODSECURITY_LIB_VERSION=v3.0.4
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.0
-export LUA_NGX_VERSION=0.10.17
-export LUA_STREAM_NGX_VERSION=0.0.8
+export LUA_NGX_VERSION=138c1b96423aa26defe00fe64dd5760ef17e5ad8
+export LUA_STREAM_NGX_VERSION=0.0.9
 export LUA_UPSTREAM_VERSION=0.07
-export LUA_BRIDGE_TRACER_VERSION=0.1.1
 export LUA_CJSON_VERSION=2.1.0.8
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 export GEOIP2_VERSION=3.3
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 
-export LUAJIT_VERSION=31116c4d25c4283a52b2d87fed50101cf20f5b77
+export LUAJIT_VERSION=2.1-20201027
 
-export LUA_RESTY_BALANCER=0.03
+export LUA_RESTY_BALANCER=af4508f7aa5560c7d810922c2515b557f9e5d51a
 export LUA_RESTY_CACHE=0.10
-export LUA_RESTY_CORE=0.1.19
+export LUA_RESTY_CORE=0.1.21
 export LUA_RESTY_COOKIE_VERSION=766ad8c15e498850ac77f5e0265f1d3f30dc4027
 export LUA_RESTY_DNS=0.21
 export LUA_RESTY_HTTP=0.15
 export LUA_RESTY_LOCK=0.08
 export LUA_RESTY_UPLOAD_VERSION=0.10
 export LUA_RESTY_STRING_VERSION=0.12
+export LUA_RESTY_MEMCACHED_VERSION=0.15
+export LUA_RESTY_REDIS_VERSION=0.29
+export LUA_RESTY_IPMATCHER_VERSION=1a0a1c58fd085b15eedee58de8b5f45c27aff7bc
+export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
 
 export BUILD_PATH=/tmp/build
 
@@ -71,9 +74,6 @@ get_src()
   tar xzf "$f"
   rm -rf "$f"
 }
-
-apk update
-apk upgrade
 
 # install required packages to build
 apk add \
@@ -111,7 +111,8 @@ apk add \
   bc \
   unzip \
   dos2unix \
-  yaml-cpp
+  yaml-cpp \
+  coreutils
 
 mkdir -p /etc/nginx
 
@@ -119,7 +120,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 7c1f7bb13e79433ee930c597d272a64bc6e30c356a48524f38fd34fa88d62473 \
+get_src b11195a02b1d3285ddf2987e02c6b6d28df41bb1b1dd25f33542848ef4fc33b5 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 0e971105e210d272a497567fa2e2c256f4e39b845a5ba80d373e26ba1abfbd85 \
@@ -137,7 +138,7 @@ get_src fe683831f832aae4737de1e1026a4454017c2d5f98cb88b08c5411dc380062f8 \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 4fc410d7aef0c8a6371afa9f249d2c6cec50ea88785d05052f8f457c35b69c18 \
+get_src d580efc71809cc1cd9138c1940f4f20766a0631cacf45b99c07facd93583260d \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
@@ -146,7 +147,7 @@ get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
 get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src 3f943d1ac7bbf64b010a57b8738107c1412cb31c55c73f0772b4148614493b7b \
+get_src 38f2ae43fceda683f652065e13a80b14a580ede476a4b44eb0ddd85665380360 \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
 get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
@@ -155,23 +156,20 @@ get_src 21257af93a64fee42c04ca6262d292b2e4e0b7b0660c511db357b32fd42ef5d3 \
 get_src 464f46744a6be778626d11452c4db3c2d09461080c6db42e358e21af19d542f6 \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src 1ebdcb041ca3bd238813ef6de352285e7418e6001c41a0a260b447260e37716e \
-        "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
+get_src 7dc05df3d1824b02c6958ff37f9e682b73c1737dcfee93212ca3f6c5bfae08f3 \
+        "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
-get_src f2c4b7966dbb5c88edb5692616bf0eeca330ee2d43ae04c1cb96ef8fb072ba46 \
+get_src 6fcf7054f412a19c23c1ac3c0663f42f40bccc907d98c5d1657ae5cab9973ee9 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
 
-get_src 82bf1af1ee89887648b53c9df566f8b52ec10400f1641c051970a7540b7bf06a \
-        "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
+get_src f74a0821b079ea1fd63dd8659064356fc3f421ff4b35c17877140d2b2841cc3b \
+        "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 
-get_src b84fd2fb0bb0578af4901db31d1c0ae909b532a1016fe6534cbe31a6c3ad6924 \
+get_src 3e6fe45f467d653870985cc52a1c2cf81a8a2c7a7bcf7ffcfedfd305a47a1eca \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
-
-get_src 6faab57557bd9cc9fc38208f6bc304c1c13cf048640779f98812cf1f9567e202 \
-        "https://github.com/opentracing/lua-bridge-tracer/archive/v$LUA_BRIDGE_TRACER_VERSION.tar.gz"
 
 get_src 1af5a5632dc8b00ae103d51b7bf225de3a7f0df82f5c6a401996c080106e600e \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
@@ -188,10 +186,10 @@ get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
 get_src bfd8c4b6c90aa9dcbe047ac798593a41a3f21edcb71904d50d8ac0e8c77d1132 \
         "https://github.com/openresty/lua-resty-string/archive/v$LUA_RESTY_STRING_VERSION.tar.gz"
 
-get_src 82209d5a5d9545c6dde3db7857f84345db22162fdea9743d5e2b2094d8d407f8 \
-        "https://github.com/openresty/lua-resty-balancer/archive/v$LUA_RESTY_BALANCER.tar.gz"
+get_src a21ec0d78a5dc5856df2374890a8a58e51de866b3d5978aceb0109a094367630 \
+        "https://github.com/openresty/lua-resty-balancer/archive/$LUA_RESTY_BALANCER.tar.gz"
 
-get_src 040878ed9a485ca7f0f8128e4e979280bcf501af875704c8830bec6a68f128f7 \
+get_src a377fbce78ba10f3ed3a8b5173ea318f8cf8da9d2ab127bb1e1f263078bf7da0 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 
 get_src bd6bee4ccc6cf3307ab6ca0eea693a921fab9b067ba40ae12a652636da588ff7 \
@@ -212,9 +210,20 @@ get_src 4aca34f324d543754968359672dcf5f856234574ee4da360ce02c778d244572a \
 get_src 987d5754a366d3ccbf745d2765f82595dcff5b94ba6c755eeb6d310447996f32 \
         "https://github.com/ledgetech/lua-resty-http/archive/v$LUA_RESTY_HTTP.tar.gz"
 
+get_src 8257e8fbf78eb2cc2cf2fdca2fda3c2e755f7d3222e7d15cc322111a0f720f9c \
+        "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
+
+get_src 3f602af507aacd1f7aaeddfe7b77627fcde095fe9f115cb9d6ad8de2a52520e1 \
+        "https://github.com/openresty/lua-resty-redis/archive/v$LUA_RESTY_REDIS_VERSION.tar.gz"
+
+get_src d0eacda122ab36585936256cb222ea9147bc5ad1fc3f24fd3748475653dd27ad \
+        "https://github.com/api7/lua-resty-ipmatcher/archive/$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
+
+get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
+        "https://github.com/ElvinEfendi/lua-resty-global-throttle/archive/v$LUA_RESTY_GLOBAL_THROTTLE_VERSION.tar.gz"
 
 # improve compilation times
-CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
+CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
 
 export MAKEFLAGS=-j${CORES}
 export CTEST_BUILD_FLAGS=${MAKEFLAGS}
@@ -231,6 +240,7 @@ make CCDEBUG=-g
 make install
 
 ln -s /usr/local/bin/luajit /usr/local/bin/lua
+ln -s "$LUAJIT_INC" /usr/local/include/lua
 
 cd "$BUILD_PATH"
 
@@ -368,6 +378,10 @@ git submodule update
 
 sh build.sh
 
+# https://github.com/SpiderLabs/ModSecurity/issues/1909#issuecomment-465926762
+sed -i '115i LUA_CFLAGS="${LUA_CFLAGS} -DWITH_LUA_JIT_2_1"' build/lua.m4
+sed -i '117i AC_SUBST(LUA_CFLAGS)' build/lua.m4
+
 ./configure \
   --disable-doxygen-doc \
   --disable-doxygen-html \
@@ -416,9 +430,11 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-930-APPLICATION-ATTACK-LF
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-934-APPLICATION-ATTACK-NODEJS.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-944-APPLICATION-ATTACK-JAVA.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-949-BLOCKING-EVALUATION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-950-DATA-LEAKAGES.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-951-DATA-LEAKAGES-SQL.conf
@@ -565,22 +581,21 @@ make install
 cd "$BUILD_PATH/lua-resty-string-$LUA_RESTY_STRING_VERSION"
 make install
 
-# build Lua bridge tracer
-#cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"
-#mkdir .build
-#cd .build
-#
-#cmake -DCMAKE_BUILD_TYPE=Release \
-#      -DBUILD_SHARED=OFF \
-#      -WITH_BOOST_STATIC=ON \
-#      ..
-#
-#make
-#make install
+cd "$BUILD_PATH/lua-resty-memcached-$LUA_RESTY_MEMCACHED_VERSION"
+make install
+
+cd "$BUILD_PATH/lua-resty-redis-$LUA_RESTY_REDIS_VERSION"
+make install
+
+cd "$BUILD_PATH/lua-resty-ipmatcher-$LUA_RESTY_IPMATCHER_VERSION"
+INST_LUADIR=/usr/local/lib/lua make install
+
+cd "$BUILD_PATH/lua-resty-global-throttle-$LUA_RESTY_GLOBAL_THROTTLE_VERSION"
+make install
 
 # mimalloc
 cd "$BUILD_PATH"
-git clone --depth=1 -b v1.6.4 https://github.com/microsoft/mimalloc
+git clone --depth=1 -b v1.6.7 https://github.com/microsoft/mimalloc
 cd mimalloc
 
 mkdir -p out/release
@@ -590,16 +605,6 @@ cmake ../..
 
 make
 make install
-
-# check libraries are ok
-#echo "Checking libraries..."
-#for LIB in $(find /usr/local/lib -name "*.so");do
-#  ldd $LIB | grep 'not found'
-#  if [ $? -eq 0 ]; then
-#    echo "Dependencies is missing for $LIB"
-#    exit 1
-#  fi
-#done
 
 # update image permissions
 writeDirs=( \

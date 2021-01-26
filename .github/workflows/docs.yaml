@@ -18,9 +18,9 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
-      - uses: dorny/paths-filter@v2.2.0
+      - uses: dorny/paths-filter@v2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
     steps:
 
       - name: Checkout master
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Deploy
         uses: ./.github/actions/mkdocs

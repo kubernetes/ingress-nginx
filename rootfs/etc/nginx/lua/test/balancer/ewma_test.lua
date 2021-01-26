@@ -69,6 +69,18 @@ describe("Balancer ewma", function()
       assert.are.equals(expected_ewma, ngx.shared.balancer_ewma:get(ngx.var.upstream_addr))
       assert.are.equals(ngx_now, ngx.shared.balancer_ewma_last_touched_at:get(ngx.var.upstream_addr))
     end)
+
+    it("updates EWMA stats with the latest result", function()
+      ngx.var = { upstream_addr = "10.10.10.1:8080, 10.10.10.2:8080", upstream_connect_time = "0.05, 0.02", upstream_response_time = "0.2, 0.1" }
+
+      instance:after_balance()
+
+      local weight = math.exp(-5 / 10)
+      local expected_ewma = 0.3 * weight + 0.12 * (1.0 - weight)
+
+      assert.are.equals(expected_ewma, ngx.shared.balancer_ewma:get("10.10.10.2:8080"))
+      assert.are.equals(ngx_now, ngx.shared.balancer_ewma_last_touched_at:get("10.10.10.2:8080"))
+    end)
   end)
 
   describe("balance()", function()
@@ -94,7 +106,34 @@ describe("Balancer ewma", function()
       -- even though 10.10.10.1:8080 has a lower ewma score
       -- algorithm picks 10.10.10.3:8080 because its decayed score is even lower
       assert.equal("10.10.10.3:8080", peer)
+      assert.equal(true, ngx.ctx.balancer_ewma_tried_endpoints["10.10.10.3:8080"])
       assert.are.equals(0.16240233988393523723, ngx.var.balancer_ewma_score)
+    end)
+
+    it("doesn't pick the tried endpoint while retry", function()
+      local two_endpoints_backend = util.deepcopy(backend)
+      table.remove(two_endpoints_backend.endpoints, 2)
+      local two_endpoints_instance = balancer_ewma:new(two_endpoints_backend)
+
+      ngx.ctx.balancer_ewma_tried_endpoints = {
+        ["10.10.10.3:8080"] = true,
+      }
+      local peer = two_endpoints_instance:balance()
+      assert.equal("10.10.10.1:8080", peer)
+      assert.equal(true, ngx.ctx.balancer_ewma_tried_endpoints["10.10.10.1:8080"])
+    end)
+
+    it("all the endpoints are tried, pick the one with lowest score", function()
+      local two_endpoints_backend = util.deepcopy(backend)
+      table.remove(two_endpoints_backend.endpoints, 2)
+      local two_endpoints_instance = balancer_ewma:new(two_endpoints_backend)
+
+      ngx.ctx.balancer_ewma_tried_endpoints = {
+        ["10.10.10.1:8080"] = true,
+        ["10.10.10.3:8080"] = true,
+      }
+      local peer = two_endpoints_instance:balance()
+      assert.equal("10.10.10.3:8080", peer)
     end)
   end)
 
@@ -104,6 +143,31 @@ describe("Balancer ewma", function()
 
       instance:sync(new_backend)
 
+      assert.are.same(new_backend.endpoints, instance.peers)
+
+      assert_ewma_stats("10.10.10.1:8080", 0.2, ngx_now - 1)
+      assert_ewma_stats("10.10.10.2:8080", 0.3, ngx_now - 5)
+      assert_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 20)
+    end)
+
+    it("resets alternative backends and traffic shaping policy even if endpoints do not change", function()
+      assert.are.same(nil, instance.alternativeBackends)
+      assert.are.same(nil, instance.trafficShapingPolicy)
+
+      local new_backend = util.deepcopy(backend)
+      new_backend.alternativeBackends = {"my-canary-namespace-my-canary-service-my-port"}
+      new_backend.trafficShapingPolicy = {
+        cookie = "",
+        header = "",
+        headerPattern = "",
+        headerValue = "",
+        weight = 20,
+      }
+
+      instance:sync(new_backend)
+
+      assert.are.same(new_backend.alternativeBackends, instance.alternative_backends)
+      assert.are.same(new_backend.trafficShapingPolicy, instance.traffic_shaping_policy)
       assert.are.same(new_backend.endpoints, instance.peers)
 
       assert_ewma_stats("10.10.10.1:8080", 0.2, ngx_now - 1)

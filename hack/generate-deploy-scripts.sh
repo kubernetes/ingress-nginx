@@ -53,7 +53,7 @@ $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
 
 # Cloud - generic
 OUTPUT_FILE="${DIR}/deploy/static/provider/cloud/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   service:
     type: LoadBalancer

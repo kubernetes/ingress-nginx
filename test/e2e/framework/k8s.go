@@ -34,7 +34,6 @@ import (
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 )
 
 // EnsureSecret creates a Secret object or returns it if it already exists.
@@ -62,7 +61,7 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 	return cm, nil
 }
 
-// GetIngress gets an Ingress object from the given namespace, name and retunrs it, throws error if it does not exists.
+// GetIngress gets an Ingress object from the given namespace, name and returns it, throws error if it does not exists.
 func (f *Framework) GetIngress(namespace string, name string) *networking.Ingress {
 	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "getting ingress")
@@ -70,14 +69,14 @@ func (f *Framework) GetIngress(namespace string, name string) *networking.Ingres
 	return ing
 }
 
-// EnsureIngress creates an Ingress object and retunrs it, throws error if it already exists.
+// EnsureIngress creates an Ingress object and returns it, throws error if it already exists.
 func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingress {
 	fn := func() {
 		err := createIngressWithRetries(f.KubeClientSet, f.Namespace, ingress)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
 	}
 
-	f.waitForReload(fn)
+	f.WaitForReload(fn)
 
 	ing := f.GetIngress(f.Namespace, ingress.Name)
 	if ing.Annotations == nil {
@@ -103,7 +102,7 @@ func (f *Framework) UpdateIngress(ingress *networking.Ingress) *networking.Ingre
 	return ing
 }
 
-// EnsureService creates a Service object and retunrs it, throws error if it already exists.
+// EnsureService creates a Service object and returns it, throws error if it already exists.
 func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	err := createServiceWithRetries(f.KubeClientSet, f.Namespace, service)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating service")
@@ -115,7 +114,7 @@ func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	return s
 }
 
-// EnsureDeployment creates a Deployment object and retunrs it, throws error if it already exists.
+// EnsureDeployment creates a Deployment object and returns it, throws error if it already exists.
 func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Deployment {
 	err := createDeploymentWithRetries(f.KubeClientSet, f.Namespace, deployment)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating deployment")
@@ -129,7 +128,7 @@ func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Depl
 
 // waitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
 func waitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration, expectedReplicas int, namespace string, opts metav1.ListOptions) error {
-	return wait.Poll(Poll, timeout, func() (bool, error) {
+	return wait.PollImmediate(1*time.Second, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(context.TODO(), opts)
 		if err != nil {
 			return false, nil
@@ -172,7 +171,7 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 		return nil
 	}
 
-	return wait.Poll(Poll, timeout, func() (bool, error) {
+	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
 		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(context.TODO(), name, metav1.GetOptions{})
 		if k8sErrors.IsNotFound(err) {
 			return false, nil
@@ -210,17 +209,30 @@ func podRunningReady(p *core.Pod) (bool, error) {
 			p.ObjectMeta.Name, p.Spec.NodeName, core.PodRunning, p.Status.Phase)
 	}
 	// Check the ready condition is true.
-	if !podutil.IsPodReady(p) {
+
+	if !isPodReady(p) {
 		return false, fmt.Errorf("pod '%s' on '%s' didn't have condition {%v %v}; conditions: %v",
 			p.ObjectMeta.Name, p.Spec.NodeName, core.PodReady, core.ConditionTrue, p.Status.Conditions)
 	}
 	return true, nil
 }
 
-// GetIngressNGINXPod returns the ingress controller running pod
-func GetIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
+func isPodReady(p *core.Pod) bool {
+	for _, condition := range p.Status.Conditions {
+		if condition.Type != core.ContainersReady {
+			continue
+		}
+
+		return condition.Status == core.ConditionTrue
+	}
+
+	return false
+}
+
+// getIngressNGINXPod returns the ingress controller running pod
+func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
 	var pod *core.Pod
-	err := wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
+	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
 		l, err := kubeClientSet.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 		})

@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -73,7 +73,7 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 	if ngx_config.EnableSSLChainCompletion {
 		data, err := fullChainCert(cert)
 		if err != nil {
-			klog.Errorf("Error generating certificate chain for Secret: %v", err)
+			klog.ErrorS(err, "Error generating certificate chain for Secret")
 		} else {
 			pemCertBuffer.Reset()
 			pemCertBuffer.Write(data)
@@ -109,7 +109,7 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 	}
 
 	if len(pemCert.Extensions) > 0 {
-		klog.V(3).Info("parsing ssl certificate extensions")
+		klog.V(3).InfoS("parsing ssl certificate extensions")
 		for _, ext := range getExtension(pemCert, oidExtensionSubjectAltName) {
 			dns, _, _, err := parseSANExtension(ext.Value)
 			if err != nil {
@@ -125,7 +125,7 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 		}
 	}
 
-	hasher := sha1.New()
+	hasher := sha1.New() // #nosec
 	hasher.Write(pemCert.Raw)
 
 	return &ingress.SSLCert{
@@ -257,7 +257,7 @@ func ConfigureCACert(name string, ca []byte, sslCert *ingress.SSLCert) error {
 
 	sslCert.CAFileName = fileName
 
-	klog.V(3).Infof("Created CA Certificate for Authentication: %v", fileName)
+	klog.V(3).InfoS("Created CA Certificate for Authentication", "path", fileName)
 
 	return nil
 }
@@ -334,7 +334,7 @@ func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
 
 	tempPemFile, err := ioutil.TempFile(file.DefaultSSLDirectory, pemName)
 
-	klog.V(3).Infof("Creating temp file %v for DH param: %v", tempPemFile.Name(), pemName)
+	klog.V(3).InfoS("Creating temporal file for DH", "path", tempPemFile.Name(), "name", pemName)
 	if err != nil {
 		return "", fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
 	}
@@ -504,9 +504,12 @@ func NewTLSListener(certificate, key string) *TLSListener {
 		keyPath:         key,
 		lock:            sync.Mutex{},
 	}
+
 	l.load()
-	watch.NewFileWatcher(certificate, l.load)
-	watch.NewFileWatcher(key, l.load)
+
+	_, _ = watch.NewFileWatcher(certificate, l.load)
+	_, _ = watch.NewFileWatcher(key, l.load)
+
 	return &l
 }
 
@@ -521,11 +524,12 @@ func (tl *TLSListener) GetCertificate(*tls.ClientHelloInfo) (*tls.Certificate, e
 func (tl *TLSListener) TLSConfig() *tls.Config {
 	return &tls.Config{
 		GetCertificate: tl.GetCertificate,
+		MinVersion:     tls.VersionTLS12,
 	}
 }
 
 func (tl *TLSListener) load() {
-	klog.Infof("loading tls certificate from certificate path %s and key path %s", tl.certificatePath, tl.keyPath)
+	klog.InfoS("loading tls certificate", "path", tl.certificatePath, "key", tl.keyPath)
 	certBytes, err := ioutil.ReadFile(tl.certificatePath)
 	if err != nil {
 		tl.certificate = nil

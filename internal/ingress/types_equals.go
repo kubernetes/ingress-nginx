@@ -29,6 +29,10 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		return false
 	}
 
+	if !c1.DefaultSSLCertificate.Equal(c2.DefaultSSLCertificate) {
+		return false
+	}
+
 	match := compareBackends(c1.Backends, c2.Backends)
 	if !match {
 		return false
@@ -73,10 +77,6 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	}
 
 	if c1.BackendConfigChecksum != c2.BackendConfigChecksum {
-		return false
-	}
-
-	if c1.ControllerPodsCount != c2.ControllerPodsCount {
 		return false
 	}
 
@@ -275,7 +275,7 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.SSLPassthrough != s2.SSLPassthrough {
 		return false
 	}
-	if !(s1.SSLCert).Equal(s2.SSLCert) {
+	if !s1.SSLCert.Equal(s2.SSLCert) {
 		return false
 	}
 
@@ -381,6 +381,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 	if !(&l1.RateLimit).Equal(&l2.RateLimit) {
+		return false
+	}
+	if !(&l1.GlobalRateLimit).Equal(&l2.GlobalRateLimit) {
 		return false
 	}
 	if !(&l1.Redirect).Equal(&l2.Redirect) {
@@ -526,6 +529,9 @@ func (l4b1 *L4Backend) Equal(l4b2 *L4Backend) bool {
 		return false
 	}
 	if l4b1.Protocol != l4b2.Protocol {
+		return false
+	}
+	if l4b1.ProxyProtocol != l4b2.ProxyProtocol {
 		return false
 	}
 

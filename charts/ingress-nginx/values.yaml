@@ -1,11 +1,18 @@
 ## nginx configuration
-## Ref: https://github.com/kubernetes/ingress/blob/master/controllers/nginx/configuration.md
+## Ref: https://github.com/kubernetes/ingress-nginx/blob/master/controllers/nginx/configuration.md
 ##
+
+## Overrides for generated resource names
+# See templates/_helpers.tpl
+# nameOverride:
+# fullnameOverride:
+
 controller:
+  name: controller
   image:
     repository: k8s.gcr.io/ingress-nginx/controller
-    tag: "v0.35.0"
-    digest: sha256:fc4979d8b8443a831c9789b5155cded454cb7de737a8b727bc2ba0106d2eae8b
+    tag: "v0.43.0"
+    digest: sha256:9bba603b99bf25f6d117cf1235b6598c16033ad027b143c90fa5b3cc583c5713
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -112,6 +119,10 @@ controller:
     configMapNamespace: ""   # defaults to .Release.Namespace
     ## Annotations to be added to the udp config configmap
     annotations: {}
+
+  # Maxmind license key to download GeoLite2 Databases
+  # https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
+  maxmindLicenseKey: ""
 
   ## Additional command line arguments to pass to nginx-ingress-controller
   ## E.g. to specify the default SSL certificate you can use
@@ -228,7 +239,8 @@ controller:
   ## Node labels for controller pod assignment
   ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
-  nodeSelector: {}
+  nodeSelector:
+    kubernetes.io/os: linux
 
   ## Liveness and readiness probe values
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
@@ -272,6 +284,7 @@ controller:
       cpu: 100m
       memory: 90Mi
 
+  # Mutually exclusive with keda autoscaling
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -289,6 +302,45 @@ controller:
   #     target:
   #       type: AverageValue
   #       averageValue: 10000m
+
+  # Mutually exclusive with hpa autoscaling
+  keda:
+    apiVersion: "keda.sh/v1alpha1"
+  # apiVersion changes with keda 1.x vs 2.x
+  # 2.x = keda.sh/v1alpha1
+  # 1.x = keda.k8s.io/v1alpha1
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 11
+    pollingInterval: 30
+    cooldownPeriod: 300
+    restoreToOriginalReplicaCount: false
+    scaledObject:
+      annotations: {}
+      # Custom annotations for ScaledObject resource
+      #  annotations:
+      # key: value
+    triggers: []
+ #     - type: prometheus
+ #       metadata:
+ #         serverAddress: http://<prometheus-host>:9090
+ #         metricName: http_requests_total
+ #         threshold: '100'
+ #         query: sum(rate(http_requests_total{deployment="my-deployment"}[2m]))
+
+    behavior: {}
+ #     scaleDown:
+ #       stabilizationWindowSeconds: 300
+ #       policies:
+ #       - type: Pods
+ #         value: 1
+ #         periodSeconds: 180
+ #     scaleUp:
+ #       stabilizationWindowSeconds: 300
+ #       policies:
+ #       - type: Pods
+ #         value: 2
+ #         periodSeconds: 60
 
   ## Enable mimalloc as a drop-in replacement for malloc.
   ## ref: https://github.com/microsoft/mimalloc
@@ -360,6 +412,11 @@ controller:
       enabled: false
       annotations: {}
 
+      # loadBalancerIP: ""
+
+      ## Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
+      loadBalancerSourceRanges: []
+
       ## Set external traffic policy to: "Local" to preserve source IP on
       ## providers supporting it
       ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
@@ -406,9 +463,15 @@ controller:
   #   command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
 
   admissionWebhooks:
+    annotations: {}
     enabled: true
     failurePolicy: Fail
+    # timeoutSeconds: 10
     port: 8443
+    certificate: "/usr/local/certificates/cert"
+    key: "/usr/local/certificates/key"
+    namespaceSelector: {}
+    objectSelector: {}
 
     service:
       annotations: {}
@@ -423,7 +486,7 @@ controller:
       enabled: true
       image:
         repository: docker.io/jettech/kube-webhook-certgen
-        tag: v1.3.0
+        tag: v1.5.1
         pullPolicy: IfNotPresent
       ## Provide a priority class name to the webhook patching job
       ##
@@ -529,28 +592,28 @@ controller:
 ##
 revisionHistoryLimit: 10
 
-# Maxmind license key to download GeoLite2 Databases
-# https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
-maxmindLicenseKey: ""
-
 ## Default 404 backend
 ##
 defaultBackend:
   ##
   enabled: false
 
+  name: defaultbackend
   image:
     repository: k8s.gcr.io/defaultbackend-amd64
     tag: "1.5"
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
     runAsUser: 65534
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
 
   extraArgs: {}
 
   serviceAccount:
     create: true
-    name:
+    name: ""
   ## Additional environment variables to set for defaultBackend pods
   extraEnvs: []
 
@@ -614,6 +677,13 @@ defaultBackend:
   #   cpu: 10m
   #   memory: 20Mi
 
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+
   service:
     annotations: {}
 
@@ -643,7 +713,7 @@ podSecurityPolicy:
 
 serviceAccount:
   create: true
-  name:
+  name: ""
 
 ## Optional array of imagePullSecrets containing private registry credentials
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/

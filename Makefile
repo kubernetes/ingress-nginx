@@ -33,7 +33,7 @@ TAG ?= $(shell cat TAG)
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 8
+E2E_NODES ?= 7
 # run e2e test suite with tests that check for memory leaks? (default is false)
 E2E_CHECK_LEAKS ?=
 
@@ -51,7 +51,7 @@ endif
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20200909-ge480f024e@sha256:646a0815768536be16d180e4fb218d88527b42effadbeab39589261d916b17ee
+BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20210115-gba0502603@sha256:224da667cf3047998ea691e9766fedd1eab94257a39df81374bfa14536da3688
 
 GOARCH=$(ARCH)
 
@@ -163,11 +163,13 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 	@kind delete cluster --name ingress-nginx-dev
 
 .PHONY: live-docs
-live-docs: ## Build and launch a local copy of the documentation website in http://localhost:3000
+live-docs: ## Build and launch a local copy of the documentation website in http://localhost:8000
+	@docker build -t ingress-nginx-docs .github/actions/mkdocs
 	@docker run --rm -it \
 		-p 8000:8000 \
 		-v ${PWD}:/docs \
-		squidfunk/mkdocs-material:5.5.12
+		--entrypoint mkdocs \
+		ingress-nginx-docs serve --dev-addr=0.0.0.0:8000
 
 .PHONY: misspell
 misspell:  ## Check for spelling errors.

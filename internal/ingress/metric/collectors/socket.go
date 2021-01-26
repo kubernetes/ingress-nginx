@@ -110,7 +110,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 		return nil, err
 	}
 
-	err = os.Chmod(socket, 0777)
+	err = os.Chmod(socket, 0777) // #nosec
 	if err != nil {
 		return nil, err
 	}
@@ -219,19 +219,19 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 }
 
 func (sc *SocketCollector) handleMessage(msg []byte) {
-	klog.V(5).Infof("msg: %v", string(msg))
+	klog.V(5).InfoS("Metric", "message", string(msg))
 
 	// Unmarshal bytes
 	var statsBatch []socketData
 	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(msg, &statsBatch)
 	if err != nil {
-		klog.Errorf("Unexpected error deserializing JSON payload: %v. Payload:\n%v", err, string(msg))
+		klog.ErrorS(err, "Unexpected error deserializing JSON", "payload", string(msg))
 		return
 	}
 
 	for _, stats := range statsBatch {
 		if sc.metricsPerHost && !sc.hosts.Has(stats.Host) {
-			klog.V(3).Infof("Skipping metric for host %v that is not being served", stats.Host)
+			klog.V(3).InfoS("Skipping metric for host not being served", "host", stats.Host)
 			continue
 		}
 
@@ -263,7 +263,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 
 		requestsMetric, err := sc.requests.GetMetricWith(collectorLabels)
 		if err != nil {
-			klog.Errorf("Error fetching requests metric: %v", err)
+			klog.ErrorS(err, "Error fetching requests metric")
 		} else {
 			requestsMetric.Inc()
 		}
@@ -271,7 +271,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		if stats.Latency != -1 {
 			latencyMetric, err := sc.upstreamLatency.GetMetricWith(latencyLabels)
 			if err != nil {
-				klog.Errorf("Error fetching latency metric: %v", err)
+				klog.ErrorS(err, "Error fetching latency metric")
 			} else {
 				latencyMetric.Observe(stats.Latency)
 			}
@@ -280,7 +280,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		if stats.RequestTime != -1 {
 			requestTimeMetric, err := sc.requestTime.GetMetricWith(requestLabels)
 			if err != nil {
-				klog.Errorf("Error fetching request duration metric: %v", err)
+				klog.ErrorS(err, "Error fetching request duration metric")
 			} else {
 				requestTimeMetric.Observe(stats.RequestTime)
 			}
@@ -289,7 +289,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		if stats.RequestLength != -1 {
 			requestLengthMetric, err := sc.requestLength.GetMetricWith(requestLabels)
 			if err != nil {
-				klog.Errorf("Error fetching request length metric: %v", err)
+				klog.ErrorS(err, "Error fetching request length metric")
 			} else {
 				requestLengthMetric.Observe(stats.RequestLength)
 			}
@@ -298,7 +298,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		if stats.ResponseTime != -1 {
 			responseTimeMetric, err := sc.responseTime.GetMetricWith(requestLabels)
 			if err != nil {
-				klog.Errorf("Error fetching upstream response time metric: %v", err)
+				klog.ErrorS(err, "Error fetching upstream response time metric")
 			} else {
 				responseTimeMetric.Observe(stats.ResponseTime)
 			}
@@ -307,14 +307,14 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		if stats.ResponseLength != -1 {
 			bytesSentMetric, err := sc.bytesSent.GetMetricWith(requestLabels)
 			if err != nil {
-				klog.Errorf("Error fetching bytes sent metric: %v", err)
+				klog.ErrorS(err, "Error fetching bytes sent metric")
 			} else {
 				bytesSentMetric.Observe(stats.ResponseLength)
 			}
 
 			responseSizeMetric, err := sc.responseLength.GetMetricWith(requestLabels)
 			if err != nil {
-				klog.Errorf("Error fetching bytes sent metric: %v", err)
+				klog.ErrorS(err, "Error fetching bytes sent metric")
 			} else {
 				responseSizeMetric.Observe(stats.ResponseLength)
 			}
@@ -345,12 +345,12 @@ func (sc *SocketCollector) Stop() {
 func (sc *SocketCollector) RemoveMetrics(ingresses []string, registry prometheus.Gatherer) {
 	mfs, err := registry.Gather()
 	if err != nil {
-		klog.Errorf("Error gathering metrics: %v", err)
+		klog.ErrorS(err, "Error gathering metrics: %v")
 		return
 	}
 
 	// 1. remove metrics of removed ingresses
-	klog.V(2).Infof("removing ingresses %v from metrics", ingresses)
+	klog.V(2).InfoS("removing metrics", "ingresses", ingresses)
 	for _, mf := range mfs {
 		metricName := mf.GetName()
 		metric, ok := sc.metricMapping[metricName]
@@ -388,7 +388,7 @@ func (sc *SocketCollector) RemoveMetrics(ingresses []string, registry prometheus
 			if ok {
 				removed := h.Delete(labels)
 				if !removed {
-					klog.V(2).Infof("metric %v for ingress %v with labels not removed: %v", metricName, ingKey, labels)
+					klog.V(2).InfoS("metric not removed", "name", metricName, "ingress", ingKey, "labels", labels)
 				}
 			}
 
@@ -396,12 +396,11 @@ func (sc *SocketCollector) RemoveMetrics(ingresses []string, registry prometheus
 			if ok {
 				removed := s.Delete(labels)
 				if !removed {
-					klog.V(2).Infof("metric %v for ingress %v with labels not removed: %v", metricName, ingKey, labels)
+					klog.V(2).InfoS("metric not removed", "name", metricName, "ingress", ingKey, "labels", labels)
 				}
 			}
 		}
 	}
-
 }
 
 // Describe implements prometheus.Collector

@@ -86,7 +86,7 @@ var (
 			true,
 			false,
 		},
-		"when secure backend, stickeness and dynamic config enabled": {
+		"when secure backend, stickiness and dynamic config enabled": {
 			"/",
 			"/",
 			"/",
@@ -355,7 +355,7 @@ func TestBuildAuthLocation(t *testing.T) {
 	}
 
 	encodedAuthURL := strings.Replace(base64.URLEncoding.EncodeToString([]byte(loc.Path)), "=", "", -1)
-	externalAuthPath := fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
+	externalAuthPath := fmt.Sprintf("/_external-auth-%v-default", encodedAuthURL)
 
 	testCases := []struct {
 		title                    string
@@ -766,16 +766,19 @@ func TestFilterRateLimits(t *testing.T) {
 
 func TestBuildAuthSignURL(t *testing.T) {
 	cases := map[string]struct {
-		Input, Output string
+		Input, RedirectParam, Output string
 	}{
-		"default url":       {"http://google.com", "http://google.com?rd=$pass_access_scheme://$http_host$escaped_request_uri"},
-		"with random field": {"http://google.com?cat=0", "http://google.com?cat=0&rd=$pass_access_scheme://$http_host$escaped_request_uri"},
-		"with rd field":     {"http://google.com?cat&rd=$request", "http://google.com?cat&rd=$request"},
+		"default url and redirect":              {"http://google.com", "rd", "http://google.com?rd=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"default url and custom redirect":       {"http://google.com", "orig", "http://google.com?orig=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"with random field":                     {"http://google.com?cat=0", "rd", "http://google.com?cat=0&rd=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"with random field and custom redirect": {"http://google.com?cat=0", "orig", "http://google.com?cat=0&orig=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"with rd field":                         {"http://google.com?cat&rd=$request", "rd", "http://google.com?cat&rd=$request"},
+		"with orig field":                       {"http://google.com?cat&orig=$request", "orig", "http://google.com?cat&orig=$request"},
 	}
 	for k, tc := range cases {
-		res := buildAuthSignURL(tc.Input)
+		res := buildAuthSignURL(tc.Input, tc.RedirectParam)
 		if res != tc.Output {
-			t.Errorf("%s: called buildAuthSignURL('%s'); expected '%v' but returned '%v'", k, tc.Input, tc.Output, res)
+			t.Errorf("%s: called buildAuthSignURL('%s','%s'); expected '%v' but returned '%v'", k, tc.Input, tc.RedirectParam, tc.Output, res)
 		}
 	}
 }
@@ -871,10 +874,10 @@ func TestEscapeLiteralDollar(t *testing.T) {
 		t.Errorf("Expected %v but returned %v", expected, escapedPath)
 	}
 
-	leaveUnchagned := "/leave-me/unchagned"
-	escapedPath = escapeLiteralDollar(leaveUnchagned)
-	if escapedPath != leaveUnchagned {
-		t.Errorf("Expected %v but returned %v", leaveUnchagned, escapedPath)
+	leaveUnchanged := "/leave-me/unchanged"
+	escapedPath = escapeLiteralDollar(leaveUnchanged)
+	if escapedPath != leaveUnchanged {
+		t.Errorf("Expected %v but returned %v", leaveUnchanged, escapedPath)
 	}
 
 	escapedPath = escapeLiteralDollar(false)
@@ -1445,6 +1448,110 @@ func TestModSecurityForLocation(t *testing.T) {
 
 		if testCase.expected != actual {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.description, testCase.expected, actual)
+		}
+	}
+}
+
+func TestBuildServerName(t *testing.T) {
+
+	testCases := []struct {
+		title    string
+		hostname string
+		expected string
+	}{
+		{"simple domain", "foo.bar", "foo.bar"},
+		{"simple www domain", "www.foo.bar", "www.foo.bar"},
+		{"wildcard domain", "*.foo.bar", "~^(?<subdomain>[\\w-]+)\\.foo\\.bar$"},
+		{"wildcard two levels domain", "*.sub.foo.bar", "~^(?<subdomain>[\\w-]+)\\.sub\\.foo\\.bar$"},
+	}
+
+	for _, testCase := range testCases {
+		result := buildServerName(testCase.hostname)
+		if result != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+		}
+	}
+}
+
+func TestParseComplexNginxVarIntoLuaTable(t *testing.T) {
+	testCases := []struct {
+		ngxVar           string
+		expectedLuaTable string
+	}{
+		{"foo", `{ { nil, nil, nil, "foo", }, }`},
+		{"$foo", `{ { nil, nil, "foo", nil, }, }`},
+		{"${foo}", `{ { nil, "foo", nil, nil, }, }`},
+		{"\\$foo", `{ { "\$foo", nil, nil, nil, }, }`},
+		{
+			"foo\\$bar$baz${daz}xiyar$pomidor",
+			`{ { nil, nil, nil, "foo", }, { "\$bar", nil, nil, nil, }, { nil, nil, "baz", nil, }, ` +
+				`{ nil, "daz", nil, nil, }, { nil, nil, nil, "xiyar", }, { nil, nil, "pomidor", nil, }, }`,
+		},
+	}
+
+	for _, testCase := range testCases {
+		actualLuaTable := parseComplexNginxVarIntoLuaTable(testCase.ngxVar)
+		if actualLuaTable != testCase.expectedLuaTable {
+			t.Errorf("expected %v but returned %v", testCase.expectedLuaTable, actualLuaTable)
+		}
+	}
+}
+
+func TestConvertGoSliceIntoLuaTablet(t *testing.T) {
+	testCases := []struct {
+		title            string
+		goSlice          interface{}
+		emptyStringAsNil bool
+		expectedLuaTable string
+		expectedErr      error
+	}{
+		{
+			"flat string slice",
+			[]string{"one", "two", "three"},
+			false,
+			`{ "one", "two", "three", }`,
+			nil,
+		},
+		{
+			"nested string slice",
+			[][]string{{"one", "", "three"}, {"foo", "bar"}},
+			false,
+			`{ { "one", "", "three", }, { "foo", "bar", }, }`,
+			nil,
+		},
+		{
+			"converts empty string to nil when enabled",
+			[][]string{{"one", "", "three"}, {"foo", "bar"}},
+			true,
+			`{ { "one", nil, "three", }, { "foo", "bar", }, }`,
+			nil,
+		},
+		{
+			"boolean slice",
+			[]bool{true, true, false},
+			false,
+			`{ true, true, false, }`,
+			nil,
+		},
+		{
+			"integer slice",
+			[]int{4, 3, 6},
+			false,
+			`{ 4, 3, 6, }`,
+			nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		actualLuaTable, err := convertGoSliceIntoLuaTable(testCase.goSlice, testCase.emptyStringAsNil)
+		if testCase.expectedErr != nil && err != nil && testCase.expectedErr.Error() != err.Error() {
+			t.Errorf("expected error '%v' but returned '%v'", testCase.expectedErr, err)
+		}
+		if testCase.expectedErr == nil && err != nil {
+			t.Errorf("expected error to be nil but returned '%v'", err)
+		}
+		if testCase.expectedLuaTable != actualLuaTable {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expectedLuaTable, actualLuaTable)
 		}
 	}
 }

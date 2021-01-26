@@ -100,7 +100,7 @@ var _ = framework.DescribeAnnotation("influxdb-*", func() {
 func createInfluxDBService(f *framework.Framework) *corev1.Service {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "inflxudb",
+			Name:      "influxdb",
 			Namespace: f.Namespace,
 		},
 		Spec: corev1.ServiceSpec{Ports: []corev1.ServicePort{

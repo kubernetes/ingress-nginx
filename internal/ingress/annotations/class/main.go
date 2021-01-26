@@ -41,30 +41,24 @@ var (
 // IsValid returns true if the given Ingress specify the ingress.class
 // annotation or IngressClassName resource for Kubernetes >= v1.18
 func IsValid(ing *networking.Ingress) bool {
-	// 1. with annotation
+	// 1. with annotation or IngressClass
 	ingress, ok := ing.GetAnnotations()[IngressKey]
-	if ok {
-		// empty annotation and same annotation on ingress
-		if ingress == "" && IngressClass == DefaultClass {
-			return true
-		}
-
-		return ingress == IngressClass
+	if !ok && ing.Spec.IngressClassName != nil {
+		ingress = *ing.Spec.IngressClassName
 	}
 
-	// 2. k8s < v1.18. Check default annotation
-	if !k8s.IsIngressV1Ready {
-		return IngressClass == DefaultClass
+	// empty ingress and IngressClass equal default
+	if len(ingress) == 0 && IngressClass == DefaultClass {
+		return true
 	}
 
-	// 3. without annotation and IngressClass. Check default annotation
-	if k8s.IngressClass == nil {
-		return IngressClass == DefaultClass
+	// k8s > v1.18.
+	// Processing may be redundant because k8s.IngressClass is obtained by IngressClass
+	// 3. without annotation and IngressClass. Check IngressClass
+	if k8s.IngressClass != nil {
+		return ingress == k8s.IngressClass.Name
 	}
 
 	// 4. with IngressClass
-	if ing.Spec.IngressClassName != nil {
-		return k8s.IngressClass.Name == *ing.Spec.IngressClassName
-	}
-	return false
+	return ingress == IngressClass
 }

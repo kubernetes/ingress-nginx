@@ -35,15 +35,16 @@ import (
 type Config struct {
 	URL string `json:"url"`
 	// Host contains the hostname defined in the URL
-	Host              string            `json:"host"`
-	SigninURL         string            `json:"signinUrl"`
-	Method            string            `json:"method"`
-	ResponseHeaders   []string          `json:"responseHeaders,omitempty"`
-	RequestRedirect   string            `json:"requestRedirect"`
-	AuthSnippet       string            `json:"authSnippet"`
-	AuthCacheKey      string            `json:"authCacheKey"`
-	AuthCacheDuration []string          `json:"authCacheDuration"`
-	ProxySetHeaders   map[string]string `json:"proxySetHeaders,omitempty"`
+	Host                   string            `json:"host"`
+	SigninURL              string            `json:"signinUrl"`
+	SigninURLRedirectParam string            `json:"signinUrlRedirectParam,omitempty"`
+	Method                 string            `json:"method"`
+	ResponseHeaders        []string          `json:"responseHeaders,omitempty"`
+	RequestRedirect        string            `json:"requestRedirect"`
+	AuthSnippet            string            `json:"authSnippet"`
+	AuthCacheKey           string            `json:"authCacheKey"`
+	AuthCacheDuration      []string          `json:"authCacheDuration"`
+	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
 }
 
 // DefaultCacheDuration is the fallback value if no cache duration is provided
@@ -64,6 +65,9 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		return false
 	}
 	if e1.SigninURL != e2.SigninURL {
+		return false
+	}
+	if e1.SigninURLRedirectParam != e2.SigninURLRedirectParam {
 		return false
 	}
 	if e1.Method != e2.Method {
@@ -171,17 +175,22 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	// Optional Parameters
 	signIn, err := parser.GetStringAnnotation("auth-signin", ing)
 	if err != nil {
-		klog.V(3).Infof("auth-signin annotation is undefined and will not be set")
+		klog.V(3).InfoS("auth-signin annotation is undefined and will not be set")
+	}
+
+	signInRedirectParam, err := parser.GetStringAnnotation("auth-signin-redirect-param", ing)
+	if err != nil {
+		klog.V(3).Infof("auth-signin-redirect-param annotation is undefined and will not be set")
 	}
 
 	authSnippet, err := parser.GetStringAnnotation("auth-snippet", ing)
 	if err != nil {
-		klog.V(3).Infof("auth-snippet annotation is undefined and will not be set")
+		klog.V(3).InfoS("auth-snippet annotation is undefined and will not be set")
 	}
 
 	authCacheKey, err := parser.GetStringAnnotation("auth-cache-key", ing)
 	if err != nil {
-		klog.V(3).Infof("auth-cache-key annotation is undefined and will not be set")
+		klog.V(3).InfoS("auth-cache-key annotation is undefined and will not be set")
 	}
 
 	durstr, _ := parser.GetStringAnnotation("auth-cache-duration", ing)
@@ -207,7 +216,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	proxySetHeaderMap, err := parser.GetStringAnnotation("auth-proxy-set-headers", ing)
 	if err != nil {
-		klog.V(3).Infof("auth-set-proxy-headers annotation is undefined and will not be set")
+		klog.V(3).InfoS("auth-set-proxy-headers annotation is undefined and will not be set")
 	}
 
 	var proxySetHeaders map[string]string
@@ -230,16 +239,17 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	requestRedirect, _ := parser.GetStringAnnotation("auth-request-redirect", ing)
 
 	return &Config{
-		URL:               urlString,
-		Host:              authURL.Hostname(),
-		SigninURL:         signIn,
-		Method:            authMethod,
-		ResponseHeaders:   responseHeaders,
-		RequestRedirect:   requestRedirect,
-		AuthSnippet:       authSnippet,
-		AuthCacheKey:      authCacheKey,
-		AuthCacheDuration: authCacheDuration,
-		ProxySetHeaders:   proxySetHeaders,
+		URL:                    urlString,
+		Host:                   authURL.Hostname(),
+		SigninURL:              signIn,
+		SigninURLRedirectParam: signInRedirectParam,
+		Method:                 authMethod,
+		ResponseHeaders:        responseHeaders,
+		RequestRedirect:        requestRedirect,
+		AuthSnippet:            authSnippet,
+		AuthCacheKey:           authCacheKey,
+		AuthCacheDuration:      authCacheDuration,
+		ProxySetHeaders:        proxySetHeaders,
 	}, nil
 }
 

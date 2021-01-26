@@ -9,3 +9,8 @@ kubeadmConfigPatches:
   kind: ClusterConfiguration
   metadata:
     name: config
+  controllerManager:
+    extraArgs:
+      namespace-sync-period: 10s
+      concurrent-deployment-syncs: "30"
+      deployment-controller-sync-period: 10s

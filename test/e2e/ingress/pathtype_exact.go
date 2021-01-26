@@ -35,7 +35,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 	})
 
 	ginkgo.It("should choose exact location for /exact", func() {
-		if !f.IsIngressV1Ready {
+		if !f.IsIngressV1Beta1Ready {
 			ginkgo.Skip("Test requires Kubernetes v1.18 or higher")
 		}
 
@@ -54,14 +54,14 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: prefix";`,
 		}
 
-		ing = framework.NewSingleIngress("exact-sufix", "/exact", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing = framework.NewSingleIngress("exact-suffix", "/exact", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, host) &&
 					strings.Contains(server, "location = /exact") &&
-					strings.Contains(server, "location /exact")
+					strings.Contains(server, "location /exact/")
 			})
 
 		body := f.HTTPTestClient().
@@ -76,7 +76,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, "pathtype=exact")
 
 		body = f.HTTPTestClient().
-			GET("/exact/sufix").
+			GET("/exact/suffix").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).
@@ -99,11 +99,11 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 			func(server string) bool {
 				return strings.Contains(server, host) &&
 					strings.Contains(server, "location = /exact") &&
-					strings.Contains(server, "location /exact")
+					strings.Contains(server, "location /exact/")
 			})
 
 		body = f.HTTPTestClient().
-			GET("/exact/sufix").
+			GET("/exact/suffix").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).

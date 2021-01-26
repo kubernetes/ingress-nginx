@@ -1,0 +1,36 @@
+# TODO: remove the need to use fullnameOverride
+fullnameOverride: nginx-ingress
+controller:
+  image:
+    repository: ingress-controller/controller
+    tag: 1.0.0-dev
+    digest:
+  containerPort:
+    http: "1080"
+    https: "1443"
+
+  extraArgs:
+    http-port: "1080"
+    https-port: "1443"
+    # e2e tests do not require information about ingress status
+    update-status: "false"
+
+  scope:
+    enabled: true
+
+  config:
+    worker-processes: "1"
+  service:
+    type: NodePort
+
+  admissionWebhooks:
+    enabled: true
+    certificate: "/usr/local/certificates/cert"
+    key: "/usr/local/certificates/key"
+
+defaultBackend:
+  enabled: false
+
+rbac:
+  create: true
+  scope: true

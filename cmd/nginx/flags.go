@@ -173,6 +173,7 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
 	)
 
+	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases`)
 	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
 https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases`)
 	flags.StringVar(&nginx.MaxmindEditionIDs, "maxmind-edition-ids", "GeoLite2-City,GeoLite2-ASN", `Maxmind edition ids to download GeoLite2 Databases.`)
@@ -187,7 +188,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	flag.CommandLine.Parse([]string{})
 
 	pflag.VisitAll(func(flag *pflag.Flag) {
-		klog.V(2).Infof("FLAG: --%s=%q", flag.Name, flag.Value)
+		klog.V(2).InfoS("FLAG", flag.Name, flag.Value)
 	})
 
 	if *showVersion {
@@ -202,12 +203,12 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	}
 
 	if *ingressClass != "" {
-		klog.Infof("Watching for Ingress class: %s", *ingressClass)
+		klog.InfoS("Watching for Ingress", "class", *ingressClass)
 
 		if *ingressClass != class.DefaultClass {
 			klog.Warningf("Only Ingresses with class %q will be processed by this Ingress controller", *ingressClass)
 		} else {
-			klog.Warning("Ingresses with an empty class will also be processed by this Ingress controller", *ingressClass)
+			klog.Warning("Ingresses with an empty class will also be processed by this Ingress controller")
 		}
 
 		class.IngressClass = *ingressClass
@@ -246,10 +247,6 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 
 	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)
-	}
-
-	if !*enableSSLChainCompletion {
-		klog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}
 
 	if *publishSvc != "" && *publishStatusAddress != "" {
@@ -303,13 +300,13 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		config.RootCAFile = *rootCAFile
 	}
 
-	if nginx.MaxmindLicenseKey != "" && nginx.MaxmindEditionIDs != "" {
+	if (nginx.MaxmindLicenseKey != "" || nginx.MaxmindMirror != "") && nginx.MaxmindEditionIDs != "" {
 		if err := nginx.ValidateGeoLite2DBEditions(); err != nil {
 			return false, nil, err
 		}
-		klog.Info("downloading maxmind GeoIP2 databases...")
+		klog.InfoS("downloading maxmind GeoIP2 databases")
 		if err := nginx.DownloadGeoLite2DB(); err != nil {
-			klog.Errorf("unexpected error downloading GeoIP2 database: %v", err)
+			klog.ErrorS(err, "unexpected error downloading GeoIP2 database")
 		}
 		config.MaxmindEditionFiles = nginx.MaxmindEditionFiles
 	}

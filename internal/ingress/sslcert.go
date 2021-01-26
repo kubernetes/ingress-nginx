@@ -71,5 +71,10 @@ func (s SSLCert) GetObjectKind() schema.ObjectKind {
 
 // HashInclude defines if a field should be used or not to calculate the hash
 func (s SSLCert) HashInclude(field string, v interface{}) (bool, error) {
-	return (field != "PemSHA" && field != "CASHA" && field != "ExpireTime"), nil
+	switch field {
+	case "PemSHA", "CASHA", "ExpireTime":
+		return true, nil
+	default:
+		return false, nil
+	}
 }

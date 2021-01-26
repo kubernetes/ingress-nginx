@@ -253,7 +253,7 @@ func (cm *Controller) RemoveAllSSLExpireMetrics(registry prometheus.Gatherer) {
 func (cm *Controller) removeSSLExpireMetrics(onlyDefinedHosts bool, hosts []string, registry prometheus.Gatherer) {
 	mfs, err := registry.Gather()
 	if err != nil {
-		klog.Errorf("Error gathering metrics: %v", err)
+		klog.ErrorS(err, "Error gathering metrics")
 		return
 	}
 
@@ -283,10 +283,10 @@ func (cm *Controller) removeSSLExpireMetrics(onlyDefinedHosts bool, hosts []stri
 				continue
 			}
 
-			klog.V(2).Infof("Removing prometheus metric from gauge %v for host %v", metricName, host)
+			klog.V(2).InfoS("Removing prometheus metric", "gauge", metricName, "host", host)
 			removed := cm.sslExpireTime.Delete(labels)
 			if !removed {
-				klog.V(2).Infof("metric %v for host %v with labels not removed: %v", metricName, host, labels)
+				klog.V(2).InfoS("metric removed", "metric", metricName, "host", host, "labels", labels)
 			}
 		}
 	}

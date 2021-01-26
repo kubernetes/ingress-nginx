@@ -160,7 +160,7 @@ func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 		return
 	}
 
-	klog.V(2).Infof("Updating ssl expiration metrics.")
+	klog.V(2).InfoS("Updating ssl expiration metrics")
 	c.ingressController.SetSSLExpireTime(servers)
 }
 

@@ -30,7 +30,6 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -64,7 +63,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 					Name:      "foo1",
 					Namespace: apiv1.NamespaceDefault,
 					Labels: map[string]string{
-						"lable_sig": "foo_pod",
+						"label_sig": "foo_pod",
 					},
 				},
 				Spec: apiv1.PodSpec{
@@ -72,6 +71,12 @@ func buildSimpleClientSet() *testclient.Clientset {
 				},
 				Status: apiv1.PodStatus{
 					Phase: apiv1.PodRunning,
+					Conditions: []apiv1.PodCondition{
+						{
+							Type:   apiv1.PodReady,
+							Status: apiv1.ConditionTrue,
+						},
+					},
 				},
 			},
 			{
@@ -91,7 +96,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 					Name:      "foo2",
 					Namespace: apiv1.NamespaceDefault,
 					Labels: map[string]string{
-						"lable_sig": "foo_no",
+						"label_sig": "foo_no",
 					},
 				},
 			},
@@ -100,7 +105,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 					Name:      "foo3",
 					Namespace: metav1.NamespaceSystem,
 					Labels: map[string]string{
-						"lable_sig": "foo_pod",
+						"label_sig": "foo_pod",
 					},
 				},
 				Spec: apiv1.PodSpec{
@@ -108,6 +113,12 @@ func buildSimpleClientSet() *testclient.Clientset {
 				},
 				Status: apiv1.PodStatus{
 					Phase: apiv1.PodRunning,
+					Conditions: []apiv1.PodCondition{
+						{
+							Type:   apiv1.PodReady,
+							Status: apiv1.ConditionTrue,
+						},
+					},
 				},
 			},
 		}},
@@ -234,7 +245,7 @@ func buildExtensionsIngresses() []networking.Ingress {
 type testIngressLister struct {
 }
 
-func (til *testIngressLister) ListIngresses(store.IngressFilterFunc) []*ingress.Ingress {
+func (til *testIngressLister) ListIngresses() []*ingress.Ingress {
 	var ingresses []*ingress.Ingress
 	ingresses = append(ingresses, &ingress.Ingress{
 		Ingress: networking.Ingress{
@@ -265,13 +276,6 @@ func buildIngressLister() ingressLister {
 
 func buildStatusSync() statusSync {
 	return statusSync{
-		pod: &k8s.PodInfo{
-			Name:      "foo_base_pod",
-			Namespace: apiv1.NamespaceDefault,
-			Labels: map[string]string{
-				"lable_sig": "foo_pod",
-			},
-		},
 		syncQueue: task.NewTaskQueue(fakeSynFn),
 		Config: Config{
 			Client:         buildSimpleClientSet(),
@@ -292,20 +296,21 @@ func TestStatusActions(t *testing.T) {
 		UpdateStatusOnShutdown: true,
 	}
 
-	// create object
-	fkSync := NewStatusSyncer(&k8s.PodInfo{
-		Name:      "foo_base_pod",
-		Namespace: apiv1.NamespaceDefault,
-		Labels: map[string]string{
-			"lable_sig": "foo_pod",
+	k8s.IngressPodDetails = &k8s.PodInfo{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "foo_base_pod",
+			Namespace: apiv1.NamespaceDefault,
+			Labels: map[string]string{
+				"label_sig": "foo_pod",
+			},
 		},
-	}, c)
+	}
+
+	// create object
+	fkSync := NewStatusSyncer(c)
 	if fkSync == nil {
 		t.Fatalf("expected a valid Sync")
 	}
-
-	// assume k8s >= 1.14 as the rest of the test
-	k8s.IsNetworkingIngressAvailable = true
 
 	fk := fkSync.(statusSync)
 
@@ -374,7 +379,7 @@ func TestKeyfunc(t *testing.T) {
 	}
 }
 
-func TestRunningAddresessWithPublishService(t *testing.T) {
+func TestRunningAddressesWithPublishService(t *testing.T) {
 	testCases := map[string]struct {
 		fakeClient  *testclient.Clientset
 		expected    []string
@@ -554,7 +559,7 @@ func TestRunningAddresessWithPublishService(t *testing.T) {
 	}
 }
 
-func TestRunningAddresessWithPods(t *testing.T) {
+func TestRunningAddressesWithPods(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishService = ""
 
@@ -572,7 +577,7 @@ func TestRunningAddresessWithPods(t *testing.T) {
 	}
 }
 
-func TestRunningAddresessWithPublishStatusAddress(t *testing.T) {
+func TestRunningAddressesWithPublishStatusAddress(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishStatusAddress = "127.0.0.1"
 

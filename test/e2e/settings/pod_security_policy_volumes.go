@@ -57,43 +57,42 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with vo
 		_, err = f.KubeClientSet.RbacV1().Roles(f.Namespace).Update(context.TODO(), role, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller cluster role to use a pod security policy")
 
-		err = framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1.Deployment) error {
-				args := deployment.Spec.Template.Spec.Containers[0].Args
-				args = append(args, "--v=2")
-				deployment.Spec.Template.Spec.Containers[0].Args = args
+		err = f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--v=2")
+			deployment.Spec.Template.Spec.Containers[0].Args = args
 
-				deployment.Spec.Template.Spec.Volumes = []corev1.Volume{
-					{
-						Name: "ssl", VolumeSource: corev1.VolumeSource{
-							EmptyDir: &corev1.EmptyDirVolumeSource{},
-						},
+			deployment.Spec.Template.Spec.Volumes = []corev1.Volume{
+				{
+					Name: "ssl", VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{},
 					},
-					{
-						Name: "tmp", VolumeSource: corev1.VolumeSource{
-							EmptyDir: &corev1.EmptyDirVolumeSource{},
-						},
+				},
+				{
+					Name: "tmp", VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{},
 					},
-				}
+				},
+			}
 
-				fsGroup := int64(33)
-				deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
-					FSGroup: &fsGroup,
-				}
+			fsGroup := int64(33)
+			deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+				FSGroup: &fsGroup,
+			}
 
-				deployment.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
-					{
-						Name: "ssl", MountPath: "/etc/ingress-controller",
-					},
-					{
-						Name: "tmp", MountPath: "/tmp",
-					},
-				}
+			deployment.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
+				{
+					Name: "ssl", MountPath: "/etc/ingress-controller",
+				},
+				{
+					Name: "tmp", MountPath: "/tmp",
+				},
+			}
 
-				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 
-				return err
-			})
+			return err
+		})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment")
 
 		f.WaitForNginxListening(80)

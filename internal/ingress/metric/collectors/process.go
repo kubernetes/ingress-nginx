@@ -32,8 +32,8 @@ type scrapeRequest struct {
 	done    chan struct{}
 }
 
-// Stopable defines a prometheus collector that can be stopped
-type Stopable interface {
+// Stoppable defines a prometheus collector that can be stopped
+type Stoppable interface {
 	prometheus.Collector
 	Stop()
 }

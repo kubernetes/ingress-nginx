@@ -96,40 +96,40 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 
 	cookie.Name, err = parser.GetStringAnnotation(annotationAffinityCookieName, ing)
 	if err != nil {
-		klog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieExpires, "default", defaultAffinityCookieName)
 		cookie.Name = defaultAffinityCookieName
 	}
 
 	cookie.Expires, err = parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)
 	if err != nil || !affinityCookieExpiresRegex.MatchString(cookie.Expires) {
-		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieExpires)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieExpires)
 		cookie.Expires = ""
 	}
 
 	cookie.MaxAge, err = parser.GetStringAnnotation(annotationAffinityCookieMaxAge, ing)
 	if err != nil || !affinityCookieExpiresRegex.MatchString(cookie.MaxAge) {
-		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieMaxAge)
 		cookie.MaxAge = ""
 	}
 
 	cookie.Path, err = parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
 	if err != nil {
-		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieMaxAge)
 	}
 
 	cookie.SameSite, err = parser.GetStringAnnotation(annotationAffinityCookieSameSite, ing)
 	if err != nil {
-		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieSameSite)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieSameSite)
 	}
 
 	cookie.ConditionalSameSiteNone, err = parser.GetBoolAnnotation(annotationAffinityCookieConditionalSameSiteNone, ing)
 	if err != nil {
-		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieConditionalSameSiteNone)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieConditionalSameSiteNone)
 	}
 
 	cookie.ChangeOnFailure, err = parser.GetBoolAnnotation(annotationAffinityCookieChangeOnFailure, ing)
 	if err != nil {
-		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieChangeOnFailure)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieChangeOnFailure)
 	}
 
 	return cookie
@@ -154,7 +154,7 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 		at = ""
 	}
 
-	// Check the afinity mode that will be used
+	// Check the affinity mode that will be used
 	am, err := parser.GetStringAnnotation(annotationAffinityMode, ing)
 	if err != nil {
 		am = ""
@@ -164,7 +164,7 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 	case "cookie":
 		cookie = a.cookieAffinityParse(ing)
 	default:
-		klog.V(3).Infof("No default affinity was found for Ingress %v", ing.Name)
+		klog.V(3).InfoS("No default affinity found", "ingress", ing.Name)
 
 	}
 

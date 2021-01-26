@@ -34,7 +34,6 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
-		f.UpdateNginxConfigMapData("use-forwarded-headers", "false")
 	})
 
 	ginkgo.Context("should configure TLS protocol", func() {
@@ -111,16 +110,16 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 
 	ginkgo.Context("should configure HSTS policy header", func() {
 		var (
-			tlsConfig             *tls.Config
-			hstsMaxAge            string
-			hstsIncludeSubdomains string
-			hstsPreload           string
+			tlsConfig *tls.Config
+		)
+
+		const (
+			hstsMaxAge            = "hsts-max-age"
+			hstsIncludeSubdomains = "hsts-include-subdomains"
+			hstsPreload           = "hsts-preload"
 		)
 
 		ginkgo.BeforeEach(func() {
-			hstsMaxAge = "hsts-max-age"
-			hstsIncludeSubdomains = "hsts-include-subdomains"
-			hstsPreload = "hsts-preload"
 			ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil))
 			tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 				ing.Spec.TLS[0].Hosts,
@@ -196,7 +195,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			// we can not use gorequest here because it flattens the duplicate headers
 			// and specifically in case of Strict-Transport-Security it ignore extra headers
 			// intead of concatenating, rightfully. And I don't know of any API it provides for getting raw headers.
-			curlCmd := fmt.Sprintf("curl -I -k --fail --silent --resolve settings-tls:443:127.0.0.1 https://settings-tls/%v", "?hsts=true")
+			curlCmd := fmt.Sprintf("curl -I -k --fail --silent --resolve settings-tls:443:127.0.0.1 https://settings-tls%v", "?hsts=true")
 			output, err := f.ExecIngressPod(curlCmd)
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.Contains(ginkgo.GinkgoT(), output, "strict-transport-security: max-age=86400; preload")
@@ -222,7 +221,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				WithHeader("Host", host).
 				Expect().
 				Status(http.StatusPermanentRedirect).
-				Header("Location").Equal(fmt.Sprintf("https://%v/", host))
+				Header("Location").Equal(fmt.Sprintf("https://%v", host))
 		})
 
 		ginkgo.It("should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection", func() {
@@ -243,8 +242,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				WithHeader("X-Forwarded-Host", "example.com:80").
 				Expect().
 				Status(http.StatusPermanentRedirect).
-				Header("Location").Equal("https://example.com/")
+				Header("Location").Equal("https://example.com")
 		})
 	})
-
 })

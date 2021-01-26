@@ -26,7 +26,10 @@ spec:
   template:
     metadata:
     {{- if .Values.controller.podAnnotations }}
-      annotations: {{ toYaml .Values.controller.podAnnotations | nindent 8 }}
+      annotations: 
+      {{- range $key, $value := .Values.controller.podAnnotations }}
+        {{ $key }}: {{ $value | quote }}
+      {{- end }}      
     {{- end }}
       labels:
         {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
@@ -92,9 +95,12 @@ spec:
           {{- end }}
           {{- if .Values.controller.admissionWebhooks.enabled }}
             - --validating-webhook=:{{ .Values.controller.admissionWebhooks.port }}
-            - --validating-webhook-certificate=/usr/local/certificates/cert
-            - --validating-webhook-key=/usr/local/certificates/key
+            - --validating-webhook-certificate={{ .Values.controller.admissionWebhooks.certificate }}
+            - --validating-webhook-key={{ .Values.controller.admissionWebhooks.key }}
           {{- end }}
+          {{- if .Values.controller.maxmindMirror }}
+            - --maxmind-mirror={{ .Values.controller.maxmindMirror }}
+          {{- end}}
           {{- if .Values.controller.maxmindLicenseKey }}
             - --maxmind-license-key={{ .Values.controller.maxmindLicenseKey }}
           {{- end }}
@@ -135,7 +141,7 @@ spec:
           {{- end }}
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: {{ .Values.controller.healthCheckPath }}
               port: {{ .Values.controller.livenessProbe.port }}
               scheme: HTTP
             initialDelaySeconds: {{ .Values.controller.livenessProbe.initialDelaySeconds }}
@@ -145,7 +151,7 @@ spec:
             failureThreshold: {{ .Values.controller.livenessProbe.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: {{ .Values.controller.healthCheckPath }}
               port: {{ .Values.controller.readinessProbe.port }}
               scheme: HTTP
             initialDelaySeconds: {{ .Values.controller.readinessProbe.initialDelaySeconds }}

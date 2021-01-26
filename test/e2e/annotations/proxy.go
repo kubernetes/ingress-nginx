@@ -156,12 +156,12 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 
 	ginkgo.It("should turn on proxy-buffering", func() {
 		proxyBuffering := "on"
-		proxyBufersNumber := "8"
+		proxyBuffersNumber := "8"
 		proxyBufferSize := "8k"
 
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-buffering"] = proxyBuffering
-		annotations["nginx.ingress.kubernetes.io/proxy-buffers-number"] = proxyBufersNumber
+		annotations["nginx.ingress.kubernetes.io/proxy-buffers-number"] = proxyBuffersNumber
 		annotations["nginx.ingress.kubernetes.io/proxy-buffer-size"] = proxyBufferSize
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
@@ -171,7 +171,7 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("proxy_buffering %s;", proxyBuffering)) &&
 					strings.Contains(server, fmt.Sprintf("proxy_buffer_size %s;", proxyBufferSize)) &&
-					strings.Contains(server, fmt.Sprintf("proxy_buffers %s %s;", proxyBufersNumber, proxyBufferSize)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_buffers %s %s;", proxyBuffersNumber, proxyBufferSize)) &&
 					strings.Contains(server, fmt.Sprintf("proxy_request_buffering %s;", proxyBuffering))
 			})
 	})

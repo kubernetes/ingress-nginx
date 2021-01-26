@@ -42,7 +42,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to indicate if the upstream servers should use SSL
 func (a su) Parse(ing *networking.Ingress) (secure interface{}, err error) {
 	if ca, _ := parser.GetStringAnnotation("secure-verify-ca-secret", ing); ca != "" {
-		klog.Errorf("NOTE! secure-verify-ca-secret is not suppored anymore. Please use proxy-ssl-secret instead")
+		klog.Warningf("NOTE! secure-verify-ca-secret is not supported anymore. Please use proxy-ssl-secret instead")
 	}
 	return
 }

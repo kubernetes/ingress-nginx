@@ -54,6 +54,6 @@ var _ = framework.IngressNginxDescribe("[SSL] redirect to HTTPS", func() {
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusPermanentRedirect).
-			Header("Location").Equal("https://redirect.com/")
+			Header("Location").Equal("https://redirect.com")
 	})
 })

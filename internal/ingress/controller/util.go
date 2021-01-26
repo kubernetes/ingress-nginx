@@ -18,15 +18,18 @@ package controller
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
+	"strconv"
+	"strings"
 	"syscall"
 
 	api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/klog/v2"
-	"k8s.io/kubernetes/pkg/util/sysctl"
 )
 
 // newUpstream creates an upstream without servers.
@@ -52,9 +55,9 @@ func upstreamName(namespace string, service string, port intstr.IntOrString) str
 // for acceptance (value of net.core.somaxconn)
 // http://nginx.org/en/docs/http/ngx_http_core_module.html#listen
 func sysctlSomaxconn() int {
-	maxConns, err := sysctl.New().GetSysctl("net/core/somaxconn")
+	maxConns, err := getSysctl("net/core/somaxconn")
 	if err != nil || maxConns < 512 {
-		klog.V(3).Infof("net.core.somaxconn=%v (using system default)", maxConns)
+		klog.V(3).InfoS("Using default net.core.somaxconn", "value", maxConns)
 		return 511
 	}
 
@@ -66,10 +69,9 @@ func rlimitMaxNumFiles() int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		klog.Errorf("Error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
+		klog.ErrorS(err, "Error reading system maximum number of open file descriptors (RLIMIT_NOFILE)")
 		return 0
 	}
-	klog.V(2).Infof("rlimit.max=%v", rLimit.Max)
 	return int(rLimit.Max)
 }
 
@@ -117,4 +119,19 @@ func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
 // Test checks if config file is a syntax valid nginx configuration
 func (nc NginxCommand) Test(cfg string) ([]byte, error) {
 	return exec.Command(nc.Binary, "-c", cfg, "-t").CombinedOutput()
+}
+
+// getSysctl returns the value for the specified sysctl setting
+func getSysctl(sysctl string) (int, error) {
+	data, err := ioutil.ReadFile(path.Join("/proc/sys", sysctl))
+	if err != nil {
+		return -1, err
+	}
+
+	val, err := strconv.Atoi(strings.Trim(string(data), " \n"))
+	if err != nil {
+		return -1, err
+	}
+
+	return val, nil
 }

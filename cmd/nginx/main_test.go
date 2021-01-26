@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"k8s.io/ingress-nginx/internal/ingress/controller"
+	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
 )
 
@@ -55,6 +56,16 @@ func TestHandleSigterm(t *testing.T) {
 		podName   = "test"
 		namespace = "test"
 	)
+
+	k8s.IngressPodDetails = &k8s.PodInfo{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
+		},
+	}
 
 	clientSet := fake.NewSimpleClientset()
 

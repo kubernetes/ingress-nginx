@@ -25,11 +25,9 @@ import (
 	"github.com/gavv/httpexpect/v2"
 	"github.com/onsi/ginkgo"
 	"github.com/pkg/errors"
-	dto "github.com/prometheus/client_model/go"
-	"github.com/prometheus/common/expfmt"
-	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -39,10 +37,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/klog/v2"
-	kubeframework "k8s.io/kubernetes/test/e2e/framework"
 )
 
 // RequestScheme define a scheme used in a test request.
@@ -63,7 +62,8 @@ var (
 type Framework struct {
 	BaseName string
 
-	IsIngressV1Ready bool
+	IsIngressV1Ready      bool
+	IsIngressV1Beta1Ready bool
 
 	// A Kubernetes and Service Catalog client
 	KubeClientSet          kubernetes.Interface
@@ -71,6 +71,8 @@ type Framework struct {
 	APIExtensionsClientSet apiextcs.Interface
 
 	Namespace string
+
+	pod *corev1.Pod
 }
 
 // NewDefaultFramework makes a new framework and sets up a BeforeEach/AfterEach for
@@ -93,13 +95,16 @@ func (f *Framework) BeforeEach() {
 	var err error
 
 	if f.KubeClientSet == nil {
-		f.KubeConfig, err = kubeframework.LoadConfig()
+		f.KubeConfig, err = loadConfig()
 		assert.Nil(ginkgo.GinkgoT(), err, "loading a kubernetes client configuration")
+
+		// TODO: remove after k8s v1.22
+		f.KubeConfig.WarningHandler = rest.NoWarnings{}
+
 		f.KubeClientSet, err = kubernetes.NewForConfig(f.KubeConfig)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating a kubernetes client")
 
-		_, isIngressV1Ready := k8s.NetworkingIngressAvailable(f.KubeClientSet)
-		f.IsIngressV1Ready = isIngressV1Ready
+		_, f.IsIngressV1Beta1Ready, f.IsIngressV1Ready = k8s.NetworkingIngressAvailable(f.KubeClientSet)
 	}
 
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
@@ -107,6 +112,9 @@ func (f *Framework) BeforeEach() {
 
 	err = f.newIngressController(f.Namespace, f.BaseName)
 	assert.Nil(ginkgo.GinkgoT(), err, "deploying the ingress controller")
+
+	err = f.updateIngressNGINXPod()
+	assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller pod information")
 
 	f.WaitForNginxListening(80)
 }
@@ -125,14 +133,8 @@ func (f *Framework) AfterEach() {
 		return
 	}
 
-	pod, err := GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
-	if err != nil {
-		Logf("Unexpected error searching for ingress controller pod: %v", err)
-		return
-	}
-
 	cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf")
-	o, err := f.ExecCommand(pod, cmd)
+	o, err := f.ExecCommand(f.pod, cmd)
 	if err != nil {
 		Logf("Unexpected error obtaining nginx.conf file: %v", err)
 		return
@@ -192,9 +194,7 @@ func (f *Framework) GetNginxIP() string {
 
 // GetNginxPodIP returns the IP addresses of the running pods
 func (f *Framework) GetNginxPodIP() string {
-	pod, err := GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
-	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX Pod")
-	return pod.Status.PodIP
+	return f.pod.Status.PodIP
 }
 
 // GetURL returns the URL should be used to make a request to NGINX
@@ -203,7 +203,20 @@ func (f *Framework) GetURL(scheme RequestScheme) string {
 	return fmt.Sprintf("%v://%v", scheme, ip)
 }
 
-// WaitForNginxServer waits until the nginx configuration contains a particular server section
+// GetIngressNGINXPod returns the ingress controller running pod
+func (f *Framework) GetIngressNGINXPod() *corev1.Pod {
+	return f.pod
+}
+
+// UpdateIngressNGINXPod search and updates the ingress controller running pod
+func (f *Framework) updateIngressNGINXPod() error {
+	var err error
+	f.pod, err = getIngressNGINXPod(f.Namespace, f.KubeClientSet)
+	return err
+}
+
+// WaitForNginxServer waits until the nginx configuration contains a particular server section.
+// `cfg` passed to matcher is normalized by replacing all tabs and spaces with single space.
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
@@ -211,6 +224,7 @@ func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) boo
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
+// `cfg` passed to matcher is normalized by replacing all tabs and spaces with single space.
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
@@ -223,31 +237,17 @@ func (f *Framework) WaitForNginxCustomConfiguration(from string, to string, matc
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
 
-func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
-	pod, err := GetIngressNGINXPod(namespace, client)
-	if err != nil {
-		return "", err
-	}
-
-	if isRunning, err := podRunningReady(pod); err == nil && isRunning {
-		return Logs(pod)
+// NginxLogs returns the logs of the nginx ingress controller pod running
+func (f *Framework) NginxLogs() (string, error) {
+	if isRunning, err := podRunningReady(f.pod); err == nil && isRunning {
+		return Logs(f.KubeClientSet, f.Namespace, f.pod.Name)
 	}
 
 	return "", fmt.Errorf("no nginx ingress controller pod is running (logs)")
 }
 
-// NginxLogs returns the logs of the nginx ingress controller pod running
-func (f *Framework) NginxLogs() (string, error) {
-	return nginxLogs(f.KubeClientSet, f.Namespace)
-}
-
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
-		pod, err := GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
-		if err != nil {
-			return false, nil
-		}
-
 		var cmd string
 		if name == "" {
 			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf")
@@ -255,13 +255,13 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
 		}
 
-		o, err := f.ExecCommand(pod, cmd)
+		o, err := f.ExecCommand(f.pod, cmd)
 		if err != nil {
 			return false, nil
 		}
 
 		if klog.V(10).Enabled() && len(o) > 0 {
-			klog.Infof("nginx.conf:\n%v", o)
+			klog.InfoS("NGINX", "configuration", o)
 		}
 
 		// passes the nginx config to the passed function
@@ -275,20 +275,15 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 
 func (f *Framework) matchNginxCustomConditions(from string, to string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
-		pod, err := GetIngressNGINXPod(f.Namespace, f.KubeClientSet)
-		if err != nil {
-			return false, nil
-		}
-
 		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf| awk '/%v/,/%v/'", from, to)
 
-		o, err := f.ExecCommand(pod, cmd)
+		o, err := f.ExecCommand(f.pod, cmd)
 		if err != nil {
 			return false, nil
 		}
 
 		if klog.V(10).Enabled() && len(o) > 0 {
-			klog.Infof("nginx.conf:\n%v", o)
+			klog.InfoS("NGINX", "configuration", o)
 		}
 
 		// passes the nginx config to the passed function
@@ -298,10 +293,6 @@ func (f *Framework) matchNginxCustomConditions(from string, to string, matcher f
 
 		return false, nil
 	}
-}
-
-func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
-	return f.getConfigMap("nginx-ingress-controller")
 }
 
 func (f *Framework) getConfigMap(name string) (*v1.ConfigMap, error) {
@@ -336,7 +327,7 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 		assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
 	}
 
-	f.waitForReload(fn)
+	f.WaitForReload(fn)
 }
 
 // CreateConfigMap creates a new configmap in the current namespace
@@ -367,73 +358,60 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 		assert.Nil(ginkgo.GinkgoT(), err, "updating configuration configmap")
 	}
 
-	f.waitForReload(fn)
+	f.WaitForReload(fn)
 }
 
-func (f *Framework) waitForReload(fn func()) {
-	reloadCount := f.getReloadCount()
+// WaitForReload calls the passed function and
+// asser it has caused at least 1 reload.
+func (f *Framework) WaitForReload(fn func()) {
+	initialReloadCount := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
 
 	fn()
 
-	var count int
-	err := wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
+	count := 0
+	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
+		reloads := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
 		// most of the cases reload the ingress controller
 		// in cases where the value is not modified we could wait forever
-		if count > 10 {
+		if count > 5 && reloads == initialReloadCount {
 			return true, nil
 		}
 
 		count++
 
-		return (f.getReloadCount() > reloadCount), nil
+		return (reloads > initialReloadCount), nil
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "while waiting for ingress controller reload")
 }
 
-func (f *Framework) getReloadCount() int {
-	ip := f.GetNginxPodIP()
+func getReloadCount(pod *corev1.Pod, namespace string, client kubernetes.Interface) int {
+	events, err := client.CoreV1().Events(namespace).Search(scheme.Scheme, pod)
+	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX Pod")
 
-	mf, err := f.GetMetric("nginx_ingress_controller_success", ip)
-	if err != nil {
-		return 0
+	reloadCount := 0
+	for _, e := range events.Items {
+		if e.Reason == "RELOAD" && e.Type == corev1.EventTypeNormal {
+			reloadCount++
+		}
 	}
 
-	assert.NotNil(ginkgo.GinkgoT(), mf)
-
-	rc0, err := extractReloadCount(mf)
-	assert.Nil(ginkgo.GinkgoT(), err)
-
-	return int(rc0)
-}
-
-func extractReloadCount(mf *dto.MetricFamily) (float64, error) {
-	vec, err := expfmt.ExtractSamples(&expfmt.DecodeOptions{
-		Timestamp: model.Now(),
-	}, mf)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(vec[0].Value), nil
+	return reloadCount
 }
 
 // DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.
 // Grace period to wait for pod shutdown is in seconds.
 func (f *Framework) DeleteNGINXPod(grace int64) {
 	ns := f.Namespace
-	pod, err := GetIngressNGINXPod(ns, f.KubeClientSet)
-	assert.Nil(ginkgo.GinkgoT(), err, "expected ingress nginx pod to be running")
 
-	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(context.TODO(), pod.GetName(), *metav1.NewDeleteOptions(grace))
+	err := f.KubeClientSet.CoreV1().Pods(ns).Delete(context.TODO(), f.pod.GetName(), *metav1.NewDeleteOptions(grace))
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting ingress nginx pod")
 
 	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
-		pod, err := GetIngressNGINXPod(ns, f.KubeClientSet)
-		if err != nil || pod == nil {
+		err := f.updateIngressNGINXPod()
+		if err != nil || f.pod == nil {
 			return false, nil
 		}
-		return pod.GetName() != "", nil
+		return f.pod.GetName() != "", nil
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "while waiting for ingress nginx pod to come up again")
 }
@@ -736,4 +714,14 @@ func Sleep(duration ...time.Duration) {
 	}
 
 	time.Sleep(sleepFor)
+}
+
+func loadConfig() (*restclient.Config, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	config.UserAgent = "ingress-nginx-e2e"
+	return config, nil
 }

@@ -28,6 +28,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
@@ -74,8 +75,7 @@ type Configuration struct {
 	// ConfigurationChecksum contains the particular checksum of a Configuration object
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 
-	// ControllerPodsCount contains the list of running ingress controller Pod(s)
-	ControllerPodsCount int `json:"controllerPodsCount,omitempty"`
+	DefaultSSLCertificate *SSLCert `json:"-"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -89,7 +89,7 @@ type Backend struct {
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
-	// StickySessionAffinitySession contains the StickyConfig object with stickyness configuration
+	// StickySessionAffinitySession contains the StickyConfig object with stickiness configuration
 	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
 	// Consistent hashing by NGINX variable
 	UpstreamHashBy UpstreamHashByConfig `json:"upstreamHashByConfig,omitempty"`
@@ -127,7 +127,12 @@ type TrafficShapingPolicy struct {
 
 // HashInclude defines if a field should be used or not to calculate the hash
 func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
-	return (field != "Endpoints"), nil
+	switch field {
+	case "Endpoints":
+		return false, nil
+	default:
+		return true, nil
+	}
 }
 
 // SessionAffinityConfig describes different affinity configurations for new sessions.
@@ -235,6 +240,8 @@ type Location struct {
 	IsDefBackend bool `json:"isDefBackend"`
 	// Ingress returns the ingress from which this location was generated
 	Ingress *Ingress `json:"ingress"`
+	// IngressPath original path defined in the ingress rule
+	IngressPath string `json:"ingressPath"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
@@ -271,6 +278,10 @@ type Location struct {
 	// The Redirect annotation precedes RateLimit
 	// +optional
 	RateLimit ratelimit.Config `json:"rateLimit,omitempty"`
+	// GlobalRateLimit similar to RateLimit
+	// but this is applied globally across multiple replicas.
+	// +optional
+	GlobalRateLimit globalratelimit.Config `json:"globalRateLimit,omitempty"`
 	// Redirect describes a temporal o permanent redirection this location.
 	// +optional
 	Redirect redirect.Config `json:"redirect,omitempty"`
@@ -390,5 +401,4 @@ type Ingress struct {
 
 // GeneralConfig holds the definition of lua general configuration data
 type GeneralConfig struct {
-	ControllerPodsCount int `json:"controllerPodsCount"`
 }

@@ -11,12 +11,12 @@
 ### [[Default Backend]](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L29)
 
 - [should return 404 sending requests when only a default backend is running](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L32)
-- [enables access logging for default backend](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L87)
-- [disables access logging for default backend](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L101)
+- [enables access logging for default backend](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L89)
+- [disables access logging for default backend](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/default_backend.go#L106)
 
-### [[Default Backend] custom service](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/custom_default_backend.go#L34)
+### [[Default Backend] custom service](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/custom_default_backend.go#L33)
 
-- [uses custom default backend that returns 200 as status code](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/custom_default_backend.go#L37)
+- [uses custom default backend that returns 200 as status code](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/custom_default_backend.go#L36)
 
 ### [[Default Backend] SSL](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/defaultbackend/ssl.go#L26)
 
@@ -27,32 +27,35 @@
 - [should expose a TCP service](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/tcpudp/tcp.go#L40)
 - [should expose an ExternalName TCP service](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/tcpudp/tcp.go#L98)
 
-### [auth-*](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L38)
+### [auth-*](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L39)
 
-- [should return status code 200 when no authentication is configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L45)
-- [should return status code 503 when authentication is configured with an invalid secret](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L64)
-- [should return status code 401 when authentication is configured but Authorization header is not configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L88)
-- [should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L115)
-- [should return status code 200 when authentication is configured and Authorization header is sent](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L143)
-- [should return status code 200 when authentication is configured with a map and Authorization header is sent](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L170)
-- [should return status code 401 when authentication is configured with invalid content and Authorization header is sent](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L198)
-- [proxy_set_header My-Custom-Header 42;](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L237)
-- [proxy_set_header My-Custom-Header 42;](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L255)
-- [proxy_set_header 'My-Custom-Header' '42';](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L272)
-- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L293)
-- [retains cookie set by external authentication server](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L315)
-- [should return status code 200 when signed in](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L386)
-- [should redirect to signin url when not signed in](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L395)
-- [keeps processing new ingresses even if one of the existing ingresses is misconfigured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L406)
-- [should return status code 200 when signed in after auth backend is deleted ](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L475)
-- [should deny login for different location on same server](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L494)
-- [should deny login for different servers](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L522)
-- [should redirect to signin url when not signed in](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L550)
+- [should return status code 200 when no authentication is configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L46)
+- [should return status code 503 when authentication is configured with an invalid secret](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L65)
+- [should return status code 401 when authentication is configured but Authorization header is not configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L89)
+- [should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L116)
+- [should return status code 200 when authentication is configured and Authorization header is sent](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L144)
+- [should return status code 200 when authentication is configured with a map and Authorization header is sent](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L171)
+- [should return status code 401 when authentication is configured with invalid content and Authorization header is sent](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L199)
+- [proxy_set_header My-Custom-Header 42;](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L238)
+- [proxy_set_header My-Custom-Header 42;](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L256)
+- [proxy_set_header 'My-Custom-Header' '42';](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L273)
+- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L294)
+- [retains cookie set by external authentication server](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L316)
+- [should return status code 200 when signed in](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L413)
+- [should redirect to signin url when not signed in](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L422)
+- [keeps processing new ingresses even if one of the existing ingresses is misconfigured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L433)
+- [should return status code 200 when signed in](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L490)
+- [should redirect to signin url when not signed in](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L499)
+- [keeps processing new ingresses even if one of the existing ingresses is misconfigured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L510)
+- [should return status code 200 when signed in after auth backend is deleted ](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L584)
+- [should deny login for different location on same server](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L604)
+- [should deny login for different servers](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L632)
+- [should redirect to signin url when not signed in](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/auth.go#L661)
 
-### [affinitymode](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinitymode.go#L32)
+### [affinitymode](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinitymode.go#L31)
 
-- [Balanced affinity mode should balance](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinitymode.go#L35)
-- [Check persistent affinity mode](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinitymode.go#L65)
+- [Balanced affinity mode should balance](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinitymode.go#L34)
+- [Check persistent affinity mode](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinitymode.go#L64)
 
 ### [proxy-*](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxy.go#L28)
 
@@ -80,6 +83,7 @@
 - [should warn user when use-regex is true and session-cookie-path is not set](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L237)
 - [should not set affinity across all server locations when using separate ingresses](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L263)
 - [should set sticky cookie without host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L295)
+- [should work with server-alias annotation](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/affinity.go#L315)
 
 ### [mirror-*](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/mirror.go#L28)
 
@@ -123,10 +127,10 @@
 ### [proxy-ssl-*](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L30)
 
 - [should set valid proxy-ssl-secret](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L37)
-- [should set valid proxy-ssl-secret, proxy-ssl-verify to on, and proxy-ssl-verify-depth to 2](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L64)
-- [should set valid proxy-ssl-secret, proxy-ssl-ciphers to HIGH:!AES](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L93)
-- [should set valid proxy-ssl-secret, proxy-ssl-protocols](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L121)
-- [proxy-ssl-location-only flag should change the nginx config server part](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L149)
+- [should set valid proxy-ssl-secret, proxy-ssl-verify to on, proxy-ssl-verify-depth to 2, and proxy-ssl-server-name to on](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L64)
+- [should set valid proxy-ssl-secret, proxy-ssl-ciphers to HIGH:!AES](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L94)
+- [should set valid proxy-ssl-secret, proxy-ssl-protocols](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L122)
+- [proxy-ssl-location-only flag should change the nginx config server part](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/proxyssl.go#L150)
 
 ### [modsecurity owasp](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/modsecurity.go#L27)
 
@@ -153,14 +157,15 @@
 - [should disable cors allow credentials](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L92)
 - [should allow origin for cors](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L108)
 - [should allow headers for cors](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L124)
+- [should expose headers for cors](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/cors.go#L140)
 
 ### [influxdb-*](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/influxdb.go#L39)
 
 - [should send the request metric to the influxdb server](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/influxdb.go#L48)
 
-### [Annotation - limit-connections](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/limitconnections.go#L30)
+### [Annotation - limit-connections](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/limitconnections.go#L31)
 
-- [should limit-connections](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/limitconnections.go#L37)
+- [should limit-connections](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/limitconnections.go#L38)
 
 ### [client-body-buffer-size](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/clientbodybuffersize.go#L28)
 
@@ -187,6 +192,11 @@
 
 - [configures Nginx correctly](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/customhttperrors.go#L41)
 
+### [disable-access-log disable-http-access-log disable-stream-access-log](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/disableaccesslog.go#L27)
+
+- [disable-access-log set access_log off](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/disableaccesslog.go#L34)
+- [disable-http-access-log set access_log off](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/disableaccesslog.go#L46)
+
 ### [server-snippet](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/serversnippet.go#L27)
 
 - [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/serversnippet.go#L34)
@@ -195,9 +205,9 @@
 
 - [should write rewrite logs](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L37)
 - [should use correct longest path match](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L66)
-- [should use ~* location modifier if regex annotation is present](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L110)
-- [should fail to use longest match for documented warning](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L156)
-- [should allow for custom rewrite parameters](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L188)
+- [should use ~* location modifier if regex annotation is present](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L111)
+- [should fail to use longest match for documented warning](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L158)
+- [should allow for custom rewrite parameters](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/rewrite.go#L190)
 
 ### [app-root](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/approot.go#L28)
 
@@ -228,12 +238,12 @@
 - [should add fastcgi_param in the configuration file](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fastcgi.go#L72)
 - [should return OK for service with backend protocol FastCGI](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fastcgi.go#L105)
 
-### [from-to-www-redirect](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L32)
+### [from-to-www-redirect](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L31)
 
-- [should redirect from www HTTP to HTTP](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L39)
-- [should redirect from www HTTPS to HTTPS](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L65)
+- [should redirect from www HTTP to HTTP](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L38)
+- [should redirect from www HTTPS to HTTPS](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/fromtowwwredirect.go#L64)
 
-### [permanen-redirect permanen-redirect-code](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/redirect.go#L30)
+### [permanent-redirect permanent-redirect-code](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/redirect.go#L30)
 
 - [should respond with a standard redirect code](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/redirect.go#L33)
 - [should respond with a custom redirect code](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/redirect.go#L61)
@@ -242,6 +252,10 @@
 
 - [should connect to the same pod](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/upstreamhashby.go#L83)
 - [should connect to the same subset of pods](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/upstreamhashby.go#L92)
+
+### [annotation-global-rate-limit](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/globalratelimit.go#L30)
+
+- [generates correct configuration](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/globalratelimit.go#L38)
 
 ### [backend-protocol](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/annotations/backendprotocol.go#L27)
 
@@ -287,6 +301,15 @@
 
 - [should not leak memory from ingress SSL certificates or configuration updates](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/leaks/lua_ssl.go#L42)
 
+### [[Ingress] [PathType] mix Exact and Prefix paths](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/pathtype_mixed.go#L30)
+
+- [should choose the correct location](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/pathtype_mixed.go#L39)
+
+### [[Ingress] definition without host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/without_host.go#L32)
+
+- [should set ingress details variables for ingresses without a host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/without_host.go#L35)
+- [should set ingress details variables for ingresses with host without IngressRuleValue, only Backend](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/without_host.go#L56)
+
 ### [single ingress - multiple hosts](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/multiple_rules.go#L31)
 
 - [should set the correct $service_name NGINX variable](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/multiple_rules.go#L39)
@@ -295,14 +318,23 @@
 
 - [should choose exact location for /exact](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/pathtype_exact.go#L37)
 
+### [[Ingress] [PathType] prefix checks](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/pathtype_prefix.go#L28)
+
+- [should return 404 when prefix /aaa does not match request /aaaccc](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/ingress/pathtype_prefix.go#L35)
+
 ### [[Security] request smuggling](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/security/request_smuggling.go#L32)
 
 - [should not return body content from error_page](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/security/request_smuggling.go#L39)
 
 ### [[SSL] [Flag] default-ssl-certificate](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/default_ssl_certificate.go#L33)
 
-- [uses default ssl certificate for catch-all ingress](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/default_ssl_certificate.go#L65)
-- [uses default ssl certificate for host based ingress when configured certificate does not match host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/default_ssl_certificate.go#L81)
+- [uses default ssl certificate for catch-all ingress](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/default_ssl_certificate.go#L64)
+- [uses default ssl certificate for host based ingress when configured certificate does not match host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/default_ssl_certificate.go#L80)
+
+### [enable-real-ip](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/enable_real_ip.go#L30)
+
+- [trusts X-Forwarded-For header only when setting is true](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/enable_real_ip.go#L40)
+- [should not trust X-Forwarded-For header when setting is false](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/enable_real_ip.go#L78)
 
 ### [access-log](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/access_log.go#L26)
 
@@ -321,11 +353,12 @@
 - [should not exists Server header in the response](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/server_tokens.go#L38)
 - [should exists Server header in the response when is enabled](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/server_tokens.go#L50)
 
-### [use-proxy-protocol](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L32)
+### [use-proxy-protocol](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L36)
 
-- [should respect port passed by the PROXY Protocol](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L42)
-- [should respect proto passed by the PROXY Protocol server port](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L75)
-- [should enable PROXY Protocol for HTTPS](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L108)
+- [should respect port passed by the PROXY Protocol](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L46)
+- [should respect proto passed by the PROXY Protocol server port](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L79)
+- [should enable PROXY Protocol for HTTPS](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L112)
+- [should enable PROXY Protocol for TCP](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_protocol.go#L155)
 
 ### [[Flag] custom HTTP and HTTPS ports](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/listen_nondefault_ports.go#L32)
 
@@ -351,7 +384,7 @@
 
 ### [[Security] Pod Security Policies](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/pod_security_policy.go#L40)
 
-- [should be running with a Pod Security Policy](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/pod_security_policy.go#L79)
+- [should be running with a Pod Security Policy](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/pod_security_policy.go#L43)
 
 ### [Geoip2](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/geoip2.go#L29)
 
@@ -375,12 +408,12 @@
 - [log-format-escape-json enabled](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/log-format.go#L66)
 - [log-format-escape-json disabled](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/log-format.go#L89)
 
-### [[Flag] ingress-class](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L38)
+### [[Flag] ingress-class](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L39)
 
-- [should ignore Ingress with class](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L66)
-- [should ignore Ingress with no class](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L119)
-- [should delete Ingress when class is removed](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L153)
-- [check scenarios for IngressClass and ingress.class annotation](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L190)
+- [should ignore Ingress with class](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L91)
+- [should ignore Ingress with no class](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L143)
+- [should delete Ingress when class is removed](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L177)
+- [check scenarios for IngressClass and ingress.class annotation](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ingress_class.go#L216)
 
 ### [ssl-ciphers](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ssl_ciphers.go#L28)
 
@@ -394,13 +427,13 @@
 
 - [should return status code 401 when request any protected service](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L83)
 - [should return status code 200 when request whitelisted (via no-auth-locations) service and 401 when request protected service](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L100)
-- [should return status code 200 when request whitelisted (via ingress annotation) service and 401 when request protected service](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L120)
-- [should still return status code 200 after auth backend is deleted using cache ](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L149)
-- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L190)
-- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L203)
-- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L216)
-- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L230)
-- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L243)
+- [should return status code 200 when request whitelisted (via ingress annotation) service and 401 when request protected service](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L124)
+- [should still return status code 200 after auth backend is deleted using cache ](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L153)
+- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L195)
+- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L208)
+- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L221)
+- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L235)
+- [](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_external_auth.go#L248)
 
 ### [[Security] block-*](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/global_access_block.go#L28)
 
@@ -416,10 +449,23 @@
 
 - [Check limit-rate config](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/limit_rate.go#L36)
 
+### [Configure OpenTracing](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L43)
+
+- [should not exists opentracing directive](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L53)
+- [should exists opentracing directive when is enabled](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L66)
+- [should not exists opentracing_operation_name directive when is empty](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L80)
+- [should exists opentracing_operation_name directive when is configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L95)
+- [should not exists opentracing_location_operation_name directive when is empty](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L110)
+- [should exists opentracing_location_operation_name directive when is configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L125)
+- [should enable opentracing using zipkin](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L140)
+- [should enable opentracing using jaeger](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L152)
+- [should enable opentracing using jaeger with sampler host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L164)
+- [should enable opentracing using datadog](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L177)
+
 ### [use-forwarded-headers](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/forwarded_headers.go#L30)
 
 - [should trust X-Forwarded headers when setting is true](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/forwarded_headers.go#L40)
-- [should not trust X-Forwarded headers when setting is false](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/forwarded_headers.go#L89)
+- [should not trust X-Forwarded headers when setting is false](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/forwarded_headers.go#L90)
 
 ### [proxy-send-timeout](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/proxy_send_timeout.go#L28)
 
@@ -429,6 +475,10 @@
 ### [Add no tls redirect locations](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/no_tls_redirect_locations.go#L28)
 
 - [Check no tls redirect locations config](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/no_tls_redirect_locations.go#L31)
+
+### [settings-global-rate-limit](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/globalratelimit.go#L30)
+
+- [generates correct NGINX configuration](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/globalratelimit.go#L38)
 
 ### [add-headers](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/custom_header.go#L30)
 
@@ -455,9 +505,9 @@
 
 ### [[Flag] disable-catch-all](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L34)
 
-- [should ignore catch all Ingress](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L52)
-- [should delete Ingress updated to catch-all](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L71)
-- [should allow Ingress with both a default backend and rules](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L109)
+- [should ignore catch all Ingress](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L51)
+- [should delete Ingress updated to catch-all](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L70)
+- [should allow Ingress with both a default backend and rules](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/disable_catch_all.go#L108)
 
 ### [main-snippet](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/main_snippet.go#L27)
 
@@ -465,14 +515,14 @@
 
 ### [[SSL] TLS protocols, ciphers and headers)](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L31)
 
-- [setting cipher suite](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L66)
-- [enforcing TLS v1.0](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L88)
-- [setting max-age parameter](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L134)
-- [setting includeSubDomains parameter](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L150)
-- [setting preload parameter](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L169)
-- [overriding what's set from the upstream](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L189)
-- [should not use ports during the HTTP to HTTPS redirection](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L210)
-- [should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L228)
+- [setting cipher suite](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L65)
+- [enforcing TLS v1.0](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L87)
+- [setting max-age parameter](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L133)
+- [setting includeSubDomains parameter](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L149)
+- [setting preload parameter](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L168)
+- [overriding what's set from the upstream](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L188)
+- [should not use ports during the HTTP to HTTPS redirection](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L209)
+- [should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/tls.go#L227)
 
 ### [Configmap change](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/configmap_change.go#L29)
 
@@ -487,9 +537,9 @@
 
 - [should add value of modsecurity-snippet setting to nginx config](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/modsecurity_snippet.go#L30)
 
-### [OCSP](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ocsp/ocsp.go#L43)
+### [OCSP](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ocsp/ocsp.go#L42)
 
-- [should enable OCSP and contain stapling information in the connection](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ocsp/ocsp.go#L50)
+- [should enable OCSP and contain stapling information in the connection](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/ocsp/ocsp.go#L49)
 
 ### [reuse-port](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/reuse-port.go#L27)
 
@@ -497,15 +547,15 @@
 - [reuse port should be disabled](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/reuse-port.go#L44)
 - [reuse port should be enabled](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/reuse-port.go#L52)
 
-### [[Shutdown] Graceful shutdown with pending request](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/slow_requests.go#L29)
+### [[Shutdown] Graceful shutdown with pending request](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/slow_requests.go#L28)
 
-- [should let slow requests finish before shutting down](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/slow_requests.go#L37)
+- [should let slow requests finish before shutting down](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/slow_requests.go#L36)
 
 ### [[Shutdown] ingress controller](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L33)
 
-- [should shutdown in less than 60 secons without pending connections](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L44)
-- [should shutdown after waiting 60 seconds for pending connections to be closed](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L71)
-- [should shutdown after waiting 150 seconds for pending connections to be closed](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L135)
+- [should shutdown in less than 60 secons without pending connections](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L43)
+- [should shutdown after waiting 60 seconds for pending connections to be closed](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L64)
+- [should shutdown after waiting 150 seconds for pending connections to be closed](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/gracefulshutdown/shutdown.go#L109)
 
 ### [[Service] backend status code 503](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_backend.go#L32)
 
@@ -514,9 +564,10 @@
 
 ### [[Service] Type ExternalName](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L37)
 
-- [works with external name set to incomplete fdqn](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L40)
+- [works with external name set to incomplete fqdn](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L40)
 - [should return 200 for service type=ExternalName without a port defined](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L73)
 - [should return 200 for service type=ExternalName with a port defined](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L107)
 - [should return status 502 for service type=ExternalName with an invalid host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L148)
 - [should return 200 for service type=ExternalName using a port name](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L179)
-- [should update the external name after a service update](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L221)
+- [should return 200 for service type=ExternalName using FQDN with trailing dot](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L221)
+- [should update the external name after a service update](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/servicebackend/service_externalname.go#L252)

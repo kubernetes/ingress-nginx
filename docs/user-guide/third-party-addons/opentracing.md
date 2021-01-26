@@ -92,6 +92,9 @@ datadog-collector-port
 # specifies the service name to use for any traces created, Default: nginx
 datadog-service-name
 
+# specifies the environment this trace belongs to, Default: prod
+datadog-environment
+
 # specifies the operation name to use for any traces collected, Default: nginx.handle
 datadog-operation-name-override
 

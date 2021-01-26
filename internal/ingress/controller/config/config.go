@@ -166,9 +166,18 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout
 	ClientBodyTimeout int `json:"client-body-timeout,omitempty"`
 
-	// DisableAccessLog disables the Access Log globally from NGINX ingress controller
-	//http://nginx.org/en/docs/http/ngx_http_log_module.html
+	// DisableAccessLog disables the Access Log globally for both HTTP and Stream contexts from NGINX ingress controller
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html
+	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html
 	DisableAccessLog bool `json:"disable-access-log,omitempty"`
+
+	// DisableHTTPAccessLog disables the Access Log for http context globally from NGINX ingress controller
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html
+	DisableHTTPAccessLog bool `json:"disable-http-access-log,omitempty"`
+
+	// DisableStreamAccessLog disables the Access Log for stream context globally from NGINX ingress controller
+	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html
+	DisableStreamAccessLog bool `json:"disable-stream-access-log,omitempty"`
 
 	// DisableIpv6DNS disables IPv6 for nginx resolver
 	DisableIpv6DNS bool `json:"disable-ipv6-dns"`
@@ -460,6 +469,21 @@ type Configuration struct {
 	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
 	ProxyStreamTimeout string `json:"proxy-stream-timeout,omitempty"`
 
+	// When a connection to the proxied server cannot be established, determines whether
+	// a client connection will be passed to the next server.
+	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream
+	ProxyStreamNextUpstream bool `json:"proxy-stream-next-upstream,omitempty"`
+
+	// Limits the time allowed to pass a connection to the next server.
+	// The 0 value turns off this limitation.
+	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout
+	ProxyStreamNextUpstreamTimeout string `json:"proxy-stream-next-upstream-timeout,omitempty"`
+
+	// Limits the number of possible tries a request should be passed to the next server.
+	// The 0 value turns off this limitation.
+	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_tries
+	ProxyStreamNextUpstreamTries int `json:"proxy-stream-next-upstream-tries,omitempty"`
+
 	// Sets the number of datagrams expected from the proxied server in response
 	// to the client request if the UDP protocol is used.
 	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses
@@ -575,6 +599,10 @@ type Configuration struct {
 	// Default: 8126
 	DatadogCollectorPort int `json:"datadog-collector-port"`
 
+	// DatadogEnvironment specifies the environment this trace belongs to.
+	// Default: prod
+	DatadogEnvironment string `json:"datadog-environment"`
+
 	// DatadogServiceName specifies the service name to use for any traces created
 	// Default: nginx
 	DatadogServiceName string `json:"datadog-service-name"`
@@ -680,6 +708,31 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type
 	// Default: text/html
 	DefaultType string `json:"default-type"`
+
+	// GlobalRateLimitMemcachedHost configures memcached host.
+	GlobalRateLimitMemcachedHost string `json:"global-rate-limit-memcached-host"`
+
+	// GlobalRateLimitMemcachedPort configures memcached port.
+	GlobalRateLimitMemcachedPort int `json:"global-rate-limit-memcached-port"`
+
+	// GlobalRateLimitMemcachedConnectTimeout configures timeout when connecting to memcached.
+	// The unit is millisecond.
+	GlobalRateLimitMemcachedConnectTimeout int `json:"global-rate-limit-memcached-connect-timeout"`
+
+	// GlobalRateLimitMemcachedMaxIdleTimeout configured how long connections
+	// should be kept alive in idle state. The unit is millisecond.
+	GlobalRateLimitMemcachedMaxIdleTimeout int `json:"global-rate-limit-memcached-max-idle-timeout"`
+
+	// GlobalRateLimitMemcachedPoolSize configures how many connections
+	// should be kept alive in the pool.
+	// Note that this is per NGINX worker. Make sure your memcached server can
+	// handle `MemcachedPoolSize * <nginx worker count> * <nginx replica count>`
+	// simultaneous connections.
+	GlobalRateLimitMemcachedPoolSize int `json:"global-rate-limit-memcached-pool-size"`
+
+	// GlobalRateLimitStatucCode determines the HTTP status code to return
+	// when limit is exceeding during global rate limiting.
+	GlobalRateLimitStatucCode int `json:"global-rate-limit-status-code"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -695,7 +748,7 @@ func NewDefault() Configuration {
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
 	defProxyDeadlineDuration := time.Duration(5) * time.Second
-	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}}
+	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}}
 
 	cfg := Configuration{
 		AllowBackendServerHeader:         false,
@@ -764,7 +817,7 @@ func NewDefault() Configuration {
 		SSLSessionTickets:                false,
 		SSLSessionTimeout:                sslSessionTimeout,
 		EnableBrotli:                     false,
-		UseGzip:                          true,
+		UseGzip:                          false,
 		UseGeoIP:                         true,
 		UseGeoIP2:                        false,
 		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
@@ -773,6 +826,9 @@ func NewDefault() Configuration {
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,
 		ProxyStreamTimeout:               "600s",
+		ProxyStreamNextUpstream:          true,
+		ProxyStreamNextUpstreamTimeout:   "600s",
+		ProxyStreamNextUpstreamTries:     3,
 		Backend: defaults.Backend{
 			ProxyBodySize:            bodySize,
 			ProxyConnectTimeout:      5,
@@ -798,34 +854,40 @@ func NewDefault() Configuration {
 			ProxyHTTPVersion:         "1.1",
 			ProxyMaxTempFileSize:     "1024m",
 		},
-		UpstreamKeepaliveConnections: 32,
-		UpstreamKeepaliveTimeout:     60,
-		UpstreamKeepaliveRequests:    100,
-		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
-		BindAddressIpv4:              defBindAddress,
-		BindAddressIpv6:              defBindAddress,
-		ZipkinCollectorPort:          9411,
-		ZipkinServiceName:            "nginx",
-		ZipkinSampleRate:             1.0,
-		JaegerCollectorPort:          6831,
-		JaegerServiceName:            "nginx",
-		JaegerSamplerType:            "const",
-		JaegerSamplerParam:           "1",
-		JaegerSamplerPort:            5778,
-		JaegerSamplerHost:            "http://127.0.0.1",
-		DatadogServiceName:           "nginx",
-		DatadogCollectorPort:         8126,
-		DatadogOperationNameOverride: "nginx.handle",
-		DatadogSampleRate:            1.0,
-		DatadogPrioritySampling:      true,
-		LimitReqStatusCode:           503,
-		LimitConnStatusCode:          503,
-		SyslogPort:                   514,
-		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
-		NoAuthLocations:              "/.well-known/acme-challenge",
-		GlobalExternalAuth:           defGlobalExternalAuth,
-		ProxySSLLocationOnly:         false,
-		DefaultType:                  "text/html",
+		UpstreamKeepaliveConnections:           320,
+		UpstreamKeepaliveTimeout:               60,
+		UpstreamKeepaliveRequests:              10000,
+		LimitConnZoneVariable:                  defaultLimitConnZoneVariable,
+		BindAddressIpv4:                        defBindAddress,
+		BindAddressIpv6:                        defBindAddress,
+		ZipkinCollectorPort:                    9411,
+		ZipkinServiceName:                      "nginx",
+		ZipkinSampleRate:                       1.0,
+		JaegerCollectorPort:                    6831,
+		JaegerServiceName:                      "nginx",
+		JaegerSamplerType:                      "const",
+		JaegerSamplerParam:                     "1",
+		JaegerSamplerPort:                      5778,
+		JaegerSamplerHost:                      "http://127.0.0.1",
+		DatadogServiceName:                     "nginx",
+		DatadogEnvironment:                     "prod",
+		DatadogCollectorPort:                   8126,
+		DatadogOperationNameOverride:           "nginx.handle",
+		DatadogSampleRate:                      1.0,
+		DatadogPrioritySampling:                true,
+		LimitReqStatusCode:                     503,
+		LimitConnStatusCode:                    503,
+		SyslogPort:                             514,
+		NoTLSRedirectLocations:                 "/.well-known/acme-challenge",
+		NoAuthLocations:                        "/.well-known/acme-challenge",
+		GlobalExternalAuth:                     defGlobalExternalAuth,
+		ProxySSLLocationOnly:                   false,
+		DefaultType:                            "text/html",
+		GlobalRateLimitMemcachedPort:           11211,
+		GlobalRateLimitMemcachedConnectTimeout: 50,
+		GlobalRateLimitMemcachedMaxIdleTimeout: 10000,
+		GlobalRateLimitMemcachedPoolSize:       50,
+		GlobalRateLimitStatucCode:              429,
 	}
 
 	if klog.V(5).Enabled() {
@@ -879,13 +941,14 @@ type ListenPorts struct {
 type GlobalExternalAuth struct {
 	URL string `json:"url"`
 	// Host contains the hostname defined in the URL
-	Host              string            `json:"host"`
-	SigninURL         string            `json:"signinUrl"`
-	Method            string            `json:"method"`
-	ResponseHeaders   []string          `json:"responseHeaders,omitempty"`
-	RequestRedirect   string            `json:"requestRedirect"`
-	AuthSnippet       string            `json:"authSnippet"`
-	AuthCacheKey      string            `json:"authCacheKey"`
-	AuthCacheDuration []string          `json:"authCacheDuration"`
-	ProxySetHeaders   map[string]string `json:"proxySetHeaders,omitempty"`
+	Host                   string            `json:"host"`
+	SigninURL              string            `json:"signinUrl"`
+	SigninURLRedirectParam string            `json:"signinUrlRedirectParam"`
+	Method                 string            `json:"method"`
+	ResponseHeaders        []string          `json:"responseHeaders,omitempty"`
+	RequestRedirect        string            `json:"requestRedirect"`
+	AuthSnippet            string            `json:"authSnippet"`
+	AuthCacheKey           string            `json:"authCacheKey"`
+	AuthCacheDuration      []string          `json:"authCacheDuration"`
+	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
 }
