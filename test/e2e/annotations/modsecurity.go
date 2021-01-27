@@ -236,8 +236,10 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.UpdateNginxConfigMapData("enable-modsecurity", "true")
-		f.UpdateNginxConfigMapData("enable-owasp-modsecurity-crs", "true")
+		f.SetNginxConfigMapData(map[string]string{
+			"enable-modsecurity":  "true",
+			"enable-owasp-modsecurity-crs": "true",
+		})
 
 
 		f.WaitForNginxServer(host,
@@ -278,8 +280,6 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 			"enable-owasp-modsecurity-crs": "true",
 			"modsecurity-snippet": expectedComment,
 		})
-
-
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
