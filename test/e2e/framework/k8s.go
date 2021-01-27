@@ -76,7 +76,7 @@ func (f *Framework) EnsureIngress(ingress *networking.Ingress) *networking.Ingre
 		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
 	}
 
-	f.waitForReload(fn)
+	f.WaitForReload(fn)
 
 	ing := f.GetIngress(f.Namespace, ingress.Name)
 	if ing.Annotations == nil {

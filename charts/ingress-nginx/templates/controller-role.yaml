@@ -31,7 +31,6 @@ rules:
     verbs:
       - get
       - list
-      - update
       - watch
   - apiGroups:
       - extensions
@@ -72,14 +71,6 @@ rules:
       - configmaps
     verbs:
       - create
-  - apiGroups:
-      - ""
-    resources:
-      - endpoints
-    verbs:
-      - create
-      - get
-      - update
   - apiGroups:
       - ""
     resources:

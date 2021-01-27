@@ -40,6 +40,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/customhttperrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/http2pushpreload"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
@@ -94,6 +95,7 @@ type Ingress struct {
 	Proxy              proxy.Config
 	ProxySSL           proxyssl.Config
 	RateLimit          ratelimit.Config
+	GlobalRateLimit    globalratelimit.Config
 	Redirect           redirect.Config
 	Rewrite            rewrite.Config
 	Satisfy            string
@@ -142,6 +144,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Proxy":                proxy.NewParser(cfg),
 			"ProxySSL":             proxyssl.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
+			"GlobalRateLimit":      globalratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
 			"Satisfy":              satisfy.NewParser(cfg),

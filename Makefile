@@ -51,7 +51,7 @@ endif
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20201226-g944d36fdb@sha256:b92a94876aa3795480b1b3076f6feea1e93b015bcf052ff517f3a6827a72b9ef
+BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20210115-gba0502603@sha256:224da667cf3047998ea691e9766fedd1eab94257a39df81374bfa14536da3688
 
 GOARCH=$(ARCH)
 
@@ -164,10 +164,12 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:8000
+	@docker build -t ingress-nginx-docs .github/actions/mkdocs
 	@docker run --rm -it \
 		-p 8000:8000 \
 		-v ${PWD}:/docs \
-		squidfunk/mkdocs-material:5.5.12
+		--entrypoint mkdocs \
+		ingress-nginx-docs serve --dev-addr=0.0.0.0:8000
 
 .PHONY: misspell
 misspell:  ## Check for spelling errors.

@@ -1,7 +1,7 @@
 # Installation Guide
 
 !!! attention
-    The default configuration watches Ingress object from **all the namespaces**.
+    The default configuration watches Ingress object from **all namespaces**.
 
     To change this behavior use the flag `--watch-namespace` to limit the scope to a particular namespace.
 
@@ -31,6 +31,7 @@
 - [Provider Specific Steps](#provider-specific-steps)
   - [Docker for Mac](#docker-for-mac)
   - [minikube](#minikube)
+  - [microk8s](#microk8s)
   - [AWS](#aws)
   - [GCE - GKE](#gce-gke)
   - [Azure](#azure)
@@ -47,10 +48,8 @@
 
 Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018))
 
-[enable]: https://docs.docker.com/docker-for-mac/#kubernetes
-
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 #### minikube
@@ -61,6 +60,16 @@ For standard usage:
 minikube addons enable ingress
 ```
 
+#### microk8s
+
+For standard usage:
+
+```console
+microk8s enable ingress
+```
+
+Please check the microk8s [documentation page](https://microk8s.io/docs/addon-ingress)
+
 #### AWS
 
 In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
@@ -68,7 +77,7 @@ In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controll
 ##### Network Load Balancer (NLB)
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/aws/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/aws/deploy.yaml
 ```
 
 ##### TLS termination in AWS Load Balancer (ELB)
@@ -77,10 +86,10 @@ In some scenarios is required to terminate TLS in the Load Balancer and not in t
 
 For this purpose we provide a template:
 
-- Download [deploy-tls-termination.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/aws/deploy-tls-termination.yaml)
+- Download [deploy-tls-termination.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/aws/deploy-tls-termination.yaml)
 
 ```console
-wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/aws/deploy-tls-termination.yaml
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/aws/deploy-tls-termination.yaml
 ```
 
 - Edit the file and change:
@@ -126,7 +135,7 @@ More information with regards to timeouts can be found in the [official AWS docu
 
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 !!! failure Important
@@ -135,33 +144,35 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 #### Azure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/cloud/deploy.yaml
 ```
+
+More information with regards to Azure annotations for ingress controller can be found in the [official AKS documentation](https://docs.microsoft.com/en-us/azure/aks/ingress-internal-ip#create-an-ingress-controller).
 
 #### Digital Ocean
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/do/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/do/deploy.yaml
 ```
 
 #### Scaleway
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/scw/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/scw/deploy.yaml
 ```
-
-More information with regards to Azure annotations for ingress controller can be found in the [official AKS documentation](https://docs.microsoft.com/en-us/azure/aks/ingress-internal-ip#create-an-ingress-controller).
 
 #### Bare-metal
 
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.42.0/deploy/static/provider/baremetal/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.43.0/deploy/static/provider/baremetal/deploy.yaml
 ```
+
 !!! tip
     Applicable on kubernetes clusters deployed on bare-metal with generic Linux distro(Such as CentOs, Ubuntu ...).
-!!! tip
+
+!!! info
     For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
 
 ### Verify installation
@@ -182,7 +193,7 @@ Now, you are ready to create your first ingress.
 
 ### Detect installed version
 
-To detect which version of the ingress controller is running, exec into the pod and run `nginx-ingress-controller version` command.
+To detect which version of the ingress controller is running, exec into the pod and run `nginx-ingress-controller --version`.
 
 ```console
 POD_NAMESPACE=ingress-nginx
@@ -194,7 +205,7 @@ kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --vers
 ## Using Helm
 
 !!! attention
-    Only helm3 is supported
+    Only Helm v3 is supported
 
 NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart from the project repository.
 To install the chart with the release name `ingress-nginx`:
@@ -203,7 +214,7 @@ To install the chart with the release name `ingress-nginx`:
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
-helm install my-release ingress-nginx/ingress-nginx
+helm install ingress-nginx ingress-nginx/ingress-nginx
 ```
 
 ## Detect installed version:

@@ -232,6 +232,17 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 
 	k8s.SetDefaultNGINXPathType(ing)
 
+	cfg := n.store.GetBackendConfiguration()
+	cfg.Resolver = n.resolver
+
+	if len(cfg.GlobalRateLimitMemcachedHost) == 0 {
+		for key := range ing.ObjectMeta.GetAnnotations() {
+			if strings.HasPrefix(key, fmt.Sprintf("%s/%s", parser.AnnotationsPrefix, "global-rate-limit")) {
+				return fmt.Errorf("'global-rate-limit*' annotations require 'global-rate-limit-memcached-host' settings configured in the global configmap")
+			}
+		}
+	}
+
 	allIngresses := n.store.ListIngresses()
 
 	filter := func(toCheck *ingress.Ingress) bool {
@@ -243,9 +254,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		Ingress:           *ing,
 		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
 	})
-
-	cfg := n.store.GetBackendConfiguration()
-	cfg.Resolver = n.resolver
 
 	_, servers, pcfg := n.getConfiguration(ings)
 
@@ -483,6 +491,7 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
 		PassthroughBackends:   passUpstreams,
 		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
+		DefaultSSLCertificate: n.getDefaultSSLCertificate(),
 	}
 }
 
@@ -1253,6 +1262,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.Proxy = anns.Proxy
 	loc.ProxySSL = anns.ProxySSL
 	loc.RateLimit = anns.RateLimit
+	loc.GlobalRateLimit = anns.GlobalRateLimit
 	loc.Redirect = anns.Redirect
 	loc.Rewrite = anns.Rewrite
 	loc.UpstreamVhost = anns.UpstreamVhost

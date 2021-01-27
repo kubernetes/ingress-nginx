@@ -1,27 +1,16 @@
-local original_ngx = ngx
 local util
 
-local function reset_ngx()
-  _G.ngx = original_ngx
-end
-
-local function mock_ngx(mock)
-  local _ngx = mock
-  setmetatable(_ngx, { __index = ngx })
-  _G.ngx = _ngx
-end
-
 describe("utility", function()
+  before_each(function()
+    ngx.var = { remote_addr = "192.168.1.1", [1] = "nginx/regexp/1/group/capturing" }
+    util = require_without_cache("util")
+  end)
 
   after_each(function()
     reset_ngx()
   end)
 
   describe("ngx_complex_value", function()
-    before_each(function()
-      mock_ngx({ var = { remote_addr = "192.168.1.1", [1] = "nginx/regexp/1/group/capturing" } })
-      util = require("util")
-    end)
 
     local ngx_complex_value = function(data)
       local ret, err = util.parse_complex_value(data)

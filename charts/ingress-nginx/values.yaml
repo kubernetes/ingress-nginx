@@ -11,8 +11,8 @@ controller:
   name: controller
   image:
     repository: k8s.gcr.io/ingress-nginx/controller
-    tag: "v0.42.0"
-    digest: sha256:f7187418c647af4a0039938b0ab36c2322ac3662d16be69f9cc178bfd25f7eee
+    tag: "v0.43.0"
+    digest: sha256:9bba603b99bf25f6d117cf1235b6598c16033ad027b143c90fa5b3cc583c5713
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -315,6 +315,11 @@ controller:
     pollingInterval: 30
     cooldownPeriod: 300
     restoreToOriginalReplicaCount: false
+    scaledObject:
+      annotations: {}
+      # Custom annotations for ScaledObject resource
+      #  annotations:
+      # key: value
     triggers: []
  #     - type: prometheus
  #       metadata:
@@ -481,7 +486,7 @@ controller:
       enabled: true
       image:
         repository: docker.io/jettech/kube-webhook-certgen
-        tag: v1.5.0
+        tag: v1.5.1
         pullPolicy: IfNotPresent
       ## Provide a priority class name to the webhook patching job
       ##
@@ -608,7 +613,7 @@ defaultBackend:
 
   serviceAccount:
     create: true
-    name:
+    name: ""
   ## Additional environment variables to set for defaultBackend pods
   extraEnvs: []
 
@@ -708,7 +713,7 @@ podSecurityPolicy:
 
 serviceAccount:
   create: true
-  name:
+  name: ""
 
 ## Optional array of imagePullSecrets containing private registry credentials
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/

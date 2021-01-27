@@ -54,6 +54,8 @@ export LUA_RESTY_UPLOAD_VERSION=0.10
 export LUA_RESTY_STRING_VERSION=0.12
 export LUA_RESTY_MEMCACHED_VERSION=0.15
 export LUA_RESTY_REDIS_VERSION=0.29
+export LUA_RESTY_IPMATCHER_VERSION=1a0a1c58fd085b15eedee58de8b5f45c27aff7bc
+export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
 
 export BUILD_PATH=/tmp/build
 
@@ -72,9 +74,6 @@ get_src()
   tar xzf "$f"
   rm -rf "$f"
 }
-
-apk update
-apk upgrade
 
 # install required packages to build
 apk add \
@@ -112,7 +111,8 @@ apk add \
   bc \
   unzip \
   dos2unix \
-  yaml-cpp
+  yaml-cpp \
+  coreutils
 
 mkdir -p /etc/nginx
 
@@ -215,6 +215,12 @@ get_src 8257e8fbf78eb2cc2cf2fdca2fda3c2e755f7d3222e7d15cc322111a0f720f9c \
 
 get_src 3f602af507aacd1f7aaeddfe7b77627fcde095fe9f115cb9d6ad8de2a52520e1 \
         "https://github.com/openresty/lua-resty-redis/archive/v$LUA_RESTY_REDIS_VERSION.tar.gz"
+
+get_src d0eacda122ab36585936256cb222ea9147bc5ad1fc3f24fd3748475653dd27ad \
+        "https://github.com/api7/lua-resty-ipmatcher/archive/$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
+
+get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
+        "https://github.com/ElvinEfendi/lua-resty-global-throttle/archive/v$LUA_RESTY_GLOBAL_THROTTLE_VERSION.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
@@ -579,6 +585,12 @@ cd "$BUILD_PATH/lua-resty-memcached-$LUA_RESTY_MEMCACHED_VERSION"
 make install
 
 cd "$BUILD_PATH/lua-resty-redis-$LUA_RESTY_REDIS_VERSION"
+make install
+
+cd "$BUILD_PATH/lua-resty-ipmatcher-$LUA_RESTY_IPMATCHER_VERSION"
+INST_LUADIR=/usr/local/lib/lua make install
+
+cd "$BUILD_PATH/lua-resty-global-throttle-$LUA_RESTY_GLOBAL_THROTTLE_VERSION"
 make install
 
 # mimalloc

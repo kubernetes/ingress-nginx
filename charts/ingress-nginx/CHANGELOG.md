@@ -4,6 +4,31 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.21.0
+
+- [X] [#6783](https://github.com/kubernetes/ingress-nginx/pull/6783) Add custom annotations to ScaledObject
+- [X] [#6761](https://github.com/kubernetes/ingress-nginx/pull/6761) Adding quotes in the serviceAccount name in Helm values
+- [X] [#6767](https://github.com/kubernetes/ingress-nginx/pull/6767) Remove ClusterRole when scope option is enabled
+- [X] [#6785](https://github.com/kubernetes/ingress-nginx/pull/6785) Update kube-webhook-certgen image to v1.5.1
+
+### 3.20.1
+
+- Do not create KEDA in case of DaemonSets.
+- Fix KEDA v2 definition
+
+### 3.20.0
+
+- [X] [#6730](https://github.com/kubernetes/ingress-nginx/pull/6730) Do not create HPA for defaultBackend if not enabled.
+
+### 3.19.0
+
+- Update ingress-nginx v0.43.0
+
+### 3.18.0
+
+- [X] [#6688](https://github.com/kubernetes/ingress-nginx/pull/6688) Allow volume-type emptyDir in controller podsecuritypolicy
+- [X] [#6691](https://github.com/kubernetes/ingress-nginx/pull/6691) Improve parsing of helm parameters
+
 ### 3.17.0
 
 - Update ingress-nginx v0.42.0

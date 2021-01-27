@@ -1096,6 +1096,9 @@ func cleanTempNginxCfg() error {
 	var files []string
 
 	err := filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() && os.TempDir() != path {
 			return filepath.SkipDir
 		}
