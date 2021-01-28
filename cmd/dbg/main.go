@@ -108,6 +108,8 @@ func main() {
 	}
 	rootCmd.AddCommand(confCmd)
 
+	rootCmd.PersistentFlags().IntVar(&nginx.StatusPort, "status-port", 10246, `Port to use for the lua HTTP endpoint configuration.`)
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
