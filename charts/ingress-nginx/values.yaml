@@ -1,5 +1,5 @@
 ## nginx configuration
-## Ref: https://github.com/kubernetes/ingress-nginx/blob/master/controllers/nginx/configuration.md
+## Ref: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/index.md
 ##
 
 ## Overrides for generated resource names
