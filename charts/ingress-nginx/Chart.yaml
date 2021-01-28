@@ -2,7 +2,7 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 3.21.0
+version: 3.22.0
 appVersion: 0.43.0
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
@@ -21,7 +21,5 @@ annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - Add custom annotations to ScaledObject
-    - Adding quotes in the serviceAccount name in Helm values
-    - Remove ClusterRole when scope option is enabled
-    - Update kube-webhook-certgen image to v1.5.1
+    - Add value for configuring a custom Diffie-Hellman parameters file
+    - Allow use of numeric namespaces in helm chart
