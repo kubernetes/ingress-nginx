@@ -1046,7 +1046,7 @@ const jaegerTmpl = `{
 	"jaegerDebugHeader": "{{ .JaegerDebugHeader }}",
 	"jaegerBaggageHeader": "{{ .JaegerBaggageHeader }}",
 	"traceBaggageHeaderPrefix": "{{ .JaegerTraceBaggageHeaderPrefix }}"
-  },
+  }
 }`
 
 const datadogTmpl = `{
