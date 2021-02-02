@@ -54,11 +54,6 @@ func RunE2ETests(t *testing.T) {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	// Disable skipped tests unless they are explicitly requested.
-	if config.GinkgoConfig.FocusString == "" && config.GinkgoConfig.SkipString == "" {
-		config.GinkgoConfig.SkipString = `\[Flaky\]|\[Feature:.+\]`
-	}
-
 	if os.Getenv("KUBECTL_PATH") != "" {
 		framework.KubectlPath = os.Getenv("KUBECTL_PATH")
 		framework.Logf("Using kubectl path '%s'", framework.KubectlPath)
