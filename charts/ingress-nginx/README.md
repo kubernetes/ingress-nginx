@@ -171,9 +171,10 @@ controller:
     internal:
       enabled: true
       annotations:
+        # ref: https://cloud.google.com/kubernetes-engine/docs/how-to/internal-load-balancing#create
         # Create internal LB
-        cloud.google.com/load-balancer-type: "Internal"
-        # Any other annotation can be declared here.
+        networking.gke.io/load-balancer-type: "Internal"
+        # Any other annotation can be declared here. 
 ```
 
 Example for Azure:
