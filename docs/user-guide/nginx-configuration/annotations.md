@@ -622,6 +622,8 @@ In some scenarios is required to have different values. To allow this we provide
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-tries`
 - `nginx.ingress.kubernetes.io/proxy-request-buffering`
 
+Note: All timeout values are unitless and in seconds e.g. `nginx.ingress.kubernetes.io/proxy-read-timeout: "120"` sets a valid 120 seconds proxy read timeout.
+
 ### Proxy redirect
 
 With the annotations `nginx.ingress.kubernetes.io/proxy-redirect-from` and `nginx.ingress.kubernetes.io/proxy-redirect-to` it is possible to
