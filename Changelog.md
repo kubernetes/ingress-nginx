@@ -1,5 +1,75 @@
 # Changelog
 
+### 0.44.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.44.0@sha256:3dd0fac48073beaca2d67a78c746c7593f9c575168a17139a9955a82c63c4b9a`
+
+_New Features:_
+
+- Update alpine to v3.13
+- client-go v0.20.2
+- New option to set a shutdown grace period [#5855](https://github.com/kubernetes/ingress-nginx/pull/5855)
+- Support for Global/Distributed Rate Limiting [#6673](https://github.com/kubernetes/ingress-nginx/pull/6673
+- Update kube-webhook-certgen image to v1.5.1
+
+_Changes:_
+
+- [X] [#5855](https://github.com/kubernetes/ingress-nginx/pull/5855) New option to set a shutdown grace period
+- [X] [#6530](https://github.com/kubernetes/ingress-nginx/pull/6530) #6477 Allow specifying the loadBalancerIP for the internal load balancer
+- [X] [#6667](https://github.com/kubernetes/ingress-nginx/pull/6667) Correct the value for setting a static IP
+- [X] [#6669](https://github.com/kubernetes/ingress-nginx/pull/6669) chore: Add test to internal ingress resolver pkg
+- [X] [#6673](https://github.com/kubernetes/ingress-nginx/pull/6673) Add Global/Distributed Rate Limiting support
+- [X] [#6679](https://github.com/kubernetes/ingress-nginx/pull/6679) Bugfix: fix incomplete log
+- [X] [#6695](https://github.com/kubernetes/ingress-nginx/pull/6695) include lua-resty-ipmatcher and lua-resty-global-throttle inn the base image
+- [X] [#6705](https://github.com/kubernetes/ingress-nginx/pull/6705) Update nginx alpine image to 3.12
+- [X] [#6708](https://github.com/kubernetes/ingress-nginx/pull/6708) fix generated code for the new year
+- [X] [#6710](https://github.com/kubernetes/ingress-nginx/pull/6710) Update nginx base image
+- [X] [#6711](https://github.com/kubernetes/ingress-nginx/pull/6711) Update test container images
+- [X] [#6712](https://github.com/kubernetes/ingress-nginx/pull/6712) Update tag version
+- [X] [#6717](https://github.com/kubernetes/ingress-nginx/pull/6717) fix ipmatcher installation
+- [X] [#6718](https://github.com/kubernetes/ingress-nginx/pull/6718) generalize cidr parsing and improve lua tests
+- [X] [#6719](https://github.com/kubernetes/ingress-nginx/pull/6719) Update nginx image
+- [X] [#6720](https://github.com/kubernetes/ingress-nginx/pull/6720) Update test runner image
+- [X] [#6724](https://github.com/kubernetes/ingress-nginx/pull/6724) e2e test for requiring memcached setting to configure global rate limit
+- [X] [#6726](https://github.com/kubernetes/ingress-nginx/pull/6726) add body_filter_by_lua_block lua plugin to ingress-nginx
+- [X] [#6730](https://github.com/kubernetes/ingress-nginx/pull/6730) Do not create HPA if default backend not enabled
+- [X] [#6754](https://github.com/kubernetes/ingress-nginx/pull/6754) Fix KEDA autoscaler resource
+- [X] [#6756](https://github.com/kubernetes/ingress-nginx/pull/6756) Dashboard Panel supposed to show average is showing sum.
+- [X] [#6760](https://github.com/kubernetes/ingress-nginx/pull/6760) Update alpine to 3.13
+- [X] [#6761](https://github.com/kubernetes/ingress-nginx/pull/6761) Adding quotes in the serviceAccount name in Helm values.
+- [X] [#6764](https://github.com/kubernetes/ingress-nginx/pull/6764) Update nginx image
+- [X] [#6767](https://github.com/kubernetes/ingress-nginx/pull/6767) Remove ClusterRole when scope option is enabled
+- [X] [#6783](https://github.com/kubernetes/ingress-nginx/pull/6783) Add custom annotations to ScaledObject #6757
+- [X] [#6785](https://github.com/kubernetes/ingress-nginx/pull/6785) Update kube-webhook-certgen image to v1.5.1
+- [X] [#6786](https://github.com/kubernetes/ingress-nginx/pull/6786) Release helm chart v3.21.0
+- [X] [#6787](https://github.com/kubernetes/ingress-nginx/pull/6787) Update static manifests
+- [X] [#6788](https://github.com/kubernetes/ingress-nginx/pull/6788) Update go dependencies
+- [X] [#6790](https://github.com/kubernetes/ingress-nginx/pull/6790) :bug: return error if tempconfig missing
+- [X] [#6796](https://github.com/kubernetes/ingress-nginx/pull/6796) Updates to the custom default SSL certificate must trigger a reload
+- [X] [#6802](https://github.com/kubernetes/ingress-nginx/pull/6802) Add value for configuring a custom Diffie-Hellman parameters file
+- [X] [#6811](https://github.com/kubernetes/ingress-nginx/pull/6811) add --status-port flag to dbg
+- [X] [#6815](https://github.com/kubernetes/ingress-nginx/pull/6815) Allow use of numeric namespaces in helm chart
+- [X] [#6817](https://github.com/kubernetes/ingress-nginx/pull/6817) corrected nginx configuration doc path
+- [X] [#6818](https://github.com/kubernetes/ingress-nginx/pull/6818) Release helm chart v3.22.0
+- [X] [#6819](https://github.com/kubernetes/ingress-nginx/pull/6819) Update kind and kindest images
+- [X] [#6830](https://github.com/kubernetes/ingress-nginx/pull/6830) Remove extra comma for Tracing Jaeger config json
+- [X] [#6832](https://github.com/kubernetes/ingress-nginx/pull/6832) Fix e2e build
+- [X] [#6842](https://github.com/kubernetes/ingress-nginx/pull/6842) Change chart-testing image
+
+_Documentation:_
+
+- [X] [#6723](https://github.com/kubernetes/ingress-nginx/pull/6723) fix link in annotation docs
+- [X] [#6727](https://github.com/kubernetes/ingress-nginx/pull/6727) Fix the documentation for the proxy-ssl-secret and the auth-tls-secret annotations
+- [X] [#6738](https://github.com/kubernetes/ingress-nginx/pull/6738) docs/deploy: fix grammar and inconsistencies
+- [X] [#6741](https://github.com/kubernetes/ingress-nginx/pull/6741) Update mkdocs, fix nodeport link and add microk8s link
+- [X] [#6746](https://github.com/kubernetes/ingress-nginx/pull/6746) Move Azure deploy note to right item on doc page
+- [X] [#6749](https://github.com/kubernetes/ingress-nginx/pull/6749) Update README.md
+- [X] [#6789](https://github.com/kubernetes/ingress-nginx/pull/6789) Update e2e tests link markdown
+- [X] [#6813](https://github.com/kubernetes/ingress-nginx/pull/6813) Added docs to clear up PROXY definition
+- [X] [#6823](https://github.com/kubernetes/ingress-nginx/pull/6823) Change break link for documentation
+
 ### 0.43.0
 
 **Image:**
