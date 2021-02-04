@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Update ingress-nginx v0.44.0
+    apiVersion: v2
+    appVersion: 0.44.0
+    created: "2021-02-04T14:17:20.136149563Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: a1999d0ed90ab34418fb3f3e54024a9ff74d77c9ea3b7d3ec42e0bd5adc5e6f8
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.23.0/ingress-nginx-3.23.0.tgz
+    version: 3.23.0
+  - annotations:
+      artifacthub.io/changes: |
         - Add value for configuring a custom Diffie-Hellman parameters file
         - Allow use of numeric namespaces in helm chart
     apiVersion: v2
