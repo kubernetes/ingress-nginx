@@ -4,6 +4,10 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.23.1
+
+- [X] [#6854](https://github.com/kubernetes/ingress-nginx/pull/6854) Fix incorrect AKS example from helm chart docs
+
 ### 3.23.0
 
 - Update ingress-nginx v0.44.0
