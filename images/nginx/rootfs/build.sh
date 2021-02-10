@@ -24,7 +24,7 @@ export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=cd8641886c873cf543255aeda20d23e4cd603d05
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.10.0
+export NGINX_OPENTRACING_VERSION=0.11.0
 export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=0.4.2
@@ -138,7 +138,7 @@ get_src fe683831f832aae4737de1e1026a4454017c2d5f98cb88b08c5411dc380062f8 \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src d580efc71809cc1cd9138c1940f4f20766a0631cacf45b99c07facd93583260d \
+get_src a0087c61e82651dbdeeef1ceec375ce103f0ce571a1c8b35863cff4e596434a6 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
