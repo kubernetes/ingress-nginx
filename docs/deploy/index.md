@@ -29,7 +29,7 @@
 ## Contents
 
 - [Provider Specific Steps](#provider-specific-steps)
-  - [Docker for Mac](#docker-for-mac)
+  - [Docker Desktop](#docker-desktop)
   - [minikube](#minikube)
   - [microk8s](#microk8s)
   - [AWS](#aws)
@@ -44,9 +44,12 @@
 
 ### Provider Specific Steps
 
-#### Docker for Mac
+#### Docker Desktop
 
-Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018))
+Kubernetes is available in Docker Desktop
+
+- Mac, from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018)
+- Windows, from [version 18.06.0-ce](https://docs.docker.com/docker-for-windows/release-notes/#docker-community-edition-18060-ce-win70-2018-07-25)
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.44.0/deploy/static/provider/cloud/deploy.yaml
