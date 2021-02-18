@@ -132,6 +132,7 @@ The following table shows a configuration option's name, type, and the default v
 |[zipkin-sample-rate](#zipkin-sample-rate)|float|1.0|
 |[jaeger-collector-host](#jaeger-collector-host)|string|""|
 |[jaeger-collector-port](#jaeger-collector-port)|int|6831|
+|[jaeger-endpoint](#jaeger-endpoint)|string|""|
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
 |[jaeger-sampler-type](#jaeger-sampler-type)|string|"const"|
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
@@ -844,6 +845,10 @@ Specifies the host to use when uploading traces. It must be a valid URL.
 ## jaeger-collector-port
 
 Specifies the port to use when uploading traces. _**default:**_ 6831
+
+## jaeger-endpoint
+
+Specifies the endpoint to use when uploading traces to a collector. This takes priority over `jaeger-collector-host` if both are specified.
 
 ## jaeger-service-name
 
