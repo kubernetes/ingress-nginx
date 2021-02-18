@@ -1018,7 +1018,7 @@ func buildOpentracing(c interface{}, s interface{}) string {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;")
-	} else if cfg.JaegerCollectorHost != "" {
+	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
 	}
 

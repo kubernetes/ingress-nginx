@@ -555,6 +555,9 @@ type Configuration struct {
 	// Default: 6831
 	JaegerCollectorPort int `json:"jaeger-collector-port"`
 
+	// JaegerEndpoint specifies the enpoint to use when uploading traces to a collector over TCP
+	JaegerEndpoint string `json:"jaeger-endpoint"`
+
 	// JaegerServiceName specifies the service name to use for any traces created
 	// Default: nginx
 	JaegerServiceName string `json:"jaeger-service-name"`
