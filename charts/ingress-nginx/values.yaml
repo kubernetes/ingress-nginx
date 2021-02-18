@@ -70,6 +70,12 @@ controller:
   ##
   ingressClass: nginx
 
+  # This section refers to the creation of the IngressClass resource
+  # IngressClass resources are supported since k8s >= 1.18
+  ingressClassResource:
+    enabled: false
+    default: false
+
   # labels to add to the pod container metadata
   podLabels: {}
   #  key: value
