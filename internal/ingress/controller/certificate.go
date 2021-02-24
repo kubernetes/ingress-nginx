@@ -50,15 +50,15 @@ func verifyHostname(h string, c *x509.Certificate) error {
 
 	lowered := toLowerCaseASCII(h)
 
-	if len(c.DNSNames) > 0 {
+	//checking the CommonName then failover to checking the DNSNames aka AltNames
+	if matchHostnames(toLowerCaseASCII(c.Subject.CommonName), lowered) {
+		return nil
+	} else if len(c.DNSNames) > 0 {
 		for _, match := range c.DNSNames {
 			if matchHostnames(toLowerCaseASCII(match), lowered) {
 				return nil
 			}
 		}
-		// If Subject Alt Name is given, we ignore the common name.
-	} else if matchHostnames(toLowerCaseASCII(c.Subject.CommonName), lowered) {
-		return nil
 	}
 
 	return x509.HostnameError{Certificate: c, Host: h}
