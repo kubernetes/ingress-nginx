@@ -677,6 +677,16 @@ defaultBackend:
   #   cpu: 10m
   #   memory: 20Mi
 
+  extraVolumeMounts: []
+  ## Additional volumeMounts to the default backend container.
+  #  - name: copy-portal-skins
+  #   mountPath: /var/lib/lemonldap-ng/portal/skins
+
+  extraVolumes: []
+  ## Additional volumes to the default backend pod.
+  #  - name: copy-portal-skins
+  #    emptyDir: {}
+
   autoscaling:
     enabled: false
     minReplicas: 1
