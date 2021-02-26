@@ -138,7 +138,7 @@ extension for this to succeed.`)
 			`Define the sync frequency upper limit`)
 
 		publishStatusAddress = flags.String("publish-status-address", "",
-			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
+			`Customized address (or addresses, separated by comma) to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
 		enableMetrics = flags.Bool("enable-metrics", true,
