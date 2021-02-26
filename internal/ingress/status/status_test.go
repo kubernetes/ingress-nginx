@@ -594,6 +594,51 @@ func TestRunningAddressesWithPublishStatusAddress(t *testing.T) {
 		t.Errorf("returned %v but expected %v", rv, "127.0.0.1")
 	}
 }
+
+func TestRunningAddressesWithPublishStatusAddresses(t *testing.T) {
+	fk := buildStatusSync()
+	fk.PublishStatusAddress = "127.0.0.1,1.1.1.1"
+
+	ra, _ := fk.runningAddresses()
+	if ra == nil {
+		t.Fatalf("returned nil but expected valid []string")
+	}
+	rl := len(ra)
+	if len(ra) != 2 {
+		t.Errorf("returned %v but expected %v", rl, 2)
+	}
+	rv := ra[0]
+	rv2 := ra[1]
+	if rv != "127.0.0.1" {
+		t.Errorf("returned %v but expected %v", rv, "127.0.0.1")
+	}
+	if rv2 != "1.1.1.1" {
+		t.Errorf("returned %v but expected %v", rv2, "1.1.1.1")
+	}
+}
+
+func TestRunningAddressesWithPublishStatusAddressesAndSpaces(t *testing.T) {
+	fk := buildStatusSync()
+	fk.PublishStatusAddress = "127.0.0.1,  1.1.1.1"
+
+	ra, _ := fk.runningAddresses()
+	if ra == nil {
+		t.Fatalf("returned nil but expected valid []string")
+	}
+	rl := len(ra)
+	if len(ra) != 2 {
+		t.Errorf("returned %v but expected %v", rl, 2)
+	}
+	rv := ra[0]
+	rv2 := ra[1]
+	if rv != "127.0.0.1" {
+		t.Errorf("returned %v but expected %v", rv, "127.0.0.1")
+	}
+	if rv2 != "1.1.1.1" {
+		t.Errorf("returned %v but expected %v", rv2, "1.1.1.1")
+	}
+}
+
 func TestSliceToStatus(t *testing.T) {
 	fkEndpoints := []string{
 		"10.0.0.1",

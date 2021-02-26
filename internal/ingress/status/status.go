@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -165,7 +166,9 @@ func NewStatusSyncer(config Config) Syncer {
 // ingress controller is currently running
 func (s *statusSync) runningAddresses() ([]string, error) {
 	if s.PublishStatusAddress != "" {
-		return []string{s.PublishStatusAddress}, nil
+		re := regexp.MustCompile(`,\s*`)
+		multipleAddrs := re.Split(s.PublishStatusAddress, -1)
+		return multipleAddrs, nil
 	}
 
 	if s.PublishService != "" {
