@@ -518,8 +518,14 @@ controller:
       enabled: false
       # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service.
       annotations: {}
+      # enableHttp: false
+      # enableHttps: false
 
+      # clusterIP: ""
+      # externalIPs: []
       # loadBalancerIP: ""
+      # sessionAffinity: ""
+      # healthCheckNodePort: 0
 
       # -- Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
       loadBalancerSourceRanges: []
