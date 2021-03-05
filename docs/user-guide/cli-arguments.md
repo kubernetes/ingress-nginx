@@ -38,7 +38,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--profiler-port`                  | Port to use for expose the ingress controller Go profiler when it is enabled. (default 10245) |
 | `--profiling`                      | Enable profiling via web interface host:port/debug/pprof/ (default true) |
 | `--publish-service`                | Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies. |
-| `--publish-status-address`         | Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
+| `--publish-status-address`         | Customized address (or addresses, separated by comma) to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
 | `--report-node-internal-ip-address`| Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter. |
 | `--skip_headers`                   | If true, avoid header prefixes in the log messages |
 | `--skip_log_headers`               | If true, avoid headers when opening log files |
