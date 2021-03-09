@@ -7,7 +7,7 @@ metadata:
 </code></pre></div></p> <p>We must also set the host to use when uploading traces:</p> <p><div class=highlight><pre><span></span><code>zipkin-collector-host: zipkin.default.svc.cluster.local
 jaeger-collector-host: jaeger-agent.default.svc.cluster.local
 datadog-collector-host: datadog-agent.default.svc.cluster.local
-</code></pre></div> NOTE: While the option is called <code>jaeger-collector-host</code>, you will need to point this to a <code>jaeger-agent</code>, and not the <code>jaeger-collector</code> component.</p> <p>Next you will need to deploy a distributed tracing system which uses OpenTracing. <a href=https://github.com/openzipkin/zipkin>Zipkin</a> and <a href=https://github.com/jaegertracing/jaeger>Jaeger</a> and <a href=https://github.com/DataDog/dd-opentracing-cpp>Datadog</a> have been tested.</p> <p>Other optional configuration options: <div class=highlight><pre><span></span><code># specifies the name to use for the server span
+</code></pre></div> NOTE: While the option is called <code>jaeger-collector-host</code>, you will need to point this to a <code>jaeger-agent</code>, and not the <code>jaeger-collector</code> component. Alternatively, you can set <code>jaeger-endpoint</code> and specify the full endpoint for uploading traces. This will use TCP and should be used for a collector rather than an agent.</p> <p>Next you will need to deploy a distributed tracing system which uses OpenTracing. <a href=https://github.com/openzipkin/zipkin>Zipkin</a> and <a href=https://github.com/jaegertracing/jaeger>Jaeger</a> and <a href=https://github.com/DataDog/dd-opentracing-cpp>Datadog</a> have been tested.</p> <p>Other optional configuration options: <div class=highlight><pre><span></span><code># specifies the name to use for the server span
 opentracing-operation-name
 
 # specifies specifies the name to use for the location span
@@ -24,6 +24,9 @@ zipkin-sample-rate
 
 # specifies the port to use when uploading traces, Default: 6831
 jaeger-collector-port
+
+# specifies the endpoint to use when uploading traces to a collector instead of an agent
+jaeger-endpoint
 
 # specifies the service name to use for any traces created, Default: nginx
 jaeger-service-name
