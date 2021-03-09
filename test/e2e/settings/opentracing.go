@@ -33,6 +33,7 @@ const (
 
 	jaegerCollectorHost = "jaeger-collector-host"
 	jaegerSamplerHost   = "jaeger-sampler-host"
+	// jaegerEndpoint      = "jaeger-endpoint"
 
 	datadogCollectorHost = "datadog-collector-host"
 
@@ -173,6 +174,20 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
 		assert.NotContains(ginkgo.GinkgoT(), log, "Unexpected failure reloading the backend", "reloading nginx after a configmap change")
 	})
+
+	/*
+		ginkgo.It("should enable opentracing using jaeger with an HTTP endpoint", func() {
+			config := map[string]string{}
+			config[enableOpentracing] = "true"
+			config[jaegerEndpoint] = "http://127.0.0.1/api/traces"
+			f.SetNginxConfigMapData(config)
+
+			framework.Sleep(10 * time.Second)
+			log, err := f.NginxLogs()
+			assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+			assert.NotContains(ginkgo.GinkgoT(), log, "Unexpected failure reloading the backend", "reloading nginx after a configmap change")
+		})
+	*/
 
 	ginkgo.It("should enable opentracing using datadog", func() {
 		config := map[string]string{}
