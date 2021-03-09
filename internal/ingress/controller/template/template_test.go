@@ -1163,6 +1163,16 @@ func TestBuildOpenTracing(t *testing.T) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
+	cfgNoHost := config.Configuration{
+		EnableOpentracing: true,
+	}
+	expected = "\r\n"
+	actual = buildOpentracing(cfgNoHost, []*ingress.Server{})
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	cfgJaeger := config.Configuration{
 		EnableOpentracing:   true,
 		JaegerCollectorHost: "jaeger-host.com",
@@ -1191,6 +1201,17 @@ func TestBuildOpenTracing(t *testing.T) {
 	}
 	expected = "opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgDatadog, []*ingress.Server{})
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	cfgJaegerEndpoint := config.Configuration{
+		EnableOpentracing: true,
+		JaegerEndpoint:    "http://jaeger-collector.com:14268/api/traces",
+	}
+	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;\r\n"
+	actual = buildOpentracing(cfgJaegerEndpoint, []*ingress.Server{})
 
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
