@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Add volumes to default-backend deployment
+    apiVersion: v2
+    appVersion: 0.44.0
+    created: "2021-03-09T22:29:53.552530464Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 270c83e6ac7d82af7caab73c94aefd213364077417baa5b5316cca32e2b6b57d
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.24.0/ingress-nginx-3.24.0.tgz
+    version: 3.24.0
+  - annotations:
+      artifacthub.io/changes: |
         - Update ingress-nginx v0.44.0
     apiVersion: v2
     appVersion: 0.44.0
