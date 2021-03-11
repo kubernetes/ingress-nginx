@@ -61,6 +61,12 @@ local function get_namespaced_key_value(namespace, key_value)
   return namespace .. key_value
 end
 
+local function set_headers(limit, count_current, window_size)
+      ngx.header["Ratelimit-Remaining"] = string.format("%.0f",(limit - count_current <= 0 ) and 0 or (limit - count_current))
+      ngx.header["Ratelimit-Limit"] = limit
+      ngx.header["Ratelimit-Reset"] = window_size
+end
+
 function _M.throttle(config, location_config)
   if not is_enabled(config, location_config) then
     return
@@ -77,6 +83,10 @@ function _M.throttle(config, location_config)
   local is_limit_exceeding = DECISION_CACHE:get(namespaced_key_value)
   if is_limit_exceeding then
     ngx.var.global_rate_limit_exceeding = "c"
+
+    if location_config.set_headers then
+      set_headers(location_config.limit, 0, location_config.window_size)
+    end
     return ngx_exit(config.status_code)
   end
 
@@ -105,6 +115,10 @@ function _M.throttle(config, location_config)
     ngx.log(ngx.ERR, "error while processing key: ", err)
     -- fail open
     return
+  end
+
+  if location_config.set_headers then
+    set_headers(location_config.limit, estimated_final_count, location_config.window_size)
   end
 
   if desired_delay then
