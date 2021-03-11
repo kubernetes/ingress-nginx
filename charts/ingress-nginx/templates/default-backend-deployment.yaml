@@ -88,6 +88,9 @@ spec:
             - name: http
               containerPort: {{ .Values.defaultBackend.port }}
               protocol: TCP
+        {{- if .Values.defaultBackend.extraVolumeMounts }}
+          volumeMounts: {{- toYaml .Values.defaultBackend.extraVolumeMounts | nindent 12 }}
+        {{- end }}
         {{- if .Values.defaultBackend.resources }}
           resources: {{ toYaml .Values.defaultBackend.resources | nindent 12 }}
         {{- end }}
@@ -102,4 +105,7 @@ spec:
       affinity: {{ toYaml .Values.defaultBackend.affinity | nindent 8 }}
     {{- end }}
       terminationGracePeriodSeconds: 60
+    {{- if .Values.defaultBackend.extraVolumes }}
+      volumes: {{ toYaml .Values.defaultBackend.extraVolumes | nindent 8 }}
+    {{- end }}
 {{- end }}

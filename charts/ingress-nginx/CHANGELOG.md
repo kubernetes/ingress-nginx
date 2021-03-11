@@ -4,8 +4,9 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
-### 3.23.1
+### 3.24.0
 
+- [X] [#6908](https://github.com/kubernetes/ingress-nginx/pull/6908) Add volumes to default-backend deployment
 - [X] [#6854](https://github.com/kubernetes/ingress-nginx/pull/6854) Fix incorrect AKS example from helm chart docs
 
 ### 3.23.0
