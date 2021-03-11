@@ -23,3 +23,4 @@ annotations:
   artifacthub.io/changes: |
     - Add volumes to default-backend deployment
     - Fix incorrect AKS example from helm chart docs
+
