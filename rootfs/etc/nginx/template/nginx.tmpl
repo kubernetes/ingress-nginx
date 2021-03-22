@@ -202,6 +202,8 @@ http {
         $geoip2_time_zone source=$remote_addr location time_zone;
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
+        $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
     }
     {{ end }}
 
@@ -217,6 +219,8 @@ http {
         $geoip2_time_zone source=$remote_addr location time_zone;
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
+        $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
     }
     {{ end }}
 
