@@ -4,7 +4,7 @@ kind: Service
 metadata:
   annotations:
   {{- range $key, $value := .Values.controller.service.internal.annotations }}
-    {{ $key }}: {{ $value | quote }}
+    {{- $key }}: {{ $value | quote }}
   {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
@@ -13,6 +13,7 @@ metadata:
     {{- toYaml .Values.controller.service.labels | nindent 4 }}
   {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}-internal
+  namespace: {{ .Release.Namespace }}
 spec:
   type: "{{ .Values.controller.service.type }}"
 {{- if .Values.controller.service.internal.loadBalancerIP }}

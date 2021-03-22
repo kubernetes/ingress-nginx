@@ -16,7 +16,7 @@ type: application
 maintainers:
   - name: ChiefAlexander
 engine: gotpl
-kubeVersion: ">=1.16.0-0"
+kubeVersion: ">=1.15.0-0"
 annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog

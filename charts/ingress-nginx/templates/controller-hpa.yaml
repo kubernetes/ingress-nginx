@@ -8,6 +8,7 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
   name: {{ include "ingress-nginx.controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -17,9 +18,9 @@ spec:
   maxReplicas: {{ .Values.controller.autoscaling.maxReplicas }}
   metrics:
   {{- with .Values.controller.autoscaling.targetMemoryUtilizationPercentage }}
-  - type: Resource 
-    resource: 
-      name: memory 
+  - type: Resource
+    resource:
+      name: memory
       target:
         type: Utilization
         averageUtilization: {{ . }}

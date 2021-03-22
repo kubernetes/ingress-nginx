@@ -9,6 +9,7 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
   name: {{ include "ingress-nginx.controller.fullname" . }}-admission
+  namespace: {{ .Release.Namespace }}
 spec:
   type: {{ .Values.controller.admissionWebhooks.service.type }}
 {{- if .Values.controller.admissionWebhooks.service.clusterIP }}

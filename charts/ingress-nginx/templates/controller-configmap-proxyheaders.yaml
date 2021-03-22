@@ -6,6 +6,7 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
   name: {{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
+  namespace: {{ .Release.Namespace }}
 data:
 {{- if .Values.controller.proxySetHeaders }}
 {{ toYaml .Values.controller.proxySetHeaders | indent 2 }}
