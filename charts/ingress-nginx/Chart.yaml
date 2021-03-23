@@ -2,7 +2,7 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 4.0.18
+version: 4.0.19
 appVersion: 1.1.2
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
@@ -24,8 +24,5 @@ annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - "#8253 Add a certificate info metric"
-    - "#8225 fix inconsistent-label-cardinality for prometheus metrics: nginx_ingress_controller_requests"
-    - "#8162 Versioned static manifests"
-    - "#8159 Adding some geoip variables and default values"
-    - "#8221 Do not validate ingresses with unknown ingress class in admission webhook endpoint"
+    - "#6939 Rebase controller-service-internal features on controller-service"
+    - "#6939 Add capability to disable ports in controller-service-internal"

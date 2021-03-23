@@ -2,7 +2,12 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.0.19
+- [6939] https://github.com/kubernetes/ingress-nginx/pull/6939/ Rebase controller-service-internal features on controller-service
+- [6939] https://github.com/kubernetes/ingress-nginx/pull/6939/ Add capability to disable ports in controller-service-internal
+
 ### 4.0.18
+
 "[8291](https://github.com/kubernetes/ingress-nginx/pull/8291) remove git tag env from cloud build"
 "[8286](https://github.com/kubernetes/ingress-nginx/pull/8286) Fix OpenTelemetry sidecar image build"
 "[8277](https://github.com/kubernetes/ingress-nginx/pull/8277) Add OpenSSF Best practices badge"
@@ -35,7 +40,6 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 "[8143](https://github.com/kubernetes/ingress-nginx/pull/8143) Allow to configure delay before controller exits"
 "[8136](https://github.com/kubernetes/ingress-nginx/pull/8136) add ingressClass option to helm chart - back compatibility with ingress.class annotations"
 "[8126](https://github.com/kubernetes/ingress-nginx/pull/8126) Example for JWT"
-
 
 ### 4.0.15
 
