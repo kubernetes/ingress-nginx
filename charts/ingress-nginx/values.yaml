@@ -614,6 +614,7 @@ defaultBackend:
   serviceAccount:
     create: true
     name: ""
+    automountServiceAccountToken: true
   ## Additional environment variables to set for defaultBackend pods
   extraEnvs: []
 
@@ -724,6 +725,7 @@ podSecurityPolicy:
 serviceAccount:
   create: true
   name: ""
+  automountServiceAccountToken: true
 
 ## Optional array of imagePullSecrets containing private registry credentials
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/

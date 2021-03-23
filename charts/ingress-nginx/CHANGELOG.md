@@ -4,6 +4,10 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.25.0
+
+- [X] [#6957](https://github.com/kubernetes/ingress-nginx/pull/6957) Add ability to specify automountServiceAccountToken
+
 ### 3.24.0
 
 - [X] [#6908](https://github.com/kubernetes/ingress-nginx/pull/6908) Add volumes to default-backend deployment
