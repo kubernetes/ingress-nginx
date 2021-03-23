@@ -537,8 +537,8 @@ Extract a path out into its own ingres if you need to isolate a certain path.
 * `nginx.ingress.kubernetes.io/global-rate-limit-key`: Configures a key for counting the samples. Defaults to `$remote_addr`. You can also combine multiple NGINX variables here, like `${remote_addr}-${http_x_api_client}` which would mean the limit will be applied to requests coming from the same API client (indicated by `X-API-Client` HTTP request header) with the same source IP address.
 * `nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs`: comma separated list of IPs and CIDRs to match client IP against. When there's a match request is not considered for rate limiting.
 * `nginx.ingress.kubernetes.io/global-rate-limit-set-headers`: Set to `true` to enable the addition of global rate limiting headers. Default is `false`
-  * Ratelimit-Limit: The maximum number of allowed requests in the time window;
-  * Ratelimit-Remaining: The number of remaining requests in the current window;
+  * Ratelimit-Limit: The requests quota in the configured time window;
+  * Ratelimit-Remaining: TThe remaining requests quota in the current time window;
   * Ratelimit-Window: The number of seconds of the period window;
   
   For more information please see  [RateLimit Header Fields for HTTP](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html).
