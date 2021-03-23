@@ -1,6 +1,7 @@
 local resty_global_throttle = require("resty.global_throttle")
 local resty_ipmatcher = require("resty.ipmatcher")
 local util = require("util")
+local string = string
 
 local ngx = ngx
 local ngx_exit = ngx.exit
@@ -62,7 +63,8 @@ local function get_namespaced_key_value(namespace, key_value)
 end
 
 local function set_headers(limit, count_current, window_size)
-      ngx.header["Ratelimit-Remaining"] = string.format("%.0f",(limit - count_current <= 0 ) and 0 or (limit - count_current))
+      ngx.header["Ratelimit-Remaining"] = string.format("%.0f",
+        (limit - count_current <= 0 ) and 0 or (limit - count_current))
       ngx.header["Ratelimit-Limit"] = limit
       ngx.header["Ratelimit-Reset"] = window_size
 end
