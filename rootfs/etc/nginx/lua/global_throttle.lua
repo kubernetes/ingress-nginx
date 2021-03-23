@@ -66,7 +66,7 @@ local function set_headers(limit, count_current, window_size)
       ngx.header["Ratelimit-Remaining"] = string.format("%.0f",
         (limit - count_current <= 0 ) and 0 or (limit - count_current))
       ngx.header["Ratelimit-Limit"] = limit
-      ngx.header["Ratelimit-Reset"] = window_size
+      ngx.header["Ratelimit-Window"] = window_size
 end
 
 function _M.throttle(config, location_config)

@@ -89,7 +89,7 @@ var _ = framework.DescribeAnnotation("annotation-global-rate-limit", func() {
 
 		assert.Equal(ginkgo.GinkgoT(), resp.Header("Ratelimit-Limit").Raw(), fmt.Sprint(5))
 		assert.Equal(ginkgo.GinkgoT(), resp.Header("Ratelimit-Remaining").Raw(), fmt.Sprint(5))
-		assert.Equal(ginkgo.GinkgoT(), resp.Header("Ratelimit-Reset").Raw(), fmt.Sprint(120))
+		assert.Equal(ginkgo.GinkgoT(), resp.Header("Ratelimit-Window").Raw(), fmt.Sprint(120))
 
 	})
 
