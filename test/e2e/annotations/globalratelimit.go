@@ -87,9 +87,11 @@ var _ = framework.DescribeAnnotation("annotation-global-rate-limit", func() {
 			WithHeader("Host", host).Expect().
 			Status(http.StatusOK)
 
+		ginkgo.By("verifying the associated headers are set")
 		assert.Equal(ginkgo.GinkgoT(), resp.Header("Ratelimit-Limit").Raw(), fmt.Sprint(5))
 		assert.Equal(ginkgo.GinkgoT(), resp.Header("Ratelimit-Remaining").Raw(), fmt.Sprint(5))
 		assert.Equal(ginkgo.GinkgoT(), resp.Header("Ratelimit-Window").Raw(), fmt.Sprint(120))
+		assert.Contains(ginkgo.GinkgoT(), resp.Headers().Keys().Contains("Ratelimit-Reset").Raw(), "Ratelimit-Reset")
 
 	})
 

@@ -539,7 +539,8 @@ Extract a path out into its own ingres if you need to isolate a certain path.
 * `nginx.ingress.kubernetes.io/global-rate-limit-set-headers`: Set to `true` to enable the addition of global rate limiting headers. Default is `false`
   * Ratelimit-Limit: The requests quota in the configured time window;
   * Ratelimit-Remaining: TThe remaining requests quota in the current time window;
-  * Ratelimit-Window: The number of seconds of the period window;
+  * Ratelimit-Window: The number in seconds of the period window;
+  * Ratelimit-Reset: The time remaining in the current window, specified in seconds;
   
   For more information please see  [RateLimit Header Fields for HTTP](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html).
 
