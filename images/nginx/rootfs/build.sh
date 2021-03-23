@@ -27,6 +27,7 @@ export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.11.0
 export OPENTRACING_CPP_VERSION=1.6.0
 export ZIPKIN_CPP_VERSION=f69593138ff84ca2f6bc115992e18ca3d35f344a
+export YAML_CPP_VERSION=yaml-cpp-0.6.3
 export JAEGER_VERSION=0.7.0
 export MSGPACK_VERSION=3.2.1
 export DATADOG_CPP_VERSION=7b560e5c13324c0581476dad3bd8ac4ac5f64045
@@ -150,6 +151,9 @@ get_src 71de3d0658935db7ccea20e006b35e58ddc7e4c18878b9523f2addc2371e9270 \
 get_src 38f2ae43fceda683f652065e13a80b14a580ede476a4b44eb0ddd85665380360 \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
+get_src 77ea1b90b3718aa0c324207cb29418f5bced2354c2e483a9523d98c3460af1ed \
+        "https://github.com/jbeder/yaml-cpp/archive/$YAML_CPP_VERSION.tar.gz"
+
 get_src 3a3a03060bf5e3fef52c9a2de02e6035cb557f389453d8f3b0c1d3d570636994 \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
 
@@ -263,9 +267,29 @@ cmake -DCMAKE_BUILD_TYPE=Release \
 make
 make install
 
+# build yaml-cpp
+# TODO @timmysilv: remove this and jaeger sed calls once it is fixed in jaeger-client-cpp
+cd "$BUILD_PATH/yaml-cpp-$YAML_CPP_VERSION"
+mkdir .build
+cd .build
+
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
+      -DYAML_BUILD_SHARED_LIBS=ON \
+      -DYAML_CPP_BUILD_TESTS=OFF \
+      -DYAML_CPP_BUILD_TOOLS=OFF \
+      ..
+
+make
+make install
+
 # build jaeger lib
 cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
 sed -i 's/-Werror/-Wno-psabi/' CMakeLists.txt
+# use the above built yaml-cpp instead until a new version of jaeger-client-cpp fixes the yaml-cpp issue
+# tl;dr new hunter is needed for new yaml-cpp, but new hunter has a conflict with old Thrift and new Boost
+sed -i 's/hunter_add_package(yaml-cpp)/#hunter_add_package(yaml-cpp)/' CMakeLists.txt
+sed -i 's/yaml-cpp::yaml-cpp/yaml-cpp/' CMakeLists.txt
 
 cat <<EOF > export.map
 {
