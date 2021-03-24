@@ -64,7 +64,7 @@ spec:
       containers:
         - name: controller
           {{- with .Values.controller.image }}
-          image: "{{.repository}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{.repository}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
           {{- end }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
         {{- if .Values.controller.lifecycle }}
