@@ -18,6 +18,7 @@ package template
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha1" // #nosec
 	"encoding/base64"
 	"encoding/hex"
@@ -1013,13 +1014,39 @@ func buildOpentracing(c interface{}, s interface{}) string {
 	}
 
 	buf := bytes.NewBufferString("")
+	var host string = "localhost"
 
 	if cfg.DatadogCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;")
+		host = cfg.DatadogCollectorHost
 	} else if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;")
-	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
+		host = cfg.ZipkinCollectorHost
+	} else if cfg.JaegerEndpoint != "" { // Takes priority over the collector within the cpp client code
+		// from https://github.com/jaegertracing/jaeger-client-cpp/blob/c1d57957e8478667ba8d46cba7fa6ad2dbd33f85/src/jaegertracing/net/URI.cpp#L67
+		jaegerRegexp := regexp.MustCompile(`^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?`)
+		hostMatch := jaegerRegexp.FindStringSubmatch(cfg.JaegerEndpoint)
+		if hostMatch == nil {
+			klog.Errorf("could not find a valid hostname in cfg.JaegerEndpoint (%v)", cfg.JaegerEndpoint)
+			return ""
+		}
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
+		host = strings.Split(hostMatch[4], ":")[0]
+	} else if cfg.JaegerCollectorHost != "" {
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
+		host = cfg.JaegerCollectorHost
+	}
+
+	host_split := strings.Split(host, "://")
+	if len(host_split) == 2 {
+		host = host_split[1]
+	} else if len(host_split) > 2 {
+		klog.Errorf("could not validate tracing host %v, not enabling opentracing", host)
+		return ""
+	}
+	if _, err := net.DefaultResolver.LookupHost(context.Background(), host); err != nil {
+		klog.ErrorS(err, "failed to resolve tracing host, not enabling opentracing")
+		return ""
 	}
 
 	buf.WriteString("\r\n")

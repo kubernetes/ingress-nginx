@@ -1175,7 +1175,7 @@ func TestBuildOpenTracing(t *testing.T) {
 
 	cfgJaeger := config.Configuration{
 		EnableOpentracing:   true,
-		JaegerCollectorHost: "jaeger-host.com",
+		JaegerCollectorHost: "jaeger.lvh.me",
 	}
 	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgJaeger, []*ingress.Server{})
@@ -1186,7 +1186,7 @@ func TestBuildOpenTracing(t *testing.T) {
 
 	cfgZipkin := config.Configuration{
 		EnableOpentracing:   true,
-		ZipkinCollectorHost: "zipkin-host.com",
+		ZipkinCollectorHost: "zipkin.lvh.me",
 	}
 	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgZipkin, []*ingress.Server{})
@@ -1197,10 +1197,31 @@ func TestBuildOpenTracing(t *testing.T) {
 
 	cfgDatadog := config.Configuration{
 		EnableOpentracing:    true,
-		DatadogCollectorHost: "datadog-host.com",
+		DatadogCollectorHost: "datadog.lvh.me",
 	}
 	expected = "opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgDatadog, []*ingress.Server{})
+
+	cfgBadhost := config.Configuration{
+		EnableOpentracing:   true,
+		ZipkinCollectorHost: "foobar.nonsense",
+	}
+	expected = ""
+	actual = buildOpentracing(cfgBadhost, []*ingress.Server{})
+
+	cfgUseIP := config.Configuration{
+		EnableOpentracing:   true,
+		ZipkinCollectorHost: "127.0.0.1",
+	}
+	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;\r\n"
+	actual = buildOpentracing(cfgUseIP, []*ingress.Server{})
+
+	cfgUseProtocol := config.Configuration{
+		EnableOpentracing:   true,
+		ZipkinCollectorHost: "https://zipkin.lvh.me",
+	}
+	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;\r\n"
+	actual = buildOpentracing(cfgUseProtocol, []*ingress.Server{})
 
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -1208,7 +1229,7 @@ func TestBuildOpenTracing(t *testing.T) {
 
 	cfgJaegerEndpoint := config.Configuration{
 		EnableOpentracing: true,
-		JaegerEndpoint:    "http://jaeger-collector.com:14268/api/traces",
+		JaegerEndpoint:    "http://jaeger.lvh.me:14268/api/traces",
 	}
 	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgJaegerEndpoint, []*ingress.Server{})
@@ -1217,9 +1238,20 @@ func TestBuildOpenTracing(t *testing.T) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
+	cfgInvalidJaegerEndpoint := config.Configuration{
+		EnableOpentracing: true,
+		JaegerEndpoint:    "invalid-foobar.com", // Jaeger client expects full endpoint so this fails fast
+	}
+	expected = ""
+	actual = buildOpentracing(cfgInvalidJaegerEndpoint, []*ingress.Server{})
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	cfgOpenTracing := config.Configuration{
 		EnableOpentracing:                true,
-		DatadogCollectorHost:             "datadog-host.com",
+		DatadogCollectorHost:             "datadog.lvh.me",
 		OpentracingOperationName:         "my-operation-name",
 		OpentracingLocationOperationName: "my-location-operation-name",
 	}
