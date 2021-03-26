@@ -854,6 +854,10 @@ Specifies the endpoint to use when uploading traces to a collector. This takes p
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
 
+## jaeger-propagation-format
+
+Specifies the traceparent/tracestate propagation format. _**default:**_ jaeger
+
 ## jaeger-sampler-type
 
 Specifies the sampler to be used when sampling traces. The available samplers are: const, probabilistic, ratelimiting, remote. _**default:**_ const
