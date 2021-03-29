@@ -764,7 +764,7 @@
           "refId": "D"
         },
         {
-          "expr": "    sum (rate(nginx_ingress_controller_response_size_bucket{\n        namespace =~ \"$namespace\",\n        ingress =~ \"$ingress\",\n    }[1m])) by (le)\n",
+          "expr": "    sum (rate(nginx_ingress_controller_response_size_bucket{\n        ingress =~ \"$ingress\",\n    }[1m])) by (le)\n",
           "hide": true,
           "legendFormat": "{{le}}",
           "refId": "A"
