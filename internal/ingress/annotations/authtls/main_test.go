@@ -86,7 +86,6 @@ func (m mockSecret) GetAuthCertificate(name string) (*resolver.AuthSSLCert, erro
 		CAFileName: "/ssl/ca.crt",
 		CASHA:      "abc",
 	}, nil
-
 }
 
 func TestAnnotations(t *testing.T) {
@@ -161,6 +160,9 @@ func TestAnnotations(t *testing.T) {
 	if u.PassCertToUpstream != true {
 		t.Errorf("expected %v but got %v", true, u.PassCertToUpstream)
 	}
+	if u.OCSP != "on" {
+		t.Errorf("expected %v but got %v", "on", u.OCSP)
+	}
 }
 
 func TestInvalidAnnotations(t *testing.T) {
@@ -195,6 +197,7 @@ func TestInvalidAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "w00t"
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "abcd"
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "nahh"
+	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp")] = "1337"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(fakeSecret).Parse(ing)
@@ -215,7 +218,9 @@ func TestInvalidAnnotations(t *testing.T) {
 	if u.PassCertToUpstream != false {
 		t.Errorf("expected %v but got %v", false, u.PassCertToUpstream)
 	}
-
+	if u.OCSP != "off" {
+		t.Errorf("expected %v but got %v", "off", u.OCSP)
+	}
 }
 
 func TestEquals(t *testing.T) {
@@ -288,6 +293,15 @@ func TestEquals(t *testing.T) {
 		t.Errorf("Expected false")
 	}
 	cfg2.PassCertToUpstream = true
+
+	// Different OCSP
+	cfg1.OCSP = "leaf"
+	cfg2.OCSP = "on"
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.OCSP = "leaf"
 
 	// Equal Configs
 	result = cfg1.Equal(cfg2)
