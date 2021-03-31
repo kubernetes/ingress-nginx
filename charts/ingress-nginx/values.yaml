@@ -515,7 +515,7 @@ controller:
 
       # loadBalancerIP: ""
       loadBalancerSourceRanges: []
-      servicePort: 9913
+      servicePort: 10254
       type: ClusterIP
       # externalTrafficPolicy: ""
       # nodePort: ""
