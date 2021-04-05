@@ -33,6 +33,9 @@ LABEL build_id="${BUILD_ID}"
 
 WORKDIR  /etc/nginx
 
+# Need to update apk-tools first, otherwise cloud-build breaks
+RUN apk update && apk upgrade apk-tools
+
 RUN apk update \
   && apk upgrade \
   && apk add --no-cache \
