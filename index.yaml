@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Update ingress-nginx v0.45.0
+    apiVersion: v2
+    appVersion: 0.45.0
+    created: "2021-04-06T17:51:15.276561635Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: d1b54dc6ad22492d1c2dd9f8899a44a73b09107929d97309dd68b1f632a2b558
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.27.0/ingress-nginx-3.27.0.tgz
+    version: 3.27.0
+  - annotations:
+      artifacthub.io/changes: |
         - Changed servicePort value for metrics
     apiVersion: v2
     appVersion: 0.44.0
