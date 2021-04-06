@@ -77,7 +77,7 @@ are created in the iptables NAT table and the node with the selected IP address 
 the ports configured in the LoadBalancer Service:
 
 ```console
-$ curl -D- http://203.0.113.3 -H 'Host: myapp.example.com'
+$ curl -D- http://203.0.113.10 -H 'Host: myapp.example.com'
 HTTP/1.1 200 OK
 Server: nginx/1.15.2
 ```
