@@ -10,7 +10,7 @@ _New Features:_
 
 - Update the Ingress Controller Image to correct OpenSSL CVEs
 - Add support for Jaeger Endpoint [#6884](https://github.com/kubernetes/ingress-nginx/pull/6884)
-- Allow Multiple Publish Status Addresses [#6856](https://github.com/kubernetes/ingress-nginx/pull/6856
+- Allow Multiple Publish Status Addresses [#6856](https://github.com/kubernetes/ingress-nginx/pull/6856)
 
 _Changes:_
 
@@ -24,6 +24,7 @@ _Changes:_
 - [X] [#6908](https://github.com/kubernetes/ingress-nginx/pull/6908) feat(chart) Add volumes to default-backend deployment #6908 
 - [X] [#6884](https://github.com/kubernetes/ingress-nginx/pull/6884) jaeger-endpoint feature for non-agent trace collectors
 - [X] [#6856](https://github.com/kubernetes/ingress-nginx/pull/6856) Allow multiple publish status addresses
+- [X] [#6971](https://github.com/kubernetes/ingress-nginx/pull/6971) Fix bug related to CRL update
 
 ### 0.44.0
 
