@@ -4,9 +4,13 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
-### 3.27.0
+### 3.28.0
 
 - [X] [#6945](https://github.com/kubernetes/ingress-nginx/pull/7020) Add option to specify job label for ServiceMonitor
+
+### 3.27.0
+
+- Update ingress-nginx v0.45.0
 
 ### 3.26.0
 
