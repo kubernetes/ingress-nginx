@@ -4,6 +4,8 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+- [ ] [#6900](https://github.com/kubernetes/ingress-nginx/pull/6900) Support existing PSPs
+
 ### 3.27.0
 
 - Update ingress-nginx v0.45.0
