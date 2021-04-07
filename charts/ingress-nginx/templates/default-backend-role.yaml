@@ -10,5 +10,9 @@ rules:
   - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']
     verbs:          ['use']
+    {{- with .Values.defaultBackend.existingPsp }}
+    resourceNames:  [{{ . }}]
+    {{- else }}
     resourceNames:  [{{ include "ingress-nginx.fullname" . }}-backend]
+    {{- end }}
 {{- end }}
