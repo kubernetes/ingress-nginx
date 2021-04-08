@@ -529,6 +529,8 @@ controller:
     serviceMonitor:
       enabled: false
       additionalLabels: {}
+      # The label to use to retrieve the job name from.
+      # jobLabel: "app.kubernetes.io/name"
       namespace: ""
       namespaceSelector: {}
       # Default: scrape .Release.Namespace only
