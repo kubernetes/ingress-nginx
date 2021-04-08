@@ -18,6 +18,9 @@ controller:
     runAsUser: 101
     allowPrivilegeEscalation: true
 
+  # Use an existing PSP instead of creating one
+  existingPsp: ""
+
   # Configures the ports the nginx-controller listens on
   containerPort:
     http: 80
@@ -473,6 +476,9 @@ controller:
     namespaceSelector: {}
     objectSelector: {}
 
+    # Use an existing PSP instead of creating one
+    existingPsp: ""
+
     service:
       annotations: {}
       # clusterIP: ""
@@ -610,6 +616,9 @@ defaultBackend:
     runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
+
+  # Use an existing PSP instead of creating one
+  existingPsp: ""
 
   extraArgs: {}
 
