@@ -26,10 +26,10 @@ spec:
   template:
     metadata:
     {{- if .Values.controller.podAnnotations }}
-      annotations: 
+      annotations:
       {{- range $key, $value := .Values.controller.podAnnotations }}
         {{ $key }}: {{ $value | quote }}
-      {{- end }}      
+      {{- end }}
     {{- end }}
       labels:
         {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
@@ -62,7 +62,7 @@ spec:
     {{- end }}
     {{- end }}
       containers:
-        - name: controller
+        - name: {{ .Values.controller.containerName }}
           {{- with .Values.controller.image }}
           image: "{{.repository}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
           {{- end }}
