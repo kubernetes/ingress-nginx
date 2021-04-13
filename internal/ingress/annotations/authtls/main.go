@@ -106,7 +106,7 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.AuthSSLCert = *authCert
 	} else {
 		// Only enabled global ssl auth validation when auth-tls-verify-client is
-		// set to either `on|optional|optional_no_ca` and that GlobalSSLClientCertificate is set
+		// set to either `on|optional|optional_no_ca` and that auth-tls-secret is not set
 		authTLSVerifyClient, err := parser.GetStringAnnotation("auth-tls-verify-client", ing)
 		if err != nil || !validationEnabledClientRegex.MatchString(authTLSVerifyClient) {
 			return &Config{}, nil
