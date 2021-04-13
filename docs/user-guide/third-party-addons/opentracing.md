@@ -46,6 +46,9 @@ opentracing-operation-name
 # specifies specifies the name to use for the location span
 opentracing-location-operation-name
 
+# sets whether or not to trust incoming tracing spans
+opentracing-trust-incoming-span
+
 # specifies the port to use when uploading traces, Default: 9411
 zipkin-collector-port
 
