@@ -221,7 +221,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				WithHeader("Host", host).
 				Expect().
 				Status(http.StatusPermanentRedirect).
-				Header("Location").Equal(fmt.Sprintf("https://%v", host))
+				Header("Location").Equal(fmt.Sprintf("https://%v/", host))
 		})
 
 		ginkgo.It("should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection", func() {
