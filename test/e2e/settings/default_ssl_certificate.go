@@ -124,6 +124,7 @@ var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", f
 		})
 
 		ginkgo.By("making sure the default ssl certificate is being used when accessing ingress")
+		tlsConfig.ServerName = host
 		f.HTTPTestClientWithTLSConfig(tlsConfig).
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).
