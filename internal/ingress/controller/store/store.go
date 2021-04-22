@@ -328,7 +328,7 @@ func New(
 			return
 		}
 
-		if hasCatchAllIngress(ing.Spec) && disableCatchAll {
+		if hasCatchAllIngressRule(ing.Spec) && disableCatchAll {
 			klog.InfoS("Ignoring delete for catch-all because of --disable-catch-all", "ingress", klog.KObj(ing))
 			return
 		}
@@ -353,7 +353,7 @@ func New(
 				return
 			}
 
-			if hasCatchAllIngress(ing.Spec) && disableCatchAll {
+			if hasCatchAllIngressRule(ing.Spec) && disableCatchAll {
 				klog.InfoS("Ignoring add for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(ing))
 				return
 			}
@@ -377,7 +377,7 @@ func New(
 			validOld := class.IsValid(oldIng)
 			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
-				if hasCatchAllIngress(curIng.Spec) && disableCatchAll {
+				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(curIng))
 					return
 				}
@@ -389,7 +389,7 @@ func New(
 				ingDeleteHandler(old)
 				return
 			} else if validCur && !reflect.DeepEqual(old, cur) {
-				if hasCatchAllIngress(curIng.Spec) && disableCatchAll {
+				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress and delete old one because of --disable-catch-all", "ingress", klog.KObj(curIng))
 					ingDeleteHandler(old)
 					return
@@ -624,9 +624,9 @@ func New(
 	return store
 }
 
-// hasCatchAllIngress returns whether or not an ingress produces a
+// hasCatchAllIngressRule returns whether or not an ingress produces a
 // catch-all server, and so should be ignored when --disable-catch-all is set
-func hasCatchAllIngress(spec networkingv1beta1.IngressSpec) bool {
+func hasCatchAllIngressRule(spec networkingv1beta1.IngressSpec) bool {
 	return spec.Backend != nil
 }
 
