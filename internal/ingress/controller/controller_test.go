@@ -256,6 +256,28 @@ func TestCheckIngress(t *testing.T) {
 			}
 		})
 
+		t.Run("When a new catch-all ingress is being created despite catch-alls being disabled ", func(t *testing.T) {
+			nginx.command = testNginxTestCommand{
+				t:   t,
+				err: nil,
+			}
+			nginx.cfg.DisableCatchAll = true
+
+			ing.Spec.Backend = &networking.IngressBackend{
+				ServiceName: "http-svc",
+				ServicePort: intstr.IntOrString{
+					IntVal: 80,
+				},
+			}
+
+			if nginx.CheckIngress(ing) == nil {
+				t.Errorf("with a new catch-all ingress and catch-alls disable, should return error")
+			}
+
+			// set back to nil for next test
+			ing.Spec.Backend = nil
+		})
+
 		t.Run("When the ingress is in a different namespace than the watched one", func(t *testing.T) {
 			nginx.command = testNginxTestCommand{
 				t:   t,
