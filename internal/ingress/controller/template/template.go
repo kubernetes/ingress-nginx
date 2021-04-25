@@ -53,6 +53,12 @@ const (
 	slash         = "/"
 	nonIdempotent = "non_idempotent"
 	defBufferSize = 65535
+	writeIndentOnEmptyLines = true // backward-compatibility
+)
+
+const (
+	stateCode = iota
+	stateComment
 )
 
 // TemplateWriter is the interface to render a template
@@ -90,6 +96,7 @@ func cleanConf(in *bytes.Buffer, out *bytes.Buffer) {
 	depth := 0
 	lineStarted := false
 	emptyLineWritten := false
+	state := stateCode
 	for {
 		c, err := in.ReadByte()
 		if err != nil {
@@ -103,29 +110,46 @@ func cleanConf(in *bytes.Buffer, out *bytes.Buffer) {
 		nextDepth := depth
 		nextLineStarted := lineStarted
 
-		switch c {
-		case '{':
-			needOutput = true
-			nextDepth = depth + 1
-			nextLineStarted = true
-		case '}':
-			needOutput = true
-			depth--
-			nextDepth = depth
-			nextLineStarted = true
-		case ' ', '\t':
-			needOutput = lineStarted
-		case '\r':
-		case '\n':
-			needOutput = !(!lineStarted && emptyLineWritten)
-			nextLineStarted = false
-		default:
-			needOutput = true
-			nextLineStarted = true
+		switch state {
+		case stateCode:
+			switch c {
+			case '{':
+				needOutput = true
+				nextDepth = depth + 1
+				nextLineStarted = true
+			case '}':
+				needOutput = true
+				depth--
+				nextDepth = depth
+				nextLineStarted = true
+			case ' ', '\t':
+				needOutput = lineStarted
+			case '\r':
+			case '\n':
+				needOutput = !(!lineStarted && emptyLineWritten)
+				nextLineStarted = false
+			case '#':
+				needOutput = true
+				nextLineStarted = true
+				state = stateComment
+			default:
+				needOutput = true
+				nextLineStarted = true
+			}
+		case stateComment:
+			switch c {
+			case '\r':
+			case '\n':
+				needOutput = true
+				nextLineStarted = false
+				state = stateCode
+			default:
+				needOutput = true
+			}
 		}
 
 		if needOutput {
-			if !lineStarted && c != '\n' {
+			if !lineStarted && (writeIndentOnEmptyLines || c != '\n') {
 				for i := 0; i < depth; i++ {
 					_ = out.WriteByte('\t')
 				}
