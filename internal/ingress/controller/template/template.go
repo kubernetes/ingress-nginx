@@ -23,12 +23,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand" // #nosec
 	"net"
 	"net/url"
 	"os"
-	"os/exec"
 	"reflect"
 	"regexp"
 	"sort"
@@ -86,6 +86,59 @@ func NewTemplate(file string) (*Template, error) {
 	}, nil
 }
 
+func cleanConf(in *bytes.Buffer, out *bytes.Buffer) {
+	depth := 0
+	lineStarted := false
+	emptyLineWritten := false
+	for {
+		c, err := in.ReadByte()
+		if err != nil {
+			if err == io.EOF {
+				return
+			}
+			panic(err)
+		}
+
+		needOutput := false
+		nextDepth := depth
+		nextLineStarted := lineStarted
+
+		switch c {
+		case '{':
+			needOutput = true
+			nextDepth = depth + 1
+			nextLineStarted = true
+		case '}':
+			needOutput = true
+			depth--
+			nextDepth = depth
+			nextLineStarted = true
+		case ' ', '\t':
+			needOutput = lineStarted
+		case '\r':
+		case '\n':
+			needOutput = !(!lineStarted && emptyLineWritten)
+			nextLineStarted = false
+		default:
+			needOutput = true
+			nextLineStarted = true
+		}
+
+		if needOutput {
+			if !lineStarted && c != '\n' {
+				for i := 0; i < depth; i++ {
+					_ = out.WriteByte('\t')
+				}
+			}
+			emptyLineWritten = !lineStarted
+			_ = out.WriteByte(c)
+		}
+
+		depth = nextDepth
+		lineStarted = nextLineStarted
+	}
+}
+
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
 func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
@@ -110,13 +163,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 
 	// squeezes multiple adjacent empty lines to be single
 	// spaced this is to avoid the use of regular expressions
-	cmd := exec.Command("/ingress-controller/clean-nginx-conf.sh")
-	cmd.Stdin = tmplBuf
-	cmd.Stdout = outCmdBuf
-	if err := cmd.Run(); err != nil {
-		klog.Warningf("unexpected error cleaning template: %v", err)
-		return tmplBuf.Bytes(), nil
-	}
+	cleanConf(tmplBuf, outCmdBuf)
 
 	return outCmdBuf.Bytes(), nil
 }
