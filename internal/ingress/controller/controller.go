@@ -224,6 +224,10 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return nil
 	}
 
+	if n.cfg.DisableCatchAll && ing.Spec.Backend != nil {
+		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.backend' or set DisableCatchAll flag to false.")
+	}
+
 	if parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
 		for key := range ing.ObjectMeta.GetAnnotations() {
 			if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.DefaultAnnotationsPrefix)) {
