@@ -178,7 +178,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	retry := wait.Backoff{
 		Steps:    15,
 		Duration: 1 * time.Second,
-		Factor:   0.8,
+		Factor:   1.2,
 		Jitter:   0.1,
 	}
 
