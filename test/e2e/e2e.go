@@ -44,7 +44,6 @@ import (
 	_ "k8s.io/ingress-nginx/test/e2e/servicebackend"
 	_ "k8s.io/ingress-nginx/test/e2e/settings"
 	_ "k8s.io/ingress-nginx/test/e2e/settings/modsecurity"
-	_ "k8s.io/ingress-nginx/test/e2e/settings/ocsp"
 	_ "k8s.io/ingress-nginx/test/e2e/ssl"
 	_ "k8s.io/ingress-nginx/test/e2e/status"
 	_ "k8s.io/ingress-nginx/test/e2e/tcpudp"
