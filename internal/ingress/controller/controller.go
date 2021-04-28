@@ -108,6 +108,8 @@ type Configuration struct {
 	MonitorMaxBatchSize int
 
 	ShutdownGracePeriod int
+
+	DynamicConfigurationRetries int
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -176,7 +178,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	retry := wait.Backoff{
-		Steps:    15,
+		Steps:    1 + n.cfg.DynamicConfigurationRetries,
 		Duration: time.Second,
 		Factor:   1.3,
 		Jitter:   0.1,
