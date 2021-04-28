@@ -182,11 +182,18 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		Jitter:   0.1,
 	}
 
+	retriesRemaining := retry.Steps
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
 		err := n.configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
+		}
+
+		retriesRemaining--
+		if retriesRemaining > 0 {
+			klog.Warningf("Dynamic reconfiguration failed (retrying; %d retries left): %v", retriesRemaining, err)
+			return false, nil
 		}
 
 		klog.Warningf("Dynamic reconfiguration failed: %v", err)
@@ -1009,7 +1016,6 @@ func (n *NGINXController) getDefaultSSLCertificate() *ingress.SSLCert {
 func (n *NGINXController) createServers(data []*ingress.Ingress,
 	upstreams map[string]*ingress.Backend,
 	du *ingress.Backend) map[string]*ingress.Server {
-
 	servers := make(map[string]*ingress.Server, len(data))
 	allAliases := make(map[string][]string, len(data))
 
@@ -1051,7 +1057,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					Rewrite: false,
 				},
 			},
-		}}
+		},
+	}
 
 	// initialize all other servers
 	for _, ing := range data {
@@ -1330,7 +1337,6 @@ func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) b
 // If no match is found, then the serverless backend is deleted.
 func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingress.Backend,
 	servers map[string]*ingress.Server) {
-
 	// merge catch-all alternative backends
 	if ing.Spec.Backend != nil {
 		upsName := upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
@@ -1421,7 +1427,6 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 // certificate for the given host name, or an empty string.
 func extractTLSSecretName(host string, ing *ingress.Ingress,
 	getLocalSSLCert func(string) (*ingress.SSLCert, error)) string {
-
 	if ing == nil {
 		return ""
 	}
