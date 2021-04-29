@@ -195,9 +195,6 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 ### Verify installation
 
-!!! info
-    In minikube the ingress addon is installed in the namespace **kube-system** instead of ingress-nginx
-
 To check if the ingress controller pods have started, run the following command:
 
 ```console
