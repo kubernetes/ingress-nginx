@@ -134,6 +134,7 @@ func TestAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
 	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp")] = "off"
+	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp-responder")] = "http://alwaysok.com"
 
 	ing.SetAnnotations(data)
 
@@ -164,6 +165,9 @@ func TestAnnotations(t *testing.T) {
 	}
 	if u.OCSP != "off" {
 		t.Errorf("expected %v but got %v", "off", u.OCSP)
+	}
+	if u.OCSPResponder != "http://alwaysok.com" {
+		t.Errorf("expected %v but got %v", "http://alwaysok.com", u.OCSPResponder)
 	}
 }
 
@@ -211,6 +215,7 @@ func TestInvalidAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "abcd"
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "nahh"
 	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp")] = "1337"
+	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp-responder")] = "https://totes.not.ok"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(fakeSecret).Parse(ing)
@@ -233,6 +238,9 @@ func TestInvalidAnnotations(t *testing.T) {
 	}
 	if u.OCSP != "off" {
 		t.Errorf("expected %v but got %v", "off", u.OCSP)
+	}
+	if u.OCSPResponder != "" {
+		t.Errorf("expected an empty string but got %v", u.OCSPResponder)
 	}
 }
 
