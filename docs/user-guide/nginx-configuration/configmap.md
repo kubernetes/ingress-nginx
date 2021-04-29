@@ -460,7 +460,8 @@ Sets the bucket size for the [map variables hash tables](http://nginx.org/en/doc
 
 ## proxy-real-ip-cidr
 
-If use-forwarded-headers or use-proxy-protocol is enabled, proxy-real-ip-cidr defines the default the IP/network address of your external load balancer.
+If `use-forwarded-headers` or `use-proxy-protocol` is enabled, `proxy-real-ip-cidr` defines the default IP/network address of your external load balancer. Can be a comma-separated list of CIDR blocks.
+_**default:**_ "0.0.0.0/0"
 
 ## proxy-set-headers
 
