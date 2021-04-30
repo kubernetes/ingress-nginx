@@ -62,7 +62,7 @@ var _ = framework.DescribeAnnotation("service-upstream", func() {
 			curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
 			output, err := f.ExecIngressPod(curlCmd)
 			assert.Nil(ginkgo.GinkgoT(), err)
-			assert.Contains(ginkgo.GinkgoT(), output, fmt.Sprintf(`{"address":"%s"`, s.Spec.ClusterIP))
+			assert.Contains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address":"%s"`, s.Spec.ClusterIP))
 		})
 	})
 
@@ -91,7 +91,7 @@ var _ = framework.DescribeAnnotation("service-upstream", func() {
 			curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
 			output, err := f.ExecIngressPod(curlCmd)
 			assert.Nil(ginkgo.GinkgoT(), err)
-			assert.Contains(ginkgo.GinkgoT(), output, fmt.Sprintf(`{"address":"%s"`, s.Spec.ClusterIP))
+			assert.Contains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address":"%s"`, s.Spec.ClusterIP))
 		})
 	})
 
@@ -122,7 +122,7 @@ var _ = framework.DescribeAnnotation("service-upstream", func() {
 			curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
 			output, err := f.ExecIngressPod(curlCmd)
 			assert.Nil(ginkgo.GinkgoT(), err)
-			assert.NotContains(ginkgo.GinkgoT(), output, fmt.Sprintf(`{"address":"%s"`, s.Spec.ClusterIP))
+			assert.NotContains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address":"%s"`, s.Spec.ClusterIP))
 		})
 	})
 })

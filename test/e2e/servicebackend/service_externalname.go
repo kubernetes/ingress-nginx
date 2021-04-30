@@ -304,7 +304,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
 		output, err := f.ExecIngressPod(curlCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.Contains(ginkgo.GinkgoT(), output, `{"address":"eu.httpbin.org"`)
+		assert.Contains(ginkgo.GinkgoT(), output, `"address":"eu.httpbin.org"`)
 	})
 
 	ginkgo.It("should sync ingress on external name service addition/deletion", func() {

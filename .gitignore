@@ -37,6 +37,7 @@ test/binaries
 # coverage artifacts
 .coverprofile
 gover.coverprofile
+vendor/
 
 e2e-tests
 coverage.txt
