@@ -1,4 +1,4 @@
-piVersion: v2
+apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
