@@ -30,6 +30,56 @@ local function get_backends()
   }
 end
 
+
+-- from
+-- https://stackoverflow.com/questions/25922437/how-can-i-deep-compare-2-lua-tables-which-may-or-may-not-have-tables-as-keys
+local function table_eq(table1, table2)
+   local avoid_loops = {}
+   local function recurse(t1, t2)
+      -- compare value types
+      if type(t1) ~= type(t2) then return false end
+      -- Base case: compare simple values
+      if type(t1) ~= "table" then return t1 == t2 end
+      -- Now, on to tables.
+      -- First, let's avoid looping forever.
+      if avoid_loops[t1] then return avoid_loops[t1] == t2 end
+      avoid_loops[t1] = t2
+      -- Copy keys from t2
+      local t2keys = {}
+      local t2tablekeys = {}
+      for k, _ in pairs(t2) do
+         if type(k) == "table" then table.insert(t2tablekeys, k) end
+         t2keys[k] = true
+      end
+      -- Let's iterate keys from t1
+      for k1, v1 in pairs(t1) do
+         local v2 = t2[k1]
+         if type(k1) == "table" then
+            -- if key is a table, we need to find an equivalent one.
+            local ok = false
+            for i, tk in ipairs(t2tablekeys) do
+               if table_eq(k1, tk) and recurse(v1, t2[tk]) then
+                  table.remove(t2tablekeys, i)
+                  t2keys[tk] = nil
+                  ok = true
+                  break
+               end
+            end
+            if not ok then return false end
+         else
+            -- t1 has a key which t2 doesn't have, fail.
+            if v2 == nil then return false end
+            t2keys[k1] = nil
+            if not recurse(v1, v2) then return false end
+         end
+      end
+      -- if t2 has a key which t1 doesn't have, fail.
+      if next(t2keys) then return false end
+      return true
+   end
+   return recurse(table1, table2)
+end
+
 local function get_mocked_ngx_env()
   local _ngx = {
     status = ngx.HTTP_OK,
@@ -80,11 +130,25 @@ describe("Configuration", function()
 
       it("returns the current configured backends on the response body", function()
         -- Encoding backends since comparing tables fail due to reference comparison
+        local backend_names = {}
+        table.insert(backend_names, "bucket_1")
         local encoded_backends = cjson.encode(get_backends())
-        ngx.shared.configuration_data:set("backends", encoded_backends)
+        ngx.shared.configuration_data:set("backend_bucket_names", cjson.encode(backend_names))
+        ngx.shared.configuration_data:set("bucket_1", encoded_backends)
         local s = spy.on(ngx, "print")
         assert.has_no.errors(configuration.call)
-        assert.spy(s).was_called_with(encoded_backends)
+
+        local resp_backends = nil
+        if #s.calls > 0 then
+          resp_backends = s.calls[#s.calls]["vals"]
+        end
+
+        local resp_backends_tab
+        for _, value in ipairs(resp_backends) do 
+          resp_backends_tab = cjson.decode(value)
+        end
+
+        assert.equal(table_eq(resp_backends_tab, get_backends()), true)
       end)
 
       it("returns a status of 200", function()
@@ -102,7 +166,7 @@ describe("Configuration", function()
       it("stores the posted backends on the shared dictionary", function()
         -- Encoding backends since comparing tables fail due to reference comparison
         assert.has_no.errors(configuration.call)
-        assert.equal(ngx.shared.configuration_data:get("backends"), cjson.encode(get_backends()))
+        assert.equal(ngx.shared.configuration_data:get("bucket_1"), cjson.encode(get_backends()))
       end)
 
       context("Failed to read request body", function()

@@ -1,5 +1,4 @@
 local ngx_balancer = require("ngx.balancer")
-local cjson = require("cjson.safe")
 local util = require("util")
 local dns_lookup = require("util.dns").lookup
 local configuration = require("configuration")
@@ -143,21 +142,15 @@ local function sync_backends_with_external_name()
   end
 end
 
-local function sync_backends()
+local function sync_backends(is_init_call)
   local raw_backends_last_synced_at = configuration.get_raw_backends_last_synced_at()
   if raw_backends_last_synced_at <= backends_last_synced_at then
     return
   end
 
-  local backends_data = configuration.get_backends_data()
-  if not backends_data then
-    balancers = {}
-    return
-  end
-
-  local new_backends, err = cjson.decode(backends_data)
+  local new_backends = configuration.get_backends_data(is_init_call)
   if not new_backends then
-    ngx.log(ngx.ERR, "could not parse backends data: ", err)
+    balancers = {}
     return
   end
 
@@ -296,7 +289,7 @@ end
 
 function _M.init_worker()
   -- when worker starts, sync non ExternalName backends without delay
-  sync_backends()
+  sync_backends(true)
   -- we call sync_backends_with_external_name in timer because for endpoints that require
   -- DNS resolution it needs to use socket which is not available in
   -- init_worker phase

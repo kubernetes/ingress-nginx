@@ -524,7 +524,8 @@ describe("Balancer", function()
       }
 
       mock_ngx({ var = { proxy_upstream_name = "access-router-production-web-80" }, ctx = { } }, function()
-        ngx.shared.configuration_data:set("backends", cjson.encode(backends))
+        ngx.shared.configuration_data:set("backend_bucket_names", cjson.encode({"bucket_1"}))
+        ngx.shared.configuration_data:set("bucket_1", cjson.encode(backends))
       end)
 
       balancer.init_worker()
