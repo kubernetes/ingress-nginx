@@ -135,6 +135,7 @@ func TestAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
 	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp")] = "off"
 	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp-responder")] = "http://alwaysok.com"
+	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp-cache")] = "shared:foo:10m"
 
 	ing.SetAnnotations(data)
 
@@ -168,6 +169,9 @@ func TestAnnotations(t *testing.T) {
 	}
 	if u.OCSPResponder != "http://alwaysok.com" {
 		t.Errorf("expected %v but got %v", "http://alwaysok.com", u.OCSPResponder)
+	}
+	if u.OCSPCache != "shared:foo:10m" {
+		t.Errorf("expected %v but got %v", "shared:foo:10m", u.OCSPCache)
 	}
 }
 
@@ -216,6 +220,7 @@ func TestInvalidAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "nahh"
 	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp")] = "1337"
 	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp-responder")] = "https://totes.not.ok"
+	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp-cache")] = "should:totes:fail"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(fakeSecret).Parse(ing)
@@ -241,6 +246,9 @@ func TestInvalidAnnotations(t *testing.T) {
 	}
 	if u.OCSPResponder != "" {
 		t.Errorf("expected an empty string but got %v", u.OCSPResponder)
+	}
+	if u.OCSPCache != "off" {
+		t.Errorf("execpted %v but got %v", "off", u.OCSPCache)
 	}
 }
 
@@ -323,6 +331,15 @@ func TestEquals(t *testing.T) {
 		t.Errorf("Expected false")
 	}
 	cfg2.OCSP = "leaf"
+
+	// Different OCSP Cache
+	cfg1.OCSPCache = "shared:this:10m"
+	cfg2.OCSPCache = "shared:that:5m"
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.OCSPCache = "shared:this:10m"
 
 	// Equal Configs
 	result = cfg1.Equal(cfg2)
