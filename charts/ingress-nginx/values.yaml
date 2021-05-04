@@ -21,6 +21,9 @@ controller:
   # Use an existing PSP instead of creating one
   existingPsp: ""
 
+  # Configures the controller container name
+  containerName: controller
+
   # Configures the ports the nginx-controller listens on
   containerPort:
     http: 80
