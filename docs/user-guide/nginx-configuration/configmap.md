@@ -451,7 +451,7 @@ _**default:**_ 16384
 ## max-worker-open-files
 
 Sets the [maximum number of files](http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile) that can be opened by each worker process.
-The default of 0 means "max open files (system's limit) / [worker-processes](#worker-processes) - 1024".
+The default of 0 means "max open files (system's limit) - 1024".
 _**default:**_ 0
 
 ## map-hash-bucket-size
