@@ -853,6 +853,7 @@ func NewDefault() Configuration {
 			SSLRedirect:              true,
 			CustomHTTPErrors:         []int{},
 			WhitelistSourceRange:     []string{},
+			BlocklistSourceRange:     []string{},
 			SkipAccessLogURLs:        []string{},
 			LimitRate:                0,
 			LimitRateAfter:           0,
