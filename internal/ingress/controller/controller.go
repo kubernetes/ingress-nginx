@@ -1369,6 +1369,11 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 	}
 
 	for _, rule := range ing.Spec.Rules {
+		host := rule.Host
+		if host == "" {
+			host = defServerName
+		}
+
 		for _, path := range rule.HTTP.Paths {
 			upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
 
@@ -1382,11 +1387,11 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			merged := false
 			altEqualsPri := false
 
-			server, ok := servers[rule.Host]
+			server, ok := servers[host]
 			if !ok {
 				klog.Errorf("cannot merge alternative backend %s into hostname %s that does not exist",
 					altUps.Name,
-					rule.Host)
+					host)
 
 				continue
 			}
