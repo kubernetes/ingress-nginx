@@ -137,12 +137,6 @@ print-e2e-suite: e2e-test-binary ## Prints information about the suite of e2e te
 	@build/run-in-docker.sh \
 		hack/print-e2e-suite.sh
 
-.PHONY: cover
-cover:  ## Run go coverage unit tests.
-	@build/cover.sh
-	echo "Uploading coverage results..."
-	@curl -s https://codecov.io/bash | bash
-
 .PHONY: vet
 vet:
 	@go vet $(shell go list ${PKG}/internal/... | grep -v vendor)

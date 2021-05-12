@@ -1,5 +1,16 @@
 # Changelog
 
+### 0.46.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.46.0@sha256:52f0058bed0a17ab0fb35628ba97e8d52b5d32299fbc03cc0f6c7b9ff036b61a`
+
+_Changes:_
+
+- [#7092](https://github.com/kubernetes/ingress-nginx/pull/7092) Removes the possibility of using localhost in ExternalNames as endpoints
+
+
 ### 0.45.0
 
 **Image:**
