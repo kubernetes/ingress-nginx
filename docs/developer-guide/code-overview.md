@@ -26,11 +26,13 @@ All endpoints and certificate changes are handled dynamically by posting the pay
 The following parts of the code can be found:
 
 ### Entrypoint
+
 Is the `main` package, responsible for starting ingress-nginx program.
 
 It can be found in [cmd/nginx](https://github.com/kubernetes/ingress-nginx/tree/master/cmd/nginx) directory
 
 ### Version
+
 Is the package of the code responsible for adding `version` subcommand, and can be found in [version](https://github.com/kubernetes/ingress-nginx/tree/master/version) directory
 
 ### Internal code
@@ -51,10 +53,11 @@ Contains auxiliary codes that deal with files, such as generating the SHA1 check
 This code can be found in [internal/file](https://github.com/kubernetes/ingress-nginx/blob/master/internal/file) directory
 
 #### Ingress functions
+
 Contains all the logics from NGINX Ingress Controller, with some examples being:
 
 * Expected Golang structures that will be used in templates and other parts of the codes - [internal/ingress/types.go](https://github.com/kubernetes/ingress-nginx/blob/master/internal/ingress/types.go)
-* supported annotations and it's parsing logics - [internal/ingress/annotations](https://github.com/kubernetes/ingress-nginx/tree/master/internal/ingress/annotations)
+* supported annotations and its parsing logics - [internal/ingress/annotations](https://github.com/kubernetes/ingress-nginx/tree/master/internal/ingress/annotations)
 * reconciliation loops and logics - [internal/ingress/controller](https://github.com/kubernetes/ingress-nginx/tree/master/internal/ingress/controller)
 * Defaults - TODO HERE
 * Error interface and types implementation - [internal/ingress/errors](https://github.com/kubernetes/ingress-nginx/tree/master/internal/ingress/errors)
@@ -97,6 +100,7 @@ Other parts of internal code might not be covered here, like runtime and watch b
 The e2e tests code is in [test](https://github.com/kubernetes/ingress-nginx/tree/master/test) directory.
 
 ## Other programs
+
 Describe here `kubectl plugin`, `dbg`, `waitshutdown` and cover the hack scripts
 
 ## Deploy files
@@ -106,6 +110,7 @@ This directory contains the `yaml` deploy files used as examples or references i
 Those files are in [deploy](https://github.com/kubernetes/ingress-nginx/tree/master/deploy) directory.
 
 ## Helm Chart
+
 Used to generate the Helm chart published.
 
 Code is in [charts/ingress-nginx](https://github.com/kubernetes/ingress-nginx/tree/master/charts/ingress-nginx)
@@ -129,6 +134,7 @@ Contains the `Dockerfiles` and scripts used to build base images that are used i
 There are other images inside this directory
 
 ### Ingress Controller Image
+
 The image used to build the final ingress controller, used in deploy scripts and Helm charts. 
 
 This is NGINX with some Lua enhancement. We do dynamic certificate, endpoints handling, canary traffic split, custom load balancing etc at this component. One can also add new functionalities using Lua plugin system.
@@ -139,13 +145,14 @@ The files are in [rootfs](https://github.com/kubernetes/ingress-nginx/tree/maste
 * [Auxiliary scripts](https://github.com/kubernetes/ingress-nginx/tree/master/rootfs/ingress-controller)
 
 #### Ingress NGINX Lua Scripts
-Ingress NGINX uses Lua Scripts to enable features like hot reloads, rate limits and monitoring. Some are written using the [OpenResty](https://openresty.org/en/) helper.
+
+Ingress NGINX uses Lua Scripts to enable features like hot reloading, rate limiting and monitoring. Some are written using the [OpenResty](https://openresty.org/en/) helper.
 
 The directory containing Lua scripts is [rootfs/etc/nginx/lua](https://github.com/kubernetes/ingress-nginx/tree/master/rootfs/etc/nginx/lua)
 
 #### Nginx Go template file
+
 One of the functions of Ingress NGINX is to turn [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) objects into nginx.conf file. 
 
 To do so, the final step is to apply those configurations in [nginx.tmpl](https://github.com/kubernetes/ingress-nginx/tree/master/rootfs/etc/nginx/template) turning it into a final nginx.conf file
-
 
