@@ -21,10 +21,13 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"k8s.io/ingress-nginx/internal/nginx"
 )
 
@@ -96,7 +99,7 @@ func TestStatusCollector(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
+			listener, err := tryListen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 			if err != nil {
 				t.Fatalf("crating unix listener: %s", err)
 			}
@@ -146,4 +149,26 @@ func TestStatusCollector(t *testing.T) {
 			listener.Close()
 		})
 	}
+}
+
+func tryListen(network, address string) (l net.Listener, err error) {
+	condFunc := func() (bool, error) {
+		l, err = net.Listen(network, address)
+		if err == nil {
+			return true, nil
+		}
+		if strings.Contains(err.Error(), "bind: address already in use") {
+			return false, nil
+		}
+		return false, err
+	}
+
+	backoff := wait.Backoff{
+		Duration: 500 * time.Millisecond,
+		Factor:   2,
+		Steps:    6,
+		Cap:      128 * time.Second,
+	}
+	err = wait.ExponentialBackoff(backoff, condFunc)
+	return
 }
