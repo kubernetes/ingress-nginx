@@ -117,6 +117,15 @@ datadog-sample-rate
 
 All these options (including host) allow environment variables, such as `$HOSTNAME` or `$HOST_IP`. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like `$HOST_IP` (which can be 'mounted' with the `status.hostIP` fieldpath, as described [here](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api)) to make sure traces will be sent to the local agent.
 
+
+Note that you can also set whether to trust incoming spans (global default is true) per-location using annotations like the following:
+```
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/opentracing-trust-incoming-span: "true"
+```
+
 ## Examples
 
 The following examples show how to deploy and test different distributed tracing systems. These example can be performed using Minikube.
