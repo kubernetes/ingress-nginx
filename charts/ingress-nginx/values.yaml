@@ -253,7 +253,8 @@ controller:
   ##
   # startupProbe:
   #   httpGet:
-  #     path: "/healthz" # should match container.healthCheckPath
+  #     # should match container.healthCheckPath
+  #     path: "/healthz"
   #     port: 10254
   #     scheme: HTTP
   #   initialDelaySeconds: 5
@@ -263,7 +264,8 @@ controller:
   #   failureThreshold: 5
   livenessProbe:
     httpGet:
-      path: "/healthz" # should match container.healthCheckPath
+      # should match container.healthCheckPath
+      path: "/healthz" 
       port: 10254
       scheme: HTTP
     initialDelaySeconds: 10
@@ -273,7 +275,8 @@ controller:
     failureThreshold: 5
   readinessProbe:
     httpGet:
-      path: "/healthz" # should match container.healthCheckPath
+      # should match container.healthCheckPath
+      path: "/healthz"
       port: 10254
       scheme: HTTP
     initialDelaySeconds: 10
