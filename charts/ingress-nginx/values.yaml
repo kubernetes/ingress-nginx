@@ -265,7 +265,7 @@ controller:
   livenessProbe:
     httpGet:
       # should match container.healthCheckPath
-      path: "/healthz" 
+      path: "/healthz"
       port: 10254
       scheme: HTTP
     initialDelaySeconds: 10
