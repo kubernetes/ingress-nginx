@@ -251,20 +251,40 @@ controller:
   ## Liveness and readiness probe values
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ##
+  # startupProbe:
+  #   httpGet:
+  #     # should match container.healthCheckPath
+  #     path: "/healthz"
+  #     port: 10254
+  #     scheme: HTTP
+  #   initialDelaySeconds: 5
+  #   periodSeconds: 5
+  #   timeoutSeconds: 2
+  #   successThreshold: 1
+  #   failureThreshold: 5
   livenessProbe:
+    httpGet:
+      # should match container.healthCheckPath
+      path: "/healthz"
+      port: 10254
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
     failureThreshold: 5
-    initialDelaySeconds: 10
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 1
-    port: 10254
   readinessProbe:
-    failureThreshold: 3
+    httpGet:
+      # should match container.healthCheckPath
+      path: "/healthz"
+      port: 10254
+      scheme: HTTP
     initialDelaySeconds: 10
     periodSeconds: 10
-    successThreshold: 1
     timeoutSeconds: 1
-    port: 10254
+    successThreshold: 1
+    failureThreshold: 3
+
 
   # Path of the health check endpoint. All requests received on the port defined by
   # the healthz-port parameter are forwarded internally to this path.
