@@ -149,7 +149,7 @@ function _M.rewrite(location_config)
     local request_uri = ngx.var.request_uri
     -- do not append a trailing slash on redirects unless enabled by annotations
     if location_config.preserve_trailing_slash == false then
-      if string.sub(request_uri, -1) == "/" then
+      if string.byte(request_uri, -1, -1) == string.byte('/') then
         request_uri = string.sub(request_uri, 1, -2)
       end
     end

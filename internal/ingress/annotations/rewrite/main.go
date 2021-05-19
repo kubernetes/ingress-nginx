@@ -87,9 +87,12 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	config.Target, _ = parser.GetStringAnnotation("rewrite-target", ing)
 	config.SSLRedirect, err = parser.GetBoolAnnotation("ssl-redirect", ing)
-	config.PreserveTrailingSlash, err = parser.GetBoolAnnotation("preserve-trailing-slash", ing)
 	if err != nil {
 		config.SSLRedirect = a.r.GetDefaultBackend().SSLRedirect
+	}
+	config.PreserveTrailingSlash, err = parser.GetBoolAnnotation("preserve-trailing-slash", ing)
+	if err != nil {
+		config.PreserveTrailingSlash = a.r.GetDefaultBackend().PreserveTrailingSlash
 	}
 
 	config.ForceSSLRedirect, err = parser.GetBoolAnnotation("force-ssl-redirect", ing)

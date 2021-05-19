@@ -31,6 +31,9 @@ type Backend struct {
 	// By default this is disabled
 	CustomHTTPErrors []int `json:"custom-http-errors"`
 
+	// toggles whether or not to remove trailing slashes during TLS redirects
+	PreserveTrailingSlash bool `json:"preserve-trailing-slash"`
+
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
 	ProxyBodySize string `json:"proxy-body-size"`
