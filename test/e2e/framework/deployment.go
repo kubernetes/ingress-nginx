@@ -121,11 +121,11 @@ http {
 
 `
 
-	f.NGINXWithConfigDeployment(SlowEchoService, cfg)
+	f.NGINXWithConfigDeployment(SlowEchoService, cfg, 1)
 }
 
 // NGINXWithConfigDeployment creates an NGINX deployment using a configmap containing the nginx.conf configuration
-func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
+func (f *Framework) NGINXWithConfigDeployment(name string, cfg string, replicas int32) {
 	cfgMap := map[string]string{
 		"nginx.conf": cfg,
 	}
@@ -139,7 +139,7 @@ func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
 	}, metav1.CreateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
 
-	deployment := newDeployment(name, f.Namespace, "k8s.gcr.io/ingress-nginx/nginx:v20210324-g8baef769d@sha256:fcfa3e9d1f8ec3141efedbf77cf659640f452a9c22165c78006ea462b84d06f6", 80, 1,
+	deployment := newDeployment(name, f.Namespace, "k8s.gcr.io/ingress-nginx/nginx:v20210324-g8baef769d@sha256:fcfa3e9d1f8ec3141efedbf77cf659640f452a9c22165c78006ea462b84d06f6", 80, replicas,
 		nil,
 		[]corev1.VolumeMount{
 			{

@@ -620,7 +620,7 @@ To configure this setting globally for all Ingress rules, the `blocklist-source-
 !!! note
 Adding an annotation to an Ingress rule overrides any global restriction.
 
-If you also use [Whitelist source range](#whitelist-source-range) and an IP address or net was specified both in [Whitelist source range](#whitelist-source-range) and [Blocklist source range](#blocklist-source-range), the former takes the precedence.
+If there is an `nginx.ingress.kubernetes.io/whitelist-source-range` annotation in your Ingress resource, the `nginx.ingress.kubernetes.io/blocklist-source-range` will be ignored.
 
 ### Custom timeouts
 
