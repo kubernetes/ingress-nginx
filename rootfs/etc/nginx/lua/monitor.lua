@@ -7,6 +7,8 @@ local socket = ngx.socket.tcp
 local cjson = require("cjson.safe")
 local new_tab = require "table.new"
 local clear_tab = require "table.clear"
+local table = table
+local pairs = pairs
 
 
 -- if an Nginx worker processes more than (MAX_BATCH_SIZE/FLUSH_INTERVAL) RPS
