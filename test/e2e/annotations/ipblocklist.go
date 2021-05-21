@@ -60,8 +60,8 @@ http {
 
 func getTestClient(host string) *httpexpect.Expect {
 	return httpexpect.WithConfig(httpexpect.Config{
-		BaseURL:         "http://"+host,
-		Client:          http.DefaultClient,
+		BaseURL: "http://" + host,
+		Client:  http.DefaultClient,
 	})
 }
 
