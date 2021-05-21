@@ -84,6 +84,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           configuration = res
+          configuration.prohibited_localhost_port = '{{ .StatusPort }}'
         end
 
         ok, res = pcall(require, "balancer")
@@ -203,6 +204,8 @@ http {
         $geoip2_time_zone source=$remote_addr location time_zone;
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
+        $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
     }
     {{ end }}
 
@@ -218,6 +221,8 @@ http {
         $geoip2_time_zone source=$remote_addr location time_zone;
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
+        $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
     }
     {{ end }}
 
@@ -710,6 +715,8 @@ stream {
           error("require failed: " .. tostring(res))
         else
           tcp_udp_configuration = res
+          tcp_udp_configuration.prohibited_localhost_port = '{{ .StatusPort }}'
+
         end
 
         ok, res = pcall(require, "tcp_udp_balancer")
@@ -1247,6 +1254,7 @@ stream {
             {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
             {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
+            {{ $proxySetHeader }} X-Forwarded-Scheme     $pass_access_scheme;
             {{ if $all.Cfg.ProxyAddOriginalURIHeader }}
             {{ $proxySetHeader }} X-Original-URI         $request_uri;
             {{ end }}

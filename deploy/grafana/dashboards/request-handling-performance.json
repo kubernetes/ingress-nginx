@@ -481,7 +481,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (path) (rate(nginx_ingress_controller_request_duration_seconds_count{\n  ingress = \"$ingress\",\n  status =~ \"[4-5].*\"\n}[1m])) / sum by (path) (rate(nginx_ingress_controller_request_duration_seconds_count{\n  ingress = \"$ingress\",\n}[1m]))",
+          "expr": "sum by (path) (rate(nginx_ingress_controller_request_duration_seconds_count{\n  ingress =~ \"$ingress\",\n  status =~ \"[4-5].*\"\n}[1m])) / sum by (path) (rate(nginx_ingress_controller_request_duration_seconds_count{\n  ingress =~ \"$ingress\",\n}[1m]))",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{ path }}",
@@ -573,7 +573,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (path) (rate(nginx_ingress_controller_response_duration_seconds_sum{ingress = \"$ingress\"}[1m]))",
+          "expr": "sum by (path) (rate(nginx_ingress_controller_response_duration_seconds_sum{ingress =~ \"$ingress\"}[1m]))",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{ path }}",
@@ -764,7 +764,7 @@
           "refId": "D"
         },
         {
-          "expr": "    sum (rate(nginx_ingress_controller_response_size_bucket{\n        namespace =~ \"$namespace\",\n        ingress =~ \"$ingress\",\n    }[1m])) by (le)\n",
+          "expr": "    sum (rate(nginx_ingress_controller_response_size_bucket{\n        ingress =~ \"$ingress\",\n    }[1m])) by (le)\n",
           "hide": true,
           "legendFormat": "{{le}}",
           "refId": "A"

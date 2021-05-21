@@ -4,8 +4,12 @@ approvers:
   - ingress-nginx-admins
   - ingress-nginx-maintainers
   - ElvinEfendi
+  - rikatz
 
 reviewers:
-  - aledbf
   - ElvinEfendi
   - cmluciano
+  - rikatz
+
+emeritus_approvers:
+  - aledbf  # 2020-04-02

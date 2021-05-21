@@ -325,7 +325,7 @@ type Configuration struct {
 
 	// Enables or disables emitting nginx version in error messages and in the “Server” response header field.
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens
-	// Default: true
+	// Default: false
 	ShowServerTokens bool `json:"server-tokens"`
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
@@ -555,9 +555,15 @@ type Configuration struct {
 	// Default: 6831
 	JaegerCollectorPort int `json:"jaeger-collector-port"`
 
+	// JaegerEndpoint specifies the enpoint to use when uploading traces to a collector over TCP
+	JaegerEndpoint string `json:"jaeger-endpoint"`
+
 	// JaegerServiceName specifies the service name to use for any traces created
 	// Default: nginx
 	JaegerServiceName string `json:"jaeger-service-name"`
+
+	// JaegerPropagationFormat specifies the traceparent/tracestate propagation format
+	JaegerPropagationFormat string `json:"jaeger-propagation-format"`
 
 	// JaegerSamplerType specifies the sampler to be used when sampling traces.
 	// The available samplers are: const, probabilistic, ratelimiting, remote
@@ -864,6 +870,7 @@ func NewDefault() Configuration {
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,
 		JaegerCollectorPort:                    6831,
+		JaegerPropagationFormat:                "jaeger",
 		JaegerServiceName:                      "nginx",
 		JaegerSamplerType:                      "const",
 		JaegerSamplerParam:                     "1",

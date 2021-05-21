@@ -256,6 +256,32 @@ func TestCheckIngress(t *testing.T) {
 			}
 		})
 
+		t.Run("When a new catch-all ingress is being created despite catch-alls being disabled ", func(t *testing.T) {
+			backendBefore := ing.Spec.Backend
+			disableCatchAllBefore := nginx.cfg.DisableCatchAll
+
+			nginx.command = testNginxTestCommand{
+				t:   t,
+				err: nil,
+			}
+			nginx.cfg.DisableCatchAll = true
+
+			ing.Spec.Backend = &networking.IngressBackend{
+				ServiceName: "http-svc",
+				ServicePort: intstr.IntOrString{
+					IntVal: 80,
+				},
+			}
+
+			if nginx.CheckIngress(ing) == nil {
+				t.Errorf("with a new catch-all ingress and catch-alls disable, should return error")
+			}
+
+			// reset backend and catch-all flag
+			ing.Spec.Backend = backendBefore
+			nginx.cfg.DisableCatchAll = disableCatchAllBefore
+		})
+
 		t.Run("When the ingress is in a different namespace than the watched one", func(t *testing.T) {
 			nginx.command = testNginxTestCommand{
 				t:   t,
@@ -663,6 +689,88 @@ func TestMergeAlternativeBackends(t *testing.T) {
 							Path:     "/",
 							PathType: &pathTypePrefix,
 							Backend:  "upstream-default-backend",
+						},
+					},
+				},
+			},
+		},
+		"non-host canary ingress use default server name as host to merge": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "example",
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/",
+												PathType: &pathTypePrefix,
+												Backend: networking.IngressBackend{
+													ServiceName: "http-svc-canary",
+													ServicePort: intstr.IntOrString{
+														IntVal: 80,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:     "example-http-svc-80",
+					NoServer: false,
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"_": {
+					Hostname: "_",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:                "example-http-svc-80",
+					NoServer:            false,
+					AlternativeBackends: []string{"example-http-svc-canary-80"},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"_": {
+					Hostname: "_",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
 						},
 					},
 				},

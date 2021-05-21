@@ -4,7 +4,9 @@ Ingress does not support TCP or UDP services. For this reason this Ingress contr
 `<namespace/service name>:<service port>:[PROXY]:[PROXY]`
 
 It is also possible to use a number or the name of the port. The two last fields are optional.
-Adding `PROXY` in either or both of the two last fields we can use [Proxy Protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol) decoding (listen) and/or encoding (proxy_pass) in a TCP service 
+Adding `PROXY` in either or both of the two last fields we can use [Proxy Protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol) decoding (listen) and/or encoding (proxy_pass) in a TCP service. 
+The first `PROXY` controls the decode of the proxy protocol and the second `PROXY` controls the encoding using proxy protocol. 
+This allows an incoming connection to be decoded or an outgoing connection to be encoded. It is also possible to arbitrate between two different proxies by turning on the decode and encode on a TCP service. 
 
 The next example shows how to expose the service `example-go` running in the namespace `default` in the port `8080` using the port `9000`
 

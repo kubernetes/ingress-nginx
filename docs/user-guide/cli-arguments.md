@@ -38,7 +38,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--profiler-port`                  | Port to use for expose the ingress controller Go profiler when it is enabled. (default 10245) |
 | `--profiling`                      | Enable profiling via web interface host:port/debug/pprof/ (default true) |
 | `--publish-service`                | Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies. |
-| `--publish-status-address`         | Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
+| `--publish-status-address`         | Customized address (or addresses, separated by comma) to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
 | `--report-node-internal-ip-address`| Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter. |
 | `--skip_headers`                   | If true, avoid header prefixes in the log messages |
 | `--skip_log_headers`               | If true, avoid headers when opening log files |
@@ -53,6 +53,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--udp-services-configmap`         | Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number. |
 | `--update-status`                  | Update the load-balancer status of Ingress objects this controller satisfies. Requires setting the publish-service parameter to a valid Service reference. (default true) |
 | `--update-status-on-shutdown`      | Update the load-balancer status of Ingress objects when the controller shuts down. Requires the update-status parameter. (default true) |
+| `--shutdown-grace-period`          | Seconds to wait after receiving the shutdown signal, before stopping the nginx process. |
 | `-v, --v Level`                    | number for the log level verbosity |
 | `--validating-webhook`             | The address to start an admission controller on to validate incoming ingresses. Takes the form "<host>:port". If not provided, no admission controller is started. |
 | `--validating-webhook-certificate` | The path of the validating webhook certificate PEM. |

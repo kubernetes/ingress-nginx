@@ -15,6 +15,9 @@ data:
 {{- if or .Values.controller.proxySetHeaders .Values.controller.headers }}
   proxy-set-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
 {{- end }}
+{{- if .Values.dhParam }}
+  ssl-dh-param: {{ printf "%s/%s" .Release.Namespace (include "ingress-nginx.controller.fullname" .) }}
+{{- end }}
 {{- range $key, $value := .Values.controller.config }}
     {{ $key | nindent 2 }}: {{ $value | quote }}
 {{- end }}

@@ -30,6 +30,7 @@ jaeger-collector-host: jaeger-agent.default.svc.cluster.local
 datadog-collector-host: datadog-agent.default.svc.cluster.local
 ```
 NOTE: While the option is called `jaeger-collector-host`, you will need to point this to a `jaeger-agent`, and not the `jaeger-collector` component.
+Alternatively, you can set `jaeger-endpoint` and specify the full endpoint for uploading traces. This will use TCP and should be used for a collector rather than an agent.
 
 Next you will need to deploy a distributed tracing system which uses OpenTracing.
 [Zipkin](https://github.com/openzipkin/zipkin) and
@@ -57,8 +58,14 @@ zipkin-sample-rate
 # specifies the port to use when uploading traces, Default: 6831
 jaeger-collector-port
 
+# specifies the endpoint to use when uploading traces to a collector instead of an agent
+jaeger-endpoint
+
 # specifies the service name to use for any traces created, Default: nginx
 jaeger-service-name
+
+# specifies the traceparent/tracestate propagation format
+jaeger-propagation-format
 
 # specifies the sampler to be used when sampling traces.
 # The available samplers are: const, probabilistic, ratelimiting, remote, Default: const

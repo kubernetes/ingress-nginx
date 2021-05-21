@@ -132,7 +132,9 @@ The following table shows a configuration option's name, type, and the default v
 |[zipkin-sample-rate](#zipkin-sample-rate)|float|1.0|
 |[jaeger-collector-host](#jaeger-collector-host)|string|""|
 |[jaeger-collector-port](#jaeger-collector-port)|int|6831|
+|[jaeger-endpoint](#jaeger-endpoint)|string|""|
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
+|[jaeger-propagation-format](#jaeger-propagation-format)|string|"jaeger"|
 |[jaeger-sampler-type](#jaeger-sampler-type)|string|"const"|
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
 |[jaeger-sampler-host](#jaeger-sampler-host)|string|"http://127.0.0.1"|
@@ -458,7 +460,8 @@ Sets the bucket size for the [map variables hash tables](http://nginx.org/en/doc
 
 ## proxy-real-ip-cidr
 
-If use-forwarded-headers or use-proxy-protocol is enabled, proxy-real-ip-cidr defines the default the IP/network address of your external load balancer.
+If `use-forwarded-headers` or `use-proxy-protocol` is enabled, `proxy-real-ip-cidr` defines the default IP/network address of your external load balancer. Can be a comma-separated list of CIDR blocks.
+_**default:**_ "0.0.0.0/0"
 
 ## proxy-set-headers
 
@@ -845,9 +848,17 @@ Specifies the host to use when uploading traces. It must be a valid URL.
 
 Specifies the port to use when uploading traces. _**default:**_ 6831
 
+## jaeger-endpoint
+
+Specifies the endpoint to use when uploading traces to a collector. This takes priority over `jaeger-collector-host` if both are specified.
+
 ## jaeger-service-name
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
+
+## jaeger-propagation-format
+
+Specifies the traceparent/tracestate propagation format. _**default:**_ jaeger
 
 ## jaeger-sampler-type
 
