@@ -34,8 +34,8 @@ supplementalGroups:
 
 volumes:
 - configMap
+- downwardAPI
 - emptyDir
 - projected
 - secret
-- downwardAPI
 {{- end }}
