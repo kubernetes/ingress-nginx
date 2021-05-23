@@ -104,36 +104,25 @@ func main() {
 	conf.FakeCertificate = ssl.GetFakeSSLCert()
 	klog.InfoS("SSL fake certificate created", "file", conf.FakeCertificate.PemFileName)
 
-	var isNetworkingIngressAvailable bool
-
-	isNetworkingIngressAvailable, k8s.IsIngressV1Beta1Ready, _ = k8s.NetworkingIngressAvailable(kubeClient)
-	if !isNetworkingIngressAvailable {
-		klog.Fatalf("ingress-nginx requires Kubernetes v1.14.0 or higher")
+	if k8s.NetworkingIngressAvailable(kubeClient) {
+		klog.Fatalf("ingress-nginx requires Kubernetes v1.19.0 or higher")
 	}
 
-	if k8s.IsIngressV1Beta1Ready {
-		klog.InfoS("Enabling new Ingress features available since Kubernetes v1.18")
-		k8s.IngressClass, err = kubeClient.NetworkingV1beta1().IngressClasses().
-			Get(context.TODO(), class.IngressClass, metav1.GetOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				if !errors.IsUnauthorized(err) && !errors.IsForbidden(err) {
-					klog.Fatalf("Error searching IngressClass: %v", err)
-				}
-
-				klog.ErrorS(err, "Searching IngressClass", "class", class.IngressClass)
+	k8s.IngressClass, err = kubeClient.NetworkingV1().IngressClasses().
+		Get(context.TODO(), class.IngressClass, metav1.GetOptions{})
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			if !errors.IsUnauthorized(err) && !errors.IsForbidden(err) {
+				klog.Fatalf("Error searching IngressClass: %v", err)
 			}
-
-			klog.Warningf("No IngressClass resource with name %v found. Only annotation will be used.", class.IngressClass)
-
-			// TODO: remove once this is fixed in client-go
-			k8s.IngressClass = nil
 		}
+		klog.ErrorS(err, "Searching IngressClass", "class", class.IngressClass)
 
-		if k8s.IngressClass != nil && k8s.IngressClass.Spec.Controller != k8s.IngressNGINXController {
-			klog.Errorf(`Invalid IngressClass (Spec.Controller) value "%v". Should be "%v"`, k8s.IngressClass.Spec.Controller, k8s.IngressNGINXController)
-			klog.Fatalf("IngressClass with name %v is not valid for ingress-nginx (invalid Spec.Controller)", class.IngressClass)
-		}
+	}
+
+	if k8s.IngressClass != nil && k8s.IngressClass.Spec.Controller != k8s.IngressNGINXController {
+		klog.Errorf(`Invalid IngressClass (Spec.Controller) value "%v". Should be "%v"`, k8s.IngressClass.Spec.Controller, k8s.IngressNGINXController)
+		klog.Fatalf("IngressClass with name %v is not valid for ingress-nginx (invalid Spec.Controller)", class.IngressClass)
 	}
 
 	conf.Client = kubeClient

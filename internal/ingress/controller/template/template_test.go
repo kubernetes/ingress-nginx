@@ -30,9 +30,8 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -937,8 +936,10 @@ func TestGetIngressInformation(t *testing.T) {
 						},
 					},
 					Spec: networking.IngressSpec{
-						Backend: &networking.IngressBackend{
-							ServiceName: "a-svc",
+						DefaultBackend: &networking.IngressBackend{
+							Service: &networking.IngressServiceBackend{
+								Name: "a-svc",
+							},
 						},
 					},
 				},
@@ -974,8 +975,12 @@ func TestGetIngressInformation(t *testing.T) {
 											{
 												Path: "/ok",
 												Backend: networking.IngressBackend{
-													ServiceName: "b-svc",
-													ServicePort: intstr.FromInt(80),
+													Service: &networking.IngressServiceBackend{
+														Name: "b-svc",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
+													},
 												},
 											},
 										},

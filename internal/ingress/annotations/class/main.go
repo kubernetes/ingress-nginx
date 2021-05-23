@@ -17,7 +17,7 @@ limitations under the License.
 package class
 
 import (
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/internal/k8s"
 )
 

@@ -22,7 +22,7 @@ import (
 
 	admissionv1 "k8s.io/api/admission/v1"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -46,7 +46,7 @@ type IngressAdmission struct {
 var (
 	ingressResource = metav1.GroupVersionKind{
 		Group:   networking.GroupName,
-		Version: "v1beta1",
+		Version: "v1",
 		Kind:    "Ingress",
 	}
 )

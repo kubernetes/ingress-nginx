@@ -104,7 +104,7 @@ func (f *Framework) BeforeEach() {
 		f.KubeClientSet, err = kubernetes.NewForConfig(f.KubeConfig)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating a kubernetes client")
 
-		_, f.IsIngressV1Beta1Ready, f.IsIngressV1Ready = k8s.NetworkingIngressAvailable(f.KubeClientSet)
+		f.IsIngressV1Ready = k8s.NetworkingIngressAvailable(f.KubeClientSet)
 	}
 
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
