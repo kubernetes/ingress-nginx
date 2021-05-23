@@ -17,10 +17,12 @@ limitations under the License.
 package annotations
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/gavv/httpexpect/v2"
 	"net/http"
+	"os/exec"
 	"strings"
 
 	"github.com/onsi/ginkgo"
@@ -71,8 +73,32 @@ var _ = framework.DescribeAnnotation("blocklist-source-range", func() {
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
+	ginkgo.AfterEach(func() {
+		// This is for debugging.
+		var (
+			execOut bytes.Buffer
+			execErr bytes.Buffer
+		)
 
-	ginkgo.It("should set valid ip blocklist range", func() {
+		cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v logs deployments/reverse-proxy --namespace %s", framework.KubectlPath, f.Namespace))
+		cmd.Stdout = &execOut
+		cmd.Stderr = &execErr
+
+		err := cmd.Run()
+		if err != nil {
+			fmt.Printf("could not execute '%s %s': %v\n", cmd.Path, cmd.Args, err)
+			return
+		}
+
+		eout := strings.TrimSpace(execErr.String())
+		if len(eout) > 0 {
+			fmt.Printf("stderr: %v\n", eout)
+			return
+		}
+		fmt.Println(execOut.String())
+	})
+
+	ginkgo.FIt("should set valid ip blocklist range", func() {
 		f.NGINXWithConfigDeployment("reverse-proxy", _ngxConf, 3)
 
 		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), "reverse-proxy", metav1.GetOptions{})
