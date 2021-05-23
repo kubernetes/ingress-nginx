@@ -10,7 +10,10 @@
 controller:
   name: controller
   image:
-    repository: k8s.gcr.io/ingress-nginx/controller
+    registry: k8s.gcr.io
+    image: ingress-nginx/controller
+    # for backwards compatibility setting full image url via repository value
+    repository:
     tag: "v0.46.0"
     digest: sha256:52f0058bed0a17ab0fb35628ba97e8d52b5d32299fbc03cc0f6c7b9ff036b61a
     pullPolicy: IfNotPresent
@@ -514,7 +517,10 @@ controller:
     patch:
       enabled: true
       image:
-        repository: docker.io/jettech/kube-webhook-certgen
+        registry: docker.io
+        image: jettech/kube-webhook-certgen
+        # for backwards compatibility setting full image url via repository value
+        repository:
         tag: v1.5.1
         pullPolicy: IfNotPresent
       ## Provide a priority class name to the webhook patching job
@@ -631,7 +637,10 @@ defaultBackend:
 
   name: defaultbackend
   image:
-    repository: k8s.gcr.io/defaultbackend-amd64
+    registry: k8s.gcr.io
+    image: defaultbackend-amd64
+    # for backwards compatibility setting full image url via repository value
+    repository:
     tag: "1.5"
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
