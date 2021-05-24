@@ -22,7 +22,7 @@ If you're new to the project and want to help, but don't know where to start, we
 ## Contributing a Patch
 
 1. If you haven't already done so, sign a Contributor License Agreement (see details above).
-1. Read the [Ingress development guide](docs/development.md).
+1. Read the [Ingress development guide](docs/developer-guide/getting-started.md).
 1. Fork the desired repo, develop and test your code changes.
 1. Submit a pull request.
 
