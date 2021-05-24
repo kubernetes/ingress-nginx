@@ -99,7 +99,6 @@ http {
 	client_max_body_size 0;
 
 	server {
-		access_log on;
 		access_log /dev/stdout;
 
 		listen 80;
