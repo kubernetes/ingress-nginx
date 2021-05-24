@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	_ngxConf = `
+	_ngxConf = `#
 events {
 	worker_connections  1024;
 	multi_accept on;
