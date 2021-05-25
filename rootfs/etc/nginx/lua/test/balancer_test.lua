@@ -133,7 +133,10 @@ describe("Balancer", function()
       _balancer = {
         alternative_backends = {
           backend.name,
-        }
+        },
+        is_affinitized = function (_)
+          return false
+        end
       }
       mock_ngx({ var = { request_uri = "/" } })
       reset_balancer()
