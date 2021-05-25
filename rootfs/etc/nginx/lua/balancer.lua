@@ -186,6 +186,10 @@ local function sync_backends()
 end
 
 local function route_to_alternative_balancer(balancer)
+  if balancer.is_affinitized() then
+    return false
+  end
+
   if not balancer.alternative_backends then
     return false
   end

@@ -86,6 +86,14 @@ function _M.set_cookie(self, value)
   end
 end
 
+function _M.is_affinitized()
+  if self:get_cookie() then
+    return true
+  end
+
+  return false
+end
+
 function _M.get_last_failure()
   return ngx_balancer.get_last_failure()
 end
