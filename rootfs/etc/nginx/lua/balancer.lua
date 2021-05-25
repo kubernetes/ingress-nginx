@@ -186,7 +186,8 @@ local function sync_backends()
 end
 
 local function route_to_alternative_balancer(balancer)
-  if balancer.is_affinitized() then
+  if balancer.is_affinitized(balancer) then
+    -- If request is already affinitized to a primary balancer, keep the primary balancer.
     return false
   end
 
@@ -208,6 +209,12 @@ local function route_to_alternative_balancer(balancer)
     return false
   end
 
+  if alternative_balancer.is_affinitized(alternative_balancer) then
+    -- If request is affinitized to an alternative balancer, instruct caller to switch to alternative.
+    return true
+  end
+
+  -- Use traffic shaping policy, if request didn't have affinity set.
   local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
   if not traffic_shaping_policy then
     ngx.log(ngx.ERR, "traffic shaping policy is not set for balancer ",
