@@ -829,7 +829,8 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
-				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String())
+				_, port := upstreamServiceNameAndPort(ing.Spec.DefaultBackend.Service)
+				endps, err := n.serviceEndpoints(svcKey, port.String())
 				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
 				if err != nil {
 					klog.Warningf("Error creating upstream %q: %v", defBackend, err)
@@ -850,14 +851,14 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 			for _, path := range rule.HTTP.Paths {
 				name := upstreamName(ing.Namespace, path.Backend.Service)
-
+				svcName, svcPort := upstreamServiceNameAndPort(path.Backend.Service)
 				if _, ok := upstreams[name]; ok {
 					continue
 				}
 
 				klog.V(3).Infof("Creating upstream %q", name)
 				upstreams[name] = newUpstream(name)
-				upstreams[name].Port = path.Backend.ServicePort
+				upstreams[name].Port = svcPort
 
 				upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
@@ -868,7 +869,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					upstreams[name].LoadBalancing = n.store.GetBackendConfiguration().LoadBalancing
 				}
 
-				svcKey := fmt.Sprintf("%v/%v", ing.Namespace, path.Backend.ServiceName)
+				svcKey := fmt.Sprintf("%v/%v", ing.Namespace, svcName)
 
 				// add the service ClusterIP as a single Endpoint instead of individual Endpoints
 				if anns.ServiceUpstream {
@@ -893,7 +894,8 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
-					endp, err := n.serviceEndpoints(svcKey, path.Backend.ServicePort.String())
+					_, port := upstreamServiceNameAndPort(path.Backend.Service)
+					endp, err := n.serviceEndpoints(svcKey, port.String())
 					if err != nil {
 						klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 						continue
@@ -932,20 +934,21 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *netw
 	// if the Service port is referenced by name in the Ingress, lookup the
 	// actual port in the service spec
 	if backend.Service != nil {
-		if backend.Service.Port.Name != "" {
+		_, svcportintorstr := upstreamServiceNameAndPort(backend.Service)
+		if svcportintorstr.Type == intstr.String {
 			var port int32 = -1
 			for _, svcPort := range svc.Spec.Ports {
-				if svcPort.Name == backend.Service.Port.Name {
+				if svcPort.Name == svcportintorstr.String() {
 					port = svcPort.Port
 					break
 				}
 			}
 			if port == -1 {
-				return endpoint, fmt.Errorf("service %q does not have a port named %q", svc.Name, backend.Service.Port.Name)
+				return endpoint, fmt.Errorf("service %q does not have a port named %q", svc.Name, &svcportintorstr)
 			}
 			endpoint.Port = fmt.Sprintf("%d", port)
 		} else {
-			endpoint.Port = string(backend.Service.Port.Number)
+			endpoint.Port = svcportintorstr.String()
 		}
 	}
 

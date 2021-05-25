@@ -28,6 +28,7 @@ import (
 
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/klog/v2"
 )
@@ -57,7 +58,20 @@ func upstreamName(namespace string, service *networking.IngressServiceBackend) s
 		}
 	}
 	return fmt.Sprintf("%s-INVALID", namespace)
+}
 
+// upstreamServiceNameAndPort verifies if service is not nil, and then return the
+// correct serviceName and Port
+func upstreamServiceNameAndPort(service *networking.IngressServiceBackend) (string, intstr.IntOrString) {
+	if service != nil {
+		if service.Port.Number > 0 {
+			return service.Name, intstr.FromInt(int(service.Port.Number))
+		}
+		if service.Port.Name != "" {
+			return service.Name, intstr.FromString(service.Port.Name)
+		}
+	}
+	return "", intstr.IntOrString{}
 }
 
 // sysctlSomaxconn returns the maximum number of connections that can be queued
