@@ -1329,6 +1329,8 @@ func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) b
 		}
 	}
 
+	priUps.SessionAffinity.DeepCopyInto(&altUps.SessionAffinity)
+
 	priUps.AlternativeBackends =
 		append(priUps.AlternativeBackends, altUps.Name)
 
