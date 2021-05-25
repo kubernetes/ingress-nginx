@@ -1315,7 +1315,7 @@ func canMergeBackend(primary *ingress.Backend, alternative *ingress.Backend) boo
 }
 
 // Performs the merge action and checks to ensure that one two alternative backends do not merge into each other
-func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) bool {
+func mergeAlternativeBackend(ing *ingress.Ingress, priUps *ingress.Backend, altUps *ingress.Backend) bool {
 	if priUps.NoServer {
 		klog.Warningf("unable to merge alternative backend %v into primary backend %v because %v is a primary backend",
 			altUps.Name, priUps.Name, priUps.Name)
@@ -1329,7 +1329,9 @@ func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) b
 		}
 	}
 
-	priUps.SessionAffinity.DeepCopyInto(&altUps.SessionAffinity)
+	if ing.ParsedAnnotations.SessionAffinity.CanaryBehavior != "legacy" {
+		priUps.SessionAffinity.DeepCopyInto(&altUps.SessionAffinity)
+	}
 
 	priUps.AlternativeBackends =
 		append(priUps.AlternativeBackends, altUps.Name)
@@ -1370,7 +1372,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
-					merged = mergeAlternativeBackend(priUps, altUps)
+					merged = mergeAlternativeBackend(ing, priUps, altUps)
 				}
 			}
 
@@ -1423,7 +1425,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
-					merged = mergeAlternativeBackend(priUps, altUps)
+					merged = mergeAlternativeBackend(ing, priUps, altUps)
 				}
 			}
 
