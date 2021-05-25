@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 	networking "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"k8s.io/ingress-nginx/cmd/plugin/request"
@@ -158,7 +159,9 @@ func getIngressRows(ingresses *[]networking.Ingress) []ingressRow {
 		defaultBackendService := ""
 		defaultBackendPort := ""
 		if ing.Spec.DefaultBackend != nil {
-			defaultBackendService, defaultBackendPort = serviceToNameAndPort(ing.Spec.DefaultBackend.Service)
+			name, port := serviceToNameAndPort(ing.Spec.DefaultBackend.Service)
+			defaultBackendService = name
+			defaultBackendPort = port.String()
 		}
 
 		// Handle catch-all ingress
@@ -204,7 +207,7 @@ func getIngressRows(ingresses *[]networking.Ingress) []ingressRow {
 					Path:        path.Path,
 					TLS:         hasTLS,
 					ServiceName: svcName,
-					ServicePort: svcPort,
+					ServicePort: svcPort.String(),
 					Address:     address,
 				}
 
@@ -216,16 +219,16 @@ func getIngressRows(ingresses *[]networking.Ingress) []ingressRow {
 	return rows
 }
 
-func serviceToNameAndPort(svc *networking.IngressServiceBackend) (string, string) {
+func serviceToNameAndPort(svc *networking.IngressServiceBackend) (string, intstr.IntOrString) {
 	var svcName string
 	if svc != nil {
 		svcName = svc.Name
 		if svc.Port.Number > 0 {
-			return svcName, string(svc.Port.Number)
+			return svcName, intstr.FromInt(int(svc.Port.Number))
 		}
 		if svc.Port.Name != "" {
-			return svcName, svc.Port.Name
+			return svcName, intstr.FromString(svc.Port.String())
 		}
 	}
-	return "", ""
+	return "", intstr.IntOrString{}
 }
