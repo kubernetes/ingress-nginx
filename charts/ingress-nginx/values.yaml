@@ -121,23 +121,23 @@ controller:
   ##
   scope:
     enabled: false
-    namespace: ""   # defaults to .Release.Namespace
+    namespace: ""   # defaults to $(POD_NAMESPACE)
 
   ## Allows customization of the configmap / nginx-configmap namespace
   ##
-  configMapNamespace: ""   # defaults to .Release.Namespace
+  configMapNamespace: ""   # defaults to $(POD_NAMESPACE)
 
   ## Allows customization of the tcp-services-configmap
   ##
   tcp:
-    configMapNamespace: ""   # defaults to .Release.Namespace
+    configMapNamespace: ""   # defaults to $(POD_NAMESPACE)
     ## Annotations to be added to the tcp config configmap
     annotations: {}
 
   ## Allows customization of the udp-services-configmap
   ##
   udp:
-    configMapNamespace: ""   # defaults to .Release.Namespace
+    configMapNamespace: ""   # defaults to $(POD_NAMESPACE)
     ## Annotations to be added to the udp config configmap
     annotations: {}
 
