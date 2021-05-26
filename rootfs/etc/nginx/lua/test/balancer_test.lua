@@ -26,7 +26,8 @@ local function reset_expected_implementations()
     ["my-dummy-app-2"] = package.loaded["balancer.chash"],
     ["my-dummy-app-3"] = package.loaded["balancer.sticky_persistent"],
     ["my-dummy-app-4"] = package.loaded["balancer.ewma"],
-    ["my-dummy-app-5"] = package.loaded["balancer.sticky_balanced"]
+    ["my-dummy-app-5"] = package.loaded["balancer.sticky_balanced"],
+    ["my-dummy-app-6"] = package.loaded["balancer.chashsubset"]
   }
 end
 
@@ -48,19 +49,34 @@ local function reset_backends()
         cookie = ""
       },
     },
-    { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
     {
-      name = "my-dummy-app-2", ["load-balance"] = "chash",
+      name = "my-dummy-app-1",
+      ["load-balance"] = "round_robin",
+    },
+    {
+      name = "my-dummy-app-2",
+      ["load-balance"] = "round_robin",           -- upstreamHashByConfig will take priority.
       upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri", },
     },
     {
-      name = "my-dummy-app-3", ["load-balance"] = "ewma",
-      sessionAffinityConfig = { name = "cookie", mode = 'persistent', cookieSessionAffinity = { name = "route" } }
+      name = "my-dummy-app-3",
+      ["load-balance"] = "ewma",                  -- sessionAffinityConfig will take priority.
+      sessionAffinityConfig = { name = "cookie", mode = "persistent", cookieSessionAffinity = { name = "route" } }
     },
-    { name = "my-dummy-app-4", ["load-balance"] = "ewma", },
     {
-      name = "my-dummy-app-5", ["load-balance"] = "ewma", ["upstream-hash-by"] = "$request_uri",
+      name = "my-dummy-app-4",
+      ["load-balance"] = "ewma",
+    },
+    {
+      name = "my-dummy-app-5",
+      ["load-balance"] = "ewma",                  -- sessionAffinityConfig will take priority.
+      upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri", },
       sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route" } }
+    },
+    {
+      name = "my-dummy-app-6",
+      ["load-balance"] = "ewma",                  -- upstreamHashByConfig will take priority.
+      upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri", ["upstream-hash-by-subset"] = "true", }
     },
   }
 end
@@ -77,7 +93,7 @@ describe("Balancer", function()
   end)
 
   describe("get_implementation()", function()
-    it("returns correct implementation for given backend", function()
+    it("uses heuristics to select correct load balancer implementation for a given backend", function()
       for _, backend in pairs(backends) do
         local expected_implementation = expected_implementations[backend.name]
         local implementation = balancer.get_implementation(backend)
@@ -89,8 +105,8 @@ describe("Balancer", function()
   describe("get_balancer()", function()
     it("always returns the same balancer for given request context", function()
       local backend = {
-        name = "my-dummy-app-6", ["load-balance"] = "ewma",
-        alternativeBackends = { "my-dummy-canary-app-6" },
+        name = "my-dummy-app-100", ["load-balance"] = "ewma",
+        alternativeBackends = { "my-dummy-canary-app-100" },
         endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
         trafficShapingPolicy = {
           weight = 0,
@@ -100,8 +116,8 @@ describe("Balancer", function()
         },
       }
       local canary_backend = {
-        name = "my-dummy-canary-app-6", ["load-balance"] = "ewma",
-        alternativeBackends = { "my-dummy-canary-app-6" },
+        name = "my-dummy-canary-app-100", ["load-balance"] = "ewma",
+        alternativeBackends = { "my-dummy-canary-app-100" },
         endpoints = { { address = "11.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
         trafficShapingPolicy = {
           weight = 5,
@@ -126,11 +142,11 @@ describe("Balancer", function()
   end)
 
   describe("route_to_alternative_balancer()", function()
-    local backend, _balancer
+    local backend, _primaryBalancer
 
     before_each(function()
       backend = backends[1]
-      _balancer = {
+      _primaryBalancer = {
         alternative_backends = {
           backend.name,
         }
@@ -139,44 +155,44 @@ describe("Balancer", function()
       reset_balancer()
     end)
 
-    describe("not affinitized - uses traffic shaping policy", function()
+    describe("not affinitized - uses traffic shaping policy to pick backend", function()
 
       before_each(function()
-        _balancer.is_affinitized = function (_)
+        _primaryBalancer.is_affinitized = function (_)
           return false
         end
       end)
 
       it("returns false when no trafficShapingPolicy is set", function()
         balancer.sync_backend(backend)
-        assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+        assert.equal(false, balancer.route_to_alternative_balancer(_primaryBalancer))
       end)
 
       it("returns false when no alternative backends is set", function()
         backend.trafficShapingPolicy.weight = 100
         balancer.sync_backend(backend)
-        _balancer.alternative_backends = nil
-        assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+        _primaryBalancer.alternative_backends = nil
+        assert.equal(false, balancer.route_to_alternative_balancer(_primaryBalancer))
       end)
 
       it("returns false when alternative backends name does not match", function()
         backend.trafficShapingPolicy.weight = 100
         balancer.sync_backend(backend)
-        _balancer.alternative_backends[1] = "nonExistingBackend"
-        assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+        _primaryBalancer.alternative_backends[1] = "nonExistingBackend"
+        assert.equal(false, balancer.route_to_alternative_balancer(_primaryBalancer))
       end)
 
       describe("canary by weight", function()
         it("returns true when weight is 100", function()
           backend.trafficShapingPolicy.weight = 100
           balancer.sync_backend(backend)
-          assert.equal(true, balancer.route_to_alternative_balancer(_balancer))
+          assert.equal(true, balancer.route_to_alternative_balancer(_primaryBalancer))
         end)
 
         it("returns false when weight is 0", function()
           backend.trafficShapingPolicy.weight = 0
           balancer.sync_backend(backend)
-          assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+          assert.equal(false, balancer.route_to_alternative_balancer(_primaryBalancer))
         end)
       end)
 
@@ -217,7 +233,7 @@ describe("Balancer", function()
             backend.trafficShapingPolicy.cookie = "canaryCookie"
             balancer.sync_backend(backend)
             assert.message("\nTest data pattern: " .. test_pattern.case_title)
-              .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+              .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_primaryBalancer))
             reset_ngx()
           end
         end)
@@ -296,12 +312,15 @@ describe("Balancer", function()
             backend.trafficShapingPolicy.headerValue = test_pattern.header_value
             balancer.sync_backend(backend)
             assert.message("\nTest data pattern: " .. test_pattern.case_title)
-              .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+              .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_primaryBalancer))
             reset_ngx()
           end
         end)
       end)
 
+    end)
+
+    describe("affinitized - prefers affinitized backend", function()
     end)
   end)
 
