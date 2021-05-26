@@ -265,6 +265,10 @@ local function route_to_alternative_balancer(balancer)
   return false
 end
 
+local function get_balancer_by_upstream_name(upstream_name)
+  return balancers[upstream_name]
+end
+
 local function get_balancer()
   if ngx.ctx.balancer then
     return ngx.ctx.balancer
@@ -274,7 +278,7 @@ local function get_balancer()
 
   local balancer = balancers[backend_name]
   if not balancer then
-    return
+    return nil
   end
 
   if route_to_alternative_balancer(balancer) then
@@ -363,6 +367,7 @@ setmetatable(_M, {__index = {
   sync_backend = sync_backend,
   route_to_alternative_balancer = route_to_alternative_balancer,
   get_balancer = get_balancer,
+  get_balancer_by_upstream_name = get_balancer_by_upstream_name,
 }})
 
 return _M
