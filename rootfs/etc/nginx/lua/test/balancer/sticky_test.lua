@@ -75,6 +75,11 @@ describe("Sticky", function()
   local test_backend = get_test_backend()
   local test_backend_endpoint= test_backend.endpoints[1].address .. ":" .. test_backend.endpoints[1].port
 
+  local legacy_cookie_value = test_backend_endpoint
+  local function create_current_cookie_value(backend_key)
+    return test_backend_endpoint .. "|" .. backend_key
+  end
+
   describe("new(backend)", function()
     describe("when backend specifies cookie name", function()
       local function test(sticky)
@@ -98,6 +103,16 @@ describe("Sticky", function()
 
       it("returns an instance with 'route' as cookie name", function() test(sticky_balanced) end)
       it("returns an instance with 'route' as cookie name", function() test(sticky_persistent) end)
+    end)
+
+    describe("backend_key", function()
+      local function test(sticky)
+        local sticky_balancer_instance = sticky:new(test_backend)
+        assert.is_truthy(sticky_balancer_instance.backend_key)
+      end
+
+      it("calculates at construction time", function() test(sticky_balanced) end)
+      it("calculates at construction time", function() test(sticky_persistent) end)
     end)
   end)
 
@@ -271,7 +286,7 @@ describe("Sticky", function()
         cookie.new = function(self)
           local return_obj = {
             set = function(v) return false, nil end,
-            get = function(k) return test_backend_endpoint end,
+            get = function(k) return legacy_cookie_value end,
           }
           s = spy.on(return_obj, "set")
           return return_obj, false
@@ -469,5 +484,127 @@ describe("Sticky", function()
       mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"} })
       test_set_cookie(sticky_balanced, "None", true, "/", nil)
     end)
+  end)
+
+  describe("get_cookie()", function()
+
+    describe("legacy cookie value", function()
+      local function test_with(sticky_balancer_type)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
+
+        cookie.new = function(self)
+          local return_obj = {
+            set = function(v) return false, nil end,
+            get = function(k) return legacy_cookie_value end,
+          }
+          return return_obj, false
+        end
+
+        assert.equal(test_backend_endpoint, sticky_balancer_instance.get_cookie(sticky_balancer_instance))
+      end
+
+      it("retrieves upstream key value", function() test_with(sticky_balanced) end)
+      it("retrieves upstream key value", function() test_with(sticky_persistent) end)
+    end)
+
+    describe("current cookie value", function()
+      local function test_with(sticky_balancer_type)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
+
+        cookie.new = function(self)
+          local return_obj = {
+            set = function(v) return false, nil end,
+            get = function(k) return create_current_cookie_value(sticky_balancer_instance.backend_key) end,
+          }
+          return return_obj, false
+        end
+
+        assert.equal(test_backend_endpoint, sticky_balancer_instance.get_cookie(sticky_balancer_instance))
+      end
+
+      it("retrieves upstream key value", function() test_with(sticky_balanced) end)
+      it("retrieves upstream key value", function() test_with(sticky_persistent) end)
+    end)
+
+  end)
+
+  describe("get_cookie_parsed()", function()
+
+    describe("legacy cookie value", function()
+      local function test_with(sticky_balancer_type)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
+
+        cookie.new = function(self)
+          local return_obj = {
+            set = function(v) return false, nil end,
+            get = function(k) return legacy_cookie_value end,
+          }
+          return return_obj, false
+        end
+
+        local parsed_cookie = sticky_balancer_instance.get_cookie_parsed(sticky_balancer_instance)
+
+        assert.is_truthy(parsed_cookie)
+        assert.equal(test_backend_endpoint, parsed_cookie.upstream_key)
+        assert.is_falsy(parsed_cookie.backend_key)
+      end
+
+      it("retrieves upstream key value", function() test_with(sticky_balanced) end)
+      it("retrieves upstream key value", function() test_with(sticky_persistent) end)
+    end)
+
+    describe("current cookie value", function()
+      local function test_with(sticky_balancer_type)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
+
+        cookie.new = function(self)
+          local return_obj = {
+            set = function(v) return false, nil end,
+            get = function(k) return create_current_cookie_value(sticky_balancer_instance.backend_key) end,
+          }
+          return return_obj, false
+        end
+
+        local parsed_cookie = sticky_balancer_instance.get_cookie_parsed(sticky_balancer_instance)
+
+        assert.is_truthy(parsed_cookie)
+        assert.equal(test_backend_endpoint, parsed_cookie.upstream_key)
+        assert.equal(sticky_balancer_instance.backend_key, parsed_cookie.backend_key)
+      end
+
+      it("retrieves all supported values", function() test_with(sticky_balanced) end)
+      it("retrieves all supported values", function() test_with(sticky_persistent) end)
+    end)
+
+  end)
+
+  describe("set_cookie()", function()
+
+    local function test_with(sticky_balancer_type)
+      local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
+
+      local cookieSetSpy = {}
+      cookie.new = function(self)
+        local return_obj = {
+          set = function(self, payload)
+            assert.equal(create_current_cookie_value(sticky_balancer_instance.backend_key), payload.value)
+
+            return true, nil
+          end,
+          get = function(k) return nil end,
+        }
+        cookieSetSpy = spy.on(return_obj, "set")
+
+        return return_obj, false
+      end
+
+      sticky_balancer_instance.set_cookie(sticky_balancer_instance, test_backend_endpoint)
+
+      assert.spy(cookieSetSpy).was_called()
+    end
+
+    it("constructs correct cookie value", function() test_with(sticky_balanced) end)
+    it("constructs correct cookie value", function() test_with(sticky_persistent) end)
+
   end)
 end)
