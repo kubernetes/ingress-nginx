@@ -6,17 +6,27 @@ local original_ngx = ngx
 
 local function reset_ngx()
   _G.ngx = original_ngx
-end
 
-local function mock_ngx(mock)
-  local _ngx = mock
-  setmetatable(_ngx, { __index = ngx })
-  _G.ngx = _ngx
+  -- Ensure balancer cache is reset.
+  _G.ngx.ctx.balancer = nil
 end
 
 local function reset_balancer()
   package.loaded["balancer"] = nil
   balancer = require("balancer")
+end
+
+local function mock_ngx(mock, after_mock_set)
+  local _ngx = mock
+  setmetatable(_ngx, { __index = ngx })
+  _G.ngx = _ngx
+
+  if after_mock_set then
+    after_mock_set()
+  end
+
+  -- Balancer module caches ngx module, must be reset after mocks were configured.
+  reset_balancer()
 end
 
 local function reset_expected_implementations()
@@ -128,7 +138,6 @@ describe("Balancer", function()
       }
 
       mock_ngx({ var = { proxy_upstream_name = backend.name } })
-      reset_balancer()
 
       balancer.sync_backend(backend)
       balancer.sync_backend(canary_backend)
@@ -152,7 +161,6 @@ describe("Balancer", function()
         }
       }
       mock_ngx({ var = { request_uri = "/" } })
-      reset_balancer()
     end)
 
     describe("not affinitized - uses traffic shaping policy to pick backend", function()
@@ -229,7 +237,6 @@ describe("Balancer", function()
               ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
               request_uri = "/"
             }})
-            reset_balancer()
             backend.trafficShapingPolicy.cookie = "canaryCookie"
             balancer.sync_backend(backend)
             assert.message("\nTest data pattern: " .. test_pattern.case_title)
@@ -307,7 +314,6 @@ describe("Balancer", function()
               ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
               request_uri = "/"
             }})
-            reset_balancer()
             backend.trafficShapingPolicy.header = test_pattern.header_name
             backend.trafficShapingPolicy.headerValue = test_pattern.header_value
             balancer.sync_backend(backend)
@@ -321,6 +327,15 @@ describe("Balancer", function()
     end)
 
     describe("affinitized - prefers affinitized backend", function()
+
+      before_each(function()
+        mock_ngx({ var = { request_uri = "/", proxy_upstream_name = backend.name } })
+      end)
+
+      it("test", function()
+        assert.equal(_primaryBalancer, balancer.get_balancer())
+      end)
+
     end)
   end)
 
@@ -461,10 +476,13 @@ describe("Balancer", function()
           },
         }
       }
-      mock_ngx({ var = { proxy_upstream_name = "access-router-production-web-80" }, ctx = { } })
-      ngx.shared.configuration_data:set("backends", cjson.encode(backends))
-      reset_balancer()
+
+      mock_ngx({ var = { proxy_upstream_name = "access-router-production-web-80" }, ctx = { } }, function()
+        ngx.shared.configuration_data:set("backends", cjson.encode(backends))
+      end)
+
       balancer.init_worker()
+
       assert.not_equal(balancer.get_balancer(), nil)
     end)
 
