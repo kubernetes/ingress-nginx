@@ -82,37 +82,37 @@ describe("Sticky", function()
 
   describe("new(backend)", function()
     describe("when backend specifies cookie name", function()
-      local function test(sticky)
-        local sticky_balancer_instance = sticky:new(test_backend)
+      local function test_with(sticky_balancer_type)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
         local test_backend_cookie_name = test_backend.sessionAffinityConfig.cookieSessionAffinity.name
         assert.equal(sticky_balancer_instance:cookie_name(), test_backend_cookie_name)
       end
 
-      it("returns an instance containing the corresponding cookie name", function() test(sticky_balanced) end)
-      it("returns an instance containing the corresponding cookie name", function() test(sticky_persistent) end)
+      it("returns an instance containing the corresponding cookie name", function() test_with(sticky_balanced) end)
+      it("returns an instance containing the corresponding cookie name", function() test_with(sticky_persistent) end)
     end)
 
     describe("when backend does not specify cookie name", function()
-      local function test(sticky)
+      local function test_with(sticky_balancer_type)
         local temp_backend = util.deepcopy(test_backend)
         temp_backend.sessionAffinityConfig.cookieSessionAffinity.name = nil
-        local sticky_balancer_instance = sticky:new(temp_backend)
+        local sticky_balancer_instance = sticky_balancer_type:new(temp_backend)
         local default_cookie_name = "route"
         assert.equal(sticky_balancer_instance:cookie_name(), default_cookie_name)
       end
 
-      it("returns an instance with 'route' as cookie name", function() test(sticky_balanced) end)
-      it("returns an instance with 'route' as cookie name", function() test(sticky_persistent) end)
+      it("returns an instance with 'route' as cookie name", function() test_with(sticky_balanced) end)
+      it("returns an instance with 'route' as cookie name", function() test_with(sticky_persistent) end)
     end)
 
     describe("backend_key", function()
-      local function test(sticky)
-        local sticky_balancer_instance = sticky:new(test_backend)
+      local function test_with(sticky_balancer_type)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
         assert.is_truthy(sticky_balancer_instance.backend_key)
       end
 
-      it("calculates at construction time", function() test(sticky_balanced) end)
-      it("calculates at construction time", function() test(sticky_persistent) end)
+      it("calculates at construction time", function() test_with(sticky_balanced) end)
+      it("calculates at construction time", function() test_with(sticky_persistent) end)
     end)
   end)
 
@@ -129,16 +129,16 @@ describe("Sticky", function()
 
     describe("when client doesn't have a cookie set and location is in cookie_locations", function()
 
-      local function test_pick_endpoint(sticky)
-        local sticky_balancer_instance = sticky:new(test_backend)
+      local function test_pick_endpoint_with(sticky_balancer_type)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
         local peer = sticky_balancer_instance:balance()
         assert.equal(test_backend_endpoint, peer)
       end
 
-      it("picks an endpoint for the client", function() test_pick_endpoint(sticky_balanced) end)
-      it("picks an endpoint for the client", function() test_pick_endpoint(sticky_persistent) end)
+      it("picks an endpoint for the client", function() test_pick_endpoint_with(sticky_balanced) end)
+      it("picks an endpoint for the client", function() test_pick_endpoint_with(sticky_persistent) end)
 
-      local function test_set_cookie(sticky)
+      local function test_set_cookie_with(sticky_balancer_type)
         local s = {}
         cookie.new = function(self)
           local cookie_instance = {
@@ -159,15 +159,15 @@ describe("Sticky", function()
         local b = get_test_backend()
         b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
         b.sessionAffinityConfig.cookieSessionAffinity.locations["test.com"] = {"/"}
-        local sticky_balancer_instance = sticky:new(b)
+        local sticky_balancer_instance = sticky_balancer_type:new(b)
         assert.has_no.errors(function() sticky_balancer_instance:balance() end)
         assert.spy(s).was_called()
       end
 
-      it("sets a cookie on the client", function() test_set_cookie(sticky_balanced) end)
-      it("sets a cookie on the client", function() test_set_cookie(sticky_persistent) end)
+      it("sets a cookie on the client", function() test_set_cookie_with(sticky_balanced) end)
+      it("sets a cookie on the client", function() test_set_cookie_with(sticky_persistent) end)
 
-      local function test_set_ssl_cookie(sticky)
+      local function test_set_ssl_cookie_with(sticky_balancer_type)
         ngx.var.https = "on"
         local s = {}
         cookie.new = function(self)
@@ -189,17 +189,13 @@ describe("Sticky", function()
         local b = get_test_backend()
         b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
         b.sessionAffinityConfig.cookieSessionAffinity.locations["test.com"] = {"/"}
-        local sticky_balancer_instance = sticky:new(b)
+        local sticky_balancer_instance = sticky_balancer_type:new(b)
         assert.has_no.errors(function() sticky_balancer_instance:balance() end)
         assert.spy(s).was_called()
       end
 
-      it("sets a secure cookie on the client when being in ssl mode", function()
-          test_set_ssl_cookie(sticky_balanced)
-      end)
-      it("sets a secure cookie on the client when being in ssl mode", function()
-        test_set_ssl_cookie(sticky_persistent)
-      end)
+      it("sets a secure cookie on the client when being in ssl mode", function() test_set_ssl_cookie_with(sticky_balanced) end)
+      it("sets a secure cookie on the client when being in ssl mode", function() test_set_ssl_cookie_with(sticky_persistent) end)
     end)
 
     describe("when client doesn't have a cookie set and cookie_locations contains a matching wildcard location", function()
@@ -211,7 +207,7 @@ describe("Sticky", function()
         ngx.var.host = "test.com"
       end)
 
-      local function test(sticky)
+      local function test_with(sticky_balancer_type)
         local s = {}
         cookie.new = function(self)
           local cookie_instance = {
@@ -233,27 +229,27 @@ describe("Sticky", function()
         local b = get_test_backend()
         b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
         b.sessionAffinityConfig.cookieSessionAffinity.locations["*.test.com"] = {"/"}
-        local sticky_balancer_instance = sticky:new(b)
+        local sticky_balancer_instance = sticky_balancer_type:new(b)
         assert.has_no.errors(function() sticky_balancer_instance:balance() end)
         assert.spy(s).was_called()
       end
 
-      it("sets a cookie on the client", function() test(sticky_balanced) end)
-      it("sets a cookie on the client", function() test(sticky_persistent) end)
+      it("sets a cookie on the client", function() test_with(sticky_balanced) end)
+      it("sets a cookie on the client", function() test_with(sticky_persistent) end)
     end)
 
     describe("when client doesn't have a cookie set and location not in cookie_locations", function()
 
-      local function test_pick_endpoint(sticky)
-        local sticky_balancer_instance = sticky:new(test_backend)
+      local function test_pick_endpoint_with(sticky_balancer_type)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
         local peer = sticky_balancer_instance:balance()
         assert.equal(peer, test_backend_endpoint)
       end
 
-      it("picks an endpoint for the client", function() test_pick_endpoint(sticky_balanced) end)
-      it("picks an endpoint for the client", function() test_pick_endpoint(sticky_persistent) end)
+      it("picks an endpoint for the client", function() test_pick_endpoint_with(sticky_balanced) end)
+      it("picks an endpoint for the client", function() test_pick_endpoint_with(sticky_persistent) end)
 
-      local function test_no_cookie(sticky)
+      local function test_no_cookie_with(sticky_balancer_type)
         local s = {}
         cookie.new = function(self)
           local cookie_instance = {
@@ -270,18 +266,18 @@ describe("Sticky", function()
           s = spy.on(cookie_instance, "set")
           return cookie_instance, false
         end
-        local sticky_balancer_instance = sticky:new(get_test_backend())
+        local sticky_balancer_instance = sticky_balancer_type:new(get_test_backend())
         assert.has_no.errors(function() sticky_balancer_instance:balance() end)
         assert.spy(s).was_not_called()
       end
 
-      it("does not set a cookie on the client", function() test_no_cookie(sticky_balanced) end)
-      it("does not set a cookie on the client", function() test_no_cookie(sticky_persistent) end)
+      it("does not set a cookie on the client", function() test_no_cookie_with(sticky_balanced) end)
+      it("does not set a cookie on the client", function() test_no_cookie_with(sticky_persistent) end)
     end)
 
     describe("when client has a cookie set", function()
 
-      local function test_no_cookie(sticky)
+      local function test_no_cookie_with(sticky_balancer_type)
         local s = {}
         cookie.new = function(self)
           local return_obj = {
@@ -291,13 +287,13 @@ describe("Sticky", function()
           s = spy.on(return_obj, "set")
           return return_obj, false
         end
-        local sticky_balancer_instance = sticky:new(test_backend)
+        local sticky_balancer_instance = sticky_balancer_type:new(test_backend)
         assert.has_no.errors(function() sticky_balancer_instance:balance() end)
         assert.spy(s).was_not_called()
       end
 
-      it("does not set a cookie", function() test_no_cookie(sticky_balanced) end)
-      it("does not set a cookie", function() test_no_cookie(sticky_persistent) end)
+      it("does not set a cookie", function() test_no_cookie_with(sticky_balanced) end)
+      it("does not set a cookie", function() test_no_cookie_with(sticky_persistent) end)
 
       local function test_correct_endpoint(sticky)
         local sticky_balancer_instance = sticky:new(test_backend)
@@ -342,8 +338,8 @@ describe("Sticky", function()
 
     describe("when request to upstream fails", function()
 
-      local function test(sticky, change_on_failure)
-        local sticky_balancer_instance = sticky:new(get_several_test_backends(change_on_failure))
+      local function test_with(sticky_balancer_type, change_on_failure)
+        local sticky_balancer_instance = sticky_balancer_type:new(get_several_test_backends(change_on_failure))
 
         local old_upstream = sticky_balancer_instance:balance()
         assert.is.Not.Nil(old_upstream)
@@ -370,18 +366,11 @@ describe("Sticky", function()
         end
       end
 
-      it("changes upstream when change_on_failure option is true", function()
-        test(sticky_balanced, true)
-      end)
-      it("changes upstream when change_on_failure option is true", function()
-        test(sticky_balanced, false)
-      end)
-      it("changes upstream when change_on_failure option is true", function()
-        test(sticky_persistent, true)
-      end)
-      it("changes upstream when change_on_failure option is true", function()
-        test(sticky_persistent, false)
-      end)
+      it("changes upstream when change_on_failure option is true", function() test_with(sticky_balanced, true) end)
+      it("changes upstream when change_on_failure option is true", function() test_with(sticky_persistent, true) end)
+
+      it("changes upstream when change_on_failure option is false", function() test_with(sticky_balanced, false) end)
+      it("changes upstream when change_on_failure option is false", function() test_with(sticky_persistent, false) end)
     end)
   end)
 
@@ -391,7 +380,7 @@ describe("Sticky", function()
       ngx.var.server_name = "_"
     end)
 
-    local function test(sticky)
+    local function test_with(sticky_balancer_type)
       local s = {}
       cookie.new = function(self)
         local cookie_instance = {
@@ -413,13 +402,13 @@ describe("Sticky", function()
       local b = get_test_backend()
       b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
       b.sessionAffinityConfig.cookieSessionAffinity.locations["_"] = {"/"}
-      local sticky_balancer_instance = sticky:new(b)
+      local sticky_balancer_instance = sticky_balancer_type:new(b)
       assert.has_no.errors(function() sticky_balancer_instance:balance() end)
       assert.spy(s).was_called()
     end
 
-    it("sets a cookie on the client", function() test(sticky_balanced) end)
-    it("sets a cookie on the client", function() test(sticky_persistent) end)
+    it("sets a cookie on the client", function() test_with(sticky_balanced) end)
+    it("sets a cookie on the client", function() test_with(sticky_persistent) end)
   end)
 
   describe("SameSite settings", function()
@@ -433,7 +422,7 @@ describe("Sticky", function()
       cookie.new = mocked_cookie_new
     end)
 
-    local function test_set_cookie(sticky, samesite, conditional_samesite_none, expected_path, expected_samesite)
+    local function test_set_cookie_with(sticky_balancer_type, samesite, conditional_samesite_none, expected_path, expected_samesite)
       local s = {}
       cookie.new = function(self)
         local cookie_instance = {
@@ -456,33 +445,57 @@ describe("Sticky", function()
       b.sessionAffinityConfig.cookieSessionAffinity.locations["test.com"] = {"/"}
       b.sessionAffinityConfig.cookieSessionAffinity.samesite = samesite
       b.sessionAffinityConfig.cookieSessionAffinity.conditional_samesite_none = conditional_samesite_none
-      local sticky_balancer_instance = sticky:new(b)
+      local sticky_balancer_instance = sticky_balancer_type:new(b)
       assert.has_no.errors(function() sticky_balancer_instance:balance() end)
       assert.spy(s).was_called()
     end
 
     it("returns a cookie with SameSite=Strict when user specifies samesite strict", function()
-      test_set_cookie(sticky_balanced, "Strict", false, "/", "Strict")
+      test_set_cookie_with(sticky_balanced, "Strict", false, "/", "Strict")
     end)
     it("returns a cookie with SameSite=Strict when user specifies samesite strict and conditional samesite none", function()
-      test_set_cookie(sticky_balanced, "Strict", true, "/", "Strict")
+      test_set_cookie_with(sticky_balanced, "Strict", true, "/", "Strict")
     end)
     it("returns a cookie with SameSite=Lax when user specifies samesite lax", function()
-      test_set_cookie(sticky_balanced, "Lax", false, "/", "Lax")
+      test_set_cookie_with(sticky_balanced, "Lax", false, "/", "Lax")
     end)
     it("returns a cookie with SameSite=Lax when user specifies samesite lax and conditional samesite none", function()
-      test_set_cookie(sticky_balanced, "Lax", true, "/", "Lax")
+      test_set_cookie_with(sticky_balanced, "Lax", true, "/", "Lax")
     end)
     it("returns a cookie with SameSite=None when user specifies samesite None", function()
-      test_set_cookie(sticky_balanced, "None", false, "/", "None")
+      test_set_cookie_with(sticky_balanced, "None", false, "/", "None")
     end)
     it("returns a cookie with SameSite=None when user specifies samesite None and conditional samesite none with supported user agent", function()
       mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.2704.103 Safari/537.36"} })
-      test_set_cookie(sticky_balanced, "None", true, "/", "None")
+      test_set_cookie_with(sticky_balanced, "None", true, "/", "None")
     end)
     it("returns a cookie without SameSite=None when user specifies samesite None and conditional samesite none with unsupported user agent", function()
       mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"} })
-      test_set_cookie(sticky_balanced, "None", true, "/", nil)
+      test_set_cookie_with(sticky_balanced, "None", true, "/", nil)
+    end)
+
+    it("returns a cookie with SameSite=Strict when user specifies samesite strict", function()
+      test_set_cookie_with(sticky_persistent, "Strict", false, "/", "Strict")
+    end)
+    it("returns a cookie with SameSite=Strict when user specifies samesite strict and conditional samesite none", function()
+      test_set_cookie_with(sticky_persistent, "Strict", true, "/", "Strict")
+    end)
+    it("returns a cookie with SameSite=Lax when user specifies samesite lax", function()
+      test_set_cookie_with(sticky_persistent, "Lax", false, "/", "Lax")
+    end)
+    it("returns a cookie with SameSite=Lax when user specifies samesite lax and conditional samesite none", function()
+      test_set_cookie_with(sticky_persistent, "Lax", true, "/", "Lax")
+    end)
+    it("returns a cookie with SameSite=None when user specifies samesite None", function()
+      test_set_cookie_with(sticky_persistent, "None", false, "/", "None")
+    end)
+    it("returns a cookie with SameSite=None when user specifies samesite None and conditional samesite none with supported user agent", function()
+      mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.2704.103 Safari/537.36"} })
+      test_set_cookie_with(sticky_persistent, "None", true, "/", "None")
+    end)
+    it("returns a cookie without SameSite=None when user specifies samesite None and conditional samesite none with unsupported user agent", function()
+      mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"} })
+      test_set_cookie_with(sticky_persistent, "None", true, "/", nil)
     end)
   end)
 
