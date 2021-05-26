@@ -5,22 +5,33 @@ local util = require("util")
 
 local original_ngx = ngx
 
-function mock_ngx(mock)
-  local _ngx = mock
-  setmetatable(_ngx, {__index = _G.ngx})
-  _G.ngx = _ngx
-end
-
-local function reset_ngx()
-  _G.ngx = original_ngx
-end
-
 local function reset_sticky_balancer()
   package.loaded["balancer.sticky"] = nil
   package.loaded["balancer.sticky_balanced"] = nil
   package.loaded["balancer.sticky_persistent"] = nil
+
   sticky_balanced = require("balancer.sticky_balanced")
   sticky_persistent = require("balancer.sticky_persistent")
+end
+
+local function mock_ngx(mock, after_mock_set)
+  local _ngx = mock
+  setmetatable(_ngx, { __index = ngx })
+  _G.ngx = _ngx
+
+  if after_mock_set then
+    after_mock_set()
+  end
+
+  -- Balancer module caches ngx module, must be reset after mocks were configured.
+  reset_sticky_balancer()
+end
+
+local function reset_ngx()
+  _G.ngx = original_ngx
+
+  -- Ensure balancer cache is reset.
+  _G.ngx.ctx.balancer = nil
 end
 
 function get_mocked_cookie_new()
@@ -55,7 +66,6 @@ end
 describe("Sticky", function()
   before_each(function()
     mock_ngx({ var = { location_path = "/", host = "test.com" } })
-    reset_sticky_balancer()
   end)
 
   after_each(function()
@@ -66,7 +76,7 @@ describe("Sticky", function()
   local test_backend_endpoint= test_backend.endpoints[1].address .. ":" .. test_backend.endpoints[1].port
 
   describe("new(backend)", function()
-    context("when backend specifies cookie name", function()
+    describe("when backend specifies cookie name", function()
       local function test(sticky)
         local sticky_balancer_instance = sticky:new(test_backend)
         local test_backend_cookie_name = test_backend.sessionAffinityConfig.cookieSessionAffinity.name
@@ -77,7 +87,7 @@ describe("Sticky", function()
       it("returns an instance containing the corresponding cookie name", function() test(sticky_persistent) end)
     end)
 
-    context("when backend does not specify cookie name", function()
+    describe("when backend does not specify cookie name", function()
       local function test(sticky)
         local temp_backend = util.deepcopy(test_backend)
         temp_backend.sessionAffinityConfig.cookieSessionAffinity.name = nil
@@ -95,17 +105,14 @@ describe("Sticky", function()
     local mocked_cookie_new = cookie.new
 
     before_each(function()
-      package.loaded["balancer.sticky_balanced"] = nil
-      package.loaded["balancer.sticky_persistent"] = nil
-      sticky_balanced = require("balancer.sticky_balanced")
-      sticky_persistent = require("balancer.sticky_persistent")
+      reset_sticky_balancer()
     end)
 
     after_each(function()
       cookie.new = mocked_cookie_new
     end)
 
-    context("when client doesn't have a cookie set and location is in cookie_locations", function()
+    describe("when client doesn't have a cookie set and location is in cookie_locations", function()
 
       local function test_pick_endpoint(sticky)
         local sticky_balancer_instance = sticky:new(test_backend)
@@ -180,8 +187,8 @@ describe("Sticky", function()
       end)
     end)
 
-    context("when client doesn't have a cookie set and cookie_locations contains a matching wildcard location",
-    function()
+    describe("when client doesn't have a cookie set and cookie_locations contains a matching wildcard location", function()
+
       before_each(function ()
         ngx.var.host = "dev.test.com"
       end)
@@ -220,7 +227,7 @@ describe("Sticky", function()
       it("sets a cookie on the client", function() test(sticky_persistent) end)
     end)
 
-    context("when client doesn't have a cookie set and location not in cookie_locations", function()
+    describe("when client doesn't have a cookie set and location not in cookie_locations", function()
 
       local function test_pick_endpoint(sticky)
         local sticky_balancer_instance = sticky:new(test_backend)
@@ -257,7 +264,7 @@ describe("Sticky", function()
       it("does not set a cookie on the client", function() test_no_cookie(sticky_persistent) end)
     end)
 
-    context("when client has a cookie set", function()
+    describe("when client has a cookie set", function()
 
       local function test_no_cookie(sticky)
         local s = {}
@@ -312,14 +319,13 @@ describe("Sticky", function()
 
     before_each(function()
       mock_ngx({ var = { location_path = "/", host = "test.com" } })
-      reset_sticky_balancer()
     end)
 
     after_each(function()
       reset_ngx()
     end)
 
-    context("when request to upstream fails", function()
+    describe("when request to upstream fails", function()
 
       local function test(sticky, change_on_failure)
         local sticky_balancer_instance = sticky:new(get_several_test_backends(change_on_failure))
@@ -364,8 +370,7 @@ describe("Sticky", function()
     end)
   end)
 
-  context("when client doesn't have a cookie set and no host header, matching default server '_'",
-  function()
+  describe("when client doesn't have a cookie set and no host header, matching default server '_'", function()
     before_each(function ()
       ngx.var.host = "not-default-server"
       ngx.var.server_name = "_"
@@ -406,10 +411,7 @@ describe("Sticky", function()
     local mocked_cookie_new = cookie.new
 
     before_each(function()
-      package.loaded["balancer.sticky_balanced"] = nil
-      package.loaded["balancer.sticky_persistent"] = nil
-      sticky_balanced = require("balancer.sticky_balanced")
-      sticky_persistent = require("balancer.sticky_persistent")
+      reset_sticky_balancer()
     end)
 
     after_each(function()
@@ -465,7 +467,6 @@ describe("Sticky", function()
     end)
     it("returns a cookie without SameSite=None when user specifies samesite None and conditional samesite none with unsupported user agent", function()
       mock_ngx({ var = { location_path = "/", host = "test.com" , http_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"} })
-      reset_sticky_balancer()
       test_set_cookie(sticky_balanced, "None", true, "/", nil)
     end)
   end)
