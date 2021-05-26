@@ -54,6 +54,8 @@ func init() {
 }
 
 var (
+	pathPrefix networking.PathType = networking.PathTypePrefix
+
 	// TODO: add tests for SSLPassthrough
 	tmplFuncTestcases = map[string]struct {
 		Path             string
@@ -196,11 +198,11 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	servers := []*ingress.Server{
 		{
 			Hostname:  "foo.bar",
-			Locations: []*ingress.Location{{Path: "/"}},
+			Locations: []*ingress.Location{{Path: "/", PathType: &pathPrefix}},
 		},
 		{
 			Hostname:  "another.host",
-			Locations: []*ingress.Location{{Path: "/"}},
+			Locations: []*ingress.Location{{Path: "/", PathType: &pathPrefix}},
 		},
 	}
 	// returns value from config
@@ -282,8 +284,9 @@ func TestBuildLocation(t *testing.T) {
 
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:    tc.Path,
-			Rewrite: rewrite.Config{Target: tc.Target},
+			Path:     tc.Path,
+			PathType: &pathPrefix,
+			Rewrite:  rewrite.Config{Target: tc.Target},
 		}
 
 		newLoc := buildLocation(loc, tc.enforceRegex)
@@ -300,6 +303,7 @@ func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:             tc.Path,
+			PathType:         &pathPrefix,
 			Rewrite:          rewrite.Config{Target: tc.Target},
 			Backend:          defaultBackend,
 			XForwardedPrefix: tc.XForwardedPrefix,
@@ -827,6 +831,7 @@ func TestBuildUpstreamName(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:             tc.Path,
+			PathType:         &pathPrefix,
 			Rewrite:          rewrite.Config{Target: tc.Target},
 			Backend:          defaultBackend,
 			XForwardedPrefix: tc.XForwardedPrefix,
@@ -949,6 +954,7 @@ func TestGetIngressInformation(t *testing.T) {
 			&ingressInformation{
 				Namespace: "default",
 				Rule:      "validIng",
+				Path:      "/",
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
@@ -973,7 +979,8 @@ func TestGetIngressInformation(t *testing.T) {
 									HTTP: &networking.HTTPIngressRuleValue{
 										Paths: []networking.HTTPIngressPath{
 											{
-												Path: "/ok",
+												Path:     "/ok",
+												PathType: &pathPrefix,
 												Backend: networking.IngressBackend{
 													Service: &networking.IngressServiceBackend{
 														Name: "b-svc",
@@ -1254,7 +1261,8 @@ func TestEnforceRegexModifier(t *testing.T) {
 				Target:   "/alright",
 				UseRegex: true,
 			},
-			Path: "/ok",
+			Path:     "/ok",
+			PathType: &pathPrefix,
 		},
 	}
 	expected = true

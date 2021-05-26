@@ -42,9 +42,13 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+var pathPrefix networking.PathType = networking.PathTypePrefix
+
 func TestStore(t *testing.T) {
 	//TODO: move env definition to docker image?
 	os.Setenv("KUBEBUILDER_ASSETS", "/usr/local/bin")
+
+	pathPrefix = networking.PathTypePrefix
 
 	te := &envtest.Environment{}
 	cfg, err := te.Start()
@@ -108,7 +112,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected an error but none returned")
 		}
 		if svc != nil {
-			t.Errorf("expected an Ingres but none returned")
+			t.Errorf("expected an Ingress but none returned")
 		}
 	})
 
@@ -176,7 +180,8 @@ func TestStore(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
 											Service: &networking.IngressServiceBackend{
 												Name: "http-svc",
@@ -217,7 +222,8 @@ func TestStore(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
 											Service: &networking.IngressServiceBackend{
 												Name: "http-svc",
@@ -335,7 +341,8 @@ func TestStore(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
 											Service: &networking.IngressServiceBackend{
 												Name: "http-svc",
@@ -645,7 +652,8 @@ func TestStore(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
 											Service: &networking.IngressServiceBackend{
 												Name: "http-svc",
@@ -936,7 +944,8 @@ func TestListIngresses(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/demo",
+										Path:     "/demo",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
 											Service: &networking.IngressServiceBackend{
 												Name: "demo",

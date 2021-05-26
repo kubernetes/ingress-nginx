@@ -32,6 +32,7 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	text_template "text/template"
 	"time"
@@ -901,8 +902,8 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 
 	if ing.Spec.DefaultBackend != nil && ing.Spec.DefaultBackend.Service != nil {
 		info.Service = ing.Spec.DefaultBackend.Service.Name
-		if ing.Spec.DefaultBackend.Service.Port.String() != "0" {
-			info.ServicePort = ing.Spec.DefaultBackend.Service.Port.String()
+		if ing.Spec.DefaultBackend.Service.Port.Number > 0 {
+			info.ServicePort = strconv.Itoa(int(ing.Spec.DefaultBackend.Service.Port.Number))
 		}
 	}
 
@@ -935,8 +936,8 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 			}
 
 			info.Service = rPath.Backend.Service.Name
-			if rPath.Backend.Service.Port.String() != "0" {
-				info.ServicePort = rPath.Backend.Service.Port.String()
+			if rPath.Backend.Service.Port.Number > 0 {
+				info.ServicePort = strconv.Itoa(int(rPath.Backend.Service.Port.Number))
 			}
 
 			return info
