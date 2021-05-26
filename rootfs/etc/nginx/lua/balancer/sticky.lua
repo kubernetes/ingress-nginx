@@ -13,7 +13,7 @@ local setmetatable = setmetatable
 
 local _M = balancer_resty:new()
 local DEFAULT_COOKIE_NAME = "route"
-local COOKIE_VALUE_DELIMITER = ":"
+local COOKIE_VALUE_DELIMITER = "|"
 
 function _M.cookie_name(self)
   return self.cookie_session_affinity.name or DEFAULT_COOKIE_NAME
@@ -55,7 +55,7 @@ function _M.get_cookie_parsed(self)
   end
 
   result.upstream_key = parsed_value[1]
-  if len <= 2 then
+  if len > 1 then
     result.backend_key = parsed_value[2]
   end
 
