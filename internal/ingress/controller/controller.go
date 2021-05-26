@@ -1329,7 +1329,7 @@ func mergeAlternativeBackend(ing *ingress.Ingress, priUps *ingress.Backend, altU
 		}
 	}
 
-	if ing.ParsedAnnotations.SessionAffinity.CanaryBehavior != "legacy" {
+	if ing.ParsedAnnotations != nil && ing.ParsedAnnotations.SessionAffinity.CanaryBehavior != "legacy" {
 		priUps.SessionAffinity.DeepCopyInto(&altUps.SessionAffinity)
 	}
 
