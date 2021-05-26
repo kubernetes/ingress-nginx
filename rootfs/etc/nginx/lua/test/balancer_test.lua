@@ -133,168 +133,175 @@ describe("Balancer", function()
       _balancer = {
         alternative_backends = {
           backend.name,
-        },
-        is_affinitized = function (_)
-          return false
-        end
+        }
       }
       mock_ngx({ var = { request_uri = "/" } })
       reset_balancer()
     end)
 
-    it("returns false when no trafficShapingPolicy is set", function()
-      balancer.sync_backend(backend)
-      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
-    end)
+    describe("not affinitized - uses traffic shaping policy", function()
 
-    it("returns false when no alternative backends is set", function()
-      backend.trafficShapingPolicy.weight = 100
-      balancer.sync_backend(backend)
-      _balancer.alternative_backends = nil
-      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
-    end)
-
-    it("returns false when alternative backends name does not match", function()
-      backend.trafficShapingPolicy.weight = 100
-      balancer.sync_backend(backend)
-      _balancer.alternative_backends[1] = "nonExistingBackend"
-      assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
-    end)
-
-    context("canary by weight", function()
-      it("returns true when weight is 100", function()
-        backend.trafficShapingPolicy.weight = 100
-        balancer.sync_backend(backend)
-        assert.equal(true, balancer.route_to_alternative_balancer(_balancer))
+      before_each(function()
+        _balancer.is_affinitized = function (_)
+          return false
+        end
       end)
 
-      it("returns false when weight is 0", function()
-        backend.trafficShapingPolicy.weight = 0
+      it("returns false when no trafficShapingPolicy is set", function()
         balancer.sync_backend(backend)
         assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
       end)
-    end)
 
-    context("canary by cookie", function()
-      it("returns correct result for given cookies", function()
-        local test_patterns = {
-          {
-            case_title = "cookie_value is 'always'",
-            request_cookie_name = "canaryCookie",
-            request_cookie_value = "always",
-            expected_result = true,
-          },
-          {
-            case_title = "cookie_value is 'never'",
-            request_cookie_name = "canaryCookie",
-            request_cookie_value = "never",
-            expected_result = false,
-          },
-          {
-            case_title = "cookie_value is undefined",
-            request_cookie_name = "canaryCookie",
-            request_cookie_value = "foo",
-            expected_result = false,
-          },
-          {
-            case_title = "cookie_name is undefined",
-            request_cookie_name = "foo",
-            request_cookie_value = "always",
-            expected_result = false
-          },
-        }
-        for _, test_pattern in pairs(test_patterns) do
-          mock_ngx({ var = {
-            ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
-            request_uri = "/"
-          }})
-          reset_balancer()
-          backend.trafficShapingPolicy.cookie = "canaryCookie"
-          balancer.sync_backend(backend)
-          assert.message("\nTest data pattern: " .. test_pattern.case_title)
-            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
-          reset_ngx()
-        end
+      it("returns false when no alternative backends is set", function()
+        backend.trafficShapingPolicy.weight = 100
+        balancer.sync_backend(backend)
+        _balancer.alternative_backends = nil
+        assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
       end)
-    end)
 
-    context("canary by header", function()
-      it("returns correct result for given headers", function()
-        local test_patterns = {
-          -- with no header value setting
-          {
-            case_title = "no custom header value and header value is 'always'",
-            header_name = "canaryHeader",
-            header_value = "",
-            request_header_name = "canaryHeader",
-            request_header_value = "always",
-            expected_result = true,
-          },
-          {
-            case_title = "no custom header value and header value is 'never'",
-            header_name = "canaryHeader",
-            header_value = "",
-            request_header_name = "canaryHeader",
-            request_header_value = "never",
-            expected_result = false,
-          },
-          {
-            case_title = "no custom header value and header value is undefined",
-            header_name = "canaryHeader",
-            header_value = "",
-            request_header_name = "canaryHeader",
-            request_header_value = "foo",
-            expected_result = false,
-          },
-          {
-            case_title = "no custom header value and header name is undefined",
-            header_name = "canaryHeader",
-            header_value = "",
-            request_header_name = "foo",
-            request_header_value = "always",
-            expected_result = false,
-          },
-          -- with header value setting
-          {
-            case_title = "custom header value is set and header value is 'always'",
-            header_name = "canaryHeader",
-            header_value = "foo",
-            request_header_name = "canaryHeader",
-            request_header_value = "always",
-            expected_result = false,
-          },
-          {
-            case_title = "custom header value is set and header value match custom header value",
-            header_name = "canaryHeader",
-            header_value = "foo",
-            request_header_name = "canaryHeader",
-            request_header_value = "foo",
-            expected_result = true,
-          },
-          {
-            case_title = "custom header value is set and header name is undefined",
-            header_name = "canaryHeader",
-            header_value = "foo",
-            request_header_name = "bar",
-            request_header_value = "foo",
-            expected_result = false
-          },
-        }
-
-        for _, test_pattern in pairs(test_patterns) do
-          mock_ngx({ var = {
-            ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
-            request_uri = "/"
-          }})
-          reset_balancer()
-          backend.trafficShapingPolicy.header = test_pattern.header_name
-          backend.trafficShapingPolicy.headerValue = test_pattern.header_value
-          balancer.sync_backend(backend)
-          assert.message("\nTest data pattern: " .. test_pattern.case_title)
-            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
-          reset_ngx()
-        end
+      it("returns false when alternative backends name does not match", function()
+        backend.trafficShapingPolicy.weight = 100
+        balancer.sync_backend(backend)
+        _balancer.alternative_backends[1] = "nonExistingBackend"
+        assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
       end)
+
+      describe("canary by weight", function()
+        it("returns true when weight is 100", function()
+          backend.trafficShapingPolicy.weight = 100
+          balancer.sync_backend(backend)
+          assert.equal(true, balancer.route_to_alternative_balancer(_balancer))
+        end)
+
+        it("returns false when weight is 0", function()
+          backend.trafficShapingPolicy.weight = 0
+          balancer.sync_backend(backend)
+          assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
+        end)
+      end)
+
+      describe("canary by cookie", function()
+        it("returns correct result for given cookies", function()
+          local test_patterns = {
+            {
+              case_title = "cookie_value is 'always'",
+              request_cookie_name = "canaryCookie",
+              request_cookie_value = "always",
+              expected_result = true,
+            },
+            {
+              case_title = "cookie_value is 'never'",
+              request_cookie_name = "canaryCookie",
+              request_cookie_value = "never",
+              expected_result = false,
+            },
+            {
+              case_title = "cookie_value is undefined",
+              request_cookie_name = "canaryCookie",
+              request_cookie_value = "foo",
+              expected_result = false,
+            },
+            {
+              case_title = "cookie_name is undefined",
+              request_cookie_name = "foo",
+              request_cookie_value = "always",
+              expected_result = false
+            },
+          }
+          for _, test_pattern in pairs(test_patterns) do
+            mock_ngx({ var = {
+              ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
+              request_uri = "/"
+            }})
+            reset_balancer()
+            backend.trafficShapingPolicy.cookie = "canaryCookie"
+            balancer.sync_backend(backend)
+            assert.message("\nTest data pattern: " .. test_pattern.case_title)
+              .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+            reset_ngx()
+          end
+        end)
+      end)
+
+      describe("canary by header", function()
+        it("returns correct result for given headers", function()
+          local test_patterns = {
+            -- with no header value setting
+            {
+              case_title = "no custom header value and header value is 'always'",
+              header_name = "canaryHeader",
+              header_value = "",
+              request_header_name = "canaryHeader",
+              request_header_value = "always",
+              expected_result = true,
+            },
+            {
+              case_title = "no custom header value and header value is 'never'",
+              header_name = "canaryHeader",
+              header_value = "",
+              request_header_name = "canaryHeader",
+              request_header_value = "never",
+              expected_result = false,
+            },
+            {
+              case_title = "no custom header value and header value is undefined",
+              header_name = "canaryHeader",
+              header_value = "",
+              request_header_name = "canaryHeader",
+              request_header_value = "foo",
+              expected_result = false,
+            },
+            {
+              case_title = "no custom header value and header name is undefined",
+              header_name = "canaryHeader",
+              header_value = "",
+              request_header_name = "foo",
+              request_header_value = "always",
+              expected_result = false,
+            },
+            -- with header value setting
+            {
+              case_title = "custom header value is set and header value is 'always'",
+              header_name = "canaryHeader",
+              header_value = "foo",
+              request_header_name = "canaryHeader",
+              request_header_value = "always",
+              expected_result = false,
+            },
+            {
+              case_title = "custom header value is set and header value match custom header value",
+              header_name = "canaryHeader",
+              header_value = "foo",
+              request_header_name = "canaryHeader",
+              request_header_value = "foo",
+              expected_result = true,
+            },
+            {
+              case_title = "custom header value is set and header name is undefined",
+              header_name = "canaryHeader",
+              header_value = "foo",
+              request_header_name = "bar",
+              request_header_value = "foo",
+              expected_result = false
+            },
+          }
+
+          for _, test_pattern in pairs(test_patterns) do
+            mock_ngx({ var = {
+              ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
+              request_uri = "/"
+            }})
+            reset_balancer()
+            backend.trafficShapingPolicy.header = test_pattern.header_name
+            backend.trafficShapingPolicy.headerValue = test_pattern.header_value
+            balancer.sync_backend(backend)
+            assert.message("\nTest data pattern: " .. test_pattern.case_title)
+              .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_balancer))
+            reset_ngx()
+          end
+        end)
+      end)
+
     end)
   end)
 
