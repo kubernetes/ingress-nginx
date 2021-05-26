@@ -163,7 +163,8 @@ describe("Balancer", function()
       mock_ngx({ var = { request_uri = "/" } })
     end)
 
-    describe("not affinitized - uses traffic shaping policy to pick backend", function()
+    -- Not affinitized request must follow traffic shaping policies.
+    describe("not affinitized", function()
 
       before_each(function()
         _primaryBalancer.is_affinitized = function (_)
@@ -326,14 +327,45 @@ describe("Balancer", function()
 
     end)
 
-    describe("affinitized - prefers affinitized backend", function()
+    -- Affinitized request prefers backend it is affinitized to.
+    describe("affinitized", function()
 
       before_each(function()
         mock_ngx({ var = { request_uri = "/", proxy_upstream_name = backend.name } })
+        balancer.sync_backend(backend)
       end)
 
-      it("test", function()
-        assert.equal(_primaryBalancer, balancer.get_balancer())
+      it("returns false if request is affinitized to primary backend", function()
+        _primaryBalancer.is_affinitized = function (_)
+          return true
+        end
+
+        local alternativeBalancer = balancer.get_balancer_by_upstream_name(backend.name)
+
+        local primarySpy = spy.on(_primaryBalancer, "is_affinitized")
+        local alternativeSpy = spy.on(alternativeBalancer, "is_affinitized")
+
+        assert.is_false(balancer.route_to_alternative_balancer(_primaryBalancer))
+        assert.spy(_primaryBalancer.is_affinitized).was_called()
+        assert.spy(alternativeBalancer.is_affinitized).was_not_called()
+      end)
+
+      it("returns true if request is affinitized to alternative backend", function()
+        _primaryBalancer.is_affinitized = function (_)
+          return false
+        end
+
+        local alternativeBalancer = balancer.get_balancer_by_upstream_name(backend.name)
+        alternativeBalancer.is_affinitized = function (_)
+          return true
+        end
+
+        local primarySpy = spy.on(_primaryBalancer, "is_affinitized")
+        local alternativeSpy = spy.on(alternativeBalancer, "is_affinitized")
+
+        assert.is_true(balancer.route_to_alternative_balancer(_primaryBalancer))
+        assert.spy(_primaryBalancer.is_affinitized).was_called()
+        assert.spy(alternativeBalancer.is_affinitized).was_called()
       end)
 
     end)
