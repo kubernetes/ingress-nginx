@@ -70,7 +70,7 @@ function _M.split_string(what, delim)
   local result = {}
   local idx = 0
 
-  if what then
+  if what and delim and delim ~= "" then
     for chunk in what:gmatch("([^" .. delim .. "]+)") do
       idx = idx + 1
       result[idx] = chunk
