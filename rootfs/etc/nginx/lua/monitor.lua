@@ -7,7 +7,8 @@ local socket = ngx.socket.tcp
 local cjson = require("cjson.safe")
 local new_tab = require "table.new"
 local clear_tab = require "table.clear"
-local clone_tab = require "table.clone"
+local table = table
+local pairs = pairs
 
 
 -- if an Nginx worker processes more than (MAX_BATCH_SIZE/FLUSH_INTERVAL) RPS
@@ -17,6 +18,9 @@ local FLUSH_INTERVAL = 1 -- second
 
 local metrics_batch = new_tab(MAX_BATCH_SIZE, 0)
 local metrics_count = 0
+
+-- for save json raw metrics table
+local metrics_raw_batch = new_tab(MAX_BATCH_SIZE, 0)
 
 local _M = {}
 
@@ -57,16 +61,22 @@ local function flush(premature)
     return
   end
 
-  local current_metrics_batch = clone_tab(metrics_batch)
-  clear_tab(metrics_batch)
   metrics_count = 0
+  clear_tab(metrics_batch)
 
-  local payload, err = cjson.encode(current_metrics_batch)
-  if not payload then
-    ngx.log(ngx.ERR, "error while encoding metrics: ", err)
-    return
+  local request_metrics = {}
+  table.insert(request_metrics, "[")
+  for i in pairs(metrics_raw_batch) do
+    local item = metrics_raw_batch[i] ..","
+    if i == table.getn(metrics_raw_batch) then
+      item = metrics_raw_batch[i]
+    end
+    table.insert(request_metrics, item)
   end
+  table.insert(request_metrics, "]")
+  local payload = table.concat(request_metrics)
 
+  clear_tab(metrics_raw_batch)
   send(payload)
 end
 
@@ -90,8 +100,16 @@ function _M.call()
     return
   end
 
+  local metrics_obj = metrics()
+  local payload, err = cjson.encode(metrics_obj)
+  if err then
+    ngx.log(ngx.ERR, string.format("error when encoding metrics: %s", tostring(err)))
+    return
+  end
+
   metrics_count = metrics_count + 1
-  metrics_batch[metrics_count] = metrics()
+  metrics_batch[metrics_count] = metrics_obj
+  metrics_raw_batch[metrics_count] = payload
 end
 
 setmetatable(_M, {__index = {

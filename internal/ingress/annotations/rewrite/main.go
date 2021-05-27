@@ -35,6 +35,8 @@ type Config struct {
 	SSLRedirect bool `json:"sslRedirect"`
 	// ForceSSLRedirect indicates if the location section is accessible SSL only
 	ForceSSLRedirect bool `json:"forceSSLRedirect"`
+	// PreserveTrailingSlash indicates if the trailing slash should be kept during a tls redirect
+	PreserveTrailingSlash bool `json:"preserveTrailingSlash"`
 	// AppRoot defines the Application Root that the Controller must redirect if it's in '/' context
 	AppRoot string `json:"appRoot"`
 	// UseRegex indicates whether or not the locations use regex paths
@@ -87,6 +89,10 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.SSLRedirect, err = parser.GetBoolAnnotation("ssl-redirect", ing)
 	if err != nil {
 		config.SSLRedirect = a.r.GetDefaultBackend().SSLRedirect
+	}
+	config.PreserveTrailingSlash, err = parser.GetBoolAnnotation("preserve-trailing-slash", ing)
+	if err != nil {
+		config.PreserveTrailingSlash = a.r.GetDefaultBackend().PreserveTrailingSlash
 	}
 
 	config.ForceSSLRedirect, err = parser.GetBoolAnnotation("force-ssl-redirect", ing)

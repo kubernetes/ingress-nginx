@@ -850,6 +850,7 @@ func NewDefault() Configuration {
 			ProxyRequestBuffering:    "on",
 			ProxyRedirectFrom:        "off",
 			ProxyRedirectTo:          "off",
+			PreserveTrailingSlash:    false,
 			SSLRedirect:              true,
 			CustomHTTPErrors:         []int{},
 			WhitelistSourceRange:     []string{},
