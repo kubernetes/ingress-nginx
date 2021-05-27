@@ -56,6 +56,13 @@ type socketData struct {
 	Path      string `json:"path"`
 }
 
+// HistogramBuckets allow customizing prometheus histogram buckets values
+type HistogramBuckets struct {
+	TimeBuckets   []float64
+	LengthBuckets []float64
+	SizeBuckets   []float64
+}
+
 // SocketCollector stores prometheus metrics and ingress meta-data
 type SocketCollector struct {
 	prometheus.Collector
@@ -79,6 +86,8 @@ type SocketCollector struct {
 	hosts sets.String
 
 	metricsPerHost bool
+
+	buckets HistogramBuckets
 }
 
 var (
@@ -101,7 +110,7 @@ var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*SocketCollector, error) {
+func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, buckets HistogramBuckets) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	_ = syscall.Unlink(socket)
@@ -138,6 +147,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Help:        "The time spent on receiving the response from the upstream server",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
+				Buckets:     buckets.TimeBuckets,
 			},
 			requestTags,
 		),
@@ -147,6 +157,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Help:        "The response length (including request line, header, and request body)",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
+				Buckets:     buckets.LengthBuckets,
 			},
 			requestTags,
 		),
@@ -157,6 +168,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Help:        "The request processing time in milliseconds",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
+				Buckets:     buckets.TimeBuckets,
 			},
 			requestTags,
 		),
@@ -165,7 +177,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Name:        "request_size",
 				Help:        "The request length (including request line, header, and request body)",
 				Namespace:   PrometheusNamespace,
-				Buckets:     prometheus.LinearBuckets(10, 10, 10), // 10 buckets, each 10 bytes wide.
+				Buckets:     buckets.LengthBuckets,
 				ConstLabels: constLabels,
 			},
 			requestTags,
@@ -186,7 +198,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Name:        "bytes_sent",
 				Help:        "The number of bytes sent to a client",
 				Namespace:   PrometheusNamespace,
-				Buckets:     prometheus.ExponentialBuckets(10, 10, 7), // 7 buckets, exponential factor of 10.
+				Buckets:     buckets.SizeBuckets,
 				ConstLabels: constLabels,
 			},
 			requestTags,
