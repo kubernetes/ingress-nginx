@@ -121,22 +121,6 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			})
 	})
 
-	ginkgo.It("should allow multiple origins for cors", func() {
-		host := "cors.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin.cors.com:8080, https://origin2.cors.com",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Origin: https://origin.cors.com:8080, https://origin2.cors.com';")
-			})
-	})
-
 	ginkgo.It("should allow headers for cors", func() {
 		host := "cors.foo.com"
 		annotations := map[string]string{

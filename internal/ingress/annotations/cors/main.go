@@ -18,7 +18,6 @@ package cors
 
 import (
 	"regexp"
-	"strings"
 
 	networking "k8s.io/api/networking/v1beta1"
 
@@ -114,14 +113,7 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	config.CorsAllowOrigin, err = parser.GetStringAnnotation("cors-allow-origin", ing)
-	if err == nil {
-		for _, origin := range strings.Split(config.CorsAllowOrigin, ",") {
-			if !corsOriginRegex.MatchString(strings.TrimSpace(origin)) {
-				config.CorsAllowOrigin = "*"
-				break
-			}
-		}
-	} else {
+	if err != nil || !corsOriginRegex.MatchString(config.CorsAllowOrigin) {
 		config.CorsAllowOrigin = "*"
 	}
 

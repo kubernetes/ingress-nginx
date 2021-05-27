@@ -349,10 +349,10 @@ CORS can be controlled with the following annotations:
   - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
 
 * `nginx.ingress.kubernetes.io/cors-allow-origin`
-  controls which Origin(s) are allowed for CORS.
-  This is a multi-valued field, separated by ',', each value should obey the following format: `http(s)://origin-site.com` or `http(s)://origin-site.com:port`
+  controls what's the accepted Origin for CORS.
+  This is a single field value, with the following format: `http(s)://origin-site.com` or `http(s)://origin-site.com:port`
   - Default: `*`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443, https://origin-site-2.com"`
+  - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"`
 
 * `nginx.ingress.kubernetes.io/cors-allow-credentials`
   controls if credentials can be passed during CORS operations.
