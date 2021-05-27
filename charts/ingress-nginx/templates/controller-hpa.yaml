@@ -4,6 +4,10 @@
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
+  annotations:
+  {{- with .Values.controller.autoscaling.annotations }}
+  {{- toYaml . | trimSuffix "\n" | nindent 4 }}
+  {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
