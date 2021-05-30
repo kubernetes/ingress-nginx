@@ -12,8 +12,9 @@ controller:
   image:
     registry: k8s.gcr.io
     image: ingress-nginx/controller
-    # for backwards compatibility setting full image url via repository value
-    repository:
+    # for backwards compatibility consider setting the full image url via the repository value below
+    # use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
+    # repository:
     tag: "v0.46.0"
     digest: sha256:52f0058bed0a17ab0fb35628ba97e8d52b5d32299fbc03cc0f6c7b9ff036b61a
     pullPolicy: IfNotPresent
@@ -519,8 +520,9 @@ controller:
       image:
         registry: docker.io
         image: jettech/kube-webhook-certgen
-        # for backwards compatibility setting full image url via repository value
-        repository:
+        # for backwards compatibility consider setting the full image url via the repository value below
+        # use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
+        # repository:
         tag: v1.5.1
         pullPolicy: IfNotPresent
       ## Provide a priority class name to the webhook patching job
@@ -639,8 +641,9 @@ defaultBackend:
   image:
     registry: k8s.gcr.io
     image: defaultbackend-amd64
-    # for backwards compatibility setting full image url via repository value
-    repository:
+    # for backwards compatibility consider setting the full image url via the repository value below
+    # use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
+    # repository:
     tag: "1.5"
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
