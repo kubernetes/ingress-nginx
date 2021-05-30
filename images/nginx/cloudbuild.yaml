@@ -1,4 +1,4 @@
-timeout: 10800s
+timeout: 21600s
 options:
   substitution_option: ALLOW_LOOSE
   # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
