@@ -2,6 +2,11 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 3.31.0
+
+- Changed the name of TCP and UDP ports to support Yandex.Cloud
+
+
 ### 3.30.0
 
 - [#7092](https://github.com/kubernetes/ingress-nginx/pull/7092) Removes the possibility of using localhost in ExternalNames as endpoints
