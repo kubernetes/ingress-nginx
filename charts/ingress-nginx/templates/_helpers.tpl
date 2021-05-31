@@ -70,6 +70,7 @@ helm.sh/chart: {{ include "ingress-nginx.chart" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
+app.kubernetes.io/part-of: {{ template "ingress-nginx.name" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
