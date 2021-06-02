@@ -104,7 +104,7 @@ func main() {
 	conf.FakeCertificate = ssl.GetFakeSSLCert()
 	klog.InfoS("SSL fake certificate created", "file", conf.FakeCertificate.PemFileName)
 
-	if k8s.NetworkingIngressAvailable(kubeClient) {
+	if !k8s.NetworkingIngressAvailable(kubeClient) {
 		klog.Fatalf("ingress-nginx requires Kubernetes v1.19.0 or higher")
 	}
 
@@ -115,8 +115,12 @@ func main() {
 			if !errors.IsUnauthorized(err) && !errors.IsForbidden(err) {
 				klog.Fatalf("Error searching IngressClass: %v", err)
 			}
+			klog.ErrorS(err, "Searching IngressClass", "class", class.IngressClass)
 		}
-		klog.ErrorS(err, "Searching IngressClass", "class", class.IngressClass)
+
+		klog.Warningf("No IngressClass resource with name %v found. Only annotation will be used.", class.IngressClass)
+		// TODO: remove once this is fixed in client-go
+		k8s.IngressClass = nil
 
 	}
 

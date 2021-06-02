@@ -29,12 +29,11 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -62,8 +61,7 @@ var (
 type Framework struct {
 	BaseName string
 
-	IsIngressV1Ready      bool
-	IsIngressV1Beta1Ready bool
+	IsIngressV1Ready bool
 
 	// A Kubernetes and Service Catalog client
 	KubeClientSet          kubernetes.Interface
@@ -542,7 +540,7 @@ func waitForDeploymentRollout(kubeClientSet kubernetes.Interface, resource *apps
 
 // UpdateIngress runs the given updateFunc on the ingress
 func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name string, updateFunc func(d *networking.Ingress) error) error {
-	ingress, err := kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	ingress, err := kubeClientSet.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -559,7 +557,7 @@ func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name st
 		return err
 	}
 
-	_, err = kubeClientSet.NetworkingV1beta1().Ingresses(namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
+	_, err = kubeClientSet.NetworkingV1().Ingresses(namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
@@ -580,6 +578,7 @@ func NewSingleIngress(name, path, host, ns, service string, port int, annotation
 
 // NewSingleIngressWithMultiplePaths creates a simple ingress rule with multiple paths
 func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations map[string]string) *networking.Ingress {
+	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
 		Rules: []networking.IngressRule{
 			{
@@ -593,10 +592,15 @@ func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, se
 
 	for _, path := range paths {
 		spec.Rules[0].IngressRuleValue.HTTP.Paths = append(spec.Rules[0].IngressRuleValue.HTTP.Paths, networking.HTTPIngressPath{
-			Path: path,
+			Path:     path,
+			PathType: &pathtype,
 			Backend: networking.IngressBackend{
-				ServiceName: service,
-				ServicePort: intstr.FromInt(port),
+				Service: &networking.IngressServiceBackend{
+					Name: service,
+					Port: networking.ServiceBackendPort{
+						Number: int32(port),
+					},
+				},
 			},
 		})
 	}
@@ -605,6 +609,7 @@ func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, se
 }
 
 func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations map[string]string, tlsHosts []string) *networking.Ingress {
+	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
 		Rules: []networking.IngressRule{
 			{
@@ -612,10 +617,15 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 					HTTP: &networking.HTTPIngressRuleValue{
 						Paths: []networking.HTTPIngressPath{
 							{
-								Path: path,
+								Path:     path,
+								PathType: &pathtype,
 								Backend: networking.IngressBackend{
-									ServiceName: service,
-									ServicePort: intstr.FromInt(port),
+									Service: &networking.IngressServiceBackend{
+										Name: service,
+										Port: networking.ServiceBackendPort{
+											Number: int32(port),
+										},
+									},
 								},
 							},
 						},
@@ -644,10 +654,15 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 
 // NewSingleIngressWithBackendAndRules creates an ingress with both a default backend and a rule
 func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations map[string]string) *networking.Ingress {
+	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
-		Backend: &networking.IngressBackend{
-			ServiceName: defaultService,
-			ServicePort: intstr.FromInt(defaultPort),
+		DefaultBackend: &networking.IngressBackend{
+			Service: &networking.IngressServiceBackend{
+				Name: defaultService,
+				Port: networking.ServiceBackendPort{
+					Number: int32(defaultPort),
+				},
+			},
 		},
 		Rules: []networking.IngressRule{
 			{
@@ -656,10 +671,15 @@ func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService st
 					HTTP: &networking.HTTPIngressRuleValue{
 						Paths: []networking.HTTPIngressPath{
 							{
-								Path: path,
+								Path:     path,
+								PathType: &pathtype,
 								Backend: networking.IngressBackend{
-									ServiceName: service,
-									ServicePort: intstr.FromInt(port),
+									Service: &networking.IngressServiceBackend{
+										Name: service,
+										Port: networking.ServiceBackendPort{
+											Number: int32(port),
+										},
+									},
 								},
 							},
 						},
@@ -675,9 +695,13 @@ func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService st
 // NewSingleCatchAllIngress creates a simple ingress with a catch-all backend
 func NewSingleCatchAllIngress(name, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	spec := networking.IngressSpec{
-		Backend: &networking.IngressBackend{
-			ServiceName: service,
-			ServicePort: intstr.FromInt(port),
+		DefaultBackend: &networking.IngressBackend{
+			Service: &networking.IngressServiceBackend{
+				Name: service,
+				Port: networking.ServiceBackendPort{
+					Number: int32(port),
+				},
+			},
 		},
 	}
 	return newSingleIngress(name, ns, annotations, spec)

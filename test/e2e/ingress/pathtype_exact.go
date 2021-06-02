@@ -22,7 +22,7 @@ import (
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -35,9 +35,6 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 	})
 
 	ginkgo.It("should choose exact location for /exact", func() {
-		if !f.IsIngressV1Beta1Ready {
-			ginkgo.Skip("Test requires Kubernetes v1.18 or higher")
-		}
 
 		host := "exact.path"
 
@@ -45,7 +42,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: exact";`,
 		}
 
-		var exactPathType = networkingv1beta1.PathTypeExact
+		var exactPathType = networking.PathTypeExact
 		ing := framework.NewSingleIngress("exact", "/exact", host, f.Namespace, framework.EchoService, 80, annotations)
 		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &exactPathType
 		f.EnsureIngress(ing)
