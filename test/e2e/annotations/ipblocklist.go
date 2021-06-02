@@ -94,7 +94,7 @@ var _ = framework.DescribeAnnotation("blocklist-source-range", func() {
 			fmt.Printf("stderr: %v\n", eout)
 			return
 		}
-		fmt.Println(execOut.String())
+		fmt.Println("stdout", execOut.String())
 	})
 
 	ginkgo.It("should set valid ip blocklist range", func() {
