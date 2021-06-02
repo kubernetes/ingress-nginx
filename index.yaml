@@ -6,6 +6,29 @@ entries:
         - Removes the possibility of using localhost in ExternalNames as endpoints
     apiVersion: v2
     appVersion: 0.46.0
+    created: "2021-06-02T09:53:22.403057445Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 147258822cff2e0efc736fe045f3843f1b1bd5244abfa0e806797ef092b81730
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.32.0/ingress-nginx-3.32.0.tgz
+    version: 3.32.0
+  - annotations:
+      artifacthub.io/changes: |
+        - Removes the possibility of using localhost in ExternalNames as endpoints
+    apiVersion: v2
+    appVersion: 0.46.0
     created: "2021-05-18T13:38:49.491675977Z"
     description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
     digest: 5d90062df12d7f6459248252e79c7e58c9390d3be685de97ccb81429bd1530fd
