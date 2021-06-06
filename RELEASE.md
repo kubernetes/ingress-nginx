@@ -69,8 +69,9 @@ The sha is available in output from [cloud build](https://console.cloud.google.c
     * Open pull request with the updates
     * Merge
 
-* Update changelog:
+* Update Changelog and Documentation:
     * Open pull request updating [Changelog.md](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md)
+    * Update the version in [docs/deploy/index.md](docs/deploy/index.md)
     * Merge
-
+      
 7. Github release
