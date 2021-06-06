@@ -3,6 +3,29 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Update nginx to v1.20.1
+    apiVersion: v2
+    appVersion: 0.47.0
+    created: "2021-06-06T16:23:21.535360996Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 52ec03a3ebbca9ff08de5087ecf45c444db317f73d2e4b12845625db1e10fb3a
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.33.0/ingress-nginx-3.33.0.tgz
+    version: 3.33.0
+  - annotations:
+      artifacthub.io/changes: |
         - Removes the possibility of using localhost in ExternalNames as endpoints
     apiVersion: v2
     appVersion: 0.46.0
