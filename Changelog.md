@@ -9,7 +9,6 @@
 _New Features:_
 
 - [X] [#7137] Add support for custom probes
-- [X] [#7134] Multiple-cors-allow-origin support 
 
 _Changes:_
 
