@@ -294,6 +294,16 @@ func TestCheckIngress(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("When the ingress is marked as deleted", func(t *testing.T) {
+		ing.DeletionTimestamp = &metav1.Time{
+			Time: time.Now(),
+		}
+
+		if nginx.CheckIngress(ing) != nil {
+			t.Errorf("when the ingress is marked as deleted, no error should be returned")
+		}
+	})
 }
 
 func TestMergeAlternativeBackends(t *testing.T) {
