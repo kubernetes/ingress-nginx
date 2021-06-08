@@ -19,6 +19,12 @@ spec:
     name: {{ include "ingress-nginx.controller.fullname" . }}
   minReplicas: {{ .Values.controller.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.controller.autoscaling.maxReplicas }}
+  {{- if .Values.controller.autoscaling.behavior }}
+  behavior:
+    {{ with .Values.controller.autoscaling.behavior -}}
+    {{ toYaml . | nindent 4 }}
+    {{ end }}
+  {{- end }}
   metrics:
   {{- with .Values.controller.autoscaling.targetMemoryUtilizationPercentage }}
   - type: Resource 

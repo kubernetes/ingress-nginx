@@ -316,6 +316,27 @@ controller:
 
   # Mutually exclusive with keda autoscaling
   autoscaling:
+    annotations: {}
+    behavior: {}
+      # Support for configurable scaling behavior
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behavior
+      #
+      # scaleDown:
+      #   stabilizationWindowSeconds: 300
+      #   policies:
+      #   - type: Percent
+      #     value: 100
+      #     periodSeconds: 15
+      # scaleUp:
+      #   stabilizationWindowSeconds: 0
+      #   policies:
+      #   - type: Percent
+      #     value: 100
+      #     periodSeconds: 15
+      #   - type: Pods
+      #     value: 4
+      #     periodSeconds: 15
+      #   selectPolicy: Max
     enabled: false
     minReplicas: 1
     maxReplicas: 11
@@ -735,7 +756,6 @@ defaultBackend:
   #    emptyDir: {}
 
   autoscaling:
-    annotations: {}
     enabled: false
     minReplicas: 1
     maxReplicas: 2

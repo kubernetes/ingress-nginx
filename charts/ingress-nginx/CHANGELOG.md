@@ -2,6 +2,14 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 3.34.0
+
+- [7223] https://github.com/kubernetes/ingress-nginx/pull/7223 Add support for configurable scaling behavior to HPA template
+
+### 3.33.0
+
+- [7211] https://github.com/kubernetes/ingress-nginx/pull/7211 Release v0.47.0
+
 ### 3.32.0
 
 - [7117] https://github.com/kubernetes/ingress-nginx/pull/7117 Add annotations for HPA
