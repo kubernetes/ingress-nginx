@@ -61,7 +61,9 @@ function _M.new(self, backend)
     instance = resty_chash:new(subset_map),
     hash_by = complex_val,
     subsets = subsets,
-    current_endpoints = backend.endpoints
+    current_endpoints = backend.endpoints,
+    traffic_shaping_policy = backend.trafficShapingPolicy,
+    alternative_backends = backend.alternativeBackends,
   }
   setmetatable(o, self)
   self.__index = self
