@@ -77,7 +77,7 @@ clean-image: ## Removes local image
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
-	build/run-in-docker.sh \
+	@build/run-in-docker.sh \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
@@ -205,13 +205,13 @@ release: ensure-buildx clean
 	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
 
 	echo "Building and pushing ingress-nginx image..."
-	docker buildx build \
+	@docker buildx build \
 		--no-cache \
 		--push \
 		--progress plain \
-		--platform linux/amd64 \
+		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
-		-t hushasy/ingress-nginx-controller:$(TAG) rootfs
+		-t $(REGISTRY)/controller:$(TAG) rootfs
