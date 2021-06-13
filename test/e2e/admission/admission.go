@@ -121,7 +121,6 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid configuration should return an error")
 	})
 
-
 	ginkgo.It("should not return an error if the Ingress V1 definition is valid", func() {
 		if !f.IsIngressV1Ready {
 			ginkgo.Skip("Test requires Kubernetes v1.19 or higher")
@@ -167,7 +166,6 @@ func uninstallChart(f *framework.Framework) error {
 }
 
 const (
-
 	validV1Ingress = `
 apiVersion: networking.k8s.io/v1
 kind: Ingress

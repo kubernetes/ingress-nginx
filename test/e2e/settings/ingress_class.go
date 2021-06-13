@@ -209,7 +209,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		})
 	})
 
-	ginkgo.It("check scenarios for IngressClass and ingress.class annotation", func() {	
+	ginkgo.It("check scenarios for IngressClass and ingress.class annotation", func() {
 
 		pod := f.GetIngressNGINXPod()
 
