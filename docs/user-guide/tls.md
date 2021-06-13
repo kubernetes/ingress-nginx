@@ -18,6 +18,10 @@ kubectl create secret tls ${CERT_NAME} --key ${KEY_FILE} --cert ${CERT_FILE}
 
 The resulting secret will be of type `kubernetes.io/tls`.
 
+## Host names
+
+Ensure that the relevant [ingress rules specify a matching host name](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls).
+
 ## Default SSL Certificate
 
 NGINX provides the option to configure a server as a catch-all with
