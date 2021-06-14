@@ -210,7 +210,8 @@ local function route_to_alternative_balancer(balancer)
   end
 
   if alternative_balancer.is_affinitized(alternative_balancer) then
-    -- If request is affinitized to an alternative balancer, instruct caller to switch to alternative.
+    -- If request is affinitized to an alternative balancer, instruct caller to
+    -- switch to alternative.
     return true
   end
 

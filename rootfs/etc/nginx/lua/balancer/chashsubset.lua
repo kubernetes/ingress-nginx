@@ -68,7 +68,7 @@ function _M.new(self, backend)
   return o
 end
 
-function _M.is_affinitized(self)
+function _M.is_affinitized()
   return false
 end
 

@@ -170,7 +170,7 @@ local function calculate_slow_start_ewma(self)
   return total_ewma / endpoints_count
 end
 
-function _M.is_affinitized(self)
+function _M.is_affinitized()
   return false
 end
 
