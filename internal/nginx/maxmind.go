@@ -25,6 +25,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 // MaxmindLicenseKey maxmind license key to download databases
@@ -38,6 +39,9 @@ var MaxmindEditionFiles []string
 
 // MaxmindMirror maxmind database mirror url (http://geoip.local)
 var MaxmindMirror = ""
+
+// MaxmindRetriesTimeout maxmind download retries timeout in seconds, 0 - do not retry to download if something went wrong
+var MaxmindRetriesTimeout = time.Second * 0
 
 const (
 	geoIPPath   = "/etc/nginx/geoip"

@@ -17,7 +17,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
 	github.com/ncabatoff/process-exporter v0.7.2
-	github.com/onsi/ginkgo v1.14.1
+	github.com/onsi/ginkgo v1.16.4
 	github.com/opencontainers/runc v1.0.0-rc92
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
@@ -45,4 +45,5 @@ require (
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.8.0
+	sigs.k8s.io/kind v0.11.1 // indirect
 )
