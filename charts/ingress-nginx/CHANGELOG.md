@@ -2,10 +2,17 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 3.32.0
+
+- [7117] https://github.com/kubernetes/ingress-nginx/pull/7117 Add annotations for HPA
+
+### 3.31.0
+
+- [7137] https://github.com/kubernetes/ingress-nginx/pull/7137 Add support for custom probes
+
 ### 3.30.0
 
 - [#7092](https://github.com/kubernetes/ingress-nginx/pull/7092) Removes the possibility of using localhost in ExternalNames as endpoints
-
 
 ### 3.29.0
 
