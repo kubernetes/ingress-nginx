@@ -10,6 +10,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: {{ include "ingress-nginx.fullname" . }}
+  namespace: {{ .Release.Namespace }}
 subjects:
   - kind: ServiceAccount
     name: {{ template "ingress-nginx.serviceAccountName" . }}
