@@ -55,7 +55,9 @@ var (
 func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object, error) {
 
 	review, isV1 := obj.(*admissionv1.AdmissionReview)
-	fmt.Printf("Review: %v IsV1: %v\n\n\n", review, isV1)
+	if !isV1 {
+		return nil, fmt.Errorf("request is not of type AdmissionReview v1 or v1beta1")
+	}
 
 	if !apiequality.Semantic.DeepEqual(review.Request.Kind, ingressResource) {
 		return nil, fmt.Errorf("rejecting admission review because the request does not contain an Ingress resource but %s with name %s in namespace %s",
