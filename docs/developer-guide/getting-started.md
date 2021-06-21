@@ -4,25 +4,23 @@ This document explains how to get started with developing for NGINX Ingress cont
 
 ## Prerequisites
 
-* [Go 1.14](https://golang.org/dl/) or later
-* [Docker](https://docs.docker.com/engine/install/) (v19.03.0 or later with experimental feature on)
-* [Kind](https://kind.sigs.k8s.io/)
-* [Kubectl](https://kubernetes.io/docs/tasks/tools/)
-* [Helm](https://helm.sh/docs/intro/install/)
-* Optionally install [kubectl plugin](../kubectl-plugin.md) for easier troubleshooting on cluster
+Install [Go 1.14](https://golang.org/dl/) or later.
+
+!!! note
+    The project uses [Go Modules](https://github.com/golang/go/wiki/Modules)
+
+Install [Docker](https://docs.docker.com/engine/install/) (v19.03.0 or later with experimental feature on)
 
 !!! important
-    The majority of make tasks run as Docker containers.
+    The majority of make tasks run as docker containers
 
 ## Quick Start
+
 
 1. Fork the repository
 2. Clone the repository to any location in your work station
 3. Add a `GO111MODULE` environment variable with `export GO111MODULE=on`
 4. Run `go mod download` to install dependencies
-
-!!! note
-    The project uses [Go modules](https://github.com/golang/go/wiki/Modules).
 
 ### Local build
 
