@@ -8,6 +8,7 @@ metadata:
   annotations: {{ toYaml .Values.controller.configAnnotations | nindent 4 }}
 {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
 data:
 {{- if .Values.controller.addHeaders }}
   add-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers
