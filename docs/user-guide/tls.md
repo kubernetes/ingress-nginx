@@ -18,12 +18,16 @@ kubectl create secret tls ${CERT_NAME} --key ${KEY_FILE} --cert ${CERT_FILE}
 
 The resulting secret will be of type `kubernetes.io/tls`.
 
+## Host names
+
+Ensure that the relevant [ingress rules specify a matching host name](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls).
+
 ## Default SSL Certificate
 
 NGINX provides the option to configure a server as a catch-all with
 [server_name](http://nginx.org/en/docs/http/server_names.html)
 for requests that do not match any of the configured server names.
-This configuration works without out-of-the-box for HTTP traffic.
+This configuration works out-of-the-box for HTTP traffic.
 For HTTPS, a certificate is naturally required.
 
 For this reason the Ingress controller provides the flag `--default-ssl-certificate`.

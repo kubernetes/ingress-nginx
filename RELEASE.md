@@ -1,6 +1,11 @@
-1. [nginx](https://github.com/kubernetes/ingress-nginx/tree/master/images/nginx)
+1. [NGINX](https://github.com/kubernetes/ingress-nginx/tree/master/images/nginx)
 
 * Open pull request
+  
+If you are updating any component in [build.sh](images/nginx/rootfs/build.sh) please also update the SHA256 checksum of that component as 
+  well, the cloud build will fail with an exit 10 if not.  
+Example [NGINX_VERSION](images/nginx/rootfs/build.sh#L21),
+[SHA256](images/nginx/rootfs/build.sh#L124) 
 * Merge
 * Wait for [cloud build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-ingress-nginx)
 
@@ -64,8 +69,10 @@ The sha is available in output from [cloud build](https://console.cloud.google.c
     * Open pull request with the updates
     * Merge
 
-* Update changelog:
+* Update Changelog and Documentation:
     * Open pull request updating [Changelog.md](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md)
+    * Update the version in [docs/deploy/index.md](docs/deploy/index.md)
+    * Update Supported versions in the Support Versions table in the README.md 
     * Merge
-
+      
 7. Github release

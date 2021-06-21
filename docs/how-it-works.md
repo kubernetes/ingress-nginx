@@ -54,7 +54,7 @@ In some cases, it is possible to avoid reloads, in particular when there is a ch
 
 On every endpoint change the controller fetches endpoints from all the services it sees and generates corresponding Backend objects. It then sends these objects to a Lua handler running inside Nginx. The Lua code in turn stores those backends in a shared memory zone. Then for every request Lua code running in [`balancer_by_lua`](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md) context detects what endpoints it should choose upstream peer from and applies the configured load balancing algorithm to choose the peer. Then Nginx takes care of the rest. This way we avoid reloading Nginx on endpoint changes. _Note_ that this includes annotation changes that affects only `upstream` configuration in Nginx as well.
 
-In a relatively big clusters with frequently deploying apps this feature saves significant number of Nginx reloads which can otherwise affect response latency, load balancing quality (after every reload Nginx resets the state of load balancing) and so on.
+In a relatively big cluster with frequently deploying apps this feature saves significant number of Nginx reloads which can otherwise affect response latency, load balancing quality (after every reload Nginx resets the state of load balancing) and so on.
 
 ### Avoiding outage from wrong configuration
 
