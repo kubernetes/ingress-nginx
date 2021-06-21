@@ -1654,6 +1654,10 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 				continue
 			}
 
+			if location.IsDefBackend {
+				continue
+			}
+
 			ingresses = append(ingresses, &location.Ingress.Ingress)
 		}
 	}
