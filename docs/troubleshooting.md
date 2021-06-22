@@ -172,61 +172,46 @@ token that is required to authenticate with the API server.
 Verify with the following commands:
 
 ```console
-# get service IP of master
-$ kubectl get services kuberentes
-NAME         CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
-kubernetes   10.100.0.1     <none>        443/TCP   1d
-
 # start a container that contains curl
-$ kubectl run -i --tty --rm test --image=tutum/curl --restart=Never
+$ kubectl run -it --rm test --image=curlimages/curl --restart=Never -- /bin/sh
 
 # check if secret exists
-root@test:/# ls /var/run/secrets/kubernetes.io/serviceaccount/
-ca.crt
-namespace
-token
+/ $ ls /var/run/secrets/kubernetes.io/serviceaccount/
+ca.crt     namespace  token
+/ $
 
 # check base connectivity from cluster inside
-root@test:/# curl -k https://10.100.0.1
-Unauthorized
+/ $ curl -k https://kubernetes.default.svc.cluster.local
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {
+
+  },
+  "status": "Failure",
+  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
+  "reason": "Forbidden",
+  "details": {
+
+  },
+  "code": 403
+}/ $
 
 # connect using tokens
-root@test:/# curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://10.100.0.1 && echo
+}/ $ curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://kubernetes.default.svc.cluster.local
+&& echo
 {
   "paths": [
     "/api",
     "/api/v1",
     "/apis",
-    "/apis/apps",
-    "/apis/apps/v1alpha1",
-    "/apis/authentication.k8s.io",
-    "/apis/authentication.k8s.io/v1beta1",
-    "/apis/authorization.k8s.io",
-    "/apis/authorization.k8s.io/v1beta1",
-    "/apis/autoscaling",
-    "/apis/autoscaling/v1",
-    "/apis/batch",
-    "/apis/batch/v1",
-    "/apis/batch/v2alpha1",
-    "/apis/certificates.k8s.io",
-    "/apis/certificates.k8s.io/v1alpha1",
-    "/apis/networking",
-    "/apis/networking/v1beta1",
-    "/apis/policy",
-    "/apis/policy/v1alpha1",
-    "/apis/rbac.authorization.k8s.io",
-    "/apis/rbac.authorization.k8s.io/v1alpha1",
-    "/apis/storage.k8s.io",
-    "/apis/storage.k8s.io/v1beta1",
-    "/healthz",
-    "/healthz/ping",
-    "/logs",
-    "/metrics",
-    "/swaggerapi/",
-    "/ui/",
+    "/apis/",
+    ... TRUNCATED
+    "/readyz/shutdown",
     "/version"
   ]
 }
+/ $
 
 # when you type `exit` or `^D` the test pod will be deleted.
 ```
