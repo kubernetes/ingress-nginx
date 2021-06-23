@@ -21,7 +21,7 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
