@@ -81,6 +81,19 @@ _Changes:_
 - [X] [#7216](https://github.com/kubernetes/ingress-nginx/pull/7216) Admission: Skip validation checks if an ingress 
   is marked as deleted #7216
   
+### 1.0.0-alpha.1
+**THIS IS A BREAKING CHANGE**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-alpha.1@sha256:32f3f02a038c0d7cf33b71a14028c3a4ddee6f4c3fe5fadfa14b915e5e0d9faf`
+
+_ New Features:_
+
+- [X] [#7156] Drops support for Ingress Object v1beta1
+
 ### 0.47.0
 
 **Image:**
