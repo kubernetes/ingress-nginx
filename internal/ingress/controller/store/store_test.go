@@ -28,10 +28,9 @@ import (
 
 	"github.com/eapache/channels"
 	v1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -42,9 +41,13 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+var pathPrefix networking.PathType = networking.PathTypePrefix
+
 func TestStore(t *testing.T) {
 	//TODO: move env definition to docker image?
 	os.Setenv("KUBEBUILDER_ASSETS", "/usr/local/bin")
+
+	pathPrefix = networking.PathTypePrefix
 
 	te := &envtest.Environment{}
 	cfg, err := te.Start()
@@ -108,7 +111,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected an error but none returned")
 		}
 		if svc != nil {
-			t.Errorf("expected an Ingres but none returned")
+			t.Errorf("expected an Ingress but none returned")
 		}
 	})
 
@@ -176,10 +179,15 @@ func TestStore(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
+											Service: &networking.IngressServiceBackend{
+												Name: "http-svc",
+												Port: networking.ServiceBackendPort{
+													Number: 80,
+												},
+											},
 										},
 									},
 								},
@@ -213,10 +221,15 @@ func TestStore(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
+											Service: &networking.IngressServiceBackend{
+												Name: "http-svc",
+												Port: networking.ServiceBackendPort{
+													Number: 80,
+												},
+											},
 										},
 									},
 								},
@@ -237,7 +250,7 @@ func TestStore(t *testing.T) {
 		// Secret takes a bit to update
 		time.Sleep(3 * time.Second)
 
-		err = clientSet.NetworkingV1beta1().Ingresses(ni.Namespace).Delete(context.TODO(), ni.Name, metav1.DeleteOptions{})
+		err = clientSet.NetworkingV1().Ingresses(ni.Namespace).Delete(context.TODO(), ni.Name, metav1.DeleteOptions{})
 		if err != nil {
 			t.Errorf("error creating ingress: %v", err)
 		}
@@ -327,10 +340,15 @@ func TestStore(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
+											Service: &networking.IngressServiceBackend{
+												Name: "http-svc",
+												Port: networking.ServiceBackendPort{
+													Number: 80,
+												},
+											},
 										},
 									},
 								},
@@ -513,9 +531,13 @@ func TestStore(t *testing.T) {
 						SecretName: secretName,
 					},
 				},
-				Backend: &networking.IngressBackend{
-					ServiceName: "http-svc",
-					ServicePort: intstr.FromInt(80),
+				DefaultBackend: &networking.IngressBackend{
+					Service: &networking.IngressServiceBackend{
+						Name: "http-svc",
+						Port: networking.ServiceBackendPort{
+							Number: 80,
+						},
+					},
 				},
 			},
 		}, clientSet, t)
@@ -629,10 +651,15 @@ func TestStore(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
+											Service: &networking.IngressServiceBackend{
+												Name: "http-svc",
+												Port: networking.ServiceBackendPort{
+													Number: 80,
+												},
+											},
 										},
 									},
 								},
@@ -724,13 +751,13 @@ func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) st
 
 func ensureIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, t *testing.T) *networking.Ingress {
 	t.Helper()
-	ing, err := clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
+	ing, err := clientSet.NetworkingV1().Ingresses(ingress.Namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
 
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			t.Logf("Ingress %v not found, creating", ingress)
 
-			ing, err = clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Create(context.TODO(), ingress, metav1.CreateOptions{})
+			ing, err = clientSet.NetworkingV1().Ingresses(ingress.Namespace).Create(context.TODO(), ingress, metav1.CreateOptions{})
 			if err != nil {
 				t.Fatalf("error creating ingress %+v: %v", ingress, err)
 			}
@@ -747,7 +774,7 @@ func ensureIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, 
 
 func deleteIngress(ingress *networking.Ingress, clientSet kubernetes.Interface, t *testing.T) {
 	t.Helper()
-	err := clientSet.NetworkingV1beta1().Ingresses(ingress.Namespace).Delete(context.TODO(), ingress.Name, metav1.DeleteOptions{})
+	err := clientSet.NetworkingV1().Ingresses(ingress.Namespace).Delete(context.TODO(), ingress.Name, metav1.DeleteOptions{})
 
 	if err != nil {
 		t.Errorf("failed to delete ingress %+v: %v", ingress, err)
@@ -851,9 +878,13 @@ func TestListIngresses(t *testing.T) {
 				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
 			Spec: networking.IngressSpec{
-				Backend: &networking.IngressBackend{
-					ServiceName: "demo",
-					ServicePort: intstr.FromInt(80),
+				DefaultBackend: &networking.IngressBackend{
+					Service: &networking.IngressServiceBackend{
+						Name: "demo",
+						Port: networking.ServiceBackendPort{
+							Number: 80,
+						},
+					},
 				},
 			},
 		},
@@ -876,8 +907,12 @@ func TestListIngresses(t *testing.T) {
 								Paths: []networking.HTTPIngressPath{
 									{
 										Backend: networking.IngressBackend{
-											ServiceName: "demo",
-											ServicePort: intstr.FromInt(80),
+											Service: &networking.IngressServiceBackend{
+												Name: "demo",
+												Port: networking.ServiceBackendPort{
+													Number: 80,
+												},
+											},
 										},
 									},
 								},
@@ -908,10 +943,15 @@ func TestListIngresses(t *testing.T) {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/demo",
+										Path:     "/demo",
+										PathType: &pathPrefix,
 										Backend: networking.IngressBackend{
-											ServiceName: "demo",
-											ServicePort: intstr.FromInt(80),
+											Service: &networking.IngressServiceBackend{
+												Name: "demo",
+												Port: networking.ServiceBackendPort{
+													Number: 80,
+												},
+											},
 										},
 									},
 								},

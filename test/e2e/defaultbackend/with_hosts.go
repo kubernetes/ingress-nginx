@@ -22,9 +22,8 @@ import (
 
 	"github.com/onsi/ginkgo"
 
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -48,9 +47,13 @@ var _ = framework.IngressNginxDescribe("[Default Backend] change default setting
 				Annotations: annotations,
 			},
 			Spec: networking.IngressSpec{
-				Backend: &networking.IngressBackend{
-					ServiceName: framework.EchoService,
-					ServicePort: intstr.FromInt(80),
+				DefaultBackend: &networking.IngressBackend{
+					Service: &networking.IngressServiceBackend{
+						Name: framework.EchoService,
+						Port: networking.ServiceBackendPort{
+							Number: int32(80),
+						},
+					},
 				},
 				Rules: []networking.IngressRule{
 					{

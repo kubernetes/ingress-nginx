@@ -31,9 +31,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/pmezard/go-difflib/difflib"
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -56,6 +55,8 @@ func init() {
 }
 
 var (
+	pathPrefix networking.PathType = networking.PathTypePrefix
+
 	// TODO: add tests for SSLPassthrough
 	tmplFuncTestcases = map[string]struct {
 		Path              string
@@ -226,11 +227,11 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	servers := []*ingress.Server{
 		{
 			Hostname:  "foo.bar",
-			Locations: []*ingress.Location{{Path: "/"}},
+			Locations: []*ingress.Location{{Path: "/", PathType: &pathPrefix}},
 		},
 		{
 			Hostname:  "another.host",
-			Locations: []*ingress.Location{{Path: "/"}},
+			Locations: []*ingress.Location{{Path: "/", PathType: &pathPrefix}},
 		},
 	}
 	// returns value from config
@@ -312,8 +313,9 @@ func TestBuildLocation(t *testing.T) {
 
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:    tc.Path,
-			Rewrite: rewrite.Config{Target: tc.Target},
+			Path:     tc.Path,
+			PathType: &pathPrefix,
+			Rewrite:  rewrite.Config{Target: tc.Target},
 		}
 
 		newLoc := buildLocation(loc, tc.enforceRegex)
@@ -330,6 +332,7 @@ func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:             tc.Path,
+			PathType:         &pathPrefix,
 			Rewrite:          rewrite.Config{Target: tc.Target},
 			Backend:          defaultBackend,
 			XForwardedPrefix: tc.XForwardedPrefix,
@@ -899,6 +902,7 @@ func TestBuildUpstreamName(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:             tc.Path,
+			PathType:         &pathPrefix,
 			Rewrite:          rewrite.Config{Target: tc.Target},
 			Backend:          defaultBackend,
 			XForwardedPrefix: tc.XForwardedPrefix,
@@ -1009,8 +1013,10 @@ func TestGetIngressInformation(t *testing.T) {
 						},
 					},
 					Spec: networking.IngressSpec{
-						Backend: &networking.IngressBackend{
-							ServiceName: "a-svc",
+						DefaultBackend: &networking.IngressBackend{
+							Service: &networking.IngressServiceBackend{
+								Name: "a-svc",
+							},
 						},
 					},
 				},
@@ -1020,6 +1026,7 @@ func TestGetIngressInformation(t *testing.T) {
 			&ingressInformation{
 				Namespace: "default",
 				Rule:      "validIng",
+				Path:      "/",
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
@@ -1044,10 +1051,15 @@ func TestGetIngressInformation(t *testing.T) {
 									HTTP: &networking.HTTPIngressRuleValue{
 										Paths: []networking.HTTPIngressPath{
 											{
-												Path: "/ok",
+												Path:     "/ok",
+												PathType: &pathPrefix,
 												Backend: networking.IngressBackend{
-													ServiceName: "b-svc",
-													ServicePort: intstr.FromInt(80),
+													Service: &networking.IngressServiceBackend{
+														Name: "b-svc",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
+													},
 												},
 											},
 										},
@@ -1338,7 +1350,8 @@ func TestEnforceRegexModifier(t *testing.T) {
 				Target:   "/alright",
 				UseRegex: true,
 			},
-			Path: "/ok",
+			Path:     "/ok",
+			PathType: &pathPrefix,
 		},
 	}
 	expected = true

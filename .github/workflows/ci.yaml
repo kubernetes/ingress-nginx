@@ -137,8 +137,16 @@ jobs:
         id: kind
         uses: engineerd/setup-kind@v0.5.0
         with:
+<<<<<<< HEAD
           version: v0.11.1
           image: kindest/node:v1.20.2
+||||||| parent of 78afe7e38 (Drop v1beta1 from ingress nginx (#7156))
+          version: v0.10.0
+          image: kindest/node:v1.20.2
+=======
+          version: v0.11.1
+          image: kindest/node:v1.21.1
+>>>>>>> 78afe7e38 (Drop v1beta1 from ingress nginx (#7156))
 
       - name: Test
         env:
@@ -159,7 +167,13 @@ jobs:
 
     strategy:
       matrix:
+<<<<<<< HEAD
         k8s: [v1.16.15, v1.17.17, v1.18.19, v1.19.11, v1.20.7, v1.21.2]
+||||||| parent of 78afe7e38 (Drop v1beta1 from ingress nginx (#7156))
+        k8s: [v1.16.15, v1.17.17, v1.18.15, v1.19.7, v1.20.2]
+=======
+        k8s: [v1.19.11, v1.20.7, v1.21.1]
+>>>>>>> 78afe7e38 (Drop v1beta1 from ingress nginx (#7156))
 
     steps:
 
