@@ -25,7 +25,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 

@@ -22,12 +22,12 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	appsv1client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	typednetworking "k8s.io/client-go/kubernetes/typed/networking/v1beta1"
+	typednetworking "k8s.io/client-go/kubernetes/typed/networking/v1"
 
 	"k8s.io/ingress-nginx/cmd/plugin/util"
 )
