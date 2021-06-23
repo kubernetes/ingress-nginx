@@ -927,10 +927,6 @@ func configureBackends(rawBackends []*ingress.Backend) error {
 	backends := make([]*ingress.Backend, len(rawBackends))
 
 	for i, backend := range rawBackends {
-		var service *apiv1.Service
-		if backend.Service != nil {
-			service = &apiv1.Service{Spec: backend.Service.Spec}
-		}
 		luaBackend := &ingress.Backend{
 			Name:                 backend.Name,
 			Port:                 backend.Port,
@@ -938,7 +934,7 @@ func configureBackends(rawBackends []*ingress.Backend) error {
 			SessionAffinity:      backend.SessionAffinity,
 			UpstreamHashBy:       backend.UpstreamHashBy,
 			LoadBalancing:        backend.LoadBalancing,
-			Service:              service,
+			Service:              backend.Service,
 			NoServer:             backend.NoServer,
 			TrafficShapingPolicy: backend.TrafficShapingPolicy,
 			AlternativeBackends:  backend.AlternativeBackends,
