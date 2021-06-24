@@ -26,7 +26,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -67,11 +67,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				},
 			}, metav1.CreateOptions{})
 
-			if !f.IsIngressV1Beta1Ready {
-				return
-			}
-
-			_, err := f.KubeClientSet.NetworkingV1beta1().IngressClasses().
+			_, err := f.KubeClientSet.NetworkingV1().IngressClasses().
 				Create(context.TODO(), &networking.IngressClass{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: testIngressClassName,
@@ -192,11 +188,11 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				Expect().
 				Status(http.StatusOK)
 
-			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			delete(ing.Annotations, class.IngressKey)
-			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ing.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+			_, err = f.KubeClientSet.NetworkingV1().Ingresses(ing.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			framework.Sleep()
@@ -214,9 +210,6 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 	})
 
 	ginkgo.It("check scenarios for IngressClass and ingress.class annotation", func() {
-		if !f.IsIngressV1Beta1Ready {
-			ginkgo.Skip("Test requires Kubernetes v1.18 or higher")
-		}
 
 		pod := f.GetIngressNGINXPod()
 
@@ -269,7 +262,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			Status(http.StatusOK)
 
 		ginkgo.By("only having ingress.class annotation")
-		ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+		ing, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		ing.Annotations = map[string]string{
@@ -277,7 +270,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		}
 		ing.Spec.IngressClassName = nil
 
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
@@ -293,7 +286,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			Status(http.StatusOK)
 
 		ginkgo.By("having an invalid ingress.class annotation and no IngressClassName")
-		ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+		ing, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		ing.Annotations = map[string]string{
@@ -301,7 +294,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		}
 		ing.Spec.IngressClassName = nil
 
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		framework.Sleep()
@@ -317,13 +310,13 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			Status(http.StatusNotFound)
 
 		ginkgo.By("not having ingress.class annotation and invalid IngressClassName")
-		ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+		ing, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		ing.Annotations = map[string]string{}
 		invalidClassName := "invalidclass"
 		ing.Spec.IngressClassName = &invalidClassName
 
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		framework.Sleep()

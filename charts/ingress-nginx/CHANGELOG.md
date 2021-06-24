@@ -2,9 +2,19 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
-### 3.33.0
+
+### 3.35.0
 
 - Changed the name of TCP and UDP ports to support Yandex.Cloud
+
+### 3.34.0
+
+- [7256] https://github.com/kubernetes/ingress-nginx/pull/7256 Add namespace field in the namespace scoped resource templates
+
+### 3.33.0
+
+- [7164] https://github.com/kubernetes/ingress-nginx/pull/7164 Update nginx to v1.20.1
+
 
 ### 3.32.0
 

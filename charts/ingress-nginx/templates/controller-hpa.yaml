@@ -12,6 +12,7 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
   name: {{ include "ingress-nginx.controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 
 	appsv1 "k8s.io/api/apps/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	kmeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
