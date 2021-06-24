@@ -15,7 +15,6 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 - [7164] https://github.com/kubernetes/ingress-nginx/pull/7164 Update nginx to v1.20.1
 
-
 ### 3.32.0
 
 - [7117] https://github.com/kubernetes/ingress-nginx/pull/7117 Add annotations for HPA
