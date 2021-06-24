@@ -13,7 +13,7 @@ NAME            HOSTS                         ADDRESS       PORTS     AGE
 external-auth   external-auth-01.sample.com   172.17.4.99   80        13s
 
 $ kubectl get ing external-auth -o yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -23,7 +23,7 @@ metadata:
   name: external-auth
   namespace: default
   resourceVersion: "2068378"
-  selfLink: /apis/networking/v1beta1/namespaces/default/ingresses/external-auth
+  selfLink: /apis/networking/v1/namespaces/default/ingresses/external-auth
   uid: 5c388f1d-8970-11e6-9004-080027d2dc94
 spec:
   rules:

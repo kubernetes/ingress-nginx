@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	kmeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/cmd/plugin/util"
 )

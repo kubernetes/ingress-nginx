@@ -28,7 +28,7 @@ import (
 
 	"github.com/eapache/channels"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -293,7 +293,7 @@ func New(
 		informers.WithTweakListOptions(secretsTweakListOptionsFunc),
 	)
 
-	store.informers.Ingress = infFactory.Networking().V1beta1().Ingresses().Informer()
+	store.informers.Ingress = infFactory.Networking().V1().Ingresses().Informer()
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
 
 	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
@@ -317,7 +317,7 @@ func New(
 				klog.ErrorS(nil, "Error obtaining object from tombstone", "key", obj)
 				return
 			}
-			ing, ok = tombstone.Obj.(*networkingv1beta1.Ingress)
+			ing, ok = tombstone.Obj.(*networkingv1.Ingress)
 			if !ok {
 				klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
 				return
@@ -626,17 +626,17 @@ func New(
 
 // hasCatchAllIngressRule returns whether or not an ingress produces a
 // catch-all server, and so should be ignored when --disable-catch-all is set
-func hasCatchAllIngressRule(spec networkingv1beta1.IngressSpec) bool {
-	return spec.Backend != nil
+func hasCatchAllIngressRule(spec networkingv1.IngressSpec) bool {
+	return spec.DefaultBackend != nil
 }
 
 // syncIngress parses ingress annotations converting the value of the
 // annotation to a go struct
-func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
+func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	klog.V(3).Infof("updating annotations information for ingress %v", key)
 
-	copyIng := &networkingv1beta1.Ingress{}
+	copyIng := &networkingv1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
 	ing.Status.DeepCopyInto(&copyIng.Status)
@@ -666,7 +666,7 @@ func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
 
 // updateSecretIngressMap takes an Ingress and updates all Secret objects it
 // references in secretIngressMap.
-func (s *k8sStore) updateSecretIngressMap(ing *networkingv1beta1.Ingress) {
+func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	klog.V(3).Infof("updating references to secrets for ingress %v", key)
 
@@ -710,7 +710,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1beta1.Ingress) {
 
 // objectRefAnnotationNsKey returns an object reference formatted as a
 // 'namespace/name' key from the given annotation name.
-func objectRefAnnotationNsKey(ann string, ing *networkingv1beta1.Ingress) (string, error) {
+func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, error) {
 	annValue, err := parser.GetStringAnnotation(ann, ing)
 	if err != nil {
 		return "", err
@@ -729,7 +729,7 @@ func objectRefAnnotationNsKey(ann string, ing *networkingv1beta1.Ingress) (strin
 
 // syncSecrets synchronizes data from all Secrets referenced by the given
 // Ingress with the local store and file system.
-func (s *k8sStore) syncSecrets(ing *networkingv1beta1.Ingress) {
+func (s *k8sStore) syncSecrets(ing *networkingv1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	for _, secrKey := range s.secretIngressMap.ReferencedBy(key) {
 		s.syncSecret(secrKey)
@@ -759,7 +759,7 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 }
 
 // getIngress returns the Ingress matching key.
-func (s *k8sStore) getIngress(key string) (*networkingv1beta1.Ingress, error) {
+func (s *k8sStore) getIngress(key string) (*networkingv1.Ingress, error) {
 	ing, err := s.listers.IngressWithAnnotation.ByKey(key)
 	if err != nil {
 		return nil, err
@@ -900,11 +900,11 @@ func (s *k8sStore) Run(stopCh chan struct{}) {
 var runtimeScheme = k8sruntime.NewScheme()
 
 func init() {
-	utilruntime.Must(networkingv1beta1.AddToScheme(runtimeScheme))
+	utilruntime.Must(networkingv1.AddToScheme(runtimeScheme))
 }
 
-func toIngress(obj interface{}) (*networkingv1beta1.Ingress, bool) {
-	if ing, ok := obj.(*networkingv1beta1.Ingress); ok {
+func toIngress(obj interface{}) (*networkingv1.Ingress, bool) {
+	if ing, ok := obj.(*networkingv1.Ingress); ok {
 		k8s.SetDefaultNGINXPathType(ing)
 		return ing, true
 	}

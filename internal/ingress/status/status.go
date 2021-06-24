@@ -275,7 +275,7 @@ func runUpdate(ing *ingress.Ingress, status []apiv1.LoadBalancerIngress,
 			return nil, nil
 		}
 
-		ingClient := client.NetworkingV1beta1().Ingresses(ing.Namespace)
+		ingClient := client.NetworkingV1().Ingresses(ing.Namespace)
 		currIng, err := ingClient.Get(context.TODO(), ing.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))

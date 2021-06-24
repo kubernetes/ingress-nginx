@@ -5,11 +5,13 @@ approvers:
   - ingress-nginx-maintainers
   - ElvinEfendi
   - rikatz
+  - strongjz
 
 reviewers:
   - ElvinEfendi
   - cmluciano
   - rikatz
+  - strongjz
 
 emeritus_approvers:
   - aledbf  # 2020-04-02

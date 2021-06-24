@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	admissionv1 "k8s.io/api/admission/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -71,7 +71,7 @@ func TestHandleAdmission(t *testing.T) {
 
 	result, err = adm.HandleAdmission(&admissionv1.AdmissionReview{
 		Request: &admissionv1.AdmissionRequest{
-			Kind: v1.GroupVersionKind{Group: networking.GroupName, Version: "v1beta1", Kind: "Ingress"},
+			Kind: v1.GroupVersionKind{Group: networking.GroupName, Version: "v1", Kind: "Ingress"},
 			Object: runtime.RawExtension{
 				Raw: []byte{0xff},
 			},

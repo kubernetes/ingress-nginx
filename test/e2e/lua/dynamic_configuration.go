@@ -26,7 +26,7 @@ import (
 
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -172,11 +172,11 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 				return true
 			})
 
-			ingress, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), "foo.com", metav1.GetOptions{})
+			ingress, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), "foo.com", metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
-			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
+			_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			f.HTTPTestClient().

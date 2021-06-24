@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	core "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -203,7 +204,15 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
 		}
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
-		ing.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort = intstr.FromString(host)
+		namedBackend := networking.IngressBackend{
+			Service: &networking.IngressServiceBackend{
+				Name: framework.HTTPBinService,
+				Port: networking.ServiceBackendPort{
+					Name: host,
+				},
+			},
+		}
+		ing.Spec.Rules[0].HTTP.Paths[0].Backend = namedBackend
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -276,7 +285,15 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
 		}
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
-		ing.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort = intstr.FromString(host)
+		namedBackend := networking.IngressBackend{
+			Service: &networking.IngressServiceBackend{
+				Name: framework.HTTPBinService,
+				Port: networking.ServiceBackendPort{
+					Name: host,
+				},
+			},
+		}
+		ing.Spec.Rules[0].HTTP.Paths[0].Backend = namedBackend
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
