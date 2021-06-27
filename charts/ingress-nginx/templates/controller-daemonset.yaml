@@ -77,22 +77,22 @@ spec:
           args:
             - /nginx-ingress-controller
           {{- if .Values.defaultBackend.enabled }}
-            - --default-backend-service={{ .Release.Namespace }}/{{ include "ingress-nginx.defaultBackend.fullname" . }}
+            - --default-backend-service=$(POD_NAMESPACE)/{{ include "ingress-nginx.defaultBackend.fullname" . }}
           {{- end }}
           {{- if .Values.controller.publishService.enabled }}
             - --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}
           {{- end }}
             - --election-id={{ .Values.controller.electionID }}
             - --ingress-class={{ .Values.controller.ingressClass }}
-            - --configmap={{ .Release.Namespace }}/{{ include "ingress-nginx.controller.fullname" . }}
+            - --configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.controller.fullname" . }}
           {{- if .Values.tcp }}
-            - --tcp-services-configmap={{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-tcp
+            - --tcp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.fullname" . }}-tcp
           {{- end }}
           {{- if .Values.udp }}
-            - --udp-services-configmap={{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-udp
+            - --udp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.fullname" . }}-udp
           {{- end }}
           {{- if .Values.controller.scope.enabled }}
-            - --watch-namespace={{ default .Release.Namespace .Values.controller.scope.namespace }}
+            - --watch-namespace={{ default "$(POD_NAMESPACE)" .Values.controller.scope.namespace }}
           {{- end }}
           {{- if and .Values.controller.reportNodeInternalIp .Values.controller.hostNetwork }}
             - --report-node-internal-ip-address={{ .Values.controller.reportNodeInternalIp }}
