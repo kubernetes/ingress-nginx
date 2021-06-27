@@ -178,6 +178,9 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-buffering](#proxy-buffering)|string|"off"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
 |[limit-conn-status-code](#limit-conn-status-code)|int|503|
+|[enable-syslog](#enable-syslog)|bool|false|
+|[syslog-host](#syslog-host)|string|""|
+|[syslog-port](#syslog-port)|int|514|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
 |[global-auth-url](#global-auth-url)|string|""|
 |[global-auth-method](#global-auth-method)|string|""|
@@ -1076,6 +1079,18 @@ Sets the [status code to return in response to rejected requests](http://nginx.o
 ## limit-conn-status-code
 
 Sets the [status code to return in response to rejected connections](http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status). _**default:**_ 503
+
+## enable-syslog
+
+Enable [syslog](http://nginx.org/en/docs/syslog.html) feature for access log and error log. _**default:**_ false
+
+## syslog-host
+
+Sets the address of syslog server. The address can be specified as a domain name or IP address.
+
+## syslog-port
+
+Sets the port of syslog server. _**default:**_ 514
 
 ## no-tls-redirect-locations
 
