@@ -17,6 +17,7 @@ limitations under the License.
 package template
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -29,6 +30,7 @@ import (
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/pmezard/go-difflib/difflib"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -177,6 +179,14 @@ proxy_pass http://upstream_balancer;`,
 		},
 	}
 )
+
+func getTestDataDir() (string, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return path.Join(pwd, "../../../../test/data"), nil
+}
 
 func TestBuildLuaSharedDictionaries(t *testing.T) {
 	invalidType := &ingress.Ingress{}
@@ -1574,5 +1584,36 @@ func TestConvertGoSliceIntoLuaTablet(t *testing.T) {
 		if testCase.expectedLuaTable != actualLuaTable {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expectedLuaTable, actualLuaTable)
 		}
+	}
+}
+
+func TestCleanConf(t *testing.T) {
+	testDataDir, err := getTestDataDir()
+	if err != nil {
+		t.Error("unexpected error reading conf file: ", err)
+	}
+	actual := &bytes.Buffer{}
+	{
+		data, err := ioutil.ReadFile(testDataDir + "/cleanConf.src.conf")
+		if err != nil {
+			t.Error("unexpected error reading conf file: ", err)
+		}
+		in := bytes.NewBuffer(data)
+		err = cleanConf(in, actual)
+		if err != nil {
+			t.Error("cleanConf failed: ", err)
+		}
+	}
+
+	expected, err := ioutil.ReadFile(testDataDir + "/cleanConf.expected.conf")
+	if err != nil {
+		t.Error("unexpected error reading conf file: ", err)
+	}
+	if !bytes.Equal(expected, actual.Bytes()) {
+		diff, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{A: strings.SplitAfter(string(expected), "\n"), B: strings.SplitAfter(actual.String(), "\n"), Context: 3})
+		if err != nil {
+			t.Error("failed to get diff for cleanConf", err)
+		}
+		t.Errorf("cleanConf result don't match with expected: %s", diff)
 	}
 }
