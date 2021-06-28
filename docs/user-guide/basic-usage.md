@@ -63,7 +63,7 @@ spec:
             name: myservicea
             port: 
               number: 80
-  ingressClassName: nlb
+  ingressClassName: nginx
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -81,14 +81,14 @@ spec:
             name: myserviceb
             port: 
               number: 80
-  ingressClassName: nlb
+  ingressClassName: nginx
 ---
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  name: nlb
+  name: nginx
 spec:
-  controller: nginx.com/ingress-controller
+  controller: k8s.io/ingress-nginx
 ```
 
 On many cloud providers ingress-nginx will also create the corresponding Load Balancer resource. All you have to do is get the external IP and add a DNS `A record` inside your DNS provider that point myServiceA.foo.org and myServiceB.foo.org to the nginx external IP. Get the external IP by running:
