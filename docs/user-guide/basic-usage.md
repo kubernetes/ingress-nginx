@@ -39,7 +39,7 @@ spec:
           serviceName: myserviceb
           servicePort: 80
 ```
- 
+
 When you apply this yaml, 2 ingress resources will be created managed by the **ingress-nginx** instance. Nginx is configured to automatically discover all ingress with the `kubernetes.io/ingress.class: "nginx"` annotation.
 Please note that the ingress resource should be placed inside the same namespace of the backend resource.
 
