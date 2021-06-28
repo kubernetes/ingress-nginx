@@ -50,9 +50,9 @@ import (
 )
 
 const (
-	slash         = "/"
-	nonIdempotent = "non_idempotent"
-	defBufferSize = 65535
+	slash                   = "/"
+	nonIdempotent           = "non_idempotent"
+	defBufferSize           = 65535
 	writeIndentOnEmptyLines = true // backward-compatibility
 )
 

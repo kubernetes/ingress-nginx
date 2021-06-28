@@ -1603,7 +1603,7 @@ func TestCleanConf(t *testing.T) {
 		t.Error("unexpected error reading conf file: ", err)
 	}
 	if !bytes.Equal(expected, actual.Bytes()) {
-		diff, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{A: strings.SplitAfter(string(expected), "\n"), B: strings.SplitAfter(actual.String(),"\n"), Context: 3})
+		diff, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{A: strings.SplitAfter(string(expected), "\n"), B: strings.SplitAfter(actual.String(), "\n"), Context: 3})
 		if err != nil {
 			t.Error("failed to get diff for cleanConf", err)
 		}
