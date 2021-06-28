@@ -92,7 +92,11 @@ func NewTemplate(file string) (*Template, error) {
 	}, nil
 }
 
-func cleanConf(in *bytes.Buffer, out *bytes.Buffer) {
+// 1. Removes carriage return symbol (\r)
+// 2. Collapses multiple empty lines to single one
+// 3. Re-indent
+// (ATW: always returns nil)
+func cleanConf(in *bytes.Buffer, out *bytes.Buffer) error {
 	depth := 0
 	lineStarted := false
 	emptyLineWritten := false
@@ -101,9 +105,9 @@ func cleanConf(in *bytes.Buffer, out *bytes.Buffer) {
 		c, err := in.ReadByte()
 		if err != nil {
 			if err == io.EOF {
-				return
+				return nil
 			}
-			panic(err)
+			return err // unreachable
 		}
 
 		needOutput := false
@@ -151,11 +155,17 @@ func cleanConf(in *bytes.Buffer, out *bytes.Buffer) {
 		if needOutput {
 			if !lineStarted && (writeIndentOnEmptyLines || c != '\n') {
 				for i := 0; i < depth; i++ {
-					_ = out.WriteByte('\t')
+					err = out.WriteByte('\t') // always nil
+					if err != nil {
+						return err
+					}
 				}
 			}
 			emptyLineWritten = !lineStarted
-			_ = out.WriteByte(c)
+			err = out.WriteByte(c) // always nil
+			if err != nil {
+				return err
+			}
 		}
 
 		depth = nextDepth
@@ -187,7 +197,10 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 
 	// squeezes multiple adjacent empty lines to be single
 	// spaced this is to avoid the use of regular expressions
-	cleanConf(tmplBuf, outCmdBuf)
+	err = cleanConf(tmplBuf, outCmdBuf)
+	if err != nil {
+		return nil, err
+	}
 
 	return outCmdBuf.Bytes(), nil
 }
