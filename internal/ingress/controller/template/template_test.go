@@ -180,9 +180,12 @@ proxy_pass http://upstream_balancer;`,
 	}
 )
 
-func getTestDataDir() string {
-	pwd, _ := os.Getwd()
-	return path.Join(pwd, "../../../../test/data")
+func getTestDataDir() (string, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return path.Join(pwd, "../../../../test/data"), nil
 }
 
 func TestBuildLuaSharedDictionaries(t *testing.T) {
@@ -1585,9 +1588,13 @@ func TestConvertGoSliceIntoLuaTablet(t *testing.T) {
 }
 
 func TestCleanConf(t *testing.T) {
+	testDataDir, err := getTestDataDir()
+	if err != nil {
+		t.Error("unexpected error reading conf file: ", err)
+	}
 	actual := &bytes.Buffer{}
 	{
-		data, err := ioutil.ReadFile(getTestDataDir() + "/cleanConf.src.conf")
+		data, err := ioutil.ReadFile(testDataDir + "/cleanConf.src.conf")
 		if err != nil {
 			t.Error("unexpected error reading conf file: ", err)
 		}
@@ -1598,7 +1605,7 @@ func TestCleanConf(t *testing.T) {
 		}
 	}
 
-	expected, err := ioutil.ReadFile(getTestDataDir() + "/cleanConf.expected.conf")
+	expected, err := ioutil.ReadFile(testDataDir + "/cleanConf.expected.conf")
 	if err != nil {
 		t.Error("unexpected error reading conf file: ", err)
 	}
