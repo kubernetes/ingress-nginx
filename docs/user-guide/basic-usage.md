@@ -44,7 +44,7 @@ When you apply this yaml, 2 ingress resources will be created managed by the **i
 Please note that the ingress resource should be placed inside the same namespace of the backend resource.
 
 If cluster version >= 1.19 the Ingress resource above will not work.
-You deploy the following so that it match the new api version.
+You need to deploy the following so that it match the new api version.
 This will require changes to the Ingress objects as shown below, and a new object from type "kind: IngressClass"
 ```
 apiVersion: networking.k8s.io/v1
