@@ -54,7 +54,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
 |[http2-max-header-size](#http2-max-header-size)|string|"16k"|
 |[http2-max-requests](#http2-max-requests)|int|1000|
-|[http2-max-concurrent-streams](#http2-max-concurrent-streams)|int|1000|
+|[http2-max-concurrent-streams](#http2-max-concurrent-streams)|int|128|
 |[hsts](#hsts)|bool|"true"|
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"|
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
@@ -178,6 +178,9 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-buffering](#proxy-buffering)|string|"off"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
 |[limit-conn-status-code](#limit-conn-status-code)|int|503|
+|[enable-syslog](#enable-syslog)|bool|false|
+|[syslog-host](#syslog-host)|string|""|
+|[syslog-port](#syslog-port)|int|514|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
 |[global-auth-url](#global-auth-url)|string|""|
 |[global-auth-method](#global-auth-method)|string|""|
@@ -451,7 +454,7 @@ _**default:**_ 16384
 ## max-worker-open-files
 
 Sets the [maximum number of files](http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile) that can be opened by each worker process.
-The default of 0 means "max open files (system's limit) / [worker-processes](#worker-processes) - 1024".
+The default of 0 means "max open files (system's limit) - 1024".
 _**default:**_ 0
 
 ## map-hash-bucket-size
@@ -1070,6 +1073,18 @@ Sets the [status code to return in response to rejected requests](http://nginx.o
 ## limit-conn-status-code
 
 Sets the [status code to return in response to rejected connections](http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status). _**default:**_ 503
+
+## enable-syslog
+
+Enable [syslog](http://nginx.org/en/docs/syslog.html) feature for access log and error log. _**default:**_ false
+
+## syslog-host
+
+Sets the address of syslog server. The address can be specified as a domain name or IP address.
+
+## syslog-port
+
+Sets the port of syslog server. _**default:**_ 514
 
 ## no-tls-redirect-locations
 
