@@ -21,11 +21,17 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
+	"syscall"
 	"time"
+
+	"k8s.io/apimachinery/pkg/util/wait"
+	klog "k8s.io/klog/v2"
 )
 
 // MaxmindLicenseKey maxmind license key to download databases
@@ -39,6 +45,9 @@ var MaxmindEditionFiles []string
 
 // MaxmindMirror maxmind database mirror url (http://geoip.local)
 var MaxmindMirror = ""
+
+// MaxmindRetriesCount number of attempts to download the GeoIP DB
+var MaxmindRetriesCount = 1
 
 // MaxmindRetriesTimeout maxmind download retries timeout in seconds, 0 - do not retry to download if something went wrong
 var MaxmindRetriesTimeout = time.Second * 0
@@ -64,15 +73,53 @@ func GeoLite2DBExists() bool {
 
 // DownloadGeoLite2DB downloads the required databases by the
 // GeoIP2 NGINX module using a license key from MaxMind.
-func DownloadGeoLite2DB() error {
-	for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
-		err := downloadDatabase(dbName)
-		if err != nil {
-			return err
-		}
-		MaxmindEditionFiles = append(MaxmindEditionFiles, dbName+dbExtension)
+func DownloadGeoLite2DB(period time.Duration, attempts int) error {
+	if attempts < 1 {
+		attempts = 1
 	}
-	return nil
+
+	defaultRetry := wait.Backoff{
+		Steps:    attempts,
+		Duration: period,
+		Factor:   1.5,
+		Jitter:   0.1,
+	}
+	if period == time.Duration(0) {
+		defaultRetry.Steps = 1
+	}
+
+	var lastErr error
+	retries := 0
+
+	_ = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
+		var dlError error
+		for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
+			dlError = downloadDatabase(dbName)
+			if dlError != nil {
+				break
+			}
+			MaxmindEditionFiles = append(MaxmindEditionFiles, dbName+dbExtension)
+		}
+
+		lastErr = dlError
+		if dlError == nil {
+			return true, nil
+		}
+
+		if e, ok := dlError.(*url.Error); ok {
+			if e, ok := e.Err.(*net.OpError); ok {
+				if e, ok := e.Err.(*os.SyscallError); ok {
+					if e.Err == syscall.ECONNREFUSED {
+						retries++
+						klog.InfoS("download failed on attempt " + fmt.Sprint(retries))
+						return false, nil
+					}
+				}
+			}
+		}
+		return true, nil
+	})
+	return lastErr
 }
 
 func createURL(mirror, licenseKey, dbName string) string {

@@ -33,7 +33,8 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--log_file_max_size`              | Defines the maximum size a log file can grow to. Unit is megabytes. If the value is 0, the maximum file size is unlimited. (default 1800) |
 | `--logtostderr`                    | log to standard error instead of files (default true) |
 | `--maxmind-edition-ids`            | Maxmind edition ids to download GeoLite2 Databases. (default "GeoLite2-City,GeoLite2-ASN") |
-| `--maxmind-retries-timeout`        | "Maxmind downloading delay between 1st and 2nd attempt (5 attempts in total), 0s - do not retry to download if something went wrong. (default 0s) |
+| `--maxmind-retries-timeout`        | Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong. (default 0s) |
+| `--maxmind-retries-count`          | Number of attempts to download the GeoIP DB. (default 1) |
 | `--maxmind-license-key`            | Maxmind license key to download GeoLite2 Databases. https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases |
 | `--metrics-per-host`               | Export metrics per-host (default true) |
 | `--profiler-port`                  | Port to use for expose the ingress controller Go profiler when it is enabled. (default 10245) |

@@ -19,15 +19,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
-	"net/url"
 	"os"
-	"syscall"
 	"time"
 
 	"github.com/spf13/pflag"
 	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
@@ -181,7 +177,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
 https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases`)
 	flags.StringVar(&nginx.MaxmindEditionIDs, "maxmind-edition-ids", "GeoLite2-City,GeoLite2-ASN", `Maxmind edition ids to download GeoLite2 Databases.`)
-	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt (5 attempts in total), 0s - do not retry to download if something went wrong.")
+	flags.IntVar(&nginx.MaxmindRetriesCount, "maxmind-retries-count", 1, "Number of attempts to download the GeoIP DB.")
+	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
 
 	flag.Set("logtostderr", "true")
 
@@ -311,42 +308,8 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		if err = nginx.ValidateGeoLite2DBEditions(); err != nil {
 			return false, nil, err
 		}
-		klog.InfoS("trying to download maxmind GeoIP2 databases...")
-		defaultRetry := wait.Backoff{
-			Steps:    5,
-			Duration: nginx.MaxmindRetriesTimeout,
-			Factor:   1.5,
-			Jitter:   0.1,
-		}
-		if nginx.MaxmindRetriesTimeout == time.Duration(0) {
-			defaultRetry.Steps = 1
-		}
-
-		var lastErr error
-		retries := 0
-
-		err = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
-			err := nginx.DownloadGeoLite2DB()
-			lastErr = err
-			if err == nil {
-				return true, nil
-			}
-
-			if e, ok := err.(*url.Error); ok {
-				if e, ok := e.Err.(*net.OpError); ok {
-					if e, ok := e.Err.(*os.SyscallError); ok {
-						if e.Err == syscall.ECONNREFUSED {
-							retries++
-							klog.InfoS("download failed on attempt " + fmt.Sprint(retries))
-							return false, nil
-						}
-					}
-				}
-			}
-			return true, nil
-		})
-		err = lastErr
-		if err != nil {
+		klog.InfoS("downloading maxmind GeoIP2 databases")
+		if err = nginx.DownloadGeoLite2DB(nginx.MaxmindRetriesTimeout, nginx.MaxmindRetriesCount); err != nil {
 			klog.ErrorS(err, "unexpected error downloading GeoIP2 database")
 		}
 		config.MaxmindEditionFiles = nginx.MaxmindEditionFiles
