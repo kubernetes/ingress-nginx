@@ -82,6 +82,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	hostPort := net.JoinHostPort(proxy.IP, fmt.Sprintf("%v", proxy.Port))
 	clientConn, err := net.Dial("tcp", hostPort)
 	if err != nil {
+		klog.V(4).ErrorS(err, "error dialing proxy", "ip", proxy.IP, "port", proxy.Port, "hostname", proxy.Hostname)
 		return
 	}
 	defer clientConn.Close()
