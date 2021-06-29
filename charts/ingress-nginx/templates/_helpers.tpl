@@ -122,3 +122,13 @@ Check the ingress controller version tag is at most three versions behind the la
 {{- fail "Controller container image tag should be 0.27.0 or higher" -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+IngressClass parameters.
+*/}}
+{{- define "ingressClass.parameters" -}}
+  {{- if .Values.controller.ingressClassResource.parameters -}}
+          parameters:
+{{ toYaml .Values.controller.ingressClassResource.parameters | indent 4}}
+  {{ end }}
+{{- end -}}

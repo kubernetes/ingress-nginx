@@ -9,6 +9,7 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend
   name: {{ include "ingress-nginx.defaultBackend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
 spec:
   type: {{ .Values.defaultBackend.service.type }}
 {{- if .Values.defaultBackend.service.clusterIP }}

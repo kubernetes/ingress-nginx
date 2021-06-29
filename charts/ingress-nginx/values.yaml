@@ -80,6 +80,17 @@ controller:
   ##
   ingressClass: nginx
 
+  # This section refers to the creation of the IngressClass resource
+  # IngressClass resources are supported since k8s >= 1.18
+  ingressClassResource:
+    enabled: false
+    default: false
+
+    # Parameters is a link to a custom resource containing additional
+    # configuration for the controller. This is optional if the controller
+    # does not require extra parameters.
+    parameters: {}
+
   # labels to add to the pod container metadata
   podLabels: {}
   #  key: value

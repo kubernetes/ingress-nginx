@@ -25,7 +25,7 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -229,7 +229,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return nil
 	}
 
-	if n.cfg.DisableCatchAll && ing.Spec.Backend != nil {
+	if n.cfg.DisableCatchAll && ing.Spec.DefaultBackend != nil {
 		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.backend' or set DisableCatchAll flag to false.")
 	}
 
@@ -571,7 +571,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
+				upsName := upstreamName(ing.Namespace, path.Backend.Service)
 
 				ups := upstreams[upsName]
 
@@ -789,8 +789,8 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 		anns := ing.ParsedAnnotations
 
 		var defBackend string
-		if ing.Spec.Backend != nil {
-			defBackend = upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
+		if ing.Spec.DefaultBackend != nil && ing.Spec.DefaultBackend.Service != nil {
+			defBackend = upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service)
 
 			klog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
@@ -804,11 +804,11 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				upstreams[defBackend].LoadBalancing = n.store.GetBackendConfiguration().LoadBalancing
 			}
 
-			svcKey := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.Backend.ServiceName)
+			svcKey := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.DefaultBackend.Service.Name)
 
 			// add the service ClusterIP as a single Endpoint instead of individual Endpoints
 			if anns.ServiceUpstream {
-				endpoint, err := n.getServiceClusterEndpoint(svcKey, ing.Spec.Backend)
+				endpoint, err := n.getServiceClusterEndpoint(svcKey, ing.Spec.DefaultBackend)
 				if err != nil {
 					klog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)
 				} else {
@@ -829,7 +829,8 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
-				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String())
+				_, port := upstreamServiceNameAndPort(ing.Spec.DefaultBackend.Service)
+				endps, err := n.serviceEndpoints(svcKey, port.String())
 				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
 				if err != nil {
 					klog.Warningf("Error creating upstream %q: %v", defBackend, err)
@@ -849,15 +850,15 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				name := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
-
+				name := upstreamName(ing.Namespace, path.Backend.Service)
+				svcName, svcPort := upstreamServiceNameAndPort(path.Backend.Service)
 				if _, ok := upstreams[name]; ok {
 					continue
 				}
 
 				klog.V(3).Infof("Creating upstream %q", name)
 				upstreams[name] = newUpstream(name)
-				upstreams[name].Port = path.Backend.ServicePort
+				upstreams[name].Port = svcPort
 
 				upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
@@ -868,7 +869,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					upstreams[name].LoadBalancing = n.store.GetBackendConfiguration().LoadBalancing
 				}
 
-				svcKey := fmt.Sprintf("%v/%v", ing.Namespace, path.Backend.ServiceName)
+				svcKey := fmt.Sprintf("%v/%v", ing.Namespace, svcName)
 
 				// add the service ClusterIP as a single Endpoint instead of individual Endpoints
 				if anns.ServiceUpstream {
@@ -893,7 +894,8 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
-					endp, err := n.serviceEndpoints(svcKey, path.Backend.ServicePort.String())
+					_, port := upstreamServiceNameAndPort(path.Backend.Service)
+					endp, err := n.serviceEndpoints(svcKey, port.String())
 					if err != nil {
 						klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 						continue
@@ -931,20 +933,23 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *netw
 
 	// if the Service port is referenced by name in the Ingress, lookup the
 	// actual port in the service spec
-	if backend.ServicePort.Type == intstr.String {
-		var port int32 = -1
-		for _, svcPort := range svc.Spec.Ports {
-			if svcPort.Name == backend.ServicePort.String() {
-				port = svcPort.Port
-				break
+	if backend.Service != nil {
+		_, svcportintorstr := upstreamServiceNameAndPort(backend.Service)
+		if svcportintorstr.Type == intstr.String {
+			var port int32 = -1
+			for _, svcPort := range svc.Spec.Ports {
+				if svcPort.Name == svcportintorstr.String() {
+					port = svcPort.Port
+					break
+				}
 			}
+			if port == -1 {
+				return endpoint, fmt.Errorf("service %q does not have a port named %q", svc.Name, svcportintorstr.String())
+			}
+			endpoint.Port = fmt.Sprintf("%d", port)
+		} else {
+			endpoint.Port = svcportintorstr.String()
 		}
-		if port == -1 {
-			return endpoint, fmt.Errorf("service %q does not have a port named %q", svc.Name, backend.ServicePort)
-		}
-		endpoint.Port = fmt.Sprintf("%d", port)
-	} else {
-		endpoint.Port = backend.ServicePort.String()
 	}
 
 	return endpoint, err
@@ -1071,8 +1076,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			continue
 		}
 
-		if ing.Spec.Backend != nil {
-			defUpstream := upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
+		if ing.Spec.DefaultBackend != nil && ing.Spec.DefaultBackend.Service != nil {
+			defUpstream := upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service)
 
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
 				// use backend specified in Ingress as the default backend for all its rules
@@ -1337,8 +1342,8 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 	servers map[string]*ingress.Server) {
 
 	// merge catch-all alternative backends
-	if ing.Spec.Backend != nil {
-		upsName := upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
+	if ing.Spec.DefaultBackend != nil {
+		upsName := upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service)
 
 		altUps := upstreams[upsName]
 
@@ -1380,7 +1385,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 		}
 
 		for _, path := range rule.HTTP.Paths {
-			upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
+			upsName := upstreamName(ing.Namespace, path.Backend.Service)
 
 			altUps := upstreams[upsName]
 
@@ -1651,6 +1656,10 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 
 		for _, location := range server.Locations {
 			if location.Path != path {
+				continue
+			}
+
+			if location.IsDefBackend {
 				continue
 			}
 
