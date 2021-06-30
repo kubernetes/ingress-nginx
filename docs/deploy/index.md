@@ -39,6 +39,7 @@ You can wait until it is ready to run the next command:
   - [Scaleway](#scaleway)
   - [Exoscale](#exoscale)
   - [Oracle Cloud Infrastructure](#oracle-cloud-infrastructure)  
+  - [BizFly Cloud](#bizfly-cloud)
   - [Bare-metal](#bare-metal)
   - [Verify installation](#verify-installation)
   - [Detect installed version](#detect-installed-version)
@@ -181,6 +182,12 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 ```
 
 A [complete list of available annotations for Oracle Cloud Infrastructure](https://github.com/oracle/oci-cloud-controller-manager/blob/master/docs/load-balancer-annotations.md) can be found in the [OCI Cloud Controller Manager](https://github.com/oracle/oci-cloud-controller-manager) documentation.
+
+#### BizFly Cloud
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/bizflycloud/deploy.yaml
+```
 
 #### Bare-metal
 

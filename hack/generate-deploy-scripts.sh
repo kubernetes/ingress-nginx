@@ -206,5 +206,22 @@ controller:
       enabled: true
 EOF
 
+# BizFly Cloud
+echo "${NAMESPACE_VAR}
+$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
+
+OUTPUT_FILE="${DIR}/deploy/static/provider/bizflycloud/deploy.yaml"
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+controller:
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+    annotations:
+      kubernetes.bizflycloud.vn/enable-proxy-protocol: "true"
+  config:
+    use-proxy-protocol: "true"
+
+EOF
+
 echo "${NAMESPACE_VAR}
 $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
