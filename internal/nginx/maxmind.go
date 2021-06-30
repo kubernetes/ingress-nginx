@@ -73,7 +73,7 @@ func GeoLite2DBExists() bool {
 
 // DownloadGeoLite2DB downloads the required databases by the
 // GeoIP2 NGINX module using a license key from MaxMind.
-func DownloadGeoLite2DB(period time.Duration, attempts int) error {
+func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 	if attempts < 1 {
 		attempts = 1
 	}
