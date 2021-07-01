@@ -168,7 +168,7 @@ In the Zipkin interface we can see the details:
 
     # Apply the Ingress Resource
     $ echo '
-      apiVersion: networking.k8s.io/v1beta1
+      apiVersion: networking.k8s.io/v1
       kind: Ingress
       metadata:
         name: echo-ingress
