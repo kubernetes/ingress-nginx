@@ -52,6 +52,9 @@ var MaxmindRetriesCount = 1
 // MaxmindRetriesTimeout maxmind download retries timeout in seconds, 0 - do not retry to download if something went wrong
 var MaxmindRetriesTimeout = time.Second * 0
 
+// minimumRetriesCount minimum value of the MaxmindRetriesCount parameter. If MaxmindRetriesCount less than minimumRetriesCount, it will be set to minimumRetriesCount
+const minimumRetriesCount = 1
+
 const (
 	geoIPPath   = "/etc/nginx/geoip"
 	dbExtension = ".mmdb"
@@ -74,8 +77,8 @@ func GeoLite2DBExists() bool {
 // DownloadGeoLite2DB downloads the required databases by the
 // GeoIP2 NGINX module using a license key from MaxMind.
 func DownloadGeoLite2DB(attempts int, period time.Duration) error {
-	if attempts < 1 {
-		attempts = 1
+	if attempts < minimumRetriesCount {
+		attempts = minimumRetriesCount
 	}
 
 	defaultRetry := wait.Backoff{
@@ -85,7 +88,7 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 		Jitter:   0.1,
 	}
 	if period == time.Duration(0) {
-		defaultRetry.Steps = 1
+		defaultRetry.Steps = minimumRetriesCount
 	}
 
 	var lastErr error
