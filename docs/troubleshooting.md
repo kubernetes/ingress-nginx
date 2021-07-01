@@ -173,7 +173,7 @@ Verify with the following commands:
 
 ```console
 # start a container that contains curl
-$ kubectl run test --image=tutum/curl -- sleep 10000
+$ kubectl run test --image=curlimages/curl-- sleep 10000
 
 # check that container is running
 $ kubectl get pods
