@@ -74,5 +74,7 @@ The sha is available in output from [cloud build](https://console.cloud.google.c
     * Update the version in [docs/deploy/index.md](docs/deploy/index.md)
     * Update Supported versions in the Support Versions table in the README.md 
     * Merge
+
+* Update the stable.txt file to reflect the release to be created
       
 7. Github release
