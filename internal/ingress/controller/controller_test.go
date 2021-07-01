@@ -815,10 +815,11 @@ func TestMergeAlternativeBackends(t *testing.T) {
 												Path:     "/",
 												PathType: &pathTypePrefix,
 												Backend: networking.IngressBackend{
-													ServiceName: "http-svc-canary",
-													ServicePort: intstr.IntOrString{
-														Type:   intstr.Int,
-														IntVal: 80,
+													Service: &networking.IngressServiceBackend{
+														Name: "http-svc-canary",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
 													},
 												},
 											},
@@ -925,10 +926,11 @@ func TestMergeAlternativeBackends(t *testing.T) {
 												Path:     "/",
 												PathType: &pathTypePrefix,
 												Backend: networking.IngressBackend{
-													ServiceName: "http-svc-canary",
-													ServicePort: intstr.IntOrString{
-														Type:   intstr.Int,
-														IntVal: 80,
+													Service: &networking.IngressServiceBackend{
+														Name: "http-svc-canary",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
 													},
 												},
 											},
@@ -1035,10 +1037,11 @@ func TestMergeAlternativeBackends(t *testing.T) {
 												Path:     "/",
 												PathType: &pathTypePrefix,
 												Backend: networking.IngressBackend{
-													ServiceName: "http-svc-canary",
-													ServicePort: intstr.IntOrString{
-														Type:   intstr.Int,
-														IntVal: 80,
+													Service: &networking.IngressServiceBackend{
+														Name: "http-svc-canary",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
 													},
 												},
 											},
