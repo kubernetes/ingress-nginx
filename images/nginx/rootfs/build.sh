@@ -162,7 +162,6 @@ apk add \
   geoip-dev \
   perl-dev \
   libedit-dev \
-  mercurial \
   alpine-sdk \
   findutils \
   curl ca-certificates \
