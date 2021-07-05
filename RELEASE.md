@@ -32,7 +32,7 @@ The sha is available in output from [cloud build](https://console.cloud.google.c
 
 2a. Promote images:
 
-* Open pull request to promote [staging image](https://github.com/kubernetes/k8s.io/blob/master/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)
+* Open pull request to promote [staging image](https://github.com/kubernetes/k8s.io/blob/main/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)
     * e2e-test-runner
     * e2e-test-cfssl
     * e2e-test-echo
@@ -53,7 +53,7 @@ The sha is available in output from [cloud build](https://console.cloud.google.c
 
 4a. Promote images:
 
-* Open pull request to promote [staging image](https://github.com/kubernetes/k8s.io/blob/master/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)
+* Open pull request to promote [staging image](https://github.com/kubernetes/k8s.io/blob/main/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)
   * controller
 
 5. Release helm chart:
@@ -74,5 +74,7 @@ The sha is available in output from [cloud build](https://console.cloud.google.c
     * Update the version in [docs/deploy/index.md](docs/deploy/index.md)
     * Update Supported versions in the Support Versions table in the README.md 
     * Merge
+
+* Update the stable.txt file to reflect the release to be created
       
 7. Github release

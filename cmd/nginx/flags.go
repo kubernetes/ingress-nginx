@@ -124,6 +124,9 @@ Requires the update-status parameter.`)
 		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false,
 			`Enable SSL Passthrough.`)
 
+		disableServiceExternalName = flags.Bool("disable-svc-external-name", false,
+			`Disable support for Services of type ExternalName`)
+
 		annotationsPrefix = flags.String("annotations-prefix", parser.DefaultAnnotationsPrefix,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
@@ -264,28 +267,29 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
 
 	config := &controller.Configuration{
-		APIServerHost:          *apiserverHost,
-		KubeConfigFile:         *kubeConfigFile,
-		UpdateStatus:           *updateStatus,
-		ElectionID:             *electionID,
-		EnableProfiling:        *profiling,
-		EnableMetrics:          *enableMetrics,
-		MetricsPerHost:         *metricsPerHost,
-		MonitorMaxBatchSize:    *monitorMaxBatchSize,
-		EnableSSLPassthrough:   *enableSSLPassthrough,
-		ResyncPeriod:           *resyncPeriod,
-		DefaultService:         *defaultSvc,
-		Namespace:              *watchNamespace,
-		ConfigMapName:          *configMap,
-		TCPConfigMapName:       *tcpConfigMapName,
-		UDPConfigMapName:       *udpConfigMapName,
-		DefaultSSLCertificate:  *defSSLCertificate,
-		PublishService:         *publishSvc,
-		PublishStatusAddress:   *publishStatusAddress,
-		UpdateStatusOnShutdown: *updateStatusOnShutdown,
-		ShutdownGracePeriod:    *shutdownGracePeriod,
-		UseNodeInternalIP:      *useNodeInternalIP,
-		SyncRateLimit:          *syncRateLimit,
+		APIServerHost:              *apiserverHost,
+		KubeConfigFile:             *kubeConfigFile,
+		UpdateStatus:               *updateStatus,
+		ElectionID:                 *electionID,
+		EnableProfiling:            *profiling,
+		EnableMetrics:              *enableMetrics,
+		MetricsPerHost:             *metricsPerHost,
+		MonitorMaxBatchSize:        *monitorMaxBatchSize,
+		DisableServiceExternalName: *disableServiceExternalName,
+		EnableSSLPassthrough:       *enableSSLPassthrough,
+		ResyncPeriod:               *resyncPeriod,
+		DefaultService:             *defaultSvc,
+		Namespace:                  *watchNamespace,
+		ConfigMapName:              *configMap,
+		TCPConfigMapName:           *tcpConfigMapName,
+		UDPConfigMapName:           *udpConfigMapName,
+		DefaultSSLCertificate:      *defSSLCertificate,
+		PublishService:             *publishSvc,
+		PublishStatusAddress:       *publishStatusAddress,
+		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
+		ShutdownGracePeriod:        *shutdownGracePeriod,
+		UseNodeInternalIP:          *useNodeInternalIP,
+		SyncRateLimit:              *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
