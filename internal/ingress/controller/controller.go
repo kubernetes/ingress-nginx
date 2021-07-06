@@ -105,7 +105,7 @@ type Configuration struct {
 	ValidationWebhookKeyPath  string
 
 	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
-	MaxmindEditionFiles []string
+	MaxmindEditionFiles *[]string
 
 	MonitorMaxBatchSize int
 

@@ -56,7 +56,7 @@ func TestGeoLite2DBExists(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			resetForTesting()
 			// mimics assignment in flags.go
-			config := MaxmindEditionFiles
+			config := &MaxmindEditionFiles
 
 			if tt.setup != nil {
 				tt.setup()
@@ -67,8 +67,8 @@ func TestGeoLite2DBExists(t *testing.T) {
 			if !reflect.DeepEqual(MaxmindEditionFiles, tt.wantFiles) {
 				t.Errorf("nginx.MaxmindEditionFiles = %v, want %v", MaxmindEditionFiles, tt.wantFiles)
 			}
-			if !reflect.DeepEqual(config, tt.wantFiles) {
-				t.Errorf("config.MaxmindEditionFiles = %v, want %v", config, tt.wantFiles)
+			if !reflect.DeepEqual(*config, tt.wantFiles) {
+				t.Errorf("config.MaxmindEditionFiles = %v, want %v", *config, tt.wantFiles)
 			}
 		})
 	}

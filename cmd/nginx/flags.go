@@ -318,7 +318,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 				klog.ErrorS(err, "unexpected error downloading GeoIP2 database")
 			}
 		}
-		config.MaxmindEditionFiles = nginx.MaxmindEditionFiles
+		config.MaxmindEditionFiles = &nginx.MaxmindEditionFiles
 	}
 
 	return false, config, err
