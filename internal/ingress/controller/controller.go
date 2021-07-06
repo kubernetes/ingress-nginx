@@ -85,6 +85,8 @@ type Configuration struct {
 
 	ListenPorts *ngx_config.ListenPorts
 
+	DisableServiceExternalName bool
+
 	EnableSSLPassthrough bool
 
 	EnableProfiling bool
@@ -963,6 +965,10 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 
 	// Ingress with an ExternalName Service and no port defined for that Service
 	if svc.Spec.Type == apiv1.ServiceTypeExternalName {
+		if n.cfg.DisableServiceExternalName {
+			klog.Warningf("Service %q of type ExternalName not allowed due to Ingress configuration.", svcKey)
+			return upstreams, nil
+		}
 		servicePort := externalNamePorts(backendPort, svc)
 		endps := getEndpoints(svc, servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 		if len(endps) == 0 {

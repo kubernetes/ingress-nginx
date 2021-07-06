@@ -137,7 +137,7 @@ jobs:
         id: kind
         uses: engineerd/setup-kind@v0.5.0
         with:
-          version: v0.10.0
+          version: v0.11.1
           image: kindest/node:v1.20.2
 
       - name: Test
@@ -159,7 +159,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.16.15, v1.17.17, v1.18.15, v1.19.7, v1.20.2]
+        k8s: [v1.16.15, v1.17.17, v1.18.19, v1.19.11, v1.20.7]
 
     steps:
 
@@ -175,7 +175,7 @@ jobs:
         id: kind
         uses: engineerd/setup-kind@v0.5.0
         with:
-          version: v0.10.0
+          version: v0.11.1
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
