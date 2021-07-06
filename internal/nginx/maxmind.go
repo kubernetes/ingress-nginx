@@ -222,7 +222,7 @@ func ValidateGeoLite2DBEditions() error {
 	return nil
 }
 
-func fileExists(filePath string) bool {
+func _fileExists(filePath string) bool {
 	info, err := os.Stat(filePath)
 	if os.IsNotExist(err) {
 		return false
@@ -230,3 +230,5 @@ func fileExists(filePath string) bool {
 
 	return !info.IsDir()
 }
+
+var fileExists = _fileExists
