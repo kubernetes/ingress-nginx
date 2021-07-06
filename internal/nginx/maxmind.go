@@ -71,6 +71,7 @@ func GeoLite2DBExists() bool {
 	for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
 		filename := dbName + dbExtension
 		if !fileExists(path.Join(geoIPPath, filename)) {
+			klog.Error(filename, " not found")
 			return false
 		}
 		files = append(files, filename)
