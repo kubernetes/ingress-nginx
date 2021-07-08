@@ -227,7 +227,7 @@ func serviceToNameAndPort(svc *networking.IngressServiceBackend) (string, intstr
 			return svcName, intstr.FromInt(int(svc.Port.Number))
 		}
 		if svc.Port.Name != "" {
-			return svcName, intstr.FromString(svc.Port.String())
+			return svcName, intstr.FromString(svc.Port.Name)
 		}
 	}
 	return "", intstr.IntOrString{}

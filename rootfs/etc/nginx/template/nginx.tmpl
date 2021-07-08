@@ -149,14 +149,16 @@ http {
     {{ if $all.Cfg.EnableModsecurity }}
     modsecurity on;
 
+    {{ if (not (empty $all.Cfg.ModsecuritySnippet)) }}
+    modsecurity_rules '
+      {{ $all.Cfg.ModsecuritySnippet }}
+    ';
+    {{ end }}
+
     modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
 
     {{ if $all.Cfg.EnableOWASPCoreRules }}
     modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
-    {{ else if (not (empty $all.Cfg.ModsecuritySnippet)) }}
-    modsecurity_rules '
-      {{ $all.Cfg.ModsecuritySnippet }}
-    ';
     {{ end }}
 
     {{ end }}

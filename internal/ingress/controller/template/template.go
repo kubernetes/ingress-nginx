@@ -988,6 +988,8 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 		info.Service = ing.Spec.DefaultBackend.Service.Name
 		if ing.Spec.DefaultBackend.Service.Port.Number > 0 {
 			info.ServicePort = strconv.Itoa(int(ing.Spec.DefaultBackend.Service.Port.Number))
+		} else {
+			info.ServicePort = ing.Spec.DefaultBackend.Service.Port.Name
 		}
 	}
 
@@ -1022,6 +1024,8 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 			info.Service = rPath.Backend.Service.Name
 			if rPath.Backend.Service.Port.Number > 0 {
 				info.ServicePort = strconv.Itoa(int(rPath.Backend.Service.Port.Number))
+			} else {
+				info.ServicePort = rPath.Backend.Service.Port.Name
 			}
 
 			return info
