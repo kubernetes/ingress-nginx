@@ -64,12 +64,19 @@ const (
 
 // GeoLite2DBExists checks if the required databases for
 // the GeoIP2 NGINX module are present in the filesystem
+// and indexes the discovered databases for iteration in
+// the config.
 func GeoLite2DBExists() bool {
+	files := []string{}
 	for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
-		if !fileExists(path.Join(geoIPPath, dbName+dbExtension)) {
+		filename := dbName + dbExtension
+		if !fileExists(path.Join(geoIPPath, filename)) {
+			klog.Error(filename, " not found")
 			return false
 		}
+		files = append(files, filename)
 	}
+	MaxmindEditionFiles = files
 
 	return true
 }
@@ -101,7 +108,6 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 			if dlError != nil {
 				break
 			}
-			MaxmindEditionFiles = append(MaxmindEditionFiles, dbName+dbExtension)
 		}
 
 		lastErr = dlError
@@ -217,7 +223,7 @@ func ValidateGeoLite2DBEditions() error {
 	return nil
 }
 
-func fileExists(filePath string) bool {
+func _fileExists(filePath string) bool {
 	info, err := os.Stat(filePath)
 	if os.IsNotExist(err) {
 		return false
@@ -225,3 +231,5 @@ func fileExists(filePath string) bool {
 
 	return !info.IsDir()
 }
+
+var fileExists = _fileExists
