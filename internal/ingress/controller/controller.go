@@ -573,6 +573,11 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			}
 
 			for _, path := range rule.HTTP.Paths {
+				if path.Backend.Service == nil {
+					// skip non-service backends
+					continue
+				}
+
 				upsName := upstreamName(ing.Namespace, path.Backend.Service)
 
 				ups := upstreams[upsName]
