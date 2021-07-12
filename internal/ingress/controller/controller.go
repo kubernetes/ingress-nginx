@@ -573,6 +573,12 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			}
 
 			for _, path := range rule.HTTP.Paths {
+				if path.Backend.Service == nil {
+					// skip non-service backends
+					klog.V(3).Infof("Ingress %q and path %q does not contain a service backend, using default backend", ingKey, path.Path)
+					continue
+				}
+
 				upsName := upstreamName(ing.Namespace, path.Backend.Service)
 
 				ups := upstreams[upsName]
@@ -788,6 +794,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 	upstreams[defUpstreamName] = du
 
 	for _, ing := range data {
+		ingKey := k8s.MetaNamespaceKey(ing)
 		anns := ing.ParsedAnnotations
 
 		var defBackend string
@@ -852,6 +859,12 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			}
 
 			for _, path := range rule.HTTP.Paths {
+				if path.Backend.Service == nil {
+					// skip non-service backends
+					klog.V(3).Infof("Ingress %q and path %q does not contain a service backend, using default backend", ingKey, path.Path)
+					continue
+				}
+
 				name := upstreamName(ing.Namespace, path.Backend.Service)
 				svcName, svcPort := upstreamServiceNameAndPort(path.Backend.Service)
 				if _, ok := upstreams[name]; ok {
@@ -1395,6 +1408,12 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 		}
 
 		for _, path := range rule.HTTP.Paths {
+			if path.Backend.Service == nil {
+				// skip non-service backends
+				klog.V(3).Infof("Ingress %q and path %q does not contain a service backend, using default backend", k8s.MetaNamespaceKey(ing), path.Path)
+				continue
+			}
+
 			upsName := upstreamName(ing.Namespace, path.Backend.Service)
 
 			altUps := upstreams[upsName]
@@ -1611,6 +1630,12 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 		}
 
 		for _, path := range rule.HTTP.Paths {
+			if path.Backend.Service == nil {
+				// skip non-service backends
+				klog.V(3).Infof("Ingress %q and path %q does not contain a service backend, using default backend", k8s.MetaNamespaceKey(ing), path.Path)
+				continue
+			}
+
 			if path.Path == "" {
 				path.Path = rootLocation
 			}

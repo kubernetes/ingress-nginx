@@ -2105,6 +2105,67 @@ func TestGetBackendServers(t *testing.T) {
 				}
 			},
 		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "proxy-ssl-1",
+							Namespace: "proxyssl",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path:     "/path1",
+													PathType: &pathTypePrefix,
+													Backend:  networking.IngressBackend{},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						ProxySSL: proxyssl.Config{
+							AuthSSLCert: resolver.AuthSSLCert{
+								CAFileName: "cafile1.crt",
+								Secret:     "secret1",
+							},
+						},
+					},
+				},
+			},
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 1, got %d", len(servers))
+					return
+				}
+
+				s := servers[1]
+
+				if s.Locations[0].Backend != "upstream-default-backend" {
+					t.Errorf("backend should be upstream-default-backend, got '%s'", s.Locations[0].Backend)
+				}
+			},
+			SetConfigMap: func(ns string) *v1.ConfigMap {
+				return &v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:     "config",
+						SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
+					},
+					Data: map[string]string{
+						"proxy-ssl-location-only": "true",
+					},
+				}
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
