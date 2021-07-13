@@ -1252,23 +1252,40 @@ func TestBuildCustomErrorLocationsPerServer(t *testing.T) {
 }
 
 func TestProxySetHeader(t *testing.T) {
-	invalidType := &ingress.Ingress{}
-	expected := "proxy_set_header"
-	actual := proxySetHeader(invalidType)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	tests := []struct {
+		name     string
+		loc      interface{}
+		expected string
+	}{
+		{
+			name:     "nil",
+			loc:      nil,
+			expected: "proxy_set_header",
+		},
+		{
+			name:     "invalid type",
+			loc:      &ingress.Ingress{},
+			expected: "proxy_set_header",
+		},
+		{
+			name:     "http backend",
+			loc:      &ingress.Location{},
+			expected: "proxy_set_header",
+		},
+		{
+			name: "gRPC backend",
+			loc: &ingress.Location{
+				BackendProtocol: "GRPC",
+			},
+			expected: "grpc_set_header",
+		},
 	}
-
-	grpcBackend := &ingress.Location{
-		BackendProtocol: "GRPC",
-	}
-
-	expected = "grpc_set_header"
-	actual = proxySetHeader(grpcBackend)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := proxySetHeader(tt.loc); got != tt.expected {
+				t.Errorf("proxySetHeader() = %v, expected %v", got, tt.expected)
+			}
+		})
 	}
 }
 
