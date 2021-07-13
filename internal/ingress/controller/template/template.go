@@ -563,7 +563,7 @@ func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool
 	return false
 }
 
-func buildAuthResponseHeaders(headers []string) []string {
+func buildAuthResponseHeaders(proxySetHeader string, headers []string) []string {
 	res := []string{}
 
 	if len(headers) == 0 {
@@ -574,7 +574,7 @@ func buildAuthResponseHeaders(headers []string) []string {
 		hvar := strings.ToLower(h)
 		hvar = strings.NewReplacer("-", "_").Replace(hvar)
 		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
-		res = append(res, fmt.Sprintf("proxy_set_header '%v' $authHeader%v;", h, i))
+		res = append(res, fmt.Sprintf("%s '%v' $authHeader%v;", proxySetHeader, h, i))
 	}
 	return res
 }
@@ -668,7 +668,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 		var xForwardedPrefix string
 
 		if len(location.XForwardedPrefix) > 0 {
-			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", location.XForwardedPrefix)
+			xForwardedPrefix = fmt.Sprintf("%s X-Forwarded-Prefix \"%s\";\n", proxySetHeader(location), location.XForwardedPrefix)
 		}
 
 		return fmt.Sprintf(`
