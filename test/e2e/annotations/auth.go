@@ -453,6 +453,29 @@ http {
 				Expect().
 				Status(http.StatusOK)
 		})
+
+		ginkgo.It("should overwrite Foo header with auth response", func() {
+			var (
+				rewriteHeader = "Foo"
+				rewriteVal    = "bar"
+			)
+			annotations["nginx.ingress.kubernetes.io/auth-response-headers"] = rewriteHeader
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("proxy_set_header '%s' $authHeader0;", rewriteHeader))
+			})
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithHeader(rewriteHeader, rewriteVal).
+				WithBasicAuth("user", "password").
+				Expect().
+				Status(http.StatusOK).
+				Body().
+				NotContainsFold(fmt.Sprintf("%s=%s", rewriteHeader, rewriteVal))
+		})
 	})
 
 	ginkgo.Context("when external authentication is configured with a custom redirect param", func() {
