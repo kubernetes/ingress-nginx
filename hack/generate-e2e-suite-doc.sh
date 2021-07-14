@@ -22,7 +22,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-URL="https://github.com/kubernetes/ingress-nginx/tree/master/"
+URL="https://github.com/kubernetes/ingress-nginx/tree/main/"
 DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 
 echo "
