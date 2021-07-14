@@ -1,5 +1,28 @@
 # Changelog
 
+### 0.48.1
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.48.1@sha256:e9fb216ace49dfa4a5983b183067e97496e7a8b307d2093f4278cd550c303899`
+
+_New Features:_
+
+
+_Changes:_
+
+- [X] [#7298](https://github.com/kubernetes/ingress-nginx/pull/ ) Speed up admission hook by eliminating deep 
+  copy of Ingresses in CheckIngress
+- [X] [#6940](https://github.com/kubernetes/ingress-nginx/pull/6940) Fix definition order of modsecurity 
+  directives for controller
+- [X] [#7314](https://github.com/kubernetes/ingress-nginx/pull/7314) Add configuration to disable external name service feature #7314
+- [X] [#7076](https://github.com/kubernetes/ingress-nginx/pull/7076) Rewrite clean-nginx-conf.sh in Go to speed up 
+  admission webhook
+- [X] [#7255](https://github.com/kubernetes/ingress-nginx/pull/7255) Fix nilpointer in admission and remove failing 
+  test #7255 
+- [X] [#7216](https://github.com/kubernetes/ingress-nginx/pull/7216) Admission: Skip validation checks if an ingress 
+  is marked as deleted #7216
+  
 ### 0.47.0
 
 **Image:**
