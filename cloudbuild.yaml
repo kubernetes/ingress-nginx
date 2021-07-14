@@ -21,5 +21,5 @@ steps:
       && make release
 substitutions:
   _GIT_TAG: "12345"
-  _PULL_BASE_REF: "master"
+  _PULL_BASE_REF: "main"
   _PULL_BASE_SHA: '12345'
