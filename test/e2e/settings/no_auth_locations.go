@@ -106,6 +106,7 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 			},
 		},
 		Spec: networking.IngressSpec{
+			IngressClassName: &namespace,
 			Rules: []networking.IngressRule{
 				{
 					Host: host,

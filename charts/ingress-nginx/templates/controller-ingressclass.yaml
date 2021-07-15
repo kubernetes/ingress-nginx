@@ -1,9 +1,7 @@
-{{- if and (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) (.Values.controller.ingressClassResource.enabled) -}}
-{{- if and (semverCompare "=1.18-0" .Capabilities.KubeVersion.GitVersion)  }}
-apiVersion: networking.k8s.io/v1beta1
-{{- else }}
+{{- if .Values.controller.ingressClassResource.enabled -}}
+# We don't support namespaced ingressClass yet
+# So a ClusterRole and a ClusterRoleBinding is required
 apiVersion: networking.k8s.io/v1
-{{- end }}
 kind: IngressClass
 metadata:
   labels:
@@ -18,6 +16,37 @@ metadata:
     ingressclass.kubernetes.io/is-default-class: "true"
 {{- end }}
 spec:
-  controller: k8s.io/ingress-nginx
+  controller: {{ .Values.controller.ingressClassResource.controllerValue }}
   {{ template "ingressClass.parameters" . }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+  name: {{ include "ingress-nginx.ingressclassclrole.fullname" . }}
+rules:
+  - apiGroups:
+      - networking.k8s.io 
+    resources:
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+  name: {{ include "ingress-nginx.ingressclassclrole.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "ingress-nginx.ingressclassclrole.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "ingress-nginx.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace | quote }}
 {{- end }}

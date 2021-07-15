@@ -131,6 +131,7 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 				Annotations: annotations,
 			},
 			Spec: networking.IngressSpec{
+				IngressClassName: &f.Namespace,
 				Rules: []networking.IngressRule{
 					{
 						Host: host,
