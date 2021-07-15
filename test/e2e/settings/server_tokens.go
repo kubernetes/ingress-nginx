@@ -57,6 +57,7 @@ var _ = framework.DescribeSetting("server-tokens", func() {
 				Annotations: map[string]string{},
 			},
 			Spec: networking.IngressSpec{
+				IngressClassName: &f.Namespace,
 				Rules: []networking.IngressRule{
 					{
 						Host: serverTokens,

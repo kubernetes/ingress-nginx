@@ -257,7 +257,10 @@ func (n *NGINXController) Start() {
 
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
-	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, n.cfg.IngressClassConfiguration.Controller)
+	// TODO: For now, as the the IngressClass logics has changed, is up to the
+	// cluster admin to create different Leader Election IDs.
+	// Should revisit this in a future
+	electionID := n.cfg.ElectionID
 
 	setupLeaderElection(&leaderElectionConfig{
 		Client:     n.cfg.Client,

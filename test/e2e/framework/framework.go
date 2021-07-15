@@ -580,6 +580,7 @@ func NewSingleIngress(name, path, host, ns, service string, port int, annotation
 func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
+		IngressClassName: &ns,
 		Rules: []networking.IngressRule{
 			{
 				Host: host,
@@ -611,6 +612,7 @@ func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, se
 func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations map[string]string, tlsHosts []string) *networking.Ingress {
 	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
+		IngressClassName: &ns,
 		Rules: []networking.IngressRule{
 			{
 				IngressRuleValue: networking.IngressRuleValue{
@@ -656,6 +658,7 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations map[string]string) *networking.Ingress {
 	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
+		IngressClassName: &ns,
 		DefaultBackend: &networking.IngressBackend{
 			Service: &networking.IngressServiceBackend{
 				Name: defaultService,
@@ -695,6 +698,7 @@ func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService st
 // NewSingleCatchAllIngress creates a simple ingress with a catch-all backend
 func NewSingleCatchAllIngress(name, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	spec := networking.IngressSpec{
+		IngressClassName: &ns,
 		DefaultBackend: &networking.IngressBackend{
 			Service: &networking.IngressServiceBackend{
 				Name: service,
