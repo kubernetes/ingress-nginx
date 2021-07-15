@@ -159,7 +159,7 @@ controller:
       enabled: true
       annotations:
         # Create internal ELB
-        service.beta.kubernetes.io/aws-load-balancer-internal: true
+        service.beta.kubernetes.io/aws-load-balancer-internal: "true"
         # Any other annotation can be declared here.
 ```
 
