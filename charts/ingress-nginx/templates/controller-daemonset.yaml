@@ -80,7 +80,7 @@ spec:
             - --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}
           {{- end }}
             - --election-id={{ .Values.controller.electionID }}
-            - --ingress-class={{ .Values.controller.ingressClass }}
+            - --controller-class={{ .Values.controller.ingressClassResource.controllerValue }}
             - --configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.controller.fullname" . }}
           {{- if .Values.tcp }}
             - --tcp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.fullname" . }}-tcp
