@@ -1,7 +1,7 @@
+# See the OWNERS docs: https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md
+
 approvers:
-  - ChiefAlexander
-  - cpanato
+- ingress-nginx-helm-maintainers
 
 reviewers:
-  - ChiefAlexander
-  - cpanato
+- ingress-nginx-helm-reviewers
