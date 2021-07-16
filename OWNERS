@@ -1,4 +1,4 @@
-# See the OWNERS docs: https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md
+# See the OWNERS docs: https://github.com/kubernetes/community/blob/main/contributors/guide/owners.md
 
 approvers:
 - ingress-nginx-admins
