@@ -88,12 +88,12 @@ spec:
           {{- end }}
             - --election-id={{ .Values.controller.electionID }}
             - --ingress-class={{ .Values.controller.ingressClass }}
-            - --configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.controller.fullname" . }}
+            - --configmap={{ default "$(POD_NAMESPACE)" .Values.controller.configMapNamespace }}/{{ include "ingress-nginx.controller.fullname" . }}
           {{- if .Values.tcp }}
-            - --tcp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.fullname" . }}-tcp
+            - --tcp-services-configmap={{ default "$(POD_NAMESPACE)" .Values.controller.tcp.configMapNamespace }}/{{ include "ingress-nginx.fullname" . }}-tcp
           {{- end }}
           {{- if .Values.udp }}
-            - --udp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.fullname" . }}-udp
+            - --udp-services-configmap={{ default "$(POD_NAMESPACE)" .Values.controller.udp.configMapNamespace }}/{{ include "ingress-nginx.fullname" . }}-udp
           {{- end }}
           {{- if .Values.controller.scope.enabled }}
             - --watch-namespace={{ default "$(POD_NAMESPACE)" .Values.controller.scope.namespace }}
