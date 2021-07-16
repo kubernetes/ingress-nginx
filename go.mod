@@ -46,4 +46,5 @@ require (
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.8.0
+	sigs.k8s.io/kind v0.11.1 // indirect
 )
