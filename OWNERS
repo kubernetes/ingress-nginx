@@ -1,15 +1,12 @@
 # See the OWNERS docs: https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md
 
 approvers:
-  - ingress-nginx-admins
-  - ingress-nginx-maintainers
-  - ElvinEfendi
-  - rikatz
+- ingress-nginx-admins
+- ingress-nginx-maintainers
+- sig-network-leads
 
 reviewers:
-  - ElvinEfendi
-  - cmluciano
-  - rikatz
+- ingress-nginx-reviewers
 
 emeritus_approvers:
-  - aledbf  # 2020-04-02
+- aledbf  # 2020-04-02
