@@ -1,1 +1,1 @@
-controller-v0.47.0
+controller-v0.48.1
