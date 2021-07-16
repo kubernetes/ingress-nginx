@@ -441,6 +441,7 @@ webhooks:
         namespace: ingress-nginx
         name: ingress-nginx-controller-admission
         path: /networking/v1/ingresses
+    timeoutSeconds: 29
 ---
 # Source: ingress-nginx/templates/admission-webhooks/job-patch/serviceaccount.yaml
 apiVersion: v1
