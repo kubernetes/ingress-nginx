@@ -78,3 +78,4 @@ kubectl run --rm \
   --env="E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS}" \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
   e2e --image=nginx-ingress-controller:e2e
+

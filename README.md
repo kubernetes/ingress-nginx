@@ -35,14 +35,15 @@ See [the list of releases](https://github.com/kubernetes/ingress-nginx/releases)
 For detailed changes for each release; please check the [Changelog.md](Changelog.md) file.
 For detailed changes on the `ingress-nginx` helm chart, please check the following [CHANGELOG.md](charts/ingress-nginx/CHANGELOG.md) file.
 
-### Support Versions table 
+### Support Versions table
 
-| Ingress-nginx version | k8s supported version | Alpine Version | Nginx Version |
-|-----------------------|-------------          |----------------|---------------|
-| v1.0.0-alpha.1        | 1.21, 1.20, 1.19      | 3.13.5         |  1.20.1       |
-| v0.47.0               | 1.21, 1.20, 1.19      | 3.13.5         |  1.20.1       |
-| v0.46.0               | 1.21, 1.20, 1.19      | 3.13.2         |  1.19.6       |
-| v0.45.0               | 1.21, 1.20, 1.19      | 3.13.2         |  1.19.6       |
+| Ingress-nginx version | k8s supported version  | Alpine Version | Nginx Version |
+|-----------------------|-------------           |----------------|---------------|
+| v1.0.0-alpha.2        | 1.22, 1.21, 1.20, 1.19 | 3.13.5         |  1.20.1       |
+| v1.0.0-alpha.1        | 1.21, 1.20, 1.19       | 3.13.5         |  1.20.1       |
+| v0.48.1               | 1.21, 1.20, 1.19       | 3.13.5         |  1.20.1       |
+| v0.47.0               | 1.21, 1.20, 1.19       | 3.13.5         |  1.20.1       |
+| v0.46.0               | 1.21, 1.20, 1.19       | 3.13.2         |  1.19.6       |
 
 # Get Involved
 

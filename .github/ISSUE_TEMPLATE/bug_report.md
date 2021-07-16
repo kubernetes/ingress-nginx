@@ -60,11 +60,11 @@ Help up us (if possible) reproducing the issue using minikube or kind.
 
 ## Install the ingress controller
 
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/baremetal/deploy.yaml
 
 ## Install an application that will act as default backend (is just an echo app)
 
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/http-svc.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/http-svc.yaml
 
 ## Create an ingress (please add any additional annotation required)
 

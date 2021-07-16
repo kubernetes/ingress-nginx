@@ -18,9 +18,12 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: myservicea
-          servicePort: 80
+          service:
+            name: myservicea
+            port:
+              number: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -35,9 +38,12 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: myserviceb
-          servicePort: 80
+          service:
+            name: myserviceb
+            port:
+              number: 80
 ```
 
 When you apply this yaml, 2 ingress resources will be created managed by the **ingress-nginx** instance. Nginx is configured to automatically discover all ingress with the `kubernetes.io/ingress.class: "nginx"` annotation.

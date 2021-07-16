@@ -2,9 +2,31 @@
 
 aliases:
   sig-network-leads:
-    - caseydavenport
-    - dcbw
-    - thockin
+  - caseydavenport
+  - dcbw
+  - thockin
+
   ingress-nginx-admins:
-    - bowei
+  - bowei
+  - rikatz
+
   ingress-nginx-maintainers:
+  - ElvinEfendi
+  - justinsb
+  - rikatz
+  - strongjz
+
+  ingress-nginx-reviewers:
+  - ElvinEfendi
+  - cmluciano
+  - rikatz
+  - strongjz
+  - tao12345666333
+
+  ingress-nginx-helm-maintainers:
+  - ChiefAlexander
+  - cpanato
+
+  ingress-nginx-helm-reviewers:
+  - ChiefAlexander
+  - cpanato
