@@ -32,9 +32,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/pmezard/go-difflib/difflib"
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -57,6 +56,8 @@ func init() {
 }
 
 var (
+	pathPrefix networking.PathType = networking.PathTypePrefix
+
 	// TODO: add tests for SSLPassthrough
 	tmplFuncTestcases = map[string]struct {
 		Path             string
@@ -207,11 +208,11 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	servers := []*ingress.Server{
 		{
 			Hostname:  "foo.bar",
-			Locations: []*ingress.Location{{Path: "/"}},
+			Locations: []*ingress.Location{{Path: "/", PathType: &pathPrefix}},
 		},
 		{
 			Hostname:  "another.host",
-			Locations: []*ingress.Location{{Path: "/"}},
+			Locations: []*ingress.Location{{Path: "/", PathType: &pathPrefix}},
 		},
 	}
 	// returns value from config
@@ -293,8 +294,9 @@ func TestBuildLocation(t *testing.T) {
 
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:    tc.Path,
-			Rewrite: rewrite.Config{Target: tc.Target},
+			Path:     tc.Path,
+			PathType: &pathPrefix,
+			Rewrite:  rewrite.Config{Target: tc.Target},
 		}
 
 		newLoc := buildLocation(loc, tc.enforceRegex)
@@ -311,6 +313,7 @@ func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:             tc.Path,
+			PathType:         &pathPrefix,
 			Rewrite:          rewrite.Config{Target: tc.Target},
 			Backend:          defaultBackend,
 			XForwardedPrefix: tc.XForwardedPrefix,
@@ -838,6 +841,7 @@ func TestBuildUpstreamName(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:             tc.Path,
+			PathType:         &pathPrefix,
 			Rewrite:          rewrite.Config{Target: tc.Target},
 			Backend:          defaultBackend,
 			XForwardedPrefix: tc.XForwardedPrefix,
@@ -936,6 +940,76 @@ func TestGetIngressInformation(t *testing.T) {
 			10,
 			&ingressInformation{},
 		},
+		"valid ingress definition with name validIng in namespace default  using a service with name a-svc port number 8080": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "validIng",
+						Namespace: apiv1.NamespaceDefault,
+						Annotations: map[string]string{
+							"ingress.annotation": "ok",
+						},
+					},
+					Spec: networking.IngressSpec{
+						DefaultBackend: &networking.IngressBackend{
+							Service: &networking.IngressServiceBackend{
+								Name: "a-svc",
+								Port: networking.ServiceBackendPort{
+									Number: 8080,
+								},
+							},
+						},
+					},
+				},
+			},
+			"host1",
+			"",
+			&ingressInformation{
+				Namespace: "default",
+				Rule:      "validIng",
+				Path:      "/",
+				Annotations: map[string]string{
+					"ingress.annotation": "ok",
+				},
+				Service:     "a-svc",
+				ServicePort: "8080",
+			},
+		},
+		"valid ingress definition with name validIng in namespace default  using a service with name a-svc port name b-svc": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "validIng",
+						Namespace: apiv1.NamespaceDefault,
+						Annotations: map[string]string{
+							"ingress.annotation": "ok",
+						},
+					},
+					Spec: networking.IngressSpec{
+						DefaultBackend: &networking.IngressBackend{
+							Service: &networking.IngressServiceBackend{
+								Name: "a-svc",
+								Port: networking.ServiceBackendPort{
+									Name: "b-svc",
+								},
+							},
+						},
+					},
+				},
+			},
+			"host1",
+			"",
+			&ingressInformation{
+				Namespace: "default",
+				Rule:      "validIng",
+				Path:      "/",
+				Annotations: map[string]string{
+					"ingress.annotation": "ok",
+				},
+				Service:     "a-svc",
+				ServicePort: "b-svc",
+			},
+		},
 		"valid ingress definition with name validIng in namespace default": {
 			&ingress.Ingress{
 				Ingress: networking.Ingress{
@@ -947,8 +1021,10 @@ func TestGetIngressInformation(t *testing.T) {
 						},
 					},
 					Spec: networking.IngressSpec{
-						Backend: &networking.IngressBackend{
-							ServiceName: "a-svc",
+						DefaultBackend: &networking.IngressBackend{
+							Service: &networking.IngressServiceBackend{
+								Name: "a-svc",
+							},
 						},
 					},
 				},
@@ -958,6 +1034,7 @@ func TestGetIngressInformation(t *testing.T) {
 			&ingressInformation{
 				Namespace: "default",
 				Rule:      "validIng",
+				Path:      "/",
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
@@ -982,10 +1059,15 @@ func TestGetIngressInformation(t *testing.T) {
 									HTTP: &networking.HTTPIngressRuleValue{
 										Paths: []networking.HTTPIngressPath{
 											{
-												Path: "/ok",
+												Path:     "/ok",
+												PathType: &pathPrefix,
 												Backend: networking.IngressBackend{
-													ServiceName: "b-svc",
-													ServicePort: intstr.FromInt(80),
+													Service: &networking.IngressServiceBackend{
+														Name: "b-svc",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
+													},
 												},
 											},
 										},
@@ -1007,6 +1089,56 @@ func TestGetIngressInformation(t *testing.T) {
 				},
 				Service:     "b-svc",
 				ServicePort: "80",
+			},
+		},
+		"valid ingress definition with name demo in namespace something and path /ok using a service with name b-svc port name b-svc-80": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "demo",
+						Namespace: "something",
+						Annotations: map[string]string{
+							"ingress.annotation": "ok",
+						},
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "foo.bar",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/ok",
+												PathType: &pathPrefix,
+												Backend: networking.IngressBackend{
+													Service: &networking.IngressServiceBackend{
+														Name: "b-svc",
+														Port: networking.ServiceBackendPort{
+															Name: "b-svc-80",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							{},
+						},
+					},
+				},
+			},
+			"foo.bar",
+			"/ok",
+			&ingressInformation{
+				Namespace: "something",
+				Rule:      "demo",
+				Annotations: map[string]string{
+					"ingress.annotation": "ok",
+				},
+				Service:     "b-svc",
+				ServicePort: "b-svc-80",
 			},
 		},
 	}
@@ -1259,7 +1391,8 @@ func TestEnforceRegexModifier(t *testing.T) {
 				Target:   "/alright",
 				UseRegex: true,
 			},
-			Path: "/ok",
+			Path:     "/ok",
+			PathType: &pathPrefix,
 		},
 	}
 	expected = true

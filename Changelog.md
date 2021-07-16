@@ -11,18 +11,18 @@ _New Features:_
 
 _Changes:_
 
-- [X] [#7298](https://github.com/kubernetes/ingress-nginx/pull/ ) Speed up admission hook by eliminating deep 
+- [X] [#7298](https://github.com/kubernetes/ingress-nginx/pull/ ) Speed up admission hook by eliminating deep
   copy of Ingresses in CheckIngress
-- [X] [#6940](https://github.com/kubernetes/ingress-nginx/pull/6940) Fix definition order of modsecurity 
+- [X] [#6940](https://github.com/kubernetes/ingress-nginx/pull/6940) Fix definition order of modsecurity
   directives for controller
 - [X] [#7314](https://github.com/kubernetes/ingress-nginx/pull/7314) Add configuration to disable external name service feature #7314
-- [X] [#7076](https://github.com/kubernetes/ingress-nginx/pull/7076) Rewrite clean-nginx-conf.sh in Go to speed up 
+- [X] [#7076](https://github.com/kubernetes/ingress-nginx/pull/7076) Rewrite clean-nginx-conf.sh in Go to speed up
   admission webhook
-- [X] [#7255](https://github.com/kubernetes/ingress-nginx/pull/7255) Fix nilpointer in admission and remove failing 
-  test #7255 
-- [X] [#7216](https://github.com/kubernetes/ingress-nginx/pull/7216) Admission: Skip validation checks if an ingress 
+- [X] [#7255](https://github.com/kubernetes/ingress-nginx/pull/7255) Fix nilpointer in admission and remove failing
+  test #7255
+- [X] [#7216](https://github.com/kubernetes/ingress-nginx/pull/7216) Admission: Skip validation checks if an ingress
   is marked as deleted #7216
-  
+
 ### 0.47.0
 
 **Image:**
@@ -35,12 +35,12 @@ _New Features:_
 
 _Changes:_
 
-- [X] [#7179](https://github.com/kubernetes/ingress-nginx/pull/7179) Upgrade Nginx to 1.20.1 
+- [X] [#7179](https://github.com/kubernetes/ingress-nginx/pull/7179) Upgrade Nginx to 1.20.1
 - [X] [#7101](https://github.com/kubernetes/ingress-nginx/pull/7101)  Removed Codecov
 - [X] [#6993](https://github.com/kubernetes/ingress-nginx/pull/6993)  Fix cookieAffinity log printing error
 - [X] [#7046](https://github.com/kubernetes/ingress-nginx/pull/7046)  Allow configuring controller container name
-- [X] [#6994](https://github.com/kubernetes/ingress-nginx/pull/6994)  Fixed oauth2 callback url 
-- [X] [#6740](https://github.com/kubernetes/ingress-nginx/pull/6740)  non-host canary ingress use default server name as host to merge 
+- [X] [#6994](https://github.com/kubernetes/ingress-nginx/pull/6994)  Fixed oauth2 callback url
+- [X] [#6740](https://github.com/kubernetes/ingress-nginx/pull/6740)  non-host canary ingress use default server name as host to merge
 - [X] [#7126](https://github.com/kubernetes/ingress-nginx/pull/7126)  set x-forwarded-scheme to be the same as x-forwarded-proto
 - [X] [#6734](https://github.com/kubernetes/ingress-nginx/pull/6734)  Update controller-poddisruptionbudget.yaml
 - [X] [#7117](https://github.com/kubernetes/ingress-nginx/pull/7117)  Adding annotations for HPA
@@ -75,9 +75,9 @@ _Changes:_
 - [X] [#6979](https://github.com/kubernetes/ingress-nginx/pull/6979) Changed servicePort value for metrics
 - [X] [#6971](https://github.com/kubernetes/ingress-nginx/pull/6971) Fix crl not reload when crl got updated in the ca secret
 - [X] [#6957](https://github.com/kubernetes/ingress-nginx/pull/6957) Add ability to specify automountServiceAccountToken
-- [X] [#6956](https://github.com/kubernetes/ingress-nginx/pull/6956) update nginx base image, handle jaeger propagation format 
-- [X] [#6936](https://github.com/kubernetes/ingress-nginx/pull/6936) update tracing libraries for opentracing 1.6.0 
-- [X] [#6908](https://github.com/kubernetes/ingress-nginx/pull/6908) feat(chart) Add volumes to default-backend deployment #6908 
+- [X] [#6956](https://github.com/kubernetes/ingress-nginx/pull/6956) update nginx base image, handle jaeger propagation format
+- [X] [#6936](https://github.com/kubernetes/ingress-nginx/pull/6936) update tracing libraries for opentracing 1.6.0
+- [X] [#6908](https://github.com/kubernetes/ingress-nginx/pull/6908) feat(chart) Add volumes to default-backend deployment #6908
 - [X] [#6884](https://github.com/kubernetes/ingress-nginx/pull/6884) jaeger-endpoint feature for non-agent trace collectors
 - [X] [#6856](https://github.com/kubernetes/ingress-nginx/pull/6856) Allow multiple publish status addresses
 - [X] [#6971](https://github.com/kubernetes/ingress-nginx/pull/6971) Fix bug related to CRL update

@@ -11,7 +11,7 @@ You need a [TLS cert](../PREREQUISITES.md#tls-certificates) and a [test HTTP ser
 Create a `ingress.yaml` file.
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nginx-test

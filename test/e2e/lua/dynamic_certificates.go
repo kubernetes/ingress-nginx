@@ -28,7 +28,7 @@ import (
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/assert"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -45,7 +45,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 	ginkgo.It("picks up the certificate when we add TLS spec to existing ingress", func() {
 		ensureIngress(f, host, framework.EchoService)
 
-		ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+		ing, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		ing.Spec.TLS = []networking.IngressTLS{
 			{
@@ -59,7 +59,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 			ing.Namespace)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		time.Sleep(waitForLuaSync)
@@ -147,7 +147,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 		})
 
 		ginkgo.It("picks up the updated certificate without reloading", func() {
-			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			ensureHTTPSRequest(f, fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.GetURL(framework.HTTPS)), host, host)
@@ -183,7 +183,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 		})
 
 		ginkgo.It("falls back to using default certificate when secret gets deleted without reloading", func() {
-			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			ensureHTTPSRequest(f, fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.GetURL(framework.HTTPS)), host, host)
@@ -217,11 +217,11 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 
 		ginkgo.It("picks up a non-certificate only change", func() {
 			newHost := "foo2.com"
-			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			ing.Spec.Rules[0].Host = newHost
-			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+			_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			time.Sleep(waitForLuaSync)
@@ -231,11 +231,11 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 		})
 
 		ginkgo.It("removes HTTPS configuration when we delete TLS spec", func() {
-			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+			ing, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			ing.Spec.TLS = []networking.IngressTLS{}
-			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+			_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			time.Sleep(waitForLuaSync)

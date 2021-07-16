@@ -22,13 +22,14 @@ import (
 
 	"github.com/onsi/ginkgo"
 	corev1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+var pathtype = networking.PathTypePrefix
 var _ = framework.IngressNginxDescribe("[Service] backend status code 503", func() {
 	f := framework.NewDefaultFramework("service-backend")
 
@@ -86,10 +87,15 @@ func buildIngressWithNonexistentService(host, namespace, path string) *networkin
 						HTTP: &networking.HTTPIngressRuleValue{
 							Paths: []networking.HTTPIngressPath{
 								{
-									Path: path,
+									Path:     path,
+									PathType: &pathtype,
 									Backend: networking.IngressBackend{
-										ServiceName: backendService,
-										ServicePort: intstr.FromInt(80),
+										Service: &networking.IngressServiceBackend{
+											Name: backendService,
+											Port: networking.ServiceBackendPort{
+												Number: int32(80),
+											},
+										},
 									},
 								},
 							},
@@ -116,10 +122,15 @@ func buildIngressWithUnavailableServiceEndpoints(host, namespace, path string) (
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: path,
+										Path:     path,
+										PathType: &pathtype,
 										Backend: networking.IngressBackend{
-											ServiceName: backendService,
-											ServicePort: intstr.FromInt(80),
+											Service: &networking.IngressServiceBackend{
+												Name: backendService,
+												Port: networking.ServiceBackendPort{
+													Number: int32(80),
+												},
+											},
 										},
 									},
 								},

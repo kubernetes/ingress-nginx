@@ -103,7 +103,7 @@ func checkIngress(hostname string, f *framework.Framework) {
 }
 
 func deleteIngress(hostname string, f *framework.Framework) {
-	err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Delete(context.TODO(), hostname, metav1.DeleteOptions{})
+	err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Delete(context.TODO(), hostname, metav1.DeleteOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting ingress")
 }
 

@@ -67,7 +67,7 @@ FOCUS="no-auth-locations" make kind-e2e-test
 
 Valid values are defined in the describe definition of the e2e tests like [Default Backend](https://github.com/kubernetes/ingress-nginx/blob/master/test/e2e/defaultbackend/default_backend.go#L29)
 
-The complete list of tests can be found [here](e2e-tests.md)
+The complete list of tests can be found [here](../e2e-tests.md)
 
 ### Custom docker image
 

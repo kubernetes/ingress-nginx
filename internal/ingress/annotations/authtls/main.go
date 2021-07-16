@@ -18,7 +18,7 @@ package authtls
 
 import (
 	"github.com/pkg/errors"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 
 	"regexp"
 

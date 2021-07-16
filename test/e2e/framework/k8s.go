@@ -28,7 +28,7 @@ import (
 	api "k8s.io/api/core/v1"
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
@@ -63,7 +63,7 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 
 // GetIngress gets an Ingress object from the given namespace, name and returns it, throws error if it does not exists.
 func (f *Framework) GetIngress(namespace string, name string) *networking.Ingress {
-	ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	ing, err := f.KubeClientSet.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "getting ingress")
 	assert.NotNil(ginkgo.GinkgoT(), ing, "expected an ingress but none returned")
 	return ing
@@ -334,7 +334,7 @@ func createIngressWithRetries(c kubernetes.Interface, namespace string, obj *net
 		return fmt.Errorf("Object provided to create is empty")
 	}
 	createFunc := func() (bool, error) {
-		_, err := c.NetworkingV1beta1().Ingresses(namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
+		_, err := c.NetworkingV1().Ingresses(namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
 		if err == nil {
 			return true, nil
 		}
@@ -355,7 +355,7 @@ func updateIngressWithRetries(c kubernetes.Interface, namespace string, obj *net
 		return fmt.Errorf("Object provided to create is empty")
 	}
 	updateFunc := func() (bool, error) {
-		_, err := c.NetworkingV1beta1().Ingresses(namespace).Update(context.TODO(), obj, metav1.UpdateOptions{})
+		_, err := c.NetworkingV1().Ingresses(namespace).Update(context.TODO(), obj, metav1.UpdateOptions{})
 		if err == nil {
 			return true, nil
 		}
