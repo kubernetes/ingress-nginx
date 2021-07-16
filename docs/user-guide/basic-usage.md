@@ -5,7 +5,7 @@ ingress-nginx can be used for many use cases, inside various cloud provider and 
 First of all follow the instructions to install ingress-nginx. Then imagine that you need to expose 2 HTTP services already installed: `myServiceA`, `myServiceB`. Let's say that you want to expose the first at `myServiceA.foo.org` and the second at `myServiceB.foo.org`. One possible solution is to create two **ingress** resources:
 
 ```
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-myservicea
@@ -18,11 +18,14 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: myservicea
-          servicePort: 80
+          service:
+            name: myservicea
+            port:
+              number: 80
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-myserviceb
@@ -35,9 +38,12 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: myserviceb
-          servicePort: 80
+          service:
+            name: myserviceb
+            port:
+              number: 80
 ```
 
 When you apply this yaml, 2 ingress resources will be created managed by the **ingress-nginx** instance. Nginx is configured to automatically discover all ingress with the `kubernetes.io/ingress.class: "nginx"` annotation.
