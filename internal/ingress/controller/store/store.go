@@ -331,13 +331,11 @@ func New(
 			}
 		}
 
-		ic, err := store.GetIngressClass(ing, icConfig)
+		_, err := store.GetIngressClass(ing, icConfig)
 		if err != nil {
 			klog.InfoS("Ignoring ingress because of error while validating ingress class", "ingress", klog.KObj(ing), "error", err)
 			return
 		}
-
-		klog.InfoS("Found valid IngressClass", "ingress", klog.KObj(ing), "ingressclass", ic)
 
 		if hasCatchAllIngressRule(ing.Spec) && disableCatchAll {
 			klog.InfoS("Ignoring delete for catch-all because of --disable-catch-all", "ingress", klog.KObj(ing))
@@ -388,7 +386,7 @@ func New(
 			curIng, _ := toIngress(cur)
 
 			_, errOld := store.GetIngressClass(oldIng, icConfig)
-			classCur, errCur := store.GetIngressClass(oldIng, icConfig)
+			classCur, errCur := store.GetIngressClass(curIng, icConfig)
 			if errOld != nil && errCur == nil {
 				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(curIng))

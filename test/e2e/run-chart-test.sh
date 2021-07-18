@@ -50,7 +50,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab}
+  export K8S_VERSION=${K8S_VERSION:-v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -61,7 +61,25 @@ if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
 
   echo "Kubernetes cluster:"
   kubectl get nodes -o wide
+
 fi
+
+if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
+  export TAG=1.0.0-dev
+  export ARCH=${ARCH:-amd64}
+  export REGISTRY=ingress-controller
+  if ! command -v ginkgo &> /dev/null; then
+    go get github.com/onsi/ginkgo/ginkgo
+  fi
+  echo "[dev-env] building image"
+  make -C ${DIR}/../../ clean-image build image
+fi
+  
+
+KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
+echo "[dev-env] copying docker images to cluster..."
+
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
 
 echo "[dev-env] running helm chart e2e tests..."
 # Uses a custom chart-testing image to avoid timeouts waiting for namespace deletion.
