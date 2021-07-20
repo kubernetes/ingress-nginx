@@ -291,6 +291,7 @@ http {
     client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
 
     large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
+    large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
     keepalive_requests              {{ $cfg.KeepaliveRequests }};
     http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
 
