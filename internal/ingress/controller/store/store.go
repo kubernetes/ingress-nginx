@@ -660,6 +660,24 @@ func New(
 	}
 
 	serviceHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			svc := obj.(*corev1.Service)
+			if svc.Spec.Type == corev1.ServiceTypeExternalName {
+				updateCh.In() <- Event{
+					Type: CreateEvent,
+					Obj:  obj,
+				}
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			svc := obj.(*corev1.Service)
+			if svc.Spec.Type == corev1.ServiceTypeExternalName {
+				updateCh.In() <- Event{
+					Type: DeleteEvent,
+					Obj:  obj,
+				}
+			}
+		},
 		UpdateFunc: func(old, cur interface{}) {
 			oldSvc := old.(*corev1.Service)
 			curSvc := cur.(*corev1.Service)
