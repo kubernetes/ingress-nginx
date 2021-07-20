@@ -10,13 +10,23 @@
 controller:
   name: controller
   image:
-    repository: k8s.gcr.io/ingress-nginx/controller
-    tag: "v0.45.0"
-    digest: sha256:c4390c53f348c3bd4e60a5dd6a11c35799ae78c49388090140b9d72ccede1755
+    registry: k8s.gcr.io
+    image: ingress-nginx/controller
+    # for backwards compatibility consider setting the full image url via the repository value below
+    # use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
+    # repository:
+    tag: "v0.47.0"
+    digest: sha256:a1e4efc107be0bb78f32eaec37bef17d7a0c81bec8066cdf2572508d21351d0b
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
     allowPrivilegeEscalation: true
+
+  # Use an existing PSP instead of creating one
+  existingPsp: ""
+
+  # Configures the controller container name
+  containerName: controller
 
   # Configures the ports the nginx-controller listens on
   containerPort:
@@ -69,6 +79,17 @@ controller:
   ## Name of the ingress class to route through this controller
   ##
   ingressClass: nginx
+
+  # This section refers to the creation of the IngressClass resource
+  # IngressClass resources are supported since k8s >= 1.18
+  ingressClassResource:
+    enabled: false
+    default: false
+
+    # Parameters is a link to a custom resource containing additional
+    # configuration for the controller. This is optional if the controller
+    # does not require extra parameters.
+    parameters: {}
 
   # labels to add to the pod container metadata
   podLabels: {}
@@ -245,20 +266,40 @@ controller:
   ## Liveness and readiness probe values
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ##
+  # startupProbe:
+  #   httpGet:
+  #     # should match container.healthCheckPath
+  #     path: "/healthz"
+  #     port: 10254
+  #     scheme: HTTP
+  #   initialDelaySeconds: 5
+  #   periodSeconds: 5
+  #   timeoutSeconds: 2
+  #   successThreshold: 1
+  #   failureThreshold: 5
   livenessProbe:
+    httpGet:
+      # should match container.healthCheckPath
+      path: "/healthz"
+      port: 10254
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
     failureThreshold: 5
-    initialDelaySeconds: 10
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 1
-    port: 10254
   readinessProbe:
-    failureThreshold: 3
+    httpGet:
+      # should match container.healthCheckPath
+      path: "/healthz"
+      port: 10254
+      scheme: HTTP
     initialDelaySeconds: 10
     periodSeconds: 10
-    successThreshold: 1
     timeoutSeconds: 1
-    port: 10254
+    successThreshold: 1
+    failureThreshold: 3
+
 
   # Path of the health check endpoint. All requests received on the port defined by
   # the healthz-port parameter are forwarded internally to this path.
@@ -473,6 +514,9 @@ controller:
     namespaceSelector: {}
     objectSelector: {}
 
+    # Use an existing PSP instead of creating one
+    existingPsp: ""
+
     service:
       annotations: {}
       # clusterIP: ""
@@ -485,7 +529,11 @@ controller:
     patch:
       enabled: true
       image:
-        repository: docker.io/jettech/kube-webhook-certgen
+        registry: docker.io
+        image: jettech/kube-webhook-certgen
+        # for backwards compatibility consider setting the full image url via the repository value below
+        # use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
+        # repository:
         tag: v1.5.1
         pullPolicy: IfNotPresent
       ## Provide a priority class name to the webhook patching job
@@ -523,6 +571,8 @@ controller:
     serviceMonitor:
       enabled: false
       additionalLabels: {}
+      # The label to use to retrieve the job name from.
+      # jobLabel: "app.kubernetes.io/name"
       namespace: ""
       namespaceSelector: {}
       # Default: scrape .Release.Namespace only
@@ -600,7 +650,11 @@ defaultBackend:
 
   name: defaultbackend
   image:
-    repository: k8s.gcr.io/defaultbackend-amd64
+    registry: k8s.gcr.io
+    image: defaultbackend-amd64
+    # for backwards compatibility consider setting the full image url via the repository value below
+    # use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
+    # repository:
     tag: "1.5"
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
@@ -608,6 +662,9 @@ defaultBackend:
     runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
+
+  # Use an existing PSP instead of creating one
+  existingPsp: ""
 
   extraArgs: {}
 
@@ -689,6 +746,7 @@ defaultBackend:
   #    emptyDir: {}
 
   autoscaling:
+    annotations: {}
     enabled: false
     minReplicas: 1
     maxReplicas: 2

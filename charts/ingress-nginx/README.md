@@ -171,9 +171,13 @@ controller:
     internal:
       enabled: true
       annotations:
-        # Create internal LB
-        cloud.google.com/load-balancer-type: "Internal"
-        # Any other annotation can be declared here.
+        # Create internal LB. More informations: https://cloud.google.com/kubernetes-engine/docs/how-to/internal-load-balancing
+        # For GKE versions 1.17 and later
+        networking.gke.io/load-balancer-type: "Internal"
+        # For earlier versions
+        # cloud.google.com/load-balancer-type: "Internal"
+        
+        # Any other annotation can be declared here. 
 ```
 
 Example for Azure:
@@ -184,6 +188,17 @@ controller:
       annotations:
         # Create internal LB
         service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+        # Any other annotation can be declared here.
+```
+
+Example for Oracle Cloud Infrastructure:
+
+```yaml
+controller:
+  service:
+      annotations:
+        # Create internal LB
+        service.beta.kubernetes.io/oci-load-balancer-internal: "true"
         # Any other annotation can be declared here.
 ```
 

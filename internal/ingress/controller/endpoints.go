@@ -50,6 +50,12 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 
 	// ExternalName services
 	if s.Spec.Type == corev1.ServiceTypeExternalName {
+		if ip := net.ParseIP(s.Spec.ExternalName); s.Spec.ExternalName == "localhost" ||
+			(ip != nil && ip.IsLoopback()) {
+			klog.Errorf("Invalid attempt to use localhost name %s in %q", s.Spec.ExternalName, svcKey)
+			return upsServers
+		}
+
 		klog.V(3).Infof("Ingress using Service %q of type ExternalName.", svcKey)
 		targetPort := port.TargetPort.IntValue()
 		// if the externalName is not an IP address we need to validate is a valid FQDN

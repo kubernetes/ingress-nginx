@@ -1,10 +1,5 @@
-## Help us to improve the NGINX Ingress controller [completing the survey](https://docs.google.com/forms/d/15ULTOvYDsV920V0GWrspew4yyjEmTAi740Wr34UgKwA/viewform)
-
----
-
 # NGINX Ingress Controller
 
-[![Coverage Status](https://codecov.io/gh/kubernetes/ingress-nginx/branch/master/graph/badge.svg)](https://codecov.io/gh/kubernetes/ingress-nginx)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx)
 [![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/stargazers)
@@ -32,7 +27,7 @@ Thanks for taking the time to join our community and start contributing!
 - This project adheres to the [Kubernetes Community Code of Conduct](https://git.k8s.io/community/code-of-conduct.md). By participating in this project, you agree to abide by its terms.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for information about setting up your environment, the workflow that we expect, and instructions on the developer certificate of origin that we require.
 - Check out the [open issues](https://github.com/kubernetes/ingress-nginx).
-- Join our Kubernetes Slack channel: [#ingress-nginx](https://kubernetes.slack.com/messages/CANQGM8BA/).
+- Join our Kubernetes Slack channel for developer discussion : [#ingress-nginx-dev](https://kubernetes.slack.com/archives/C021E147ZA4).
 
 ## Changelog
 
@@ -40,12 +35,22 @@ See [the list of releases](https://github.com/kubernetes/ingress-nginx/releases)
 For detailed changes for each release; please check the [Changelog.md](Changelog.md) file.
 For detailed changes on the `ingress-nginx` helm chart, please check the following [CHANGELOG.md](charts/ingress-nginx/CHANGELOG.md) file.
 
+### Support Versions table 
+
+| Ingress-nginx version | k8s supported version  | Alpine Version | Nginx Version |
+|-----------------------|-------------           |----------------|---------------|
+| v1.0.0-alpha.2        | 1.22, 1.21, 1.20, 1.19 | 3.13.5         |  1.20.1       |
+| v1.0.0-alpha.1        | 1.21, 1.20, 1.19       | 3.13.5         |  1.20.1       |
+| v0.47.0               | 1.21, 1.20, 1.19       | 3.13.5         |  1.20.1       |
+| v0.46.0               | 1.21, 1.20, 1.19       | 3.13.2         |  1.19.6       |
+| v0.45.0               | 1.21, 1.20, 1.19       | 3.13.2         |  1.19.6       |
+
 # Get Involved
 
 - **Contributing**: Pull requests are welcome!
   - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and check out [help-wanted](https://github.com/kubernetes/ingress-nginx/labels/help%20wanted) issues.
   - Submit github issues for any feature enhancements, bugs or documentation problems.
-- **Support**: Join to [Kubernetes Slack](http://slack.kubernetes.io/) in the [#ingress-nginx](https://kubernetes.slack.com/messages/CANQGM8BA/) channel to ask questions to get support from the maintainers and other users.
+- **Support**: Join to [Kubernetes Slack](http://slack.kubernetes.io/) in the [#ingress-nginx-users](https://kubernetes.slack.com/messages/CANQGM8BA/) channel to ask questions to get support from the maintainers and other users.
   - The [github issues](https://github.com/kubernetes/ingress-nginx/issues) in the repository are **exclusively** for bug reports and feature requests.
 - **Discuss**: Tweet using the `#IngressNginx` hashtag.
 

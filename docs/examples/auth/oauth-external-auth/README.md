@@ -47,7 +47,7 @@ kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addon
 ![Register OAuth2 Application](images/register-oauth-app.png)
 
 - Homepage URL is the FQDN in the Ingress rule, like `https://foo.bar.com`
-- Authorization callback URL is the same as the base FQDN plus `/oauth2`, like `https://foo.bar.com/oauth2`
+- Authorization callback URL is the same as the base FQDN plus `/oauth2/callback`, like `https://foo.bar.com/oauth2/callback`
 
 ![Register OAuth2 Application](images/register-oauth-app-2.png)
 

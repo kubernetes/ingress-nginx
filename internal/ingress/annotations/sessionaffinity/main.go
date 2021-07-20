@@ -19,7 +19,7 @@ package sessionaffinity
 import (
 	"regexp"
 
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -96,7 +96,7 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 
 	cookie.Name, err = parser.GetStringAnnotation(annotationAffinityCookieName, ing)
 	if err != nil {
-		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieExpires, "default", defaultAffinityCookieName)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieName, "default", defaultAffinityCookieName)
 		cookie.Name = defaultAffinityCookieName
 	}
 
@@ -114,7 +114,7 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 
 	cookie.Path, err = parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
 	if err != nil {
-		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieMaxAge)
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookiePath)
 	}
 
 	cookie.SameSite, err = parser.GetStringAnnotation(annotationAffinityCookieSameSite, ing)

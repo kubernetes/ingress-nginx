@@ -18,7 +18,6 @@ package controller
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -46,7 +45,7 @@ func TestNginxCheck(t *testing.T) {
 
 			mux := http.NewServeMux()
 
-			listener, err := net.Listen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
+			listener, err := tryListen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 			if err != nil {
 				t.Fatalf("creating tcp listener: %s", err)
 			}

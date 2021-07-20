@@ -12,5 +12,5 @@ Due to the value of the setting [SecAuditLogType=Concurrent](https://github.com/
 The default `Serial` value in SecAuditLogType can impact performance.
 
 The OWASP ModSecurity Core Rule Set (CRS) is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls. The CRS aims to protect web applications from a wide range of attacks, including the OWASP Top Ten, with a minimum of false alerts.
-The directory `/etc/nginx/owasp-modsecurity-crs` contains the [owasp-modsecurity-crs repository](https://github.com/SpiderLabs/owasp-modsecurity-crs).
+The directory `/etc/nginx/owasp-modsecurity-crs` contains the [OWASP ModSecurity Core Rule Set repository](https://github.com/coreruleset/coreruleset).
 Using `enable-owasp-modsecurity-crs: "true"` we enable the use of the rules.

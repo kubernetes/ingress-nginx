@@ -24,9 +24,8 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -48,7 +47,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 	})
 
-	ginkgo.It("should ignore catch all Ingress", func() {
+	ginkgo.It("should ignore catch all Ingress with backend", func() {
 		host := "foo"
 
 		ing := framework.NewSingleCatchAllIngress("catch-all", f.Namespace, framework.EchoService, 80, nil)
@@ -60,6 +59,18 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 		f.WaitForNginxServer(host, func(cfg string) bool {
 			return strings.Contains(cfg, "server_name foo")
 		})
+
+		f.WaitForNginxServer("_", func(cfg string) bool {
+			return strings.Contains(cfg, `set $ingress_name ""`) &&
+				strings.Contains(cfg, `set $proxy_upstream_name "upstream-default-backend"`)
+		})
+	})
+
+	ginkgo.It("should ignore catch all Ingress with backend and rules", func() {
+		host := "foo"
+
+		ing := framework.NewSingleIngressWithBackendAndRules(host, "/", host, f.Namespace, framework.EchoService, 80, framework.EchoService, 80, nil)
+		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer("_", func(cfg string) bool {
 			return strings.Contains(cfg, `set $ingress_name ""`) &&
@@ -86,9 +97,13 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 
 		err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *networking.Ingress) error {
 			ingress.Spec.Rules = nil
-			ingress.Spec.Backend = &networking.IngressBackend{
-				ServiceName: framework.EchoService,
-				ServicePort: intstr.FromInt(80),
+			ingress.Spec.DefaultBackend = &networking.IngressBackend{
+				Service: &networking.IngressServiceBackend{
+					Name: framework.EchoService,
+					Port: networking.ServiceBackendPort{
+						Number: int32(80),
+					},
+				},
 			}
 			return nil
 		})
@@ -105,10 +120,10 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 			Status(http.StatusNotFound)
 	})
 
-	ginkgo.It("should allow Ingress with both a default backend and rules", func() {
+	ginkgo.It("should allow Ingress with rules", func() {
 		host := "foo"
 
-		ing := framework.NewSingleIngressWithBackendAndRules("not-catch-all", "/rulepath", host, f.Namespace, framework.EchoService, 80, framework.EchoService, 80, nil)
+		ing := framework.NewSingleIngress("not-catch-all", "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(cfg string) bool {

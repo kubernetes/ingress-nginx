@@ -6,6 +6,7 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend
   name: {{ include "ingress-nginx.defaultBackend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
@@ -39,7 +40,7 @@ spec:
       containers:
         - name: {{ template "ingress-nginx.name" . }}-default-backend
           {{- with .Values.defaultBackend.image }}
-          image: "{{.repository}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
+          image: "{{- if .repository -}}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{- end -}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
           {{- end }}
           imagePullPolicy: {{ .Values.defaultBackend.image.pullPolicy }}
         {{- if .Values.defaultBackend.extraArgs }}

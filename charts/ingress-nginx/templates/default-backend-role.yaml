@@ -6,9 +6,14 @@ metadata:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend
   name: {{ include "ingress-nginx.fullname" . }}-backend
+  namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']
     verbs:          ['use']
+    {{- with .Values.defaultBackend.existingPsp }}
+    resourceNames:  [{{ . }}]
+    {{- else }}
     resourceNames:  [{{ include "ingress-nginx.fullname" . }}-backend]
+    {{- end }}
 {{- end }}

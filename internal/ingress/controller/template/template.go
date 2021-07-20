@@ -23,22 +23,23 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand" // #nosec
 	"net"
 	"net/url"
 	"os"
-	"os/exec"
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	text_template "text/template"
 	"time"
 
 	"github.com/pkg/errors"
 
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 
@@ -50,9 +51,15 @@ import (
 )
 
 const (
-	slash         = "/"
-	nonIdempotent = "non_idempotent"
-	defBufferSize = 65535
+	slash                   = "/"
+	nonIdempotent           = "non_idempotent"
+	defBufferSize           = 65535
+	writeIndentOnEmptyLines = true // backward-compatibility
+)
+
+const (
+	stateCode = iota
+	stateComment
 )
 
 // TemplateWriter is the interface to render a template
@@ -86,6 +93,87 @@ func NewTemplate(file string) (*Template, error) {
 	}, nil
 }
 
+// 1. Removes carriage return symbol (\r)
+// 2. Collapses multiple empty lines to single one
+// 3. Re-indent
+// (ATW: always returns nil)
+func cleanConf(in *bytes.Buffer, out *bytes.Buffer) error {
+	depth := 0
+	lineStarted := false
+	emptyLineWritten := false
+	state := stateCode
+	for {
+		c, err := in.ReadByte()
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err // unreachable
+		}
+
+		needOutput := false
+		nextDepth := depth
+		nextLineStarted := lineStarted
+
+		switch state {
+		case stateCode:
+			switch c {
+			case '{':
+				needOutput = true
+				nextDepth = depth + 1
+				nextLineStarted = true
+			case '}':
+				needOutput = true
+				depth--
+				nextDepth = depth
+				nextLineStarted = true
+			case ' ', '\t':
+				needOutput = lineStarted
+			case '\r':
+			case '\n':
+				needOutput = !(!lineStarted && emptyLineWritten)
+				nextLineStarted = false
+			case '#':
+				needOutput = true
+				nextLineStarted = true
+				state = stateComment
+			default:
+				needOutput = true
+				nextLineStarted = true
+			}
+		case stateComment:
+			switch c {
+			case '\r':
+			case '\n':
+				needOutput = true
+				nextLineStarted = false
+				state = stateCode
+			default:
+				needOutput = true
+			}
+		}
+
+		if needOutput {
+			if !lineStarted && (writeIndentOnEmptyLines || c != '\n') {
+				for i := 0; i < depth; i++ {
+					err = out.WriteByte('\t') // always nil
+					if err != nil {
+						return err
+					}
+				}
+			}
+			emptyLineWritten = !lineStarted
+			err = out.WriteByte(c) // always nil
+			if err != nil {
+				return err
+			}
+		}
+
+		depth = nextDepth
+		lineStarted = nextLineStarted
+	}
+}
+
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
 func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
@@ -110,12 +198,9 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 
 	// squeezes multiple adjacent empty lines to be single
 	// spaced this is to avoid the use of regular expressions
-	cmd := exec.Command("/ingress-controller/clean-nginx-conf.sh")
-	cmd.Stdin = tmplBuf
-	cmd.Stdout = outCmdBuf
-	if err := cmd.Run(); err != nil {
-		klog.Warningf("unexpected error cleaning template: %v", err)
-		return tmplBuf.Bytes(), nil
+	err = cleanConf(tmplBuf, outCmdBuf)
+	if err != nil {
+		return nil, err
 	}
 
 	return outCmdBuf.Bytes(), nil
@@ -342,12 +427,14 @@ func locationConfigForLua(l interface{}, a interface{}) string {
 		force_ssl_redirect = %t,
 		ssl_redirect = %t,
 		force_no_ssl_redirect = %t,
+		preserve_trailing_slash = %t,
 		use_port_in_redirects = %t,
 		global_throttle = { namespace = "%v", limit = %d, window_size = %d, key = %v, ignored_cidrs = %v },
 	}`,
 		location.Rewrite.ForceSSLRedirect,
 		location.Rewrite.SSLRedirect,
 		isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations),
+		location.Rewrite.PreserveTrailingSlash,
 		location.UsePortInRedirects,
 		location.GlobalRateLimit.Namespace,
 		location.GlobalRateLimit.Limit,
@@ -433,7 +520,7 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 		return fmt.Sprintf(`~* "^%s"`, path)
 	}
 
-	if location.PathType != nil && *location.PathType == networkingv1beta1.PathTypeExact {
+	if location.PathType != nil && *location.PathType == networkingv1.PathTypeExact {
 		return fmt.Sprintf(`= %s`, path)
 	}
 
@@ -478,7 +565,7 @@ func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool
 	return false
 }
 
-func buildAuthResponseHeaders(headers []string) []string {
+func buildAuthResponseHeaders(proxySetHeader string, headers []string) []string {
 	res := []string{}
 
 	if len(headers) == 0 {
@@ -489,7 +576,7 @@ func buildAuthResponseHeaders(headers []string) []string {
 		hvar := strings.ToLower(h)
 		hvar = strings.NewReplacer("-", "_").Replace(hvar)
 		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
-		res = append(res, fmt.Sprintf("proxy_set_header '%v' $authHeader%v;", h, i))
+		res = append(res, fmt.Sprintf("%s '%v' $authHeader%v;", proxySetHeader, h, i))
 	}
 	return res
 }
@@ -581,7 +668,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 		var xForwardedPrefix string
 
 		if len(location.XForwardedPrefix) > 0 {
-			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", location.XForwardedPrefix)
+			xForwardedPrefix = fmt.Sprintf("%s X-Forwarded-Prefix \"%s\";\n", proxySetHeader(location), location.XForwardedPrefix)
 		}
 
 		return fmt.Sprintf(`
@@ -897,10 +984,12 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 		info.Path = "/"
 	}
 
-	if ing.Spec.Backend != nil {
-		info.Service = ing.Spec.Backend.ServiceName
-		if ing.Spec.Backend.ServicePort.String() != "0" {
-			info.ServicePort = ing.Spec.Backend.ServicePort.String()
+	if ing.Spec.DefaultBackend != nil && ing.Spec.DefaultBackend.Service != nil {
+		info.Service = ing.Spec.DefaultBackend.Service.Name
+		if ing.Spec.DefaultBackend.Service.Port.Number > 0 {
+			info.ServicePort = strconv.Itoa(int(ing.Spec.DefaultBackend.Service.Port.Number))
+		} else {
+			info.ServicePort = ing.Spec.DefaultBackend.Service.Port.Name
 		}
 	}
 
@@ -927,14 +1016,16 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 				continue
 			}
 
-			if info.Service != "" && rPath.Backend.ServiceName == "" {
+			if info.Service != "" && rPath.Backend.Service.Name == "" {
 				// empty rule. Only contains a Path and PathType
 				return info
 			}
 
-			info.Service = rPath.Backend.ServiceName
-			if rPath.Backend.ServicePort.String() != "0" {
-				info.ServicePort = rPath.Backend.ServicePort.String()
+			info.Service = rPath.Backend.Service.Name
+			if rPath.Backend.Service.Port.Number > 0 {
+				info.ServicePort = strconv.Itoa(int(rPath.Backend.Service.Port.Number))
+			} else {
+				info.ServicePort = rPath.Backend.Service.Port.Name
 			}
 
 			return info

@@ -35,6 +35,9 @@ local IMPLEMENTATIONS = {
   ewma = ewma,
 }
 
+local PROHIBITED_LOCALHOST_PORT = configuration.prohibited_localhost_port or '10246'
+local PROHIBITED_PEER_PATTERN = "^127.*:" .. PROHIBITED_LOCALHOST_PORT .. "$"
+
 local _M = {}
 local balancers = {}
 local backends_with_external_name = {}
@@ -314,6 +317,11 @@ function _M.balance()
   local peer = balancer:balance()
   if not peer then
     ngx.log(ngx.WARN, "no peer was returned, balancer: " .. balancer.name)
+    return
+  end
+
+  if peer:match(PROHIBITED_PEER_PATTERN) then
+    ngx.log(ngx.ERR, "attempted to proxy to self, balancer: ", balancer.name, ", peer: ", peer)
     return
   end
 

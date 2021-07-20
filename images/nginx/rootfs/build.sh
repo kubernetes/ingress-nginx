@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.19.6
+export NGINX_VERSION=1.20.1
 export NDK_VERSION=0.3.1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -93,7 +93,6 @@ apk add \
   geoip-dev \
   perl-dev \
   libedit-dev \
-  mercurial \
   alpine-sdk \
   findutils \
   curl ca-certificates \
@@ -121,7 +120,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src b11195a02b1d3285ddf2987e02c6b6d28df41bb1b1dd25f33542848ef4fc33b5 \
+get_src e462e11533d5c30baa05df7652160ff5979591d291736cfa5edb9fd2edb48c49 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 0e971105e210d272a497567fa2e2c256f4e39b845a5ba80d373e26ba1abfbd85 \

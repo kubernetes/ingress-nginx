@@ -79,6 +79,54 @@ func TestGetEndpoints(t *testing.T) {
 			[]ingress.Endpoint{},
 		},
 		{
+			"a service type ServiceTypeExternalName service with localhost in name should return 0 endpoint",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:         corev1.ServiceTypeExternalName,
+					ExternalName: "localhost",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromInt(443),
+						},
+					},
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "default",
+				TargetPort: intstr.FromInt(80),
+			},
+			corev1.ProtocolTCP,
+			func(string) (*corev1.Endpoints, error) {
+				return &corev1.Endpoints{}, nil
+			},
+			[]ingress.Endpoint{},
+		},
+		{
+			"a service type ServiceTypeExternalName service with 127.0.0.1 in name should return 0 endpoint",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:         corev1.ServiceTypeExternalName,
+					ExternalName: "127.0.0.1",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromInt(443),
+						},
+					},
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "default",
+				TargetPort: intstr.FromInt(80),
+			},
+			corev1.ProtocolTCP,
+			func(string) (*corev1.Endpoints, error) {
+				return &corev1.Endpoints{}, nil
+			},
+			[]ingress.Endpoint{},
+		},
+		{
 			"a service type ServiceTypeExternalName with a valid port should return one endpoint",
 			&corev1.Service{
 				Spec: corev1.ServiceSpec{

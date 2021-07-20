@@ -21,10 +21,17 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
+	"syscall"
+	"time"
+
+	"k8s.io/apimachinery/pkg/util/wait"
+	klog "k8s.io/klog/v2"
 )
 
 // MaxmindLicenseKey maxmind license key to download databases
@@ -39,6 +46,15 @@ var MaxmindEditionFiles []string
 // MaxmindMirror maxmind database mirror url (http://geoip.local)
 var MaxmindMirror = ""
 
+// MaxmindRetriesCount number of attempts to download the GeoIP DB
+var MaxmindRetriesCount = 1
+
+// MaxmindRetriesTimeout maxmind download retries timeout in seconds, 0 - do not retry to download if something went wrong
+var MaxmindRetriesTimeout = time.Second * 0
+
+// minimumRetriesCount minimum value of the MaxmindRetriesCount parameter. If MaxmindRetriesCount less than minimumRetriesCount, it will be set to minimumRetriesCount
+const minimumRetriesCount = 1
+
 const (
 	geoIPPath   = "/etc/nginx/geoip"
 	dbExtension = ".mmdb"
@@ -48,27 +64,71 @@ const (
 
 // GeoLite2DBExists checks if the required databases for
 // the GeoIP2 NGINX module are present in the filesystem
+// and indexes the discovered databases for iteration in
+// the config.
 func GeoLite2DBExists() bool {
+	files := []string{}
 	for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
-		if !fileExists(path.Join(geoIPPath, dbName+dbExtension)) {
+		filename := dbName + dbExtension
+		if !fileExists(path.Join(geoIPPath, filename)) {
+			klog.Error(filename, " not found")
 			return false
 		}
+		files = append(files, filename)
 	}
+	MaxmindEditionFiles = files
 
 	return true
 }
 
 // DownloadGeoLite2DB downloads the required databases by the
 // GeoIP2 NGINX module using a license key from MaxMind.
-func DownloadGeoLite2DB() error {
-	for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
-		err := downloadDatabase(dbName)
-		if err != nil {
-			return err
-		}
-		MaxmindEditionFiles = append(MaxmindEditionFiles, dbName+dbExtension)
+func DownloadGeoLite2DB(attempts int, period time.Duration) error {
+	if attempts < minimumRetriesCount {
+		attempts = minimumRetriesCount
 	}
-	return nil
+
+	defaultRetry := wait.Backoff{
+		Steps:    attempts,
+		Duration: period,
+		Factor:   1.5,
+		Jitter:   0.1,
+	}
+	if period == time.Duration(0) {
+		defaultRetry.Steps = minimumRetriesCount
+	}
+
+	var lastErr error
+	retries := 0
+
+	_ = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
+		var dlError error
+		for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
+			dlError = downloadDatabase(dbName)
+			if dlError != nil {
+				break
+			}
+		}
+
+		lastErr = dlError
+		if dlError == nil {
+			return true, nil
+		}
+
+		if e, ok := dlError.(*url.Error); ok {
+			if e, ok := e.Err.(*net.OpError); ok {
+				if e, ok := e.Err.(*os.SyscallError); ok {
+					if e.Err == syscall.ECONNREFUSED {
+						retries++
+						klog.InfoS("download failed on attempt " + fmt.Sprint(retries))
+						return false, nil
+					}
+				}
+			}
+		}
+		return true, nil
+	})
+	return lastErr
 }
 
 func createURL(mirror, licenseKey, dbName string) string {
@@ -163,7 +223,7 @@ func ValidateGeoLite2DBEditions() error {
 	return nil
 }
 
-func fileExists(filePath string) bool {
+func _fileExists(filePath string) bool {
 	info, err := os.Stat(filePath)
 	if os.IsNotExist(err) {
 		return false
@@ -171,3 +231,5 @@ func fileExists(filePath string) bool {
 
 	return !info.IsDir()
 }
+
+var fileExists = _fileExists

@@ -1415,7 +1415,7 @@
         "multi": false,
         "name": "ingress",
         "options": [],
-        "query": "label_values(nginx_ingress_controller_requests{namespace=~\"$namespace\",controller_class=~\"$controller_class\",controller=~\"$controller\"}, ingress) ",
+        "query": "label_values(nginx_ingress_controller_requests{namespace=~\"$namespace\",controller_class=~\"$controller_class\",controller_pod=~\"$controller\"}, ingress) ",
         "refresh": 1,
         "regex": "",
         "sort": 2,

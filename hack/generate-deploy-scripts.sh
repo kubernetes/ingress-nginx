@@ -183,5 +183,28 @@ controller:
 
 EOF
 
+# Exoscale
+echo "${NAMESPACE_VAR}
+$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
+
+OUTPUT_FILE="${DIR}/deploy/static/provider/exoscale/deploy.yaml"
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+controller:
+  kind: DaemonSet
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+    annotations:
+      service.beta.kubernetes.io/exoscale-loadbalancer-name: "nginx-ingress-controller"
+      service.beta.kubernetes.io/exoscale-loadbalancer-description: "NGINX Ingress Controller load balancer"
+      service.beta.kubernetes.io/exoscale-loadbalancer-service-strategy: "source-hash"
+      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-mode: "tcp"
+      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-interval: "10s"
+      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-timeout: "3s"
+      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-retries: "1"
+  publishService:
+      enabled: true
+EOF
+
 echo "${NAMESPACE_VAR}
 $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}

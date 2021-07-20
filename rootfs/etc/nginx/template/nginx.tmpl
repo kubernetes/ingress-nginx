@@ -84,6 +84,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           configuration = res
+          configuration.prohibited_localhost_port = '{{ .StatusPort }}'
         end
 
         ok, res = pcall(require, "balancer")
@@ -148,14 +149,16 @@ http {
     {{ if $all.Cfg.EnableModsecurity }}
     modsecurity on;
 
+    {{ if (not (empty $all.Cfg.ModsecuritySnippet)) }}
+    modsecurity_rules '
+      {{ $all.Cfg.ModsecuritySnippet }}
+    ';
+    {{ end }}
+
     modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
 
     {{ if $all.Cfg.EnableOWASPCoreRules }}
     modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
-    {{ else if (not (empty $all.Cfg.ModsecuritySnippet)) }}
-    modsecurity_rules '
-      {{ $all.Cfg.ModsecuritySnippet }}
-    ';
     {{ end }}
 
     {{ end }}
@@ -713,6 +716,8 @@ stream {
           error("require failed: " .. tostring(res))
         else
           tcp_udp_configuration = res
+          tcp_udp_configuration.prohibited_localhost_port = '{{ .StatusPort }}'
+
         end
 
         ok, res = pcall(require, "tcp_udp_balancer")
@@ -1173,7 +1178,7 @@ stream {
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthResponseHeaders $externalAuth.ResponseHeaders }}
+            {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
             {{ $line }}
             {{- end }}
             {{ end }}
@@ -1191,7 +1196,7 @@ stream {
             auth_digest {{ $location.BasicDigestAuth.Realm | quote }};
             auth_digest_user_file {{ $location.BasicDigestAuth.File }};
             {{ end }}
-            proxy_set_header Authorization "";
+            {{ $proxySetHeader }} Authorization "";
             {{ end }}
             {{ end }}
 
@@ -1250,6 +1255,7 @@ stream {
             {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
             {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
+            {{ $proxySetHeader }} X-Forwarded-Scheme     $pass_access_scheme;
             {{ if $all.Cfg.ProxyAddOriginalURIHeader }}
             {{ $proxySetHeader }} X-Original-URI         $request_uri;
             {{ end }}

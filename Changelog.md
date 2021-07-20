@@ -1,5 +1,79 @@
 # Changelog
 
+### 1.0.0-alpha.2
+**THIS IS A BREAKING CHANGE**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-alpha.2@sha256:04a0ad3a1279c2a58898e789eed767eafa138ee1e5b9b23a988c6e8485cf958d`
+
+_ New Features:_
+
+- [X] [#7314](https://github.com/kubernetes/ingress-nginx/pull/7314) Add configuration to disable external name service feature
+- [X] [#7313](https://github.com/kubernetes/ingress-nginx/pull/7313) Add file containing stable release 
+- [X] [#7311](https://github.com/kubernetes/ingress-nginx/pull/7311) Handle named (non-numeric) ports correctly
+- [X] [#7308](https://github.com/kubernetes/ingress-nginx/pull/7308) Updated v1beta1 to v1 as its deprecated
+- [X] [#7298](https://github.com/kubernetes/ingress-nginx/pull/7298) Speed up admission hook by eliminating deep copy of Ingresses in CheckIngress 
+- [X] [#7242](https://github.com/kubernetes/ingress-nginx/pull/7242) Retry to download maxmind DB if it fails 
+- [X] [#7228](https://github.com/kubernetes/ingress-nginx/pull/7228) Discover mounted geoip db files
+- [X] [#7208](https://github.com/kubernetes/ingress-nginx/pull/7208) ingress/tcp: add additional error logging on failed
+- [X] [#7190](https://github.com/kubernetes/ingress-nginx/pull/7190) chart: using Helm builtin capabilities check
+- [X] [#7146](https://github.com/kubernetes/ingress-nginx/pull/7146) Use ENV expansion for namespace in args
+- [X] [#7107](https://github.com/kubernetes/ingress-nginx/pull/7107) Fix MaxWorkerOpenFiles calculation on high cores nodes
+- [X] [#7076](https://github.com/kubernetes/ingress-nginx/pull/7076) Rewrite clean-nginx-conf.sh in Go to speed up admission webhook
+- [X] [#7031](https://github.com/kubernetes/ingress-nginx/pull/7031) Remove mercurial from build
+- [X] [#6990](https://github.com/kubernetes/ingress-nginx/pull/6990) Use listen to ensure the port is free
+- [X] [#6944](https://github.com/kubernetes/ingress-nginx/pull/6944) Update proper default value for HTTP2MaxConcurrentStreams in Docs
+- [X] [#6940](https://github.com/kubernetes/ingress-nginx/pull/6940) Fix definition order of modsecurity directives 
+
+### 1.0.0-alpha.1
+**THIS IS A BREAKING CHANGE**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-alpha.1@sha256:32f3f02a038c0d7cf33b71a14028c3a4ddee6f4c3fe5fadfa14b915e5e0d9faf`
+
+_ New Features:_
+
+- [X] [#7156] Drops support for Ingress Object v1beta1
+
+### 0.47.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.47.0@sha256:a1e4efc107be0bb78f32eaec37bef17d7a0c81bec8066cdf2572508d21351d0b`
+
+_New Features:_
+
+- [X] [#7137] Add support for custom probes
+
+_Changes:_
+
+- [X] [#7179](https://github.com/kubernetes/ingress-nginx/pull/7179) Upgrade Nginx to 1.20.1 
+- [X] [#7101](https://github.com/kubernetes/ingress-nginx/pull/7101)  Removed Codecov
+- [X] [#6993](https://github.com/kubernetes/ingress-nginx/pull/6993)  Fix cookieAffinity log printing error
+- [X] [#7046](https://github.com/kubernetes/ingress-nginx/pull/7046)  Allow configuring controller container name
+- [X] [#6994](https://github.com/kubernetes/ingress-nginx/pull/6994)  Fixed oauth2 callback url 
+- [X] [#6740](https://github.com/kubernetes/ingress-nginx/pull/6740)  non-host canary ingress use default server name as host to merge 
+- [X] [#7126](https://github.com/kubernetes/ingress-nginx/pull/7126)  set x-forwarded-scheme to be the same as x-forwarded-proto
+- [X] [#6734](https://github.com/kubernetes/ingress-nginx/pull/6734)  Update controller-poddisruptionbudget.yaml
+- [X] [#7117](https://github.com/kubernetes/ingress-nginx/pull/7117)  Adding annotations for HPA
+
+### 0.46.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.46.0@sha256:52f0058bed0a17ab0fb35628ba97e8d52b5d32299fbc03cc0f6c7b9ff036b61a`
+
+_Changes:_
+
+- [#7092](https://github.com/kubernetes/ingress-nginx/pull/7092) Removes the possibility of using localhost in ExternalNames as endpoints
+
+
 ### 0.45.0
 
 **Image:**

@@ -2,7 +2,33 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
-### Unreleased
+### 3.34.0
+
+- [7256] https://github.com/kubernetes/ingress-nginx/pull/7256 Add namespace field in the namespace scoped resource templates
+
+### 3.33.0
+
+- [7164] https://github.com/kubernetes/ingress-nginx/pull/7164 Update nginx to v1.20.1
+
+### 3.32.0
+
+- [7117] https://github.com/kubernetes/ingress-nginx/pull/7117 Add annotations for HPA
+
+### 3.31.0
+
+- [7137] https://github.com/kubernetes/ingress-nginx/pull/7137 Add support for custom probes
+
+### 3.30.0
+
+- [#7092](https://github.com/kubernetes/ingress-nginx/pull/7092) Removes the possibility of using localhost in ExternalNames as endpoints
+
+### 3.29.0
+
+- [X] [#6945](https://github.com/kubernetes/ingress-nginx/pull/7020) Add option to specify job label for ServiceMonitor
+
+### 3.28.0
+
+- [ ] [#6900](https://github.com/kubernetes/ingress-nginx/pull/6900) Support existing PSPs
 
 ### 3.27.0
 

@@ -17,9 +17,10 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
 	github.com/ncabatoff/process-exporter v0.7.2
-	github.com/onsi/ginkgo v1.14.1
+	github.com/onsi/ginkgo v1.16.4
 	github.com/opencontainers/runc v1.0.0-rc92
 	github.com/pkg/errors v0.9.1
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.14.0
@@ -28,21 +29,22 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/tallclair/mdtoc v1.0.0
 	github.com/zakjan/cert-chain-resolver v0.0.0-20200729110141-6b99e360f97a
-	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
-	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/net v0.0.0-20210224082022-3d97a244fca7
 	google.golang.org/grpc v1.27.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/pool.v3 v3.1.1
-	k8s.io/api v0.20.2
-	k8s.io/apiextensions-apiserver v0.20.2
-	k8s.io/apimachinery v0.20.2
-	k8s.io/apiserver v0.20.2
-	k8s.io/cli-runtime v0.20.2
-	k8s.io/client-go v0.20.2
-	k8s.io/code-generator v0.20.2
-	k8s.io/component-base v0.20.2
-	k8s.io/klog/v2 v2.4.0
+	k8s.io/api v0.21.1
+	k8s.io/apiextensions-apiserver v0.21.1
+	k8s.io/apimachinery v0.21.1
+	k8s.io/apiserver v0.21.1
+	k8s.io/cli-runtime v0.21.1
+	k8s.io/client-go v0.21.1
+	k8s.io/code-generator v0.21.1
+	k8s.io/component-base v0.21.1
+	k8s.io/klog/v2 v2.8.0
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.8.0
+	sigs.k8s.io/kind v0.11.1 // indirect
 )

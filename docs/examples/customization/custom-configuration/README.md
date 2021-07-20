@@ -21,4 +21,4 @@ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/exam
     | kubectl apply -f -
 ```
 
-If the Configmap it is updated, NGINX will be reloaded with the new configuration.
+If the Configmap is updated, NGINX will be reloaded with the new configuration.

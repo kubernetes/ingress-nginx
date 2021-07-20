@@ -1,0 +1,4 @@
+contact_links:
+  - name: Support Request/Question 
+    url: https://kubernetes.slack.com/messages/ingress-nginx/
+    about: Support request or question relating to Ingress NGINX in Kubernetes Slack

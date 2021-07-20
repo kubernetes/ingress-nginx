@@ -10,6 +10,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   {{- if .Values.controller.annotations }}
   annotations: {{ toYaml .Values.controller.annotations | nindent 4 }}
   {{- end }}
@@ -30,7 +31,7 @@ spec:
   template:
     metadata:
     {{- if .Values.controller.podAnnotations }}
-      annotations: 
+      annotations:
       {{- range $key, $value := .Values.controller.podAnnotations }}
         {{ $key }}: {{ $value | quote }}
       {{- end }}
@@ -66,9 +67,9 @@ spec:
     {{- end }}
     {{- end }}
       containers:
-        - name: controller
+        - name: {{ .Values.controller.containerName }}
           {{- with .Values.controller.image }}
-          image: "{{.repository}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
+          image: "{{- if .repository -}}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{- end -}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
           {{- end }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
         {{- if .Values.controller.lifecycle }}
@@ -139,27 +140,12 @@ spec:
           {{- end }}
           {{- if .Values.controller.extraEnvs }}
             {{- toYaml .Values.controller.extraEnvs | nindent 12 }}
+          {{- end }}          
+          {{- if .Values.controller.startupProbe }}
+          startupProbe: {{ toYaml .Values.controller.startupProbe | nindent 12 }}
           {{- end }}
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.controller.healthCheckPath }}
-              port: {{ .Values.controller.livenessProbe.port }}
-              scheme: HTTP
-            initialDelaySeconds: {{ .Values.controller.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.controller.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.controller.livenessProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.controller.livenessProbe.successThreshold }}
-            failureThreshold: {{ .Values.controller.livenessProbe.failureThreshold }}
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.controller.healthCheckPath }}
-              port: {{ .Values.controller.readinessProbe.port }}
-              scheme: HTTP
-            initialDelaySeconds: {{ .Values.controller.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.controller.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.controller.readinessProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.controller.readinessProbe.successThreshold }}
-            failureThreshold: {{ .Values.controller.readinessProbe.failureThreshold }}
+          livenessProbe: {{ toYaml .Values.controller.livenessProbe | nindent 12 }}
+          readinessProbe: {{ toYaml .Values.controller.readinessProbe | nindent 12 }}
           ports:
           {{- range $key, $value := .Values.controller.containerPort }}
             - name: {{ $key }}

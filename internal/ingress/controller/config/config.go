@@ -325,7 +325,7 @@ type Configuration struct {
 
 	// Enables or disables emitting nginx version in error messages and in the “Server” response header field.
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens
-	// Default: true
+	// Default: false
 	ShowServerTokens bool `json:"server-tokens"`
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
@@ -850,6 +850,7 @@ func NewDefault() Configuration {
 			ProxyRequestBuffering:    "on",
 			ProxyRedirectFrom:        "off",
 			ProxyRedirectTo:          "off",
+			PreserveTrailingSlash:    false,
 			SSLRedirect:              true,
 			CustomHTTPErrors:         []int{},
 			WhitelistSourceRange:     []string{},
@@ -924,7 +925,7 @@ type TemplateConfig struct {
 	ListenPorts              *ListenPorts
 	PublishService           *apiv1.Service
 	EnableMetrics            bool
-	MaxmindEditionFiles      []string
+	MaxmindEditionFiles      *[]string
 	MonitorMaxBatchSize      int
 
 	PID        string

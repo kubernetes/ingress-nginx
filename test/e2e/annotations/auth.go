@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	corev1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -452,6 +452,29 @@ http {
 				WithHeader("Host", anotherHost).
 				Expect().
 				Status(http.StatusOK)
+		})
+
+		ginkgo.It("should overwrite Foo header with auth response", func() {
+			var (
+				rewriteHeader = "Foo"
+				rewriteVal    = "bar"
+			)
+			annotations["nginx.ingress.kubernetes.io/auth-response-headers"] = rewriteHeader
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("proxy_set_header '%s' $authHeader0;", rewriteHeader))
+			})
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithHeader(rewriteHeader, rewriteVal).
+				WithBasicAuth("user", "password").
+				Expect().
+				Status(http.StatusOK).
+				Body().
+				NotContainsFold(fmt.Sprintf("%s=%s", rewriteHeader, rewriteVal))
 		})
 	})
 
