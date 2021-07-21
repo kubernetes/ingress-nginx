@@ -46,6 +46,9 @@ spec:
     {{- if .Values.controller.dnsConfig }}
       dnsConfig: {{ toYaml .Values.controller.dnsConfig | nindent 8 }}
     {{- end }}
+    {{- if .Values.controller.hostname }}
+      hostname: {{ toYaml .Values.controller.hostname | nindent 8 }}
+    {{- end }}
       dnsPolicy: {{ .Values.controller.dnsPolicy }}
     {{- if .Values.imagePullSecrets }}
       imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
