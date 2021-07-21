@@ -23,8 +23,8 @@ log_format upstreaminfo
 | `$http_user_agent` | value of User-Agent header |
 | `$request_length` | request length (including request line, header, and request body) |
 | `$request_time` | time elapsed since the first bytes were read from the client |
-| `$proxy_upstream_name` | name of the upstream. The format is `upstream-<namespace>-<service name>-<service port>` |
-| `$proxy_alternative_upstream_name` | name of the alternative upstream. The format is `upstream-<namespace>-<service name>-<service port>` |
+| `$proxy_upstream_name` | name of the upstream. The format is `<namespace>-<service name>-<service port>` |
+| `$proxy_alternative_upstream_name` | name of the alternative upstream. The format is `<namespace>-<service name>-<service port>` |
 | `$upstream_addr` | the IP address and port (or the path to the domain socket) of the upstream server. If several servers were contacted during request processing, their addresses are separated by commas. |
 | `$upstream_response_length` | the length of the response obtained from the upstream server |
 | `$upstream_response_time` | time spent on receiving the response from the upstream server as seconds with millisecond resolution |
