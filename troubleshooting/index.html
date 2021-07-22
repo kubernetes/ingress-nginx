@@ -20,7 +20,7 @@ Do not move it without providing redirects.
 <span class=go>            /tea      tea-svc:80 (&lt;none&gt;)</span>
 <span class=go>            /coffee   coffee-svc:80 (&lt;none&gt;)</span>
 <span class=go>Annotations:</span>
-<span class=go>  kubectl.kubernetes.io/last-applied-configuration:  {&quot;apiVersion&quot;:&quot;networking.k8s.io/v1&quot;,&quot;kind&quot;:&quot;Ingress&quot;,&quot;metadata&quot;:{&quot;annotations&quot;:{},&quot;name&quot;:&quot;cafe-ingress&quot;,&quot;namespace&quot;:&quot;default&quot;,&quot;selfLink&quot;:&quot;/apis/networking/v1/namespaces/default/ingresses/cafe-ingress&quot;},&quot;spec&quot;:{&quot;rules&quot;:[{&quot;host&quot;:&quot;cafe.com&quot;,&quot;http&quot;:{&quot;paths&quot;:[{&quot;backend&quot;:{&quot;serviceName&quot;:&quot;tea-svc&quot;,&quot;servicePort&quot;:80},&quot;path&quot;:&quot;/tea&quot;},{&quot;backend&quot;:{&quot;serviceName&quot;:&quot;coffee-svc&quot;,&quot;servicePort&quot;:80},&quot;path&quot;:&quot;/coffee&quot;}]}}]},&quot;status&quot;:{&quot;loadBalancer&quot;:{&quot;ingress&quot;:[{&quot;ip&quot;:&quot;169.48.142.110&quot;}]}}}</span>
+<span class=go>  kubectl.kubernetes.io/last-applied-configuration:  {&quot;apiVersion&quot;:&quot;networking.k8s.io/v1beta1&quot;,&quot;kind&quot;:&quot;Ingress&quot;,&quot;metadata&quot;:{&quot;annotations&quot;:{},&quot;name&quot;:&quot;cafe-ingress&quot;,&quot;namespace&quot;:&quot;default&quot;,&quot;selfLink&quot;:&quot;/apis/networking/v1beta1/namespaces/default/ingresses/cafe-ingress&quot;},&quot;spec&quot;:{&quot;rules&quot;:[{&quot;host&quot;:&quot;cafe.com&quot;,&quot;http&quot;:{&quot;paths&quot;:[{&quot;backend&quot;:{&quot;serviceName&quot;:&quot;tea-svc&quot;,&quot;servicePort&quot;:80},&quot;path&quot;:&quot;/tea&quot;},{&quot;backend&quot;:{&quot;serviceName&quot;:&quot;coffee-svc&quot;,&quot;servicePort&quot;:80},&quot;path&quot;:&quot;/coffee&quot;}]}}]},&quot;status&quot;:{&quot;loadBalancer&quot;:{&quot;ingress&quot;:[{&quot;ip&quot;:&quot;169.48.142.110&quot;}]}}}</span>
 
 <span class=go>Events:</span>
 <span class=go>  Type    Reason  Age   From                      Message</span>
@@ -129,9 +129,9 @@ Do not move it without providing redirects.
 <span class=go>    &quot;/apis/apps&quot;,</span>
 <span class=go>    &quot;/apis/apps/v1alpha1&quot;,</span>
 <span class=go>    &quot;/apis/authentication.k8s.io&quot;,</span>
-<span class=go>    &quot;/apis/authentication.k8s.io/v1&quot;,</span>
+<span class=go>    &quot;/apis/authentication.k8s.io/v1beta1&quot;,</span>
 <span class=go>    &quot;/apis/authorization.k8s.io&quot;,</span>
-<span class=go>    &quot;/apis/authorization.k8s.io/v1&quot;,</span>
+<span class=go>    &quot;/apis/authorization.k8s.io/v1beta1&quot;,</span>
 <span class=go>    &quot;/apis/autoscaling&quot;,</span>
 <span class=go>    &quot;/apis/autoscaling/v1&quot;,</span>
 <span class=go>    &quot;/apis/batch&quot;,</span>
@@ -140,13 +140,13 @@ Do not move it without providing redirects.
 <span class=go>    &quot;/apis/certificates.k8s.io&quot;,</span>
 <span class=go>    &quot;/apis/certificates.k8s.io/v1alpha1&quot;,</span>
 <span class=go>    &quot;/apis/networking&quot;,</span>
-<span class=go>    &quot;/apis/networking/v1&quot;,</span>
+<span class=go>    &quot;/apis/networking/v1beta1&quot;,</span>
 <span class=go>    &quot;/apis/policy&quot;,</span>
 <span class=go>    &quot;/apis/policy/v1alpha1&quot;,</span>
 <span class=go>    &quot;/apis/rbac.authorization.k8s.io&quot;,</span>
 <span class=go>    &quot;/apis/rbac.authorization.k8s.io/v1alpha1&quot;,</span>
 <span class=go>    &quot;/apis/storage.k8s.io&quot;,</span>
-<span class=go>    &quot;/apis/storage.k8s.io/v1&quot;,</span>
+<span class=go>    &quot;/apis/storage.k8s.io/v1beta1&quot;,</span>
 <span class=go>    &quot;/healthz&quot;,</span>
 <span class=go>    &quot;/healthz/ping&quot;,</span>
 <span class=go>    &quot;/logs&quot;,</span>
