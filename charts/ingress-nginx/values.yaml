@@ -34,7 +34,15 @@ controller:
     https: 443
 
   # Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
-  config: {}
+  config:
+    log-format-upstream: '{"weblog": {"Origin": "$http_origin", "ClientIP": "$remote_addr", "CDN-Originated": "$http_cdn_originated", "True-Client-IP": "$http_true_client_ip", "EventTime": "$time_local", "HostHeader": "$http_host", "Request": "$request", "HttpStatusCode": "$status", "Size": $body_bytes_sent, "Referer": "$http_referer", "UserAgent": "$http_user_agent", "Cookie": "$http_cookie", "RequestTime": $request_time, "NetworkBytesIn": $request_length, "NetworkBytesOut": $bytes_sent, "GDPRCountry": "$http_x_gdprcountry", "GeoState": "$http_x_geostate", "GeoCountry": "$http_x_geocountry", "GeoISP": "$http_x_geoisp", "GeoProxy": "$http_x_geoproxy", "GeoCity": "$http_x_geocity", "SigSciTags": "$http_x_sigsci_tags", "HttpProto": "$http_x_forwarded_proto", "Challenge": "$http_x_challenge", "Defense": "$http_defense", "Banned": "$http_banned"}}'
+    custom-http-errors: "503"
+    server-tokens: "false"
+    enable-underscores-in-headers: "true"
+    use-gzip: "true"
+    error-log-level: "error"
+    main-snippet: "load_module /usr/lib/nginx/modules/ngx_http_sigsci_module.so;"
+    http-snippet: "sigsci_agent_host unix:/sigsci/tmp/sigsci.sock;"
 
   ## Annotations to be added to the controller config configuration configmap
   ##
@@ -152,7 +160,19 @@ controller:
   extraArgs: {}
 
   ## Additional environment variables to set
-  extraEnvs: []
+  extraEnvs:
+   - name: DD_AGENT_HOST
+     valueFrom:
+       fieldRef:
+         fieldPath: status.hostIP
+   - name: DD_ENV
+     valueFrom:
+       fieldRef:
+         fieldPath: metadata.labels['tags.datadoghq.com/env']
+   - name: DD_SERVICE
+     valueFrom:
+       fieldRef:
+         fieldPath: metadata.labels['tags.datadoghq.com/service']
   # extraEnvs:
   #   - name: FOO
   #     valueFrom:
@@ -171,7 +191,9 @@ controller:
 
   ## Labels to be added to the controller Deployment or DaemonSet
   ##
-  labels: {}
+  labels:
+    tags.datadoghq.com/env: "qa"
+    tags.datadoghq.com/service: "rewardsengine-sigsci-ingress-controller"
   #  keel.sh/policy: patch
   #  keel.sh/trigger: poll
 
@@ -179,13 +201,13 @@ controller:
   # The update strategy to apply to the Deployment or DaemonSet
   ##
   updateStrategy: {}
-  #  rollingUpdate:
-  #    maxUnavailable: 1
-  #  type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
 
   # minReadySeconds to avoid killing pods before we are ready
   ##
-  minReadySeconds: 0
+  minReadySeconds: 10
 
 
   ## Node tolerations for server scheduling to nodes with taints
@@ -255,7 +277,7 @@ controller:
   ## terminationGracePeriodSeconds
   ## wait up to five minutes for the drain of connections
   ##
-  terminationGracePeriodSeconds: 300
+  terminationGracePeriodSeconds: 90
 
   ## Node labels for controller pod assignment
   ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
@@ -307,9 +329,10 @@ controller:
 
   ## Annotations to be added to controller pods
   ##
-  podAnnotations: {}
+  podAnnotations:
+    ad.datadoghq.com/controller.logs: '[{"source":"nginx-ingress-controller","service":"rewardsengine-sigsci-ingress-controller"}]'
 
-  replicaCount: 1
+  replicaCount: 2
 
   minAvailable: 1
 
@@ -318,20 +341,20 @@ controller:
   # Ideally, there should be no limits.
   # https://engineering.indeedblog.com/blog/2019/12/cpu-throttling-regression-fix/
   resources:
-  #  limits:
-  #    cpu: 100m
-  #    memory: 90Mi
+    limits:
+      cpu: 100m
+      memory: 90Mi
     requests:
       cpu: 100m
       memory: 90Mi
 
   # Mutually exclusive with keda autoscaling
   autoscaling:
-    enabled: false
-    minReplicas: 1
+    enabled: true
+    minReplicas: 2
     maxReplicas: 11
-    targetCPUUtilizationPercentage: 50
-    targetMemoryUtilizationPercentage: 50
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 70
 
   autoscalingTemplate: []
   # Custom or additional autoscaling metrics
@@ -463,7 +486,30 @@ controller:
       ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
       # externalTrafficPolicy: ""
 
-  extraContainers: []
+  extraContainers:
+    - name: sigsci-agent
+      image: signalsciences/sigsci-agent:latest
+      imagePullPolicy: IfNotPresent
+      env:
+      - name: SIGSCI_ACCESSKEYID
+        valueFrom:
+          secretKeyRef:
+          # This secret needs added (see docs on sigsci secrets)
+            name: sigsci.cashley
+            key: accesskeyid
+      - name: SIGSCI_SECRETACCESSKEY
+        valueFrom:
+          secretKeyRef:
+          # This secret needs added (see docs on sigsci secrets)
+            name: sigsci.cashley
+            key: secretaccesskey
+      securityContext:
+          # The sigsci-agent container should run with its root filesystem read only
+        readOnlyRootFilesystem: true
+      volumeMounts:
+          # Default volume mount location for sigsci-agent writeable data (do not change mount path)
+      - name: sigsci-tmp
+        mountPath: /sigsci/tmp
   ## Additional containers to be added to the controller pod.
   ## See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example.
   #  - name: my-sidecar
@@ -487,12 +533,16 @@ controller:
   #    - name: copy-portal-skins
   #      mountPath: /srv/var/lib/lemonldap-ng/portal/skins
 
-  extraVolumeMounts: []
+  extraVolumeMounts:
+    - name: sigsci-tmp
+      mountPath: /sigsci/tmp
   ## Additional volumeMounts to the controller main container.
   #  - name: copy-portal-skins
   #   mountPath: /var/lib/lemonldap-ng/portal/skins
 
-  extraVolumes: []
+  extraVolumes:
+    - name: sigsci-tmp
+      emptyDir: {}
   ## Additional volumes to the controller pod.
   #  - name: copy-portal-skins
   #    emptyDir: {}
@@ -711,7 +761,9 @@ defaultBackend:
   podSecurityContext: {}
 
   # labels to add to the pod container metadata
-  podLabels: {}
+  podLabels:
+    tags.datadoghq.com/env: "qa"
+    tags.datadoghq.com/service: "rewardsengine-sigsci-ingress-controller"
   #  key: value
 
   ## Node labels for default backend pod assignment
