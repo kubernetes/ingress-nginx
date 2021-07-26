@@ -36,6 +36,8 @@ cleanup() {
 
 trap cleanup EXIT
 
+export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
+
 if ! command -v kind --version &> /dev/null; then
   echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
   exit 1
@@ -43,7 +45,10 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
+# Use 1.0.0-dev to make sure we use the latest configuration in the helm template
+export TAG=1.0.0-dev
+export ARCH=${ARCH:-amd64}
+export REGISTRY=ingress-controller
 
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 
@@ -65,9 +70,6 @@ if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
 fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
-  export TAG=1.0.0-dev
-  export ARCH=${ARCH:-amd64}
-  export REGISTRY=ingress-controller
   if ! command -v ginkgo &> /dev/null; then
     go get github.com/onsi/ginkgo/ginkgo
   fi
@@ -76,7 +78,7 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
 fi
   
 
-KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
+KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | awk '{printf (NR>1?",":"") $1}')
 echo "[dev-env] copying docker images to cluster..."
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
