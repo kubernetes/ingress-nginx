@@ -189,18 +189,6 @@ func TestCheckIngress(t *testing.T) {
 			},
 		},
 	}
-	/* TODO: Right now we have stopped to check IngressClass in Admission
-	t.Run("When the ingress class differs from nginx", func(t *testing.T) {
-		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "different"
-		nginx.command = testNginxTestCommand{
-			t:   t,
-			err: fmt.Errorf("test error"),
-		}
-		if nginx.CheckIngress(ing) != nil {
-			t.Errorf("with a different ingress class, no error should be returned")
-		}
-	})
-	*/
 	t.Run("when the class is the nginx one", func(t *testing.T) {
 		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
 		nginx.command = testNginxTestCommand{

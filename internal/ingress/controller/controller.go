@@ -222,11 +222,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if !ing.DeletionTimestamp.IsZero() {
 		return nil
 	}
-	/* TODO: Should we / how can we check for ingress class?
-	if !n.cfg.IngressClassConfiguration.IsValid(ing) {
-		klog.Warningf("ignoring ingress %v in %v as it does not belong to any IngressClass this controller is watching", ing.Name, ing.ObjectMeta.Namespace)
-		return nil
-	}*/
 
 	if n.cfg.Namespace != "" && ing.ObjectMeta.Namespace != n.cfg.Namespace {
 		klog.Warningf("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
