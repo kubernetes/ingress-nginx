@@ -94,68 +94,47 @@ Do not move it without providing redirects.
 |                                                   |     |                  |
 +---------------------------------------------------+     +------------------+
 </code></pre></div> <h3 id=service-account>Service Account<a class=headerlink href=#service-account title="Permanent link"> ¶</a></h3> <p>If using a service account to connect to the API server, the ingress-controller expects the file <code>/var/run/secrets/kubernetes.io/serviceaccount/token</code> to be present. It provides a secret token that is required to authenticate with the API server.</p> <p>Verify with the following commands:</p> <div class=highlight><pre><span></span><code><span class=gp>#</span> start a container that contains curl
-<span class=gp>$</span> kubectl run <span class=nb>test</span> --image<span class=o>=</span>tutum/curl -- sleep <span class=m>10000</span>
-
-<span class=gp>#</span> check that container is running
-<span class=gp>$</span> kubectl get pods
-<span class=go>NAME                   READY     STATUS    RESTARTS   AGE</span>
-<span class=go>test-701078429-s5kca   1/1       Running   0          16s</span>
+<span class=gp>$</span> kubectl run -it --rm <span class=nb>test</span> --image<span class=o>=</span>curlimages/curl --restart<span class=o>=</span>Never -- /bin/sh
 
 <span class=gp>#</span> check <span class=k>if</span> secret exists
-<span class=gp>$</span> kubectl <span class=nb>exec</span> test-701078429-s5kca -- ls /var/run/secrets/kubernetes.io/serviceaccount/
-<span class=go>ca.crt</span>
-<span class=go>namespace</span>
-<span class=go>token</span>
-
-<span class=gp>#</span> get service IP of master
-<span class=gp>$</span> kubectl get services
-<span class=go>NAME         CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE</span>
-<span class=go>kubernetes   10.0.0.1     &lt;none&gt;        443/TCP   1d</span>
+<span class=go>/ $ ls /var/run/secrets/kubernetes.io/serviceaccount/</span>
+<span class=go>ca.crt     namespace  token</span>
+<span class=go>/ $</span>
 
 <span class=gp>#</span> check base connectivity from cluster inside
-<span class=gp>$</span> kubectl <span class=nb>exec</span> test-701078429-s5kca -- curl -k https://10.0.0.1
-<span class=go>Unauthorized</span>
+<span class=go>/ $ curl -k https://kubernetes.default.svc.cluster.local</span>
+<span class=go>{</span>
+<span class=go>  &quot;kind&quot;: &quot;Status&quot;,</span>
+<span class=go>  &quot;apiVersion&quot;: &quot;v1&quot;,</span>
+<span class=go>  &quot;metadata&quot;: {</span>
+
+<span class=go>  },</span>
+<span class=go>  &quot;status&quot;: &quot;Failure&quot;,</span>
+<span class=go>  &quot;message&quot;: &quot;forbidden: User \&quot;system:anonymous\&quot; cannot get path \&quot;/\&quot;&quot;,</span>
+<span class=go>  &quot;reason&quot;: &quot;Forbidden&quot;,</span>
+<span class=go>  &quot;details&quot;: {</span>
+
+<span class=go>  },</span>
+<span class=go>  &quot;code&quot;: 403</span>
+<span class=go>}/ $</span>
 
 <span class=gp>#</span> connect using tokens
-<span class=gp>$</span> <span class=nv>TOKEN_VALUE</span><span class=o>=</span><span class=k>$(</span>kubectl <span class=nb>exec</span> test-701078429-s5kca -- cat /var/run/secrets/kubernetes.io/serviceaccount/token<span class=k>)</span>
-<span class=gp>$</span> <span class=nb>echo</span> <span class=nv>$TOKEN_VALUE</span>
-<span class=go>eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi....9A</span>
-<span class=gp>$</span> kubectl <span class=nb>exec</span> test-701078429-s5kca -- curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  <span class=s2>&quot;Authorization: Bearer </span><span class=nv>$TOKEN_VALUE</span><span class=s2>&quot;</span> https://10.0.0.1
+<span class=go>}/ $ curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  &quot;Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)&quot; https://kubernetes.default.svc.cluster.local</span>
+<span class=go>&amp;&amp; echo</span>
 <span class=go>{</span>
 <span class=go>  &quot;paths&quot;: [</span>
 <span class=go>    &quot;/api&quot;,</span>
 <span class=go>    &quot;/api/v1&quot;,</span>
 <span class=go>    &quot;/apis&quot;,</span>
-<span class=go>    &quot;/apis/apps&quot;,</span>
-<span class=go>    &quot;/apis/apps/v1alpha1&quot;,</span>
-<span class=go>    &quot;/apis/authentication.k8s.io&quot;,</span>
-<span class=go>    &quot;/apis/authentication.k8s.io/v1beta1&quot;,</span>
-<span class=go>    &quot;/apis/authorization.k8s.io&quot;,</span>
-<span class=go>    &quot;/apis/authorization.k8s.io/v1beta1&quot;,</span>
-<span class=go>    &quot;/apis/autoscaling&quot;,</span>
-<span class=go>    &quot;/apis/autoscaling/v1&quot;,</span>
-<span class=go>    &quot;/apis/batch&quot;,</span>
-<span class=go>    &quot;/apis/batch/v1&quot;,</span>
-<span class=go>    &quot;/apis/batch/v2alpha1&quot;,</span>
-<span class=go>    &quot;/apis/certificates.k8s.io&quot;,</span>
-<span class=go>    &quot;/apis/certificates.k8s.io/v1alpha1&quot;,</span>
-<span class=go>    &quot;/apis/networking&quot;,</span>
-<span class=go>    &quot;/apis/networking/v1beta1&quot;,</span>
-<span class=go>    &quot;/apis/policy&quot;,</span>
-<span class=go>    &quot;/apis/policy/v1alpha1&quot;,</span>
-<span class=go>    &quot;/apis/rbac.authorization.k8s.io&quot;,</span>
-<span class=go>    &quot;/apis/rbac.authorization.k8s.io/v1alpha1&quot;,</span>
-<span class=go>    &quot;/apis/storage.k8s.io&quot;,</span>
-<span class=go>    &quot;/apis/storage.k8s.io/v1beta1&quot;,</span>
-<span class=go>    &quot;/healthz&quot;,</span>
-<span class=go>    &quot;/healthz/ping&quot;,</span>
-<span class=go>    &quot;/logs&quot;,</span>
-<span class=go>    &quot;/metrics&quot;,</span>
-<span class=go>    &quot;/swaggerapi/&quot;,</span>
-<span class=go>    &quot;/ui/&quot;,</span>
+<span class=go>    &quot;/apis/&quot;,</span>
+<span class=go>    ... TRUNCATED</span>
+<span class=go>    &quot;/readyz/shutdown&quot;,</span>
 <span class=go>    &quot;/version&quot;</span>
 <span class=go>  ]</span>
 <span class=go>}</span>
+<span class=go>/ $</span>
+
+<span class=gp>#</span> when you <span class=nb>type</span> <span class=sb>`</span><span class=nb>exit</span><span class=sb>`</span> or <span class=sb>`</span>^D<span class=sb>`</span> the <span class=nb>test</span> pod will be deleted.
 </code></pre></div> <p>If it is not working, there are two possible reasons:</p> <ol> <li> <p>The contents of the tokens are invalid. Find the secret name with <code>kubectl get secrets | grep service-account</code> and delete it with <code>kubectl delete secret &lt;name&gt;</code>. It will automatically be recreated.</p> </li> <li> <p>You have a non-standard Kubernetes installation and the file containing the token may not be present. The API server will mount a volume containing this file, but only if the API server is configured to use the ServiceAccount admission controller. If you experience this error, verify that your API server is using the ServiceAccount admission controller. If you are configuring the API server by hand, you can set this with the <code>--admission-control</code> parameter.</p> <blockquote> <p>Note that you should use other admission controllers as well. Before configuring this option, you should read about admission controllers.</p> </blockquote> </li> </ol> <p>More information:</p> <ul> <li><a href=http://kubernetes.io/docs/user-guide/service-accounts/ >User Guide: Service Accounts</a></li> <li><a href=http://kubernetes.io/docs/admin/service-accounts-admin/ >Cluster Administrator Guide: Managing Service Accounts</a></li> </ul> <h2 id=kube-config>Kube-Config<a class=headerlink href=#kube-config title="Permanent link"> ¶</a></h2> <p>If you want to use a kubeconfig file for authentication, follow the <a href=../deploy/ >deploy procedure</a> and add the flag <code>--kubeconfig=/etc/kubernetes/kubeconfig.yaml</code> to the args section of the deployment.</p> <h2 id=using-gdb-with-nginx>Using GDB with Nginx<a class=headerlink href=#using-gdb-with-nginx title="Permanent link"> ¶</a></h2> <p><a href=https://www.gnu.org/software/gdb/ >Gdb</a> can be used to with nginx to perform a configuration dump. This allows us to see which configuration is being used, as well as older configurations.</p> <p>Note: The below is based on the nginx <a href=https://docs.nginx.com/nginx/admin-guide/monitoring/debugging/#dumping-nginx-configuration-from-a-running-process>documentation</a>.</p> <ol> <li>SSH into the worker</li> </ol> <div class=highlight><pre><span></span><code><span class=gp>$</span> ssh user@workerIP
 </code></pre></div> <ol> <li>Obtain the Docker Container Running nginx</li> </ol> <div class=highlight><pre><span></span><code><span class=gp>$</span> docker ps <span class=p>|</span> grep nginx-ingress-controller
 <span class=go>CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</span>
