@@ -155,6 +155,7 @@ type CookieSessionAffinity struct {
 	Expires                 string              `json:"expires,omitempty"`
 	MaxAge                  string              `json:"maxage,omitempty"`
 	Locations               map[string][]string `json:"locations,omitempty"`
+	Secure                  bool                `json:"secure,omitempty"`
 	Path                    string              `json:"path,omitempty"`
 	SameSite                string              `json:"samesite,omitempty"`
 	ConditionalSameSiteNone bool                `json:"conditional_samesite_none,omitempty"`

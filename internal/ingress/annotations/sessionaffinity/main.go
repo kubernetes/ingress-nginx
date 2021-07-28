@@ -37,6 +37,10 @@ const (
 
 	defaultAffinityCookieName = "INGRESSCOOKIE"
 
+	// This is used to force the Secure flag on the cookie even if the
+	// incoming request is not secured. (https://github.com/kubernetes/ingress-nginx/issues/6812)
+	annotationAffinityCookieSecure = "session-cookie-secure"
+
 	// This is used to control the cookie expires, its value is a number of seconds until the
 	// cookie expires
 	annotationAffinityCookieExpires = "session-cookie-expires"
@@ -85,6 +89,8 @@ type Cookie struct {
 	Path string `json:"path"`
 	// Flag that allows cookie regeneration on request failure
 	ChangeOnFailure bool `json:"changeonfailure"`
+	// Secure flag to be set
+	Secure bool `json:"secure"`
 	// SameSite attribute value
 	SameSite string `json:"samesite"`
 	// Flag that conditionally applies SameSite=None attribute on cookie if user agent accepts it.
@@ -124,6 +130,11 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 	cookie.SameSite, err = parser.GetStringAnnotation(annotationAffinityCookieSameSite, ing)
 	if err != nil {
 		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieSameSite)
+	}
+
+	cookie.Secure, err = parser.GetBoolAnnotation(annotationAffinityCookieSecure, ing)
+	if err != nil {
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieSecure)
 	}
 
 	cookie.ConditionalSameSiteNone, err = parser.GetBoolAnnotation(annotationAffinityCookieConditionalSameSiteNone, ing)
