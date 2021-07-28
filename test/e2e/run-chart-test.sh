@@ -36,6 +36,8 @@ cleanup() {
 
 trap cleanup EXIT
 
+export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
+
 if ! command -v kind --version &> /dev/null; then
   echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
   exit 1
@@ -43,14 +45,17 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
+# Use 1.0.0-dev to make sure we use the latest configuration in the helm template
+export TAG=1.0.0-dev
+export ARCH=${ARCH:-amd64}
+export REGISTRY=ingress-controller
 
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab}
+  export K8S_VERSION=${K8S_VERSION:-v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -61,7 +66,22 @@ if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
 
   echo "Kubernetes cluster:"
   kubectl get nodes -o wide
+
 fi
+
+if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
+  if ! command -v ginkgo &> /dev/null; then
+    go get github.com/onsi/ginkgo/ginkgo@v1.16.4
+  fi
+  echo "[dev-env] building image"
+  make -C ${DIR}/../../ clean-image build image
+fi
+  
+
+KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | awk '{printf (NR>1?",":"") $1}')
+echo "[dev-env] copying docker images to cluster..."
+
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
 
 echo "[dev-env] running helm chart e2e tests..."
 # Uses a custom chart-testing image to avoid timeouts waiting for namespace deletion.

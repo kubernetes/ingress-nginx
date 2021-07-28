@@ -25,7 +25,6 @@ import (
 	"github.com/gavv/httpexpect/v2"
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
-	core "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +42,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
@@ -74,7 +73,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should return 200 for service type=ExternalName without a port defined", func() {
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
@@ -108,7 +107,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should return 200 for service type=ExternalName with a port defined", func() {
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
@@ -149,7 +148,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should return status 502 for service type=ExternalName with an invalid host", func() {
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
@@ -180,7 +179,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should return 200 for service type=ExternalName using a port name", func() {
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
@@ -230,7 +229,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should return 200 for service type=ExternalName using FQDN with trailing dot", func() {
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
@@ -261,7 +260,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should update the external name after a service update", func() {
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      framework.HTTPBinService,
 				Namespace: f.Namespace,
