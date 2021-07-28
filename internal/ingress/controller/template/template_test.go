@@ -57,19 +57,21 @@ func init() {
 var (
 	// TODO: add tests for SSLPassthrough
 	tmplFuncTestcases = map[string]struct {
-		Path             string
-		Target           string
-		Location         string
-		ProxyPass        string
-		Sticky           bool
-		XForwardedPrefix string
-		SecureBackend    bool
-		enforceRegex     bool
+		Path              string
+		Target            string
+		Location          string
+		ProxyPass         string
+		AutoHttpProxyPass string
+		Sticky            bool
+		XForwardedPrefix  string
+		SecureBackend     bool
+		enforceRegex      bool
 	}{
 		"when secure backend enabled": {
 			"/",
 			"/",
 			"/",
+			"proxy_pass https://upstream_balancer;",
 			"proxy_pass https://upstream_balancer;",
 			false,
 			"",
@@ -81,6 +83,7 @@ var (
 			"/",
 			"/",
 			"proxy_pass https://upstream_balancer;",
+			"proxy_pass https://upstream_balancer;",
 			false,
 			"",
 			true,
@@ -90,6 +93,7 @@ var (
 			"/",
 			"/",
 			"/",
+			"proxy_pass https://upstream_balancer;",
 			"proxy_pass https://upstream_balancer;",
 			true,
 			"",
@@ -101,6 +105,7 @@ var (
 			"/",
 			"/",
 			"proxy_pass http://upstream_balancer;",
+			"proxy_pass $scheme://upstream_balancer;",
 			false,
 			"",
 			false,
@@ -111,6 +116,7 @@ var (
 			"/",
 			"/",
 			"proxy_pass http://upstream_balancer;",
+			"proxy_pass $scheme://upstream_balancer;",
 			false,
 			"",
 			false,
@@ -123,6 +129,9 @@ var (
 			`
 rewrite "(?i)/" /jenkins break;
 proxy_pass http://upstream_balancer;`,
+			`
+rewrite "(?i)/" /jenkins break;
+proxy_pass $scheme://upstream_balancer;`,
 			false,
 			"",
 			false,
@@ -135,6 +144,9 @@ proxy_pass http://upstream_balancer;`,
 			`
 rewrite "(?i)/" /something break;
 proxy_pass http://upstream_balancer;`,
+			`
+rewrite "(?i)/" /something break;
+proxy_pass $scheme://upstream_balancer;`,
 			true,
 			"",
 			false,
@@ -147,6 +159,9 @@ proxy_pass http://upstream_balancer;`,
 			`
 rewrite "(?i)/" /something break;
 proxy_pass http://upstream_balancer;`,
+			`
+rewrite "(?i)/" /something break;
+proxy_pass $scheme://upstream_balancer;`,
 			true,
 			"",
 			false,
@@ -160,6 +175,10 @@ proxy_pass http://upstream_balancer;`,
 rewrite "(?i)/there" /something break;
 proxy_set_header X-Forwarded-Prefix "/there";
 proxy_pass http://upstream_balancer;`,
+			`
+rewrite "(?i)/there" /something break;
+proxy_set_header X-Forwarded-Prefix "/there";
+proxy_pass $scheme://upstream_balancer;`,
 			true,
 			"/there",
 			false,
@@ -170,6 +189,7 @@ proxy_pass http://upstream_balancer;`,
 			"/something",
 			`~* "^/something"`,
 			"proxy_pass http://upstream_balancer;",
+			"proxy_pass $scheme://upstream_balancer;",
 			false,
 			"",
 			false,
@@ -329,6 +349,48 @@ func TestBuildProxyPass(t *testing.T) {
 
 		pp := buildProxyPass(defaultHost, backends, loc)
 		if !strings.EqualFold(tc.ProxyPass, pp) {
+			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, tc.ProxyPass, pp)
+		}
+	}
+}
+
+func TestBuildProxyPassAutoHttp(t *testing.T) {
+	defaultBackend := "upstream-name"
+	defaultHost := "example.com"
+
+	for k, tc := range tmplFuncTestcases {
+		loc := &ingress.Location{
+			Path:             tc.Path,
+			Rewrite:          rewrite.Config{Target: tc.Target},
+			Backend:          defaultBackend,
+			XForwardedPrefix: tc.XForwardedPrefix,
+		}
+
+		if tc.SecureBackend {
+			loc.BackendProtocol = "HTTPS"
+		} else {
+			loc.BackendProtocol = "AUTO_HTTP"
+		}
+
+		backend := &ingress.Backend{
+			Name: defaultBackend,
+		}
+
+		if tc.Sticky {
+			backend.SessionAffinity = ingress.SessionAffinityConfig{
+				AffinityType: "cookie",
+				CookieSessionAffinity: ingress.CookieSessionAffinity{
+					Locations: map[string][]string{
+						defaultHost: {tc.Path},
+					},
+				},
+			}
+		}
+
+		backends := []*ingress.Backend{backend}
+
+		pp := buildProxyPass(defaultHost, backends, loc)
+		if !strings.EqualFold(tc.AutoHttpProxyPass, pp) {
 			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, tc.ProxyPass, pp)
 		}
 	}
@@ -889,13 +951,14 @@ func TestEscapeLiteralDollar(t *testing.T) {
 
 func TestOpentracingPropagateContext(t *testing.T) {
 	tests := map[*ingress.Location]string{
-		{BackendProtocol: "HTTP"}:  "opentracing_propagate_context;",
-		{BackendProtocol: "HTTPS"}: "opentracing_propagate_context;",
-		{BackendProtocol: "GRPC"}:  "opentracing_grpc_propagate_context;",
-		{BackendProtocol: "GRPCS"}: "opentracing_grpc_propagate_context;",
-		{BackendProtocol: "AJP"}:   "opentracing_propagate_context;",
-		{BackendProtocol: "FCGI"}:  "opentracing_propagate_context;",
-		nil:                        "",
+		{BackendProtocol: "HTTP"}:      "opentracing_propagate_context;",
+		{BackendProtocol: "HTTPS"}:     "opentracing_propagate_context;",
+		{BackendProtocol: "AUTO_HTTP"}: "opentracing_propagate_context;",
+		{BackendProtocol: "GRPC"}:      "opentracing_grpc_propagate_context;",
+		{BackendProtocol: "GRPCS"}:     "opentracing_grpc_propagate_context;",
+		{BackendProtocol: "AJP"}:       "opentracing_propagate_context;",
+		{BackendProtocol: "FCGI"}:      "opentracing_propagate_context;",
+		nil:                            "",
 	}
 
 	for loc, expectedDirective := range tests {
