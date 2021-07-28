@@ -57,8 +57,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: changes
-    if: |
-      (needs.changes.outputs.go == 'true')
 
     steps:
 
@@ -116,6 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - changes
+      - build
     if: |
       (needs.changes.outputs.charts == 'true')
 
@@ -123,6 +122,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v2
+    
+      - name: cache
+        uses: actions/download-artifact@v2
+        with:
+          name: docker.tar.gz
 
       - name: Lint
         run: |
@@ -139,11 +143,22 @@ jobs:
         with:
           version: v0.11.1
           image: kindest/node:v1.21.1
+    
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: docker.tar.gz
+          failOnError: false
+
+      - name: Load images from cache
+        run: |
+          echo "loading docker images..."
+          pigz -dc docker.tar.gz | docker load
 
       - name: Test
         env:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
+          SKIP_IMAGE_CREATION: true
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-chart-tests

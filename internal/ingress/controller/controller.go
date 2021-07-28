@@ -33,11 +33,11 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -99,6 +99,8 @@ type Configuration struct {
 	SyncRateLimit float32
 
 	DisableCatchAll bool
+
+	IngressClassConfiguration *ingressclass.IngressClassConfiguration
 
 	ValidationWebhook         string
 	ValidationWebhookCertPath string
@@ -218,11 +220,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 
 	// Skip checks if the ingress is marked as deleted
 	if !ing.DeletionTimestamp.IsZero() {
-		return nil
-	}
-
-	if !class.IsValid(ing) {
-		klog.Warningf("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
 		return nil
 	}
 
