@@ -99,7 +99,7 @@ $ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echo
 
 # Apply the Ingress Resource
 $ echo &#39;
-  apiVersion: networking.k8s.io/v1
+  apiVersion: networking.k8s.io/v1beta1
   kind: Ingress
   metadata:
     name: echo-ingress
