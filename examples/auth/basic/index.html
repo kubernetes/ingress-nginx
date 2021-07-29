@@ -31,10 +31,13 @@
 <span class=go>  - host: foo.bar.com</span>
 <span class=go>    http:</span>
 <span class=go>      paths:</span>
+<span class=go>      pathType: ImplementationSpecific</span>
 <span class=go>      - path: /</span>
 <span class=go>        backend:</span>
-<span class=go>          serviceName: http-svc</span>
-<span class=go>          servicePort: 80</span>
+<span class=go>          service</span>
+<span class=go>            name: http-svc</span>
+<span class=go>            port: </span>
+<span class=go>              number: 80</span>
 <span class=go>&quot; | kubectl create -f -</span>
 </code></pre></div> <div class=highlight><pre><span></span><code>$ curl -v http://10.2.29.4/ -H &#39;Host: foo.bar.com&#39;
 *   Trying 10.2.29.4...
