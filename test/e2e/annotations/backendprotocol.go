@@ -46,6 +46,21 @@ var _ = framework.DescribeAnnotation("backend-protocol", func() {
 			})
 	})
 
+	ginkgo.It("should set backend protocol to $scheme:// and use proxy_pass", func() {
+		host := "backendprotocol.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/backend-protocol": "AUTO_HTTP",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_pass $scheme://upstream_balancer;")
+			})
+	})
+
 	ginkgo.It("should set backend protocol to grpc:// and use grpc_pass", func() {
 		host := "backendprotocol.foo.com"
 		annotations := map[string]string{
