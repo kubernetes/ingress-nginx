@@ -1,5 +1,25 @@
 # Changelog
 
+### 1.0.0-beta.1
+**THIS IS A BREAKING CHANGE**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-beta.1@sha256:f058f3fdc940095957695829745956c6acddcaef839907360965e27fd3348e2e`
+
+_ New Features:_
+
+_Changes:_
+
+- [X] [#7341](https://github.com/kubernetes/ingress-nginx/pull/7341) Fix IngressClass logic for newer releases (#7341)
+- [X] [#7355](https://github.com/kubernetes/ingress-nginx/pull/7355) Downgrade Lua modules for s390x (#7355)
+- [X] [#7319](https://github.com/kubernetes/ingress-nginx/pull/7319) Lower webhook timeout for digital ocean (#7319)
+- [X] [#7161](https://github.com/kubernetes/ingress-nginx/pull/7161) fix: allow scope/tcp/udp configmap namespace to altered (#7161)
+- [X] [#7331](https://github.com/kubernetes/ingress-nginx/pull/7331) Fix forwarding of auth-response-headers to gRPC backends (#7331)
+- [X] [#7332](https://github.com/kubernetes/ingress-nginx/pull/7332) controller: ignore non-service backends (#7332)
+
 ### 1.0.0-alpha.2
 **THIS IS A BREAKING CHANGE**
 
