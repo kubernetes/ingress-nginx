@@ -46,10 +46,13 @@ spec:
   - host: foo.bar.com
     http:
       paths:
+      pathType: ImplementationSpecific
       - path: /
         backend:
-          serviceName: http-svc
-          servicePort: 80
+          service
+            name: http-svc
+            port: 
+              number: 80
 " | kubectl create -f -
 ```
 
