@@ -18,10 +18,10 @@ package annotations
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo"
-
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -46,6 +46,12 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
 	ginkgo.It("should set client_body_buffer_size to 1K", func() {
@@ -62,6 +68,12 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
 	ginkgo.It("should set client_body_buffer_size to 1k", func() {
@@ -78,6 +90,12 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
 	ginkgo.It("should set client_body_buffer_size to 1m", func() {
@@ -94,6 +112,12 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
 	ginkgo.It("should set client_body_buffer_size to 1M", func() {
@@ -110,6 +134,12 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 
 	ginkgo.It("should not set client_body_buffer_size to invalid 1b", func() {
@@ -126,5 +156,11 @@ var _ = framework.DescribeAnnotation("client-body-buffer-size", func() {
 			func(server string) bool {
 				return !strings.Contains(server, fmt.Sprintf("client_body_buffer_size %s;", clientBodyBufferSize))
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 })
