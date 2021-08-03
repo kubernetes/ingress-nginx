@@ -1,5 +1,5 @@
 {{- if or (gt (.Values.defaultBackend.replicaCount | int) 1) (gt (.Values.defaultBackend.autoscaling.minReplicas | int) 1) }}
-apiVersion: policy/v1beta1
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   labels:
