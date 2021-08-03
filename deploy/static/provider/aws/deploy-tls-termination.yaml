@@ -38,10 +38,10 @@ metadata:
   namespace: ingress-nginx
 data:
   http-snippet: |
-	server {
-	  listen 2443;
-	  return 308 https://$host$request_uri;
-	}
+    server{
+      listen 2443;
+      return 308 https://$host$request_uri;
+    }
   proxy-real-ip-cidr: XXX.XXX.XXX/XX
   use-forwarded-headers: 'true'
 ---
