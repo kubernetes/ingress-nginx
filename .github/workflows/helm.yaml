@@ -3,7 +3,8 @@ name: Helm
 on:
   push:
     branches:
-      - master
+      - main
+      - dev-v1
 
 jobs:
 
