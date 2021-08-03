@@ -18,8 +18,8 @@ maintainers:
 engine: gotpl
 kubeVersion: ">=1.19.0-0"
 annotations:
+  artifacthub.io/prerelease: "true"
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
-  artifacthub.io/prerelease: "true"
   artifacthub.io/changes: |
     - Drop support for extensions/v1beta1, networking.k8s.io/v1beta1
