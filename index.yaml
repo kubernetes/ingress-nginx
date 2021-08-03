@@ -5,6 +5,29 @@ entries:
       artifacthub.io/changes: |
         - Add namespace field in the namespace scoped resource templates
     apiVersion: v2
+    appVersion: 0.48.1
+    created: "2021-08-03T14:35:46.714056139Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: f2843a2b9f1f8fe2716f1761784e4f4712161d5dd0c6bd58bea4bd0f3abb6ea1
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.35.0/ingress-nginx-3.35.0.tgz
+    version: 3.35.0
+  - annotations:
+      artifacthub.io/changes: |
+        - Add namespace field in the namespace scoped resource templates
+    apiVersion: v2
     appVersion: 0.47.0
     created: "2021-06-22T11:38:53.525189187Z"
     description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
