@@ -24,7 +24,7 @@ entries:
     type: application
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.0.0/ingress-nginx-4.0.0.tgz
-    version: 4.0.0
+    version: 4.0.0-beta.1
   - annotations:
       artifacthub.io/changes: |
         - Add namespace field in the namespace scoped resource templates
