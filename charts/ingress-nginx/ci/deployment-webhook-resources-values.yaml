@@ -1,4 +1,6 @@
 controller:
+  service:
+    type: ClusterIP
   admissionWebhooks:
     enabled: true
     createSecretJob:
