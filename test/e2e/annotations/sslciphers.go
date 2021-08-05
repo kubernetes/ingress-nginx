@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo"
@@ -46,5 +47,11 @@ var _ = framework.DescribeAnnotation("ssl-ciphers", func() {
 				return strings.Contains(server, "ssl_ciphers ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;") &&
 					strings.Contains(server, "ssl_prefer_server_ciphers off;")
 			})
+		f.HTTPTestClient().
+			GET("/something").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 	})
 })
