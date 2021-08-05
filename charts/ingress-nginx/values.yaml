@@ -526,6 +526,18 @@ controller:
       servicePort: 443
       type: ClusterIP
 
+    createSecretJob:
+      resources: {}
+        # limits:
+        #   cpu: 10m
+        #   memory: 20Mi
+        # requests:
+        #   cpu: 10m
+        #   memory: 20Mi
+
+    patchWebhookJob:
+      resources: {}
+
     patch:
       enabled: true
       image:
