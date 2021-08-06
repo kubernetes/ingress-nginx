@@ -39,9 +39,9 @@ build: ensure-buildx
 		--progress=$(PROGRESS) \
 		--pull \
 		--build-arg BASE_IMAGE=$(NGINX_BASE_IMAGE) \
-		--build-arg GOLANG_VERSION=1.16.5 \
+		--build-arg GOLANG_VERSION=1.16.7 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
-		--build-arg K8S_RELEASE=v1.19.4 \
+		--build-arg K8S_RELEASE=v1.21.3 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
 		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
 		--build-arg LUAROCKS_VERSION=3.3.1 \
