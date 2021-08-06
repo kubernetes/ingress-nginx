@@ -37,7 +37,32 @@ This questions are the first thing we need to know to understand the context.
 - **OS** (e.g. from /etc/os-release):
 - **Kernel** (e.g. `uname -a`):
 - **Install tools**:
+  - `Please mention how/where was clsuter created like kubeadm/kops/minikube/kind etc. `
+- **Basic cluster related info**:
+  - `kubectl version`
+  - `kubectl get nodes -o wide`
+
+- **How was the ingress-nginx-controller installed**:
+  - If helm was used then please show output of `helm ls -A`
+  - If helm was used then please show output of `helm -n <ingresscontrollernamepspace> get values <helmreleasename>`
+  - If helm was not used, then please explain how the ingress-nginx-controller was installed or copy/paste the command used to install the controller below
+  - if you have more than one instance of the ingress-nginx-controller installed in the same cluster, please provide details for all the instances
+
+- **Current State of the controller**:
+  - `kubectl -n <ingresscontrollernamespace> get all -A -o wide`
+  - `kubectl -n <ingresscontrollernamespace> describe po <ingresscontrollerpodname>`
+  - `kubectl -n <ingresscontrollernamespace> describe svc <ingresscontrollerservicename>`
+
+- **Current state of ingress object, if applicable**:
+  - `kubectl -n <appnnamespace> get all,ing -o wide`
+  - `kubectl -n <appnamespace> describe ing <ingressname>`
+  - If applicable, then, your complete and exact curl/grpcurl command (redacted if required) and the reponse to the curl/grpcurl command with the -v flag
+
 - **Others**:
+  - Any other related information like ;
+    - copy/paste of the snippet (if applicable)
+    - `kubectl describe ...` of any custom configmap(s) created and in use
+    - Any other related information that may help
 
 **What happened**:
 
