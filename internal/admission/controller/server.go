@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	admissionv1 "k8s.io/api/admission/v1"
@@ -61,7 +61,7 @@ func NewAdmissionControllerServer(ac AdmissionController) *AdmissionControllerSe
 func (acs *AdmissionControllerServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
-	data, err := ioutil.ReadAll(req.Body)
+	data, err := io.ReadAll(req.Body)
 	if err != nil {
 		klog.ErrorS(err, "Failed to read request body")
 		w.WriteHeader(http.StatusBadRequest)

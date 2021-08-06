@@ -18,7 +18,6 @@ package controller
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -123,7 +122,7 @@ func (nc NginxCommand) Test(cfg string) ([]byte, error) {
 
 // getSysctl returns the value for the specified sysctl setting
 func getSysctl(sysctl string) (int, error) {
-	data, err := ioutil.ReadFile(path.Join("/proc/sys", sysctl))
+	data, err := os.ReadFile(path.Join("/proc/sys", sysctl))
 	if err != nil {
 		return -1, err
 	}

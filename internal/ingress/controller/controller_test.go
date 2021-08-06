@@ -22,7 +22,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -123,7 +123,7 @@ func (ntc testNginxTestCommand) Test(cfg string) ([]byte, error) {
 		return nil, err
 	}
 	defer fd.Close()
-	bytes, err := ioutil.ReadAll(fd)
+	bytes, err := io.ReadAll(fd)
 	if err != nil {
 		ntc.t.Errorf("could not read generated nginx configuration: %v", err.Error())
 	}

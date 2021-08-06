@@ -18,8 +18,8 @@ package controller
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -46,7 +46,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 		return errors.Wrap(err, "reading /proc directory")
 	}
 
-	f, err := ioutil.ReadFile(nginx.PID)
+	f, err := os.ReadFile(nginx.PID)
 	if err != nil {
 		return errors.Wrapf(err, "reading %v", nginx.PID)
 	}

@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path"
@@ -538,7 +537,7 @@ func TestTemplateWithData(t *testing.T) {
 		t.Errorf("unexpected error reading json file: %v", err)
 	}
 	defer f.Close()
-	data, err := ioutil.ReadFile(f.Name())
+	data, err := os.ReadFile(f.Name())
 	if err != nil {
 		t.Error("unexpected error reading json file: ", err)
 	}
@@ -582,7 +581,7 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		b.Errorf("unexpected error reading json file: %v", err)
 	}
 	defer f.Close()
-	data, err := ioutil.ReadFile(f.Name())
+	data, err := os.ReadFile(f.Name())
 	if err != nil {
 		b.Error("unexpected error reading json file: ", err)
 	}
@@ -1657,7 +1656,7 @@ func TestCleanConf(t *testing.T) {
 	}
 	actual := &bytes.Buffer{}
 	{
-		data, err := ioutil.ReadFile(testDataDir + "/cleanConf.src.conf")
+		data, err := os.ReadFile(testDataDir + "/cleanConf.src.conf")
 		if err != nil {
 			t.Error("unexpected error reading conf file: ", err)
 		}
@@ -1668,7 +1667,7 @@ func TestCleanConf(t *testing.T) {
 		}
 	}
 
-	expected, err := ioutil.ReadFile(testDataDir + "/cleanConf.expected.conf")
+	expected, err := os.ReadFile(testDataDir + "/cleanConf.expected.conf")
 	if err != nil {
 		t.Error("unexpected error reading conf file: ", err)
 	}

@@ -19,7 +19,6 @@ package collectors
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"syscall"
@@ -442,7 +441,7 @@ func (sc *SocketCollector) SetHosts(hosts sets.String) {
 // handleMessages process the content received in a network connection
 func handleMessages(conn io.ReadCloser, fn func([]byte)) {
 	defer conn.Close()
-	data, err := ioutil.ReadAll(conn)
+	data, err := io.ReadAll(conn)
 	if err != nil {
 		return
 	}
