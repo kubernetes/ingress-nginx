@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand" // #nosec
 	"net"
 	"net/url"
@@ -77,7 +76,7 @@ type Template struct {
 //NewTemplate returns a new Template instance or an
 //error if the specified template file contains errors
 func NewTemplate(file string) (*Template, error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unexpected error reading template %v", file)
 	}
