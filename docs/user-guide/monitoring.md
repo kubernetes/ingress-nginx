@@ -38,6 +38,33 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
           prometheus.io/scrape: "true" 
   ..
   ```
+   - If you are **not using helm**, you will have to edit your manifests like this:
+     - Service manifest:
+       ```
+       apiVersion: v1
+       kind: Service
+       metadata:
+        annotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "10254"
+       ..
+       spec:
+         ports:
+           - name: prometheus
+             port: 10254
+             targetPort: prometheus
+             ..
+
+       ```
+       
+      - DeamonSet manifest:
+           ```
+           ..
+           ports:
+             - name: prometheus
+               containerPort: 10254
+             ..
+           ```
 
 
 ## Deploy and configure Prometheus Server
