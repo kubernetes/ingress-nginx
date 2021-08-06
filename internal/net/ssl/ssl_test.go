@@ -28,11 +28,11 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -393,7 +393,7 @@ func encodeCertPEM(cert *x509.Certificate) []byte {
 func newFakeCertificate(t *testing.T) ([]byte, string, string) {
 	cert, key := getFakeHostSSLCert("localhost")
 
-	certFile, err := ioutil.TempFile("", "crt-")
+	certFile, err := os.CreateTemp("", "crt-")
 	if err != nil {
 		t.Errorf("failed to write test key: %v", err)
 	}
@@ -401,7 +401,7 @@ func newFakeCertificate(t *testing.T) ([]byte, string, string) {
 	certFile.Write(cert)
 	defer certFile.Close()
 
-	keyFile, err := ioutil.TempFile("", "key-")
+	keyFile, err := os.CreateTemp("", "key-")
 	if err != nil {
 		t.Errorf("failed to write test key: %v", err)
 	}

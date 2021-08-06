@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -959,14 +958,14 @@ func TestWriteSSLSessionTicketKey(t *testing.T) {
 			},
 		}
 
-		f, err := ioutil.TempFile("", "ssl-session-ticket-test")
+		f, err := os.CreateTemp("", "ssl-session-ticket-test")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		s.writeSSLSessionTicketKey(cmap, f.Name())
 
-		content, err := ioutil.ReadFile(f.Name())
+		content, err := os.ReadFile(f.Name())
 		if err != nil {
 			t.Fatal(err)
 		}
