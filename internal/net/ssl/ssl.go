@@ -29,7 +29,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"net"
 	"os"
@@ -181,7 +180,7 @@ func CheckCACert(caBytes []byte) ([]*x509.Certificate, error) {
 func StoreSSLCertOnDisk(name string, sslCert *ingress.SSLCert) (string, error) {
 	pemFileName, _ := getPemFileName(name)
 
-	err := ioutil.WriteFile(pemFileName, []byte(sslCert.PemCertKey), file.ReadWriteByUser)
+	err := os.WriteFile(pemFileName, []byte(sslCert.PemCertKey), file.ReadWriteByUser)
 	if err != nil {
 		return "", fmt.Errorf("could not create PEM certificate file %v: %v", pemFileName, err)
 	}
@@ -209,7 +208,7 @@ func ConfigureCACertWithCertAndKey(name string, ca []byte, sslCert *ingress.SSLC
 		return fmt.Errorf("could not write ca data to cert file %v: %v", sslCert.CAFileName, err)
 	}
 
-	return ioutil.WriteFile(sslCert.CAFileName, buffer.Bytes(), 0644)
+	return os.WriteFile(sslCert.CAFileName, buffer.Bytes(), 0644)
 }
 
 // ConfigureCRL creates a CRL file and append it into the SSLCert
@@ -232,7 +231,7 @@ func ConfigureCRL(name string, crl []byte, sslCert *ingress.SSLCert) error {
 		return fmt.Errorf(err.Error())
 	}
 
-	err = ioutil.WriteFile(crlFileName, crl, 0644)
+	err = os.WriteFile(crlFileName, crl, 0644)
 	if err != nil {
 		return fmt.Errorf("could not write CRL file %v: %v", crlFileName, err)
 	}
@@ -250,7 +249,7 @@ func ConfigureCACert(name string, ca []byte, sslCert *ingress.SSLCert) error {
 	caName := fmt.Sprintf("ca-%v.pem", name)
 	fileName := fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, caName)
 
-	err := ioutil.WriteFile(fileName, ca, 0644)
+	err := os.WriteFile(fileName, ca, 0644)
 	if err != nil {
 		return fmt.Errorf("could not write CA file %v: %v", fileName, err)
 	}
@@ -332,7 +331,7 @@ func parseSANExtension(value []byte) (dnsNames, emailAddresses []string, ipAddre
 func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
 	pemFileName, pemName := getPemFileName(name)
 
-	tempPemFile, err := ioutil.TempFile(file.DefaultSSLDirectory, pemName)
+	tempPemFile, err := os.CreateTemp(file.DefaultSSLDirectory, pemName)
 
 	klog.V(3).InfoS("Creating temporal file for DH", "path", tempPemFile.Name(), "name", pemName)
 	if err != nil {
@@ -351,7 +350,7 @@ func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
 
 	defer os.Remove(tempPemFile.Name())
 
-	pemCerts, err := ioutil.ReadFile(tempPemFile.Name())
+	pemCerts, err := os.ReadFile(tempPemFile.Name())
 	if err != nil {
 		return "", err
 	}
@@ -530,12 +529,12 @@ func (tl *TLSListener) TLSConfig() *tls.Config {
 
 func (tl *TLSListener) load() {
 	klog.InfoS("loading tls certificate", "path", tl.certificatePath, "key", tl.keyPath)
-	certBytes, err := ioutil.ReadFile(tl.certificatePath)
+	certBytes, err := os.ReadFile(tl.certificatePath)
 	if err != nil {
 		tl.certificate = nil
 		tl.err = err
 	}
-	keyBytes, err := ioutil.ReadFile(tl.keyPath)
+	keyBytes, err := os.ReadFile(tl.keyPath)
 	if err != nil {
 		tl.certificate = nil
 		tl.err = err

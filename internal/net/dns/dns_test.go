@@ -17,7 +17,6 @@ limitations under the License.
 package dns
 
 import (
-	"io/ioutil"
 	"net"
 	"os"
 	"testing"
@@ -34,14 +33,14 @@ func TestGetDNSServers(t *testing.T) {
 		t.Error("expected at least 1 nameserver in /etc/resolv.conf")
 	}
 
-	f, err := ioutil.TempFile("", "fw")
+	f, err := os.CreateTemp("", "fw")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer f.Close()
 	defer os.Remove(f.Name())
 
-	ioutil.WriteFile(f.Name(), []byte(`
+	os.WriteFile(f.Name(), []byte(`
 	# comment
 	; comment
 	nameserver 2001:4860:4860::8844
