@@ -57,7 +57,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
 
        ```
        
-      - DeamonSet manifest:
+      - DaemonSet manifest:
            ```
            ..
            ports:
