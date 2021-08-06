@@ -18,7 +18,7 @@ package auth
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -183,7 +183,7 @@ func dumpSecretAuthFile(filename string, secret *api.Secret) error {
 		}
 	}
 
-	err := ioutil.WriteFile(filename, val, file.ReadWriteByUser)
+	err := os.WriteFile(filename, val, file.ReadWriteByUser)
 	if err != nil {
 		return ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "unexpected error creating password file"),
@@ -202,7 +202,7 @@ func dumpSecretAuthMap(filename string, secret *api.Secret) error {
 		builder.WriteString("\n")
 	}
 
-	err := ioutil.WriteFile(filename, []byte(builder.String()), file.ReadWriteByUser)
+	err := os.WriteFile(filename, []byte(builder.String()), file.ReadWriteByUser)
 	if err != nil {
 		return ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "unexpected error creating password file"),

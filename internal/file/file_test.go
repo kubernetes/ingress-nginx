@@ -17,7 +17,7 @@ limitations under the License.
 package file
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -31,7 +31,7 @@ func TestSHA1(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		f, err := ioutil.TempFile("", "sha-test")
+		f, err := os.CreateTemp("", "sha-test")
 		if err != nil {
 			t.Fatal(err)
 		}
