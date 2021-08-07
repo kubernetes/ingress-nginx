@@ -19,43 +19,112 @@ set -o nounset
 set -o pipefail
 
 export NGINX_VERSION=1.20.1
+
+# Check for recent changes: https://github.com/vision5/ngx_devel_kit/compare/v0.3.1...master
 export NDK_VERSION=0.3.1
-export SETMISC_VERSION=fddc347134e97d22c34dc5189e76b0ec97bf84d7
-export MORE_HEADERS_VERSION=f85af9649b858e21b400a2150a4c7b8ebd36e921
+
+# Check for recent changes: https://github.com/openresty/set-misc-nginx-module/compare/v0.32...master
+export SETMISC_VERSION=0.32
+
+# Check for recent changes: https://github.com/openresty/headers-more-nginx-module/compare/v0.33...master
+export MORE_HEADERS_VERSION=0.33
+
+# Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...atomx:master
 export NGINX_DIGEST_AUTH=1.0.0
+
+# Check for recent changes: https://github.com/yaoweibin/ngx_http_substitutions_filter_module/compare/v0.6.4...master
 export NGINX_SUBSTITUTIONS=b8a71eacc7f986ba091282ab8b1bbbc6ae1807e0
-export NGINX_OPENTRACING_VERSION=2d9f40fa86380b019698f131a803f415ad24c033
+
+# Check for recent changes: https://github.com/opentracing-contrib/nginx-opentracing/compare/v0.19.0...master
+export NGINX_OPENTRACING_VERSION=0.19.0
+
+#Check for recent changes: https://github.com/opentracing/opentracing-cpp/compare/v1.6.0...master
 export OPENTRACING_CPP_VERSION=f86b33f3d9e7322b1298ba62d5ffa7a9519c4c41
+
+# Check for recent changes: https://github.com/rnburn/zipkin-cpp-opentracing/compare/v0.5.2...master
 export ZIPKIN_CPP_VERSION=f69593138ff84ca2f6bc115992e18ca3d35f344a
-export YAML_CPP_VERSION=b591d8ae2ad1ff373273c3e05973adf6c46abfa8
-export JAEGER_VERSION=e90642a250289623fc13f650991d108e9a19b6b1
+
+# Check for recent changes: https://github.com/jbeder/yaml-cpp/compare/yaml-cpp-0.7.0...master
+export YAML_CPP_VERSION=yaml-cpp-0.7.0
+
+# Check for recent changes: https://github.com/jaegertracing/jaeger-client-cpp/compare/v0.7.0...master
+export JAEGER_VERSION=0.7.0
+
+# Check for recent changes: https://github.com/msgpack/msgpack-c/compare/cpp-3.3.0...master
 export MSGPACK_VERSION=3.3.0
-export DATADOG_CPP_VERSION=5e3e3571d2341883a15fc4b5b443f930cc70e8c1
-export MODSECURITY_VERSION=2497e6ac654d0b117b9534aa735b757c6b11c84f
+
+# Check for recent changes: https://github.com/DataDog/dd-opentracing-cpp/compare/v1.3.0...master
+export DATADOG_CPP_VERSION=af53c523787cca108ae9f458ea5c962e48187a36
+
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.2...master
+export MODSECURITY_VERSION=1.0.2
+
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.5...v3/master
 export MODSECURITY_LIB_VERSION=v3.0.5
+
+# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.2
-export LUA_NGX_VERSION=66a4d417d654404ade32fcc600ff1381e5e02f9c
-export LUA_STREAM_NGX_VERSION=b977cee61a1cc0ea988a581cf0adbc955c9a95ab
+
+# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.20...master
+export LUA_NGX_VERSION=b721656a9127255003b696b42ccc871c7ec18d59
+
+# Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/v0.0.10...master
+export LUA_STREAM_NGX_VERSION=74f8c8bca5b95cecbf42d4e1a465bc08cd075a9b
+
+# Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/v0.07...master
 export LUA_UPSTREAM_VERSION=8aa93ead98ba2060d4efd594ae33a35d153589bf
+
+# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.8...openresty:master
 export LUA_CJSON_VERSION=4b350c531de3d71008c77ae94e59275b8371b4dc
+
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
+
+# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/3.3...master
 export GEOIP2_VERSION=a26c6beed77e81553686852dceb6c7fdacc5970d
+
+# Check for recent changes: https://github.com/yaoweibin/nginx_ajp_module/compare/v0.3.0...master
 export NGINX_AJP_VERSION=a964a0bcc6a9f2bfb82a13752d7794a36319ffac
 
+# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20210510...v2.1-agentzh
 export LUAJIT_VERSION=2.1-20210510
 
-export LUA_RESTY_BALANCER=2e1848e729eb8558d533ce97ffdf61edead39953
-export LUA_RESTY_CACHE=dacd022b4b8e3a73ed25886f2f9db043075ddb31
-export LUA_RESTY_CORE=b8a4b2cfe35bcb65c2ada52c17503ece7cd3288a
+# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.03...master
+export LUA_RESTY_BALANCER=56fd8ad03d5718f507a5129edc43a25948364b9f
+
+# Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.11...master
+export LUA_RESTY_CACHE=0.11
+
+# Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.22...master
+export LUA_RESTY_CORE=0.1.22
+
+# Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/v0.1.0...master
 export LUA_RESTY_COOKIE_VERSION=303e32e512defced053a6484bc0745cf9dc0d39e
+
+# Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/v0.22...master
 export LUA_RESTY_DNS=0.22
-export LUA_RESTY_HTTP=0.16.1
-export LUA_RESTY_LOCK=ad94745a4731ee6ddbffbc3b602df25ca7c6f7ba
-export LUA_RESTY_UPLOAD_VERSION=7baca92c7e741979ae5857989bbf6cc0402d6126
+
+# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.16.1...master
+export LUA_RESTY_HTTP=0ce55d6d15da140ecc5966fa848204c6fd9074e8
+
+# Check for recent changes: https://github.com/openresty/lua-resty-lock/compare/v0.08...master
+export LUA_RESTY_LOCK=0.08
+
+# Check for recent changes: https://github.com/openresty/lua-resty-upload/compare/v0.10...master
+export LUA_RESTY_UPLOAD_VERSION=0.10
+
+# Check for recent changes: https://github.com/openresty/lua-resty-string/compare/v0.14...master
 export LUA_RESTY_STRING_VERSION=9ace36f2dde09451c377c839117ade45eb02d460
-export LUA_RESTY_MEMCACHED_VERSION=1517409a3f23116bb63f080629a6a515cf332d87
-export LUA_RESTY_REDIS_VERSION=91585affcd9a8da65cb664a5b1e926dde428095a
+
+# Check for recent changes: https://github.com/openresty/lua-resty-memcached/compare/v0.16...master
+export LUA_RESTY_MEMCACHED_VERSION=0.16
+
+# Check for recent changes: https://github.com/openresty/lua-resty-redis/compare/v0.29...master
+export LUA_RESTY_REDIS_VERSION=0.29
+
+# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6...master
 export LUA_RESTY_IPMATCHER_VERSION=211e0d2eb8bbb558b79368f89948a0bafdc23654
+
+# Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
 export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
 
 export BUILD_PATH=/tmp/build
@@ -127,11 +196,11 @@ get_src e462e11533d5c30baa05df7652160ff5979591d291736cfa5edb9fd2edb48c49 \
 get_src 0e971105e210d272a497567fa2e2c256f4e39b845a5ba80d373e26ba1abfbd85 \
         "https://github.com/simpl/ngx_devel_kit/archive/v$NDK_VERSION.tar.gz"
 
-get_src 06218d51b0ca19ce27096499762b76746e6ab70693f279151e8964bcac2f6a6c \
-        "https://github.com/openresty/set-misc-nginx-module/archive/$SETMISC_VERSION.tar.gz"
+get_src f1ad2459c4ee6a61771aa84f77871f4bfe42943a4aa4c30c62ba3f981f52c201 \
+        "https://github.com/openresty/set-misc-nginx-module/archive/v$SETMISC_VERSION.tar.gz"
 
-get_src 4f562f8ea1829b34366d1483e70363c7db1c9ac492c4b674832a3f36ef9dce0b \
-        "https://github.com/openresty/headers-more-nginx-module/archive/$MORE_HEADERS_VERSION.tar.gz"
+get_src a3dcbab117a9c103bc1ea5200fc00a7b7d2af97ff7fd525f16f8ac2632e30fbf \
+        "https://github.com/openresty/headers-more-nginx-module/archive/v$MORE_HEADERS_VERSION.tar.gz"
 
 get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
         "https://github.com/atomx/nginx-http-auth-digest/archive/v$NGINX_DIGEST_AUTH.tar.gz"
@@ -139,8 +208,8 @@ get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
 get_src a98b48947359166326d58700ccdc27256d2648218072da138ab6b47de47fbd8f \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 7cc4df20c61ad31129625cc9f177e19efbfde37b51adb3451ad81c1c1b2a6e0e \
-        "https://github.com/opentracing-contrib/nginx-opentracing/archive/$NGINX_OPENTRACING_VERSION.tar.gz"
+get_src 6f97776ebdf019b105a755c7736b70bdbd7e575c7f0d39db5fe127873c7abf17 \
+        "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src cbe625cba85291712253db5bc3870d60c709acfad9a8af5a302673d3d201e3ea \
         "https://github.com/opentracing/opentracing-cpp/archive/$OPENTRACING_CPP_VERSION.tar.gz"
@@ -148,22 +217,22 @@ get_src cbe625cba85291712253db5bc3870d60c709acfad9a8af5a302673d3d201e3ea \
 get_src 71de3d0658935db7ccea20e006b35e58ddc7e4c18878b9523f2addc2371e9270 \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src fcd5e88e4f7da137d65b05a1bf680accaaa9b13443996e17da5f1c7fab02f02d \
-        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
+get_src f8d3ff15520df736c5e20e91d5852ec27e0874566c2afce7dcb979e2298d6980 \
+        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
 
-get_src 78fcfb042dfd27125715c4b9f70c73196919c03d60efb1fdf3d1b5ed0acef1ab \
+get_src 43e6a9fcb146ad871515f0d0873947e5d497a1c9c60c58cb102a97b47208b7c3 \
         "https://github.com/jbeder/yaml-cpp/archive/$YAML_CPP_VERSION.tar.gz"
 
-get_src 7d2cf68c16b79f99bdd097c042ac2f964d94064ebe4acb68bf6e69a5019578a4 \
-        "https://github.com/jaegertracing/jaeger-client-cpp/archive/$JAEGER_VERSION.tar.gz"
+get_src 3a3a03060bf5e3fef52c9a2de02e6035cb557f389453d8f3b0c1d3d570636994 \
+        "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
 
 get_src 754c3ace499a63e45b77ef4bcab4ee602c2c414f58403bce826b76ffc2f77d0b \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
-get_src 59fddb95df4672fead41cd1fb068e78c56c1d7b11cec0b9ef5fc1102a9602b4b \
+get_src 085a9fb2bf9c4466977595a5fe5156d76f3a2d9a2a81be3cacaff2021773393e \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
-get_src 473b1769fcd0cadaa79f0c9cb2ac12dc278c64aaad86e89022150f987653850f \
+get_src ba38c9f8e4265836ba7f2ac559ddf140693ff2f5ae33ab1e384f51f3992151ab \
         "https://github.com/openresty/stream-lua-nginx-module/archive/$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src a92c9ee6682567605ece55d4eed5d1d54446ba6fba748cff0a2482aea5713d5f \
@@ -172,7 +241,7 @@ get_src a92c9ee6682567605ece55d4eed5d1d54446ba6fba748cff0a2482aea5713d5f \
 get_src 1ee6dad809a5bb22efb45e6dac767f7ce544ad652d353a93d7f26b605f69fe3f \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 
-get_src 6294ca96b1ab25c8b8585eb0a335f632380fb6d64a12e4360793dcb7902826f4 \
+get_src f29393f2cd9288105a0029a6a324fe1f7558a9e7e852d59a6355f7581bb90e30 \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/$DATADOG_CPP_VERSION.tar.gz"
 
 get_src 1af5a5632dc8b00ae103d51b7bf225de3a7f0df82f5c6a401996c080106e600e \
@@ -184,17 +253,17 @@ get_src 4c1933434572226942c65b2f2b26c8a536ab76aa771a3c7f6c2629faa764976b \
 get_src 94d1512bf0e5e6ffa4eca0489db1279d51f45386fffcb8a1d2d9f7fe93518465 \
         "https://github.com/yaoweibin/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
-get_src ec8935563d70b3a45931448c64132e309b1a48f2cb17a4e326e7f0b758585b86 \
-        "https://github.com/openresty/lua-resty-upload/archive/$LUA_RESTY_UPLOAD_VERSION.tar.gz"
+get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
+        "https://github.com/openresty/lua-resty-upload/archive/v$LUA_RESTY_UPLOAD_VERSION.tar.gz"
 
 get_src 462c6b38792bab4ca8212bdfd3f2e38f6883bb45c8fb8a03474ea813e0fab853 \
         "https://github.com/openresty/lua-resty-string/archive/$LUA_RESTY_STRING_VERSION.tar.gz"
 
-get_src 81a2e44f66f0455fedf1273a149734bae44a67b376453c851460f1b16a3ac4f4 \
+get_src b3d28adac2acee1e5904e9f65d6e80e0553b01647fa0701b812bc7e464de74ad \
         "https://github.com/openresty/lua-resty-balancer/archive/$LUA_RESTY_BALANCER.tar.gz"
 
-get_src 91fcc7d9b46efed4873862711a2ee626d0e87384981bb272c9ac222c631b0332 \
-        "https://github.com/openresty/lua-resty-core/archive/$LUA_RESTY_CORE.tar.gz"
+get_src 4d971f711fad48c097070457c128ca36053835d8a3ba25a937e9991547d55d4d \
+        "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 
 get_src 8d602af2669fb386931760916a39f6c9034f2363c4965f215042c086b8215238 \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz"
@@ -202,23 +271,23 @@ get_src 8d602af2669fb386931760916a39f6c9034f2363c4965f215042c086b8215238 \
 get_src 5ed48c36231e2622b001308622d46a0077525ac2f751e8cc0c9905914254baa4 \
         "https://github.com/cloudflare/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz"
 
-get_src 23d51fd6baf111d09da8f3b3245de2b3953994d334ab8e262e0852981a8f1cb3 \
-        "https://github.com/openresty/lua-resty-lrucache/archive/$LUA_RESTY_CACHE.tar.gz"
+get_src e810ed124fe788b8e4aac2c8960dda1b9a6f8d0ca94ce162f28d3f4d877df8af \
+        "https://github.com/openresty/lua-resty-lrucache/archive/v$LUA_RESTY_CACHE.tar.gz"
 
-get_src 60ebd0e0773c3456f1a58eff47c427acc4069015f42be7bb70e9864733e00947 \
-        "https://github.com/openresty/lua-resty-lock/archive/$LUA_RESTY_LOCK.tar.gz"
+get_src 2b4683f9abe73e18ca00345c65010c9056777970907a311d6e1699f753141de2 \
+        "https://github.com/openresty/lua-resty-lock/archive/v$LUA_RESTY_LOCK.tar.gz"
 
 get_src 70e9a01eb32ccade0d5116a25bcffde0445b94ad35035ce06b94ccd260ad1bf0 \
         "https://github.com/openresty/lua-resty-dns/archive/v$LUA_RESTY_DNS.tar.gz"
 
-get_src d2f867ea8cacb406172d258ba5c17ca530b5deff56d58583e6c11f4f190be015 \
-        "https://github.com/ledgetech/lua-resty-http/archive/v$LUA_RESTY_HTTP.tar.gz"
+get_src 9fcb6db95bc37b6fce77d3b3dc740d593f9d90dce0369b405eb04844d56ac43f \
+        "https://github.com/ledgetech/lua-resty-http/archive/$LUA_RESTY_HTTP.tar.gz"
 
-get_src 3490e0cd78acf31a9ae3a688cdbd29bcc8e5c85ccccd9b14855876b7a71f324c \
-        "https://github.com/openresty/lua-resty-memcached/archive/$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
+get_src 42893da0e3de4ec180c9bf02f82608d78787290a70c5644b538f29d243147396 \
+        "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
 
-get_src 3069e3b9f2c57171c67fb04c9bfea0145c1556afda6d112b7d6b4f841b687ae8 \
-        "https://github.com/openresty/lua-resty-redis/archive/$LUA_RESTY_REDIS_VERSION.tar.gz"
+get_src 3f602af507aacd1f7aaeddfe7b77627fcde095fe9f115cb9d6ad8de2a52520e1 \
+        "https://github.com/openresty/lua-resty-redis/archive/v$LUA_RESTY_REDIS_VERSION.tar.gz"
 
 get_src b8dbd502751140993a852381bcd8e98a402454596bd91838c1e51268d42db261 \
         "https://github.com/api7/lua-resty-ipmatcher/archive/$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
