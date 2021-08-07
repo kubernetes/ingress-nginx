@@ -108,6 +108,9 @@ spec:
           {{- if not (eq .Values.controller.healthCheckPath "/healthz") }}
             - --health-check-path={{ .Values.controller.healthCheckPath }}
           {{- end }}
+          {{- if .Values.controller.watchIngressWithoutClass }}
+            - --watch-ingress-without-class=true
+          {{- end }}
           {{- range $key, $value := .Values.controller.extraArgs }}
             {{- /* Accept keys without values or with false as value */}}
             {{- if eq ($value | quote | len) 2 }}
