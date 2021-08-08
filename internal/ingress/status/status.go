@@ -355,9 +355,10 @@ func statusAddressFromService(service string, kubeClient clientset.Interface) ([
 		addrs := make([]apiv1.LoadBalancerIngress, len(svc.Status.LoadBalancer.Ingress))
 		for i, ingress := range svc.Status.LoadBalancer.Ingress {
 			addrs[i] = apiv1.LoadBalancerIngress{}
-			if ingress.IP == "" {
+			if ingress.Hostname != "" {
 				addrs[i].Hostname = ingress.Hostname
-			} else {
+			}
+			if ingress.IP != "" {
 				addrs[i].IP = ingress.IP
 			}
 		}

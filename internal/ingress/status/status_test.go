@@ -484,6 +484,10 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 										IP:       "",
 										Hostname: "foo",
 									},
+									{
+										IP:       "10.0.0.2",
+										Hostname: "10-0-0-2.cloudprovider.example.net",
+									},
 								},
 							},
 						},
@@ -494,6 +498,10 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 			[]apiv1.LoadBalancerIngress{
 				{IP: "10.0.0.1"},
 				{Hostname: "foo"},
+				{
+					IP:       "10.0.0.2",
+					Hostname: "10-0-0-2.cloudprovider.example.net",
+				},
 			},
 			false,
 		},
