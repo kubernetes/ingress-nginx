@@ -385,7 +385,7 @@ Sets the time, in seconds, that the browser should remember that this site is on
 
 ## hsts-preload
 
-Enables or disables the preload attribute in the HSTS feature (when it is enabled) dd
+Enables or disables the preload attribute in the HSTS feature (when it is enabled).
 
 ## keep-alive
 
