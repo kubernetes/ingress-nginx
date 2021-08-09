@@ -203,6 +203,7 @@ The following table shows a configuration option's name, type, and the default v
 |[global-rate-limit-memcached-max-idle-timeout](#global-rate-limit)|int|10000|
 |[global-rate-limit-memcached-pool-size](#global-rate-limit)|int|50|
 |[global-rate-limit-status-code](#global-rate-limit)|int|429|
+|[service-upstream](#service-upstream)|bool|"false"|
 
 ## add-headers
 
@@ -1224,3 +1225,8 @@ Configure `memcached` client for [Global Rate Limiting](https://github.com/kuber
 
 These settings get used by [lua-resty-global-throttle](https://github.com/ElvinEfendi/lua-resty-global-throttle)
 that ingress-nginx includes. Refer to the link to learn more about `lua-resty-global-throttle`.
+
+## service-upstream
+
+Set if the service's Cluster IP and port should be used instead of a list of all endpoints. This can be overwritten by an annotation on an Ingress rule.
+_**default:**_ "false"
