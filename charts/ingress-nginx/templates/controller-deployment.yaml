@@ -112,6 +112,9 @@ spec:
           {{- if not (eq .Values.controller.healthCheckPath "/healthz") }}
             - --health-check-path={{ .Values.controller.healthCheckPath }}
           {{- end }}
+          {{- if .Values.controller.watchIngressWithoutClass }}
+            - --watch-ingress-without-class=true
+          {{- end }}
           {{- range $key, $value := .Values.controller.extraArgs }}
             {{- /* Accept keys without values or with false as value */}}
             {{- if eq ($value | quote | len) 2 }}
@@ -143,7 +146,7 @@ spec:
           {{- end }}
           {{- if .Values.controller.extraEnvs }}
             {{- toYaml .Values.controller.extraEnvs | nindent 12 }}
-          {{- end }}          
+          {{- end }}
           {{- if .Values.controller.startupProbe }}
           startupProbe: {{ toYaml .Values.controller.startupProbe | nindent 12 }}
           {{- end }}
