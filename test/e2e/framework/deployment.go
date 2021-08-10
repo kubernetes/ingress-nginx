@@ -38,7 +38,7 @@ const SlowEchoService = "slow-echo"
 const HTTPBinService = "httpbin"
 
 // NginxBaseImage use for testing
-const NginxBaseImage = "k8s.gcr.io/ingress-nginx/nginx:v20210530-g6aab4c291@sha256:a7356029dd0c26cc3466bf7a27daec0f4df73aa14ca6c8b871a767022a812c0b"
+const NginxBaseImage = "k8s.gcr.io/ingress-nginx/nginx:v20210809-g98288bc3c@sha256:f9363669cf26514c9548c1fe4f8f4e2f58dfb76616bcd638a0ff7f0ec3457c17"
 
 // NewEchoDeployment creates a new single replica deployment of the echoserver image in a particular namespace
 func (f *Framework) NewEchoDeployment() {
