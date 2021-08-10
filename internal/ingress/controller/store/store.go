@@ -31,6 +31,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -126,6 +127,7 @@ type Informer struct {
 	Service      cache.SharedIndexInformer
 	Secret       cache.SharedIndexInformer
 	ConfigMap    cache.SharedIndexInformer
+	Namespace    cache.SharedIndexInformer
 }
 
 // Lister contains object listers (stores).
@@ -136,6 +138,7 @@ type Lister struct {
 	Endpoint              EndpointLister
 	Secret                SecretLister
 	ConfigMap             ConfigMapLister
+	Namespace             NamespaceLister
 	IngressWithAnnotation IngressWithAnnotationsLister
 }
 
@@ -169,6 +172,15 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	}
 	if i.IngressClass != nil && !cache.WaitForCacheSync(stopCh, i.IngressClass.HasSynced) {
 		runtime.HandleError(fmt.Errorf("timed out waiting for ingress classcaches to sync"))
+	}
+
+	// when limit controller scope to one namespace, skip sync namespaces at cluster scope
+	if i.Namespace != nil {
+		go i.Namespace.Run(stopCh)
+
+		if !cache.WaitForCacheSync(stopCh, i.Namespace.HasSynced) {
+			runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
+		}
 	}
 
 	// in big clusters, deltas can keep arriving even after HasSynced
@@ -224,7 +236,9 @@ type k8sStore struct {
 
 // New creates a new object store to be used in the ingress controller
 func New(
-	namespace, configmap, tcp, udp, defaultSSLCertificate string,
+	namespace string,
+	namespaceSelector labels.Selector,
+	configmap, tcp, udp, defaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	updateCh *channels.RingChannel,
@@ -321,6 +335,35 @@ func New(
 	store.informers.Service = infFactory.Core().V1().Services().Informer()
 	store.listers.Service.Store = store.informers.Service.GetStore()
 
+	// avoid caching namespaces at cluster scope when watching single namespace
+	if namespaceSelector != nil && !namespaceSelector.Empty() {
+		// cache informers factory for namespaces
+		infFactoryNamespaces := informers.NewSharedInformerFactoryWithOptions(client, resyncPeriod,
+			informers.WithTweakListOptions(labelsTweakListOptionsFunc),
+		)
+
+		store.informers.Namespace = infFactoryNamespaces.Core().V1().Namespaces().Informer()
+		store.listers.Namespace.Store = store.informers.Namespace.GetStore()
+	}
+
+	watchedNamespace := func(namespace string) bool {
+		if namespaceSelector == nil || namespaceSelector.Empty() {
+			return true
+		}
+
+		item, ok, err := store.listers.Namespace.GetByKey(namespace)
+		if !ok {
+			klog.Errorf("Namespace %s not existed: %v.", namespace, err)
+			return false
+		}
+		ns, ok := item.(*corev1.Namespace)
+		if !ok {
+			return false
+		}
+
+		return namespaceSelector.Matches(labels.Set(ns.Labels))
+	}
+
 	ingDeleteHandler := func(obj interface{}) {
 		ing, ok := toIngress(obj)
 		if !ok {
@@ -335,6 +378,10 @@ func New(
 				klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
 				return
 			}
+		}
+
+		if !watchedNamespace(ing.Namespace) {
+			return
 		}
 
 		_, err := store.GetIngressClass(ing, icConfig)
@@ -362,6 +409,11 @@ func New(
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			ing, _ := toIngress(obj)
+
+			if !watchedNamespace(ing.Namespace) {
+				return
+			}
+
 			ic, err := store.GetIngressClass(ing, icConfig)
 			if err != nil {
 				klog.InfoS("Ignoring ingress because of error while validating ingress class", "ingress", klog.KObj(ing), "error", err)
@@ -390,6 +442,10 @@ func New(
 		UpdateFunc: func(old, cur interface{}) {
 			oldIng, _ := toIngress(old)
 			curIng, _ := toIngress(cur)
+
+			if !watchedNamespace(oldIng.Namespace) {
+				return
+			}
 
 			var errOld, errCur error
 			var classCur string
@@ -527,6 +583,10 @@ func New(
 				sec := cur.(*corev1.Secret)
 				key := k8s.MetaNamespaceKey(sec)
 
+				if !watchedNamespace(sec.Namespace) {
+					return
+				}
+
 				if store.defaultSSLCertificate == key {
 					store.syncSecret(store.defaultSSLCertificate)
 				}
@@ -563,6 +623,10 @@ func New(
 				if !ok {
 					return
 				}
+			}
+
+			if !watchedNamespace(sec.Namespace) {
+				return
 			}
 
 			store.sslStore.Delete(k8s.MetaNamespaceKey(sec))

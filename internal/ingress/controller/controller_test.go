@@ -36,6 +36,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"k8s.io/ingress-nginx/internal/file"
@@ -2361,6 +2362,7 @@ func newNGINXController(t *testing.T) *NGINXController {
 
 	storer := store.New(
 		ns,
+		labels.Nothing(),
 		fmt.Sprintf("%v/config", ns),
 		fmt.Sprintf("%v/tcp", ns),
 		fmt.Sprintf("%v/udp", ns),
@@ -2424,6 +2426,7 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 
 	storer := store.New(
 		ns,
+		labels.Nothing(),
 		fmt.Sprintf("%v/config", ns),
 		fmt.Sprintf("%v/tcp", ns),
 		fmt.Sprintf("%v/udp", ns),

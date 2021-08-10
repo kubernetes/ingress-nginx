@@ -27,6 +27,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -66,6 +67,8 @@ type Configuration struct {
 	DefaultService string
 
 	Namespace string
+
+	WatchNamespaceSelector labels.Selector
 
 	// +optional
 	TCPConfigMapName string

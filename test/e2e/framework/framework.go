@@ -126,7 +126,7 @@ func (f *Framework) AfterEach() {
 	defer func(kubeClient kubernetes.Interface, ns string) {
 		go func() {
 			defer ginkgo.GinkgoRecover()
-			err := deleteKubeNamespace(kubeClient, ns)
+			err := DeleteKubeNamespace(kubeClient, ns)
 			assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
 		}()
 	}(f.KubeClientSet, f.Namespace)
@@ -586,6 +586,12 @@ func NewSingleIngressWithTLS(name, path, host string, tlsHosts []string, ns, ser
 // NewSingleIngress creates a simple ingress rule
 func NewSingleIngress(name, path, host, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, nil)
+}
+
+func NewSingleIngressWithIngressClass(name, path, host, ns, service, ingressClass string, port int, annotations map[string]string) *networking.Ingress {
+	ing := newSingleIngressWithRules(name, path, host, ns, service, port, annotations, nil)
+	ing.Spec.IngressClassName = &ingressClass
+	return ing
 }
 
 // NewSingleIngressWithMultiplePaths creates a simple ingress rule with multiple paths

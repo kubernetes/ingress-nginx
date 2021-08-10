@@ -122,6 +122,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 	n.store = store.New(
 		config.Namespace,
+		config.WatchNamespaceSelector,
 		config.ConfigMapName,
 		config.TCPConfigMapName,
 		config.UDPConfigMapName,
