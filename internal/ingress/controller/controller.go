@@ -727,7 +727,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 				// custom backend is valid only if contains at least one endpoint
 				if len(endps) > 0 {
-					name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
+					name := fmt.Sprintf("custom-default-backend-%v-%v", location.DefaultBackend.GetNamespace(), location.DefaultBackend.GetName())
 					klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
 
 					nb := upstream.DeepCopy()
