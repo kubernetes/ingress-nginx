@@ -1,4 +1,4 @@
-# Installation Guide
+# Installation Using YAML Manifest
 
 !!! attention
     The default configuration watches Ingress object from **all namespaces**.
@@ -218,21 +218,6 @@ POD_NAMESPACE=ingress-nginx
 POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}')
 
 kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
-```
-
-## Using Helm
-
-!!! attention
-    Only Helm v3 is supported
-
-NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart from the project repository.
-To install the chart with the release name `ingress-nginx`:
-
-```console
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
-
-helm install ingress-nginx ingress-nginx/ingress-nginx
 ```
 
 ## Detect installed version:

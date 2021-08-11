@@ -73,7 +73,9 @@ nav:
       - Troubleshooting: "troubleshooting.md"
       - kubectl plugin: "kubectl-plugin.md"
   - Deployment:
-      - Installation Guide: "deploy/index.md"
+      - Installation Guide:
+          - YAML Manifest: "deploy/index.md"
+          - Helm Chart: "deploy/helm-chart.md"
       - Bare-metal considerations: "deploy/baremetal.md"
       - Role Based Access Control (RBAC): "deploy/rbac.md"
       - Upgrade: "deploy/upgrade.md"
