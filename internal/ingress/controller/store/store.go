@@ -20,7 +20,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"sort"
 	"sync"
@@ -946,7 +946,7 @@ func (s *k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName str
 			return
 		}
 
-		err = ioutil.WriteFile(fileName, decodedTicket, file.ReadWriteByUser)
+		err = os.WriteFile(fileName, decodedTicket, file.ReadWriteByUser)
 		if err != nil {
 			klog.Errorf("unexpected error writing ssl-session-ticket-key to %s: %v", fileName, err)
 			return

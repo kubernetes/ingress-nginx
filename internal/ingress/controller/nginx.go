@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -611,12 +610,12 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
-	tmpfile, err := ioutil.TempFile("", tempNginxPattern)
+	tmpfile, err := os.CreateTemp("", tempNginxPattern)
 	if err != nil {
 		return err
 	}
 	defer tmpfile.Close()
-	err = ioutil.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
+	err = os.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
@@ -661,14 +660,14 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	if klog.V(2).Enabled() {
-		src, _ := ioutil.ReadFile(cfgPath)
+		src, _ := os.ReadFile(cfgPath)
 		if !bytes.Equal(src, content) {
-			tmpfile, err := ioutil.TempFile("", "new-nginx-cfg")
+			tmpfile, err := os.CreateTemp("", "new-nginx-cfg")
 			if err != nil {
 				return err
 			}
 			defer tmpfile.Close()
-			err = ioutil.WriteFile(tmpfile.Name(), content, file.ReadWriteByUser)
+			err = os.WriteFile(tmpfile.Name(), content, file.ReadWriteByUser)
 			if err != nil {
 				return err
 			}
@@ -691,7 +690,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 	}
 
-	err = ioutil.WriteFile(cfgPath, content, file.ReadWriteByUser)
+	err = os.WriteFile(cfgPath, content, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
@@ -1088,7 +1087,7 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	// Expand possible environment variables before writing the configuration to file.
 	expanded := os.ExpandEnv(tmplBuf.String())
 
-	return ioutil.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
+	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
 }
 
 func cleanTempNginxCfg() error {
