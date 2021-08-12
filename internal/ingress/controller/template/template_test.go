@@ -214,7 +214,7 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	// config lua dict
 	cfg := config.Configuration{
 		LuaSharedDicts: map[string]int{
-			"configuration_data": 10, "certificate_data": 20,
+			"configuration_data": 10240, "certificate_data": 20480,
 		},
 	}
 	actual := buildLuaSharedDictionaries(cfg, invalidType)
@@ -255,13 +255,13 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 func TestLuaConfigurationRequestBodySize(t *testing.T) {
 	cfg := config.Configuration{
 		LuaSharedDicts: map[string]int{
-			"configuration_data": 10, "certificate_data": 20,
+			"configuration_data": 10240, "certificate_data": 20480,
 		},
 	}
 
 	size := luaConfigurationRequestBodySize(cfg)
-	if size != "21" {
-		t.Errorf("expected the size to be 20 but got: %v", size)
+	if size != "21M" {
+		t.Errorf("expected the size to be 21M but got: %v", size)
 	}
 }
 
