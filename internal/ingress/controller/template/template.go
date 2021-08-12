@@ -60,8 +60,8 @@ const (
 	stateComment
 )
 
-// TemplateWriter is the interface to render a template
-type TemplateWriter interface {
+// Writer is the interface to render a template
+type Writer interface {
 	Write(conf config.TemplateConfig) ([]byte, error)
 }
 
@@ -329,7 +329,8 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}) string {
 	}
 
 	for name, size := range cfg.LuaSharedDicts {
-		out = append(out, fmt.Sprintf("lua_shared_dict %s %dM", name, size))
+		sizeStr := dictKbToStr(size)
+		out = append(out, fmt.Sprintf("lua_shared_dict %s %s", name, sizeStr))
 	}
 
 	sort.Strings(out)
@@ -341,16 +342,16 @@ func luaConfigurationRequestBodySize(c interface{}) string {
 	cfg, ok := c.(config.Configuration)
 	if !ok {
 		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
-		return "100" // just a default number
+		return "100M" // just a default number
 	}
 
 	size := cfg.LuaSharedDicts["configuration_data"]
 	if size < cfg.LuaSharedDicts["certificate_data"] {
 		size = cfg.LuaSharedDicts["certificate_data"]
 	}
-	size = size + 1
+	size = size + 1024
 
-	return fmt.Sprintf("%d", size)
+	return dictKbToStr(size)
 }
 
 // configForLua returns some general configuration as Lua table represented as string
