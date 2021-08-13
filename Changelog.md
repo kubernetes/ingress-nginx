@@ -1,5 +1,20 @@
 # Changelog
 
+### 1.0.0-beta.3
+** This is a breaking change**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-beta.3@sha256:44a7a06b71187a4529b0a9edee5cc22bdf71b414470eff696c3869ea8d90a695`
+
+Changes:
+
+- [X] [#7487](https://github.com/kubernetes/ingress-nginx/pull/7487)[Cherry - Pick] - Fix default backend annotation and tests
+- [X] [#7459](https://github.com/kubernetes/ingress-nginx/pull/7459) Add controller.watchIngressWithoutClass config option 
+- [X] [#7478](https://github.com/kubernetes/ingress-nginx/pull/7478) Release new helm chart with certgen fixed 
+
 ### 1.0.0-beta.1
 **THIS IS A BREAKING CHANGE**
 
