@@ -684,7 +684,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	// TODO: add testing for canary-weight 0 < weight < 100
 	ginkgo.Context("when canaried by weight", func() {
-		ginkgo.It("should route requests to the correct upstream", func() {
+		ginkgo.It("should route requests only to mainline if canary weight is 0", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
@@ -708,6 +708,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			f.EnsureIngress(canaryIng)
 
 			ginkgo.By("returning requests from the mainline only when weight is equal to 0")
+
 			f.HTTPTestClient().
 				GET("/").
 				WithHeader("Host", host).
@@ -716,18 +717,32 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				Body().
 				Contains(framework.EchoService).
 				NotContains(canaryService)
+		})
+
+		ginkgo.It("should route requests only to canary if canary weight is 100", func() {
+			host := "foo"
+			annotations := map[string]string{}
+
+			ing := framework.NewSingleIngress(host, "/", host,
+				f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":        "true",
+				"nginx.ingress.kubernetes.io/canary-weight": "100",
+			}
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
+				f.Namespace, canaryService, 80, canaryAnnotations)
+			f.EnsureIngress(canaryIng)
 
 			ginkgo.By("returning requests from the canary only when weight is equal to 100")
-
-			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, canaryIngName,
-				func(ingress *networking.Ingress) error {
-					ingress.ObjectMeta.Annotations = map[string]string{
-						"nginx.ingress.kubernetes.io/canary":        "true",
-						"nginx.ingress.kubernetes.io/canary-weight": "100",
-					}
-					return nil
-				})
-			assert.Nil(ginkgo.GinkgoT(), err)
 
 			f.HTTPTestClient().
 				GET("/").
