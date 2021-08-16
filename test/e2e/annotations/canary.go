@@ -632,7 +632,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 	})
 
 	ginkgo.Context("when canaried by cookie", func() {
-		ginkgo.It("should route requests to the correct upstream", func() {
+		ginkgo.It("respects always and never values", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
@@ -657,31 +657,39 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			f.EnsureIngress(canaryIng)
 
 			ginkgo.By("routing requests to the canary upstream when cookie is set to 'always'")
-			f.HTTPTestClient().
-				GET("/").
-				WithHeader("Host", host).
-				WithCookie("Canary-By-Cookie", "always").
-				Expect().
-				Status(http.StatusOK).
-				Body().Contains(canaryService)
+			for i := 0; i < 50; i++ {
+				f.HTTPTestClient().
+					GET("/").
+					WithHeader("Host", host).
+					WithCookie("Canary-By-Cookie", "always").
+					Expect().
+					Status(http.StatusOK).
+					Body().Contains(canaryService)
+			}
 
 			ginkgo.By("routing requests to the mainline upstream when cookie is set to 'never'")
-			f.HTTPTestClient().
-				GET("/").
-				WithHeader("Host", host).
-				WithCookie("Canary-By-Cookie", "never").
-				Expect().
-				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+			for i := 0; i < 50; i++ {
+				f.HTTPTestClient().
+					GET("/").
+					WithHeader("Host", host).
+					WithCookie("Canary-By-Cookie", "never").
+					Expect().
+					Status(http.StatusOK).
+					Body().Contains(framework.EchoService).NotContains(canaryService)
+			}
 
 			ginkgo.By("routing requests to the mainline upstream when cookie is set to anything else")
-			f.HTTPTestClient().
-				GET("/").
-				WithHeader("Host", host).
-				WithCookie("Canary-By-Cookie", "badcookievalue").
-				Expect().
-				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+			for i := 0; i < 50; i++ {
+				// This test relies on canary cookie not parsing into the valid
+				// affinity data and canary weight not being specified at all.
+				f.HTTPTestClient().
+					GET("/").
+					WithHeader("Host", host).
+					WithCookie("Canary-By-Cookie", "badcookievalue").
+					Expect().
+					Status(http.StatusOK).
+					Body().Contains(framework.EchoService).NotContains(canaryService)
+			}
 		})
 	})
 
