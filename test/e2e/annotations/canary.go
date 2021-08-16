@@ -888,4 +888,179 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				return strings.Contains(server, "server_name foo")
 			})
 	})
+
+	ginkgo.Context("canary affinity behavior", func() {
+		host := "foo"
+		affinityCookieName := "aff"
+		canaryIngName := fmt.Sprintf("%v-canary", host)
+
+		ginkgo.It("always routes traffic to canary if first request was affinitized to canary (default behavior)", func() {
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/affinity":            "cookie",
+				"nginx.ingress.kubernetes.io/session-cookie-name": affinityCookieName,
+			}
+
+			ing := framework.NewSingleIngress(host, "/", host,
+				f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":                 "true",
+				"nginx.ingress.kubernetes.io/canary-by-header":       "ForceCanary",
+				"nginx.ingress.kubernetes.io/canary-by-header-value": "yes",
+				"nginx.ingress.kubernetes.io/canary-weight":          "1",
+			}
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
+				f.Namespace, canaryService, 80, canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			// This request will produce affinity cookie coming from the canary
+			// backend.
+			forcedRequestToCanary := f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithHeader("ForceCanary", "yes").
+				Expect().
+				Status(http.StatusOK)
+
+			// Make sure we got response from canary.
+			forcedRequestToCanary.
+				Body().Contains(canaryService)
+
+			affinityCookie := forcedRequestToCanary.
+				Cookie(affinityCookieName)
+
+			// As long as affinity cookie is present, all requests will be
+			// routed to a specific backend.
+			for i := 0; i < 50; i++ {
+				f.HTTPTestClient().
+					GET("/").
+					WithHeader("Host", host).
+					WithCookie(affinityCookieName, affinityCookie.Raw().Value).
+					Expect().
+					Status(http.StatusOK).
+					Body().Contains(canaryService)
+			}
+		})
+
+		ginkgo.It("always routes traffic to canary if first request was affinitized to canary (explicit sticky behavior)", func() {
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/affinity":                 "cookie",
+				"nginx.ingress.kubernetes.io/session-cookie-name":      affinityCookieName,
+				"nginx.ingress.kubernetes.io/affinity-canary-behavior": "sticky",
+			}
+
+			ing := framework.NewSingleIngress(host, "/", host,
+				f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":                 "true",
+				"nginx.ingress.kubernetes.io/canary-by-header":       "ForceCanary",
+				"nginx.ingress.kubernetes.io/canary-by-header-value": "yes",
+				"nginx.ingress.kubernetes.io/canary-weight":          "1",
+			}
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
+				f.Namespace, canaryService, 80, canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			// This request will produce affinity cookie coming from the canary
+			// backend.
+			forcedRequestToCanary := f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithHeader("ForceCanary", "yes").
+				Expect().
+				Status(http.StatusOK)
+
+			// Make sure we got response from canary.
+			forcedRequestToCanary.
+				Body().Contains(canaryService)
+
+			affinityCookie := forcedRequestToCanary.
+				Cookie(affinityCookieName)
+
+			// As long as affinity cookie is present, all requests will be
+			// routed to a specific backend.
+			for i := 0; i < 50; i++ {
+				f.HTTPTestClient().
+					GET("/").
+					WithHeader("Host", host).
+					WithCookie(affinityCookieName, affinityCookie.Raw().Value).
+					Expect().
+					Status(http.StatusOK).
+					Body().Contains(canaryService)
+			}
+		})
+
+		ginkgo.It("routes traffic to either mainline or canary backend (legacy behavior)", func() {
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/affinity":                 "cookie",
+				"nginx.ingress.kubernetes.io/session-cookie-name":      affinityCookieName,
+				"nginx.ingress.kubernetes.io/affinity-canary-behavior": "legacy",
+			}
+
+			ing := framework.NewSingleIngress(host, "/", host,
+				f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
+			// Canary weight is 50% to ensure requests are going there.
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":                 "true",
+				"nginx.ingress.kubernetes.io/canary-by-header":       "ForceCanary",
+				"nginx.ingress.kubernetes.io/canary-by-header-value": "yes",
+				"nginx.ingress.kubernetes.io/canary-weight":          "50",
+			}
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
+				f.Namespace, canaryService, 80, canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			// This request will produce affinity cookie coming from the canary
+			// backend.
+			forcedRequestToCanary := f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithHeader("ForceCanary", "yes").
+				Expect().
+				Status(http.StatusOK)
+
+			// Make sure we got response from canary.
+			forcedRequestToCanary.
+				Body().Contains(canaryService)
+
+			// BUG: doesn't make sense!
+			affinityCookie := forcedRequestToCanary.
+				Cookie(affinityCookieName)
+
+			// As long as affinity cookie is present, all requests will be
+			// routed to a specific backend.
+			for i := 0; i < 100; i++ {
+				f.HTTPTestClient().
+					GET("/").
+					WithHeader("Host", host).
+					WithCookie(affinityCookieName, affinityCookie.Raw().Value).
+					Expect().
+					Status(http.StatusOK).
+					Body().Contains(canaryService)
+			}
+		})
+	})
 })
