@@ -18,7 +18,10 @@ package annotations
 
 import (
 	"fmt"
+	"math"
 	"net/http"
+	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/onsi/ginkgo"
@@ -37,7 +40,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.BeforeEach(func() {
 		// Deployment for main backend
-		f.NewEchoDeployment()
+		f.NewEchoDeploymentWithReplicas(1)
 
 		// Deployment for canary backend
 		f.NewEchoDeploymentWithNameAndReplicas(canaryService, 1)
@@ -682,7 +685,6 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 	})
 
-	// TODO: add testing for canary-weight 0 < weight < 100
 	ginkgo.Context("when canaried by weight", func() {
 		ginkgo.It("should route requests only to mainline if canary weight is 0", func() {
 			host := "foo"
@@ -706,8 +708,6 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
 				f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
-
-			ginkgo.By("returning requests from the mainline only when weight is equal to 0")
 
 			f.HTTPTestClient().
 				GET("/").
@@ -742,8 +742,6 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			ginkgo.By("returning requests from the canary only when weight is equal to 100")
-
 			f.HTTPTestClient().
 				GET("/").
 				WithHeader("Host", host).
@@ -751,6 +749,59 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				Status(http.StatusOK).
 				Body().
 				Contains(canaryService)
+		})
+
+		ginkgo.It("should route requests evenly split between mainline and canary if canary weight is 50", func() {
+			host := "foo"
+			annotations := map[string]string{}
+
+			ing := framework.NewSingleIngress(host, "/", host,
+				f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":        "true",
+				"nginx.ingress.kubernetes.io/canary-weight": "50",
+			}
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
+				f.Namespace, canaryService, 80, canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			re := regexp.MustCompile(fmt.Sprintf(`%s.*`, framework.EchoService))
+			replicaRequestCount := map[string]int{}
+
+			for i := 0; i < 200; i++ {
+				body := f.HTTPTestClient().
+					GET("/").
+					WithHeader("Host", host).
+					Expect().
+					Status(http.StatusOK).Body().Raw()
+
+				replica := re.FindString(body)
+				assert.NotEmpty(ginkgo.GinkgoT(), replica)
+
+				if _, ok := replicaRequestCount[replica]; !ok {
+					replicaRequestCount[replica] = 1
+				} else {
+					replicaRequestCount[replica]++
+				}
+			}
+
+			keys := reflect.ValueOf(replicaRequestCount).MapKeys()
+
+			assert.Equal(ginkgo.GinkgoT(), 2, len(keys))
+
+			// The implmentation of choice by weight doesn't guarantee exact
+			// number of requests, so verify if request imbalance is within an
+			// acceptable range.
+			assert.LessOrEqual(ginkgo.GinkgoT(), math.Abs(float64(replicaRequestCount[keys[0].String()]-replicaRequestCount[keys[1].String()]))/math.Max(float64(replicaRequestCount[keys[0].String()]), float64(replicaRequestCount[keys[1].String()])), 0.2)
 		})
 	})
 
