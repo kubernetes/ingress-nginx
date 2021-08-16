@@ -782,34 +782,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			re := regexp.MustCompile(fmt.Sprintf(`%s.*`, framework.EchoService))
-			replicaRequestCount := map[string]int{}
-
-			for i := 0; i < 200; i++ {
-				body := f.HTTPTestClient().
-					GET("/").
-					WithHeader("Host", host).
-					Expect().
-					Status(http.StatusOK).Body().Raw()
-
-				replica := re.FindString(body)
-				assert.NotEmpty(ginkgo.GinkgoT(), replica)
-
-				if _, ok := replicaRequestCount[replica]; !ok {
-					replicaRequestCount[replica] = 1
-				} else {
-					replicaRequestCount[replica]++
-				}
-			}
-
-			keys := reflect.ValueOf(replicaRequestCount).MapKeys()
-
-			assert.Equal(ginkgo.GinkgoT(), 2, len(keys))
-
-			// The implmentation of choice by weight doesn't guarantee exact
-			// number of requests, so verify if request imbalance is within an
-			// acceptable range.
-			assert.LessOrEqual(ginkgo.GinkgoT(), math.Abs(float64(replicaRequestCount[keys[0].String()]-replicaRequestCount[keys[1].String()]))/math.Max(float64(replicaRequestCount[keys[0].String()]), float64(replicaRequestCount[keys[1].String()])), 0.2)
+			TestEvenMainlineCanaryDistribution(f, host)
 		})
 	})
 
@@ -1007,9 +980,8 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 		ginkgo.It("routes traffic to either mainline or canary backend (legacy behavior)", func() {
 			annotations := map[string]string{
-				"nginx.ingress.kubernetes.io/affinity":                 "cookie",
-				"nginx.ingress.kubernetes.io/session-cookie-name":      affinityCookieName,
-				"nginx.ingress.kubernetes.io/affinity-canary-behavior": "legacy",
+				"nginx.ingress.kubernetes.io/affinity":            "cookie",
+				"nginx.ingress.kubernetes.io/session-cookie-name": affinityCookieName,
 			}
 
 			ing := framework.NewSingleIngress(host, "/", host,
@@ -1023,10 +995,11 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			// Canary weight is 50% to ensure requests are going there.
 			canaryAnnotations := map[string]string{
-				"nginx.ingress.kubernetes.io/canary":                 "true",
-				"nginx.ingress.kubernetes.io/canary-by-header":       "ForceCanary",
-				"nginx.ingress.kubernetes.io/canary-by-header-value": "yes",
-				"nginx.ingress.kubernetes.io/canary-weight":          "50",
+				"nginx.ingress.kubernetes.io/canary":                   "true",
+				"nginx.ingress.kubernetes.io/canary-by-header":         "ForceCanary",
+				"nginx.ingress.kubernetes.io/canary-by-header-value":   "yes",
+				"nginx.ingress.kubernetes.io/canary-weight":            "50",
+				"nginx.ingress.kubernetes.io/affinity-canary-behavior": "legacy",
 			}
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
@@ -1046,21 +1019,48 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			forcedRequestToCanary.
 				Body().Contains(canaryService)
 
-			// BUG: doesn't make sense!
-			affinityCookie := forcedRequestToCanary.
-				Cookie(affinityCookieName)
-
-			// As long as affinity cookie is present, all requests will be
-			// routed to a specific backend.
-			for i := 0; i < 100; i++ {
-				f.HTTPTestClient().
-					GET("/").
-					WithHeader("Host", host).
-					WithCookie(affinityCookieName, affinityCookie.Raw().Value).
-					Expect().
-					Status(http.StatusOK).
-					Body().Contains(canaryService)
+			// Legacy behavior results in affinity cookie not being set in
+			// response.
+			for _, c := range forcedRequestToCanary.Cookies().Iter() {
+				if c.String().Raw() == affinityCookieName {
+					ginkgo.GinkgoT().Error("Affinity cookie is present in response, but was not expected.")
+				}
 			}
+
+			TestEvenMainlineCanaryDistribution(f, host)
 		})
 	})
+
 })
+
+// This method assumes canary weight being configured at 50%.
+func TestEvenMainlineCanaryDistribution(f *framework.Framework, host string) {
+	re := regexp.MustCompile(fmt.Sprintf(`%s.*`, framework.EchoService))
+	replicaRequestCount := map[string]int{}
+
+	for i := 0; i < 200; i++ {
+		body := f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).Body().Raw()
+
+		replica := re.FindString(body)
+		assert.NotEmpty(ginkgo.GinkgoT(), replica)
+
+		if _, ok := replicaRequestCount[replica]; !ok {
+			replicaRequestCount[replica] = 1
+		} else {
+			replicaRequestCount[replica]++
+		}
+	}
+
+	keys := reflect.ValueOf(replicaRequestCount).MapKeys()
+
+	assert.Equal(ginkgo.GinkgoT(), 2, len(keys))
+
+	// The implmentation of choice by weight doesn't guarantee exact
+	// number of requests, so verify if request imbalance is within an
+	// acceptable range.
+	assert.LessOrEqual(ginkgo.GinkgoT(), math.Abs(float64(replicaRequestCount[keys[0].String()]-replicaRequestCount[keys[1].String()]))/math.Max(float64(replicaRequestCount[keys[0].String()]), float64(replicaRequestCount[keys[1].String()])), 0.2)
+}
