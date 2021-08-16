@@ -882,6 +882,8 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 					return strings.Contains(server, "server_name foo")
 				})
 
+			// Canary weight is 1% to ensure affinity cookie does its job.
+			// affinity-canary-behavior annotation is not explicitly configured.
 			canaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":                 "true",
 				"nginx.ingress.kubernetes.io/canary-by-header":       "ForceCanary",
@@ -924,9 +926,8 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 		ginkgo.It("always routes traffic to canary if first request was affinitized to canary (explicit sticky behavior)", func() {
 			annotations := map[string]string{
-				"nginx.ingress.kubernetes.io/affinity":                 "cookie",
-				"nginx.ingress.kubernetes.io/session-cookie-name":      affinityCookieName,
-				"nginx.ingress.kubernetes.io/affinity-canary-behavior": "sticky",
+				"nginx.ingress.kubernetes.io/affinity":            "cookie",
+				"nginx.ingress.kubernetes.io/session-cookie-name": affinityCookieName,
 			}
 
 			ing := framework.NewSingleIngress(host, "/", host,
@@ -938,11 +939,14 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 					return strings.Contains(server, "server_name foo")
 				})
 
+			// Canary weight is 1% to ensure affinity cookie does its job.
+			// Explicitly set affinity-canary-behavior annotation to "sticky".
 			canaryAnnotations := map[string]string{
-				"nginx.ingress.kubernetes.io/canary":                 "true",
-				"nginx.ingress.kubernetes.io/canary-by-header":       "ForceCanary",
-				"nginx.ingress.kubernetes.io/canary-by-header-value": "yes",
-				"nginx.ingress.kubernetes.io/canary-weight":          "1",
+				"nginx.ingress.kubernetes.io/canary":                   "true",
+				"nginx.ingress.kubernetes.io/canary-by-header":         "ForceCanary",
+				"nginx.ingress.kubernetes.io/canary-by-header-value":   "yes",
+				"nginx.ingress.kubernetes.io/canary-weight":            "1",
+				"nginx.ingress.kubernetes.io/affinity-canary-behavior": "sticky",
 			}
 
 			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
@@ -994,6 +998,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				})
 
 			// Canary weight is 50% to ensure requests are going there.
+			// Explicitly set affinity-canary-behavior annotation to "legacy".
 			canaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":                   "true",
 				"nginx.ingress.kubernetes.io/canary-by-header":         "ForceCanary",
