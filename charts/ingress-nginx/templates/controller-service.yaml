@@ -58,7 +58,7 @@ spec:
     {{- end }}
   {{- end }}
   {{- range $key, $value := .Values.tcp }}
-    - name: {{ $key }}-tcp
+    - name: port-{{ $key }}-tcp
       port: {{ $key }}
       protocol: TCP
       targetPort: {{ $key }}-tcp
@@ -69,7 +69,7 @@ spec:
     {{- end }}
   {{- end }}
   {{- range $key, $value := .Values.udp }}
-    - name: {{ $key }}-udp
+    - name: port-{{ $key }}-udp
       port: {{ $key }}
       protocol: UDP
       targetPort: {{ $key }}-udp
