@@ -103,6 +103,7 @@ type Configuration struct {
 	ValidationWebhook         string
 	ValidationWebhookCertPath string
 	ValidationWebhookKeyPath  string
+	DisableFullValidationTest bool
 
 	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
 	MaxmindEditionFiles *[]string
@@ -274,6 +275,10 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
+	}
+
+	if n.cfg.DisableFullValidationTest {
+		_, _, pcfg = n.getConfiguration(ings[len(ings)-1:])
 	}
 
 	content, err := n.generateTemplate(cfg, *pcfg)
