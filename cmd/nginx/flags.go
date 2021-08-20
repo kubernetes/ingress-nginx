@@ -165,6 +165,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 			`The path of the validating webhook certificate PEM.`)
 		validationWebhookKey = flags.String("validating-webhook-key", "",
 			`The path of the validating webhook key PEM.`)
+		disableFullValidationTest = flags.Bool("disable-full-test", false,
+			`Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default)`)
 
 		statusPort = flags.Int("status-port", 10246, `Port to use for the lua HTTP endpoint configuration.`)
 		streamPort = flags.Int("stream-port", 10247, "Port to use for the lua TCP/UDP endpoint configuration.")
@@ -283,6 +285,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		ConfigMapName:              *configMap,
 		TCPConfigMapName:           *tcpConfigMapName,
 		UDPConfigMapName:           *udpConfigMapName,
+		DisableFullValidationTest:  *disableFullValidationTest,
 		DefaultSSLCertificate:      *defSSLCertificate,
 		PublishService:             *publishSvc,
 		PublishStatusAddress:       *publishStatusAddress,
