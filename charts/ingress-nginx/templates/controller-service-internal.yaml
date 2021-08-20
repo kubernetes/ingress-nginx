@@ -45,6 +45,28 @@ spec:
       nodePort: {{ .Values.controller.service.nodePorts.https }}
     {{- end }}
   {{- end }}
+  {{- range $key, $value := .Values.tcp }}
+    - name: {{ $key }}-tcp
+      port: {{ $key }}
+      protocol: TCP
+      targetPort: {{ $key }}-tcp
+    {{- if $.Values.controller.service.nodePorts.tcp }}
+    {{- if index $.Values.controller.service.nodePorts.tcp $key }}
+      nodePort: {{ index $.Values.controller.service.nodePorts.tcp $key }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- range $key, $value := .Values.udp }}
+    - name: {{ $key }}-udp
+      port: {{ $key }}
+      protocol: UDP
+      targetPort: {{ $key }}-udp
+    {{- if $.Values.controller.service.nodePorts.udp }}
+    {{- if index $.Values.controller.service.nodePorts.udp $key }}
+      nodePort: {{ index $.Values.controller.service.nodePorts.udp $key }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
   selector:
     {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: controller
