@@ -81,6 +81,82 @@ _Changes:_
 - [X] [#7216](https://github.com/kubernetes/ingress-nginx/pull/7216) Admission: Skip validation checks if an ingress 
   is marked as deleted #7216
   
+### 1.0.0-beta.3
+** This is a breaking change**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-beta.3@sha256:44a7a06b71187a4529b0a9edee5cc22bdf71b414470eff696c3869ea8d90a695`
+
+Changes:
+
+- [X] [#7487](https://github.com/kubernetes/ingress-nginx/pull/7487)[Cherry - Pick] - Fix default backend annotation and tests
+- [X] [#7459](https://github.com/kubernetes/ingress-nginx/pull/7459) Add controller.watchIngressWithoutClass config option 
+- [X] [#7478](https://github.com/kubernetes/ingress-nginx/pull/7478) Release new helm chart with certgen fixed 
+
+### 1.0.0-beta.1
+**THIS IS A BREAKING CHANGE**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-beta.1@sha256:f058f3fdc940095957695829745956c6acddcaef839907360965e27fd3348e2e`
+
+_ New Features:_
+
+_Changes:_
+
+- [X] [#7341](https://github.com/kubernetes/ingress-nginx/pull/7341) Fix IngressClass logic for newer releases (#7341)
+- [X] [#7355](https://github.com/kubernetes/ingress-nginx/pull/7355) Downgrade Lua modules for s390x (#7355)
+- [X] [#7319](https://github.com/kubernetes/ingress-nginx/pull/7319) Lower webhook timeout for digital ocean (#7319)
+- [X] [#7161](https://github.com/kubernetes/ingress-nginx/pull/7161) fix: allow scope/tcp/udp configmap namespace to altered (#7161)
+- [X] [#7331](https://github.com/kubernetes/ingress-nginx/pull/7331) Fix forwarding of auth-response-headers to gRPC backends (#7331)
+- [X] [#7332](https://github.com/kubernetes/ingress-nginx/pull/7332) controller: ignore non-service backends (#7332)
+
+### 1.0.0-alpha.2
+**THIS IS A BREAKING CHANGE**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-alpha.2@sha256:04a0ad3a1279c2a58898e789eed767eafa138ee1e5b9b23a988c6e8485cf958d`
+
+_ New Features:_
+
+- [X] [#7314](https://github.com/kubernetes/ingress-nginx/pull/7314) Add configuration to disable external name service feature
+- [X] [#7313](https://github.com/kubernetes/ingress-nginx/pull/7313) Add file containing stable release 
+- [X] [#7311](https://github.com/kubernetes/ingress-nginx/pull/7311) Handle named (non-numeric) ports correctly
+- [X] [#7308](https://github.com/kubernetes/ingress-nginx/pull/7308) Updated v1beta1 to v1 as its deprecated
+- [X] [#7298](https://github.com/kubernetes/ingress-nginx/pull/7298) Speed up admission hook by eliminating deep copy of Ingresses in CheckIngress 
+- [X] [#7242](https://github.com/kubernetes/ingress-nginx/pull/7242) Retry to download maxmind DB if it fails 
+- [X] [#7228](https://github.com/kubernetes/ingress-nginx/pull/7228) Discover mounted geoip db files
+- [X] [#7208](https://github.com/kubernetes/ingress-nginx/pull/7208) ingress/tcp: add additional error logging on failed
+- [X] [#7190](https://github.com/kubernetes/ingress-nginx/pull/7190) chart: using Helm builtin capabilities check
+- [X] [#7146](https://github.com/kubernetes/ingress-nginx/pull/7146) Use ENV expansion for namespace in args
+- [X] [#7107](https://github.com/kubernetes/ingress-nginx/pull/7107) Fix MaxWorkerOpenFiles calculation on high cores nodes
+- [X] [#7076](https://github.com/kubernetes/ingress-nginx/pull/7076) Rewrite clean-nginx-conf.sh in Go to speed up admission webhook
+- [X] [#7031](https://github.com/kubernetes/ingress-nginx/pull/7031) Remove mercurial from build
+- [X] [#6990](https://github.com/kubernetes/ingress-nginx/pull/6990) Use listen to ensure the port is free
+- [X] [#6944](https://github.com/kubernetes/ingress-nginx/pull/6944) Update proper default value for HTTP2MaxConcurrentStreams in Docs
+- [X] [#6940](https://github.com/kubernetes/ingress-nginx/pull/6940) Fix definition order of modsecurity directives 
+
+### 1.0.0-alpha.1
+**THIS IS A BREAKING CHANGE**
+
+This release only supports Kubernetes versions >= v1.19. The support for Ingress Object in `networking.k8s.io/v1beta` is being dropped and manifests should now use `networking.k8s.io/v1`.
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v1.0.0-alpha.1@sha256:32f3f02a038c0d7cf33b71a14028c3a4ddee6f4c3fe5fadfa14b915e5e0d9faf`
+
+_ New Features:_
+
+- [X] [#7156] Drops support for Ingress Object v1beta1
+
 ### 0.47.0
 
 **Image:**

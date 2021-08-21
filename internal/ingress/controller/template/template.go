@@ -31,13 +31,14 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	text_template "text/template"
 	"time"
 
 	"github.com/pkg/errors"
 
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 
@@ -519,7 +520,7 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 		return fmt.Sprintf(`~* "^%s"`, path)
 	}
 
-	if location.PathType != nil && *location.PathType == networkingv1beta1.PathTypeExact {
+	if location.PathType != nil && *location.PathType == networkingv1.PathTypeExact {
 		return fmt.Sprintf(`= %s`, path)
 	}
 
@@ -985,10 +986,12 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 		info.Path = "/"
 	}
 
-	if ing.Spec.Backend != nil {
-		info.Service = ing.Spec.Backend.ServiceName
-		if ing.Spec.Backend.ServicePort.String() != "0" {
-			info.ServicePort = ing.Spec.Backend.ServicePort.String()
+	if ing.Spec.DefaultBackend != nil && ing.Spec.DefaultBackend.Service != nil {
+		info.Service = ing.Spec.DefaultBackend.Service.Name
+		if ing.Spec.DefaultBackend.Service.Port.Number > 0 {
+			info.ServicePort = strconv.Itoa(int(ing.Spec.DefaultBackend.Service.Port.Number))
+		} else {
+			info.ServicePort = ing.Spec.DefaultBackend.Service.Port.Name
 		}
 	}
 
@@ -1015,14 +1018,16 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 				continue
 			}
 
-			if info.Service != "" && rPath.Backend.ServiceName == "" {
+			if info.Service != "" && rPath.Backend.Service.Name == "" {
 				// empty rule. Only contains a Path and PathType
 				return info
 			}
 
-			info.Service = rPath.Backend.ServiceName
-			if rPath.Backend.ServicePort.String() != "0" {
-				info.ServicePort = rPath.Backend.ServicePort.String()
+			info.Service = rPath.Backend.Service.Name
+			if rPath.Backend.Service.Port.Number > 0 {
+				info.ServicePort = strconv.Itoa(int(rPath.Backend.Service.Port.Number))
+			} else {
+				info.ServicePort = rPath.Backend.Service.Port.Name
 			}
 
 			return info

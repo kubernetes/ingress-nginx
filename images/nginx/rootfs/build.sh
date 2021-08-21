@@ -131,6 +131,13 @@ export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
 
+if [[ ${ARCH} == "s390x" ]]; then
+  export LUAJIT_VERSION=9d5750d28478abfdcaefdfdc408f87752a21e431
+  export LUA_RESTY_CORE=0.1.17
+  export LUA_NGX_VERSION=0.10.15
+  export LUA_STREAM_NGX_VERSION=0.0.7
+fi
+
 get_src()
 {
   hash="$1"
@@ -229,17 +236,30 @@ get_src 3a3a03060bf5e3fef52c9a2de02e6035cb557f389453d8f3b0c1d3d570636994 \
 get_src 754c3ace499a63e45b77ef4bcab4ee602c2c414f58403bce826b76ffc2f77d0b \
         "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
 
+if [[ ${ARCH} == "s390x" ]]; then
+get_src 7d5f3439c8df56046d0564b5857fd8a30296ab1bd6df0f048aed7afb56a0a4c2 \
+        "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
+get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
+        "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
+else
 get_src 085a9fb2bf9c4466977595a5fe5156d76f3a2d9a2a81be3cacaff2021773393e \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
 get_src ba38c9f8e4265836ba7f2ac559ddf140693ff2f5ae33ab1e384f51f3992151ab \
         "https://github.com/openresty/stream-lua-nginx-module/archive/$LUA_STREAM_NGX_VERSION.tar.gz"
 
+fi
+
 get_src a92c9ee6682567605ece55d4eed5d1d54446ba6fba748cff0a2482aea5713d5f \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/$LUA_UPSTREAM_VERSION.tar.gz"
 
+if [[ ${ARCH} == "s390x" ]]; then
+get_src 266ed1abb70a9806d97cb958537a44b67db6afb33d3b32292a2d68a2acedea75 \
+        "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
+else
 get_src 1ee6dad809a5bb22efb45e6dac767f7ce544ad652d353a93d7f26b605f69fe3f \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
+fi
 
 get_src f29393f2cd9288105a0029a6a324fe1f7558a9e7e852d59a6355f7581bb90e30 \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/$DATADOG_CPP_VERSION.tar.gz"
@@ -262,8 +282,13 @@ get_src 462c6b38792bab4ca8212bdfd3f2e38f6883bb45c8fb8a03474ea813e0fab853 \
 get_src b3d28adac2acee1e5904e9f65d6e80e0553b01647fa0701b812bc7e464de74ad \
         "https://github.com/openresty/lua-resty-balancer/archive/$LUA_RESTY_BALANCER.tar.gz"
 
+if [[ ${ARCH} == "s390x" ]]; then
+get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
+        "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
+else
 get_src 4d971f711fad48c097070457c128ca36053835d8a3ba25a937e9991547d55d4d \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
+fi
 
 get_src 8d602af2669fb386931760916a39f6c9034f2363c4965f215042c086b8215238 \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz"

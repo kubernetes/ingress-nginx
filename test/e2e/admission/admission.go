@@ -56,14 +56,14 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 
 		ginkgo.By("rejects ingress when memcached is not configured")
 
-		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating ingress with global throttle annotations when memcached is not configured")
 
 		ginkgo.By("accepts ingress when memcached is not configured")
 
 		f.UpdateNginxConfigMapData("global-rate-limit-memcached-host", "memc.default.svc.cluster.local")
 
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress with global throttle annotations when memcached is configured")
 
 		f.WaitForNginxServer(host,
@@ -76,7 +76,7 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		host := "admission-test"
 
 		firstIngress := framework.NewSingleIngress("first-ingress", "/", host, f.Namespace, framework.EchoService, 80, nil)
-		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
 
 		f.WaitForNginxServer(host,
@@ -85,7 +85,7 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 			})
 
 		secondIngress := framework.NewSingleIngress("second-ingress", "/", host, f.Namespace, framework.EchoService, 80, nil)
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with the same host and path should return an error")
 	})
 
@@ -93,7 +93,7 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		host := "admission-test"
 
 		firstIngress := framework.NewSingleIngress("first-ingress", "/", host, f.Namespace, framework.EchoService, 80, nil)
-		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
 
 		f.WaitForNginxServer(host,
@@ -106,7 +106,7 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 			"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
 		}
 		secondIngress := framework.NewSingleIngress("second-ingress", "/", host, f.Namespace, framework.SlowEchoService, 80, canaryAnnotations)
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with the same host and path should not return an error using a canary annotation")
 	})
 
@@ -117,40 +117,11 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 			"nginx.ingress.kubernetes.io/configuration-snippet": "something invalid",
 		}
 		firstIngress := framework.NewSingleIngress("first-ingress", "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid configuration should return an error")
 	})
 
-	ginkgo.It("should not return an error the ingress definition uses the deprecated extensions package", func() {
-		err := createIngress(f.Namespace, validIngress)
-		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")
-
-		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return strings.Contains(cfg, "extensions")
-		})
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", "extensions").
-			Expect().
-			Status(http.StatusOK)
-	})
-
-	ginkgo.It("should return an error if the ingress definition uses the deprecated extensions package and invalid annotations", func() {
-		err := createIngress(f.Namespace, invalidIngress)
-		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")
-
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), "extensions", metav1.GetOptions{})
-		if !apierrors.IsNotFound(err) {
-			assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid configuration should return an error")
-		}
-	})
-
-	ginkgo.It("should not return an error if the Ingress V1 definition is valid", func() {
-		if !f.IsIngressV1Ready {
-			ginkgo.Skip("Test requires Kubernetes v1.19 or higher")
-		}
-
+	ginkgo.It("should not return an error if the Ingress V1 definition is valid with Ingress Class", func() {
 		err := createIngress(f.Namespace, validV1Ingress)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")
 
@@ -165,15 +136,26 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 			Status(http.StatusOK)
 	})
 
-	ginkgo.It("should return an error if the Ingress V1 definition contains invalid annotations", func() {
-		if !f.IsIngressV1Ready {
-			ginkgo.Skip("Test requires Kubernetes v1.19 or higher")
-		}
+	ginkgo.It("should not return an error if the Ingress V1 definition is valid with IngressClass annotation", func() {
+		err := createIngress(f.Namespace, validV1IngressAnnotation)
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")
 
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "extensions-class")
+		})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", "extensions-class").
+			Expect().
+			Status(http.StatusOK)
+	})
+
+	ginkgo.It("should return an error if the Ingress V1 definition contains invalid annotations", func() {
 		err := createIngress(f.Namespace, invalidV1Ingress)
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")
 
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), "extensions", metav1.GetOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), "extensions-invalid", metav1.GetOptions{})
 		if !apierrors.IsNotFound(err) {
 			assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid configuration should return an error")
 		}
@@ -191,51 +173,37 @@ func uninstallChart(f *framework.Framework) error {
 }
 
 const (
-	validIngress = `
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: extensions
-spec:
-  rules:
-  - host: extensions
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: echo
-          servicePort: 80
----
-`
-
-	invalidIngress = `
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: extensions
-  annotations:
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      invalid directive
-spec:
-  rules:
-  - host: extensions
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: echo
-          servicePort: 80
----
-`
-
 	validV1Ingress = `
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: extensions
 spec:
+  ingressClassName: nginx
   rules:
   - host: extensions
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: echo
+            port:
+              number: 80
+
+---
+`
+	validV1IngressAnnotation = `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: extensions-class
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: extensions-class
     http:
       paths:
       - path: /
@@ -253,13 +221,14 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: extensions
+  name: extensions-invalid
   annotations:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       invalid directive
 spec:
+  ingressClassName: nginx
   rules:
-  - host: extensions
+  - host: extensions-invalid
     http:
       paths:
       - path: /

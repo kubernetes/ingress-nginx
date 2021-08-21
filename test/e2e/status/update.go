@@ -84,17 +84,17 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 		err = cmd.Process.Kill()
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error terminating kubectl proxy")
 
-		ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+		ing, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error getting %s/%v Ingress", f.Namespace, host)
 
 		ing.Status.LoadBalancer.Ingress = []apiv1.LoadBalancerIngress{}
-		_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).UpdateStatus(context.TODO(), ing, metav1.UpdateOptions{})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).UpdateStatus(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error cleaning Ingress status")
 		framework.Sleep(10 * time.Second)
 
 		err = f.KubeClientSet.CoreV1().
 			ConfigMaps(f.Namespace).
-			Delete(context.TODO(), "ingress-controller-leader-nginx", metav1.DeleteOptions{})
+			Delete(context.TODO(), "ingress-controller-leader", metav1.DeleteOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting leader election configmap")
 
 		_, cmd, err = f.KubectlProxy(port)
@@ -109,7 +109,7 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 		}()
 
 		err = wait.Poll(5*time.Second, 4*time.Minute, func() (done bool, err error) {
-			ing, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+			ing, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 			if err != nil {
 				return false, nil
 			}

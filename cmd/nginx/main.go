@@ -43,7 +43,6 @@ import (
 	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/file"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -104,35 +103,16 @@ func main() {
 	conf.FakeCertificate = ssl.GetFakeSSLCert()
 	klog.InfoS("SSL fake certificate created", "file", conf.FakeCertificate.PemFileName)
 
-	var isNetworkingIngressAvailable bool
-
-	isNetworkingIngressAvailable, k8s.IsIngressV1Beta1Ready, _ = k8s.NetworkingIngressAvailable(kubeClient)
-	if !isNetworkingIngressAvailable {
-		klog.Fatalf("ingress-nginx requires Kubernetes v1.14.0 or higher")
+	if !k8s.NetworkingIngressAvailable(kubeClient) {
+		klog.Fatalf("ingress-nginx requires Kubernetes v1.19.0 or higher")
 	}
 
-	if k8s.IsIngressV1Beta1Ready {
-		klog.InfoS("Enabling new Ingress features available since Kubernetes v1.18")
-		k8s.IngressClass, err = kubeClient.NetworkingV1beta1().IngressClasses().
-			Get(context.TODO(), class.IngressClass, metav1.GetOptions{})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				if !errors.IsUnauthorized(err) && !errors.IsForbidden(err) {
-					klog.Fatalf("Error searching IngressClass: %v", err)
-				}
-
-				klog.ErrorS(err, "Searching IngressClass", "class", class.IngressClass)
+	_, err = kubeClient.NetworkingV1().IngressClasses().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			if errors.IsUnauthorized(err) || !errors.IsForbidden(err) {
+				klog.Fatalf("Error searching IngressClass: Please verify your RBAC and allow Ingress Controller to list and get Ingress Classes: %v", err)
 			}
-
-			klog.Warningf("No IngressClass resource with name %v found. Only annotation will be used.", class.IngressClass)
-
-			// TODO: remove once this is fixed in client-go
-			k8s.IngressClass = nil
-		}
-
-		if k8s.IngressClass != nil && k8s.IngressClass.Spec.Controller != k8s.IngressNGINXController {
-			klog.Errorf(`Invalid IngressClass (Spec.Controller) value "%v". Should be "%v"`, k8s.IngressClass.Spec.Controller, k8s.IngressNGINXController)
-			klog.Fatalf("IngressClass with name %v is not valid for ingress-nginx (invalid Spec.Controller)", class.IngressClass)
 		}
 	}
 
@@ -153,7 +133,7 @@ func main() {
 
 	mc := metric.NewDummyCollector()
 	if conf.EnableMetrics {
-		mc, err = metric.NewCollector(conf.MetricsPerHost, reg)
+		mc, err = metric.NewCollector(conf.MetricsPerHost, reg, conf.IngressClassConfiguration.Controller)
 		if err != nil {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}
