@@ -169,6 +169,7 @@ apk add \
   geoip-dev \
   perl-dev \
   libedit-dev \
+  mercurial \
   alpine-sdk \
   findutils \
   curl ca-certificates \
@@ -241,10 +242,12 @@ get_src 7d5f3439c8df56046d0564b5857fd8a30296ab1bd6df0f048aed7afb56a0a4c2 \
 get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 else
-get_src 7dc05df3d1824b02c6958ff37f9e682b73c1737dcfee93212ca3f6c5bfae08f3 \
+get_src 085a9fb2bf9c4466977595a5fe5156d76f3a2d9a2a81be3cacaff2021773393e \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
-get_src 6fcf7054f412a19c23c1ac3c0663f42f40bccc907d98c5d1657ae5cab9973ee9 \
-        "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
+
+get_src ba38c9f8e4265836ba7f2ac559ddf140693ff2f5ae33ab1e384f51f3992151ab \
+        "https://github.com/openresty/stream-lua-nginx-module/archive/$LUA_STREAM_NGX_VERSION.tar.gz"
+
 fi
 
 get_src a92c9ee6682567605ece55d4eed5d1d54446ba6fba748cff0a2482aea5713d5f \
@@ -254,7 +257,7 @@ if [[ ${ARCH} == "s390x" ]]; then
 get_src 266ed1abb70a9806d97cb958537a44b67db6afb33d3b32292a2d68a2acedea75 \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 else
-get_src f74a0821b079ea1fd63dd8659064356fc3f421ff4b35c17877140d2b2841cc3b \
+get_src 1ee6dad809a5bb22efb45e6dac767f7ce544ad652d353a93d7f26b605f69fe3f \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 fi
 
@@ -283,7 +286,7 @@ if [[ ${ARCH} == "s390x" ]]; then
 get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 else
-get_src a377fbce78ba10f3ed3a8b5173ea318f8cf8da9d2ab127bb1e1f263078bf7da0 \
+get_src 4d971f711fad48c097070457c128ca36053835d8a3ba25a937e9991547d55d4d \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 fi
 
