@@ -49,7 +49,6 @@ import (
 	adm_controller "k8s.io/ingress-nginx/internal/admission/controller"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -130,7 +129,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		config.ResyncPeriod,
 		config.Client,
 		n.updateCh,
-		config.DisableCatchAll)
+		config.DisableCatchAll,
+		config.IngressClassConfiguration)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -256,10 +256,10 @@ func (n *NGINXController) Start() {
 
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
-	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.DefaultClass)
-	if class.IngressClass != "" {
-		electionID = fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.IngressClass)
-	}
+	// TODO: For now, as the the IngressClass logics has changed, is up to the
+	// cluster admin to create different Leader Election IDs.
+	// Should revisit this in a future
+	electionID := n.cfg.ElectionID
 
 	setupLeaderElection(&leaderElectionConfig{
 		Client:     n.cfg.Client,
@@ -511,12 +511,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 	if cfg.MaxWorkerOpenFiles == 0 {
 		// the limit of open files is per worker process
 		// and we leave some room to avoid consuming all the FDs available
-		wp, err := strconv.Atoi(cfg.WorkerProcesses)
-		klog.V(3).InfoS("Worker processes", "count", wp)
-		if err != nil {
-			wp = 1
-		}
-		maxOpenFiles := (rlimitMaxNumFiles() / wp) - 1024
+		maxOpenFiles := rlimitMaxNumFiles() - 1024
 		klog.V(3).InfoS("Maximum number of open file descriptors", "value", maxOpenFiles)
 		if maxOpenFiles < 1024 {
 			// this means the value of RLIMIT_NOFILE is too low.

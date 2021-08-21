@@ -21,13 +21,13 @@ import (
 
 	"github.com/onsi/ginkgo"
 
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeSetting("server-tokens", func() {
+	pathtype := networking.PathTypePrefix
 	f := framework.NewDefaultFramework("server-tokens")
 	serverTokens := "server-tokens"
 
@@ -57,6 +57,7 @@ var _ = framework.DescribeSetting("server-tokens", func() {
 				Annotations: map[string]string{},
 			},
 			Spec: networking.IngressSpec{
+				IngressClassName: &f.IngressClass,
 				Rules: []networking.IngressRule{
 					{
 						Host: serverTokens,
@@ -64,10 +65,15 @@ var _ = framework.DescribeSetting("server-tokens", func() {
 							HTTP: &networking.HTTPIngressRuleValue{
 								Paths: []networking.HTTPIngressPath{
 									{
-										Path: "/",
+										Path:     "/",
+										PathType: &pathtype,
 										Backend: networking.IngressBackend{
-											ServiceName: framework.EchoService,
-											ServicePort: intstr.FromInt(80),
+											Service: &networking.IngressServiceBackend{
+												Name: framework.EchoService,
+												Port: networking.ServiceBackendPort{
+													Number: int32(80),
+												},
+											},
 										},
 									},
 								},

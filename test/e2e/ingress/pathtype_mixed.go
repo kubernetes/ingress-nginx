@@ -23,7 +23,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -34,12 +34,9 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] mix Exact and Prefi
 		f.NewEchoDeployment()
 	})
 
-	var exactPathType = networkingv1beta1.PathTypeExact
+	var exactPathType = networking.PathTypeExact
 
 	ginkgo.It("should choose the correct location", func() {
-		if !f.IsIngressV1Beta1Ready {
-			ginkgo.Skip("Test requires Kubernetes v1.18 or higher")
-		}
 
 		host := "mixed.path"
 
