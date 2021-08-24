@@ -1203,6 +1203,49 @@ func TestGetIngressInformation(t *testing.T) {
 				ServicePort: "b-svc-80",
 			},
 		},
+		"valid ingress definition with name demo in namespace something and path /ok with a nil backend service": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "demo",
+						Namespace: "something",
+						Annotations: map[string]string{
+							"ingress.annotation": "ok",
+						},
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "foo.bar",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/ok",
+												PathType: &pathPrefix,
+												Backend: networking.IngressBackend{
+													Service: nil,
+												},
+											},
+										},
+									},
+								},
+							},
+							{},
+						},
+					},
+				},
+			},
+			"foo.bar",
+			"/ok",
+			&ingressInformation{
+				Namespace: "something",
+				Rule:      "demo",
+				Annotations: map[string]string{
+					"ingress.annotation": "ok",
+				},
+			},
+		},
 	}
 
 	for title, testCase := range testcases {
