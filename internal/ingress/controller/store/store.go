@@ -151,20 +151,33 @@ func (e NotExistsError) Error() string {
 func (i *Informer) Run(stopCh chan struct{}) {
 	go i.Secret.Run(stopCh)
 	go i.Endpoint.Run(stopCh)
-	go i.IngressClass.Run(stopCh)
+	if nil != i.IngressClass {
+		go i.IngressClass.Run(stopCh)
+	}
 	go i.Service.Run(stopCh)
 	go i.ConfigMap.Run(stopCh)
 
 	// wait for all involved caches to be synced before processing items
 	// from the queue
-	if !cache.WaitForCacheSync(stopCh,
-		i.Endpoint.HasSynced,
-		i.IngressClass.HasSynced,
-		i.Service.HasSynced,
-		i.Secret.HasSynced,
-		i.ConfigMap.HasSynced,
-	) {
-		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
+	if nil != i.IngressClass {
+		if !cache.WaitForCacheSync(stopCh,
+			i.Endpoint.HasSynced,
+			i.IngressClass.HasSynced,
+			i.Service.HasSynced,
+			i.Secret.HasSynced,
+			i.ConfigMap.HasSynced,
+		) {
+			runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
+		}
+	} else {
+		if !cache.WaitForCacheSync(stopCh,
+			i.Endpoint.HasSynced,
+			i.Service.HasSynced,
+			i.Secret.HasSynced,
+			i.ConfigMap.HasSynced,
+		) {
+			runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
+		}
 	}
 
 	// in big clusters, deltas can keep arriving even after HasSynced
@@ -300,8 +313,10 @@ func New(
 	store.informers.Ingress = infFactory.Networking().V1().Ingresses().Informer()
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
 
-	store.informers.IngressClass = infFactory.Networking().V1().IngressClasses().Informer()
-	store.listers.IngressClass.Store = cache.NewStore(cache.MetaNamespaceKeyFunc)
+	if !icConfig.IgnoreIngressClass {
+		store.informers.IngressClass = infFactory.Networking().V1().IngressClasses().Informer()
+		store.listers.IngressClass.Store = cache.NewStore(cache.MetaNamespaceKeyFunc)
+	}
 
 	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
 	store.listers.Endpoint.Store = store.informers.Endpoint.GetStore()
@@ -676,7 +691,9 @@ func New(
 	}
 
 	store.informers.Ingress.AddEventHandler(ingEventHandler)
-	store.informers.IngressClass.AddEventHandler(ingressClassEventHandler)
+	if !icConfig.IgnoreIngressClass {
+		store.informers.IngressClass.AddEventHandler(ingressClassEventHandler)
+	}
 	store.informers.Endpoint.AddEventHandler(epEventHandler)
 	store.informers.Secret.AddEventHandler(secrEventHandler)
 	store.informers.ConfigMap.AddEventHandler(cmEventHandler)

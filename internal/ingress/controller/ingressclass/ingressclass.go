@@ -42,4 +42,7 @@ type IngressClassConfiguration struct {
 	// WatchWithoutClass defines if Controller should watch to Ingress Objects that does
 	// not contain an IngressClass configuration
 	WatchWithoutClass bool
+	// IgnoreIngressClass defines if Controller should ignore the IngressClass Object if no permissions are
+	// granted on IngressClass
+	IgnoreIngressClass bool
 }
