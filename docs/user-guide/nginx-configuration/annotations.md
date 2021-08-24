@@ -141,7 +141,7 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 Canary rules are evaluated in order of precedence. Precedence is as follows:
 `canary-by-header -> canary-by-cookie -> canary-weight`
 
-**Note** that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except `nginx.ingress.kubernetes.io/load-balance`, `nginx.ingress.kubernetes.io/upstream-hash-by`, and [annotations related to session affinity](#session-affinity). If you want to restore the original behavior of canaries when session affinity was ignored, set `nginx.ingress.kubernetes.io/affinity-canary-behavior` annotation with value `legacy` on the non-canary ingress definition.
+**Note** that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except `nginx.ingress.kubernetes.io/load-balance`, `nginx.ingress.kubernetes.io/upstream-hash-by`, and [annotations related to session affinity](#session-affinity). If you want to restore the original behavior of canaries when session affinity was ignored, set `nginx.ingress.kubernetes.io/affinity-canary-behavior` annotation with value `legacy` on the canary ingress definition.
 
 **Known Limitations**
 

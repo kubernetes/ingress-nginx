@@ -66,7 +66,7 @@ var _ = framework.DescribeSetting("[Load Balancer] round-robin", func() {
 		}
 
 		for _, v := range replicaRequestCount {
-			assert.Equal(ginkgo.GinkgoT(), v, 200)
+			assert.Equal(ginkgo.GinkgoT(), 200, v)
 		}
 	})
 })
