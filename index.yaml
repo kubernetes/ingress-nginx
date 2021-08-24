@@ -3,6 +3,32 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Support for Ingress object v1 and drop support for v1beta1
+        - Update to go 1.17
+        - Fix some bugs
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.0.0
+    created: "2021-08-24T15:32:20.26472923Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 8ec593a5d3b7dea0295305b384d993817c40e4047b4ae2ed549b895435c5b417
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.19.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.0.1/ingress-nginx-4.0.1.tgz
+    version: 4.0.1
+  - annotations:
+      artifacthub.io/changes: |
         - Fix default backend annotation and tests
       artifacthub.io/prerelease: "true"
     apiVersion: v2
