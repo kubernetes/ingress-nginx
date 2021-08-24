@@ -11,7 +11,7 @@ This release only supports Kubernetes versions >= v1.19. The support for Ingress
 
 **Known Issues**
 Ingress Controller only supports cluster scoped IngressClass and needs cluster wide permission for this object, otherwise it is not going to start.
-We plan to fix this in v1.0.1
+We plan to fix this in v1.0.1 and issues #7510 and #7502 are tracking this.
 
 Changes:
 - [X] [#7529](https://github.com/kubernetes/ingress-nginx/pull/7529) End-to-end tests for canary affinity
