@@ -69,7 +69,7 @@ func buildIngressWithNonServiceBackend(host, namespace, path string) *networking
 	apiGroup := "otherobj.testingress.com"
 	obj := corev1.TypedLocalObjectReference{
 		Kind:     "Anything",
-		Name:     "meutest",
+		Name:     "mytest",
 		APIGroup: &apiGroup,
 	}
 
