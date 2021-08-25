@@ -125,6 +125,7 @@ http {
     }
 
     init_worker_by_lua_block {
+        plugins.run_before()
         lua_ingress.init_worker()
         balancer.init_worker()
         {{ if $all.EnableMetrics }}
@@ -1199,6 +1200,7 @@ stream {
             {{ end }}
 
             rewrite_by_lua_block {
+                plugins.run_before()
                 lua_ingress.rewrite({{ locationConfigForLua $location $all }})
                 balancer.rewrite()
                 plugins.run()
@@ -1211,15 +1213,18 @@ stream {
             #}
 
             header_filter_by_lua_block {
+                plugins.run_before()
                 lua_ingress.header()
                 plugins.run()
             }
 
             body_filter_by_lua_block {
+                plugins.run_before()
                 plugins.run()
             }
 
             log_by_lua_block {
+                plugins.run_before()
                 balancer.log()
                 {{ if $all.EnableMetrics }}
                 monitor.call()
