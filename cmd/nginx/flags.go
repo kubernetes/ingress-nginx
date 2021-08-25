@@ -162,6 +162,7 @@ Requires the update-status parameter.`)
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
+		healthzHost   = flags.String("healthz-host", "", "Address to bind the healthz endpoint.")
 
 		disableCatchAll = flags.Bool("disable-catch-all", false,
 			`Disable support for catch-all Ingresses`)
@@ -286,6 +287,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		ShutdownGracePeriod:        *shutdownGracePeriod,
 		UseNodeInternalIP:          *useNodeInternalIP,
 		SyncRateLimit:              *syncRateLimit,
+		HealthCheckHost:            *healthzHost,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
