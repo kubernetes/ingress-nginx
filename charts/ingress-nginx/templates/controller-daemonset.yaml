@@ -111,6 +111,9 @@ spec:
           {{- if not (eq .Values.controller.healthCheckPath "/healthz") }}
             - --health-check-path={{ .Values.controller.healthCheckPath }}
           {{- end }}
+          {{- if not (eq .Values.controller.healthCheckHost "") }}
+            - --healthz-host={{ .Values.controller.healthCheckHost }}
+          {{- end }}
           {{- if .Values.controller.watchIngressWithoutClass }}
             - --watch-ingress-without-class=true
           {{- end }}
