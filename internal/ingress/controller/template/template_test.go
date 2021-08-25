@@ -1227,6 +1227,18 @@ func TestGetIngressInformation(t *testing.T) {
 													Service: nil,
 												},
 											},
+											{
+												Path:     "/oksvc",
+												PathType: &pathPrefix,
+												Backend: networking.IngressBackend{
+													Service: &networking.IngressServiceBackend{
+														Name: "b-svc",
+														Port: networking.ServiceBackendPort{
+															Name: "b-svc-80",
+														},
+													},
+												},
+											},
 										},
 									},
 								},
