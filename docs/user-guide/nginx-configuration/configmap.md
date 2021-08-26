@@ -397,6 +397,24 @@ Sets the time during which a keep-alive client connection will stay open on the 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout)
 
+!!! important
+    Setting `keep-alive: '0'` will most likely break concurrent http/2 requests due to changes introduced with nginx 1.19.7
+
+```
+Changes with nginx 1.19.7                                        16 Feb 2021
+
+    *) Change: connections handling in HTTP/2 has been changed to better
+       match HTTP/1.x; the "http2_recv_timeout", "http2_idle_timeout", and
+       "http2_max_requests" directives have been removed, the
+       "keepalive_timeout" and "keepalive_requests" directives should be
+       used instead.
+```
+
+_References:_
+[nginx change log](http://nginx.org/en/CHANGES)
+[nginx issue tracker](https://trac.nginx.org/nginx/ticket/2155)
+[nginx mailing list](https://mailman.nginx.org/pipermail/nginx/2021-May/060697.html)
+
 ## keep-alive-requests
 
 Sets the maximum number of requests that can be served through one keep-alive connection.
