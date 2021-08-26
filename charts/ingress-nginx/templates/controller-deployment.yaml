@@ -109,7 +109,7 @@ spec:
           {{- if .Values.controller.maxmindLicenseKey }}
             - --maxmind-license-key={{ .Values.controller.maxmindLicenseKey }}
           {{- end }}
-          {{- if not (eq .Values.controller.healthCheckHost "") }}
+          {{- if .Values.controller.healthCheckHost }}
             - --healthz-host={{ .Values.controller.healthCheckHost }}
           {{- end }}
           {{- if not (eq .Values.controller.healthCheckPath "/healthz") }}
