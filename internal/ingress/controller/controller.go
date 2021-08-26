@@ -83,7 +83,8 @@ type Configuration struct {
 	ElectionID             string
 	UpdateStatusOnShutdown bool
 
-	ListenPorts *ngx_config.ListenPorts
+	HealthCheckHost string
+	ListenPorts     *ngx_config.ListenPorts
 
 	DisableServiceExternalName bool
 

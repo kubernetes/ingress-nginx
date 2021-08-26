@@ -311,6 +311,11 @@ controller:
   # the healthz-port parameter are forwarded internally to this path.
   healthCheckPath: "/healthz"
 
+  # Address to bind the health check endpoint.
+  # It is better to set this option to the internal node address
+  # if the ingress nginx controller is running in the hostNetwork: true mode.
+  healthCheckHost: ""
+
   ## Annotations to be added to controller pods
   ##
   podAnnotations: {}
