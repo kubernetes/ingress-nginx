@@ -150,7 +150,7 @@ func main() {
 	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
 
-	go startHTTPServer(conf.ListenPorts.Health, mux)
+	go startHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
 	go ngx.Start()
 
 	handleSigterm(ngx, func(code int) {
@@ -324,9 +324,9 @@ func registerProfiler() {
 	klog.Fatal(server.ListenAndServe())
 }
 
-func startHTTPServer(port int, mux *http.ServeMux) {
+func startHTTPServer(host string, port int, mux *http.ServeMux) {
 	server := &http.Server{
-		Addr:              fmt.Sprintf(":%v", port),
+		Addr:              fmt.Sprintf("%s:%v", host, port),
 		Handler:           mux,
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
