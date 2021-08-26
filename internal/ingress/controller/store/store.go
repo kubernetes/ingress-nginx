@@ -151,7 +151,7 @@ func (e NotExistsError) Error() string {
 func (i *Informer) Run(stopCh chan struct{}) {
 	go i.Secret.Run(stopCh)
 	go i.Endpoint.Run(stopCh)
-	if nil != i.IngressClass {
+	if i.IngressClass != nil {
 		go i.IngressClass.Run(stopCh)
 	}
 	go i.Service.Run(stopCh)
@@ -159,27 +159,19 @@ func (i *Informer) Run(stopCh chan struct{}) {
 
 	// wait for all involved caches to be synced before processing items
 	// from the queue
-	if nil != i.IngressClass {
-		if !cache.WaitForCacheSync(stopCh,
-			i.Endpoint.HasSynced,
-			i.IngressClass.HasSynced,
-			i.Service.HasSynced,
-			i.Secret.HasSynced,
-			i.ConfigMap.HasSynced,
-		) {
-			runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
-		}
-	} else {
-		if !cache.WaitForCacheSync(stopCh,
-			i.Endpoint.HasSynced,
-			i.Service.HasSynced,
-			i.Secret.HasSynced,
-			i.ConfigMap.HasSynced,
-		) {
-			runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
-		}
+	if !cache.WaitForCacheSync(stopCh,
+		i.Endpoint.HasSynced,
+		i.Service.HasSynced,
+		i.Secret.HasSynced,
+		i.ConfigMap.HasSynced,
+	) {
+		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
-
+	if i.IngressClass != nil && !cache.WaitForCacheSync(stopCh, i.IngressClass.HasSynced) {
+	{
+		runtime.HandleError(fmt.Errorf("timed out waiting for ingress classcaches to sync"))
+	}
+	
 	// in big clusters, deltas can keep arriving even after HasSynced
 	// functions have returned 'true'
 	time.Sleep(1 * time.Second)
@@ -400,8 +392,13 @@ func New(
 			oldIng, _ := toIngress(old)
 			curIng, _ := toIngress(cur)
 
-			_, errOld := store.GetIngressClass(oldIng, icConfig)
-			classCur, errCur := store.GetIngressClass(curIng, icConfig)
+			var errOld, errCur error
+			var classCur string
+			if !icConfig.IgnoreIngressClass {
+				_, errOld = store.GetIngressClass(oldIng, icConfig)
+				classCur, errCur = store.GetIngressClass(curIng, icConfig)
+			}
+			
 			if errOld != nil && errCur == nil {
 				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(curIng))
