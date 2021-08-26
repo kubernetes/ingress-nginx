@@ -168,10 +168,9 @@ func (i *Informer) Run(stopCh chan struct{}) {
 		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 	}
 	if i.IngressClass != nil && !cache.WaitForCacheSync(stopCh, i.IngressClass.HasSynced) {
-	{
 		runtime.HandleError(fmt.Errorf("timed out waiting for ingress classcaches to sync"))
 	}
-	
+
 	// in big clusters, deltas can keep arriving even after HasSynced
 	// functions have returned 'true'
 	time.Sleep(1 * time.Second)
@@ -398,7 +397,6 @@ func New(
 				_, errOld = store.GetIngressClass(oldIng, icConfig)
 				classCur, errCur = store.GetIngressClass(curIng, icConfig)
 			}
-			
 			if errOld != nil && errCur == nil {
 				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(curIng))
