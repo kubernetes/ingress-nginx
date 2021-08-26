@@ -37,7 +37,49 @@ spec:
             name: myserviceb
             port:
               number: 80
-</code></pre></div> <p>When you apply this yaml, 2 ingress resources will be created managed by the <strong>ingress-nginx</strong> instance. Nginx is configured to automatically discover all ingress with the <code>kubernetes.io/ingress.class: "nginx"</code> annotation. Please note that the ingress resource should be placed inside the same namespace of the backend resource.</p> <p>On many cloud providers ingress-nginx will also create the corresponding Load Balancer resource. All you have to do is get the external IP and add a DNS <code>A record</code> inside your DNS provider that point myServiceA.foo.org and myServiceB.foo.org to the nginx external IP. Get the external IP by running:</p> <div class=highlight><pre><span></span><code>kubectl get services -n ingress-nginx
+</code></pre></div> <p>When you apply this yaml, 2 ingress resources will be created managed by the <strong>ingress-nginx</strong> instance. Nginx is configured to automatically discover all ingress with the <code>kubernetes.io/ingress.class: "nginx"</code> annotation. Please note that the ingress resource should be placed inside the same namespace of the backend resource.</p> <p>If cluster version &gt;= 1.19 the Ingress resource above will not work. You need to deploy the following so that it match the new api version. This will require changes to the Ingress objects as shown below, and a new object from type "kind: IngressClass" <div class=highlight><pre><span></span><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-myservicea
+spec:
+  rules:
+  - host: myservicea.foo.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myservicea
+            port: 
+              number: 80
+  ingressClassName: nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-myserviceb
+spec:
+  rules:
+  - host: myserviceb.foo.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myserviceb
+            port: 
+              number: 80
+  ingressClassName: nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx
+spec:
+  controller: k8s.io/ingress-nginx
+</code></pre></div></p> <p>On many cloud providers ingress-nginx will also create the corresponding Load Balancer resource. All you have to do is get the external IP and add a DNS <code>A record</code> inside your DNS provider that point myServiceA.foo.org and myServiceB.foo.org to the nginx external IP. Get the external IP by running:</p> <div class=highlight><pre><span></span><code>kubectl get services -n ingress-nginx
 </code></pre></div> </article> </div> </div> </main> <footer class=md-footer> <div class=md-footer-nav> <nav class="md-footer-nav__inner md-grid" aria-label=Footer> <a href=../nginx-configuration/ class="md-footer-nav__link md-footer-nav__link--prev" rel=prev> <div class="md-footer-nav__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg> </div> <div class=md-footer-nav__title> <div class=md-ellipsis> <span class=md-footer-nav__direction> Previous </span> Introduction </div> </div> </a> <a href=../nginx-configuration/annotations/ class="md-footer-nav__link md-footer-nav__link--next" rel=next> <div class=md-footer-nav__title> <div class=md-ellipsis> <span class=md-footer-nav__direction> Next </span> Annotations </div> </div> <div class="md-footer-nav__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg> </div> </a> </nav> </div> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-footer-copyright> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> </div> </div> </footer> </div> <script src=../../assets/javascripts/vendor.93c04032.min.js></script> <script src=../../assets/javascripts/bundle.83e5331e.min.js></script><script id=__lang type=application/json>{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script> <script>
         app = initialize({
           base: "../..",
