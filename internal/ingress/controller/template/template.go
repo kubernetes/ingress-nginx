@@ -1018,6 +1018,10 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 				continue
 			}
 
+			if rPath.Backend.Service == nil {
+				continue
+			}
+
 			if info.Service != "" && rPath.Backend.Service.Name == "" {
 				// empty rule. Only contains a Path and PathType
 				return info
