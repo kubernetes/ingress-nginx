@@ -1,0 +1,26 @@
+# HG changeset patch
+# User Yichun Zhang <agentzh@gmail.com>
+# Date 1386694955 28800
+# Node ID 9ba6b149669f1f02eeb4cdc0ebd364a949b5c469
+# Parent  30e806b8636af5fd3f03ec17df24801f390f7511
+Configure: added new option --with-pcre-conf-opt=OPTIONS.
+
+diff -r 30e806b8636a -r 9ba6b149669f auto/options
+--- a/auto/options	Mon Dec 09 10:16:44 2013 +0400
++++ b/auto/options	Tue Dec 10 09:02:35 2013 -0800
+@@ -286,6 +286,7 @@
+         --with-pcre)                     USE_PCRE=YES               ;;
+         --with-pcre=*)                   PCRE="$value"              ;;
+         --with-pcre-opt=*)               PCRE_OPT="$value"          ;;
++        --with-pcre-conf-opt=*)          PCRE_CONF_OPT="$value"     ;;
+         --with-pcre-jit)                 PCRE_JIT=YES               ;;
+ 
+         --with-openssl=*)                OPENSSL="$value"           ;;
+@@ -441,6 +442,7 @@
+   --with-pcre                        force PCRE library usage
+   --with-pcre=DIR                    set path to PCRE library sources
+   --with-pcre-opt=OPTIONS            set additional build options for PCRE
++  --with-pcre-conf-opt=OPTIONS       set additional configure options for PCRE
+   --with-pcre-jit                    build PCRE with JIT compilation support
+ 
+   --with-md5=DIR                     set path to md5 library sources

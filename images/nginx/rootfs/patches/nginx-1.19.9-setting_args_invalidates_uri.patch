@@ -1,0 +1,44 @@
+# HG changeset patch
+# User Yichun Zhang <agentzh@gmail.com>
+# Date 1390506359 28800
+# Node ID 17186b98c235c07e94c64e5853689f790f173756
+# Parent  4b50d1f299d8a69f3e3f7975132e1490352642fe
+Variable: setting $args should invalidate unparsed uri.
+
+diff -r 4b50d1f299d8 -r 17186b98c235 src/http/ngx_http_variables.c
+--- a/src/http/ngx_http_variables.c	Fri Jan 10 11:22:14 2014 -0800
++++ b/src/http/ngx_http_variables.c	Thu Jan 23 11:45:59 2014 -0800
+@@ -15,6 +15,8 @@
+     ngx_http_variable_value_t *v, uintptr_t data);
+ static void ngx_http_variable_request_set(ngx_http_request_t *r,
+     ngx_http_variable_value_t *v, uintptr_t data);
++static void ngx_http_variable_request_args_set(ngx_http_request_t *r,
++    ngx_http_variable_value_t *v, uintptr_t data);
+ static ngx_int_t ngx_http_variable_request_get_size(ngx_http_request_t *r,
+     ngx_http_variable_value_t *v, uintptr_t data);
+ static void ngx_http_variable_request_set_size(ngx_http_request_t *r,
+@@ -218,7 +220,7 @@
+       NGX_HTTP_VAR_NOCACHEABLE, 0 },
+ 
+     { ngx_string("args"),
+-      ngx_http_variable_request_set,
++      ngx_http_variable_request_args_set,
+       ngx_http_variable_request,
+       offsetof(ngx_http_request_t, args),
+       NGX_HTTP_VAR_CHANGEABLE|NGX_HTTP_VAR_NOCACHEABLE, 0 },
+@@ -647,6 +649,15 @@
+ 
+ 
+ static void
++ngx_http_variable_request_args_set(ngx_http_request_t *r,
++    ngx_http_variable_value_t *v, uintptr_t data)
++{
++    r->valid_unparsed_uri = 0;
++    ngx_http_variable_request_set(r, v, data);
++}
++
++
++static void
+ ngx_http_variable_request_set(ngx_http_request_t *r,
+     ngx_http_variable_value_t *v, uintptr_t data)
+ {

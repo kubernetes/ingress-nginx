@@ -1,0 +1,15 @@
+diff --git a/src/os/win32/ngx_event_log.c b/src/os/win32/ngx_event_log.c
+index e11ed1e8..dce8eddd 100644
+--- a/src/os/win32/ngx_event_log.c
++++ b/src/os/win32/ngx_event_log.c
+@@ -8,7 +8,9 @@
+ #include <ngx_core.h>
+ 
+ 
+-#define NGX_MAX_ERROR_STR   2048
++#ifndef NGX_MAX_ERROR_STR
++#define NGX_MAX_ERROR_STR   4096
++#endif
+ 
+ 
+ void ngx_cdecl
