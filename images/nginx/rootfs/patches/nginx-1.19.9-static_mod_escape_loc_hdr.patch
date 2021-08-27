@@ -1,0 +1,50 @@
+diff --git a/src/http/modules/ngx_http_static_module.c b/src/http/modules/ngx_http_static_module.c
+index 282d6ee..899e11e 100644
+--- a/src/http/modules/ngx_http_static_module.c
++++ b/src/http/modules/ngx_http_static_module.c
+@@ -58,6 +58,8 @@ ngx_http_static_handler(ngx_http_request_t *r)
+     ngx_chain_t                out;
+     ngx_open_file_info_t       of;
+     ngx_http_core_loc_conf_t  *clcf;
++    u_char                    *uri;
++    uintptr_t                  escape;
+ 
+     if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD|NGX_HTTP_POST))) {
+         return NGX_HTTP_NOT_ALLOWED;
+@@ -162,9 +164,21 @@ ngx_http_static_handler(ngx_http_request_t *r)
+ 
+             *last = '/';
+ 
++            escape = 2 * ngx_escape_uri(NULL, location, len, NGX_ESCAPE_URI);
++            if (escape > 0) {
++                uri = ngx_pnalloc(r->pool, len + escape);
++                if (uri == NULL) {
++                   return NGX_ERROR;
++                }
++                ngx_escape_uri(uri, location, len, NGX_ESCAPE_URI);
++                location = uri;
++                len += escape;
++            }
++
+         } else {
++            escape = 2 * ngx_escape_uri(NULL, r->uri.data, r->uri.len, NGX_ESCAPE_URI);
+             if (r->args.len) {
+-                len += r->args.len + 1;
++                len += r->args.len + 1 + escape;
+             }
+ 
+             location = ngx_pnalloc(r->pool, len);
+@@ -173,7 +187,12 @@ ngx_http_static_handler(ngx_http_request_t *r)
+                 return NGX_HTTP_INTERNAL_SERVER_ERROR;
+             }
+ 
+-            last = ngx_copy(location, r->uri.data, r->uri.len);
++            if (escape > 0) {
++                last = (u_char *) ngx_escape_uri(location, r->uri.data, r->uri.len, NGX_ESCAPE_URI);
++
++            } else {
++                last = ngx_copy(location, r->uri.data, r->uri.len);
++            }
+ 
+             *last = '/';
+ 
