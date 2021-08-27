@@ -841,7 +841,7 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 
 func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.IngressClassConfiguration) (string, error) {
 	// First we try ingressClassName
-	if ing.Spec.IngressClassName != nil {
+	if !icConfig.IgnoreIngressClass && ing.Spec.IngressClassName != nil {
 		iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
 		if err != nil {
 			return "", err
