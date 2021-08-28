@@ -151,7 +151,7 @@ diff --git a/src/os/unix/ngx_process_cycle.c b/src/os/unix/ngx_process_cycle.c
 index c4376a5..48e8fa8 100644
 --- a/src/os/unix/ngx_process_cycle.c
 +++ b/src/os/unix/ngx_process_cycle.c
-@@ -960,6 +1029,9 @@ ngx_worker_process_exit(ngx_cycle_t *cycle)
+@@ -1032,6 +1032,9 @@ ngx_worker_process_exit(ngx_cycle_t *cycle)
          for (i = 0; i < cycle->connection_n; i++) {
              if (c[i].fd != -1
                  && c[i].read
