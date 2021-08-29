@@ -35,7 +35,7 @@ This mechanism also provides users the ability to run _multiple_ NGINX ingress c
 To do this, the option `--ingress-class` must be changed to a value unique for the cluster within the definition of the replication controller.
 Here is a partial example:
 
-The flags regarding the option `--ingress-class` will be diasbaled soon, instead use `--ingressClassName`
+The flags regarding the option `--ingress-class` will be diasbaled soon,instead use `--ingressClassName`
 
 ```yaml
 spec:
