@@ -87,13 +87,18 @@ function _M.set_cookie(self, value)
     end
   end
 
+  local cookie_secure = self.cookie_session_affinity.secure
+  if cookie_secure == nil then
+    cookie_secure = ngx.var.https == "on"
+  end
+
   local cookie_data = {
     key = self:cookie_name(),
     value = value .. COOKIE_VALUE_DELIMITER .. self.backend_key,
     path = cookie_path,
     httponly = true,
     samesite = cookie_samesite,
-    secure = ngx.var.https == "on",
+    secure = cookie_secure,
   }
 
   if self.cookie_session_affinity.expires and self.cookie_session_affinity.expires ~= "" then
