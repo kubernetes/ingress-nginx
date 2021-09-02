@@ -110,8 +110,11 @@ func main() {
 	_, err = kubeClient.NetworkingV1().IngressClasses().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			if errors.IsUnauthorized(err) || !errors.IsForbidden(err) {
+			if errors.IsUnauthorized(err) {
 				klog.Fatalf("Error searching IngressClass: Please verify your RBAC and allow Ingress Controller to list and get Ingress Classes: %v", err)
+			} else if errors.IsForbidden(err) {
+				klog.Warningf("No permissions to list and get Ingress Classes: %v, IngressClass feature will be disabled", err)
+				conf.IngressClassConfiguration.IgnoreIngressClass = true
 			}
 		}
 	}
