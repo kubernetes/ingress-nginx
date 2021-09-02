@@ -5,6 +5,7 @@ metadata:
     nginx.ingress.kubernetes.io/auth-url: "https://httpbin.org/basic-auth/user/passwd"
   name: external-auth
 spec:
+  ingressClassName: nginx
   rules:
   - host: external-auth-01.sample.com
     http:

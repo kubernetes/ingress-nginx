@@ -42,6 +42,7 @@ metadata:
   name: rewrite
   namespace: default
 spec:
+  ingressClassName: nginx
   rules:
   - host: rewrite.bar.com
     http:
@@ -77,6 +78,7 @@ metadata:
   name: approot
   namespace: default
 spec:
+  ingressClassName: nginx
   rules:
   - host: approot.bar.com
     http:

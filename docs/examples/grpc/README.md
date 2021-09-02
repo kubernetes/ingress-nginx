@@ -16,11 +16,11 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
   ```
   $ kubectl get po -A -o wide | grep go-grpc-greeter-server
   ```
-- If you have a gRPC app deployed in your cluster, then skip further notes in this Step 1, and continue from Step 2 below. 
+- If you have a gRPC app deployed in your cluster, then skip further notes in this Step 1, and continue from Step 2 below.
 
 - As an example gRPC application, we can use this app <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go> .
 
-- To create a container image for this app, you can use [this Dockerfile](../../../images/go-grpc-greeter-server/rootfs/Dockerfile). 
+- To create a container image for this app, you can use [this Dockerfile](../../../images/go-grpc-greeter-server/rootfs/Dockerfile).
 
 - If you use the Dockerfile mentioned above, to create a image, then given below is an example of a Kubernetes manifest, to create a deployment resource, that uses that image. If needed, then edit this manifest to suit your needs. Assuming the name of this yaml file is  `deployment.go-grpc-greeter-server.yaml` ;
 
@@ -94,12 +94,12 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
   kind: Ingress
   metadata:
     annotations:
-      kubernetes.io/ingress.class: "nginx"
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
       nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
     name: fortune-ingress
     namespace: default
   spec:
+    ingressClassName: nginx
     rules:
     - host: grpctest.dev.mydomain.com
       http:

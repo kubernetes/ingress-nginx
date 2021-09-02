@@ -15,6 +15,7 @@ metadata:
   name: nginx-test
   namespace: default
 spec:
+  ingressClassName: nginx
   rules:
   - host: mydomain.com
     http:

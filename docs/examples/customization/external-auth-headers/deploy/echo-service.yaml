@@ -52,6 +52,7 @@ metadata:
     nginx.ingress.kubernetes.io/auth-response-headers: UserID, UserRole
   namespace: default
 spec:
+  ingressClassName: nginx
   rules:
   - host: public-demo-echo-service.kube.local
     http:
@@ -73,6 +74,7 @@ metadata:
     nginx.ingress.kubernetes.io/auth-response-headers: UserID, UserRole
   namespace: default
 spec:
+  ingressClassName: nginx
   rules:
   - host: secure-demo-echo-service.kube.local
     http:

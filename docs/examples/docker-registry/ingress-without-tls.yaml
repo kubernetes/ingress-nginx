@@ -8,6 +8,7 @@ metadata:
   name: docker-registry
   namespace: docker-registry
 spec:
+  ingressClassName: nginx
   rules:
   - host: registry.<your domain>
     http:

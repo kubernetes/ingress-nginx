@@ -2,13 +2,13 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-To use, add the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
+To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
 This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 ## Prerequisites
 
-- Kubernetes v1.16+
+- Kubernetes v1.19+
 
 ## Get Repo Info
 
@@ -177,8 +177,8 @@ controller:
         networking.gke.io/load-balancer-type: "Internal"
         # For earlier versions
         # cloud.google.com/load-balancer-type: "Internal"
-        
-        # Any other annotation can be declared here. 
+
+        # Any other annotation can be declared here.
 ```
 
 Example for Azure:

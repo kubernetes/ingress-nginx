@@ -3,6 +3,7 @@ kind: Ingress
 metadata:
   name: nginx-test
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
       - foo.bar.com
@@ -14,7 +15,10 @@ spec:
       http:
         paths:
         - path: /
+          pathType: Prefix
           backend:
             # This assumes http-svc exists and routes to healthy endpoints
-            serviceName: http-svc
-            servicePort: 80
+            service:
+              name: http-svc
+              port:
+                number: 80

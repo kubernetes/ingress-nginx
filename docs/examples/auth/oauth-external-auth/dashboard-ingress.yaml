@@ -7,6 +7,7 @@ metadata:
   name: external-auth-oauth2
   namespace: kube-system
 spec:
+  ingressClassName: nginx
   rules:
   - host: __INGRESS_HOST__
     http:
@@ -27,6 +28,7 @@ metadata:
   name: oauth2-proxy
   namespace: kube-system
 spec:
+  ingressClassName: nginx
   rules:
   - host: __INGRESS_HOST__
     http:
