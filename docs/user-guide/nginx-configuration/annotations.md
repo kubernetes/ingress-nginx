@@ -64,6 +64,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|
+|[nginx.ingress.kubernetes.io/preserve-trailing-slash](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-path](#proxy-cookie-path)|string|
@@ -590,6 +591,8 @@ annotation in the particular resource.
 When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to HTTPS
 even when there is no TLS certificate available.
 This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
+
+To preserve the trailing slash in the URI with `ssl-redirect`, set `nginx.ingress.kubernetes.io/preserve-trailing-slash: "true"` annotation for that particular resource.
 
 ### Redirect from/to www
 
