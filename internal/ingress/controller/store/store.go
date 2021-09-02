@@ -160,7 +160,7 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	// wait for all involved caches to be synced before processing items
 	// from the queue
 	if !cache.WaitForCacheSync(stopCh,
-		i.Endpoint.HasSynced,		
+		i.Endpoint.HasSynced,
 		i.Service.HasSynced,
 		i.Secret.HasSynced,
 		i.ConfigMap.HasSynced,
@@ -303,7 +303,7 @@ func New(
 
 	store.informers.Ingress = infFactory.Networking().V1().Ingresses().Informer()
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
-	
+
 	if !icConfig.IgnoreIngressClass {
 		store.informers.IngressClass = infFactory.Networking().V1().IngressClasses().Informer()
 		store.listers.IngressClass.Store = cache.NewStore(cache.MetaNamespaceKeyFunc)
