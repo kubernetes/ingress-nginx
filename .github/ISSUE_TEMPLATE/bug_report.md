@@ -100,18 +100,21 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main
 ## Create an ingress (please add any additional annotation required)
 
 echo "
-  apiVersion: networking.k8s.io/v1beta1
+  apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
     name: foo-bar
   spec:
+    ingressClassName: nginx
     rules:
     - host: foo.bar
       http:
         paths:
         - backend:
-            serviceName: http-svc
-            servicePort: 80
+            service:
+              name: http-svc
+              port:
+                number: 80
           path: /
 " | kubectl apply -f -
 

@@ -173,13 +173,16 @@ In the Zipkin interface we can see the details:
       metadata:
         name: echo-ingress
       spec:
+        ingressClassName: nginx
         rules:
         - host: example.com
           http:
             paths:
             - backend:
-                serviceName: echoheaders-x
-                servicePort: 80
+                service:
+                  name: echoheaders-x
+                  port:
+                    number: 80
               path: /echo
       ' | kubectl apply -f -
     ```

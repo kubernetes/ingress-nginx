@@ -12,5 +12,7 @@ spec:
       paths:
       - backend:
           # This assumes http-svc exists and routes to healthy endpoints.
-          serviceName: http-svc
-          servicePort: 80
+          service:
+            name: http-svc
+            port:
+              number: 80
