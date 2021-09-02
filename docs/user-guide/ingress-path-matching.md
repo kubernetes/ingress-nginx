@@ -28,8 +28,11 @@ spec:
       paths:
       - path: /foo/.*
         backend:
-          serviceName: test
-          servicePort: 80
+          service:
+            name: test
+            port:
+              number: 80
+        pathType: Prefix
 ```
 
 The preceding ingress definition would translate to the following location block within the NGINX configuration for the `test.com` server:
@@ -62,12 +65,18 @@ spec:
       paths:
       - path: /foo/bar
         backend:
-          serviceName: service1
-          servicePort: 80
+          service:
+            name: service1
+            port:
+              number: 80
+        pathType: Prefix
       - path: /foo/bar/
         backend:
-          serviceName: service2
-          servicePort: 80
+          service:
+            name: service2
+            port:
+              number: 80
+        pathType: Prefix
 ```
 
 ```yaml
@@ -84,8 +93,11 @@ spec:
       paths:
       - path: /foo/bar/(.+)
         backend:
-          serviceName: service3
-          servicePort: 80
+          service:
+            name: service3
+            port:
+              number: 80
+        pathType: Prefix
 ```
 
 The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the `test.com` server:
@@ -138,12 +150,18 @@ spec:
       paths:
       - path: /foo/bar/bar
         backend:
-          serviceName: test
-          servicePort: 80
+          service:
+            name: test
+            port:
+              number: 80
+        pathType: Prefix
       - path: /foo/bar/[A-Z0-9]{3}
         backend:
-          serviceName: test
-          servicePort: 80
+          service:
+            name: test
+            port:
+              number: 80
+        pathType: Prefix
 ```
 
 The ingress controller would define the following location blocks (in this order) within the NGINX template for the `test.com` server:

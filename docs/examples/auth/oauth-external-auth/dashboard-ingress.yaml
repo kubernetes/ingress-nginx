@@ -12,8 +12,11 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: kubernetes-dashboard
-          servicePort: 80
+          service:
+            name: kubernetes-dashboard
+            port:
+              number: 80
+        pathType: Prefix
         path: /
 
 ---
@@ -29,8 +32,11 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: oauth2-proxy
-          servicePort: 4180
+          service:
+            name: oauth2-proxy
+            port:
+              number: 4180
+        pathType: Prefix
         path: /oauth2
   tls:
   - hosts:

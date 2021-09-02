@@ -57,8 +57,11 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: demo-echo-service
-          servicePort: 80
+          service:
+            name: demo-echo-service
+            port:
+              number: 80
+        pathType: Prefix
         path: /
 ---
 apiVersion: networking.k8s.io/v1
@@ -75,6 +78,9 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: demo-echo-service
-          servicePort: 80
+          service:
+            name: demo-echo-service
+            port:
+              number: 80
+        pathType: Prefix
         path: /
