@@ -1,0 +1,23 @@
+commit f9907b72a76a21ac5413187b83177a919475c75f
+Author: Yichun Zhang (agentzh) <agentzh@gmail.com>
+Date:   Wed Feb 10 16:05:08 2016 -0800
+
+    bugfix: upstream: keep sending request data after the first write attempt.
+    
+    See
+    http://mailman.nginx.org/pipermail/nginx-devel/2012-March/002040.html
+    for more details on the issue.
+
+diff --git a/src/http/ngx_http_upstream.c b/src/http/ngx_http_upstream.c
+index 69019417..92b7c97f 100644
+--- a/src/http/ngx_http_upstream.c
++++ b/src/http/ngx_http_upstream.c
+@@ -2239,7 +2239,7 @@ ngx_http_upstream_send_request_handler(ngx_http_request_t *r,
+
+ #endif
+
+-    if (u->header_sent && !u->conf->preserve_output) {
++    if (u->request_body_sent && !u->conf->preserve_output) {
+         u->write_event_handler = ngx_http_upstream_dummy_handler;
+
+         (void) ngx_handle_write_event(c->write, 0);

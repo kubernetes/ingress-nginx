@@ -1,0 +1,75 @@
+diff --git a/src/os/unix/ngx_process.c b/src/os/unix/ngx_process.c
+index 15680237..12a8c687 100644
+--- a/src/os/unix/ngx_process.c
++++ b/src/os/unix/ngx_process.c
+@@ -362,8 +362,15 @@ ngx_signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
+             break;
+ 
+         case ngx_signal_value(NGX_RECONFIGURE_SIGNAL):
+-            ngx_reconfigure = 1;
+-            action = ", reconfiguring";
++            if (ngx_process == NGX_PROCESS_SINGLE) {
++                ngx_terminate = 1;
++                action = ", exiting";
++
++            } else {
++                ngx_reconfigure = 1;
++                action = ", reconfiguring";
++            }
++
+             break;
+ 
+         case ngx_signal_value(NGX_REOPEN_SIGNAL):
+diff --git a/src/os/unix/ngx_process_cycle.c b/src/os/unix/ngx_process_cycle.c
+index 5817a2c2..f3d58e97 100644
+--- a/src/os/unix/ngx_process_cycle.c
++++ b/src/os/unix/ngx_process_cycle.c
+@@ -305,11 +305,26 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
+     }
+ 
+     for ( ;; ) {
++        if (ngx_exiting) {
++            if (ngx_event_no_timers_left() == NGX_OK) {
++                ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
++
++                for (i = 0; cycle->modules[i]; i++) {
++                    if (cycle->modules[i]->exit_process) {
++                        cycle->modules[i]->exit_process(cycle);
++                    }
++                }
++
++                ngx_master_process_exit(cycle);
++            }
++        }
++
+         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
+ 
+         ngx_process_events_and_timers(cycle);
+ 
+-        if (ngx_terminate || ngx_quit) {
++        if (ngx_terminate) {
++            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
+ 
+             for (i = 0; cycle->modules[i]; i++) {
+                 if (cycle->modules[i]->exit_process) {
+@@ -320,6 +335,20 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
+             ngx_master_process_exit(cycle);
+         }
+ 
++        if (ngx_quit) {
++            ngx_quit = 0;
++            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
++                          "gracefully shutting down");
++            ngx_setproctitle("process is shutting down");
++
++            if (!ngx_exiting) {
++                ngx_exiting = 1;
++                ngx_set_shutdown_timer(cycle);
++                ngx_close_listening_sockets(cycle);
++                ngx_close_idle_connections(cycle);
++            }
++        }
++
+         if (ngx_reconfigure) {
+             ngx_reconfigure = 0;
+             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reconfiguring");
