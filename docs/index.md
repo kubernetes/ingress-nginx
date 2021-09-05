@@ -165,8 +165,5 @@ Bear in mind that, if your `Ingress-Nginx-Controller-nginx2` is started with the
 - and also objects pointing to the ingressClass that have the same .spec.controller as configured in `--controller-class`
 
 
-## Why is the ingressClassResource disabled by default in the helm chart ?
-- If this field is set to enabled value and there are existing ingress objects in the cluster, then the existing ingress objects will not be honored and only any new ingress object you create will inherit the ingressClass value.
-
 ## I am seeing this error message in the logs of the Ingress-NGINX controller "ingress class annotation is not equal to the expected by Ingress Controller". Why ?
 - It is highly likely that you will also see the name of the ingress resource in the same error message. This error messsage has been observed on use the deprecated annotation, to spec the ingressClass, in a ingress resource manifest. It is recommended to use the ingress.spec.ingressClassName field, of the ingress resource, to spec the name of the ingressClass of the ingress resource being configured.
