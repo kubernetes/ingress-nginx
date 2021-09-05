@@ -1520,7 +1520,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		EnableOpentracing:    true,
 		DatadogCollectorHost: "datadog-host.com",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgDatadog, []*ingress.Server{})
 
 	if expected != actual {
@@ -1544,7 +1544,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		OpentracingOperationName:         "my-operation-name",
 		OpentracingLocationOperationName: "my-location-operation-name",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
 	expected += "opentracing_operation_name \"my-operation-name\";\n"
 	expected += "opentracing_location_operation_name \"my-location-operation-name\";\n"
 	actual = buildOpentracing(cfgOpenTracing, []*ingress.Server{})
