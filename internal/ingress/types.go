@@ -167,6 +167,7 @@ type UpstreamHashByConfig struct {
 	UpstreamHashBy           string `json:"upstream-hash-by,omitempty"`
 	UpstreamHashBySubset     bool   `json:"upstream-hash-by-subset,omitempty"`
 	UpstreamHashBySubsetSize int    `json:"upstream-hash-by-subset-size,omitempty"`
+	UpstreamHashByEndpoint   string `json:"upstream-hash-by-endpoint,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
