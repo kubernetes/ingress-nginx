@@ -33,9 +33,35 @@ Do this if you wish to use one of the other Ingress controllers at the same time
 
 This mechanism also provides users the ability to run _multiple_ NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).
 To do this, the option `--ingress-class` must be changed to a value unique for the cluster within the definition of the replication controller.
+
+You can mark a particular `IngressClass` as default for your cluster. Setting the `ingressclass.kubernetes.io/is-default-class` annotation to `true` on an `IngressClass` resource will ensure that new Ingresses without an `ingressClassName `field specified will be assigned this default `IngressClass`. But be aware that `ingressClass` works in a very specific way: you will need to change the `.spec.controller` value in your `IngressClass` and point the controller to the relevant `ingressClass.`
 Here is a partial example:
 
-The flags regarding the option `--ingress-class` will be disabled soon instead use `ingressClassName`
+    Ingress-Nginx-IngressClass-1 with .spec.controller equals to "k8s.io/ingress-nginx1"
+    Ingress-Nginx-IngressClass-2 with .spec.controller equals to "k8s.io/ingress-nginx2" When deploying your ingress controllers, you will have to change the --controller-class field as follows:
+
+Ingress-Nginx-Controller-nginx1 with k8s.io/ingress-nginx1 Ingress-Nginx-Controller-nginx2 with k8s.io/ingress-nginx2 Then, when you create an Ingress Object with IngressClassName = ingress-nginx2, it will look for controllers with controller-class=k8s.io/ingress-nginx2 and as Ingress-Nginx-Controller-nginx2 is watching objects that points to ingressClass="k8s.io/ingress-nginx2, it will serve that object, while Ingress-Nginx-Controller-nginx1 will ignore the ingress object.
+
+Bear in mind that, if your Ingress-Nginx-Controller-nginx2 is started with the flag --watch-ingress-without-class=true, then it will serve ; - objects without ingress-class - objects with the annotation configured in flag --ingress-class and same class value - and also objects pointing to the ingressClass that have the same .spec.controller as configured in --controller-class
+
+
+The flags regarding the option `--ingress-class` will be disabled soon instead use `ingressClassName` ingressClassName is a field in the specs of a ingress object.
+
+```
+% k explain ingress.spec.ingressClassName
+KIND:     Ingress
+VERSION:  networking.k8s.io/v1
+
+FIELD:    ingressClassName <string>
+
+DESCRIPTION:
+     IngressClassName is the name of the IngressClass cluster resource. The
+     associated IngressClass defines which controller will implement the
+     resource. This replaces the deprecated `kubernetes.io/ingress.class`
+     annotation. For backwards compatibility, when that annotation is set, it must be given precedence over this field. The controller may emit a warning if the field and annotation have different values. Implementations of this API should ignore Ingresses without a class specified. An IngressClass resource may be marked as default, which can be used to set a default value for this field. For more information, refer to the IngressClass documentation.
+```
+the `spec.ingressClassName` behavior has precedence over the annotation.
+
 ```yaml
 spec:
   template:
