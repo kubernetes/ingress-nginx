@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/klog/v2"
 
@@ -81,7 +82,8 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 	}
 
 	for _, ss := range ep.Subsets {
-		for _, epPort := range ss.Ports {
+		matchedPortNameFound := false
+		for i, epPort := range ss.Ports {
 
 			if !reflect.DeepEqual(epPort.Protocol, proto) {
 				continue
@@ -92,8 +94,16 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 			if port.Name == "" {
 				// port.Name is optional if there is only one port
 				targetPort = epPort.Port
+				matchedPortNameFound = true
 			} else if port.Name == epPort.Name {
 				targetPort = epPort.Port
+				matchedPortNameFound = true
+			}
+
+			if i == len(ss.Ports)-1 && !matchedPortNameFound && port.TargetPort.Type == intstr.Int {
+				// use service target port if it's a number and no port name matched
+				// https://github.com/kubernetes/ingress-nginx/issues/7390
+				targetPort = port.TargetPort.IntVal
 			}
 
 			if targetPort <= 0 {
