@@ -42,4 +42,8 @@ type IngressClassConfiguration struct {
 	// WatchWithoutClass defines if Controller should watch to Ingress Objects that does
 	// not contain an IngressClass configuration
 	WatchWithoutClass bool
+
+	//IngressClassByName defines if the Controller should watch for Ingress Classes by
+	// .metadata.name together with .spec.Controller
+	IngressClassByName bool
 }

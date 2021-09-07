@@ -114,6 +114,9 @@ spec:
           {{- if .Values.controller.healthCheckHost }}
             - --healthz-host={{ .Values.controller.healthCheckHost }}
           {{- end }}
+          {{- if .Values.controller.ingressClassByName }}
+            - --ingress-class-by-name=true
+          {{- end }}
           {{- if .Values.controller.watchIngressWithoutClass }}
             - --watch-ingress-without-class=true
           {{- end }}
