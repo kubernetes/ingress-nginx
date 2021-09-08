@@ -36,7 +36,7 @@ var (
 	// Regex are defined here to prevent information leak, if user tries to set anything not valid
 	// that could cause the Response to contain some internal value/variable (like returning $pid, $upstream_addr, etc)
 	// Origin must contain a http/s Origin (including or not the port) or the value '*'
-	corsOriginRegex = regexp.MustCompile(`^(https?://[A-Za-z0-9\-\.]*(:[0-9]+)?|\*)?$`)
+	corsOriginRegex = regexp.MustCompile(`^(https?:\/\/[A-Za-z0-9\-\.]*(:[0-9]+)?|\*)?`)
 	// Method must contain valid methods list (PUT, GET, POST, BLA)
 	// May contain or not spaces between each verb
 	corsMethodsRegex = regexp.MustCompile(`^([A-Za-z]+,?\s?)+$`)
@@ -143,5 +143,4 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	return config, nil
-
 }

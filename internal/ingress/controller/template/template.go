@@ -268,6 +268,7 @@ var (
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
 		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
 		"buildServerName":                    buildServerName,
+		"buildCorsOriginRegex":               buildCorsOriginRegex,
 	}
 )
 
@@ -1623,6 +1624,31 @@ func buildServerName(hostname string) string {
 	parts := strings.Split(hostname, ".")
 
 	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
+}
+
+// buildOriginRegex returns an origin as a regex
+func buildOriginRegex(origin string) string {
+	if !strings.HasPrefix(origin, "*") {
+		return origin
+	}
+
+	origin = strings.Replace(origin, "*.", "", 1)
+	parts := strings.Split(origin, ".")
+
+	return `(?:` + strings.Join(parts, "\\.") + ")"
+}
+
+// buildCorsOriginRegex builds the regex string required by nginx
+func buildCorsOriginRegex(origins string) string {
+	var originsRegex string = ".*("
+	var originsSplit = strings.Split(origins, ",")
+	for i, origin := range originsSplit {
+		originsRegex = originsRegex + buildOriginRegex(strings.TrimSpace(origin))
+		if i != len(originsSplit)-1 {
+			originsRegex = originsRegex + "|"
+		}
+	}
+	return originsRegex + ")$"
 }
 
 // parseComplexNGINXVar parses things like "$my${complex}ngx\$var" into

@@ -152,4 +152,82 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 				return strings.Contains(server, "more_set_headers 'Access-Control-Expose-Headers: X-CustomResponseHeader, X-CustomSecondHeader';")
 			})
 	})
+
+	ginkgo.It("should allow single origin for multiple cors values", func() {
+		host := "cors.foo.com"
+		origin := "https://origin.cors.com:8080" // the origin coming from request
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin.cors.com:8080, https://origin2.cors.com",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().ContainsKey("Access-Control-Allow-Origin")
+	})
+
+	ginkgo.It("should allow single origin for multiple cors values no http(s) prefix", func() {
+		host := "cors.foo.com"
+		origin := "origin.cors.com:8080" // the origin coming from request
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "origin.cors.com:8080, https://origin2.cors.com, https://origin.com",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().ContainsKey("Access-Control-Allow-Origin")
+	})
+
+	ginkgo.It("should block single origin for multiple cors values", func() {
+		host := "cors.foo.com"
+		origin := "no.origin.com" // the origin coming from request
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "origin.cors.com:8080, https://origin2.cors.com, https://origin.com",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		// the client should still receive a response but browsers should block the request
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().NotContainsKey("Access-Control-Allow-Origin")
+	})
+
+	ginkgo.It("should block single origin for multiple cors values no http(s) prefix", func() {
+		host := "cors.foo.com"
+		origin := "no.origin.com" // the origin coming from request
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "origin.cors.com:8080, https://origin2.cors.com, https://origin.com",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		// the client should still receive a response but browsers should block the request
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().NotContainsKey("Access-Control-Allow-Origin")
+	})
 })
