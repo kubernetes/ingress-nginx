@@ -1626,31 +1626,6 @@ func buildServerName(hostname string) string {
 	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
 }
 
-// buildOriginRegex returns an origin as a regex
-func buildOriginRegex(origin string) string {
-	if !strings.HasPrefix(origin, "*") {
-		return origin
-	}
-
-	origin = strings.Replace(origin, "*.", "", 1)
-	parts := strings.Split(origin, ".")
-
-	return `(?:` + strings.Join(parts, "\\.") + ")"
-}
-
-// buildCorsOriginRegex builds the regex string required by nginx
-func buildCorsOriginRegex(origins string) string {
-	var originsRegex string = ".*("
-	var originsSplit = strings.Split(origins, ",")
-	for i, origin := range originsSplit {
-		originsRegex = originsRegex + buildOriginRegex(strings.TrimSpace(origin))
-		if i != len(originsSplit)-1 {
-			originsRegex = originsRegex + "|"
-		}
-	}
-	return originsRegex + ")$"
-}
-
 // parseComplexNGINXVar parses things like "$my${complex}ngx\$var" into
 // [["$var", "complex", "my", "ngx"]]. In other words, 2nd and 3rd elements
 // in the result are actual NGINX variable names, whereas first and 4th elements
@@ -1697,4 +1672,43 @@ func convertGoSliceIntoLuaTable(goSliceInterface interface{}, emptyStringAsNil b
 	default:
 		return "", fmt.Errorf("could not process type: %s", kind)
 	}
+}
+
+// buildOriginRegex returns an origin as a regex
+func buildOriginRegex(origin string) string {
+	if !strings.HasPrefix(origin, "*") {
+		return origin
+	}
+
+	origin = strings.Replace(origin, "*.", "", 1)
+	parts := strings.Split(origin, ".")
+
+	return "(" + strings.Join(parts, "\\.") + ")"
+}
+
+// buildCorsOriginRegex builds the regex string required by nginx
+func buildCorsOriginRegex(origins string) string {
+	var originSplitList = strings.Split(origins, ",")
+	if searchCorsOrigins(originSplitList, "*") {
+		return "set $http_origin *;\nset $cors 'true';"
+	}
+
+	var originsRegex string = "if ($http_origin ~* .*("
+	for i, origin := range originSplitList {
+		originsRegex = originsRegex + buildOriginRegex(strings.TrimSpace(origin))
+		if i != len(originSplitList)-1 {
+			originsRegex = originsRegex + "|"
+		}
+	}
+	originsRegex = originsRegex + ")$ ) { set $cors 'true'; }"
+	return originsRegex
+}
+
+func searchCorsOrigins(splice []string, search string) bool {
+	for _, element := range splice {
+		if element == search {
+			return true
+		}
+	}
+	return false
 }

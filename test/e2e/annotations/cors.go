@@ -107,6 +107,7 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 	ginkgo.It("should allow origin for cors", func() {
 		host := "cors.foo.com"
+		origin := "https://origin.cors.com:8080"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":       "true",
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin.cors.com:8080",
@@ -115,10 +116,12 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Origin: https://origin.cors.com:8080';")
-			})
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().ContainsKey("Access-Control-Allow-Origin")
 	})
 
 	ginkgo.It("should allow headers for cors", func() {
@@ -229,5 +232,41 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().NotContainsKey("Access-Control-Allow-Origin")
+	})
+
+	ginkgo.It("should not break functionality", func() {
+		host := "cors.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "*",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		// the client should still receive a response but browsers should block the request
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Headers().ContainsKey("Access-Control-Allow-Origin")
+	})
+
+	ginkgo.It("should not break functionality with extra domain", func() {
+		host := "cors.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "*, foo.bar.com", // this would return *
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		// the client should still receive a response but browsers should block the request
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Headers().ContainsKey("Access-Control-Allow-Origin")
 	})
 })
