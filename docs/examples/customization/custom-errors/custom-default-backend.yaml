@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: nginx-error-server
-        image: quay.io/kubernetes-ingress-controller/custom-error-pages-amd64:0.3
+        image: gcr.io/k8s-staging-ingress-nginx/nginx-errors:0.48.1
         ports:
         - containerPort: 8080
         # Setting the environment variable DEBUG we can see the headers sent 

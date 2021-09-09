@@ -1,105 +1,57 @@
-all: all-container
+# Copyright 2021 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-BUILDTAGS=
+# Container image for nginx-errors.
 
-# Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.4
-REGISTRY?=quay.io/kubernetes-ingress-controller
-GOOS?=linux
-DOCKER?=docker
-SED_I?=sed -i
-GOHOSTOS ?= $(shell go env GOHOSTOS)
+# set default shell
+SHELL=/bin/bash -o pipefail -o errexit
 
-PKG=k8s.io/ingress-nginx/images/custom-error-pages
+DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
+INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
-ifeq ($(GOHOSTOS),darwin)
-  SED_I=sed -i ''
-endif
+TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
+REGISTRY ?= local
 
-REPO_INFO=$(shell git config --get remote.origin.url)
+IMAGE = $(REGISTRY)/nginx-errors
 
-ifndef COMMIT
-  COMMIT := git-$(shell git rev-parse --short HEAD)
-endif
+# required to enable buildx
+export DOCKER_CLI_EXPERIMENTAL=enabled
 
-ARCH ?= $(shell go env GOARCH)
-GOARCH = ${ARCH}
+# build with buildx
+PLATFORMS?=linux/amd64,linux/arm,linux/arm64
+OUTPUT=
+PROGRESS=plain
 
-BASEIMAGE?=alpine:3.10
+build: ensure-buildx
+	docker buildx build \
+		--platform=${PLATFORMS} $(OUTPUT) \
+		--progress=$(PROGRESS) \
+		--pull \
+		-t $(IMAGE):$(TAG) rootfs
 
-ALL_ARCH = amd64 arm arm64
+# push the cross built image
+push: OUTPUT=--push
+push: build
 
-QEMUVERSION=v4.1.0-1
-
-IMGNAME = custom-error-pages
-IMAGE = $(REGISTRY)/$(IMGNAME)
-MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
-
-ifeq ($(ARCH),arm)
-    QEMUARCH=arm
-	GOARCH=arm
-endif
-ifeq ($(ARCH),arm64)
-	QEMUARCH=aarch64
-endif
-
-TEMP_DIR := $(shell mktemp -d)
-
-DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
-
-sub-container-%:
-	$(MAKE) ARCH=$* build container
-
-sub-push-%:
-	$(MAKE) ARCH=$* push
-
-all-container: $(addprefix sub-container-,$(ALL_ARCH))
-
-all-push: $(addprefix sub-push-,$(ALL_ARCH))
-
-container: .container-$(ARCH)
-.container-$(ARCH):
-	cp -r ./* $(TEMP_DIR)
-	$(SED_I) 's|BASEIMAGE|$(BASEIMAGE)|g' $(DOCKERFILE)
-	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
-
-ifeq ($(ARCH),amd64)
-	# When building "normally" for amd64, remove the whole line, it has no part in the amd64 image
-	$(SED_I) "/CROSS_BUILD_/d" $(DOCKERFILE)
+# enable buildx
+ensure-buildx:
+# this is required for cloudbuild
+ifeq ("$(wildcard $(INIT_BUILDX))","")
+	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/hack/init-buildx.sh | bash
 else
-	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
-	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
-	# $(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
-	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)/rootfs
-	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
+	@exec $(INIT_BUILDX)
 endif
+	@echo "done"
 
-	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
-
-ifeq ($(ARCH), amd64)
-	# This is for to maintain the backward compatibility
-	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
-endif
-
-push: .push-$(ARCH)
-.push-$(ARCH):
-	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
-ifeq ($(ARCH), amd64)
-	$(DOCKER) push $(IMAGE):$(TAG)
-endif
-
-clean:
-	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
-
-build: clean
-	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
-		-ldflags "-s -w" \
-		-o ${TEMP_DIR}/rootfs/custom-error-pages ${PKG}/...
-
-release: all-container all-push
-	echo "done"
-
-.PHONY: register-qemu
-register-qemu:
-	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
+.PHONY: build push ensure-buildx
