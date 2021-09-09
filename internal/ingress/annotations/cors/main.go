@@ -20,6 +20,7 @@ import (
 	"regexp"
 
 	networking "k8s.io/api/networking/v1"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -114,6 +115,7 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	config.CorsAllowOrigin, err = parser.GetStringAnnotation("cors-allow-origin", ing)
 	if err != nil || !corsOriginRegex.MatchString(config.CorsAllowOrigin) {
+		klog.Errorf("Error parsing cors-allow-origin parameters using '*', supplied string: %s", config.CorsAllowOrigin)
 		config.CorsAllowOrigin = "*"
 	}
 
