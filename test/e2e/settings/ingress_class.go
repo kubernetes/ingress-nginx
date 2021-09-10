@@ -510,4 +510,72 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 		})
 
 	})
+
+	ginkgo.Context("With ingress-class-by-name flag", func() {
+		ginkgo.BeforeEach(func() {
+			err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+				args := []string{}
+				for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
+					if strings.Contains(v, "--ingress-class-by-name") &&
+						strings.Contains(v, "--ingress-class=test-new-ingress-class") {
+						continue
+					}
+
+					args = append(args, v)
+				}
+				args = append(args, "--ingress-class=test-new-ingress-class")
+				args = append(args, "--ingress-class-by-name")
+				deployment.Spec.Template.Spec.Containers[0].Args = args
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+
+				return err
+			})
+			assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
+		})
+
+		ginkgo.It("should watch Ingress that uses the class name even if spec is different", func() {
+			validHostClassName := "validhostclassname"
+
+			ing := framework.NewSingleIngress(validHostClassName, "/", validHostClassName, f.Namespace, framework.EchoService, 80, nil)
+			ing.Spec.IngressClassName = &otherIngressClassName
+			f.EnsureIngress(ing)
+
+			validHostClass := "validhostclassspec"
+			ing = framework.NewSingleIngress(validHostClass, "/", validHostClass, f.Namespace, framework.EchoService, 80, nil)
+			f.EnsureIngress(ing)
+
+			invalidHost := "invalidannotation"
+			annotations := map[string]string{
+				ingressclass.IngressKey: "testclass123",
+			}
+			ing = framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, annotations)
+			ing.Spec.IngressClassName = nil
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxConfiguration(func(cfg string) bool {
+				return strings.Contains(cfg, "server_name validhostclassname") &&
+					strings.Contains(cfg, "server_name validhostclassspec") &&
+					!strings.Contains(cfg, "server_name invalidannotation")
+			})
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", validHostClass).
+				Expect().
+				Status(http.StatusOK)
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", validHostClassName).
+				Expect().
+				Status(http.StatusOK)
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", invalidHost).
+				Expect().
+				Status(http.StatusNotFound)
+		})
+
+	})
 })
