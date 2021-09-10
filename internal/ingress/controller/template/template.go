@@ -1683,7 +1683,7 @@ func buildOriginRegex(origin string) string {
 	origin = strings.Replace(origin, "*.", "", 1)
 	parts := strings.Split(origin, ".")
 
-	return "(" + strings.Join(parts, "\\.") + ")"
+	return "(" + strings.Join(parts, ".") + ")"
 }
 
 // buildCorsOriginRegex builds the regex string required by nginx
@@ -1693,9 +1693,10 @@ func buildCorsOriginRegex(origins string) string {
 		return "set $http_origin *;\nset $cors 'true';"
 	}
 
-	var originsRegex string = "if ($http_origin ~* .*("
+	var originsRegex string = "if ($http_origin ~* ("
 	for i, origin := range originSplitList {
-		originsRegex = originsRegex + buildOriginRegex(strings.TrimSpace(origin))
+		originTrimmed := strings.TrimSpace(origin)
+		originsRegex = originsRegex + regexp.QuoteMeta(buildOriginRegex(originTrimmed))
 		if i != len(originSplitList)-1 {
 			originsRegex = originsRegex + "|"
 		}

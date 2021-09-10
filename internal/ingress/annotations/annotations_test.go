@@ -244,11 +244,11 @@ func TestCors(t *testing.T) {
 		}
 
 		if r.CorsAllowOrigin != foo.origin {
-			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowOrigin, foo.origin)
+			t.Errorf("Returned %v but expected %v for Cors Origins", r.CorsAllowOrigin, foo.origin)
 		}
 
 		if r.CorsAllowCredentials != foo.credentials {
-			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowCredentials, foo.credentials)
+			t.Errorf("Returned %v but expected %v for Cors Credentials", r.CorsAllowCredentials, foo.credentials)
 		}
 
 	}
