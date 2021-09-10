@@ -36,7 +36,6 @@ func (k8s *k8s) PatchWebhookConfigurations(
 	configurationNames string, ca []byte,
 	failurePolicy *admissionv1.FailurePolicyType,
 	patchMutating bool, patchValidating bool) {
-
 	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationNames, patchMutating, patchValidating, *failurePolicy)
 
 	if patchValidating {
@@ -44,7 +43,6 @@ func (k8s *k8s) PatchWebhookConfigurations(
 			AdmissionregistrationV1().
 			ValidatingWebhookConfigurations().
 			Get(context.TODO(), configurationNames, metav1.GetOptions{})
-
 		if err != nil {
 			log.WithField("err", err).Fatal("failed getting validating webhook")
 		}
@@ -120,7 +118,6 @@ func (k8s *k8s) GetCaFromSecret(secretName string, namespace string) []byte {
 
 // SaveCertsToSecret saves the provided ca, cert and key into a secret in the specified namespace.
 func (k8s *k8s) SaveCertsToSecret(secretName, namespace, certName, keyName string, ca, cert, key []byte) {
-
 	log.Debugf("saving to secret '%s' in namespace '%s'", secretName, namespace)
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

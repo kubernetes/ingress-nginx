@@ -9,14 +9,13 @@ import (
 	admissionv1 "k8s.io/api/admissionregistration/v1"
 )
 
-var (
-	patch = &cobra.Command{
-		Use:    "patch",
-		Short:  "Patch a validatingwebhookconfiguration and mutatingwebhookconfiguration 'webhook-name' by using the ca from 'secret-name' in 'namespace'",
-		Long:   "Patch a validatingwebhookconfiguration and mutatingwebhookconfiguration 'webhook-name' by using the ca from 'secret-name' in 'namespace'",
-		PreRun: prePatchCommand,
-		Run:    patchCommand}
-)
+var patch = &cobra.Command{
+	Use:    "patch",
+	Short:  "Patch a validatingwebhookconfiguration and mutatingwebhookconfiguration 'webhook-name' by using the ca from 'secret-name' in 'namespace'",
+	Long:   "Patch a validatingwebhookconfiguration and mutatingwebhookconfiguration 'webhook-name' by using the ca from 'secret-name' in 'namespace'",
+	PreRun: prePatchCommand,
+	Run:    patchCommand,
+}
 
 func prePatchCommand(cmd *cobra.Command, args []string) {
 	configureLogging(cmd, args)

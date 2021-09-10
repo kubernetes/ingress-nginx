@@ -7,14 +7,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	create = &cobra.Command{
-		Use:    "create",
-		Short:  "Generate a ca and server cert+key and store the results in a secret 'secret-name' in 'namespace'",
-		Long:   "Generate a ca and server cert+key and store the results in a secret 'secret-name' in 'namespace'",
-		PreRun: configureLogging,
-		Run:    createCommand}
-)
+var create = &cobra.Command{
+	Use:    "create",
+	Short:  "Generate a ca and server cert+key and store the results in a secret 'secret-name' in 'namespace'",
+	Long:   "Generate a ca and server cert+key and store the results in a secret 'secret-name' in 'namespace'",
+	PreRun: configureLogging,
+	Run:    createCommand,
+}
 
 func createCommand(cmd *cobra.Command, args []string) {
 	k := k8s.New(cfg.kubeconfig)
