@@ -583,11 +583,17 @@ http {
                 request_uri = string.sub(request_uri, 1, -2)
             end
 
+            {{ if $cfg.UseForwardedHeaders }}
+            local redirectScheme = ngx.var.http_x_forwarded_proto
+            {{ else }}
+            local redirectScheme = ngx.var.scheme
+            {{ end }}
+
             {{ if ne $all.ListenPorts.HTTPS 443 }}
             {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-            return string.format("%s://%s%s%s", ngx.var.scheme, "{{ $redirect.To }}", "{{ $redirect_port }}", request_uri)
+            return string.format("%s://%s%s%s", redirectScheme, "{{ $redirect.To }}", "{{ $redirect_port }}", request_uri)
             {{ else }}
-            return string.format("%s://%s%s", ngx.var.scheme, "{{ $redirect.To }}", request_uri)
+            return string.format("%s://%s%s", redirectScheme, "{{ $redirect.To }}", request_uri)
             {{ end }}
         }
 
