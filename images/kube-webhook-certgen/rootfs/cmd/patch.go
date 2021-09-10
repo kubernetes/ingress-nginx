@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/jet/kube-webhook-certgen/pkg/k8s"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -21,7 +19,6 @@ func prePatchCommand(cmd *cobra.Command, args []string) {
 	configureLogging(cmd, args)
 	if cfg.patchMutating == false && cfg.patchValidating == false {
 		log.Fatal("patch-validating=false, patch-mutating=false. You must patch at least one kind of webhook, otherwise this command is a no-op")
-		os.Exit(1)
 	}
 	switch cfg.patchFailurePolicy {
 	case "":
@@ -32,7 +29,6 @@ func prePatchCommand(cmd *cobra.Command, args []string) {
 		break
 	default:
 		log.Fatalf("patch-failure-policy %s is not valid", cfg.patchFailurePolicy)
-		os.Exit(1)
 	}
 }
 
