@@ -559,6 +559,22 @@ type Configuration struct {
 	// Default: true
 	OpentracingTrustIncomingSpan bool `json:"opentracing-trust-incoming-span"`
 
+	// EnableOpenTelemetry enables the nginx OpenTelemetry extension
+	// https://github.com/open-telemetry/opentelemetry-cpp-contrib
+	// By default this is disabled
+	EnableOpenTelemetry bool `json:"enable-opentelemetry"`
+
+	// OpenTelemetryOperationName specifies a custom name for the server span
+	OpenTelemetryOperationName string `json:"opentelemetry-operation-name"`
+
+	// OtlpExporterHost defines the host of the OpenTelemetry collector instance
+	// where the data will be transmitted
+	OtlpCollectorHost string `json:"otlp-collector-host"`
+
+	// OtlpExporterPost defines the port of the OpenTelemetry collector instance
+	// where the data will be transmitted
+	OtlpCollectorPort string `json:"otlp-collector-port"`
+
 	// ZipkinCollectorHost specifies the host to use when uploading traces
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
 

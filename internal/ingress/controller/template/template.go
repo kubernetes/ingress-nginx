@@ -264,6 +264,7 @@ var (
 		"buildForwardedFor":                  buildForwardedFor,
 		"buildAuthSignURL":                   buildAuthSignURL,
 		"buildAuthSignURLLocation":           buildAuthSignURLLocation,
+		"buildOpenTelemetry":                 buildOpenTelemetry,
 		"buildOpentracing":                   buildOpentracing,
 		"proxySetHeader":                     proxySetHeader,
 		"buildInfluxDB":                      buildInfluxDB,
@@ -273,6 +274,8 @@ var (
 		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
 		"buildHTTPListener":                  buildHTTPListener,
 		"buildHTTPSListener":                 buildHTTPSListener,
+		"buildOpenTelemetryForLocation":      buildOpenTelemetryForLocation,
+		"shouldLoadOpenTelemetryModule":      shouldLoadOpenTelemetryModule,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
@@ -1199,6 +1202,33 @@ func randomString() string {
 	return string(b)
 }
 
+func buildOpenTelemetry(c interface{}, s interface{}) string {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return ""
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return ""
+	}
+
+	if !shouldLoadOpenTelemetryModule(cfg, servers) {
+		return ""
+	}
+
+	buf := bytes.NewBufferString("")
+	buf.WriteString("opentelemetry_config /etc/nginx/opentelemetry.toml;\r\n")
+
+	if cfg.OpenTelemetryOperationName != "" {
+		buf.WriteString(fmt.Sprintf("opentelemetry_operation_name \"%s\";\n", cfg.OpenTelemetryOperationName))
+	}
+
+	return buf.String()
+}
+
 func buildOpentracing(c interface{}, s interface{}) string {
 	cfg, ok := c.(config.Configuration)
 	if !ok {
@@ -1345,6 +1375,14 @@ func buildCustomErrorLocationsPerServer(input interface{}) []errorLocation {
 	})
 
 	return errorLocations
+}
+
+func openTelemetryPropagateContext(location *ingress.Location) string {
+	if location == nil {
+		return ""
+	}
+
+	return "opentelemetry_propagate;"
 }
 
 func opentracingPropagateContext(location *ingress.Location) string {
@@ -1572,6 +1610,66 @@ func buildOpentracingForLocation(isOTEnabled bool, isOTTrustSet bool, location *
 	}
 
 	return opc
+}
+
+func buildOpenTelemetryForLocation(isOTEnabled bool, location *ingress.Location) string {
+	isOTEnabledInLoc := location.OpenTelemetry.Enabled
+	isOTSetInLoc := location.OpenTelemetry.Set
+
+	if isOTEnabled {
+		if isOTSetInLoc && !isOTEnabledInLoc {
+			return "opentelemetry off;"
+		}
+
+		opc := openTelemetryPropagateContext(location)
+		if opc != "" {
+			opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
+		}
+
+		return opc
+	}
+
+	if isOTSetInLoc && isOTEnabledInLoc {
+		opc := openTelemetryPropagateContext(location)
+		if opc != "" {
+			opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
+		}
+
+		return opc
+	}
+
+	return ""
+}
+
+// shouldLoadOpenTelemetryModule determines whether or not the OpenTelemetry module needs to be loaded.
+// First, it checks if `enable-opentelemetry` is set in the ConfigMap. If it is not, it iterates over all locations to
+// check if OpenTelemetry is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentelemetry`.
+func shouldLoadOpenTelemetryModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	if cfg.EnableOpenTelemetry {
+		return true
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.OpenTelemetry.Enabled {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.

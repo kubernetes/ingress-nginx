@@ -37,6 +37,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/opentelemetry"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
@@ -1643,6 +1644,28 @@ func TestBuildInfluxDB(t *testing.T) {
 	}
 }
 
+func TestBuildOpenTelemetry(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildOpenTelemetry(invalidType, []*ingress.Server{})
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	cfgOpenTelemetry := config.Configuration{
+		EnableOpenTelemetry:        true,
+		OpenTelemetryOperationName: "my-operation-name",
+	}
+	expected = "opentelemetry_config /etc/nginx/opentelemetry.toml;\r\n"
+	expected += "opentelemetry_operation_name \"my-operation-name\";\n"
+	actual = buildOpenTelemetry(cfgOpenTelemetry, []*ingress.Server{})
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
 func TestBuildOpenTracing(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""
@@ -1803,6 +1826,41 @@ func TestShouldLoadModSecurityModule(t *testing.T) {
 	}
 }
 
+func TestOpentelemetryForLocation(t *testing.T) {
+	trueVal := true
+
+	loadOT := `opentelemetry on;
+opentelemetry_propagate;`
+	testCases := []struct {
+		description string
+		globalOT    bool
+		isSetInLoc  bool
+		isOTInLoc   *bool
+		expected    string
+	}{
+		{"globally enabled, without annotation", true, false, nil, loadOT},
+		{"globally enabled and enabled in location", true, true, &trueVal, loadOT},
+		{"globally disabled and not enabled in location", false, false, nil, ""},
+		{"globally disabled but enabled in location", false, true, &trueVal, loadOT},
+		{"globally disabled, enabled in location but false", false, true, &trueVal, loadOT},
+	}
+
+	for _, testCase := range testCases {
+		il := &ingress.Location{
+			OpenTelemetry: opentelemetry.Config{Set: testCase.isSetInLoc},
+		}
+		if il.OpenTelemetry.Set {
+			il.OpenTelemetry.Enabled = *testCase.isOTInLoc
+		}
+
+		actual := buildOpenTelemetryForLocation(testCase.globalOT, il)
+
+		if testCase.expected != actual {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.description, testCase.expected, actual)
+		}
+	}
+}
+
 func TestOpentracingForLocation(t *testing.T) {
 	trueVal := true
 	falseVal := false
@@ -1847,6 +1905,59 @@ opentracing_trust_incoming_span off;`
 		if testCase.expected != actual {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.description, testCase.expected, actual)
 		}
+	}
+}
+
+func TestShouldLoadOpenTelemetryModule(t *testing.T) {
+	// ### Invalid argument type tests ###
+	// The first tests should return false.
+	expected := false
+
+	invalidType := &ingress.Ingress{}
+	actual := shouldLoadOpenTelemetryModule(config.Configuration{}, invalidType)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	actual = shouldLoadOpenTelemetryModule(invalidType, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	// ### Functional tests ###
+	actual = shouldLoadOpenTelemetryModule(config.Configuration{}, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	// All further tests should return true.
+	expected = true
+
+	configuration := config.Configuration{EnableOpenTelemetry: true}
+	actual = shouldLoadOpenTelemetryModule(configuration, []*ingress.Server{})
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	servers := []*ingress.Server{
+		{
+			Locations: []*ingress.Location{
+				{
+					OpenTelemetry: opentelemetry.Config{
+						Enabled: true,
+					},
+				},
+			},
+		},
+	}
+	actual = shouldLoadOpenTelemetryModule(config.Configuration{}, servers)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	actual = shouldLoadOpenTelemetryModule(configuration, servers)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 }
 

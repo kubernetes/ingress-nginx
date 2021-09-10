@@ -33,6 +33,10 @@ load_module /etc/nginx/modules/ngx_http_auth_digest_module.so;
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
+{{ if (shouldLoadOpenTelemetryModule $cfg $servers) }}
+load_module /etc/nginx/modules/otel_ngx_module.so;
+{{ end }}
+
 {{ if (shouldLoadOpentracingModule $cfg $servers) }}
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 {{ end }}
@@ -321,6 +325,7 @@ http {
     limit_req_status                {{ $cfg.LimitReqStatusCode }};
     limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
+    {{ buildOpenTelemetry $cfg $servers }}
     {{ buildOpentracing $cfg $servers }}
 
     include /etc/nginx/mime.types;
@@ -688,6 +693,10 @@ http {
 
         access_log off;
 
+        {{ if $cfg.EnableOpenTelemetry }}
+          opentelemtry off;
+        {{ end }}
+
         {{ if $cfg.EnableOpentracing }}
         opentracing off;
         {{ end }}
@@ -1052,6 +1061,11 @@ stream {
         location = {{ $authPath }} {
             internal;
 
+            {{ if (or $all.Cfg.EnableOpenTelemetry $location.OpenTelemetry.Enabled) }}
+            opentelemetry on;
+            opentelemetry_propagate;
+            {{ end }}
+
             {{ if (or $all.Cfg.EnableOpentracing $location.Opentracing.Enabled) }}
             opentracing on;
             opentracing_propagate_context;
@@ -1192,6 +1206,8 @@ stream {
             set $global_rate_limit_exceeding n;
 
             {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $all.Cfg.OpentracingTrustIncomingSpan $location }}
+
+            {{ buildOpenTelemetryForLocation $all.Cfg.EnableOpenTelemetry $location }}
 
             {{ if $location.Mirror.Source }}
             mirror {{ $location.Mirror.Source }};
@@ -1500,6 +1516,10 @@ stream {
         {{ if eq $server.Hostname "_" }}
         # health checks in cloud providers require the use of port {{ $all.ListenPorts.HTTP }}
         location {{ $all.HealthzURI }} {
+            {{ if $all.Cfg.EnableOpenTelemetry }}
+              opentelemetry off;
+            {{ end }}
+
             {{ if $all.Cfg.EnableOpentracing }}
             opentracing off;
             {{ end }}
@@ -1511,6 +1531,10 @@ stream {
         # this is required to avoid error if nginx is being monitored
         # with an external software (like sysdig)
         location /nginx_status {
+            {{ if $all.Cfg.EnableOpenTelemetry }}
+            opentelemetry off;
+            {{ end }}
+
             {{ if $all.Cfg.EnableOpentracing }}
             opentracing off;
             {{ end }}
