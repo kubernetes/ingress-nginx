@@ -68,6 +68,9 @@ referenced in an Ingress Object should be the same value specified here to make 
 		watchWithoutClass = flags.Bool("watch-ingress-without-class", false,
 			`Define if Ingress Controller should also watch for Ingresses without an IngressClass or the annotation specified`)
 
+		ingressClassByName = flags.Bool("ingress-class-by-name", false,
+			`Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class`)
+
 		configMap = flags.String("configmap", "",
 			`Name of the ConfigMap containing custom global configurations for the controller.`)
 
@@ -299,9 +302,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			SSLProxy: *sslProxyPort,
 		},
 		IngressClassConfiguration: &ingressclass.IngressClassConfiguration{
-			Controller:        *ingressClassController,
-			AnnotationValue:   *ingressClassAnnotation,
-			WatchWithoutClass: *watchWithoutClass,
+			Controller:         *ingressClassController,
+			AnnotationValue:    *ingressClassAnnotation,
+			WatchWithoutClass:  *watchWithoutClass,
+			IngressClassByName: *ingressClassByName,
 		},
 		DisableCatchAll:           *disableCatchAll,
 		ValidationWebhook:         *validationWebhook,
