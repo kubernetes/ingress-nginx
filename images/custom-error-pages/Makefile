@@ -29,7 +29,7 @@ IMAGE = $(REGISTRY)/nginx-errors
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64,linux/arm,linux/arm64
+PLATFORMS?=linux/amd64
 OUTPUT=
 PROGRESS=plain
 
