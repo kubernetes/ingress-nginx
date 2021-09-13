@@ -28,19 +28,19 @@ func New(clientset kubernetes.Interface) *k8s {
 // PatchWebhookConfigurations will patch validatingWebhook and mutatingWebhook clientConfig configurations with
 // the provided ca data. If failurePolicy is provided, patch all webhooks with this value
 func (k8s *k8s) PatchWebhookConfigurations(
-	configurationNames string,
+	configurationName string,
 	ca []byte,
 	failurePolicy *admissionv1.FailurePolicyType,
 	patchMutating bool,
 	patchValidating bool,
 ) {
-	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationNames, patchMutating, patchValidating, *failurePolicy)
+	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationName, patchMutating, patchValidating, *failurePolicy)
 
 	if patchValidating {
 		valHook, err := k8s.clientset.
 			AdmissionregistrationV1().
 			ValidatingWebhookConfigurations().
-			Get(context.TODO(), configurationNames, metav1.GetOptions{})
+			Get(context.TODO(), configurationName, metav1.GetOptions{})
 		if err != nil {
 			log.WithField("err", err).Fatal("failed getting validating webhook")
 		}
@@ -67,7 +67,7 @@ func (k8s *k8s) PatchWebhookConfigurations(
 		mutHook, err := k8s.clientset.
 			AdmissionregistrationV1().
 			MutatingWebhookConfigurations().
-			Get(context.TODO(), configurationNames, metav1.GetOptions{})
+			Get(context.TODO(), configurationName, metav1.GetOptions{})
 		if err != nil {
 			log.WithField("err", err).Fatal("failed getting validating webhook")
 		}
