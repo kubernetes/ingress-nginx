@@ -36,9 +36,11 @@ func prePatchCommand(cmd *cobra.Command, args []string) {
 }
 
 func patchCommand(_ *cobra.Command, _ []string) {
-	k := k8s.New(newKubernetesClient(cfg.kubeconfig))
 	ctx := context.TODO()
 
+	client, aggregationClient := newKubernetesClients(cfg.kubeconfig)
+
+	k := k8s.New(client, aggregationClient)
 	ca := k.GetCaFromSecret(ctx, cfg.secretName, cfg.namespace)
 
 	if ca == nil {

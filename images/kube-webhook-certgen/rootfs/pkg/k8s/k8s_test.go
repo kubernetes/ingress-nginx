@@ -160,3 +160,41 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 		t.Errorf("Expected second validating webhook failure policy to be set to %s", fail)
 	}
 }
+
+func Test_Patching_objects(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns_error_when", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("failure_policy_is_defined_but_no_webhooks_will_be_patched", func(t *testing.T) {
+			t.Parallel()
+		})
+
+		// This is to preserve old behavior and log format, it could be improved.
+		t.Run("diffent_names_are_specified_for_validating_and_mutating_webhook", func(t *testing.T) {
+			t.Parallel()
+		})
+
+		t.Run("patching_APIService_is_requested_and_it_does_not_exist", func(t *testing.T) {
+			t.Parallel()
+		})
+
+		t.Run("patching_webhook_is_requested_and_it_does_not_exist", func(t *testing.T) {
+			t.Parallel()
+		})
+	})
+
+	t.Run("when_patching_APIService_object", func(t *testing.T) {
+		t.Parallel()
+
+		// This is required when CABundle field is populated.
+		t.Run("sets_insecure_skip_tls_verity_to_false", func(t *testing.T) {
+			t.Parallel()
+		})
+
+		t.Run("sets_ca_bundle_with_ca_certificate_from_created_secret", func(t *testing.T) {
+			t.Parallel()
+		})
+	})
+}

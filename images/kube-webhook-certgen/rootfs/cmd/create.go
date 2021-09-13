@@ -18,7 +18,9 @@ var create = &cobra.Command{
 }
 
 func createCommand(cmd *cobra.Command, args []string) {
-	k := k8s.New(newKubernetesClient(cfg.kubeconfig))
+	clientset, aggregatorClientset := newKubernetesClients(cfg.kubeconfig)
+	k := k8s.New(clientset, aggregatorClientset)
+
 	ctx := context.TODO()
 
 	ca := k.GetCaFromSecret(ctx, cfg.secretName, cfg.namespace)

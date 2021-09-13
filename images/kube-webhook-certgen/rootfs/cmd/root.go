@@ -9,6 +9,7 @@ import (
 	admissionv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 )
 
 var (
@@ -84,7 +85,7 @@ func getFormatter(logfmt string) log.Formatter {
 	return nil
 }
 
-func newKubernetesClient(kubeconfig string) kubernetes.Interface {
+func newKubernetesClients(kubeconfig string) (kubernetes.Interface, clientset.Interface) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		log.WithError(err).Fatal("error building kubernetes config")
@@ -95,5 +96,10 @@ func newKubernetesClient(kubeconfig string) kubernetes.Interface {
 		log.WithError(err).Fatal("error creating kubernetes client")
 	}
 
-	return c
+	aggregatorClientset, err := clientset.NewForConfig(config)
+	if err != nil {
+		log.WithError(err).Fatal("error creating kubernetes aggregator client")
+	}
+
+	return c, aggregatorClientset
 }

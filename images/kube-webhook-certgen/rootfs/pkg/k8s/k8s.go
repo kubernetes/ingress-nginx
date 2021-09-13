@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	admissionv1 "k8s.io/api/admissionregistration/v1"
@@ -9,20 +10,93 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 )
 
 type k8s struct {
-	clientset kubernetes.Interface
+	clientset           kubernetes.Interface
+	aggregatorClientset clientset.Interface
 }
 
-func New(clientset kubernetes.Interface) *k8s {
+func New(clientset kubernetes.Interface, aggregatorClientset clientset.Interface) *k8s {
 	if clientset == nil {
 		log.Fatal("no kubernetes client given")
 	}
 
-	return &k8s{
-		clientset: clientset,
+	if aggregatorClientset == nil {
+		log.Fatal("no kubernetes aggregator client given")
 	}
+
+	return &k8s{
+		clientset:           clientset,
+		aggregatorClientset: aggregatorClientset,
+	}
+}
+
+type PatchOptions struct {
+	ValidatingWebhookConfigurationName string
+	MutatingWebhookConfigurationName   string
+	APIServiceName                     string
+	CABundle                           []byte
+	FailurePolicyType                  *admissionv1.FailurePolicyType
+}
+
+func (k8s *k8s) PatchObjects(ctx context.Context, options PatchOptions) error {
+	patchMutating := options.MutatingWebhookConfigurationName != ""
+	patchValidating := options.ValidatingWebhookConfigurationName != ""
+	patchAPIService := options.APIServiceName != ""
+
+	if !patchMutating && !patchValidating && options.FailurePolicyType != nil {
+		return fmt.Errorf("failurePolicy specified, but no webhook will be patched")
+	}
+
+	if options.MutatingWebhookConfigurationName != options.ValidatingWebhookConfigurationName {
+		return fmt.Errorf("webhook names must be the same")
+	}
+
+	if patchAPIService {
+		log.Infof("patching APIService %q", options.APIServiceName)
+
+		if err := k8s.patchAPIService(ctx, options.APIServiceName, options.CABundle); err != nil {
+			// Intentionally don't wrap error here to preserve old behavior and be able to log both
+			// original error and a message.
+			return err
+		}
+	}
+
+	if patchMutating || patchValidating {
+		return k8s.PatchWebhookConfigurations(ctx, options.ValidatingWebhookConfigurationName, options.CABundle, options.FailurePolicyType, patchMutating, patchValidating)
+	}
+
+	return nil
+}
+
+func (k8s *k8s) patchAPIService(ctx context.Context, objectName string, ca []byte) error {
+	log.Infof("patching APIService %q", objectName)
+
+	c := k8s.aggregatorClientset.ApiregistrationV1().APIServices()
+
+	apiService, err := c.Get(ctx, objectName, metav1.GetOptions{})
+	if err != nil {
+		return &wrappedError{
+			err:     err,
+			message: fmt.Sprintf("failed getting APIService %q", objectName),
+		}
+	}
+
+	apiService.Spec.CABundle = ca
+	apiService.Spec.InsecureSkipTLSVerify = false
+
+	if _, err := c.Update(ctx, apiService, metav1.UpdateOptions{}); err != nil {
+		return &wrappedError{
+			err:     err,
+			message: fmt.Sprintf("failed patching APIService %q", objectName),
+		}
+	}
+
+	log.Debug("patched APIService")
+
+	return nil
 }
 
 // PatchWebhookConfigurations will patch validatingWebhook and mutatingWebhook clientConfig configurations with
