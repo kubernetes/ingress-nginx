@@ -82,7 +82,7 @@ func (k8s *k8s) patchMutating(configurationName string, ca []byte, failurePolicy
 		MutatingWebhookConfigurations().
 		Get(context.TODO(), configurationName, metav1.GetOptions{})
 	if err != nil {
-		log.WithField("err", err).Fatal("failed getting validating webhook")
+		log.WithField("err", err).Fatal("failed getting mutating webhook")
 	}
 
 	for i := range mutHook.Webhooks {
@@ -96,7 +96,7 @@ func (k8s *k8s) patchMutating(configurationName string, ca []byte, failurePolicy
 	if _, err = k8s.clientset.AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
 		Update(context.TODO(), mutHook, metav1.UpdateOptions{}); err != nil {
-		log.WithField("err", err).Fatal("failed patching validating webhook")
+		log.WithField("err", err).Fatal("failed patching mutating webhook")
 	}
 	log.Debug("patched mutating hook")
 }
