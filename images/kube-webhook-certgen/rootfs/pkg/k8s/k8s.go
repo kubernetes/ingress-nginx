@@ -65,7 +65,7 @@ func (k8s *k8s) PatchObjects(ctx context.Context, options PatchOptions) error {
 	}
 
 	if patchMutating || patchValidating {
-		return k8s.PatchWebhookConfigurations(ctx, options.ValidatingWebhookConfigurationName, options.CABundle, options.FailurePolicyType, patchMutating, patchValidating)
+		return k8s.patchWebhookConfigurations(ctx, options.ValidatingWebhookConfigurationName, options.CABundle, options.FailurePolicyType, patchMutating, patchValidating)
 	}
 
 	return nil
@@ -101,7 +101,7 @@ func (k8s *k8s) patchAPIService(ctx context.Context, objectName string, ca []byt
 
 // PatchWebhookConfigurations will patch validatingWebhook and mutatingWebhook clientConfig configurations with
 // the provided ca data. If failurePolicy is provided, patch all webhooks with this value
-func (k8s *k8s) PatchWebhookConfigurations(
+func (k8s *k8s) patchWebhookConfigurations(
 	ctx context.Context,
 	configurationName string,
 	ca []byte,

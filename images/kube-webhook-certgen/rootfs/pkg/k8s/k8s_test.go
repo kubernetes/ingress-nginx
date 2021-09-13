@@ -115,7 +115,7 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 			Webhooks: []admissionv1.ValidatingWebhook{{Name: "v1"}, {Name: "v2"}},
 		}, metav1.CreateOptions{})
 
-	if err := k.PatchWebhookConfigurations(context.TODO(), testWebhookName, ca, &fail, true, true); err != nil {
+	if err := k.patchWebhookConfigurations(context.TODO(), testWebhookName, ca, &fail, true, true); err != nil {
 		t.Fatalf("Unexpected error patching webhooks: %s: %v", err.Error(), errors.Unwrap(err))
 	}
 
