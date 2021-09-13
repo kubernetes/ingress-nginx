@@ -34,7 +34,7 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
 {{ if (shouldLoadOpenTelemetryModule $cfg $servers) }}
-load_module /etc/nginx/modules/otel_ngx_module.so;
+load_module /etc/nginx/modules/opentelemetry_nginx.so;
 {{ end }}
 
 {{ if (shouldLoadOpentracingModule $cfg $servers) }}
