@@ -1027,6 +1027,9 @@ stream {
             proxy_set_header            X-Forwarded-For        $remote_addr;
             {{ end }}
 
+            # Pass the original X-Forwarded-For
+            proxy_set_header            X-Original-Forwarded-For $http_x_forwarded_for;
+
             {{ if $externalAuth.RequestRedirect }}
             proxy_set_header            X-Auth-Request-Redirect {{ $externalAuth.RequestRedirect }};
             {{ else }}
