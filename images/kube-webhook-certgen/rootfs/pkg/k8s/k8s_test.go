@@ -124,7 +124,7 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 	}
 
 	whval, err := k.clientset.
-		AdmissionregistrationV1beta1().
+		AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
 		Get(context.Background(), testWebhookName, metav1.GetOptions{})
 	if err != nil {
