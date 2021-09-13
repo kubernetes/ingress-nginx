@@ -19,6 +19,7 @@ package controller
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -32,6 +33,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
@@ -372,6 +374,96 @@ func TestConfigureCertificates(t *testing.T) {
 	err = configureCertificates(servers)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic certificate configuration: %v", err)
+	}
+}
+
+func TestConfigureOpenTelemetryCfgNotConfigured(t *testing.T) {
+	dir, _ := ioutil.TempDir("", "opentelemetry")
+	configPath := filepath.Join(dir, "opentelemetry.toml")
+
+	config := ngx_config.Configuration{}
+	err := createOpenTelemetryCfg(config, configPath)
+	if err != nil {
+		t.Errorf("unexpected error configuring OpenTelemetry: %v", err)
+	}
+	if _, err := os.Stat(configPath); !os.IsNotExist(err) {
+		t.Errorf("expected %s not to be created, but was found on disk", configPath)
+	}
+
+}
+
+func TestConfigureOpenTelemetryCfg(t *testing.T) {
+	dir, _ := ioutil.TempDir("", "opentelemetry")
+	configPath := filepath.Join(dir, "opentelemetry.toml")
+
+	for _, tt := range []struct {
+		name          string
+		config        ngx_config.Configuration
+		configContent string
+	}{
+		{
+			name: "with no collector config",
+			config: ngx_config.Configuration{
+				EnableOpenTelemetry: true,
+			},
+			configContent: `
+exporter = "otlp"
+processor = "simple"
+
+[service]
+name = "ingress-nginx"
+`,
+		},
+		{
+			name: "with no a collector host but not port",
+			config: ngx_config.Configuration{
+				EnableOpenTelemetry: true,
+				OtlpCollectorHost:   "example.com",
+			},
+			configContent: `
+exporter = "otlp"
+processor = "simple"
+[exporters.otlp]
+host = "example.com"
+
+
+[service]
+name = "ingress-nginx"
+`,
+		},
+		{
+			name: "with no a collector host and port",
+			config: ngx_config.Configuration{
+				EnableOpenTelemetry: true,
+				OtlpCollectorHost:   "example.com",
+				OtlpCollectorPort:   1234,
+			},
+			configContent: `
+exporter = "otlp"
+processor = "simple"
+[exporters.otlp]
+host = "example.com"
+port = 1234
+
+[service]
+name = "ingress-nginx"
+`,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			err := createOpenTelemetryCfg(tt.config, configPath)
+			if err != nil {
+				t.Errorf("unexpected error configuring OpenTelemetry: %v", err)
+			}
+			c, err := os.ReadFile(configPath)
+			if err != nil {
+				t.Errorf("unexpected no error while reading config file. Got %s", err)
+			}
+
+			if string(c) != tt.configContent {
+				t.Errorf("unexpected config to be %q, got %q", tt.configContent, string(c))
+			}
+		})
 	}
 }
 

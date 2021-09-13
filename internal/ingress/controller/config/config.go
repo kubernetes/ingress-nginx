@@ -573,7 +573,8 @@ type Configuration struct {
 
 	// OtlpExporterPost defines the port of the OpenTelemetry collector instance
 	// where the data will be transmitted
-	OtlpCollectorPort string `json:"otlp-collector-port"`
+	// Default: 4318
+	OtlpCollectorPort int `json:"otlp-collector-port"`
 
 	// ZipkinCollectorHost specifies the host to use when uploading traces
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`

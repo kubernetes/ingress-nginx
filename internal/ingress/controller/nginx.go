@@ -667,7 +667,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	err = createOpenTelemetryCfg(cfg)
+	err = createOpenTelemetryCfg(cfg, "/etc/nginx/opentelemetry.toml")
 	if err != nil {
 		return err
 	}
@@ -1045,17 +1045,23 @@ const otlpTmpl = `
 exporter = "otlp"
 processor = "simple"
 
+{{- if .OtlpCollectorHost }}
 [exporters.otlp]
-host = "{{.OtlpExporterHost}}"
-port = {{.OtlpExporterPort}}
+host = "{{.OtlpCollectorHost}}"
+{{ if .OtlpCollectorPort }}port = {{.OtlpCollectorPort}}{{- end }}
+{{- end }}
 
 [service]
 name = "ingress-nginx"
 `
 
-func createOpenTelemetryCfg(cfg ngx_config.Configuration) error {
+func createOpenTelemetryCfg(cfg ngx_config.Configuration, configPath string) error {
 	var tmpl *template.Template
 	var err error
+
+	if !cfg.EnableOpenTelemetry {
+		return nil
+	}
 
 	tmpl, _ = template.New("opentelemetry").Parse(otlpTmpl)
 
@@ -1068,7 +1074,7 @@ func createOpenTelemetryCfg(cfg ngx_config.Configuration) error {
 	// Expand possible environment variables before writing the configuration to file.
 	expanded := os.ExpandEnv(tmplBuf.String())
 
-	return os.WriteFile("/etc/nginx/opentelemetry.toml", []byte(expanded), file.ReadWriteByUser)
+	return os.WriteFile(configPath, []byte(expanded), file.ReadWriteByUser)
 }
 
 const zipkinTmpl = `{
