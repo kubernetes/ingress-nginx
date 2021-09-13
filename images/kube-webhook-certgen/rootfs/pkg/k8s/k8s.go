@@ -28,9 +28,12 @@ func New(clientset kubernetes.Interface) *k8s {
 // PatchWebhookConfigurations will patch validatingWebhook and mutatingWebhook clientConfig configurations with
 // the provided ca data. If failurePolicy is provided, patch all webhooks with this value
 func (k8s *k8s) PatchWebhookConfigurations(
-	configurationNames string, ca []byte,
+	configurationNames string,
+	ca []byte,
 	failurePolicy *admissionv1.FailurePolicyType,
-	patchMutating bool, patchValidating bool) {
+	patchMutating bool,
+	patchValidating bool,
+) {
 	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationNames, patchMutating, patchValidating, *failurePolicy)
 
 	if patchValidating {
