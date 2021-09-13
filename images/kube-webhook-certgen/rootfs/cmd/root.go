@@ -7,6 +7,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	admissionv1 "k8s.io/api/admissionregistration/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -80,4 +82,18 @@ func getFormatter(logfmt string) log.Formatter {
 
 	log.Fatalf("invalid log format '%s'", logfmt)
 	return nil
+}
+
+func newKubernetesClient(kubeconfig string) kubernetes.Interface {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		log.WithError(err).Fatal("error building kubernetes config")
+	}
+
+	c, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.WithError(err).Fatal("error creating kubernetes client")
+	}
+
+	return c
 }

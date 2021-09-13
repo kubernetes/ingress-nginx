@@ -9,25 +9,20 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 type k8s struct {
 	clientset kubernetes.Interface
 }
 
-func New(kubeconfig string) *k8s {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		log.WithError(err).Fatal("error building kubernetes config")
+func New(clientset kubernetes.Interface) *k8s {
+	if clientset == nil {
+		log.Fatal("no kubernetes client given")
 	}
 
-	c, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		log.WithError(err).Fatal("error creating kubernetes client")
+	return &k8s{
+		clientset: clientset,
 	}
-
-	return &k8s{clientset: c}
 }
 
 // PatchWebhookConfigurations will patch validatingWebhook and mutatingWebhook clientConfig configurations with
