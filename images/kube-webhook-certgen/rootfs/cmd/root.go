@@ -6,7 +6,6 @@ import (
 	"github.com/onrik/logrus/filename"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	admissionv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
@@ -36,8 +35,6 @@ var (
 		patchFailurePolicy string
 		kubeconfig         string
 	}{}
-
-	failurePolicy admissionv1.FailurePolicyType
 )
 
 // Execute is the main entry point for the program

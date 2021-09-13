@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jet/kube-webhook-certgen/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -14,37 +15,53 @@ var patch = &cobra.Command{
 	Use:    "patch",
 	Short:  "Patch a validatingwebhookconfiguration and mutatingwebhookconfiguration 'webhook-name' by using the ca from 'secret-name' in 'namespace'",
 	Long:   "Patch a validatingwebhookconfiguration and mutatingwebhookconfiguration 'webhook-name' by using the ca from 'secret-name' in 'namespace'",
-	PreRun: prePatchCommand,
+	PreRun: configureLogging,
 	Run:    patchCommand,
 }
 
-func prePatchCommand(cmd *cobra.Command, args []string) {
-	configureLogging(cmd, args)
-	if !cfg.patchMutating && !cfg.patchValidating {
-		log.Fatal("patch-validating=false, patch-mutating=false. You must patch at least one kind of webhook, otherwise this command is a no-op")
+type PatchConfig struct {
+	PatchMutating      bool
+	PatchValidating    bool
+	PatchFailurePolicy string
+	WebhookName        string
+
+	SecretName string
+	Namespace  string
+
+	Patcher Patcher
+}
+
+type Patcher interface {
+	PatchObjects(ctx context.Context, options k8s.PatchOptions) error
+	GetCaFromSecret(ctx context.Context, secretName, namespace string) []byte
+}
+
+func Patch(ctx context.Context, cfg *PatchConfig) error {
+	if cfg.Patcher == nil {
+		return fmt.Errorf("no patcher defined")
 	}
-	switch cfg.patchFailurePolicy {
+
+	if !cfg.PatchMutating && !cfg.PatchValidating {
+		return fmt.Errorf("patch-validating=false, patch-mutating=false. You must patch at least one kind of webhook, otherwise this command is a no-op")
+	}
+
+	var failurePolicy admissionv1.FailurePolicyType
+
+	switch cfg.PatchFailurePolicy {
 	case "":
 		break
 	case "Ignore":
 	case "Fail":
-		failurePolicy = admissionv1.FailurePolicyType(cfg.patchFailurePolicy)
+		failurePolicy = admissionv1.FailurePolicyType(cfg.PatchFailurePolicy)
 		break
 	default:
-		log.Fatalf("patch-failure-policy %s is not valid", cfg.patchFailurePolicy)
+		return fmt.Errorf("patch-failure-policy %s is not valid", cfg.PatchFailurePolicy)
 	}
-}
 
-func patchCommand(_ *cobra.Command, _ []string) {
-	ctx := context.TODO()
-
-	client, aggregationClient := newKubernetesClients(cfg.kubeconfig)
-
-	k := k8s.New(client, aggregationClient)
-	ca := k.GetCaFromSecret(ctx, cfg.secretName, cfg.namespace)
+	ca := cfg.Patcher.GetCaFromSecret(ctx, cfg.SecretName, cfg.Namespace)
 
 	if ca == nil {
-		log.Fatalf("no secret with '%s' in '%s'", cfg.secretName, cfg.namespace)
+		return fmt.Errorf("no secret with '%s' in '%s'", cfg.SecretName, cfg.Namespace)
 	}
 
 	options := k8s.PatchOptions{
@@ -52,16 +69,38 @@ func patchCommand(_ *cobra.Command, _ []string) {
 		FailurePolicyType: &failurePolicy,
 	}
 
-	if cfg.patchMutating {
-		options.MutatingWebhookConfigurationName = cfg.webhookName
+	if cfg.PatchMutating {
+		options.MutatingWebhookConfigurationName = cfg.WebhookName
 	}
 
-	if cfg.patchValidating {
-		options.ValidatingWebhookConfigurationName = cfg.webhookName
+	if cfg.PatchValidating {
+		options.ValidatingWebhookConfigurationName = cfg.WebhookName
 	}
 
-	if err := k.PatchObjects(ctx, options); err != nil {
-		log.WithField("err", errors.Unwrap(err)).Fatal(err.Error())
+	return cfg.Patcher.PatchObjects(ctx, options)
+}
+
+func patchCommand(_ *cobra.Command, _ []string) {
+	client, aggregationClient := newKubernetesClients(cfg.kubeconfig)
+
+	config := &PatchConfig{
+		SecretName:         cfg.secretName,
+		Namespace:          cfg.namespace,
+		PatchMutating:      cfg.patchMutating,
+		PatchValidating:    cfg.patchValidating,
+		PatchFailurePolicy: cfg.patchFailurePolicy,
+		WebhookName:        cfg.webhookName,
+		Patcher:            k8s.New(client, aggregationClient),
+	}
+
+	ctx := context.TODO()
+
+	if err := Patch(ctx, config); err != nil {
+		if wrappedErr := errors.Unwrap(err); wrappedErr != nil {
+			log.WithField("err", wrappedErr).Fatal(err.Error())
+		}
+
+		log.Fatal(err.Error())
 	}
 }
 
