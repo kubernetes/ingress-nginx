@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 
 	"github.com/jet/kube-webhook-certgen/pkg/k8s"
@@ -36,13 +37,15 @@ func prePatchCommand(cmd *cobra.Command, args []string) {
 
 func patchCommand(_ *cobra.Command, _ []string) {
 	k := k8s.New(newKubernetesClient(cfg.kubeconfig))
-	ca := k.GetCaFromSecret(cfg.secretName, cfg.namespace)
+	ctx := context.TODO()
+
+	ca := k.GetCaFromSecret(ctx, cfg.secretName, cfg.namespace)
 
 	if ca == nil {
 		log.Fatalf("no secret with '%s' in '%s'", cfg.secretName, cfg.namespace)
 	}
 
-	if err := k.PatchWebhookConfigurations(cfg.webhookName, ca, &failurePolicy, cfg.patchMutating, cfg.patchValidating); err != nil {
+	if err := k.PatchWebhookConfigurations(ctx, cfg.webhookName, ca, &failurePolicy, cfg.patchMutating, cfg.patchValidating); err != nil {
 		log.WithField("err", errors.Unwrap(err)).Fatal(err.Error())
 	}
 }
