@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"errors"
 
 	log "github.com/sirupsen/logrus"
 	admissionv1 "k8s.io/api/admissionregistration/v1"
@@ -37,13 +38,17 @@ func (k8s *k8s) PatchWebhookConfigurations(
 	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationName, patchMutating, patchValidating, *failurePolicy)
 
 	if patchValidating {
-		k8s.patchValidating(configurationName, ca, failurePolicy)
+		if err := k8s.patchValidating(configurationName, ca, failurePolicy); err != nil {
+			log.WithField("err", errors.Unwrap(err)).Fatal(err.Error())
+		}
 	} else {
 		log.Debug("validating hook patching not required")
 	}
 
 	if patchMutating {
-		k8s.patchMutating(configurationName, ca, failurePolicy)
+		if err := k8s.patchMutating(configurationName, ca, failurePolicy); err != nil {
+			log.WithField("err", errors.Unwrap(err)).Fatal(err.Error())
+		}
 	} else {
 		log.Debug("mutating hook patching not required")
 	}
@@ -51,13 +56,29 @@ func (k8s *k8s) PatchWebhookConfigurations(
 	log.Info("Patched hook(s)")
 }
 
-func (k8s *k8s) patchValidating(configurationName string, ca []byte, failurePolicy *admissionv1.FailurePolicyType) {
+type wrappedError struct {
+	err     error
+	message string
+}
+
+func (err wrappedError) Error() string {
+	return err.message
+}
+
+func (err wrappedError) Unwrap() error {
+	return err.err
+}
+
+func (k8s *k8s) patchValidating(configurationName string, ca []byte, failurePolicy *admissionv1.FailurePolicyType) error {
 	valHook, err := k8s.clientset.
 		AdmissionregistrationV1().
 		ValidatingWebhookConfigurations().
 		Get(context.TODO(), configurationName, metav1.GetOptions{})
 	if err != nil {
-		log.WithField("err", err).Fatal("failed getting validating webhook")
+		return &wrappedError{
+			err:     err,
+			message: "failed getting validating webhook",
+		}
 	}
 
 	for i := range valHook.Webhooks {
@@ -71,18 +92,26 @@ func (k8s *k8s) patchValidating(configurationName string, ca []byte, failurePoli
 	if _, err = k8s.clientset.AdmissionregistrationV1().
 		ValidatingWebhookConfigurations().
 		Update(context.TODO(), valHook, metav1.UpdateOptions{}); err != nil {
-		log.WithField("err", err).Fatal("failed patching validating webhook")
+		return &wrappedError{
+			err:     err,
+			message: "failed patching validating webhook",
+		}
 	}
 	log.Debug("patched validating hook")
+
+	return nil
 }
 
-func (k8s *k8s) patchMutating(configurationName string, ca []byte, failurePolicy *admissionv1.FailurePolicyType) {
+func (k8s *k8s) patchMutating(configurationName string, ca []byte, failurePolicy *admissionv1.FailurePolicyType) error {
 	mutHook, err := k8s.clientset.
 		AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
 		Get(context.TODO(), configurationName, metav1.GetOptions{})
 	if err != nil {
-		log.WithField("err", err).Fatal("failed getting mutating webhook")
+		return &wrappedError{
+			err:     err,
+			message: "failed getting mutating webhook",
+		}
 	}
 
 	for i := range mutHook.Webhooks {
@@ -96,9 +125,14 @@ func (k8s *k8s) patchMutating(configurationName string, ca []byte, failurePolicy
 	if _, err = k8s.clientset.AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
 		Update(context.TODO(), mutHook, metav1.UpdateOptions{}); err != nil {
-		log.WithField("err", err).Fatal("failed patching mutating webhook")
+		return &wrappedError{
+			err:     err,
+			message: "failed patching mutating webhook",
+		}
 	}
 	log.Debug("patched mutating hook")
+
+	return nil
 }
 
 // GetCaFromSecret will check for the presence of a secret. If it exists, will return the content of the
