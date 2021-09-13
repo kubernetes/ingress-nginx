@@ -47,7 +47,20 @@ func patchCommand(_ *cobra.Command, _ []string) {
 		log.Fatalf("no secret with '%s' in '%s'", cfg.secretName, cfg.namespace)
 	}
 
-	if err := k.PatchWebhookConfigurations(ctx, cfg.webhookName, ca, &failurePolicy, cfg.patchMutating, cfg.patchValidating); err != nil {
+	options := k8s.PatchOptions{
+		CABundle:          ca,
+		FailurePolicyType: &failurePolicy,
+	}
+
+	if cfg.patchMutating {
+		options.MutatingWebhookConfigurationName = cfg.webhookName
+	}
+
+	if cfg.patchValidating {
+		options.ValidatingWebhookConfigurationName = cfg.webhookName
+	}
+
+	if err := k.PatchObjects(ctx, options); err != nil {
 		log.WithField("err", errors.Unwrap(err)).Fatal(err.Error())
 	}
 }
