@@ -17,7 +17,7 @@ var patch = &cobra.Command{
 
 func prePatchCommand(cmd *cobra.Command, args []string) {
 	configureLogging(cmd, args)
-	if cfg.patchMutating == false && cfg.patchValidating == false {
+	if !cfg.patchMutating && !cfg.patchValidating {
 		log.Fatal("patch-validating=false, patch-mutating=false. You must patch at least one kind of webhook, otherwise this command is a no-op")
 	}
 	switch cfg.patchFailurePolicy {
