@@ -37,60 +37,68 @@ func (k8s *k8s) PatchWebhookConfigurations(
 	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationName, patchMutating, patchValidating, *failurePolicy)
 
 	if patchValidating {
-		valHook, err := k8s.clientset.
-			AdmissionregistrationV1().
-			ValidatingWebhookConfigurations().
-			Get(context.TODO(), configurationName, metav1.GetOptions{})
-		if err != nil {
-			log.WithField("err", err).Fatal("failed getting validating webhook")
-		}
-
-		for i := range valHook.Webhooks {
-			h := &valHook.Webhooks[i]
-			h.ClientConfig.CABundle = ca
-			if *failurePolicy != "" {
-				h.FailurePolicy = failurePolicy
-			}
-		}
-
-		if _, err = k8s.clientset.AdmissionregistrationV1().
-			ValidatingWebhookConfigurations().
-			Update(context.TODO(), valHook, metav1.UpdateOptions{}); err != nil {
-			log.WithField("err", err).Fatal("failed patching validating webhook")
-		}
-		log.Debug("patched validating hook")
+		k8s.patchValidating(configurationName, ca, failurePolicy)
 	} else {
 		log.Debug("validating hook patching not required")
 	}
 
 	if patchMutating {
-		mutHook, err := k8s.clientset.
-			AdmissionregistrationV1().
-			MutatingWebhookConfigurations().
-			Get(context.TODO(), configurationName, metav1.GetOptions{})
-		if err != nil {
-			log.WithField("err", err).Fatal("failed getting validating webhook")
-		}
-
-		for i := range mutHook.Webhooks {
-			h := &mutHook.Webhooks[i]
-			h.ClientConfig.CABundle = ca
-			if *failurePolicy != "" {
-				h.FailurePolicy = failurePolicy
-			}
-		}
-
-		if _, err = k8s.clientset.AdmissionregistrationV1().
-			MutatingWebhookConfigurations().
-			Update(context.TODO(), mutHook, metav1.UpdateOptions{}); err != nil {
-			log.WithField("err", err).Fatal("failed patching validating webhook")
-		}
-		log.Debug("patched mutating hook")
+		k8s.patchMutating(configurationName, ca, failurePolicy)
 	} else {
 		log.Debug("mutating hook patching not required")
 	}
 
 	log.Info("Patched hook(s)")
+}
+
+func (k8s *k8s) patchValidating(configurationName string, ca []byte, failurePolicy *admissionv1.FailurePolicyType) {
+	valHook, err := k8s.clientset.
+		AdmissionregistrationV1().
+		ValidatingWebhookConfigurations().
+		Get(context.TODO(), configurationName, metav1.GetOptions{})
+	if err != nil {
+		log.WithField("err", err).Fatal("failed getting validating webhook")
+	}
+
+	for i := range valHook.Webhooks {
+		h := &valHook.Webhooks[i]
+		h.ClientConfig.CABundle = ca
+		if *failurePolicy != "" {
+			h.FailurePolicy = failurePolicy
+		}
+	}
+
+	if _, err = k8s.clientset.AdmissionregistrationV1().
+		ValidatingWebhookConfigurations().
+		Update(context.TODO(), valHook, metav1.UpdateOptions{}); err != nil {
+		log.WithField("err", err).Fatal("failed patching validating webhook")
+	}
+	log.Debug("patched validating hook")
+}
+
+func (k8s *k8s) patchMutating(configurationName string, ca []byte, failurePolicy *admissionv1.FailurePolicyType) {
+	mutHook, err := k8s.clientset.
+		AdmissionregistrationV1().
+		MutatingWebhookConfigurations().
+		Get(context.TODO(), configurationName, metav1.GetOptions{})
+	if err != nil {
+		log.WithField("err", err).Fatal("failed getting validating webhook")
+	}
+
+	for i := range mutHook.Webhooks {
+		h := &mutHook.Webhooks[i]
+		h.ClientConfig.CABundle = ca
+		if *failurePolicy != "" {
+			h.FailurePolicy = failurePolicy
+		}
+	}
+
+	if _, err = k8s.clientset.AdmissionregistrationV1().
+		MutatingWebhookConfigurations().
+		Update(context.TODO(), mutHook, metav1.UpdateOptions{}); err != nil {
+		log.WithField("err", err).Fatal("failed patching validating webhook")
+	}
+	log.Debug("patched mutating hook")
 }
 
 // GetCaFromSecret will check for the presence of a secret. If it exists, will return the content of the
