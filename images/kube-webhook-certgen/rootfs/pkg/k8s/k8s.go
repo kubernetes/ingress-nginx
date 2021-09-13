@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"context"
-	"errors"
 
 	log "github.com/sirupsen/logrus"
 	admissionv1 "k8s.io/api/admissionregistration/v1"
@@ -34,12 +33,13 @@ func (k8s *k8s) PatchWebhookConfigurations(
 	failurePolicy *admissionv1.FailurePolicyType,
 	patchMutating bool,
 	patchValidating bool,
-) {
+) error {
 	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationName, patchMutating, patchValidating, *failurePolicy)
 
 	if patchValidating {
 		if err := k8s.patchValidating(configurationName, ca, failurePolicy); err != nil {
-			log.WithField("err", errors.Unwrap(err)).Fatal(err.Error())
+			// Intentionally don't wrap error here to preserve old behavior and be able to log both original error and a message.
+			return err
 		}
 	} else {
 		log.Debug("validating hook patching not required")
@@ -47,13 +47,16 @@ func (k8s *k8s) PatchWebhookConfigurations(
 
 	if patchMutating {
 		if err := k8s.patchMutating(configurationName, ca, failurePolicy); err != nil {
-			log.WithField("err", errors.Unwrap(err)).Fatal(err.Error())
+			// Intentionally don't wrap error here to preserve old behavior and be able to log both original error and a message.
+			return err
 		}
 	} else {
 		log.Debug("mutating hook patching not required")
 	}
 
 	log.Info("Patched hook(s)")
+
+	return nil
 }
 
 type wrappedError struct {

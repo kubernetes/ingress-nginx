@@ -3,6 +3,7 @@ package k8s
 import (
 	"bytes"
 	"context"
+	"errors"
 	"math/rand"
 	"testing"
 
@@ -113,7 +114,9 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 			Webhooks: []admissionv1.ValidatingWebhook{{Name: "v1"}, {Name: "v2"}},
 		}, metav1.CreateOptions{})
 
-	k.PatchWebhookConfigurations(testWebhookName, ca, &fail, true, true)
+	if err := k.PatchWebhookConfigurations(testWebhookName, ca, &fail, true, true); err != nil {
+		t.Fatalf("Unexpected error patching webhooks: %s: %v", err.Error(), errors.Unwrap(err))
+	}
 
 	whmut, err := k.clientset.
 		AdmissionregistrationV1().
