@@ -728,14 +728,13 @@ cd "$BUILD_PATH/lua-resty-global-throttle-$LUA_RESTY_GLOBAL_THROTTLE_VERSION"
 make install
 
 cd "$BUILD_PATH/lua-resty-session-$LUA_RESTY_SESSION"
-make install
+cp -r lib/resty/* /usr/local/lib/lua/resty/
 
 cd "$BUILD_PATH/lua-resty-jwt-$LUA_RESTY_JWT"
-make install
+cp -r lib/resty/* /usr/local/lib/lua/resty/
 
 cd "$BUILD_PATH/lua-resty-openidc-$LUA_RESTY_OPENIDC"
-make install
-
+cp -r lib/resty/* /usr/local/lib/lua/resty/
 
 # mimalloc
 cd "$BUILD_PATH"
