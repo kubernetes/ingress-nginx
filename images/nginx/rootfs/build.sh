@@ -127,6 +127,15 @@ export LUA_RESTY_IPMATCHER_VERSION=211e0d2eb8bbb558b79368f89948a0bafdc23654
 # Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
 export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
 
+# Check for recent changes: https://github.com/bungle/lua-resty-session/compare/v3.8...master
+export LUA_RESTY_SESSION=3.8
+
+# Check for recent changes: https://github.com/SkyLothar/lua-resty-jwt/compare/v0.1.11...master
+export LUA_RESTY_JWT=0.1.11
+
+# Check for recent changes: https://github.com/zmartzone/lua-resty-openidc/compare/v1.7.4...master
+export LUA_RESTY_OPENIDC=1.7.4
+
 export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
@@ -319,6 +328,15 @@ get_src b8dbd502751140993a852381bcd8e98a402454596bd91838c1e51268d42db261 \
 
 get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
         "https://github.com/ElvinEfendi/lua-resty-global-throttle/archive/v$LUA_RESTY_GLOBAL_THROTTLE_VERSION.tar.gz"
+
+get_src 6917d7a64b2619394787406c0d41f398f5c172b27b244fc7181b7c8a44c382f3 \
+        "https://github.com/bungle/lua-resty-session/archive/v$LUA_RESTY_SESSION.tar.gz"
+
+get_src e7c2b0b8edf14eed7569cd5684fc00c6f97a8abf6d6c0e462cd49b4b266e3390 \
+        "https://github.com/SkyLothar/lua-resty-jwt/archive/v$LUA_RESTY_JWT.tar.gz"
+
+get_src 24fa6b1e0721588df16e604a3b347f0febb670ae23385c4bdf22e65099d7abc3 \
+        "https://github.com/zmartzone/lua-resty-openidc/archive/v$LUA_RESTY_OPENIDC.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
@@ -708,6 +726,16 @@ INST_LUADIR=/usr/local/lib/lua make install
 
 cd "$BUILD_PATH/lua-resty-global-throttle-$LUA_RESTY_GLOBAL_THROTTLE_VERSION"
 make install
+
+cd "$BUILD_PATH/lua-resty-session-$LUA_RESTY_SESSION"
+make install
+
+cd "$BUILD_PATH/lua-resty-jwt-$LUA_RESTY_JWT"
+make install
+
+cd "$BUILD_PATH/lua-resty-openidc-$LUA_RESTY_OPENIDC"
+make install
+
 
 # mimalloc
 cd "$BUILD_PATH"
