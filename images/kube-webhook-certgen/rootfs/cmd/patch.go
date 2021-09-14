@@ -13,8 +13,8 @@ import (
 
 var patch = &cobra.Command{
 	Use:    "patch",
-	Short:  "Patch a ValidatingWebhookConfiguration and MutatingWebhookConfiguration 'webhook-name' by using the ca from 'secret-name' in 'namespace'",
-	Long:   "Patch a ValidatingWebhookConfiguration and MutatingWebhookConfiguration 'webhook-name' by using the ca from 'secret-name' in 'namespace'",
+	Short:  "Patch a ValidatingWebhookConfiguration, MutatingWebhookConfiguration or APIService 'object-name' by using the ca from 'secret-name' in 'namespace'",
+	Long:   "Patch a ValidatingWebhookConfiguration, MutatingWebhookConfiguration or APIService 'object-name' by using the ca from 'secret-name' in 'namespace'",
 	PreRun: configureLogging,
 	Run:    patchCommand,
 }
@@ -23,6 +23,7 @@ type PatchConfig struct {
 	PatchMutating      bool
 	PatchValidating    bool
 	PatchFailurePolicy string
+	APIServiceName     string
 	WebhookName        string
 
 	SecretName string
@@ -41,7 +42,7 @@ func Patch(ctx context.Context, cfg *PatchConfig) error {
 		return fmt.Errorf("no patcher defined")
 	}
 
-	if !cfg.PatchMutating && !cfg.PatchValidating {
+	if !cfg.PatchMutating && !cfg.PatchValidating && cfg.APIServiceName == "" {
 		return fmt.Errorf("patch-validating=false, patch-mutating=false. You must patch at least one kind of webhook, otherwise this command is a no-op")
 	}
 
@@ -67,6 +68,7 @@ func Patch(ctx context.Context, cfg *PatchConfig) error {
 	options := k8s.PatchOptions{
 		CABundle:          ca,
 		FailurePolicyType: &failurePolicy,
+		APIServiceName:    cfg.APIServiceName,
 	}
 
 	if cfg.PatchMutating {
@@ -89,6 +91,7 @@ func patchCommand(_ *cobra.Command, _ []string) {
 		PatchMutating:      cfg.patchMutating,
 		PatchValidating:    cfg.patchValidating,
 		PatchFailurePolicy: cfg.patchFailurePolicy,
+		APIServiceName:     cfg.apiServiceName,
 		WebhookName:        cfg.webhookName,
 		Patcher:            k8s.New(client, aggregationClient),
 	}
@@ -109,10 +112,10 @@ func init() {
 	patch.Flags().StringVar(&cfg.secretName, "secret-name", "", "Name of the secret where certificate information will be read from")
 	patch.Flags().StringVar(&cfg.namespace, "namespace", "", "Namespace of the secret where certificate information will be read from")
 	patch.Flags().StringVar(&cfg.webhookName, "webhook-name", "", "Name of ValidatingWebhookConfiguration and MutatingWebhookConfiguration that will be updated")
+	patch.Flags().StringVar(&cfg.apiServiceName, "apiservice-name", "", "Name of APIService that will be patched")
 	patch.Flags().BoolVar(&cfg.patchValidating, "patch-validating", true, "If true, patch ValidatingWebhookConfiguration")
 	patch.Flags().BoolVar(&cfg.patchMutating, "patch-mutating", true, "If true, patch MutatingWebhookConfiguration")
 	patch.Flags().StringVar(&cfg.patchFailurePolicy, "patch-failure-policy", "", "If set, patch the webhooks with this failure policy. Valid options are Ignore or Fail")
 	patch.MarkFlagRequired("secret-name")
 	patch.MarkFlagRequired("namespace")
-	patch.MarkFlagRequired("webhook-name")
 }

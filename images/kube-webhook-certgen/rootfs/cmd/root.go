@@ -29,6 +29,7 @@ var (
 		certName           string
 		keyName            string
 		host               string
+		apiServiceName     string
 		webhookName        string
 		patchValidating    bool
 		patchMutating      bool

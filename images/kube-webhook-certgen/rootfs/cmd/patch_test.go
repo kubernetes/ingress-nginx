@@ -15,6 +15,27 @@ func Test_Patch(t *testing.T) {
 
 	ctx := context.TODO()
 
+	t.Run("patches_APIService_object_when_requested", func(t *testing.T) {
+		t.Parallel()
+
+		config := testPatchConfig()
+		config.APIServiceName = "bar"
+
+		patcher := testPatcher()
+		patcher.patchObjects = func(_ context.Context, options k8s.PatchOptions) error {
+			if options.APIServiceName != config.APIServiceName {
+				return fmt.Errorf("unexpected APIService name %q, expected %q", options.APIServiceName, config.APIServiceName)
+			}
+
+			return nil
+		}
+		config.Patcher = patcher
+
+		if err := cmd.Patch(ctx, config); err != nil {
+			t.Fatalf("Unexpected patching error: %v", err)
+		}
+	})
+
 	t.Run("use_configured_webhook_name_for_patching", func(t *testing.T) {
 		t.Parallel()
 
@@ -173,6 +194,7 @@ func Test_Patch(t *testing.T) {
 			"no_webhooks_are_requested_for_patching": func(c *cmd.PatchConfig) {
 				c.PatchValidating = false
 				c.PatchMutating = false
+				c.APIServiceName = ""
 			},
 			"unsupported_patch_failure_policy_is_defined": func(c *cmd.PatchConfig) {
 				c.PatchFailurePolicy = "foo"
