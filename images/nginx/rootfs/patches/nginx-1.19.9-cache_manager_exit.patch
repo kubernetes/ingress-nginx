@@ -8,7 +8,7 @@ Cache: gracefully exit the cache manager process.
 diff -r dea321e5c021 -r f64218e1ac96 src/os/unix/ngx_process_cycle.c
 --- a/src/os/unix/ngx_process_cycle.c	Thu Oct 31 18:23:49 2013 +0400
 +++ b/src/os/unix/ngx_process_cycle.c	Mon Nov 04 12:48:50 2013 -0800
-@@ -1335,7 +1335,7 @@
+@@ -1134,7 +1134,7 @@
  
          if (ngx_terminate || ngx_quit) {
              ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
