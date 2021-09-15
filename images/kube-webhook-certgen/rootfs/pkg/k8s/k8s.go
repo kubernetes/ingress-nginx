@@ -38,7 +38,7 @@ type PatchOptions struct {
 	MutatingWebhookConfigurationName   string
 	APIServiceName                     string
 	CABundle                           []byte
-	FailurePolicyType                  *admissionv1.FailurePolicyType
+	FailurePolicyType                  admissionv1.FailurePolicyType
 }
 
 func (k8s *k8s) PatchObjects(ctx context.Context, options PatchOptions) error {
@@ -46,7 +46,7 @@ func (k8s *k8s) PatchObjects(ctx context.Context, options PatchOptions) error {
 	patchValidating := options.ValidatingWebhookConfigurationName != ""
 	patchAPIService := options.APIServiceName != ""
 
-	if !patchMutating && !patchValidating && options.FailurePolicyType != nil {
+	if !patchMutating && !patchValidating && options.FailurePolicyType != "" {
 		return fmt.Errorf("failurePolicy specified, but no webhook will be patched")
 	}
 
@@ -105,11 +105,11 @@ func (k8s *k8s) patchWebhookConfigurations(
 	ctx context.Context,
 	configurationName string,
 	ca []byte,
-	failurePolicy *admissionv1.FailurePolicyType,
+	failurePolicy admissionv1.FailurePolicyType,
 	patchMutating bool,
 	patchValidating bool,
 ) error {
-	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationName, patchMutating, patchValidating, *failurePolicy)
+	log.Infof("patching webhook configurations '%s' mutating=%t, validating=%t, failurePolicy=%s", configurationName, patchMutating, patchValidating, failurePolicy)
 
 	if patchValidating {
 		if err := k8s.patchValidating(ctx, configurationName, ca, failurePolicy); err != nil {
@@ -147,7 +147,7 @@ func (err wrappedError) Unwrap() error {
 	return err.err
 }
 
-func (k8s *k8s) patchValidating(ctx context.Context, configurationName string, ca []byte, failurePolicy *admissionv1.FailurePolicyType) error {
+func (k8s *k8s) patchValidating(ctx context.Context, configurationName string, ca []byte, failurePolicy admissionv1.FailurePolicyType) error {
 	valHook, err := k8s.clientset.
 		AdmissionregistrationV1().
 		ValidatingWebhookConfigurations().
@@ -162,8 +162,8 @@ func (k8s *k8s) patchValidating(ctx context.Context, configurationName string, c
 	for i := range valHook.Webhooks {
 		h := &valHook.Webhooks[i]
 		h.ClientConfig.CABundle = ca
-		if *failurePolicy != "" {
-			h.FailurePolicy = failurePolicy
+		if failurePolicy != "" {
+			h.FailurePolicy = &failurePolicy
 		}
 	}
 
@@ -180,7 +180,7 @@ func (k8s *k8s) patchValidating(ctx context.Context, configurationName string, c
 	return nil
 }
 
-func (k8s *k8s) patchMutating(ctx context.Context, configurationName string, ca []byte, failurePolicy *admissionv1.FailurePolicyType) error {
+func (k8s *k8s) patchMutating(ctx context.Context, configurationName string, ca []byte, failurePolicy admissionv1.FailurePolicyType) error {
 	mutHook, err := k8s.clientset.
 		AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
@@ -195,8 +195,8 @@ func (k8s *k8s) patchMutating(ctx context.Context, configurationName string, ca 
 	for i := range mutHook.Webhooks {
 		h := &mutHook.Webhooks[i]
 		h.ClientConfig.CABundle = ca
-		if *failurePolicy != "" {
-			h.FailurePolicy = failurePolicy
+		if failurePolicy != "" {
+			h.FailurePolicy = &failurePolicy
 		}
 	}
 

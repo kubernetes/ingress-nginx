@@ -67,7 +67,7 @@ func Patch(ctx context.Context, cfg *PatchConfig) error {
 
 	options := k8s.PatchOptions{
 		CABundle:          ca,
-		FailurePolicyType: &failurePolicy,
+		FailurePolicyType: failurePolicy,
 		APIServiceName:    cfg.APIServiceName,
 	}
 

@@ -125,8 +125,8 @@ func Test_Patch(t *testing.T) {
 
 		patcher := testPatcher()
 		patcher.patchObjects = func(_ context.Context, options k8s.PatchOptions) error {
-			if options.FailurePolicyType != nil {
-				return fmt.Errorf("expected policy to be nil. got: %q", *options.FailurePolicyType)
+			if options.FailurePolicyType != "" {
+				return fmt.Errorf("expected policy to be nil. got: %q", options.FailurePolicyType)
 			}
 
 			return nil
@@ -146,8 +146,8 @@ func Test_Patch(t *testing.T) {
 
 		patcher := testPatcher()
 		patcher.patchObjects = func(_ context.Context, options k8s.PatchOptions) error {
-			if options.FailurePolicyType == nil || *options.FailurePolicyType != "Fail" {
-				return fmt.Errorf("unexpected policy: %q", *options.FailurePolicyType)
+			if options.FailurePolicyType == "" || options.FailurePolicyType != "Fail" {
+				return fmt.Errorf("unexpected policy: %q", options.FailurePolicyType)
 			}
 
 			return nil
