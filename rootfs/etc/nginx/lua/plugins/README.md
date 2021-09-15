@@ -33,4 +33,4 @@ Mounting is the quickest option.
 
 ### Enabling plugins
 
-Once your plugin is ready you need to use [`plugins` configuration setting](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#plugins) to activate it. Let's say you want to active `hello_world` and `open_idc` plugins, then you set `plugins` setting to `"hello_world, open_idc"`. _Note_ that the plugins will be executed in the given order.
+Once your plugin is ready you need to use [`plugins` configuration setting](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#plugins) to activate it. Let's say you want to activate `hello_world` and `open_idc` plugins, then you set `plugins` setting to `"hello_world, open_idc"`. _Note_ that the plugins will be executed in the given order.
