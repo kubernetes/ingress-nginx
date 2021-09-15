@@ -531,7 +531,7 @@ to include that in access logs.
 1. The annotations below creates Global Rate Limiting instance per ingress.
 That means if there are multuple paths configured under the same ingress,
 the Global Rate Limiting will count requests to all the paths under the same counter.
-Extract a path out into its own ingres if you need to isolate a certain path.
+Extract a path out into its own ingress if you need to isolate a certain path.
 
 
 * `nginx.ingress.kubernetes.io/global-rate-limit`: Configures maximum allowed number of requests per window. Required.
