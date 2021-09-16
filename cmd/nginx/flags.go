@@ -68,6 +68,9 @@ referenced in an Ingress Object should be the same value specified here to make 
 		watchWithoutClass = flags.Bool("watch-ingress-without-class", false,
 			`Define if Ingress Controller should also watch for Ingresses without an IngressClass or the annotation specified`)
 
+		ingressClassByName = flags.Bool("ingress-class-by-name", false,
+			`Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class`)
+
 		configMap = flags.String("configmap", "",
 			`Name of the ConfigMap containing custom global configurations for the controller.`)
 
@@ -174,6 +177,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 			`The path of the validating webhook certificate PEM.`)
 		validationWebhookKey = flags.String("validating-webhook-key", "",
 			`The path of the validating webhook key PEM.`)
+		disableFullValidationTest = flags.Bool("disable-full-test", false,
+			`Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default)`)
 
 		statusPort = flags.Int("status-port", 10246, `Port to use for the lua HTTP endpoint configuration.`)
 		streamPort = flags.Int("stream-port", 10247, "Port to use for the lua TCP/UDP endpoint configuration.")
@@ -280,6 +285,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		ConfigMapName:              *configMap,
 		TCPConfigMapName:           *tcpConfigMapName,
 		UDPConfigMapName:           *udpConfigMapName,
+		DisableFullValidationTest:  *disableFullValidationTest,
 		DefaultSSLCertificate:      *defSSLCertificate,
 		PublishService:             *publishSvc,
 		PublishStatusAddress:       *publishStatusAddress,
@@ -296,9 +302,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			SSLProxy: *sslProxyPort,
 		},
 		IngressClassConfiguration: &ingressclass.IngressClassConfiguration{
-			Controller:        *ingressClassController,
-			AnnotationValue:   *ingressClassAnnotation,
-			WatchWithoutClass: *watchWithoutClass,
+			Controller:         *ingressClassController,
+			AnnotationValue:    *ingressClassAnnotation,
+			WatchWithoutClass:  *watchWithoutClass,
+			IngressClassByName: *ingressClassByName,
 		},
 		DisableCatchAll:           *disableCatchAll,
 		ValidationWebhook:         *validationWebhook,

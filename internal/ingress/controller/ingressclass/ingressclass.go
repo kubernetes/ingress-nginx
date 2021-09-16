@@ -45,4 +45,7 @@ type IngressClassConfiguration struct {
 	// IgnoreIngressClass defines if Controller should ignore the IngressClass Object if no permissions are
 	// granted on IngressClass
 	IgnoreIngressClass bool
+	//IngressClassByName defines if the Controller should watch for Ingress Classes by
+	// .metadata.name together with .spec.Controller
+	IngressClassByName bool
 }

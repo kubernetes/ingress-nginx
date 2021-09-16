@@ -102,16 +102,21 @@ func (f *Framework) UpdateIngress(ingress *networking.Ingress) *networking.Ingre
 	return ing
 }
 
+// GetService gets a Service object from the given namespace, name and returns it, throws error if it does not exist.
+func (f *Framework) GetService(namespace string, name string) *core.Service {
+	s, err := f.KubeClientSet.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	assert.Nil(ginkgo.GinkgoT(), err, "getting service")
+	assert.NotNil(ginkgo.GinkgoT(), s, "expected a service but none returned")
+
+	return s
+}
+
 // EnsureService creates a Service object and returns it, throws error if it already exists.
 func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	err := createServiceWithRetries(f.KubeClientSet, f.Namespace, service)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating service")
 
-	s, err := f.KubeClientSet.CoreV1().Services(f.Namespace).Get(context.TODO(), service.Name, metav1.GetOptions{})
-	assert.Nil(ginkgo.GinkgoT(), err, "getting service")
-	assert.NotNil(ginkgo.GinkgoT(), s, "expected a service but none returned")
-
-	return s
+	return f.GetService(f.Namespace, service.Name)
 }
 
 // EnsureDeployment creates a Deployment object and returns it, throws error if it already exists.

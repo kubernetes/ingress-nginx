@@ -84,7 +84,8 @@ else it would make it impossible to evacuate a node. See [gh issue #7127](https:
 
 The Nginx ingress controller can export Prometheus metrics, by setting `controller.metrics.enabled` to `true`.
 
-You can add Prometheus annotations to the metrics service using `controller.metrics.service.annotations`. Alternatively, if you use the Prometheus Operator, you can enable ServiceMonitor creation using `controller.metrics.serviceMonitor.enabled`.
+You can add Prometheus annotations to the metrics service using `controller.metrics.service.annotations`.
+Alternatively, if you use the Prometheus Operator, you can enable ServiceMonitor creation using `controller.metrics.serviceMonitor.enabled`. And set `controller.metrics.serviceMonitor.additionalLabels.release="prometheus"`. "release=prometheus" should match the label configured in the prometheus servicemonitor ( see `kubectl get servicemonitor prometheus-kube-prom-prometheus -oyaml -n prometheus`)
 
 ### ingress-nginx nginx\_status page/stats server
 
