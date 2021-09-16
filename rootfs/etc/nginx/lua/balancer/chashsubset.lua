@@ -5,7 +5,6 @@ local resty_chash = require("resty.chash")
 local util = require("util")
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
-local ngx_INFO = ngx.INFO
 local setmetatable = setmetatable
 local tostring = tostring
 local math = math
@@ -87,31 +86,12 @@ function _M.balance(self)
   local endpoints = self.subsets[subset_id]
 
   local keyEndpoint = util.generate_var_value(self.hash_by_endpoint)
-  -- local keyEndpoint = tonumber(util.generate_var_value(self.hash_by_endpoint))
-
-  -- if keyEndpoint == "1"  then
-  --   local endpoint = endpoints[1]
-  --   return endpoint.address .. ":" .. endpoint.port
-  -- end
-  -- if keyEndpoint == "2"  then
-  --   local endpoint = endpoints[2]
-  --   return endpoint.address .. ":" .. endpoint.port
-  -- end
-  -- if keyEndpoint == "3"  then
-  --   local endpoint = endpoints[3]
-  --   return endpoint.address .. ":" .. endpoint.port
-  -- end
   if keyEndpoint == "1" or keyEndpoint == "2" or keyEndpoint == "3"  then
     local endpoint = endpoints[tonumber(keyEndpoint)]
     return endpoint.address .. ":" .. endpoint.port
   end
-  -- if endpoints[keyEndpoint] ~= nil  then
-  --   local endpoint = endpoints[keyEndpoint]
-  --   return endpoint.address .. ":" .. endpoint.port
-  -- end
 
   local endpoint = endpoints[math.random(#endpoints)]
-  ngx_log(ngx_INFO,key)
   return endpoint.address .. ":" .. endpoint.port
 end
 
