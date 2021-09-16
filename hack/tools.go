@@ -1,3 +1,4 @@
+//go:build tools
 // +build tools
 
 /*
@@ -21,6 +22,6 @@ limitations under the License.
 package tools
 
 import (
-	_ "github.com/tallclair/mdtoc"
 	_ "k8s.io/code-generator"
+	_ "sigs.k8s.io/mdtoc"
 )

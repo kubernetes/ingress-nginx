@@ -4,7 +4,7 @@ timeout: 1800s
 options:
   substitution_option: ALLOW_LOOSE
 steps:
-  - name: 'gcr.io/k8s-testimages/gcb-docker-gcloud:v20201130-750d12f'
+  - name: 'gcr.io/k8s-testimages/gcb-docker-gcloud:v20210722-085d930'
     entrypoint: bash
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
@@ -21,5 +21,5 @@ steps:
       && make release
 substitutions:
   _GIT_TAG: "12345"
-  _PULL_BASE_REF: "master"
+  _PULL_BASE_REF: "main"
   _PULL_BASE_SHA: '12345'

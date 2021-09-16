@@ -29,6 +29,16 @@ if ! docker buildx 2>&1 >/dev/null; then
   exit 1
 fi
 
+# Ensure qemu is in binfmt_misc
+# Docker desktop already has these in versions recent enough to have buildx
+# We only need to do this setup on linux hosts
+if [ "$(uname)" == 'Linux' ]; then
+  # NOTE: this is pinned to a digest for a reason!
+  # Note2 (@rikatz) - Removing the pin, as apparently it's breaking new alpine builds
+  # docker run --rm --privileged multiarch/qemu-user-static@sha256:28ebe2e48220ae8fd5d04bb2c847293b24d7fbfad84f0b970246e0a4efd48ad6 --reset -p yes
+  docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+fi
+
 # We can skip setup if the current builder already has multi-arch
 # AND if it isn't the docker driver, which doesn't work
 current_builder="$(docker buildx inspect)"
@@ -41,13 +51,6 @@ if ! grep -q "^Driver: docker$"  <<<"${current_builder}" && \
   exit 0
 fi
 
-# Ensure qemu is in binfmt_misc
-# Docker desktop already has these in versions recent enough to have buildx
-# We only need to do this setup on linux hosts
-if [ "$(uname)" == 'Linux' ]; then
-  # NOTE: this is pinned to a digest for a reason!
-  docker run --rm --privileged multiarch/qemu-user-static@sha256:28ebe2e48220ae8fd5d04bb2c847293b24d7fbfad84f0b970246e0a4efd48ad6 --reset -p yes
-fi
 
 # Ensure we use a builder that can leverage it (the default on linux will not)
 docker buildx rm ingress-nginx || true

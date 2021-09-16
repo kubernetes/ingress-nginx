@@ -84,15 +84,16 @@ else it would make it impossible to evacuate a node. See [gh issue #7127](https:
 
 The Nginx ingress controller can export Prometheus metrics, by setting `controller.metrics.enabled` to `true`.
 
-You can add Prometheus annotations to the metrics service using `controller.metrics.service.annotations`. Alternatively, if you use the Prometheus Operator, you can enable ServiceMonitor creation using `controller.metrics.serviceMonitor.enabled`.
+You can add Prometheus annotations to the metrics service using `controller.metrics.service.annotations`.
+Alternatively, if you use the Prometheus Operator, you can enable ServiceMonitor creation using `controller.metrics.serviceMonitor.enabled`. And set `controller.metrics.serviceMonitor.additionalLabels.release="prometheus"`. "release=prometheus" should match the label configured in the prometheus servicemonitor ( see `kubectl get servicemonitor prometheus-kube-prom-prometheus -oyaml -n prometheus`)
 
 ### ingress-nginx nginx\_status page/stats server
 
 Previous versions of this chart had a `controller.stats.*` configuration block, which is now obsolete due to the following changes in nginx ingress controller:
 
-- In [0.16.1](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md#0161), the vts (virtual host traffic status) dashboard was removed
-- In [0.23.0](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md#0230), the status page at port 18080 is now a unix socket webserver only available at localhost.
-  You can use `curl --unix-socket /tmp/nginx-status-server.sock http://localhost/nginx_status` inside the controller container to access it locally, or use the snippet from [nginx-ingress changelog](https://github.com/kubernetes/ingress-nginx/blob/master/Changelog.md#0230) to re-enable the http server
+- In [0.16.1](https://github.com/kubernetes/ingress-nginx/blob/main/Changelog.md#0161), the vts (virtual host traffic status) dashboard was removed
+- In [0.23.0](https://github.com/kubernetes/ingress-nginx/blob/main/Changelog.md#0230), the status page at port 18080 is now a unix socket webserver only available at localhost.
+  You can use `curl --unix-socket /tmp/nginx-status-server.sock http://localhost/nginx_status` inside the controller container to access it locally, or use the snippet from [nginx-ingress changelog](https://github.com/kubernetes/ingress-nginx/blob/main/Changelog.md#0230) to re-enable the http server
 
 ### ExternalDNS Service Configuration
 
@@ -107,7 +108,7 @@ controller:
 
 ### AWS L7 ELB with SSL Termination
 
-Annotate the controller as shown in the [nginx-ingress l7 patch](https://github.com/kubernetes/ingress-nginx/blob/master/deploy/aws/l7/service-l7.yaml):
+Annotate the controller as shown in the [nginx-ingress l7 patch](https://github.com/kubernetes/ingress-nginx/blob/main/deploy/aws/l7/service-l7.yaml):
 
 ```yaml
 controller:
@@ -159,7 +160,7 @@ controller:
       enabled: true
       annotations:
         # Create internal ELB
-        service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+        service.beta.kubernetes.io/aws-load-balancer-internal: "true"
         # Any other annotation can be declared here.
 ```
 

@@ -36,7 +36,7 @@ build: ensure-buildx
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
-		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:v20210324-g8baef769d@sha256:fcfa3e9d1f8ec3141efedbf77cf659640f452a9c22165c78006ea462b84d06f6 \
+		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:v20210904-gb7c973dce@sha256:fac972a7e43b18408ecb9e87da868df519428294e2e988c16be72479ee873c0e \
 		--build-arg LUAROCKS_VERSION=3.3.1 \
 		--build-arg LUAROCKS_SHA=837481e408f7c06b59befe7ec194537c657687d624894bca7f79034302141a34 \
 		-t $(IMAGE):$(TAG) rootfs
@@ -49,7 +49,7 @@ push: build
 ensure-buildx:
 # this is required for cloudbuild
 ifeq ("$(wildcard $(INIT_BUILDX))","")
-	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/hack/init-buildx.sh | bash
+	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/hack/init-buildx.sh | bash
 else
 	@exec $(INIT_BUILDX)
 endif

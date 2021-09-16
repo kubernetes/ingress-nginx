@@ -18,7 +18,6 @@ package auth
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -209,12 +208,12 @@ func TestIngressAuthInvalidSecretKey(t *testing.T) {
 }
 
 func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%v", time.Now().Unix()))
+	dir, err := os.MkdirTemp("", fmt.Sprintf("%v", time.Now().Unix()))
 	if err != nil {
 		t.Error(err)
 	}
 
-	tmpfile, err := ioutil.TempFile("", "example-")
+	tmpfile, err := os.CreateTemp("", "example-")
 	if err != nil {
 		t.Error(err)
 	}

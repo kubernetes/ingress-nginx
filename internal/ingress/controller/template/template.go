@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand" // #nosec
 	"net"
 	"net/url"
@@ -62,8 +61,8 @@ const (
 	stateComment
 )
 
-// TemplateWriter is the interface to render a template
-type TemplateWriter interface {
+// Writer is the interface to render a template
+type Writer interface {
 	Write(conf config.TemplateConfig) ([]byte, error)
 }
 
@@ -77,7 +76,7 @@ type Template struct {
 //NewTemplate returns a new Template instance or an
 //error if the specified template file contains errors
 func NewTemplate(file string) (*Template, error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unexpected error reading template %v", file)
 	}
@@ -331,7 +330,8 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}) string {
 	}
 
 	for name, size := range cfg.LuaSharedDicts {
-		out = append(out, fmt.Sprintf("lua_shared_dict %s %dM", name, size))
+		sizeStr := dictKbToStr(size)
+		out = append(out, fmt.Sprintf("lua_shared_dict %s %s", name, sizeStr))
 	}
 
 	sort.Strings(out)
@@ -343,16 +343,16 @@ func luaConfigurationRequestBodySize(c interface{}) string {
 	cfg, ok := c.(config.Configuration)
 	if !ok {
 		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
-		return "100" // just a default number
+		return "100M" // just a default number
 	}
 
 	size := cfg.LuaSharedDicts["configuration_data"]
 	if size < cfg.LuaSharedDicts["certificate_data"] {
 		size = cfg.LuaSharedDicts["certificate_data"]
 	}
-	size = size + 1
+	size = size + 1024
 
-	return fmt.Sprintf("%d", size)
+	return dictKbToStr(size)
 }
 
 // configForLua returns some general configuration as Lua table represented as string
@@ -618,6 +618,8 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	proxyPass := "proxy_pass"
 
 	switch location.BackendProtocol {
+	case "AUTO_HTTP":
+		proto = "$scheme://"
 	case "HTTPS":
 		proto = "https://"
 	case "GRPC":
@@ -1016,6 +1018,10 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 				continue
 			}
 
+			if rPath.Backend.Service == nil {
+				continue
+			}
+
 			if info.Service != "" && rPath.Backend.Service.Name == "" {
 				// empty rule. Only contains a Path and PathType
 				return info
@@ -1106,7 +1112,7 @@ func buildOpentracing(c interface{}, s interface{}) string {
 	buf := bytes.NewBufferString("")
 
 	if cfg.DatadogCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;")
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {

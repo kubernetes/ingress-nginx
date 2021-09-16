@@ -16,6 +16,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--default-server-port`            | Port to use for exposing the default server (catch-all). (default 8181) |
 | `--default-ssl-certificate`        | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
 | `--disable-catch-all`              | Disable support for catch-all Ingresses |
+| `--disable-full-test` | Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default) |
 | `--election-id`                    | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
 | `--enable-metrics`                 | Enables the collection of NGINX metrics (default true) |
 | `--enable-ssl-chain-completion`    | Autocomplete SSL certificate chains with missing intermediate CA certificates. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. |
@@ -23,6 +24,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--health-check-path`              | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
 | `--health-check-timeout`           | Time limit, in seconds, for a probe to health-check-path to succeed. (default 10) |
 | `--healthz-port`                   | Port to use for the healthz endpoint. (default 10254) |
+| `--healthz-host`                   | Address to bind the healthz endpoint. |
 | `--http-port`                      | Port to use for servicing HTTP traffic. (default 80) |
 | `--https-port`                     | Port to use for servicing HTTPS traffic. (default 443) |
 | `--ingress-class`                  | Name of the ingress class this controller satisfies. The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.18.0 or higher or the annotation "kubernetes.io/ingress.class" (deprecated). If this parameter is not set, or set to the default value of "nginx", it will handle ingresses with either an empty or "nginx" class name. |

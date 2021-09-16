@@ -860,6 +860,7 @@ func NewDefault() Configuration {
 			ProxyBuffering:           "off",
 			ProxyHTTPVersion:         "1.1",
 			ProxyMaxTempFileSize:     "1024m",
+			ServiceUpstream:          false,
 		},
 		UpstreamKeepaliveConnections:           320,
 		UpstreamKeepaliveTimeout:               60,

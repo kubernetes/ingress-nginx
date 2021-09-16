@@ -1,5 +1,10 @@
+# See the OWNERS docs: https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md
+
 approvers:
-  - ChiefAlexander
+- ingress-nginx-helm-maintainers
 
 reviewers:
-  - ChiefAlexander
+- ingress-nginx-helm-reviewers
+
+labels:
+- area/helm

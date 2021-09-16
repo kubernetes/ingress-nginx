@@ -13,6 +13,7 @@ local setmetatable = setmetatable
 
 local _M = balancer_resty:new()
 local DEFAULT_COOKIE_NAME = "route"
+local COOKIE_VALUE_DELIMITER = "|"
 
 function _M.cookie_name(self)
   return self.cookie_session_affinity.name or DEFAULT_COOKIE_NAME
@@ -22,7 +23,8 @@ function _M.new(self)
   local o = {
     alternative_backends = nil,
     cookie_session_affinity = nil,
-    traffic_shaping_policy = nil
+    traffic_shaping_policy = nil,
+    backend_key = nil
   }
 
   setmetatable(o, self)
@@ -31,13 +33,37 @@ function _M.new(self)
   return o
 end
 
-function _M.get_cookie(self)
+function _M.get_cookie_parsed(self)
   local cookie, err = ck:new()
   if not cookie then
     ngx.log(ngx.ERR, err)
   end
 
-  return cookie:get(self:cookie_name())
+  local result = {
+    upstream_key = nil,
+    backend_key = nil
+  }
+
+  local raw_value = cookie:get(self:cookie_name())
+  if not raw_value then
+    return result
+  end
+
+  local parsed_value, len = split.split_string(raw_value, COOKIE_VALUE_DELIMITER)
+  if len == 0 then
+    return result
+  end
+
+  result.upstream_key = parsed_value[1]
+  if len > 1 then
+    result.backend_key = parsed_value[2]
+  end
+
+  return result
+end
+
+function _M.get_cookie(self)
+  return self:get_cookie_parsed().upstream_key
 end
 
 function _M.set_cookie(self, value)
@@ -61,13 +87,18 @@ function _M.set_cookie(self, value)
     end
   end
 
+  local cookie_secure = self.cookie_session_affinity.secure
+  if cookie_secure == nil then
+    cookie_secure = ngx.var.https == "on"
+  end
+
   local cookie_data = {
     key = self:cookie_name(),
-    value = value,
+    value = value .. COOKIE_VALUE_DELIMITER .. self.backend_key,
     path = cookie_path,
     httponly = true,
     samesite = cookie_samesite,
-    secure = ngx.var.https == "on",
+    secure = cookie_secure,
   }
 
   if self.cookie_session_affinity.expires and self.cookie_session_affinity.expires ~= "" then
@@ -84,6 +115,10 @@ function _M.set_cookie(self, value)
   if not ok then
     ngx.log(ngx.ERR, err)
   end
+end
+
+function _M.is_affinitized(self)
+  return self:get_cookie_parsed().backend_key == self.backend_key
 end
 
 function _M.get_last_failure()
@@ -166,6 +201,7 @@ function _M.sync(self, backend)
   self.traffic_shaping_policy = backend.trafficShapingPolicy
   self.alternative_backends = backend.alternativeBackends
   self.cookie_session_affinity = backend.sessionAffinityConfig.cookieSessionAffinity
+  self.backend_key = ngx.md5(ngx.md5(backend.name) .. backend.name)
 end
 
 return _M

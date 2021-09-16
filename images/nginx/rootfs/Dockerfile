@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.13 as builder
+FROM alpine:3.14.2 as builder
 
 COPY . /
 
@@ -23,7 +23,7 @@ RUN apk update \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.13
+FROM alpine:3.14.2
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
@@ -53,7 +53,6 @@ RUN apk update \
     nano \
     tzdata \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
-  && addgroup -Sg 101 www-data \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
     -s /sbin/nologin -G www-data -g www-data www-data \
   && bash -eu -c ' \
