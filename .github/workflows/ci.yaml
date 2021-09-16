@@ -122,7 +122,7 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v2
-    
+
       - name: cache
         uses: actions/download-artifact@v2
         with:
@@ -143,7 +143,7 @@ jobs:
         with:
           version: v0.11.1
           image: kindest/node:v1.21.1
-    
+
       - uses: geekyeggo/delete-artifact@v1
         with:
           name: docker.tar.gz
@@ -220,3 +220,60 @@ jobs:
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
+
+  test-image-build:
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: dorny/paths-filter@v2
+        id: filter-images
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            custom-error-pages:
+              - 'images/custom-error-pages/**'
+            cfssl:
+              - 'images/cfssl/**'
+            fastcgi-helloserver:
+              - 'images/fastcgi-helloserver/**'
+            echo:
+              - 'images/echo/**'
+            go-grpc-greeter-server:
+              - 'images/go-grpc-greeter-server/**'
+            httpbin:
+              - 'images/httpbin/**'
+            kube-webhook-certgen:
+              - 'images/kube-webhook-certgen/**'
+
+      - name: custom-error-pages image build
+        if: ${{ steps.filter-images.outputs.custom-error-pages == 'true' }}
+        run: |
+          cd images/custom-error-pages && make build
+      - name: cfssl image build
+        if: ${{ steps.filter-images.outputs.cfssl == 'true' }}
+        run: |
+          cd images/cfssl && make build
+      - name: fastcgi-helloserver
+        if: ${{ steps.filter-images.outputs.fastcgi-helloserver == 'true' }}
+        run: |
+          cd images/fastcgi-helloserver && make build
+      - name: echo image build
+        if: ${{ steps.filter-images.outputs.echo == 'true' }}
+        run: |
+          cd images/echo && make build
+      - name: go-grpc-greeter-server image build
+        if: ${{ steps.filter-images.outputs.go-grpc-greeter-server == 'true' }}
+        run: |
+          cd images/go-grpc-greeter-server && make build
+      - name: httpbin image build
+        if: ${{ steps.filter-images.outputs.httpbin == 'true' }}
+        run: |
+          cd images/httpbin && make build
+      - name: kube-webhook-certgen image build
+        if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
+        run: |
+          cd images/kube-webhook-certgen && make build
