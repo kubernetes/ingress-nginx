@@ -51,7 +51,7 @@ endif
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20210904-gb7c973dce@sha256:fac972a7e43b18408ecb9e87da868df519428294e2e988c16be72479ee873c0e
+BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20210915-g498892514@sha256:8c1e48123e64e3f2b90ed32a53babd9b5f5431dad26beecdcb8fc185ded3b6dd
 
 GOARCH=$(ARCH)
 
