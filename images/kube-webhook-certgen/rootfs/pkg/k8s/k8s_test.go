@@ -99,7 +99,8 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: testWebhookName,
 			},
-			Webhooks: []admissionv1.MutatingWebhook{{Name: "m1"}, {Name: "m2"}}}, metav1.CreateOptions{})
+			Webhooks: []admissionv1.MutatingWebhook{{Name: "m1"}, {Name: "m2"}},
+		}, metav1.CreateOptions{})
 
 	k.clientset.
 		AdmissionregistrationV1().
@@ -109,7 +110,8 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: testWebhookName,
 			},
-			Webhooks: []admissionv1.ValidatingWebhook{{Name: "v1"}, {Name: "v2"}}}, metav1.CreateOptions{})
+			Webhooks: []admissionv1.ValidatingWebhook{{Name: "v1"}, {Name: "v2"}},
+		}, metav1.CreateOptions{})
 
 	k.PatchWebhookConfigurations(testWebhookName, ca, &fail, true, true)
 
@@ -117,16 +119,14 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 		AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
 		Get(context.Background(), testWebhookName, metav1.GetOptions{})
-
 	if err != nil {
 		t.Error(err)
 	}
 
 	whval, err := k.clientset.
-		AdmissionregistrationV1beta1().
+		AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
 		Get(context.Background(), testWebhookName, metav1.GetOptions{})
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -155,5 +155,4 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 	if whval.Webhooks[1].FailurePolicy == nil {
 		t.Errorf("Expected second validating webhook failure policy to be set to %s", fail)
 	}
-
 }
