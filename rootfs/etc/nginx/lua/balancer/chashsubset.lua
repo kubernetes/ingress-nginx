@@ -2,6 +2,7 @@
 -- always, we return the same subset always.
 
 local resty_chash = require("resty.chash")
+local ck = require("resty.cookie")
 local util = require("util")
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
@@ -86,12 +87,22 @@ function _M.balance(self)
   local endpoints = self.subsets[subset_id]
 
   local keyEndpoint = util.generate_var_value(self.hash_by_endpoint)
+  
   if keyEndpoint == "1" or keyEndpoint == "2" or keyEndpoint == "3"  then
     local endpoint = endpoints[tonumber(keyEndpoint)]
     return endpoint.address .. ":" .. endpoint.port
   end
 
-  local endpoint = endpoints[math.random(#endpoints)]
+ 
+  local randomEndpoint = math.random(#endpoints)
+  local endpoint = endpoints[randomEndpoint]
+  local cookie = ck:new()
+  local cookie_data = {
+    key = "ENDPOINT",
+    value = randomEndpoint,
+  }
+  cookie:set(cookie_data)
+
   return endpoint.address .. ":" .. endpoint.port
 end
 
