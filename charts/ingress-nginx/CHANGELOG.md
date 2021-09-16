@@ -2,6 +2,10 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.0.0
+
+- [7535] https://github.com/kubernetes/ingress-nginx/pull/7535 Support for Ingress object v1 and Update to go 1.17
+
 ### 3.34.0
 
 - [7256] https://github.com/kubernetes/ingress-nginx/pull/7256 Add namespace field in the namespace scoped resource templates
