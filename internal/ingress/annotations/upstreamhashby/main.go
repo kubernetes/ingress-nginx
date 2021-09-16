@@ -32,6 +32,7 @@ type Config struct {
 	UpstreamHashBy           string `json:"upstream-hash-by,omitempty"`
 	UpstreamHashBySubset     bool   `json:"upstream-hash-by-subset,omitempty"`
 	UpstreamHashBySubsetSize int    `json:"upstream-hash-by-subset-size,omitempty"`
+	UpstreamHashByEndpoint   string `json:"upstream-hash-by-endpoint,omitempty"`
 }
 
 // NewParser creates a new UpstreamHashBy annotation parser
@@ -44,10 +45,11 @@ func (a upstreamhashby) Parse(ing *networking.Ingress) (interface{}, error) {
 	upstreamHashBy, _ := parser.GetStringAnnotation("upstream-hash-by", ing)
 	upstreamHashBySubset, _ := parser.GetBoolAnnotation("upstream-hash-by-subset", ing)
 	upstreamHashbySubsetSize, _ := parser.GetIntAnnotation("upstream-hash-by-subset-size", ing)
+	upstreamHashByEndpoint, _ := parser.GetStringAnnotation("upstream-hash-by-endpoint", ing)
 
 	if upstreamHashbySubsetSize == 0 {
 		upstreamHashbySubsetSize = 3
 	}
 
-	return &Config{upstreamHashBy, upstreamHashBySubset, upstreamHashbySubsetSize}, nil
+	return &Config{upstreamHashBy, upstreamHashBySubset, upstreamHashbySubsetSize, upstreamHashByEndpoint}, nil
 }

@@ -16,7 +16,7 @@ type: application
 maintainers:
   - name: ChiefAlexander
 engine: gotpl
-kubeVersion: ">=1.19.0-0"
+kubeVersion: ">=1.18.0-0"
 annotations:
   # Use this annotation to indicate that this chart version is a pre-release.
   # https://artifacthub.io/docs/topics/annotations/helm/
