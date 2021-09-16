@@ -863,21 +863,28 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 }
 
 func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.IngressClassConfiguration) (string, error) {
-	// First we try ingressClassName
-	if !icConfig.IgnoreIngressClass && ing.Spec.IngressClassName != nil {
-		iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
+	matchedIngressClass := func(class string) (string, error) {
+		iclass, err := s.listers.IngressClass.ByKey(class)
+
 		if err != nil {
 			return "", err
 		}
 		return iclass.Name, nil
 	}
 
-	// Then we try annotation
+	// First annotation (deprecated) for backwards compatibility
 	if ingressclass, ok := ing.GetAnnotations()[ingressclass.IngressKey]; ok {
-		if ingressclass != icConfig.AnnotationValue {
-			return "", fmt.Errorf("ingress class annotation is not equal to the expected by Ingress Controller")
+		matched, err := matchedIngressClass(ingressclass)
+
+		if err != nil {
+			return "", fmt.Errorf("ingress class annotation is not equal to that expected by Ingress Controller")
 		}
-		return ingressclass, nil
+		return matched, nil
+	}
+
+	// Then ingressClassName
+	if ing.Spec.IngressClassName != nil {
+		return matchedIngressClass(*ing.Spec.IngressClassName)
 	}
 
 	// Then we accept if the WithoutClass is enabled

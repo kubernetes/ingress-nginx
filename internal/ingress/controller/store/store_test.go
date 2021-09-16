@@ -773,6 +773,116 @@ func TestStore(t *testing.T) {
 		}
 	})
 
+	t.Run("should receive updates for ingress with matching class annotation", func(t *testing.T) {
+		ns := createNamespace(clientSet, t)
+		defer deleteNamespace(ns, clientSet, t)
+		ic := createIngressClass(clientSet, t, ingressclass.DefaultControllerName)
+		defer deleteIngressClass(ic, clientSet, t)
+		createConfigMap(clientSet, ns, t)
+
+		stopCh := make(chan struct{})
+		updateCh := channels.NewRingChannel(1024)
+
+		var add uint64
+		var upd uint64
+		var del uint64
+
+		go func(ch *channels.RingChannel) {
+			for {
+				evt, ok := <-ch.Out()
+				if !ok {
+					return
+				}
+
+				e := evt.(Event)
+				if e.Obj == nil {
+					continue
+				}
+				if _, ok := e.Obj.(*networking.Ingress); !ok {
+					continue
+				}
+
+				switch e.Type {
+				case CreateEvent:
+					atomic.AddUint64(&add, 1)
+				case UpdateEvent:
+					atomic.AddUint64(&upd, 1)
+				case DeleteEvent:
+					atomic.AddUint64(&del, 1)
+				}
+			}
+		}(updateCh)
+
+		storer := New(
+			ns,
+			fmt.Sprintf("%v/config", ns),
+			fmt.Sprintf("%v/tcp", ns),
+			fmt.Sprintf("%v/udp", ns),
+			"",
+			10*time.Minute,
+			clientSet,
+			updateCh,
+			false,
+			DefaultClassConfig)
+
+		storer.Run(stopCh)
+		ing := ensureIngress(&networking.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dummy-class",
+				Namespace: ns,
+				Annotations: map[string]string{
+					ingressclass.IngressKey: ic,
+				},
+			},
+			Spec: commonIngressSpec,
+		}, clientSet, t)
+
+		err := framework.WaitForIngressInNamespace(clientSet, ns, ing.Name)
+		if err != nil {
+			t.Errorf("error waiting for ingress: %v", err)
+		}
+		time.Sleep(1 * time.Second)
+
+		invalidIngress := ensureIngress(&networking.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "no-class",
+				Namespace: ns,
+			},
+			Spec: commonIngressSpec,
+		}, clientSet, t)
+		defer deleteIngress(invalidIngress, clientSet, t)
+
+		ni := ing.DeepCopy()
+		ni.Spec.Rules[0].Host = "update-dummy"
+		_ = ensureIngress(ni, clientSet, t)
+		if err != nil {
+			t.Errorf("error creating ingress: %v", err)
+		}
+		// Secret takes a bit to update
+		time.Sleep(3 * time.Second)
+
+		err = clientSet.NetworkingV1().Ingresses(ni.Namespace).Delete(context.TODO(), ni.Name, metav1.DeleteOptions{})
+		if err != nil {
+			t.Errorf("error deleting ingress: %v", err)
+		}
+
+		err = framework.WaitForNoIngressInNamespace(clientSet, ni.Namespace, ni.Name)
+		if err != nil {
+			t.Errorf("error waiting for secret: %v", err)
+		}
+		time.Sleep(1 * time.Second)
+
+		if atomic.LoadUint64(&add) != 1 {
+			t.Errorf("expected 1 event of type Create but %v occurred", add)
+		}
+		if atomic.LoadUint64(&upd) != 1 {
+			t.Errorf("expected 1 event of type Update but %v occurred", upd)
+		}
+		if atomic.LoadUint64(&del) != 1 {
+			t.Errorf("expected 1 event of type Delete but %v occurred", del)
+		}
+	})
+
 	t.Run("should not receive events from secret not referenced from ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
