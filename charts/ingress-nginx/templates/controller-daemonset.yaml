@@ -42,6 +42,9 @@ spec:
     {{- if .Values.controller.dnsConfig }}
       dnsConfig: {{ toYaml .Values.controller.dnsConfig | nindent 8 }}
     {{- end }}
+    {{- if .Values.controller.hostname }}
+      hostname: {{ toYaml .Values.controller.hostname | nindent 8 }}
+    {{- end }}
       dnsPolicy: {{ .Values.controller.dnsPolicy }}
     {{- if .Values.imagePullSecrets }}
       imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
@@ -80,13 +83,13 @@ spec:
             - --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}
           {{- end }}
             - --election-id={{ .Values.controller.electionID }}
-            - --ingress-class={{ .Values.controller.ingressClass }}
-            - --configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.controller.fullname" . }}
+            - --controller-class={{ .Values.controller.ingressClassResource.controllerValue }}
+            - --configmap={{ default "$(POD_NAMESPACE)" .Values.controller.configMapNamespace }}/{{ include "ingress-nginx.controller.fullname" . }}
           {{- if .Values.tcp }}
-            - --tcp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.fullname" . }}-tcp
+            - --tcp-services-configmap={{ default "$(POD_NAMESPACE)" .Values.controller.tcp.configMapNamespace }}/{{ include "ingress-nginx.fullname" . }}-tcp
           {{- end }}
           {{- if .Values.udp }}
-            - --udp-services-configmap=$(POD_NAMESPACE)/{{ include "ingress-nginx.fullname" . }}-udp
+            - --udp-services-configmap={{ default "$(POD_NAMESPACE)" .Values.controller.udp.configMapNamespace }}/{{ include "ingress-nginx.fullname" . }}-udp
           {{- end }}
           {{- if .Values.controller.scope.enabled }}
             - --watch-namespace={{ default "$(POD_NAMESPACE)" .Values.controller.scope.namespace }}
@@ -107,6 +110,15 @@ spec:
           {{- end }}
           {{- if not (eq .Values.controller.healthCheckPath "/healthz") }}
             - --health-check-path={{ .Values.controller.healthCheckPath }}
+          {{- end }}
+          {{- if .Values.controller.healthCheckHost }}
+            - --healthz-host={{ .Values.controller.healthCheckHost }}
+          {{- end }}
+          {{- if .Values.controller.ingressClassByName }}
+            - --ingress-class-by-name=true
+          {{- end }}
+          {{- if .Values.controller.watchIngressWithoutClass }}
+            - --watch-ingress-without-class=true
           {{- end }}
           {{- range $key, $value := .Values.controller.extraArgs }}
             {{- /* Accept keys without values or with false as value */}}

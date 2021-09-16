@@ -7,7 +7,7 @@ on:
 
   push:
     branches:
-      - master
+      - main
 
 jobs:
 
@@ -57,19 +57,17 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: changes
-    if: |
-      (needs.changes.outputs.go == 'true')
 
     steps:
 
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up Go 1.16
+      - name: Set up Go 1.17
         id: go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: 1.17
 
       - name: Set up Docker Buildx
         id: buildx
@@ -116,6 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - changes
+      - build
     if: |
       (needs.changes.outputs.charts == 'true')
 
@@ -123,6 +122,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v2
+    
+      - name: cache
+        uses: actions/download-artifact@v2
+        with:
+          name: docker.tar.gz
 
       - name: Lint
         run: |
@@ -139,11 +143,25 @@ jobs:
         with:
           version: v0.11.1
           image: kindest/node:v1.21.1
+<<<<<<< HEAD
+=======
+    
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: docker.tar.gz
+          failOnError: false
+
+      - name: Load images from cache
+        run: |
+          echo "loading docker images..."
+          pigz -dc docker.tar.gz | docker load
+>>>>>>> 19df0a3c4ba1ada4dc421976bea606061a960ef6
 
       - name: Test
         env:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
+          SKIP_IMAGE_CREATION: true
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-chart-tests
@@ -159,7 +177,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.19.11, v1.20.7, v1.21.1]
+        k8s: [v1.19.11, v1.20.7, v1.21.2, v1.22.0]
 
     steps:
 

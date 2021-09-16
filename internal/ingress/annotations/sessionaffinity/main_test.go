@@ -79,6 +79,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieMaxAge)] = "3000"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookiePath)] = "/foo"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieChangeOnFailure)] = "true"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieSecure)] = "true"
 	ing.SetAnnotations(data)
 
 	affin, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -113,5 +114,9 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 
 	if !nginxAffinity.Cookie.ChangeOnFailure {
 		t.Errorf("expected change of failure parameter set to true but returned %v", nginxAffinity.Cookie.ChangeOnFailure)
+	}
+
+	if !nginxAffinity.Cookie.Secure {
+		t.Errorf("expected secure parameter set to true but returned %v", nginxAffinity.Cookie.Secure)
 	}
 }

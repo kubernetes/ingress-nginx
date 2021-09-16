@@ -46,6 +46,7 @@ test/e2e/e2e\.test
 bin
 test/e2e-image/wait-for-nginx.sh
 .cache
+.modcache
 cover.out
 
 # secret terraform variables

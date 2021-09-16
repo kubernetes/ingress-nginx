@@ -1,0 +1,4 @@
+# See the OWNERS docs: https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md
+
+labels:
+- area/lua

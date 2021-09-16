@@ -17,8 +17,8 @@ limitations under the License.
 package dns
 
 import (
-	"io/ioutil"
 	"net"
+	"os"
 	"strings"
 
 	"k8s.io/klog/v2"
@@ -29,7 +29,7 @@ var defResolvConf = "/etc/resolv.conf"
 // GetSystemNameServers returns the list of nameservers located in the file /etc/resolv.conf
 func GetSystemNameServers() ([]net.IP, error) {
 	var nameservers []net.IP
-	file, err := ioutil.ReadFile(defResolvConf)
+	file, err := os.ReadFile(defResolvConf)
 	if err != nil {
 		return nameservers, err
 	}

@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 /*
@@ -19,8 +20,8 @@ limitations under the License.
 package runtime
 
 import (
-	"io/ioutil"
 	"math"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -52,7 +53,7 @@ func NumCPU() int {
 }
 
 func readCgroupFileToInt64(cgroupPath, cgroupFile string) int64 {
-	contents, err := ioutil.ReadFile(filepath.Join(cgroupPath, cgroupFile))
+	contents, err := os.ReadFile(filepath.Join(cgroupPath, cgroupFile))
 	if err != nil {
 		return -1
 	}

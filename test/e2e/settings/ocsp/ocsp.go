@@ -22,8 +22,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -57,13 +57,13 @@ var _ = framework.DescribeSetting("OCSP", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		leafCert, err := ioutil.ReadFile("leaf.pem")
+		leafCert, err := os.ReadFile("leaf.pem")
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		leafKey, err := ioutil.ReadFile("leaf-key.pem")
+		leafKey, err := os.ReadFile("leaf-key.pem")
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		intermediateCa, err := ioutil.ReadFile("intermediate_ca.pem")
+		intermediateCa, err := os.ReadFile("intermediate_ca.pem")
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		var pemCertBuffer bytes.Buffer
@@ -82,7 +82,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 			},
 		})
 
-		cfsslDB, err := ioutil.ReadFile("empty.db")
+		cfsslDB, err := os.ReadFile("empty.db")
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		cmap, err := f.EnsureConfigMap(&corev1.ConfigMap{
@@ -197,7 +197,7 @@ const configTemplate = `
 
 func prepareCertificates(namespace string) error {
 	config := fmt.Sprintf(configTemplate, namespace)
-	err := ioutil.WriteFile("cfssl_config.json", []byte(config), 0644)
+	err := os.WriteFile("cfssl_config.json", []byte(config), 0644)
 	if err != nil {
 		return fmt.Errorf("creating cfssl_config.json file: %v", err)
 	}

@@ -64,11 +64,11 @@ To prevent this situation to happen, the nginx ingress controller optionally exp
 This webhook appends the incoming ingress objects to the list of ingresses, generates the configuration and calls nginx to ensure the configuration has no syntax errors.
 
 [0]: https://github.com/openresty/lua-nginx-module/pull/1259
-[1]: https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/
+[1]: https://coreos.com/kubernetes/docs/latest/replication-controller.html#the-reconciliation-loop-in-detail
 [2]: https://godoc.org/k8s.io/client-go/informers#NewFilteredSharedInformerFactory
 [3]: https://godoc.org/k8s.io/client-go/tools/cache#ResourceEventHandlerFuncs
-[4]: https://github.com/kubernetes/ingress-nginx/blob/master/internal/task/queue.go#L38
+[4]: https://github.com/kubernetes/ingress-nginx/blob/main/internal/task/queue.go#L38
 [5]: https://golang.org/pkg/sync/#Mutex
-[6]: https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/template/nginx.tmpl
+[6]: https://github.com/kubernetes/ingress-nginx/blob/main/rootfs/etc/nginx/template/nginx.tmpl
 [7]: http://nginx.org/en/docs/beginners_guide.html#control
 [8]: https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook

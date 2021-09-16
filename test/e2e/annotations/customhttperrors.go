@@ -116,7 +116,7 @@ var _ = framework.DescribeAnnotation("custom-http-errors", func() {
 			}
 			return false
 		})
-		assert.Contains(ginkgo.GinkgoT(), serverConfig, errorBlockName(fmt.Sprintf("custom-default-backend-%s", customDefaultBackend), "503"))
-		assert.Contains(ginkgo.GinkgoT(), serverConfig, fmt.Sprintf("error_page %s = %s", "503", errorBlockName(fmt.Sprintf("custom-default-backend-%s", customDefaultBackend), "503")))
+		assert.Contains(ginkgo.GinkgoT(), serverConfig, errorBlockName(fmt.Sprintf("custom-default-backend-%s-%s", f.Namespace, customDefaultBackend), "503"))
+		assert.Contains(ginkgo.GinkgoT(), serverConfig, fmt.Sprintf("error_page %s = %s", "503", errorBlockName(fmt.Sprintf("custom-default-backend-%s-%s", f.Namespace, customDefaultBackend), "503")))
 	})
 })

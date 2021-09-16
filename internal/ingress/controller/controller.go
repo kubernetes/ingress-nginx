@@ -33,11 +33,11 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -83,7 +83,8 @@ type Configuration struct {
 	ElectionID             string
 	UpdateStatusOnShutdown bool
 
-	ListenPorts *ngx_config.ListenPorts
+	HealthCheckHost string
+	ListenPorts     *ngx_config.ListenPorts
 
 	DisableServiceExternalName bool
 
@@ -100,9 +101,12 @@ type Configuration struct {
 
 	DisableCatchAll bool
 
+	IngressClassConfiguration *ingressclass.IngressClassConfiguration
+
 	ValidationWebhook         string
 	ValidationWebhookCertPath string
 	ValidationWebhookKeyPath  string
+	DisableFullValidationTest bool
 
 	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
 	MaxmindEditionFiles *[]string
@@ -221,11 +225,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return nil
 	}
 
-	if !class.IsValid(ing) {
-		klog.Warningf("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
-		return nil
-	}
-
 	if n.cfg.Namespace != "" && ing.ObjectMeta.Namespace != n.cfg.Namespace {
 		klog.Warningf("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
 		return nil
@@ -274,6 +273,10 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
+	}
+
+	if n.cfg.DisableFullValidationTest {
+		_, _, pcfg = n.getConfiguration(ings[len(ings)-1:])
 	}
 
 	content, err := n.generateTemplate(cfg, *pcfg)
@@ -669,6 +672,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					ups.SessionAffinity.CookieSessionAffinity.Name = anns.SessionAffinity.Cookie.Name
 					ups.SessionAffinity.CookieSessionAffinity.Expires = anns.SessionAffinity.Cookie.Expires
 					ups.SessionAffinity.CookieSessionAffinity.MaxAge = anns.SessionAffinity.Cookie.MaxAge
+					ups.SessionAffinity.CookieSessionAffinity.Secure = anns.SessionAffinity.Cookie.Secure
 					ups.SessionAffinity.CookieSessionAffinity.Path = cookiePath
 					ups.SessionAffinity.CookieSessionAffinity.SameSite = anns.SessionAffinity.Cookie.SameSite
 					ups.SessionAffinity.CookieSessionAffinity.ConditionalSameSiteNone = anns.SessionAffinity.Cookie.ConditionalSameSiteNone
@@ -730,7 +734,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 				// custom backend is valid only if contains at least one endpoint
 				if len(endps) > 0 {
-					name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
+					name := fmt.Sprintf("custom-default-backend-%v-%v", location.DefaultBackend.GetNamespace(), location.DefaultBackend.GetName())
 					klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
 
 					nb := upstream.DeepCopy()
@@ -1333,7 +1337,7 @@ func canMergeBackend(primary *ingress.Backend, alternative *ingress.Backend) boo
 }
 
 // Performs the merge action and checks to ensure that one two alternative backends do not merge into each other
-func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) bool {
+func mergeAlternativeBackend(ing *ingress.Ingress, priUps *ingress.Backend, altUps *ingress.Backend) bool {
 	if priUps.NoServer {
 		klog.Warningf("unable to merge alternative backend %v into primary backend %v because %v is a primary backend",
 			altUps.Name, priUps.Name, priUps.Name)
@@ -1345,6 +1349,10 @@ func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) b
 			klog.V(2).Infof("skip merge alternative backend %v into %v, it's already present", altUps.Name, priUps.Name)
 			return true
 		}
+	}
+
+	if ing.ParsedAnnotations != nil && ing.ParsedAnnotations.SessionAffinity.CanaryBehavior != "legacy" {
+		priUps.SessionAffinity.DeepCopyInto(&altUps.SessionAffinity)
 	}
 
 	priUps.AlternativeBackends =
@@ -1386,7 +1394,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
-					merged = mergeAlternativeBackend(priUps, altUps)
+					merged = mergeAlternativeBackend(ing, priUps, altUps)
 				}
 			}
 
@@ -1445,7 +1453,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
-					merged = mergeAlternativeBackend(priUps, altUps)
+					merged = mergeAlternativeBackend(ing, priUps, altUps)
 				}
 			}
 
@@ -1492,7 +1500,7 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 			continue
 		}
 
-		if cert == nil { // for tests
+		if cert == nil || cert.Certificate == nil {
 			continue
 		}
 

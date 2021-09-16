@@ -163,6 +163,8 @@ controller:
       service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
   config:
     use-proxy-protocol: "true"
+  admissionWebhooks:
+    timeoutSeconds: 29
 
 EOF
 

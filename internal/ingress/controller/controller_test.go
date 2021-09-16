@@ -21,8 +21,9 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,8 +44,10 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/sessionaffinity"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
@@ -121,7 +124,7 @@ func (ntc testNginxTestCommand) Test(cfg string) ([]byte, error) {
 		return nil, err
 	}
 	defer fd.Close()
-	bytes, err := ioutil.ReadAll(fd)
+	bytes, err := io.ReadAll(fd)
 	if err != nil {
 		ntc.t.Errorf("could not read generated nginx configuration: %v", err.Error())
 	}
@@ -188,18 +191,6 @@ func TestCheckIngress(t *testing.T) {
 			},
 		},
 	}
-
-	t.Run("When the ingress class differs from nginx", func(t *testing.T) {
-		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "different"
-		nginx.command = testNginxTestCommand{
-			t:   t,
-			err: fmt.Errorf("test error"),
-		}
-		if nginx.CheckIngress(ing) != nil {
-			t.Errorf("with a different ingress class, no error should be returned")
-		}
-	})
-
 	t.Run("when the class is the nginx one", func(t *testing.T) {
 		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
 		nginx.command = testNginxTestCommand{
@@ -797,6 +788,332 @@ func TestMergeAlternativeBackends(t *testing.T) {
 				},
 			},
 		},
+		"alternative backend gets SessionAffinitySettings configured when CanaryBehavior is 'sticky'": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "example",
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "example.com",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/",
+												PathType: &pathTypePrefix,
+												Backend: networking.IngressBackend{
+													Service: &networking.IngressServiceBackend{
+														Name: "http-svc-canary",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				ParsedAnnotations: &annotations.Ingress{
+					SessionAffinity: sessionaffinity.Config{
+						CanaryBehavior: "sticky",
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:                "example-http-svc-80",
+					NoServer:            false,
+					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+		},
+		"alternative backend gets SessionAffinitySettings configured when CanaryBehavior is not 'legacy'": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "example",
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "example.com",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/",
+												PathType: &pathTypePrefix,
+												Backend: networking.IngressBackend{
+													Service: &networking.IngressServiceBackend{
+														Name: "http-svc-canary",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				ParsedAnnotations: &annotations.Ingress{
+					SessionAffinity: sessionaffinity.Config{
+						CanaryBehavior: "", // In fact any value but 'legacy' would do the trick.
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:                "example-http-svc-80",
+					NoServer:            false,
+					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+		},
+		"alternative backend doesn't get SessionAffinitySettings configured when CanaryBehavior is 'legacy'": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "example",
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "example.com",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/",
+												PathType: &pathTypePrefix,
+												Backend: networking.IngressBackend{
+													Service: &networking.IngressServiceBackend{
+														Name: "http-svc-canary",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				ParsedAnnotations: &annotations.Ingress{
+					SessionAffinity: sessionaffinity.Config{
+						CanaryBehavior: "legacy",
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:                "example-http-svc-80",
+					NoServer:            false,
+					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for title, tc := range testCases {
@@ -812,7 +1129,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 				if !actualUpstream.Equal(expUpstream) {
 					t.Logf("actual upstream %s alternative backends: %s", actualUpstream.Name, actualUpstream.AlternativeBackends)
 					t.Logf("expected upstream %s alternative backends: %s", expUpstream.Name, expUpstream.AlternativeBackends)
-					t.Errorf("upstream %s was not equal to what was expected: ", upsName)
+					t.Errorf("upstream %s was not equal to what was expected", actualUpstream.Name)
 				}
 			}
 
@@ -984,6 +1301,55 @@ func TestExtractTLSSecretName(t *testing.T) {
 				return nil, nil
 			},
 			"demo",
+		},
+		"ingress tls, hosts, bad format cert, host not in tls Hosts": {
+			"foo1.bar",
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test",
+					},
+					Spec: networking.IngressSpec{
+						TLS: []networking.IngressTLS{
+							{
+								Hosts:      []string{"foo.bar"},
+								SecretName: "demo",
+							},
+						},
+						Rules: []networking.IngressRule{
+							{
+								Host: "foo.bar",
+							},
+							{
+								Host: "foo1.bar",
+							},
+						},
+					},
+				},
+			},
+			func(string) (*ingress.SSLCert, error) {
+				secretData := map[string]string{
+					"ca.crt":    "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN5RENDQWJDZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJd01EVXhOVEEzTXpJMU5sb1hEVE13TURVeE16QTNNekkxTmxvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTUpGClVDcXBxY09mb2pPeUduTGRsRDlZSG5VVVFiTEQzZkxyN0FzM0RNTk9FNVkyTDJ2TUFhRXQxYkRvYWNqUDFMRlkKcy9ieFBVRmFmVEZ5cmY0SU1iN1FHUlZMYW84aVhmU3p4TlcwanE2dTc0OGZHN3E3c3QvNWR2c28yekpxcHNrcQo2QzNIS3liajMxMTBPNlh2N1I2VDlqdkxzT0M2Vm5VK3BtVHo4RzZ0YVdUeTFBdktQdU5Cc1puUWVRWis3Nk5hClRqSVpsaGlIMnZTUStSMFFzenBoU2tDQmVYbmdkaFloSDYyRVJvZDVZaDNiV1E3T2U0UjFKbHpNUjN3VzFSVGcKZE83aXoxSXdJT3drdlN6T1RlaElqU0pISHVWV3pJOXVqOTBkRTJUQmladzNheUVxdnhrbUxFT3Y1SFRONzRvbwpJQ216WEZzK1kxOFRCb2ZNRXNNQ0F3RUFBYU1qTUNFd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFKajArK3lCVXBIekYxdWMxSmcyczhGRGNRRHIKdFBuanFROWE0QkwwN2JZdWZyeUJqdUlpaDJReWVKcFB3cTh0RklFa3ZuWjI4VDY4bDFLajRmMnRIU0Y0MG14WAoxVGlkNWxMc1ZjZytja1B2YWVRL1MrUmxnZDNCT1hjY3FFUWR0dithanhqOTdCZXZSelQ1SWd6UFVna3VtSU5wCkxrNS9kSWdxYTIrbmorVUpxdm9TWEhtZG4rMEdvNFJRMXMyZlBJUDhhRFIyL1paQThSTE1rSTJ2R1FVVUJ3RHMKeVkzVy9oWmRWeUhpWEcvRkJKRHNZU1cyZjFrZ1AzRzlyNjdnZG1WT05JckNCdHBSWkU3NllTRjFqNUtocFlUNgp3UDFpSVNDOUc0ZmRCeGxkaXJqRWM3VU9PQTlNQ0JzYXZ4R1IreCtBTEVnTnhOUlVZdnEvZWl0OGtRVT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
+					"namespace": "ZGVtbw==",
+					"token":     "ZXlKaGJHY2lPaUpTVXpJMU5pSXNJbXRwWkNJNklqaExObWcyVnpWM01ERm9Ua1ZpVFVwTlYwbDRPV3RMVkhaTE1XRnpOa010VjI5WE55MTRaRzR6VFVVaWZRLmV5SnBjM01pT2lKcmRXSmxjbTVsZEdWekwzTmxjblpwWTJWaFkyTnZkVzUwSWl3aWEzVmlaWEp1WlhSbGN5NXBieTl6WlhKMmFXTmxZV05qYjNWdWRDOXVZVzFsYzNCaFkyVWlPaUprWlcxdklpd2lhM1ZpWlhKdVpYUmxjeTVwYnk5elpYSjJhV05sWVdOamIzVnVkQzl6WldOeVpYUXVibUZ0WlNJNkltUmxabUYxYkhRdGRHOXJaVzR0Wkc0MmVHSWlMQ0pyZFdKbGNtNWxkR1Z6TG1sdkwzTmxjblpwWTJWaFkyTnZkVzUwTDNObGNuWnBZMlV0WVdOamIzVnVkQzV1WVcxbElqb2laR1ZtWVhWc2RDSXNJbXQxWW1WeWJtVjBaWE11YVc4dmMyVnlkbWxqWldGalkyOTFiblF2YzJWeWRtbGpaUzFoWTJOdmRXNTBMblZwWkNJNkltVm1OR0kxWW1NMExUTXdPREV0TkRFNU15MWlZakl6TFRoaE5qRmhNV0ptTWpRNFlTSXNJbk4xWWlJNkluTjVjM1JsYlRwelpYSjJhV05sWVdOamIzVnVkRHBrWlcxdk9tUmxabUYxYkhRaWZRLnEzaGFxVVFDN2Z6a1V3UldKazM0RjRsamktbWs5cWdPcDJHSFlSZ1JrWUk0WW8xclhoSURCSnUzWkFPdjhMN3doZkgzcmo4ZjFnNFpMSFBkd3JKT2lZdWlvXzVXdDZPSXZtbXFaU2VncnRmV1MwUFZXYzJ1d0xweDJpSElTbUlHd21uQ1hYQzNRX05RNFRlQnZxWEMyUHR4REFwM19QM3QyZnRKN0w2Z1kzTkcyZUsyQTVFZG82azQtR2wzN0Zaam51NmRzc0FocVZaeld0NE9ZS3hTWWtpN003dnh5ZWtJQ091UmJ6SW5DNmhldEhtbHhyaF9ObWplMHhfY2M4V3ZkUnJYbFlpRWxnYXZCY1FtMTJ2YkxBQWlzWkFrT2Y1T3VvaEhLUmpEOGlMS1pRMXdKRHNnRmYzd1BFWGxTWkg2QkVZdS1TU0laSDNKYWVWU3llWjExdw==",
+				}
+				ca, err := base64.StdEncoding.DecodeString(secretData["ca.crt"])
+				if err != nil {
+					t.Fatalf("unexpected error decoding ca.crt: %v", err)
+				}
+				cert, err := ssl.CreateCACert(ca)
+				if err != nil {
+					t.Fatalf("unexpected error creating SSL Cert: %v", err)
+				}
+				err = ssl.ConfigureCACert("demo", ca, cert)
+				if err != nil {
+					t.Fatalf("error configuring CA certificate: %v", err)
+				}
+				cert.Name = "default-token-dn6xb"
+				cert.Namespace = "demo"
+				return cert, nil
+			},
+			"",
 		},
 	}
 
@@ -1899,7 +2265,12 @@ func newNGINXController(t *testing.T) *NGINXController {
 		10*time.Minute,
 		clientSet,
 		channels.NewRingChannel(10),
-		false)
+		false,
+		&ingressclass.IngressClassConfiguration{
+			Controller:      "k8s.io/ingress-nginx",
+			AnnotationValue: "nginx",
+		},
+	)
 
 	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{
@@ -1957,7 +2328,11 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		10*time.Minute,
 		clientSet,
 		channels.NewRingChannel(10),
-		false)
+		false,
+		&ingressclass.IngressClassConfiguration{
+			Controller:      "k8s.io/ingress-nginx",
+			AnnotationValue: "nginx",
+		})
 
 	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{
