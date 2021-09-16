@@ -209,7 +209,7 @@ func (u1 *UpstreamHashByConfig) Equal(u2 *UpstreamHashByConfig) bool {
 	if u1.UpstreamHashBySubsetSize != u2.UpstreamHashBySubsetSize {
 		return false
 	}
-	if u1.UpstreamHashByEndpoint != u2.UpstreamHashByEndpoint {
+	if u1.UpstreamHashBySubsetEndpoint != u2.UpstreamHashBySubsetEndpoint {
 		return false
 	}
 

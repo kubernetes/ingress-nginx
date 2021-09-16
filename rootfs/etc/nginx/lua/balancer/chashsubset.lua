@@ -59,9 +59,9 @@ function _M.new(self, backend)
   end
 
   local complex_val_endpoint, err =
-    util.parse_complex_value(backend["upstreamHashByConfig"]["upstream-hash-by-endpoint"])
+    util.parse_complex_value(backend["upstreamHashByConfig"]["upstream-hash-by-subset-endpoint"])
   if err ~= nil then
-    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-endpoint: ", err)
+    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-subset-endpoint: ", err)
   end
 
   local o = {
