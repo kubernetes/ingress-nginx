@@ -18,6 +18,7 @@ package annotations
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"strings"
@@ -363,4 +364,73 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 			Header("Set-Cookie").Contains("SERVERID=")
 	})
 
+	ginkgo.It("should set secure in cookie with provided true annotation on http", func() {
+		host := "foo.com"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-secure"] = "true"
+
+		ing := framework.NewSingleIngress(host, "/bar", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		f.HTTPTestClient().
+			GET("/bar").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Set-Cookie").Contains("; Secure")
+	})
+
+	ginkgo.It("should not set secure in cookie with provided false annotation on http", func() {
+		host := "foo.com"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-secure"] = "false"
+
+		ing := framework.NewSingleIngress(host, "/bar", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		f.HTTPTestClient().
+			GET("/bar").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Set-Cookie").NotContains("; Secure")
+	})
+
+	ginkgo.It("should set secure in cookie with provided false annotation on https", func() {
+		host := "foo.com"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-secure"] = "false"
+
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations))
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host)) &&
+					strings.Contains(server, "listen 443")
+			})
+
+		f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Set-Cookie").Contains("; Secure")
+	})
 })

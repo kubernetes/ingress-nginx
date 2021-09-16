@@ -426,7 +426,12 @@ func New(
 	ingressClassEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			ingressclass := obj.(*networkingv1.IngressClass)
-			if ingressclass.Spec.Controller != icConfig.Controller {
+			foundClassByName := false
+			if icConfig.IngressClassByName && ingressclass.Name == icConfig.AnnotationValue {
+				klog.InfoS("adding ingressclass as ingress-class-by-name is configured", "ingressclass", klog.KObj(ingressclass))
+				foundClassByName = true
+			}
+			if !foundClassByName && ingressclass.Spec.Controller != icConfig.Controller {
 				klog.InfoS("ignoring ingressclass as the spec.controller is not the same of this ingress", "ingressclass", klog.KObj(ingressclass))
 				return
 			}
@@ -660,6 +665,24 @@ func New(
 	}
 
 	serviceHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			svc := obj.(*corev1.Service)
+			if svc.Spec.Type == corev1.ServiceTypeExternalName {
+				updateCh.In() <- Event{
+					Type: CreateEvent,
+					Obj:  obj,
+				}
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			svc := obj.(*corev1.Service)
+			if svc.Spec.Type == corev1.ServiceTypeExternalName {
+				updateCh.In() <- Event{
+					Type: DeleteEvent,
+					Obj:  obj,
+				}
+			}
+		},
 		UpdateFunc: func(old, cur interface{}) {
 			oldSvc := old.(*corev1.Service)
 			curSvc := cur.(*corev1.Service)
