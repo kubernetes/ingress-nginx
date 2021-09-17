@@ -37,7 +37,7 @@ metadata:
   name: ingress-nginx-controller
   namespace: ingress-nginx
 data:
-  http-snippet:|
+  http-snippet: |
     server{
       listen 2443;
       return 308 https://$host$request_uri;
