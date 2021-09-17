@@ -452,6 +452,18 @@ controller:
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     # healthCheckNodePort: 0
 
+    ## Represents the dual-stack-ness requested or required by this Service. Possible values are
+    ## SingleStack, PreferDualStack or RequireDualStack.
+    ## The ipFamilies and clusterIPs fields depend on the value of this field.
+    ## Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
+    ipFamilyPolicy: "SingleStack"
+
+    ## List of IP families (e.g. IPv4, IPv6) assigned to the service. This field is usually assigned automatically
+    ## based on cluster configuration and the ipFamilyPolicy field.
+    ## Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
+    ipFamilies:
+      - IPv4
+
     ports:
       http: 80
       https: 443
