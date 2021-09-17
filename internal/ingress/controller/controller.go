@@ -234,26 +234,27 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.backend' or set DisableCatchAll flag to false.")
 	}
 
-	if parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
-		for key := range ing.ObjectMeta.GetAnnotations() {
+	cfg := n.store.GetBackendConfiguration()
+	cfg.Resolver = n.resolver
+
+	for key := range ing.ObjectMeta.GetAnnotations() {
+		if parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
 			if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.DefaultAnnotationsPrefix)) {
 				return fmt.Errorf("This deployment has a custom annotation prefix defined. Use '%s' instead of '%s'", parser.AnnotationsPrefix, parser.DefaultAnnotationsPrefix)
 			}
 		}
+
+		if !cfg.EnableSnippetDirectives && strings.HasSuffix(key, "-snippet") {
+			return fmt.Errorf("%s annotation cannot be used. Snippet directives are disabled by the Ingress administrator", key)
+		}
+
+		if len(cfg.GlobalRateLimitMemcachedHost) == 0 && strings.HasPrefix(key, fmt.Sprintf("%s/%s", parser.AnnotationsPrefix, "global-rate-limit")) {
+			return fmt.Errorf("'global-rate-limit*' annotations require 'global-rate-limit-memcached-host' settings configured in the global configmap")
+		}
+
 	}
 
 	k8s.SetDefaultNGINXPathType(ing)
-
-	cfg := n.store.GetBackendConfiguration()
-	cfg.Resolver = n.resolver
-
-	if len(cfg.GlobalRateLimitMemcachedHost) == 0 {
-		for key := range ing.ObjectMeta.GetAnnotations() {
-			if strings.HasPrefix(key, fmt.Sprintf("%s/%s", parser.AnnotationsPrefix, "global-rate-limit")) {
-				return fmt.Errorf("'global-rate-limit*' annotations require 'global-rate-limit-memcached-host' settings configured in the global configmap")
-			}
-		}
-	}
 
 	allIngresses := n.store.ListIngresses()
 
@@ -511,6 +512,30 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 	}
 }
 
+func dropSnippetDirectives(anns *annotations.Ingress, ingKey string) {
+	if anns != nil {
+		if anns.ConfigurationSnippet != "" {
+			klog.V(3).Infof("Ingress %q tried to use configuration-snippet and the annotation is disabled by the admin. Removing the annotation", ingKey)
+			anns.ConfigurationSnippet = ""
+		}
+		if anns.ServerSnippet != "" {
+			klog.V(3).Infof("Ingress %q tried to use server-snippet and the annotation is disabled by the admin. Removing the annotation", ingKey)
+			anns.ServerSnippet = ""
+		}
+
+		if anns.ModSecurity.Snippet != "" {
+			klog.V(3).Infof("Ingress %q tried to use modsecurity-snippet and the annotation is disabled by the admin. Removing the annotation", ingKey)
+			anns.ModSecurity.Snippet = ""
+		}
+
+		if anns.ExternalAuth.AuthSnippet != "" {
+			klog.V(3).Infof("Ingress %q tried to use auth-snippet and the annotation is disabled by the admin. Removing the annotation", ingKey)
+			anns.ExternalAuth.AuthSnippet = ""
+		}
+
+	}
+}
+
 // getBackendServers returns a list of Upstream and Server to be used by the
 // backend.  An upstream can be used in multiple servers if the namespace,
 // service name and port are the same.
@@ -524,6 +549,10 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 	for _, ing := range ingresses {
 		ingKey := k8s.MetaNamespaceKey(ing)
 		anns := ing.ParsedAnnotations
+
+		if !n.store.GetBackendConfiguration().EnableSnippetDirectives {
+			dropSnippetDirectives(anns, ingKey)
+		}
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -800,6 +829,10 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 	for _, ing := range data {
 		ingKey := k8s.MetaNamespaceKey(ing)
 		anns := ing.ParsedAnnotations
+
+		if !n.store.GetBackendConfiguration().EnableSnippetDirectives {
+			dropSnippetDirectives(anns, ingKey)
+		}
 
 		var defBackend string
 		if ing.Spec.DefaultBackend != nil && ing.Spec.DefaultBackend.Service != nil {
@@ -1091,6 +1124,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		ingKey := k8s.MetaNamespaceKey(ing)
 		anns := ing.ParsedAnnotations
 
+		if !n.store.GetBackendConfiguration().EnableSnippetDirectives {
+			dropSnippetDirectives(anns, ingKey)
+		}
+
 		// default upstream name
 		un := du.Name
 
@@ -1166,6 +1203,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	for _, ing := range data {
 		ingKey := k8s.MetaNamespaceKey(ing)
 		anns := ing.ParsedAnnotations
+
+		if !n.store.GetBackendConfiguration().EnableSnippetDirectives {
+			dropSnippetDirectives(anns, ingKey)
+		}
 
 		if anns.Canary.Enabled {
 			klog.V(2).Infof("Ingress %v is marked as Canary, ignoring", ingKey)

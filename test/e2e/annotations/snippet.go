@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo"
@@ -31,11 +32,11 @@ var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 		f.NewEchoDeployment()
 	})
 
-	ginkgo.It(`set snippet "more_set_headers "Request-Id: $req_id";" in all locations"`, func() {
+	ginkgo.It(`set snippet "more_set_headers "Foo1: Bar1";" in all locations"`, func() {
 		host := "configurationsnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `
-				more_set_headers "Request-Id: $req_id";`,
+				more_set_headers "Foo1: Bar1";`,
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
@@ -43,7 +44,44 @@ var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `more_set_headers "Request-Id: $req_id";`)
+				return strings.Contains(server, `more_set_headers "Foo1: Bar1";`)
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Foo1", []string{"Bar1"})
+	})
+
+	ginkgo.It(`drops snippet "more_set_headers "Foo1: Bar1";" in all locations if disabled by admin"`, func() {
+		host := "noconfigurationsnippet.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/configuration-snippet": `
+				more_set_headers "Foo1: Bar1";`,
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.UpdateNginxConfigMapData("enable-snippet-directives", "false")
+		defer func() {
+			// Return to the original value
+			f.UpdateNginxConfigMapData("enable-snippet-directives", "true")
+		}()
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return !strings.Contains(server, `more_set_headers "Foo1: Bar1";`)
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).Headers().
+			NotContainsKey("Foo1")
 	})
 })
