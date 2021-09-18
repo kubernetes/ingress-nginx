@@ -36,6 +36,9 @@ For detailed changes on the `ingress-nginx` helm chart, please check the followi
 | v0.47.0               | 1.21, 1.20, 1.19       | 3.13.5         |  1.20.1       |
 | v0.46.0               | 1.21, 1.20, 1.19       | 3.13.2         |  1.19.6       |
 
+
+See [this article](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/) if you want upgrade to the stable Ingress API. 
+
 ## Get Involved
 
 Thanks for taking the time to join our community and start contributing!
@@ -45,8 +48,6 @@ Thanks for taking the time to join our community and start contributing!
 - **Contributing**: Contributions of all kind are welcome!
   
   - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information about setting up your environment, the workflow that we expect, and instructions on the developer certificate of origin that we require.
-
-  - Check out the [open issues](https://github.com/kubernetes/ingress-nginx), especially [help-wanted](https://github.com/kubernetes/ingress-nginx/labels/help%20wanted) ones.
 
   - Join our Kubernetes Slack channel for developer discussion : [#ingress-nginx-dev](https://kubernetes.slack.com/archives/C021E147ZA4).
   
