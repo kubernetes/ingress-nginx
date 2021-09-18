@@ -2,10 +2,6 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
-### 4.1.0
-
-- [7651] https://github.com/kubernetes/ingress-nginx/pull/7651 Support ipFamilyPolicy and ipFamilies fields in Helm Chart
-
 ### 3.34.0
 
 - [7256] https://github.com/kubernetes/ingress-nginx/pull/7256 Add namespace field in the namespace scoped resource templates
