@@ -760,7 +760,7 @@ _New Features:_
 - Configure User-Agent for [client-go](https://github.com/kubernetes/ingress-nginx/pull/5700)
 - Switch to [gcr.io](https://cloud.google.com/container-registry/) as container registry
 - Use cloud-build to build [container images](https://console.cloud.google.com/gcr/images/k8s-artifacts-prod/US/ingress-nginx)
-- Publish images using [Container Image Promoter](https://github.com/kubernetes-sigs/k8s-container-image-promoter)
+- Publish images using [artifact promotion tooling](https://sigs.k8s.io/promo-tools)
 - Go 1.14.4
 - client-go v0.18.5
 
