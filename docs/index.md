@@ -67,7 +67,7 @@ There are 2 reasons primarily.
   - extensions/v1beta1
   - networking.k8s.io/v1beta1
 
-    (You would get a message about deprecation but the ingress resource would get created.)
+You would get a message about deprecation but the ingress resource would get created.
 
 From K8s version 1.22 onwards, you can ONLY set the "apiVersion:" field of a ingress resource, to the value "networking.k8s.io/v1". The reason is [official blog on deprecated ingress api versions](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/).
 
