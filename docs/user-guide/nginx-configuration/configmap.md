@@ -46,6 +46,7 @@ The following table shows a configuration option's name, type, and the default v
 |[disable-access-log](#disable-access-log)|bool|false|
 |[disable-ipv6](#disable-ipv6)|bool|false|
 |[disable-ipv6-dns](#disable-ipv6-dns)|bool|false|
+|[enable-snippet-directives](#enable-snippet-directives)|bool|true|
 |[enable-underscores-in-headers](#enable-underscores-in-headers)|bool|false|
 |[enable-ocsp](#enable-ocsp)|bool|false|
 |[ignore-invalid-headers](#ignore-invalid-headers)|bool|true|
@@ -311,6 +312,12 @@ Disable listening on IPV6. _**default:**_ `false`; IPv6 listening is enabled
 ## disable-ipv6-dns
 
 Disable IPV6 for nginx DNS resolver. _**default:**_ `false`; IPv6 resolving enabled.
+
+## enable-snippet-directives
+
+Enables Ingress to parse and add *-snippet annotations/directives created by the user. _**default:**_ `true`;
+Obs.: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this 
+may allow a user to add restricted configurations to the final nginx.conf file
 
 ## enable-underscores-in-headers
 
