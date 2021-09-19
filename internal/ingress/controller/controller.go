@@ -818,6 +818,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 	for _, ing := range data {
 		anns := ing.ParsedAnnotations
+		ingKey := k8s.MetaNamespaceKey(ing)
 
 		if !n.store.GetBackendConfiguration().EnableSnippetDirectives {
 			dropSnippetDirectives(anns, ingKey)
