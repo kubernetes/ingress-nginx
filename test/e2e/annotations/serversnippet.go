@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo"
@@ -35,8 +36,8 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 		host := "serversnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-snippet": `
-				more_set_headers "Content-Length: $content_length";
-				more_set_headers "Content-Type: $content_type";`,
+				more_set_headers "Foo: Bar";
+				more_set_headers "Xpto: Lalala";`,
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
@@ -44,8 +45,50 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `more_set_headers "Content-Length: $content_length`) &&
-					strings.Contains(server, `more_set_headers "Content-Type: $content_type";`)
+				return strings.Contains(server, `more_set_headers "Foo: Bar`) &&
+					strings.Contains(server, `more_set_headers "Xpto: Lalala";`)
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Foo", []string{"Bar"}).
+			ValueEqual("Xpto", []string{"Lalala"})
+	})
+
+	ginkgo.It(`drops server snippet if disabled by the administrator`, func() {
+		host := "noserversnippet.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/server-snippet": `
+				more_set_headers "Foo: Bar";
+				more_set_headers "Xpto: Lalala";`,
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.UpdateNginxConfigMapData("enable-snippet-directives", "false")
+		defer func() {
+			// Return to the original value
+			f.UpdateNginxConfigMapData("enable-snippet-directives", "true")
+		}()
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return !strings.Contains(server, `more_set_headers "Foo: Bar`) &&
+					!strings.Contains(server, `more_set_headers "Xpto: Lalala";`)
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).Headers().
+			NotContainsKey("Foo").
+			NotContainsKey("Xpto")
+
 	})
 })
