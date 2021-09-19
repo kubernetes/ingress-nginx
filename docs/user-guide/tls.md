@@ -87,23 +87,32 @@ annotation in the particular resource.
     This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"`
     annotation in the particular resource.
 
-## Automated Certificate Management with Kube-Lego
+## Automated Certificate Management with cert-manager
 
-!!! tip
-    Kube-Lego has reached end-of-life and is being
-    replaced by [cert-manager](https://github.com/jetstack/cert-manager/).
+[cert-manager] automatically requests missing or expired certificates from a range of 
+[supported issuers][cert-manager-issuer-config] (including [Let's Encrypt]) by monitoring 
+ingress resources.
 
-[Kube-Lego] automatically requests missing or expired certificates from [Let's Encrypt]
-by monitoring ingress resources and their referenced secrets.
+To set up cert-manager you should take a look at this [full example][full-cert-manager-example].
 
-To enable this for an ingress resource you have to add an annotation:
+To enable it for an ingress resource you have to deploy cert-manager, configure a certificate 
+issuer update the manifest:
 
-```console
-kubectl annotate ing ingress-demo kubernetes.io/tls-acme="true"
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-demo
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-staging" # Replace this with a production issuer once you've tested it
+    [..]
+spec:
+  tls:
+    - hosts:
+        - ingress-demo.example.com
+        secretName: ingress-demo-tls
+    [...]
 ```
-
-To setup Kube-Lego you can take a look at this [full example][full-kube-lego-example].
-The first version to fully support Kube-Lego is Nginx Ingress controller 0.8.
 
 ## Default TLS Version and Ciphers
 
@@ -136,10 +145,11 @@ data:
 
 
 
-[full-kube-lego-example]:https://github.com/jetstack/kube-lego/tree/master/examples
-[Kube-Lego]:https://github.com/jetstack/kube-lego
 [Let's Encrypt]:https://letsencrypt.org
 [ConfigMap]: ./nginx-configuration/configmap.md
 [ssl-ciphers]: ./nginx-configuration/configmap.md#ssl-ciphers
 [SNI]: https://en.wikipedia.org/wiki/Server_Name_Indication
 [mozilla-ssl-config-old]: https://ssl-config.mozilla.org/#server=nginx&config=old
+[cert-manager]: https://github.com/jetstack/cert-manager/
+[full-cert-manager-example]:https://cert-manager.io/docs/tutorials/acme/ingress/
+[cert-manager-issuer-config]:https://cert-manager.io/docs/configuration/
