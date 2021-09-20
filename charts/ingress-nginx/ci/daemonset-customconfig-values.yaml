@@ -4,7 +4,7 @@ controller:
     tag: 1.0.0-dev
     digest: null
   kind: DaemonSet
-  enableSnippetDirectives: false
+  allowSnippetAnnotations: false
   admissionWebhooks:
     enabled: false
   service:

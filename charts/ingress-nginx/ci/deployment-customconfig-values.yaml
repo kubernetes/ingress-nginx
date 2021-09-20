@@ -5,7 +5,7 @@ controller:
     digest: null
   config:
     use-proxy-protocol: "true"
-  enableSnippetDirectives: false
+  allowSnippetAnnotations: false
   admissionWebhooks:
     enabled: false
   service:
