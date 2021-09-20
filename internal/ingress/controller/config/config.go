@@ -93,6 +93,10 @@ const (
 type Configuration struct {
 	defaults.Backend `json:",squash"`
 
+	// EnableSnippetDirectives enable users to add their own snippets via ingress annotation.
+	// If disabled, only snippets added via ConfigMap are added to ingress.
+	EnableSnippetDirectives bool `json:"enable-snippet-directives"`
+
 	// Sets the name of the configmap that contains the headers to pass to the client
 	AddHeaders string `json:"add-headers,omitempty"`
 
@@ -757,6 +761,7 @@ func NewDefault() Configuration {
 	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}}
 
 	cfg := Configuration{
+		EnableSnippetDirectives:          true,
 		AllowBackendServerHeader:         false,
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
