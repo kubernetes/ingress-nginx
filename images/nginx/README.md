@@ -18,7 +18,7 @@ This image provides a default configuration file with no backend servers.
 _Using docker_
 
 ```console
-docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:v20210809-g98288bc3c@sha256:f9363669cf26514c9548c1fe4f8f4e2f58dfb76616bcd638a0ff7f0ec3457c17
+docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:v20210915-g498892514@sha256:8c1e48123e64e3f2b90ed32a53babd9b5f5431dad26beecdcb8fc185ded3b6dd
 ```
 
 _Creating a replication controller_
