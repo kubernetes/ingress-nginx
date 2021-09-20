@@ -316,7 +316,7 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 		f.SetNginxConfigMapData(map[string]string{
 			"enable-modsecurity":           "true",
 			"enable-owasp-modsecurity-crs": "true",
-			"enable-snippet-directives":    "false",
+			"allow-snippet-annotations":    "false",
 			"modsecurity-snippet":          expectedComment,
 		})
 
