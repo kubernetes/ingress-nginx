@@ -67,10 +67,10 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.UpdateNginxConfigMapData("enable-snippet-directives", "false")
+		f.UpdateNginxConfigMapData("allow-snippet-annotations", "false")
 		defer func() {
 			// Return to the original value
-			f.UpdateNginxConfigMapData("enable-snippet-directives", "true")
+			f.UpdateNginxConfigMapData("allow-snippet-annotations", "true")
 		}()
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()

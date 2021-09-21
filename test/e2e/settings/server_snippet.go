@@ -94,7 +94,7 @@ var _ = framework.DescribeSetting("configmap server-snippet", func() {
 		hostAnnots := "serverannotssnippet2.foo.com"
 
 		f.SetNginxConfigMapData(map[string]string{
-			"enable-snippet-directives": "false",
+			"allow-snippet-annotations": "false",
 			"server-snippet": `
 			more_set_headers "Globalfoo: Foooo";`,
 		})
