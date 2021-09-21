@@ -30,6 +30,7 @@ For detailed changes on the `ingress-nginx` helm chart, please check the followi
 
 | Ingress-nginx version | k8s supported version  | Alpine Version | Nginx Version |
 |-----------------------|-------------           |----------------|---------------|
+| v1.0.1                | 1.22, 1.21, 1.20, 1.19 | 3.13.5         |  1.19.9       |
 | v1.0.0                | 1.22, 1.21, 1.20, 1.19 | 3.13.5         |  1.20.1       |
 | v0.49.0               | 1.21, 1.20, 1.19       | 3.13.5         |  1.20.1       |
 | v0.48.1               | 1.21, 1.20, 1.19       | 3.13.5         |  1.20.1       |
