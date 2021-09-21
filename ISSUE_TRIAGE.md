@@ -4,7 +4,7 @@ Note that this guide refers to contributing through issue triaging. If you are i
 
 ## General Information 
 
-The triage process of the ingress-nginx maintainers is based on the [triage process guidelines](https://github.com/kubernetes/community/blob/master/contributors/guide/issue-triage.md) of the kubernetes community  
+The triage process of the ingress-nginx maintainers is based on the [triage process guidelines](https://github.com/kubernetes/community/blob/master/contributors/guide/issue-triage.md) of the Kubernetes community  
 
 However the exact process of the ingress-nginx maintainers may differ in certain aspects. This doc gives a more precise overview on how the ingress-nginx maintainers approach the issue triage process and other processes that are related. 
 
@@ -18,9 +18,9 @@ New issues come in with the labels `needs-triage` and `needs-priority` and one o
 
 * Filter for issues [without the `triage-accepted`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+-label%3Atriage%2Faccepted+is%3Aissue) label.
 * Check if all neccessary information are available. This is basically true, if people filled out the issue template correctly. If neccessary information is missing, ask the author to add the missing information and add the label `triage/needs-information` if not already present. If already present, send the author a friendly reminder to add those. 
-* Check if the used versions of ingress-nginx and kubernetes is supported. Note that [we only support n-3 versions](https://github.com/kubernetes/ingress-nginx#support-versions-table). If the version is not supported, ask the author to upgrade to newer versions and see if the error still persists. 
+* Check if the used versions of ingress-nginx and Kubernetes is supported. Note that [we only support n-3 versions](https://github.com/kubernetes/ingress-nginx#support-versions-table). If the version is not supported, ask the author to upgrade to newer versions and see if the error still persists. 
 * Read through the issue description and comments briefly to understand what the issue is about. Also check if the kind and area is correct, and adjust it if neccessary. If the issue is understandable add the label `triage-accepted`.
-* If at any point you don't know how to proceed with an issue during the triage process, tag one of the core maintainers in the issue to raise attention. 
+* If at any point you don't know how to proceed with an issue during the triage process, tag one of the [core maintainers](OWNERS_ALIASES) in the issue to raise attention. 
 
 Note: Issues that are stale for 90 days are being closed automatically. However we could be missing a bug here, so from time to time it makes sense to go over the closed ones and see if there is something important. Use [this filter](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aclosed+is%3Aissue+label%3Alifecycle%2Frotten+) to find those. 
 
@@ -38,7 +38,7 @@ Who and When?
 * Tricky/important ones could be brought up during community meetings
 
 ## Labels 
-Labels are helpfull for issues to indicate in which lifecycle state they are currently and to categorize them. This section describes the most important ones with the additional info about how to add those. A complete label list of the kubernetes community can be found [here](https://github.com/kubernetes/kubernetes/labels) while a complete label list for this project can be found [here](https://github.com/kubernetes/ingress-nginx/labels). However, her the most importan ones: 
+Labels are helpful for issues to indicate in which lifecycle state they are currently and to categorize them. This section describes the most important ones with the additional info about how to add those. A complete label list of the Kubernetes community can be found [here](https://github.com/kubernetes/kubernetes/labels) while a complete label list for this project can be found [here](https://github.com/kubernetes/ingress-nginx/labels). However, here the most important ones: 
 
 * Triage:
   * [`needs-triage`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+is%3Aissue+label%3Aneeds-triage): Indicates that the issue needs triage. Automatically added. 
