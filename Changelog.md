@@ -3,10 +3,10 @@
 ### 1.0.1
 
 **Image:**
-TODO 
+- k8s.gcr.io/ingress-nginx/controller:v1.0.1@sha256:26bbd57f32bac3b30f90373005ef669aae324a4de4c19588a13ddba399c6664e
 
 **Known Issues**
-TODO 
+* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.2, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578). 
 
 _New Features:_
 

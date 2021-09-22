@@ -24,6 +24,5 @@ annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - Support for Ingress object v1 and drop support for v1beta1
-    - Update to go 1.17
-    - Fix some bugs
+    - Downgrade NGINX to v1.19.9
+    - Update Base Image to alpine 3.14.2
