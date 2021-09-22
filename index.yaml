@@ -127,6 +127,30 @@ entries:
     version: 4.0.0-beta.1
   - annotations:
       artifacthub.io/changes: |
+        - Add option to disable snippet annotations
+        - Downgrade NGINX to v1.19.9
+    apiVersion: v2
+    appVersion: 0.49.1
+    created: "2021-09-22T12:45:13.932318132Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 1f9589f72163516cb3d2c254d1c9010a7af5d86e4c6cddb979ae5a84694fd711
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.37.0/ingress-nginx-3.37.0.tgz
+    version: 3.37.0
+  - annotations:
+      artifacthub.io/changes: |
         - Migrate the webhook-certgen program inside ingress repo.
         - Fix forwarding of auth-response-headers to gRPC backends
     apiVersion: v2
