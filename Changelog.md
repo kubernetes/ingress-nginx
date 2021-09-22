@@ -1,5 +1,71 @@
 # Changelog
 
+### 1.0.1
+
+**Image:**
+- k8s.gcr.io/ingress-nginx/controller:v1.0.1@sha256:26bbd57f32bac3b30f90373005ef669aae324a4de4c19588a13ddba399c6664e
+
+**Known Issues**
+* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.2, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578). 
+
+_New Features:_
+
+_Changes:_
+
+- [X] [#7670](https://github.com/kubernetes/ingress-nginx/pull/7670) Change enable-snippet to allow-snippet-annotation (#7670)
+- [X] [#7672](https://github.com/kubernetes/ingress-nginx/pull/7672) add option for documentiony only to pr template (#7672)
+- [X] [#7668](https://github.com/kubernetes/ingress-nginx/pull/7668) added example multiple controller install to faq (#7668)
+- [X] [#7665](https://github.com/kubernetes/ingress-nginx/pull/7665) Add option to force enabling snippet directives (#7665)
+- [X] [#7659](https://github.com/kubernetes/ingress-nginx/pull/7659) Replace kube-lego docs with cert-manager (#7659)
+- [X] [#7656](https://github.com/kubernetes/ingress-nginx/pull/7656) Changelog.md: Update references to sigs.k8s.io/promo-tools (#7656)
+- [X] [#7603](https://github.com/kubernetes/ingress-nginx/pull/7603) additional info for the custom-headers documentation page (#7603)
+- [X] [#7630](https://github.com/kubernetes/ingress-nginx/pull/7630) images/kube-webhook-certgen/rootfs: improvements (#7630)
+- [X] [#7636](https://github.com/kubernetes/ingress-nginx/pull/7636) Add github action for building images (#7636)
+- [X] [#7648](https://github.com/kubernetes/ingress-nginx/pull/7648) Update e2e-test-runner image (#7648)
+- [X] [#7643](https://github.com/kubernetes/ingress-nginx/pull/7643) Update NGINX base image to v1.19 (#7643)
+- [X] [#7642](https://github.com/kubernetes/ingress-nginx/pull/7642) Add security contacts (#7642)
+- [X] [#7640](https://github.com/kubernetes/ingress-nginx/pull/7640) fix typos. (#7640)
+- [X] [#7639](https://github.com/kubernetes/ingress-nginx/pull/7536) Downgrade nginx to v1.19 (#7639)
+- [X] [#7575](https://github.com/kubernetes/ingress-nginx/pull/7575) Add e2e tests for secure cookie annotations (#7575) (#7619)
+- [X] [#7625](https://github.com/kubernetes/ingress-nginx/pull/7625) Only build nginx-errors for linux/amd64 (#7625)
+- [X] [#7609](https://github.com/kubernetes/ingress-nginx/pull/7609) Add new flag to watch ingressclass by name instead of spec (#7609)
+- [X] [#7604](https://github.com/kubernetes/ingress-nginx/pull/7604) Change the cloudbuild timeout (#7604)
+- [X] [#7460](https://github.com/kubernetes/ingress-nginx/pull/7460) Fix old tag of custom error pages used in example (#7460)
+- [X] [#7577](https://github.com/kubernetes/ingress-nginx/pull/7577) Added command to get Nginx versionq! (#7577)
+- [X] [#7611](https://github.com/kubernetes/ingress-nginx/pull/7611) Helm notes outputs non nil value for ingress.class annotation (#7611)
+- [X] [#7469](https://github.com/kubernetes/ingress-nginx/pull/7469) Allow the usage of Services as Upstream on a global level (#7469)
+- [X] [#7393](https://github.com/kubernetes/ingress-nginx/pull/7393) getEndpoints uses service target port directly if it's a number and mismatch with port name in endpoint (#7393)
+- [X] [#7514](https://github.com/kubernetes/ingress-nginx/pull/7514) nginx flag: --disable-full-test flag to allow testing configfile of the current single ingress (#7514)
+- [X] [#7374](https://github.com/kubernetes/ingress-nginx/pull/7374) Trigger syncIngress on Service addition/deletion #7346 (#7374)
+- [X] [#7464](https://github.com/kubernetes/ingress-nginx/pull/7464) Sync Hostname and IP address from service to ingress status (#7464)
+- [X] [#7560](https://github.com/kubernetes/ingress-nginx/pull/7560) put modsecurity e2e tests into their own packages (#7560)
+- [X] [#7202](https://github.com/kubernetes/ingress-nginx/pull/7202) Additional AuthTLS assertions and doc change to demonstrate auth-tls-secret enables the other AuthTLS annotations (#7202)
+- [X] [#7606](https://github.com/kubernetes/ingress-nginx/pull/7606) fix cli flag typo in faq (#7606)
+- [X] [#7601](https://github.com/kubernetes/ingress-nginx/pull/7601) fix charts README.md to give additional detail on prometheus metrics … (#7601)
+- [X] [#7596](https://github.com/kubernetes/ingress-nginx/pull/7596) Update e2e test runner image (#7596)
+- [X] [#7604](https://github.com/kubernetes/ingress-nginx/pull/7604) Update cloudbuild timeout (#7604)
+- [X] [#7440](https://github.com/kubernetes/ingress-nginx/pull/7440) remove timestamp when requeuing Element (#7440)
+- [X] [#7598](https://github.com/kubernetes/ingress-nginx/pull/7598) fix 7591 (#7598)
+- [X] [#7597](https://github.com/kubernetes/ingress-nginx/pull/7597) Update to the base nginx image (#7597)
+- [X] [#7540](https://github.com/kubernetes/ingress-nginx/pull/7540) improve faq for migration to ingress api v1 (#7540)
+- [X] [#7594](https://github.com/kubernetes/ingress-nginx/pull/7594) Remove addgroup directive from alpine building (#7594)
+- [X] [#7592](https://github.com/kubernetes/ingress-nginx/pull/7592) Change builder in a new attempt to make it run (#7592)
+- [X] [#7584](https://github.com/kubernetes/ingress-nginx/pull/7584) Changing gcb builder (#7584)
+- [X] [#7583](https://github.com/kubernetes/ingress-nginx/pull/7583) update alpine and remove buildx restriction (#7583)
+- [X] [#7561](https://github.com/kubernetes/ingress-nginx/pull/7561) Add doc ref for preserve-trailing-slash annotation (#7561)
+- [X] [#7581](https://github.com/kubernetes/ingress-nginx/pull/7581) Default KinD manifest to watch ingresses without class (#7581)
+- [X] [#7511](https://github.com/kubernetes/ingress-nginx/pull/7511) add same tcp and udp ports to internal load balancer (#7511)
+- [X] [#7399](https://github.com/kubernetes/ingress-nginx/pull/7399) feat: add session-cookie-secure annotation (#7399)
+- [X] [#7556](https://github.com/kubernetes/ingress-nginx/pull/7556) Fix YAML indentation issue (#7556)
+- [X] [#7558](https://github.com/kubernetes/ingress-nginx/pull/7558) Revert "Update base nginx" (#7558)
+- [X] [#7552](https://github.com/kubernetes/ingress-nginx/pull/7552) Update base nginx (#7552)
+- [X] [#7541](https://github.com/kubernetes/ingress-nginx/pull/7541) Add a flag to specify address to bind the healthz server (#7541)
+- [X] [#7503](https://github.com/kubernetes/ingress-nginx/pull/7503) Document the keep-alive 0 effect on http/2 requests (#7503)
+- [X] [#7264](https://github.com/kubernetes/ingress-nginx/pull/7264) Update docs for new ingress api in cluster version >=1.19 (#7264)
+- [X] [#7545](https://github.com/kubernetes/ingress-nginx/pull/7545) Improving e2e tests for non-service backends #7544 (#7545)
+- [X] [#7537](https://github.com/kubernetes/ingress-nginx/pull/7537) improve docs for release - added step to edit README for support matrix (#7537)
+- [X] [#7536](https://github.com/kubernetes/ingress-nginx/pull/7536) add known issues in changelog.md for release v1.0.0 (#7536)
+
 ### 1.0.0
 **This is a breaking change**
 
