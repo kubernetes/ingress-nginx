@@ -45,7 +45,7 @@ _Changes:_
 - [X] [#7596](https://github.com/kubernetes/ingress-nginx/pull/7596) Update e2e test runner image (#7596)
 - [X] [#7604](https://github.com/kubernetes/ingress-nginx/pull/7604) Update cloudbuild timeout (#7604)
 - [X] [#7440](https://github.com/kubernetes/ingress-nginx/pull/7440) remove timestamp when requeuing Element (#7440)
-- [X] [#7598](https://github.com/kubernetes/ingress-nginx/pull/7598) fix 7591 (#7598)
+- [X] [#7598](https://github.com/kubernetes/ingress-nginx/pull/7598) correct docs on ingressClass resource being disabled (#7598)
 - [X] [#7597](https://github.com/kubernetes/ingress-nginx/pull/7597) Update to the base nginx image (#7597)
 - [X] [#7540](https://github.com/kubernetes/ingress-nginx/pull/7540) improve faq for migration to ingress api v1 (#7540)
 - [X] [#7594](https://github.com/kubernetes/ingress-nginx/pull/7594) Remove addgroup directive from alpine building (#7594)
@@ -114,6 +114,23 @@ Changes:
 - [X] [#6944](https://github.com/kubernetes/ingress-nginx/pull/6944) Update proper default value for HTTP2MaxConcurrentStreams in Docs
 - [X] [#6940](https://github.com/kubernetes/ingress-nginx/pull/6940) Fix definition order of modsecurity directives 
 - [X] [#7156] Drops support for Ingress Object v1beta1
+
+### 0.49.1
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.49.1@sha256:4080849490fd4f61416ad7bdba6fdd0ee58164f2e13df1128b407ce82d5f3986`
+
+_New Features:_
+
+
+_Changes:_
+
+- [x] [#7670](https://github.com/kubernetes/ingress-nginx/pull/7670) Change enable-snippet to allow-snippet-annotation (#7670) (#7677)
+- [x] [#7676](https://github.com/kubernetes/ingress-nginx/pull/7676) Fix opentracing in v0.X (#7676)
+- [x] [#7643](https://github.com/kubernetes/ingress-nginx/pull/7643) Update NGINX base image to v1.19 (#7643)
+- [x] [#7665](https://github.com/kubernetes/ingress-nginx/pull/7665) Add option to force enabling snippet directives (7665)
+- [x] [#7521](https://github.com/kubernetes/ingress-nginx/pull/7521) Update ingress to go 1.17 (#7521)
 
 ### 0.49.0
 
