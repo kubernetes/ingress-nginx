@@ -63,7 +63,7 @@ FIELDS:
 
 There are 2 reasons primarily.
 
-(Reason #1) Until K8s version 1.21, it was was possible to create a ingress resource, with the "apiVersion:" field set to a value like ;
+(Reason #1) Until K8s version 1.21, it was possible to create a ingress resource, with the "apiVersion:" field set to a value like ;
   - extensions/v1beta1
   - networking.k8s.io/v1beta1
 
