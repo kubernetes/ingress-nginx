@@ -53,7 +53,6 @@ rules:
   - apiGroups:
       - ''
     resources:
-      - configmaps
       - endpoints
       - nodes
       - pods
@@ -61,6 +60,14 @@ rules:
     verbs:
       - list
       - watch
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+    verbs:
+      - list
+      - watch
+      - update
   - apiGroups:
       - ''
     resources:
