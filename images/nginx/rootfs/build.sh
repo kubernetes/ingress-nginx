@@ -88,8 +88,8 @@ export NGINX_AJP_VERSION=a964a0bcc6a9f2bfb82a13752d7794a36319ffac
 # Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20210510...v2.1-agentzh
 export LUAJIT_VERSION=2.1-20210510
 
-# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.03...master
-export LUA_RESTY_BALANCER=56fd8ad03d5718f507a5129edc43a25948364b9f
+# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.04...master
+export LUA_RESTY_BALANCER=d97f37ddcbd5c329e0b0447fca4b2469e4f7d63e
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.11...master
 export LUA_RESTY_CACHE=0.11
@@ -279,7 +279,7 @@ get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
 get_src 462c6b38792bab4ca8212bdfd3f2e38f6883bb45c8fb8a03474ea813e0fab853 \
         "https://github.com/openresty/lua-resty-string/archive/$LUA_RESTY_STRING_VERSION.tar.gz"
 
-get_src b3d28adac2acee1e5904e9f65d6e80e0553b01647fa0701b812bc7e464de74ad \
+get_src 16d72ed133f0c6df376a327386c3ef4e9406cf51003a700737c3805770ade7c5 \
         "https://github.com/openresty/lua-resty-balancer/archive/$LUA_RESTY_BALANCER.tar.gz"
 
 if [[ ${ARCH} == "s390x" ]]; then
