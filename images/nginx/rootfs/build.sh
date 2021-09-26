@@ -89,7 +89,7 @@ export NGINX_AJP_VERSION=a964a0bcc6a9f2bfb82a13752d7794a36319ffac
 export LUAJIT_VERSION=2.1-20210510
 
 # Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.04...master
-export LUA_RESTY_BALANCER=d97f37ddcbd5c329e0b0447fca4b2469e4f7d63e
+export LUA_RESTY_BALANCER=0.04
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.11...master
 export LUA_RESTY_CACHE=0.11
@@ -280,7 +280,7 @@ get_src 462c6b38792bab4ca8212bdfd3f2e38f6883bb45c8fb8a03474ea813e0fab853 \
         "https://github.com/openresty/lua-resty-string/archive/$LUA_RESTY_STRING_VERSION.tar.gz"
 
 get_src 16d72ed133f0c6df376a327386c3ef4e9406cf51003a700737c3805770ade7c5 \
-        "https://github.com/openresty/lua-resty-balancer/archive/$LUA_RESTY_BALANCER.tar.gz"
+        "https://github.com/openresty/lua-resty-balancer/archive/v$LUA_RESTY_BALANCER.tar.gz"
 
 if [[ ${ARCH} == "s390x" ]]; then
 get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
