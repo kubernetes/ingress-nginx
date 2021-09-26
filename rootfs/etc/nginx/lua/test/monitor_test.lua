@@ -82,6 +82,7 @@ describe("Monitor", function()
         namespace = "default",
         ingress_name = "example",
         service_name = "http-svc",
+        proxy_alternative_upstream_name = "default-http-svc-canary-80",
         location_path = "/",
 
         request_method = "GET",
@@ -114,6 +115,7 @@ describe("Monitor", function()
           namespace = "default",
           ingress = "example",
           service = "http-svc",
+          canary = "default-http-svc-canary-80",
           path = "/",
 
           method = "GET",
@@ -131,6 +133,7 @@ describe("Monitor", function()
           namespace = "default",
           ingress = "example",
           service = "http-svc",
+          canary = "default-http-svc-canary-80",
           path = "/",
 
           method = "POST",
