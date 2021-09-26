@@ -36,6 +36,8 @@ type Collector interface {
 	IncReloadCount()
 	IncReloadErrorCount()
 
+	SetAdmissionMetrics(float64, float64, float64, float64, float64, float64)
+
 	OnStartedLeading(string)
 	OnStoppedLeading(string)
 
@@ -57,7 +59,8 @@ type collector struct {
 	nginxStatus  collectors.NGINXStatusCollector
 	nginxProcess collectors.NGINXProcessCollector
 
-	ingressController *collectors.Controller
+	ingressController   *collectors.Controller
+	admissionController *collectors.AdmissionCollector
 
 	socket *collectors.SocketCollector
 
@@ -90,11 +93,14 @@ func NewCollector(metricsPerHost bool, registry *prometheus.Registry, ingresscla
 
 	ic := collectors.NewController(podName, podNamespace, ingressclass)
 
+	am := collectors.NewAdmissionCollector(podName, podNamespace, ingressclass)
+
 	return Collector(&collector{
 		nginxStatus:  nc,
 		nginxProcess: pc,
 
-		ingressController: ic,
+		admissionController: am,
+		ingressController:   ic,
 
 		socket: s,
 
@@ -130,6 +136,7 @@ func (c *collector) RemoveMetrics(ingresses, hosts []string) {
 func (c *collector) Start() {
 	c.registry.MustRegister(c.nginxStatus)
 	c.registry.MustRegister(c.nginxProcess)
+	c.registry.MustRegister(c.admissionController)
 	c.registry.MustRegister(c.ingressController)
 	c.registry.MustRegister(c.socket)
 
@@ -146,6 +153,7 @@ func (c *collector) Start() {
 func (c *collector) Stop() {
 	c.registry.Unregister(c.nginxStatus)
 	c.registry.Unregister(c.nginxProcess)
+	c.registry.Unregister(c.admissionController)
 	c.registry.Unregister(c.ingressController)
 	c.registry.Unregister(c.socket)
 
@@ -165,6 +173,17 @@ func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 
 func (c *collector) SetHosts(hosts sets.String) {
 	c.socket.SetHosts(hosts)
+}
+
+func (c *collector) SetAdmissionMetrics(testedIngressLength float64, testedIngressTime float64, renderingIngressLength float64, renderingIngressTime float64, testedConfigurationSize float64, admissionTime float64) {
+	c.admissionController.SetAdmissionMetrics(
+		testedIngressLength,
+		testedIngressTime,
+		renderingIngressLength,
+		renderingIngressTime,
+		testedConfigurationSize,
+		admissionTime,
+	)
 }
 
 // OnStartedLeading indicates the pod was elected as the leader

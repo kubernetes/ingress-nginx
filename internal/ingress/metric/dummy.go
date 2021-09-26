@@ -32,6 +32,9 @@ type DummyCollector struct{}
 // ConfigSuccess ...
 func (dc DummyCollector) ConfigSuccess(uint64, bool) {}
 
+// SetAdmissionMetrics ...
+func (dc DummyCollector) SetAdmissionMetrics(float64, float64, float64, float64, float64, float64) {}
+
 // IncReloadCount ...
 func (dc DummyCollector) IncReloadCount() {}
 
