@@ -3,6 +3,7 @@ package k8s
 import (
 	"bytes"
 	"context"
+	"errors"
 	"math/rand"
 	"testing"
 
@@ -52,7 +53,7 @@ func TestGetCaFromCertificate(t *testing.T) {
 
 	k.clientset.CoreV1().Secrets(testNamespace).Create(context.Background(), secret, metav1.CreateOptions{})
 
-	retrievedCa := k.GetCaFromSecret(testSecretName, testNamespace)
+	retrievedCa := k.GetCaFromSecret(context.TODO(), testSecretName, testNamespace)
 	if !bytes.Equal(retrievedCa, ca) {
 		t.Error("Was not able to retrieve CA information that was saved")
 	}
@@ -63,7 +64,7 @@ func TestSaveCertsToSecret(t *testing.T) {
 
 	ca, cert, key := genSecretData()
 
-	k.SaveCertsToSecret(testSecretName, testNamespace, "cert", "key", ca, cert, key)
+	k.SaveCertsToSecret(context.TODO(), testSecretName, testNamespace, "cert", "key", ca, cert, key)
 
 	secret, _ := k.clientset.CoreV1().Secrets(testNamespace).Get(context.Background(), testSecretName, metav1.GetOptions{})
 
@@ -79,8 +80,9 @@ func TestSaveCertsToSecret(t *testing.T) {
 func TestSaveThenLoadSecret(t *testing.T) {
 	k := newTestSimpleK8s()
 	ca, cert, key := genSecretData()
-	k.SaveCertsToSecret(testSecretName, testNamespace, "cert", "key", ca, cert, key)
-	retrievedCert := k.GetCaFromSecret(testSecretName, testNamespace)
+	ctx := context.TODO()
+	k.SaveCertsToSecret(ctx, testSecretName, testNamespace, "cert", "key", ca, cert, key)
+	retrievedCert := k.GetCaFromSecret(ctx, testSecretName, testNamespace)
 	if !bytes.Equal(retrievedCert, ca) {
 		t.Error("Was not able to retrieve CA information that was saved")
 	}
@@ -113,7 +115,9 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 			Webhooks: []admissionv1.ValidatingWebhook{{Name: "v1"}, {Name: "v2"}},
 		}, metav1.CreateOptions{})
 
-	k.PatchWebhookConfigurations(testWebhookName, ca, &fail, true, true)
+	if err := k.patchWebhookConfigurations(context.TODO(), testWebhookName, ca, fail, true, true); err != nil {
+		t.Fatalf("Unexpected error patching webhooks: %s: %v", err.Error(), errors.Unwrap(err))
+	}
 
 	whmut, err := k.clientset.
 		AdmissionregistrationV1().
@@ -155,4 +159,42 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 	if whval.Webhooks[1].FailurePolicy == nil {
 		t.Errorf("Expected second validating webhook failure policy to be set to %s", fail)
 	}
+}
+
+func Test_Patching_objects(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns_error_when", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("failure_policy_is_defined_but_no_webhooks_will_be_patched", func(t *testing.T) {
+			t.Parallel()
+		})
+
+		// This is to preserve old behavior and log format, it could be improved.
+		t.Run("diffent_names_are_specified_for_validating_and_mutating_webhook", func(t *testing.T) {
+			t.Parallel()
+		})
+
+		t.Run("patching_APIService_is_requested_and_it_does_not_exist", func(t *testing.T) {
+			t.Parallel()
+		})
+
+		t.Run("patching_webhook_is_requested_and_it_does_not_exist", func(t *testing.T) {
+			t.Parallel()
+		})
+	})
+
+	t.Run("when_patching_APIService_object", func(t *testing.T) {
+		t.Parallel()
+
+		// This is required when CABundle field is populated.
+		t.Run("sets_insecure_skip_tls_verity_to_false", func(t *testing.T) {
+			t.Parallel()
+		})
+
+		t.Run("sets_ca_bundle_with_ca_certificate_from_created_secret", func(t *testing.T) {
+			t.Parallel()
+		})
+	})
 }

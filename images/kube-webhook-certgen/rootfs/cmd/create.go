@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/jet/kube-webhook-certgen/pkg/certs"
 	"github.com/jet/kube-webhook-certgen/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -16,13 +18,17 @@ var create = &cobra.Command{
 }
 
 func createCommand(cmd *cobra.Command, args []string) {
-	k := k8s.New(newKubernetesClient(cfg.kubeconfig))
-	ca := k.GetCaFromSecret(cfg.secretName, cfg.namespace)
+	clientset, aggregatorClientset := newKubernetesClients(cfg.kubeconfig)
+	k := k8s.New(clientset, aggregatorClientset)
+
+	ctx := context.TODO()
+
+	ca := k.GetCaFromSecret(ctx, cfg.secretName, cfg.namespace)
 	if ca == nil {
 		log.Info("creating new secret")
 		newCa, newCert, newKey := certs.GenerateCerts(cfg.host)
 		ca = newCa
-		k.SaveCertsToSecret(cfg.secretName, cfg.namespace, cfg.certName, cfg.keyName, ca, newCert, newKey)
+		k.SaveCertsToSecret(ctx, cfg.secretName, cfg.namespace, cfg.certName, cfg.keyName, ca, newCert, newKey)
 	} else {
 		log.Info("secret already exists")
 	}
