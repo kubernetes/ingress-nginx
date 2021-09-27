@@ -1,5 +1,21 @@
 # Changelog
 
+### 1.0.2
+
+**Image:**
+- k8s.gcr.io/ingress-nginx/controller:v1.0.2@sha256:85b53b493d6d658d8c013449223b0ffd739c76d76dc9bf9000786669ec04e049
+
+**Known Issues**
+* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.3, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578). 
+
+_New Features:_
+
+_Changes:_
+
+- [X] [#7706](https://github.com/kubernetes/ingress-nginx/pull/7706) Add build info on prometheus metrics
+- [X] [#7702](https://github.com/kubernetes/ingress-nginx/pull/7702) Upgrade lua-resty-balancer to v0.04
+- [X] [#7696](https://github.com/kubernetes/ingress-nginx/pull/7696) Add canary backend name for requests metrics
+
 ### 1.0.1
 
 **Image:**
@@ -114,6 +130,16 @@ Changes:
 - [X] [#6944](https://github.com/kubernetes/ingress-nginx/pull/6944) Update proper default value for HTTP2MaxConcurrentStreams in Docs
 - [X] [#6940](https://github.com/kubernetes/ingress-nginx/pull/6940) Fix definition order of modsecurity directives 
 - [X] [#7156] Drops support for Ingress Object v1beta1
+
+### 0.49.2
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.49.2@sha256:84e351228337bb7b09f0e90e6b6f5e2f8f4cf7d618c1ddc1e966f23902d273db`
+
+_Changes:_
+
+- [x] [#7702](https://github.com/kubernetes/ingress-nginx/pull/#7702) upgrade lua-resty-balancer to v0.04
 
 ### 0.49.1
 
