@@ -1,5 +1,7 @@
 # Triage Process
 
+As any kind of contributor (triage, reviewer ...), always have in mind that if a user came to us and raised an issue, the user may have a real problem. We must assume that, and not the opposite (the user needs to prove to us that this is a bug). Keeping that in mind, **be nice with users, even if you don’t agree with them**
+
 Note that this guide refers to contributing through issue triaging. If you are interested in contributing to actual sources of the repository, see [this guide](./CONTRIBUTING.MD). 
 
 ## General Information 
@@ -20,7 +22,7 @@ New issues come in with the labels `needs-triage` and `needs-priority` and one o
 * Check if all neccessary information are available. This is basically true, if people filled out the issue template correctly. If neccessary information is missing, ask the author to add the missing information and add the label `triage/needs-information` if not already present. If already present, send the author a friendly reminder to add those. 
 * Check if the used versions of ingress-nginx and Kubernetes is supported. Note that [we only support n-3 versions](https://github.com/kubernetes/ingress-nginx#support-versions-table). If the version is not supported, ask the author to upgrade to newer versions and see if the error still persists. 
 * Read through the issue description and comments briefly to understand what the issue is about. Also check if the kind and area is correct, and adjust it if neccessary. If the issue is understandable add the label `triage-accepted`.
-* If at any point you don't know how to proceed with an issue during the triage process, tag one of the [core maintainers](OWNERS_ALIASES) in the issue to raise attention. 
+* If at any point you don't know how to proceed with an issue during the triage process, tag one of the [core maintainers](OWNERS_ALIASES) in the issue to raise attention or alternatively come to [this slack channel](https://kubernetes.slack.com/archives/C021E147ZA4) which may be the quicker way as people tend to miss github notifications. 
 
 Note: Issues that are stale for 90 days are being closed automatically. However we could be missing a bug here, so from time to time it makes sense to go over the closed ones and see if there is something important. Use [this filter](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aclosed+is%3Aissue+label%3Alifecycle%2Frotten+) to find those. 
 
