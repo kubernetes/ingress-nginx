@@ -139,7 +139,7 @@ Changes:
 
 _Changes:_
 
-- [x] [##7702](https://github.com/kubernetes/ingress-nginx/pull/#7702) upgrade lua-resty-balancer to v0.04
+- [x] [#7702](https://github.com/kubernetes/ingress-nginx/pull/#7702) upgrade lua-resty-balancer to v0.04
 
 ### 0.49.1
 
