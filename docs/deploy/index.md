@@ -1,5 +1,7 @@
 # Installation Guide
 
+Something new
+
 !!! attention
     The default configuration watches Ingress object from **all namespaces**.
 
