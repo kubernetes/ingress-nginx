@@ -135,6 +135,7 @@ controller:
   terminationGracePeriodSeconds: 0
   service:
     type: NodePort
+  watchIngressWithoutClass: true
 
   nodeSelector:
     ingress-ready: "true"
