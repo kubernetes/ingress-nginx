@@ -234,7 +234,7 @@ func (s *statusSync) isRunningMultiplePods() bool {
 	// cover 95% of the cases
 	podLabel := make(map[string]string)
 	for k, v := range k8s.IngressPodDetails.Labels {
-		if k != "pod-template-hash" {
+		if k != "pod-template-hash" && k != "controller-revision-hash" && k != "pod-template-generation" {
 			podLabel[k] = v
 		}
 	}
