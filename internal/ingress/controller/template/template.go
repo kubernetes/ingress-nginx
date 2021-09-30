@@ -1696,9 +1696,11 @@ func buildCorsOriginRegex(origins string) string {
 	var originsRegex string = "if ($http_origin ~* ("
 	for i, origin := range originSplitList {
 		originTrimmed := strings.TrimSpace(origin)
-		originsRegex = originsRegex + regexp.QuoteMeta(buildOriginRegex(originTrimmed))
-		if i != len(originSplitList)-1 {
-			originsRegex = originsRegex + "|"
+		if len(originTrimmed) > 0 {
+			originsRegex = originsRegex + regexp.QuoteMeta(buildOriginRegex(originTrimmed))
+			if i != len(originSplitList)-1 {
+				originsRegex = originsRegex + "|"
+			}
 		}
 	}
 	originsRegex = originsRegex + ")$ ) { set $cors 'true'; }"
@@ -1707,7 +1709,7 @@ func buildCorsOriginRegex(origins string) string {
 
 func searchCorsOrigins(splice []string, search string) bool {
 	for _, element := range splice {
-		if element == search {
+		if strings.TrimSpace(element) == search {
 			return true
 		}
 	}
