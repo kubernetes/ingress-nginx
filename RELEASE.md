@@ -89,7 +89,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
   - The sha is also visible here https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx/global/controller
 
-  - The sha is also visible [here]((https://prow.k8s.io/?repo=kubernetes%2Fingress-nginx&job=post-*)), after cloud build is finished. Click on the respective job, go to `Artifacts` section in the UI, then again `artifacs` in the directory browser. In the `build.log` at the very bottom you see something like this: 
+  - The sha is also visible [here]((https://prow.k8s.io/?repo=kubernetes%2Fingress-nginx&job=post-*)), after cloud build is finished. Click on the respective job, go to `Artifacts` section in the UI, then again `artifacts` in the directory browser. In the `build.log` at the very bottom you see something like this: 
 
   ```
   ...
@@ -129,6 +129,8 @@ Promoting the images basically means that images, that were pushed to staging co
 
 
 ## 4. PREPARE for a new Release
+
+- Make sure to get the tag and sha of the promoted image from the step before, either from cloudbuild or from [here](https://console.cloud.google.com/gcr/images/k8s-artifacts-prod/us/ingress-nginx/controller). 
 
 - This involves editing of several different files. So carefully follow the steps below and double check all changes with diff/grep etc., repeatedly. Mistakes here impact endusers.
 
