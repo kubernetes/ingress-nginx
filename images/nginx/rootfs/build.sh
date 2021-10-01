@@ -151,6 +151,18 @@ get_src()
   tar xzf "$f"
   rm -rf "$f"
 }
+OPENSSLEXTRAPKG=""
+if [[ -z ${ARCH} || ${ARCH} == "x86_64" || ${ARCH} == "aarch64" ]]; then
+        wget 'http://openresty.org/package/admin@openresty.com-5ea678a6.rsa.pub'
+        mv 'admin@openresty.com-5ea678a6.rsa.pub' /etc/apk/keys/
+        . /etc/os-release
+        MAJOR_VER=`echo $VERSION_ID | sed 's/\.[0-9]\+$//'`
+
+        echo "http://openresty.org/package/alpine/v$MAJOR_VER/main" \
+                | tee -a /etc/apk/repositories
+        OPENSSLEXTRAPKG="openresty-openssl111 openresty-openssl111-dev"
+fi
+
 
 # install required packages to build
 apk add \
@@ -160,6 +172,7 @@ apk add \
   libc-dev \
   make \
   automake \
+  openssl-dev \
   pcre-dev \
   zlib-dev \
   linux-headers \
@@ -174,6 +187,7 @@ apk add \
   curl ca-certificates \
   patch \
   libaio-dev \
+  openssl \
   cmake \
   util-linux \
   lmdb-tools \
@@ -187,7 +201,8 @@ apk add \
   unzip \
   dos2unix \
   yaml-cpp \
-  coreutils
+  coreutils \
+  ${OPENSSLEXTRAPKG}
 
 mkdir -p /etc/nginx
 
@@ -610,15 +625,6 @@ CC_OPT="-g -Og -fPIE -fstack-protector-strong -DNGX_LUA_ABORT_AT_PANIC \
 LD_OPT="-fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
 
 if [[ -z ${ARCH} || ${ARCH} == "x86_64" || ${ARCH} == "aarch64" ]]; then
-        wget 'http://openresty.org/package/admin@openresty.com-5ea678a6.rsa.pub'
-        mv 'admin@openresty.com-5ea678a6.rsa.pub' /etc/apk/keys/
-        . /etc/os-release
-        MAJOR_VER=`echo $VERSION_ID | sed 's/\.[0-9]\+$//'`
-
-        echo "http://openresty.org/package/alpine/v$MAJOR_VER/main" \
-                | tee -a /etc/apk/repositories
-        apk update
-        apk add openresty-openssl111 openresty-openssl111-dev
         LD_OPT+=' -L/usr/local/openresty/openssl111/lib -Wl,-rpath,/usr/local/openresty/openssl111/lib'
         CC_OPT+=' -I/usr/local/openresty/openssl111/include'
 fi
@@ -761,5 +767,3 @@ rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
 # remove .a files
 find /usr/local -name "*.a" -print | xargs /bin/rm
-
-apk del openresty-openssl111-dev openssl-dev
