@@ -160,7 +160,6 @@ apk add \
   libc-dev \
   make \
   automake \
-  openssl-dev \
   pcre-dev \
   zlib-dev \
   linux-headers \
@@ -175,7 +174,6 @@ apk add \
   curl ca-certificates \
   patch \
   libaio-dev \
-  openssl \
   cmake \
   util-linux \
   lmdb-tools \
@@ -597,7 +595,7 @@ WITH_FLAGS="--with-debug \
 
 # "Combining -flto with -g is currently experimental and expected to produce unexpected results."
 # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
-CC_OPT="-g -Og -fPIE -fstack-protector-strong \
+CC_OPT="-g -Og -fPIE -fstack-protector-strong -DNGX_LUA_ABORT_AT_PANIC \
   -Wformat \
   -Werror=format-security \
   -Wno-deprecated-declarations \
@@ -610,6 +608,20 @@ CC_OPT="-g -Og -fPIE -fstack-protector-strong \
   -Wno-cast-function-type"
 
 LD_OPT="-fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
+
+if [[ -z ${ARCH} || ${ARCH} == "x86_64" || ${ARCH} == "aarch64" ]]; then
+        wget 'http://openresty.org/package/admin@openresty.com-5ea678a6.rsa.pub'
+        mv 'admin@openresty.com-5ea678a6.rsa.pub' /etc/apk/keys/
+        . /etc/os-release
+        MAJOR_VER=`echo $VERSION_ID | sed 's/\.[0-9]\+$//'`
+
+        echo "http://openresty.org/package/alpine/v$MAJOR_VER/main" \
+                | tee -a /etc/apk/repositories
+        apk update
+        apk add openresty-openssl111 openresty-openssl111-dev
+        LD_OPT+=' -L/usr/local/openresty/openssl111/lib -Wl,-rpath,/usr/local/openresty/openssl111/lib'
+        CC_OPT+=' -I/usr/local/openresty/openssl111/include'
+fi
 
 if [[ ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
@@ -749,3 +761,5 @@ rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
 # remove .a files
 find /usr/local -name "*.a" -print | xargs /bin/rm
+
+apk del openresty-openssl111-dev openssl-dev
