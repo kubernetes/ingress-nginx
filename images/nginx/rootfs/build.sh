@@ -159,7 +159,7 @@ if [[ -z ${ARCH} || ${ARCH} == "x86_64" || ${ARCH} == "aarch64" ]]; then
         MAJOR_VER=`echo $VERSION_ID | sed 's/\.[0-9]\+$//'`
 
         echo "http://openresty.org/package/alpine/v$MAJOR_VER/main" \
-                | tee -a /etc/apk/repositories
+                >> /etc/apk/repositories
         OPENSSLEXTRAPKG="openresty-openssl111 openresty-openssl111-dev"
 fi
 
