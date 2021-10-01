@@ -94,6 +94,6 @@ Server: nginx/1.11.10
 Date: Mon, 13 Mar 2017 14:57:15 GMT
 Content-Type: text/html
 Content-Length: 162
-Location: http://stickyingress.example.com/app1
+Location: http://approot.bar.com/app1
 Connection: keep-alive
 ```
