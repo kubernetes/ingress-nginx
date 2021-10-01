@@ -292,5 +292,3 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			Headers().NotContainsKey("Access-Control-Allow-Origin")
 	})
 })
-
-// cors-* should block single origin for multiple cors values
