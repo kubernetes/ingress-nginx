@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.13 as builder
+FROM alpine:3.14.2 as builder
 
 COPY . /
 
@@ -23,7 +23,7 @@ RUN apk update \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.13
+FROM alpine:3.14.2
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
