@@ -191,6 +191,6 @@ Bear in mind that, if your `Ingress-Nginx-Controller-nginx2` is started with the
   --set controller.ingressClassResource.name=nginx-2 \
   --set controller.ingressClassResource.controllerValue= "k8s.io/ingress-nginx-2" \
   --set controller.ingressClassResource.enabled=true \
-  --set controller.IngressClassByName=true
+  --set controller.ingressClassByName=true
   ```
 - If you need to install yet another instance, then repeat the procedure to create a new namespace, change the values like names & namespaces (for example from "-2" to "-3"), or anything else that meets your needs.
