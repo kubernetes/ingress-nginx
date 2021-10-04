@@ -15,8 +15,8 @@ controller:
     # for backwards compatibility consider setting the full image url via the repository value below
     # use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     # repository:
-    tag: "v0.49.2"
-    digest: sha256:84e351228337bb7b09f0e90e6b6f5e2f8f4cf7d618c1ddc1e966f23902d273db
+    tag: "v0.49.3"
+    digest: sha256:35fe394c82164efa8f47f3ed0be981b3f23da77175bbb8268a9ae438851c8324
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101

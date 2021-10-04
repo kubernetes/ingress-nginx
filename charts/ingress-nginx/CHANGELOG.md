@@ -2,8 +2,8 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
-### 3.38.0
-- [7706] https://github.com/kubernetes/ingress-nginx/pull/7706 Apply patch into lua-resty-balancer to stop coredumps
+### 3.39.0
+- [7742] https://github.com/kubernetes/ingress-nginx/pull/7742 Release v0.49.3 with bugfixes
 
 ### 3.37.0
 - [7666] https://github.com/kubernetes/ingress-nginx/pull/7666 Add option to disable snippet annotations
