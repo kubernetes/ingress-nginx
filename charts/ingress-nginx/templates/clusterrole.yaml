@@ -10,7 +10,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
-  name: {{ include "ingress-nginx.fullname" . }}
+  name: {{ include "ingress-nginx.fullname" . }}-{{ .Release.Namespace }}
 rules:
   - apiGroups:
       - ""
