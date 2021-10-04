@@ -1,5 +1,21 @@
 # Changelog
 
+### 1.0.3
+
+**Image:**
+- k8s.gcr.io/ingress-nginx/controller:v1.0.3@sha256:4ade87838eb8256b094fbb5272d7dda9b6c7fa8b759e6af5383c1300996a7452
+
+**Known Issues**
+* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.4, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578). 
+
+_New Features:_
+
+_Changes:_
+
+- [X] [#7727](https://github.com/kubernetes/ingress-nginx/pull/7727) Fix selector for shutting down Pods status
+- [X] [#7719](https://github.com/kubernetes/ingress-nginx/pull/7719) Fix overlap check when ingress is configured as canary
+- Diverse docs fixes and libraries bumping
+
 ### 1.0.2
 
 **Image:**
@@ -130,6 +146,17 @@ Changes:
 - [X] [#6944](https://github.com/kubernetes/ingress-nginx/pull/6944) Update proper default value for HTTP2MaxConcurrentStreams in Docs
 - [X] [#6940](https://github.com/kubernetes/ingress-nginx/pull/6940) Fix definition order of modsecurity directives 
 - [X] [#7156] Drops support for Ingress Object v1beta1
+
+### 0.49.3
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.49.3@sha256:35fe394c82164efa8f47f3ed0be981b3f23da77175bbb8268a9ae438851c8324`
+
+_Changes:_
+
+- [X] [#7731](https://github.com/kubernetes/ingress-nginx/pull/7727) Fix selector for shutting down Pods status
+- [X] [#7741](https://github.com/kubernetes/ingress-nginx/pull/7719) Fix overlap check when ingress is configured as canary
 
 ### 0.49.2
 
