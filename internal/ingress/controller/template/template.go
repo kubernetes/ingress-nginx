@@ -1697,7 +1697,11 @@ func buildCorsOriginRegex(origins string) string {
 	for i, origin := range originSplitList {
 		originTrimmed := strings.TrimSpace(origin)
 		if len(originTrimmed) > 0 {
-			originsRegex = originsRegex + regexp.QuoteMeta(buildOriginRegex(originTrimmed))
+			builtOrigin := regexp.QuoteMeta(buildOriginRegex(originTrimmed))
+			if len(strings.Split(originTrimmed, ":")) < 3 {
+				builtOrigin += "(:[0-9][0-9]+)?"
+			}
+			originsRegex += builtOrigin
 			if i != len(originSplitList)-1 {
 				originsRegex = originsRegex + "|"
 			}
