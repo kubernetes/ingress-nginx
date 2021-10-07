@@ -178,7 +178,7 @@ Bear in mind that, if your `Ingress-Nginx-Controller-nginx2` is started with the
 - Ensure you have helm working (refer to helm documentation)
 - We have to assume that you have the helm repo for the ingress-NGINX controller already added to your helm config. But, if you have not added the helm repo then you can do this to add the repo to your helm config;
   ```
-  helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx`
+  helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
   ```
 - Make sure you have updated the helm repo data;
   ```
