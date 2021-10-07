@@ -1677,7 +1677,12 @@ func convertGoSliceIntoLuaTable(goSliceInterface interface{}, emptyStringAsNil b
 // buildOriginRegex returns an origin as a regex
 func buildOriginRegex(origin string) string {
 	if !strings.HasPrefix(origin, "*") {
-		return origin
+		escapedOrigin := regexp.QuoteMeta(origin)
+		escapedOrigin = strings.Replace(escapedOrigin, "\\*", "[A-Za-z0-9]+", 1)
+		if len(strings.Split(escapedOrigin, ":")) < 3 {
+			escapedOrigin += "(:[0-9][0-9]+)?"
+		}
+		return escapedOrigin
 	}
 
 	origin = strings.Replace(origin, "*.", "", 1)
@@ -1697,10 +1702,7 @@ func buildCorsOriginRegex(origins string) string {
 	for i, origin := range originSplitList {
 		originTrimmed := strings.TrimSpace(origin)
 		if len(originTrimmed) > 0 {
-			builtOrigin := regexp.QuoteMeta(buildOriginRegex(originTrimmed))
-			if len(strings.Split(originTrimmed, ":")) < 3 {
-				builtOrigin += "(:[0-9][0-9]+)?"
-			}
+			builtOrigin := buildOriginRegex(originTrimmed)
 			originsRegex += builtOrigin
 			if i != len(originSplitList)-1 {
 				originsRegex = originsRegex + "|"
