@@ -189,7 +189,7 @@ Bear in mind that, if your `Ingress-Nginx-Controller-nginx2` is started with the
   helm install ingress-nginx-2 ingress-nginx/ingress-nginx  \
   --namespace ingress-nginx-2 \
   --set controller.ingressClassResource.name=nginx-2 \
-  --set controller.ingressClassResource.controllerValue= "k8s.io/ingress-nginx-2" \
+  --set controller.ingressClassResource.controllerValue="k8s.io/ingress-nginx-2" \
   --set controller.ingressClassResource.enabled=true \
   --set controller.ingressClassByName=true
   ```
