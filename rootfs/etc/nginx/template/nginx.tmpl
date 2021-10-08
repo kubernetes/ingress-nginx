@@ -429,7 +429,7 @@ http {
 
     # turn on session caching to drastically improve performance
     {{ if $cfg.SSLSessionCache }}
-    ssl_session_cache builtin:1000 shared:SSL:{{ $cfg.SSLSessionCacheSize }};
+    ssl_session_cache shared:SSL:{{ $cfg.SSLSessionCacheSize }};
     ssl_session_timeout {{ $cfg.SSLSessionTimeout }};
     {{ end }}
 
