@@ -235,6 +235,8 @@ helm repo update
 helm install ingress-nginx ingress-nginx/ingress-nginx
 ```
 
+[For multiple NGINX Ingress controllers](https://kubernetes.github.io/ingress-nginx/#how-to-easily-install-multiple-instances-of-the-ingress-nginx-controller-in-the-same-cluster)
+
 ## Detect installed version:
 
 ```console
