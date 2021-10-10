@@ -18,6 +18,7 @@ package settings
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -26,6 +27,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -569,6 +572,93 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				WithHeader("Host", validHostClassName).
 				Expect().
 				Status(http.StatusOK)
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", invalidHost).
+				Expect().
+				Status(http.StatusNotFound)
+		})
+
+	})
+
+	ginkgo.Context("Without IngressClass Cluster scoped Permission", func() {
+
+		ginkgo.BeforeEach(func() {
+			icname := fmt.Sprintf("ic-%s", f.Namespace)
+
+			newRole := &rbacv1.ClusterRoleBinding{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: icname,
+				},
+				RoleRef: rbacv1.RoleRef{
+					APIGroup: "rbac.authorization.k8s.io",
+					Kind:     "ClusterRole",
+					Name:     icname,
+				},
+				Subjects: []rbacv1.Subject{
+					{
+						APIGroup:  "",
+						Kind:      "ServiceAccount",
+						Namespace: f.Namespace,
+						Name:      "blablabla",
+					},
+				},
+			}
+			_, err := f.KubeClientSet.RbacV1().ClusterRoleBindings().Update(context.TODO(), newRole, metav1.UpdateOptions{})
+
+			assert.Nil(ginkgo.GinkgoT(), err, "Updating IngressClass ClusterRoleBinding")
+
+			// Force the correct annotation value just for the re-deployment
+			err = f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+				args := []string{}
+				for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
+					if strings.Contains(v, "--ingress-class=testclass") {
+						continue
+					}
+
+					args = append(args, v)
+				}
+				args = append(args, "--ingress-class=testclass")
+				deployment.Spec.Template.Spec.Containers[0].Args = args
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+
+				return err
+			})
+			assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
+		})
+
+		ginkgo.It("should watch Ingress with correct annotation", func() {
+
+			validHost := "foo"
+			annotations := map[string]string{
+				ingressclass.IngressKey: "testclass",
+			}
+			ing := framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, annotations)
+			ing.Spec.IngressClassName = nil
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxConfiguration(func(cfg string) bool {
+				return strings.Contains(cfg, "server_name foo")
+			})
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", validHost).
+				Expect().
+				Status(http.StatusOK)
+		})
+
+		ginkgo.It("should ignore Ingress with only IngressClassName", func() {
+
+			invalidHost := "noclassforyou"
+
+			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, nil)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxConfiguration(func(cfg string) bool {
+				return !strings.Contains(cfg, "server_name noclassforyou")
+			})
 
 			f.HTTPTestClient().
 				GET("/").
