@@ -151,7 +151,9 @@ func (e NotExistsError) Error() string {
 func (i *Informer) Run(stopCh chan struct{}) {
 	go i.Secret.Run(stopCh)
 	go i.Endpoint.Run(stopCh)
-	go i.IngressClass.Run(stopCh)
+	if i.IngressClass != nil {
+		go i.IngressClass.Run(stopCh)
+	}
 	go i.Service.Run(stopCh)
 	go i.ConfigMap.Run(stopCh)
 
@@ -159,12 +161,14 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	// from the queue
 	if !cache.WaitForCacheSync(stopCh,
 		i.Endpoint.HasSynced,
-		i.IngressClass.HasSynced,
 		i.Service.HasSynced,
 		i.Secret.HasSynced,
 		i.ConfigMap.HasSynced,
 	) {
 		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
+	}
+	if i.IngressClass != nil && !cache.WaitForCacheSync(stopCh, i.IngressClass.HasSynced) {
+		runtime.HandleError(fmt.Errorf("timed out waiting for ingress classcaches to sync"))
 	}
 
 	// in big clusters, deltas can keep arriving even after HasSynced
@@ -300,8 +304,10 @@ func New(
 	store.informers.Ingress = infFactory.Networking().V1().Ingresses().Informer()
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
 
-	store.informers.IngressClass = infFactory.Networking().V1().IngressClasses().Informer()
-	store.listers.IngressClass.Store = cache.NewStore(cache.MetaNamespaceKeyFunc)
+	if !icConfig.IgnoreIngressClass {
+		store.informers.IngressClass = infFactory.Networking().V1().IngressClasses().Informer()
+		store.listers.IngressClass.Store = cache.NewStore(cache.MetaNamespaceKeyFunc)
+	}
 
 	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
 	store.listers.Endpoint.Store = store.informers.Endpoint.GetStore()
@@ -385,8 +391,12 @@ func New(
 			oldIng, _ := toIngress(old)
 			curIng, _ := toIngress(cur)
 
-			_, errOld := store.GetIngressClass(oldIng, icConfig)
-			classCur, errCur := store.GetIngressClass(curIng, icConfig)
+			var errOld, errCur error
+			var classCur string
+			if !icConfig.IgnoreIngressClass {
+				_, errOld = store.GetIngressClass(oldIng, icConfig)
+				classCur, errCur = store.GetIngressClass(curIng, icConfig)
+			}
 			if errOld != nil && errCur == nil {
 				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(curIng))
@@ -699,7 +709,9 @@ func New(
 	}
 
 	store.informers.Ingress.AddEventHandler(ingEventHandler)
-	store.informers.IngressClass.AddEventHandler(ingressClassEventHandler)
+	if !icConfig.IgnoreIngressClass {
+		store.informers.IngressClass.AddEventHandler(ingressClassEventHandler)
+	}
 	store.informers.Endpoint.AddEventHandler(epEventHandler)
 	store.informers.Secret.AddEventHandler(secrEventHandler)
 	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
@@ -852,7 +864,7 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 
 func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.IngressClassConfiguration) (string, error) {
 	// First we try ingressClassName
-	if ing.Spec.IngressClassName != nil {
+	if !icConfig.IgnoreIngressClass && ing.Spec.IngressClassName != nil {
 		iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
 		if err != nil {
 			return "", err
