@@ -53,6 +53,9 @@ Kubernetes is available in Docker Desktop
 - Mac, from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018)
 - Windows, from [version 18.06.0-ce](https://docs.docker.com/docker-for-windows/release-notes/#docker-community-edition-18060-ce-win70-2018-07-25)
 
+!!! attention
+    Before running the command at your terminal, make sure Kubernetes is enabled at Docker settings
+
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.3/deploy/static/provider/cloud/deploy.yaml
 ```
