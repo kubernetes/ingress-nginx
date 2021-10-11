@@ -10,25 +10,23 @@
 
 - Make changes in /images 
 
-### c. Create PR
+### c. Create Pull Request
 
-- Open a PR to fire cloudbuild of a new image for the Ingress-Nginx-Controller
+- Open a Pull Request for your changes considering the following steps to fire cloudbuild of a new image for the Ingress-Nginx-Controller:
 
-  - In case of rare CVE fix or other reason to rebuild the nginx-base-image itself, look at the /images directory  [NGINX Base Image](https://github.com/kubernetes/ingress-nginx/tree/main/images/nginx)
+  - In case of rare CVE fix or other reason to rebuild the nginx-base-image itself, look at the /images directory  [NGINX Base Image](https://github.com/kubernetes/ingress-nginx/tree/main/images/nginx).
 
-  - Example [NGINX_VERSION](images/nginx/rootfs/build.sh#L21),
-
-  - [SHA256](images/nginx/rootfs/build.sh#L124) 
+  - Example [NGINX_VERSION](images/nginx/rootfs/build.sh#L21), [SHA256](images/nginx/rootfs/build.sh#L124).
 
   - If you are updating any component in [build.sh](images/nginx/rootfs/build.sh) please also update the SHA256 checksum of that component as well, the cloud build will fail with an exit 10 if not.  
 
 ### d. Merge
 
-- Merging success should fire cloudbuild
+- Merging will fire cloudbuild, which will result in images beeing promoted to the [staging container registry](https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx).
 
 ### e. Make sure cloudbuild is a success
 
-- Wait for [cloud build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-ingress-nginx)
+- Wait for [cloud build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-ingress-nginx). If you don't have access to cloudbuild, you can also have a look at [this](https://prow.k8s.io/?repo=kubernetes%2Fingress-nginx&job=post-*), to see the progress of the build. 
 
 - Proceed only after cloud-build is successful in building a new Ingress-Nginx-Controller image.
 
@@ -70,16 +68,18 @@
 
 ### d. Merge
 
-- Merging success should fire cloudbuild
+- Merging will fire cloudbuild, which will result in images beeing promoted to the [staging container registry](https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx).
 
 ### e. Make sure cloudbuild is a success
 
-- Wait for [cloud build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-ingress-nginx)
+- Wait for [cloud build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-ingress-nginx). If you don't have access to cloudbuild, you can also have a look at [this](https://prow.k8s.io/?repo=kubernetes%2Fingress-nginx&job=post-*), to see the progress of the build. 
 
 - Proceed only after cloud-build is successful in building a new Ingress-Nginx-Controller image.
 
 
 ## 3. PROMOTE the Image(s):
+
+Promoting the images basically means that images, that were pushed to staging container registry in the steps above, now are also pushed to the public container registry. Thus are publicly available. Follow these steps to promote images: 
 
 ### a. Get the sha
 
@@ -89,9 +89,17 @@
 
   - The sha is also visible here https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx/global/controller
 
-### b. Insert the sha(s) in another project
+  - The sha is also visible [here]((https://prow.k8s.io/?repo=kubernetes%2Fingress-nginx&job=post-*)), after cloud build is finished. Click on the respective job, go to `Artifacts` section in the UI, then again `artifacts` in the directory browser. In the `build.log` at the very bottom you see something like this: 
 
-- This sha(s) (and the tag(s) for the new image(s) has to be inserted, as a new line, in a file, in another project of Kubernetes. 
+  ```
+  ...
+  pushing manifest for gcr.io/k8s-staging-ingress-nginx/controller:v1.0.2@sha256:e15fac6e8474d77e1f017edc33d804ce72a184e3c0a30963b2a0d7f0b89f6b16
+  ...
+  ```
+
+### b. Add the new image to [k8s.io](http://github.com/kubernetes/k8s.io)
+
+- The sha(s) from the step before (and the tag(s) for the new image(s) have to be added, as a new line, in a file, of the [k8s.io](http://github.com/kubernetes/k8s.io) project of Kubernetes organization. 
 
 - Fork that other project (if you don't have a fork already).
 
@@ -121,6 +129,8 @@
 
 
 ## 4. PREPARE for a new Release
+
+- Make sure to get the tag and sha of the promoted image from the step before, either from cloudbuild or from [here](https://console.cloud.google.com/gcr/images/k8s-artifacts-prod/us/ingress-nginx/controller). 
 
 - This involves editing of several different files. So carefully follow the steps below and double check all changes with diff/grep etc., repeatedly. Mistakes here impact endusers.
 
