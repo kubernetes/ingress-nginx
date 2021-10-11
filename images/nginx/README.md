@@ -4,6 +4,8 @@ This custom image contains:
 
 - [nginx-http-auth-digest](https://github.com/atomx/nginx-http-auth-digest)
 - [ngx_http_substitutions_filter_module](https://github.com/yaoweibin/ngx_http_substitutions_filter_module)
+- [OpenTelemetry-CPP](https://github.com/open-telemetry/opentelemetry-cpp)
+- [OpenTelemetry-CPP-Nginx](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx)
 - [nginx-opentracing](https://github.com/opentracing-contrib/nginx-opentracing)
 - [opentracing-cpp](https://github.com/opentracing/opentracing-cpp)
 - [zipkin-cpp-opentracing](https://github.com/rnburn/zipkin-cpp-opentracing)
