@@ -2,7 +2,7 @@
 
 As any kind of contributor (triage, reviewer ...), always have in mind that if a user came to us and raised an issue, the user may have a real problem. We must assume that, and not the opposite (the user needs to prove to us that this is a bug). Keeping that in mind, **be nice with users, even if you don’t agree with them**
 
-Note that this guide refers to contributing through issue triaging. If you are interested in contributing to actual sources of the repository, see [this guide](./CONTRIBUTING.MD). 
+Note that this guide refers to contributing through issue triaging. If you are interested in contributing to actual sources of the repository, see [this guide](./CONTRIBUTING.md). 
 
 ## General Information 
 
