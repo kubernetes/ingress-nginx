@@ -10,6 +10,7 @@ import (
 	admissionv1 "k8s.io/api/admissionregistration/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -33,25 +34,24 @@ func genSecretData() (ca, cert, key []byte) {
 	return
 }
 
-func newTestSimpleK8s() *k8s {
+func newTestSimpleK8s(objects ...runtime.Object) *k8s {
 	return &k8s{
-		clientset: fake.NewSimpleClientset(),
+		clientset: fake.NewSimpleClientset(objects...),
 	}
 }
 
 func TestGetCaFromCertificate(t *testing.T) {
-	k := newTestSimpleK8s()
-
 	ca, cert, key := genSecretData()
 
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: testSecretName,
+			Name:      testSecretName,
+			Namespace: testNamespace,
 		},
 		Data: map[string][]byte{"ca": ca, "cert": cert, "key": key},
 	}
 
-	k.clientset.CoreV1().Secrets(testNamespace).Create(context.Background(), secret, metav1.CreateOptions{})
+	k := newTestSimpleK8s(secret)
 
 	retrievedCa := k.GetCaFromSecret(context.TODO(), testSecretName, testNamespace)
 	if !bytes.Equal(retrievedCa, ca) {
@@ -89,31 +89,24 @@ func TestSaveThenLoadSecret(t *testing.T) {
 }
 
 func TestPatchWebhookConfigurations(t *testing.T) {
-	k := newTestSimpleK8s()
-
 	ca, _, _ := genSecretData()
 
-	k.clientset.
-		AdmissionregistrationV1().
-		MutatingWebhookConfigurations().
-		Create(context.Background(), &admissionv1.MutatingWebhookConfiguration{
+	k := newTestSimpleK8s(
+		&admissionv1.MutatingWebhookConfiguration{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: testWebhookName,
 			},
 			Webhooks: []admissionv1.MutatingWebhook{{Name: "m1"}, {Name: "m2"}},
-		}, metav1.CreateOptions{})
-
-	k.clientset.
-		AdmissionregistrationV1().
-		ValidatingWebhookConfigurations().
-		Create(context.Background(), &admissionv1.ValidatingWebhookConfiguration{
+		},
+		&admissionv1.ValidatingWebhookConfiguration{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: testWebhookName,
 			},
 			Webhooks: []admissionv1.ValidatingWebhook{{Name: "v1"}, {Name: "v2"}},
-		}, metav1.CreateOptions{})
+		},
+	)
 
 	if err := k.patchWebhookConfigurations(context.TODO(), testWebhookName, ca, fail, true, true); err != nil {
 		t.Fatalf("Unexpected error patching webhooks: %s: %v", err.Error(), errors.Unwrap(err))
