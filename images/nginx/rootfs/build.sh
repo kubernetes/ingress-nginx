@@ -38,8 +38,8 @@ export NGINX_SUBSTITUTIONS=b8a71eacc7f986ba091282ab8b1bbbc6ae1807e0
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.0.0...main
 export OPENTELEMETRY_CPP_VERSION=1.0.0
 
-# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/4c4933...main
-export OPENTELEMETRY_CONTRIB_COMMIT=4c4933dc207c04e3528a9b20c28b639bc99773ad
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/c655b8...main
+export OPENTELEMETRY_CONTRIB_COMMIT=c655b849f017a5363085a4b4e6fcae8a4b7621ad
 
 # Check for recent changes: https://github.com/opentracing-contrib/nginx-opentracing/compare/v0.19.0...master
 export NGINX_OPENTRACING_VERSION=0.19.0
@@ -223,8 +223,8 @@ get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
 get_src a98b48947359166326d58700ccdc27256d2648218072da138ab6b47de47fbd8f \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 49519dcf5a2324f9122819141045744fdcbcf411c730f173c4f3d993f02c92b5 \
-        "https://github.com/dmathieu/opentelemetry-cpp-contrib/archive/$OPENTELEMETRY_CONTRIB_COMMIT.tar.gz"
+get_src 37b2a2abf75e865449ff1425cee96dbd74659ac0c612c84ee5f381244360cab2 \
+        "https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/$OPENTELEMETRY_CONTRIB_COMMIT.tar.gz"
 
 get_src 6f97776ebdf019b105a755c7736b70bdbd7e575c7f0d39db5fe127873c7abf17 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
