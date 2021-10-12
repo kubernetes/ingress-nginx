@@ -444,19 +444,30 @@ controller:
     enableHttp: true
     enableHttps: true
 
-    ## Set external traffic policy to: "Local" to preserve source IP on
-    ## providers supporting it
+    ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
     ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
     # externalTrafficPolicy: ""
 
-    # Must be either "None" or "ClientIP" if set. Kubernetes will default to "None".
-    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
+    ## Must be either "None" or "ClientIP" if set. Kubernetes will default to "None".
+    ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
     # sessionAffinity: ""
 
-    # specifies the health check node port (numeric port number) for the service. If healthCheckNodePort isn’t specified,
-    # the service controller allocates a port from your cluster’s NodePort range.
-    # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ## Specifies the health check node port (numeric port number) for the service. If healthCheckNodePort isn’t specified,
+    ## the service controller allocates a port from your cluster’s NodePort range.
+    ## Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     # healthCheckNodePort: 0
+
+    ## Represents the dual-stack-ness requested or required by this Service. Possible values are
+    ## SingleStack, PreferDualStack or RequireDualStack.
+    ## The ipFamilies and clusterIPs fields depend on the value of this field.
+    ## Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
+    ipFamilyPolicy: "SingleStack"
+
+    ## List of IP families (e.g. IPv4, IPv6) assigned to the service. This field is usually assigned automatically
+    ## based on cluster configuration and the ipFamilyPolicy field.
+    ## Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
+    ipFamilies:
+      - IPv4
 
     ports:
       http: 80
