@@ -50,7 +50,8 @@ func (k8s *k8s) PatchObjects(ctx context.Context, options PatchOptions) error {
 		return fmt.Errorf("failurePolicy specified, but no webhook will be patched")
 	}
 
-	if options.MutatingWebhookConfigurationName != options.ValidatingWebhookConfigurationName {
+	if patchMutating && patchValidating &&
+		options.MutatingWebhookConfigurationName != options.ValidatingWebhookConfigurationName {
 		return fmt.Errorf("webhook names must be the same")
 	}
 
@@ -64,8 +65,13 @@ func (k8s *k8s) PatchObjects(ctx context.Context, options PatchOptions) error {
 		}
 	}
 
+	webhookName := options.ValidatingWebhookConfigurationName
+	if webhookName == "" {
+		webhookName = options.MutatingWebhookConfigurationName
+	}
+
 	if patchMutating || patchValidating {
-		return k8s.patchWebhookConfigurations(ctx, options.ValidatingWebhookConfigurationName, options.CABundle, options.FailurePolicyType, patchMutating, patchValidating)
+		return k8s.patchWebhookConfigurations(ctx, webhookName, options.CABundle, options.FailurePolicyType, patchMutating, patchValidating)
 	}
 
 	return nil
