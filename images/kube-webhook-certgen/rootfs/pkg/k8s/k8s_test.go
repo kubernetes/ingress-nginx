@@ -6,6 +6,7 @@ import (
 	"errors"
 	"math/rand"
 	"testing"
+	"time"
 
 	admissionv1 "k8s.io/api/admissionregistration/v1"
 	v1 "k8s.io/api/core/v1"
@@ -53,7 +54,7 @@ func TestGetCaFromCertificate(t *testing.T) {
 
 	k := newTestSimpleK8s(secret)
 
-	retrievedCa := k.GetCaFromSecret(context.TODO(), testSecretName, testNamespace)
+	retrievedCa := k.GetCaFromSecret(contextWithDeadline(t), testSecretName, testNamespace)
 	if !bytes.Equal(retrievedCa, ca) {
 		t.Error("Was not able to retrieve CA information that was saved")
 	}
@@ -64,9 +65,11 @@ func TestSaveCertsToSecret(t *testing.T) {
 
 	ca, cert, key := genSecretData()
 
-	k.SaveCertsToSecret(context.TODO(), testSecretName, testNamespace, "cert", "key", ca, cert, key)
+	ctx := contextWithDeadline(t)
 
-	secret, _ := k.clientset.CoreV1().Secrets(testNamespace).Get(context.Background(), testSecretName, metav1.GetOptions{})
+	k.SaveCertsToSecret(ctx, testSecretName, testNamespace, "cert", "key", ca, cert, key)
+
+	secret, _ := k.clientset.CoreV1().Secrets(testNamespace).Get(ctx, testSecretName, metav1.GetOptions{})
 
 	if !bytes.Equal(secret.Data["cert"], cert) {
 		t.Error("'cert' saved data does not match retrieved")
@@ -80,7 +83,7 @@ func TestSaveCertsToSecret(t *testing.T) {
 func TestSaveThenLoadSecret(t *testing.T) {
 	k := newTestSimpleK8s()
 	ca, cert, key := genSecretData()
-	ctx := context.TODO()
+	ctx := contextWithDeadline(t)
 	k.SaveCertsToSecret(ctx, testSecretName, testNamespace, "cert", "key", ca, cert, key)
 	retrievedCert := k.GetCaFromSecret(ctx, testSecretName, testNamespace)
 	if !bytes.Equal(retrievedCert, ca) {
@@ -108,14 +111,16 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 		},
 	)
 
-	if err := k.patchWebhookConfigurations(context.TODO(), testWebhookName, ca, fail, true, true); err != nil {
+	ctx := contextWithDeadline(t)
+
+	if err := k.patchWebhookConfigurations(ctx, testWebhookName, ca, fail, true, true); err != nil {
 		t.Fatalf("Unexpected error patching webhooks: %s: %v", err.Error(), errors.Unwrap(err))
 	}
 
 	whmut, err := k.clientset.
 		AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
-		Get(context.Background(), testWebhookName, metav1.GetOptions{})
+		Get(ctx, testWebhookName, metav1.GetOptions{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -123,7 +128,7 @@ func TestPatchWebhookConfigurations(t *testing.T) {
 	whval, err := k.clientset.
 		AdmissionregistrationV1().
 		MutatingWebhookConfigurations().
-		Get(context.Background(), testWebhookName, metav1.GetOptions{})
+		Get(ctx, testWebhookName, metav1.GetOptions{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -190,4 +195,26 @@ func Test_Patching_objects(t *testing.T) {
 			t.Parallel()
 		})
 	})
+}
+
+const (
+	// Arbitrary amount of time to let tests exit cleanly before main process terminates.
+	timeoutGracePeriod = 10 * time.Second
+)
+
+// contextWithDeadline returns context with will timeout before t.Deadline().
+func contextWithDeadline(t *testing.T) context.Context {
+	t.Helper()
+
+	deadline, ok := t.Deadline()
+	if !ok {
+		return context.Background()
+	}
+
+	ctx, cancel := context.WithDeadline(context.Background(), deadline.Truncate(timeoutGracePeriod))
+
+	t.Cleanup(cancel)
+
+	return ctx
+}
 }
