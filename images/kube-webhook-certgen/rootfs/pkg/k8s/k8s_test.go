@@ -271,6 +271,34 @@ func Test_Patching_objects(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("allows_patching_only_validating_webhook", func(t *testing.T) {
+		t.Parallel()
+
+		k := testK8sWithUnpatchedObjects()
+
+		o := PatchOptions{
+			ValidatingWebhookConfigurationName: testWebhookName,
+		}
+
+		if err := k.PatchObjects(ctx, o); err != nil {
+			t.Fatalf("Unexpected error patching objects: %v", err)
+		}
+	})
+
+	t.Run("allows_patching_only_mutating_webhook", func(t *testing.T) {
+		t.Parallel()
+
+		k := testK8sWithUnpatchedObjects()
+
+		o := PatchOptions{
+			MutatingWebhookConfigurationName: testWebhookName,
+		}
+
+		if err := k.PatchObjects(ctx, o); err != nil {
+			t.Fatalf("Unexpected error patching objects: %v", err)
+		}
+	})
 }
 
 const (
