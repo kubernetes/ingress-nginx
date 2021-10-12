@@ -479,7 +479,7 @@ cmake -DCMAKE_BUILD_TYPE=Release \
 make
 make install
 
-if [ $USE_OPENTELEMETRY ]; then
+if [ $USE_OPENTELEMETRY = true ]; then
   # build opentelemetry lib
   apk add protobuf-dev \
     grpc \
@@ -672,7 +672,7 @@ WITH_MODULES=" \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
   --add-dynamic-module=$BUILD_PATH/ngx_brotli"
 
-if [ $USE_OPENTELEMETRY ]; then
+if [ $USE_OPENTELEMETRY = true ]; then
   WITH_MODULES+=" \
     --add-dynamic-module=$BUILD_PATH/opentelemetry-cpp-contrib-$OPENTELEMETRY_CONTRIB_COMMIT/instrumentation/nginx"
 fi
