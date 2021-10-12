@@ -37,19 +37,22 @@ An example Ingress that makes use of the controller:
     name: example
     namespace: foo
   spec:
+    ingressClassName: example-class
     rules:
       - host: www.example.com
         http:
           paths:
-            - backend:
-                serviceName: exampleService
-                servicePort: 80
-              path: /
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: exampleService
+                  port: 80
     # This section is only required if TLS is to be enabled for the Ingress
     tls:
-        - hosts:
-            - www.example.com
-          secretName: example-tls
+      - hosts:
+        - www.example.com
+        secretName: example-tls
 
 If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided:
 
