@@ -79,8 +79,7 @@ spec:
           lifecycle: {{ toYaml .Values.controller.lifecycle | nindent 12 }}
         {{- end }}
           args:
-            - /nginx-ingress-controller
-            {{- include "ingress-nginx.params" . | nindent 10 }}
+            {{- include "ingress-nginx.params" . | nindent 12 }}
           securityContext:
             capabilities:
                 drop:
