@@ -70,7 +70,8 @@ function _M.new(self, backend)
     hash_by = complex_val,
     hash_by_endpoint = complex_val_endpoint,
     subsets = subsets,
-    current_endpoints = backend.endpoints
+    current_endpoints = backend.endpoints,
+    subset_size = subset_size
   }
   setmetatable(o, self)
   self.__index = self
@@ -86,10 +87,12 @@ function _M.balance(self)
   local subset_id = self.instance:find(key)
   local endpoints = self.subsets[subset_id]
 
+  local subsetsize = tonumber(self.subset_size)
   local keyEndpoint = util.generate_var_value(self.hash_by_endpoint)
   
-  if keyEndpoint == "1" or keyEndpoint == "2" or keyEndpoint == "3"  then
-    local endpoint = endpoints[tonumber(keyEndpoint)]
+  local keyEndpointNum = tonumber(keyEndpoint)
+  if keyEndpointNum ~= nil  then
+    local endpoint = endpoints[(keyEndpointNum%(#endpoints))+1]
     return endpoint.address .. ":" .. endpoint.port
   end
 
@@ -102,7 +105,6 @@ function _M.balance(self)
     value = randomEndpoint,
   }
   cookie:set(cookie_data)
-
   return endpoint.address .. ":" .. endpoint.port
 end
 
