@@ -60,9 +60,9 @@ function _M.new(self, backend)
   end
 
   local complex_val_endpoint, err =
-    util.parse_complex_value(backend["upstreamHashByConfig"]["upstream-hash-by-subset-endpoint"])
+    util.parse_complex_value("$cookie_" .. backend["upstreamHashByConfig"]["upstream-hash-by-subset-cookie-name"])
   if err ~= nil then
-    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-subset-endpoint: ", err)
+    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-subset-cookie-name: ", err)
   end
 
   local o = {
@@ -71,7 +71,7 @@ function _M.new(self, backend)
     hash_by_endpoint = complex_val_endpoint,
     subsets = subsets,
     current_endpoints = backend.endpoints,
-    subset_size = subset_size
+    cookie_name = backend["upstreamHashByConfig"]["upstream-hash-by-subset-cookie-name"]
   }
   setmetatable(o, self)
   self.__index = self
@@ -87,7 +87,6 @@ function _M.balance(self)
   local subset_id = self.instance:find(key)
   local endpoints = self.subsets[subset_id]
 
-  local subsetsize = tonumber(self.subset_size)
   local keyEndpoint = util.generate_var_value(self.hash_by_endpoint)
   
   local keyEndpointNum = tonumber(keyEndpoint)
@@ -101,7 +100,7 @@ function _M.balance(self)
   local endpoint = endpoints[randomEndpoint]
   local cookie = ck:new()
   local cookie_data = {
-    key = "ENDPOINT",
+    key = tostring(self.cookie_name),
     value = randomEndpoint,
   }
   cookie:set(cookie_data)

@@ -29,10 +29,10 @@ type upstreamhashby struct {
 
 // Config contains the Consistent hash configuration to be used in the Ingress
 type Config struct {
-	UpstreamHashBy               string `json:"upstream-hash-by,omitempty"`
-	UpstreamHashBySubset         bool   `json:"upstream-hash-by-subset,omitempty"`
-	UpstreamHashBySubsetSize     int    `json:"upstream-hash-by-subset-size,omitempty"`
-	UpstreamHashBySubsetEndpoint string `json:"upstream-hash-by-subset-endpoint,omitempty"`
+	UpstreamHashBy                 string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashBySubset           bool   `json:"upstream-hash-by-subset,omitempty"`
+	UpstreamHashBySubsetSize       int    `json:"upstream-hash-by-subset-size,omitempty"`
+	UpstreamHashBySubsetCookieName string `json:"upstream-hash-by-subset-endpoint,omitempty"`
 }
 
 // NewParser creates a new UpstreamHashBy annotation parser
@@ -45,11 +45,11 @@ func (a upstreamhashby) Parse(ing *networking.Ingress) (interface{}, error) {
 	upstreamHashBy, _ := parser.GetStringAnnotation("upstream-hash-by", ing)
 	upstreamHashBySubset, _ := parser.GetBoolAnnotation("upstream-hash-by-subset", ing)
 	upstreamHashbySubsetSize, _ := parser.GetIntAnnotation("upstream-hash-by-subset-size", ing)
-	upstreamHashBySubsetEndpoint, _ := parser.GetStringAnnotation("upstream-hash-by-subset-endpoint", ing)
+	upstreamHashBySubsetCookieName, _ := parser.GetStringAnnotation("upstream-hash-by-subset-cookie-name", ing)
 
 	if upstreamHashbySubsetSize == 0 {
 		upstreamHashbySubsetSize = 3
 	}
 
-	return &Config{upstreamHashBy, upstreamHashBySubset, upstreamHashbySubsetSize, upstreamHashBySubsetEndpoint}, nil
+	return &Config{upstreamHashBy, upstreamHashBySubset, upstreamHashbySubsetSize, upstreamHashBySubsetCookieName}, nil
 }
