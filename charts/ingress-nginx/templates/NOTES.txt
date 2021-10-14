@@ -29,13 +29,20 @@ Get the application URL by running these commands:
 
 An example Ingress that makes use of the controller:
 
+{{- $isV1 := semverCompare ">=1" .Chart.AppVersion}}
   apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
     name: example
     namespace: foo
+    {{- if eq $isV1 false }}
+    annotations:
+      kubernetes.io/ingress.class: {{ .Values.controller.ingressClass }}
+    {{- end }}
   spec:
-    ingressClassName: {{ .Values.controller.ingressClass }}
+    {{- if $isV1 }}
+    ingressClassName: {{ .Values.controller.ingressClassResource.name }}
+    {{- end }}
     rules:
       - host: www.example.com
         http:

@@ -8,7 +8,8 @@ This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kuber
 
 ## Prerequisites
 
-- Kubernetes v1.19+
+- Chart version 3.x.x: Kubernetes v1.16+
+- Chart version 4.x.x and above: Kubernetes v1.19+
 
 ## Get Repo Info
 
