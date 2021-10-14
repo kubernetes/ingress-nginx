@@ -1,5 +1,21 @@
 # Changelog
 
+### 1.0.4
+
+**Image:**
+- k8s.gcr.io/ingress-nginx/controller:v1.0.4@sha256:545cff00370f28363dad31e3b59a94ba377854d3a11f18988f5f9e56841ef9ef
+
+_Possible Breaking Change_
+We have disabled the builtin ssl_session_cache due to possible memory fragmentation. This should not impact the majority of users, but please let us know 
+if you face any problem
+
+_Changes:_
+
+- [7777](https://github.com/kubernetes/ingress-nginx/pull/7777) Disable builtin ssl_session_cache
+- [7727](https://github.com/kubernetes/ingress-nginx/pull/7727) Print warning only instead of error if no IngressClass permission is available
+- Bump internal libraries versions
+- Fix diverse documentation
+
 ### 1.0.3
 
 **Image:**
