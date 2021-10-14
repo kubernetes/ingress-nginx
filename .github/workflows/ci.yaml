@@ -90,7 +90,7 @@ jobs:
       - name: Build images
         env:
           TAG: 1.0.0-dev
-          ARCH: amd64
+          ARCH: arm64
           REGISTRY: ingress-controller
         run: |
           echo "building images..."
