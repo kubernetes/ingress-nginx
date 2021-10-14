@@ -6,7 +6,9 @@ import (
 	"github.com/onrik/logrus/filename"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	admissionv1 "k8s.io/api/admissionregistration/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 )
 
 var (
@@ -27,14 +29,13 @@ var (
 		certName           string
 		keyName            string
 		host               string
+		apiServiceName     string
 		webhookName        string
 		patchValidating    bool
 		patchMutating      bool
 		patchFailurePolicy string
 		kubeconfig         string
 	}{}
-
-	failurePolicy admissionv1.FailurePolicyType
 )
 
 // Execute is the main entry point for the program
@@ -80,4 +81,23 @@ func getFormatter(logfmt string) log.Formatter {
 
 	log.Fatalf("invalid log format '%s'", logfmt)
 	return nil
+}
+
+func newKubernetesClients(kubeconfig string) (kubernetes.Interface, clientset.Interface) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		log.WithError(err).Fatal("error building kubernetes config")
+	}
+
+	c, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.WithError(err).Fatal("error creating kubernetes client")
+	}
+
+	aggregatorClientset, err := clientset.NewForConfig(config)
+	if err != nil {
+		log.WithError(err).Fatal("error creating kubernetes aggregator client")
+	}
+
+	return c, aggregatorClientset
 }

@@ -16,7 +16,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestCertificateCreation(t *testing.T) {
-
 	ca, cert, key := GenerateCerts("localhost")
 
 	c, err := tls.X509KeyPair(cert, key)
@@ -30,7 +29,9 @@ func TestCertificateCreation(t *testing.T) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			RootCAs:    caCertPool,
-			ServerName: "localhost"}}
+			ServerName: "localhost",
+		},
+	}
 
 	ts := httptest.NewUnstartedServer(http.HandlerFunc(handler))
 	ts.TLS = &tls.Config{Certificates: []tls.Certificate{c}}

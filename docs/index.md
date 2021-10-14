@@ -63,11 +63,12 @@ FIELDS:
 
 There are 2 reasons primarily.
 
-(Reason #1) Until K8s version 1.21, it was was possible to create a ingress resource, with the "apiVersion:" field set to a value like ;
+(Reason #1) Until K8s version 1.21, it was possible to create a ingress resource, with the "apiVersion:" field set to a value like:
+
   - extensions/v1beta1
   - networking.k8s.io/v1beta1
 
-    (You would get a message about deprecation but the ingress resource would get created.)
+You would get a message about deprecation but the ingress resource would get created.
 
 From K8s version 1.22 onwards, you can ONLY set the "apiVersion:" field of a ingress resource, to the value "networking.k8s.io/v1". The reason is [official blog on deprecated ingress api versions](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/).
 
@@ -167,3 +168,29 @@ Bear in mind that, if your `Ingress-Nginx-Controller-nginx2` is started with the
 
 ## I am seeing this error message in the logs of the Ingress-NGINX controller "ingress class annotation is not equal to the expected by Ingress Controller". Why ?
 - It is highly likely that you will also see the name of the ingress resource in the same error message. This error messsage has been observed on use the deprecated annotation, to spec the ingressClass, in a ingress resource manifest. It is recommended to use the ingress.spec.ingressClassName field, of the ingress resource, to spec the name of the ingressClass of the ingress resource being configured.
+
+## How to easily install multiple instances of the ingress-NGINX controller in the same cluster ?
+- Create a new namespace
+  ```
+  kubectl create namespace ingress-nginx-2
+  ```
+- Use helm to install the additional instance of the ingress controller
+- Ensure you have helm working (refer to helm documentation)
+- We have to assume that you have the helm repo for the ingress-NGINX controller already added to your helm config. But, if you have not added the helm repo then you can do this to add the repo to your helm config;
+  ```
+  helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+  ```
+- Make sure you have updated the helm repo data;
+  ```
+  helm repo update
+  ```
+- Now you install the additional instance of the ingress-NGINX controller like this ;
+  ```
+  helm install ingress-nginx-2 ingress-nginx/ingress-nginx  \
+  --namespace ingress-nginx-2 \
+  --set controller.ingressClassResource.name=nginx-2 \
+  --set controller.ingressClassResource.controllerValue="k8s.io/ingress-nginx-2" \
+  --set controller.ingressClassResource.enabled=true \
+  --set controller.ingressClassByName=true
+  ```
+- If you need to install yet another instance, then repeat the procedure to create a new namespace, change the values like names & namespaces (for example from "-2" to "-3"), or anything else that meets your needs.

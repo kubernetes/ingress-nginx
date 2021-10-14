@@ -29,6 +29,7 @@ The following table shows a configuration option's name, type, and the default v
 |:---|:---|:------|
 |[add-headers](#add-headers)|string|""|
 |[allow-backend-server-header](#allow-backend-server-header)|bool|"false"|
+|[allow-snippet-annotations](#allow-snippet-annotations)|bool|true|
 |[hide-headers](#hide-headers)|string array|empty|
 |[access-log-params](#access-log-params)|string|""|
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
@@ -212,6 +213,13 @@ Sets custom headers from named configmap before sending traffic to the client. S
 ## allow-backend-server-header
 
 Enables the return of the header Server from the backend instead of the generic nginx string. _**default:**_ is disabled
+
+## allow-snippet-annotations
+
+Enables Ingress to parse and add *-snippet annotations/directives created by the user. _**default:**_ `true`;
+
+Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this 
+may allow a user to add restricted configurations to the final nginx.conf file
 
 ## hide-headers
 

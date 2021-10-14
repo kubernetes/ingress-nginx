@@ -4,6 +4,8 @@ This custom image contains:
 
 - [nginx-http-auth-digest](https://github.com/atomx/nginx-http-auth-digest)
 - [ngx_http_substitutions_filter_module](https://github.com/yaoweibin/ngx_http_substitutions_filter_module)
+- [OpenTelemetry-CPP](https://github.com/open-telemetry/opentelemetry-cpp)
+- [OpenTelemetry-CPP-Nginx](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx)
 - [nginx-opentracing](https://github.com/opentracing-contrib/nginx-opentracing)
 - [opentracing-cpp](https://github.com/opentracing/opentracing-cpp)
 - [zipkin-cpp-opentracing](https://github.com/rnburn/zipkin-cpp-opentracing)
@@ -18,6 +20,6 @@ This image provides a default configuration file with no backend servers.
 _Using docker_
 
 ```console
-docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:v20210904-gb7c973dce@sha256:fac972a7e43b18408ecb9e87da868df519428294e2e988c16be72479ee873c0e
+docker run -v /some/nginx.conf:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:v20210926-g5662db450@sha256:1ef404b5e8741fe49605a1f40c3fdd8ef657aecdb9526ea979d1672eeabd0cd9
 ```
 

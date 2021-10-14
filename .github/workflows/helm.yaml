@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - dev-v1
+      - legacy
 
 jobs:
 

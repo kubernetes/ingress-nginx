@@ -23,6 +23,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/version"
 	"k8s.io/klog/v2"
 )
 
@@ -50,6 +51,8 @@ type Controller struct {
 	labels      prometheus.Labels
 
 	leaderElection *prometheus.GaugeVec
+
+	buildInfo prometheus.Collector
 }
 
 // NewController creates a new prometheus collector for the
@@ -68,6 +71,23 @@ func NewController(pod, namespace, class string) *Controller {
 			"namespace": namespace,
 			"class":     class,
 		},
+
+		buildInfo: prometheus.NewGaugeFunc(
+			prometheus.GaugeOpts{
+				Namespace: PrometheusNamespace,
+				Name:      "build_info",
+				Help:      "A metric with a constant '1' labeled with information about the build.",
+				ConstLabels: prometheus.Labels{
+					"controller_namespace": namespace,
+					"controller_class":     class,
+					"controller_pod":       pod,
+					"release":              version.RELEASE,
+					"build":                version.COMMIT,
+					"repository":           version.REPO,
+				},
+			},
+			func() float64 { return 1 },
+		),
 
 		configHash: prometheus.NewGauge(
 			prometheus.GaugeOpts{
@@ -210,6 +230,7 @@ func (cm Controller) Describe(ch chan<- *prometheus.Desc) {
 	cm.checkIngressOperationErrors.Describe(ch)
 	cm.sslExpireTime.Describe(ch)
 	cm.leaderElection.Describe(ch)
+	cm.buildInfo.Describe(ch)
 }
 
 // Collect implements the prometheus.Collector interface.
@@ -223,6 +244,7 @@ func (cm Controller) Collect(ch chan<- prometheus.Metric) {
 	cm.checkIngressOperationErrors.Collect(ch)
 	cm.sslExpireTime.Collect(ch)
 	cm.leaderElection.Collect(ch)
+	cm.buildInfo.Collect(ch)
 }
 
 // SetSSLExpireTime sets the expiration time of SSL Certificates

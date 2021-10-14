@@ -35,6 +35,12 @@ export NGINX_DIGEST_AUTH=1.0.0
 # Check for recent changes: https://github.com/yaoweibin/ngx_http_substitutions_filter_module/compare/v0.6.4...master
 export NGINX_SUBSTITUTIONS=b8a71eacc7f986ba091282ab8b1bbbc6ae1807e0
 
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.0.0...main
+export OPENTELEMETRY_CPP_VERSION=1.0.0
+
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/c655b8...main
+export OPENTELEMETRY_CONTRIB_COMMIT=c655b849f017a5363085a4b4e6fcae8a4b7621ad
+
 # Check for recent changes: https://github.com/opentracing-contrib/nginx-opentracing/compare/v0.19.0...master
 export NGINX_OPENTRACING_VERSION=0.19.0
 
@@ -88,8 +94,8 @@ export NGINX_AJP_VERSION=a964a0bcc6a9f2bfb82a13752d7794a36319ffac
 # Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20210510...v2.1-agentzh
 export LUAJIT_VERSION=2.1-20210510
 
-# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.03...master
-export LUA_RESTY_BALANCER=56fd8ad03d5718f507a5129edc43a25948364b9f
+# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.04...master
+export LUA_RESTY_BALANCER=0.04
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.11...master
 export LUA_RESTY_CACHE=0.11
@@ -131,11 +137,13 @@ export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
 
+export USE_OPENTELEMETRY=true
 if [[ ${ARCH} == "s390x" ]]; then
   export LUAJIT_VERSION=9d5750d28478abfdcaefdfdc408f87752a21e431
   export LUA_RESTY_CORE=0.1.17
   export LUA_NGX_VERSION=0.10.15
   export LUA_STREAM_NGX_VERSION=0.0.7
+  export USE_OPENTELEMETRY=false
 fi
 
 get_src()
@@ -215,6 +223,9 @@ get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
 get_src a98b48947359166326d58700ccdc27256d2648218072da138ab6b47de47fbd8f \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
+get_src 37b2a2abf75e865449ff1425cee96dbd74659ac0c612c84ee5f381244360cab2 \
+        "https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/$OPENTELEMETRY_CONTRIB_COMMIT.tar.gz"
+
 get_src 6f97776ebdf019b105a755c7736b70bdbd7e575c7f0d39db5fe127873c7abf17 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
@@ -279,8 +290,8 @@ get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
 get_src 462c6b38792bab4ca8212bdfd3f2e38f6883bb45c8fb8a03474ea813e0fab853 \
         "https://github.com/openresty/lua-resty-string/archive/$LUA_RESTY_STRING_VERSION.tar.gz"
 
-get_src b3d28adac2acee1e5904e9f65d6e80e0553b01647fa0701b812bc7e464de74ad \
-        "https://github.com/openresty/lua-resty-balancer/archive/$LUA_RESTY_BALANCER.tar.gz"
+get_src 16d72ed133f0c6df376a327386c3ef4e9406cf51003a700737c3805770ade7c5 \
+        "https://github.com/openresty/lua-resty-balancer/archive/v$LUA_RESTY_BALANCER.tar.gz"
 
 if [[ ${ARCH} == "s390x" ]]; then
 get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
@@ -468,6 +479,32 @@ cmake -DCMAKE_BUILD_TYPE=Release \
 make
 make install
 
+if [ $USE_OPENTELEMETRY = true ]; then
+  # build opentelemetry lib
+  apk add protobuf-dev \
+    grpc \
+    grpc-dev \
+    gtest-dev \
+    c-ares-dev
+
+  cd $BUILD_PATH
+  git clone --recursive https://github.com/open-telemetry/opentelemetry-cpp opentelemetry-cpp-$OPENTELEMETRY_CPP_VERSION
+  cd "opentelemetry-cpp-$OPENTELEMETRY_CPP_VERSION"
+  git checkout v$OPENTELEMETRY_CPP_VERSION
+  mkdir .build
+  cd .build
+
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTING=OFF \
+        -DWITH_EXAMPLES=OFF \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DWITH_OTLP=ON \
+        -DWITH_OTLP_HTTP=OFF \
+        ..
+  make
+  make install
+fi
+
 # Get Brotli source and deps
 cd "$BUILD_PATH"
 git clone --depth=1 https://github.com/google/ngx_brotli.git
@@ -634,6 +671,11 @@ WITH_MODULES=" \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
   --add-dynamic-module=$BUILD_PATH/ngx_brotli"
+
+if [ $USE_OPENTELEMETRY = true ]; then
+  WITH_MODULES+=" \
+    --add-dynamic-module=$BUILD_PATH/opentelemetry-cpp-contrib-$OPENTELEMETRY_CONTRIB_COMMIT/instrumentation/nginx"
+fi
 
 ./configure \
   --prefix=/usr/local/nginx \

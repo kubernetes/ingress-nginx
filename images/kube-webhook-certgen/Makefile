@@ -53,4 +53,10 @@ else
 endif
 	@echo "done"
 
-.PHONY: build push ensure-buildx
+test:
+	cd rootfs && go test ./...
+
+test-e2e:
+	./hack/e2e.sh
+
+.PHONY: build push ensure-buildx test test-e2e

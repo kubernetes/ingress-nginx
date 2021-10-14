@@ -52,6 +52,7 @@ type socketData struct {
 	Namespace string `json:"namespace"`
 	Ingress   string `json:"ingress"`
 	Service   string `json:"service"`
+	Canary    string `json:"canary"`
 	Path      string `json:"path"`
 }
 
@@ -90,6 +91,7 @@ var (
 		"namespace",
 		"ingress",
 		"service",
+		"canary",
 	}
 )
 
@@ -176,7 +178,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
-			[]string{"ingress", "namespace", "status", "service"},
+			[]string{"ingress", "namespace", "status", "service", "canary"},
 		),
 
 		bytesSent: prometheus.NewHistogramVec(
@@ -198,7 +200,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				ConstLabels: constLabels,
 				Objectives:  defObjectives,
 			},
-			[]string{"ingress", "namespace", "service"},
+			[]string{"ingress", "namespace", "service", "canary"},
 		),
 	}
 
@@ -242,6 +244,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"namespace": stats.Namespace,
 			"ingress":   stats.Ingress,
 			"service":   stats.Service,
+			"canary":    stats.Canary,
 		}
 		if sc.metricsPerHost {
 			requestLabels["host"] = stats.Host
@@ -252,12 +255,14 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"ingress":   stats.Ingress,
 			"status":    stats.Status,
 			"service":   stats.Service,
+			"canary":    stats.Canary,
 		}
 
 		latencyLabels := prometheus.Labels{
 			"namespace": stats.Namespace,
 			"ingress":   stats.Ingress,
 			"service":   stats.Service,
+			"canary":    stats.Canary,
 		}
 
 		requestsMetric, err := sc.requests.GetMetricWith(collectorLabels)

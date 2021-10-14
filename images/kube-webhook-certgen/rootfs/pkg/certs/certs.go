@@ -7,11 +7,12 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	log "github.com/sirupsen/logrus"
 	"math/big"
 	"net"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // GenerateCerts venerates a ca with a leaf certificate and key and returns the ca, cert and key as PEM encoded slices
