@@ -32,7 +32,7 @@ type Config struct {
 	UpstreamHashBy                 string `json:"upstream-hash-by,omitempty"`
 	UpstreamHashBySubset           bool   `json:"upstream-hash-by-subset,omitempty"`
 	UpstreamHashBySubsetSize       int    `json:"upstream-hash-by-subset-size,omitempty"`
-	UpstreamHashBySubsetCookieName string `json:"upstream-hash-by-subset-endpoint,omitempty"`
+	UpstreamHashBySubsetCookieName string `json:"upstream-hash-by-subset-cookie-name,omitempty"`
 }
 
 // NewParser creates a new UpstreamHashBy annotation parser
