@@ -59,8 +59,13 @@ function _M.new(self, backend)
     ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by: ", err)
   end
 
-  local complex_val_endpoint, err =
-    util.parse_complex_value("$cookie_" .. backend["upstreamHashByConfig"]["upstream-hash-by-subset-cookie-name"])
+  local cookie_name = backend["upstreamHashByConfig"]["upstream-hash-by-subset-cookie-name"]
+  if cookie_name == nil then
+    cookie_name = "subsetRouteCookie"
+  end
+
+  local cookie_value, err =
+    util.parse_complex_value("$cookie_" .. cookie_name)
   if err ~= nil then
     ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-subset-cookie-name: ", err)
   end
@@ -68,10 +73,10 @@ function _M.new(self, backend)
   local o = {
     instance = resty_chash:new(subset_map),
     hash_by = complex_val,
-    hash_by_endpoint = complex_val_endpoint,
     subsets = subsets,
     current_endpoints = backend.endpoints,
-    cookie_name = backend["upstreamHashByConfig"]["upstream-hash-by-subset-cookie-name"]
+    cookie_name = cookie_name,
+    cookie_value = cookie_value
   }
   setmetatable(o, self)
   self.__index = self
@@ -87,11 +92,11 @@ function _M.balance(self)
   local subset_id = self.instance:find(key)
   local endpoints = self.subsets[subset_id]
 
-  local keyEndpoint = util.generate_var_value(self.hash_by_endpoint)
+  local cookie_value = util.generate_var_value(self.cookie_value)
   
-  local keyEndpointNum = tonumber(keyEndpoint)
-  if keyEndpointNum ~= nil  then
-    local endpoint = endpoints[(keyEndpointNum%(#endpoints))+1]
+  local cookie_value_num = tonumber(cookie_value)
+  if cookie_value_num ~= nil  then
+    local endpoint = endpoints[(cookie_value_num%(#endpoints))+1]
     return endpoint.address .. ":" .. endpoint.port
   end
 
