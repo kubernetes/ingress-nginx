@@ -34,7 +34,9 @@ All changes must be code reviewed. Coding conventions and standards are explaine
 
 ### Merge Approval
 
-Ingress collaborators may add "LGTM" (Looks Good To Me) or an equivalent comment to indicate that a PR is acceptable. Any change requires at least one LGTM.  No pull requests can be merged until at least one Ingress collaborator signs off with an LGTM.
+Ingress Nginx collaborators may add "/lgtm" (Looks Good To Me) to indicate that a PR is acceptable. Any change requires at least one LGTM.  No pull requests can be merged until at least one Ingress Nginx collaborator signs off with an LGTM. Adding the "/lgtm" comment result in the prow bot adding the `lgtm` label. Note that a pull request still needs an `approve` label from one of the owners. 
+
+Reviewers or members who want to become reviewers according to the [k8s membership ladder](https://github.com/kubernetes/community/blob/master/community-membership.md), coud actively search for [pull requests that need a review](https://github.com/kubernetes/ingress-nginx/pulls?q=is%3Aopen+is%3Apr+label%3Atriage%2Faccepted). 
 
 ## Support Channels
 
