@@ -160,7 +160,8 @@ Ingress-Nginx-Controller-nginx1 with `k8s.io/ingress-nginx1`
 Ingress-Nginx-Controller-nginx2 with `k8s.io/ingress-nginx2`
 Then, when you create an Ingress Object with IngressClassName = `ingress-nginx2`, it will look for controllers with `controller-class=k8s.io/ingress-nginx2` and as `Ingress-Nginx-Controller-nginx2` is watching objects that points to `ingressClass="k8s.io/ingress-nginx2`, it will serve that object, while `Ingress-Nginx-Controller-nginx1` will ignore the ingress object.
 
-Bear in mind that, if your `Ingress-Nginx-Controller-nginx2` is started with the flag `--watch-ingress-without-class=true`, then it will serve ;
+Bear in mind that, if your `Ingress-Nginx-Controller-nginx2` is started with the flag `--watch-ingress-without-class=true`, then it will serve:
+
 - objects without ingress-class
 - objects with the annotation configured in flag `--ingress-class` and same class value
 - and also objects pointing to the ingressClass that have the same .spec.controller as configured in `--controller-class`
