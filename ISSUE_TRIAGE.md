@@ -10,13 +10,12 @@ The triage process of the ingress-nginx maintainers is based on the [triage proc
 
 However the exact process of the ingress-nginx maintainers may differ in certain aspects. This doc gives a more precise overview on how the ingress-nginx maintainers approach the issue triage process and other processes that are related. 
 
-## Triage Flow 
+## Triage Flow (Issues)
 
-This section describes the different stages of the triage flow.
+This section describes the different stages of the triage flow for issues.
 
 ### Prepare Issues
 New issues come in with the labels `needs-triage` and `needs-priority` and one of: `kind/bug`, `kind/feature` or `kind/support`. Unfortunately there are also some legacy issues that only have a `kind/*` label but neither `needs-triage` nor `needs-priority` . However for every issue that does not have the `triage-accepted` label the following steps have to be done to prepare them for further processing:  
-
 
 * Filter for issues [without the `triage-accepted`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+-label%3Atriage%2Faccepted+is%3Aissue) label.
 * Check if all neccessary information are available. This is basically true, if people filled out the issue template correctly. If neccessary information is missing, ask the author to add the missing information and add the label `triage/needs-information` if not already present. If already present, send the author a friendly reminder to add those. 
@@ -39,11 +38,35 @@ Who and When?
 * Basically every contributor should be able to do that.
 * Tricky/important ones could be brought up during community meetings
 
+## Triage Flow (Pull Requests)
+
+This section describes the different stages of the triage flow for pull requests.
+
+### Prepare Pull Requests
+Pull requests come in with the labels `needs-triage`, `needs-priority` and `needs-kind` and one that indicates the size(`size/*`). Unfortunately there are also some legacy pull requests that only have a `size/*` label but neither `needs-triage` nor `needs-priority` . However for every pull request that does not have the `triage-accepted` label the following steps should be done to prepare them for further processing:   
+
+* Filter for pull requests [without the `triage-accepted`](https://github.com/kubernetes/ingress-nginx/pulls?q=is%3Aopen+-label%3Atriage%2Faccepted+is%3Apr) label.
+* Check if the cla is signed and all neccessary information are available. This is basically true, if people filled out the pull request template correctly. If everything is fine add the `triage-accepted` label.
+* If at any point you don't know how to proceed with an issue during the triage process, tag one of the [core maintainers](OWNERS_ALIASES) in the issue to raise attention or alternatively come to [this slack channel](https://kubernetes.slack.com/archives/C021E147ZA4) which may be the quicker way as people tend to miss github notifications. 
+
+Who and When?
+* Basically everyone who wants to contribute can do the mentioned steps at any time.
+
+### Pull Request Priorization
+For all pull requests, where all neccessary information is available and cla is signed thus triage is accepted, we need to do some priorization: 
+
+* Go through all pull requests with label [`triage-accepted`](https://github.com/kubernetes/ingress-nginx/pulls?q=is%3Aopen+is%3Apr+label%3Atriage%2Faccepted).  
+* Sync the `kind/*` and `priority/*` label from the linked issue for the pull request. If the pull request does not have any issue associated (which normally should not be the case), add an appropriate priority and kind label (one of: `priority/backlog`, `priority/critical-urgent`, `priority/important-longterm`, `priority/important-soon`) 
+
+Who and When? 
+* Basically every contributor should be able to do that.
+* Tricky/important ones could be brought up during community meetings
+
 ## Labels 
-Labels are helpful for issues to indicate in which lifecycle state they are currently and to categorize them. This section describes the most important ones with the additional info about how to add those. A complete label list of the Kubernetes community can be found [here](https://github.com/kubernetes/kubernetes/labels) while a complete label list for this project can be found [here](https://github.com/kubernetes/ingress-nginx/labels). However, here the most important ones: 
+Labels are helpful for issues or pull requests to indicate in which lifecycle state they are currently and to categorize them. This section describes the most important ones with the additional info about how to add those. A complete label list of the Kubernetes community can be found [here](https://github.com/kubernetes/kubernetes/labels) while a complete label list for this project can be found [here](https://github.com/kubernetes/ingress-nginx/labels). However, here the most important ones: 
 
 * Triage:
-  * [`needs-triage`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+is%3Aissue+label%3Aneeds-triage): Indicates that the issue needs triage. Automatically added. 
+  * [`needs-triage`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+is%3Aissue+label%3Aneeds-triage): Indicates that the issue or pull request needs triage. Automatically added. 
   * [`triage/accepted`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Atriage%2Faccepted+is%3Aissue+): Indicates that the issue is ready for further processing. Add with `/triage accepted`.
   * [`triage/needs-information`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Atriage%2Fneeds-information+is%3Aissue+): Indicates that the issue lacks information. Add with `/triage needs-information`.
 * Kind: 
