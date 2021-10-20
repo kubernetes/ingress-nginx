@@ -18,7 +18,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
   ```
 - If you have a gRPC app deployed in your cluster, then skip further notes in this Step 1, and continue from Step 2 below.
 
-- As an example gRPC application, we can use this app <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go> .
+- As an example gRPC application, we can use this app <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go>.
 
 - To create a container image for this app, you can use [this Dockerfile](https://github.com/kubernetes/ingress-nginx/blob/5a52d99ae85cfe5ef9535291b8326b0006e75066/images/go-grpc-greeter-server/rootfs/Dockerfile). 
 
