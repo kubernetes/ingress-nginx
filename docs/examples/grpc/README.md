@@ -22,7 +22,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 
 - To create a container image for this app, you can use [this Dockerfile](https://github.com/kubernetes/ingress-nginx/blob/5a52d99ae85cfe5ef9535291b8326b0006e75066/images/go-grpc-greeter-server/rootfs/Dockerfile). 
 
-- If you use the Dockerfile mentioned above, to create a image, then given below is an example of a Kubernetes manifest, to create a deployment resource, that uses that image. If needed, then edit this manifest to suit your needs. Assuming the name of this yaml file is  `deployment.go-grpc-greeter-server.yaml` ;
+- If you use the Dockerfile mentioned above, to create a image, then you can use the following example Kubernetes manifest to create a deployment resource that uses that image. If necessary edit this manifest to suit your needs.
 
   ```
   cat <<EOF | kubectl apply -f -
@@ -59,7 +59,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 
 ### Step 2: Create the Kubernetes `Service` for the gRPC app
 
-- You can use the following example manifest to create a service of type ClusterIP. Edit the name/namespace/label/port to match your deployment/pod ;
+- You can use the following example manifest to create a service of type ClusterIP. Edit the name/namespace/label/port to match your deployment/pod.
   ```
   cat <<EOF | kubectl apply -f -
   apiVersion: v1
@@ -78,7 +78,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
     type: ClusterIP
   EOF
   ```
-- You can save the above example manifest to a file with name `service.go-grpc-greeter-server.yaml` and edit it to match your deployment/pod, if required. You can create the service resource with a kubectl command like this ;
+- You can save the above example manifest to a file with name `service.go-grpc-greeter-server.yaml` and edit it to match your deployment/pod, if required. You can create the service resource with a kubectl command like this:
 
   ```
   $ kubectl create -f service.go-grpc-greeter-server.yaml
@@ -86,7 +86,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 
 ### Step 3: Create the Kubernetes `Ingress` resource for the gRPC app
 
-- Use the following example manifest of a ingress resource to create a ingress for your grpc app. If required, edit it to match your app's details like name, namespace, service, secret etc. Make sure you have the required SSL-Certificate, existing in your Kubernetes cluster, in the same namespace where the gRPC app is. The certificate must be available as a kubernetes secret resource, of type "kubernete.io/tls" https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets. This is because we are terminating TLS on the ingress;
+- Use the following example manifest of a ingress resource to create a ingress for your grpc app. If required, edit it to match your app's details like name, namespace, service, secret etc. Make sure you have the required SSL-Certificate, existing in your Kubernetes cluster in the same namespace where the gRPC app is. The certificate must be available as a kubernetes secret resource, of type "kubernete.io/tls" https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets. This is because we are terminating TLS on the ingress.
 
   ```
   cat <<EOF | kubectl apply -f -
@@ -121,7 +121,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
   EOF
   ```
 
-- If you save the above example manifest as a file named `ingress.go-grpc-greeter-server.yaml` and edit it to match your deployment and service, you can create the ingress like this ;
+- If you save the above example manifest as a file named `ingress.go-grpc-greeter-server.yaml` and edit it to match your deployment and service, you can create the ingress like this:
 
   ```
   $ kubectl create -f ingress.go-grpc-greeter-server.yaml
