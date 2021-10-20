@@ -1,7 +1,7 @@
 # External authentication, authentication service response headers propagation
 
 This example demonstrates propagation of selected authentication service response headers
-to backend service.
+to a backend service.
 
 Sample configuration includes:
 
