@@ -166,8 +166,8 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 
 ### Notes on using response/request streams
 
-1. If your server does only response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the `grpc_read_timeout` to accommodate for this.
-2. If your service does only request streaming and you expect a stream to be open longer than 60 seconds, you have to change the
+1. If your server only does response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the `grpc_read_timeout` to accommodate this.
+2. If your service only does request streaming and you expect a stream to be open longer than 60 seconds, you have to change the
 `grpc_send_timeout` and the `client_body_timeout`.
 3. If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: `grpc_read_timeout`, `grpc_send_timeout` and `client_body_timeout`.
 
