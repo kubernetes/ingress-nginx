@@ -7,7 +7,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 1. You have a kubernetes cluster running.
 2. You have a domain name such as `example.com` that is configured to route traffic to the ingress controller.
 3. You have the ingress-nginx-controller installed as per docs.
-4. You have a backend application running a gRPC server and listening for TCP traffic.  If you want, you can use <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go> as an example.
+4. You have a backend application running a gRPC server listening for TCP traffic.  If you want, you can use <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go> as an example.
 5. You're also responsible for provisioning an SSL certificate for the ingress. So you need to have a valid SSL certificate, deployed as a Kubernetes secret of type tls, in the same namespace as the gRPC application.
 
 ### Step 1: Create a Kubernetes `Deployment` for gRPC app
