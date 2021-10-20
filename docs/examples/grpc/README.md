@@ -162,7 +162,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 > https://proto.stack.build, a protocol buffer / gRPC build service that can use
 > to help make it easier for your users to consume your API.
 
-> See also the specific GRPC settings of NGINX: https://nginx.org/en/docs/http/ngx_http_grpc_module.html
+> See also the specific gRPC settings of NGINX: https://nginx.org/en/docs/http/ngx_http_grpc_module.html
 
 ### Notes on using response/request streams
 
