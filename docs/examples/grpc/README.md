@@ -144,7 +144,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
   ```
   $ grpcurl grpctest.dev.mydomain.com:443 helloworld.Greeter/SayHello
   {
-    "message": "
+    "message": "Hello "
   }
   ```
 
