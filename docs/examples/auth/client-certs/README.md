@@ -30,7 +30,7 @@ for each certificate generated. Otherwise you will receive an error.
 There are many different ways of configuring your secrets to enable Client-Certificate
 Authentication to work properly.
 
-1. You can create a secret containing just the CA certificate and another
+*   You can create a secret containing just the CA certificate and another
     Secret containing the Server Certificate which is Signed by the CA.
 
     ```bash
@@ -38,14 +38,14 @@ Authentication to work properly.
     kubectl create secret generic tls-secret --from-file=tls.crt=server.crt --from-file=tls.key=server.key
     ```
 
-2. You can create a secret containing CA certificate along with the Server
-    Certificate, that can be used for both TLS and Client Auth.
+*   You can create a secret containing CA certificate along with the Server
+    Certificate that can be used for both TLS and Client Auth.
 
     ```bash
     kubectl create secret generic ca-secret --from-file=tls.crt=server.crt --from-file=tls.key=server.key --from-file=ca.crt=ca.crt
     ```
 
-3. If you want to also enable Certificate Revocation List verification you can 
+*  If you want to also enable Certificate Revocation List verification you can 
    create the secret also containing the CRL file in PEM format:
    ```bash
    kubectl create secret generic ca-secret --from-file=ca.crt=ca.crt --from-file=ca.crl=ca.crl
