@@ -247,72 +247,72 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
 
 1. SSH into the worker
 
-```console
-$ ssh user@workerIP
-```
+    ```console
+    $ ssh user@workerIP
+    ```
 
 2. Obtain the Docker Container Running nginx
 
-```console
-$ docker ps | grep ingress-nginx-controller
-CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
-d9e1d243156a        k8s.gcr.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
-```
+    ```console
+    $ docker ps | grep ingress-nginx-controller
+    CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+    d9e1d243156a        k8s.gcr.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
+    ```
 
 3. Exec into the container
 
-```console
-$ docker exec -it --user=0 --privileged d9e1d243156a bash
-```
+    ```console
+    $ docker exec -it --user=0 --privileged d9e1d243156a bash
+    ```
 
 4. Make sure nginx is running in `--with-debug`
 
-```console
-$ nginx -V 2>&1 | grep -- '--with-debug'
-```
+    ```console
+    $ nginx -V 2>&1 | grep -- '--with-debug'
+    ```
 
 5. Get list of processes running on container
 
-```console
-$ ps -ef
-UID        PID  PPID  C STIME TTY          TIME CMD
-root         1     0  0 20:23 ?        00:00:00 /usr/bin/dumb-init /nginx-ingres
-root         5     1  0 20:23 ?        00:00:05 /ingress-nginx-controller --defa
-root        21     5  0 20:23 ?        00:00:00 nginx: master process /usr/sbin/
-nobody     106    21  0 20:23 ?        00:00:00 nginx: worker process
-nobody     107    21  0 20:23 ?        00:00:00 nginx: worker process
-root       172     0  0 20:43 pts/0    00:00:00 bash
-```
+    ```console
+    $ ps -ef
+    UID        PID  PPID  C STIME TTY          TIME CMD
+    root         1     0  0 20:23 ?        00:00:00 /usr/bin/dumb-init /nginx-ingres
+    root         5     1  0 20:23 ?        00:00:05 /ingress-nginx-controller --defa
+    root        21     5  0 20:23 ?        00:00:00 nginx: master process /usr/sbin/
+    nobody     106    21  0 20:23 ?        00:00:00 nginx: worker process
+    nobody     107    21  0 20:23 ?        00:00:00 nginx: worker process
+    root       172     0  0 20:43 pts/0    00:00:00 bash
+    ```
 
 7. Attach gdb to the nginx master process
 
-```console
-$ gdb -p 21
-....
-Attaching to process 21
-Reading symbols from /usr/sbin/nginx...done.
-....
-(gdb)
-```
+    ```console
+    $ gdb -p 21
+    ....
+    Attaching to process 21
+    Reading symbols from /usr/sbin/nginx...done.
+    ....
+    (gdb)
+    ```
 
 8. Copy and paste the following:
 
-```console
-set $cd = ngx_cycle->config_dump
-set $nelts = $cd.nelts
-set $elts = (ngx_conf_dump_t*)($cd.elts)
-while ($nelts-- > 0)
-set $name = $elts[$nelts]->name.data
-printf "Dumping %s to nginx_conf.txt\n", $name
-append memory nginx_conf.txt \
-        $elts[$nelts]->buffer.start $elts[$nelts]->buffer.end
-end
-```
+    ```console
+    set $cd = ngx_cycle->config_dump
+    set $nelts = $cd.nelts
+    set $elts = (ngx_conf_dump_t*)($cd.elts)
+    while ($nelts-- > 0)
+    set $name = $elts[$nelts]->name.data
+    printf "Dumping %s to nginx_conf.txt\n", $name
+    append memory nginx_conf.txt \
+            $elts[$nelts]->buffer.start $elts[$nelts]->buffer.end
+    end
+    ```
 
 9. Quit GDB by pressing CTRL+D
 
 10. Open nginx_conf.txt
 
-```console
-cat nginx_conf.txt
-```
+    ```console
+    cat nginx_conf.txt
+    ```

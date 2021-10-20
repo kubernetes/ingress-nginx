@@ -38,34 +38,34 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using G
 
 1. Install the kubernetes dashboard
 
-```console
-kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addons/kubernetes-dashboard/v1.10.1.yaml
-```
+    ```console
+    kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/ddons/kubernetes-dashboard/v1.10.1.yaml
+    ```
 
 2. Create a [custom Github OAuth application](https://github.com/settings/applications/new)
 
-![Register OAuth2 Application](images/register-oauth-app.png)
+    ![Register OAuth2 Application](images/register-oauth-app.png)
 
-- Homepage URL is the FQDN in the Ingress rule, like `https://foo.bar.com`
-- Authorization callback URL is the same as the base FQDN plus `/oauth2/callback`, like `https://foo.bar.com/oauth2/callback`
+    - Homepage URL is the FQDN in the Ingress rule, like `https://foo.bar.com`
+    - Authorization callback URL is the same as the base FQDN plus `/oauth2/callback`, like `https://foo.bar.com/oauth2/callback`
 
-![Register OAuth2 Application](images/register-oauth-app-2.png)
+    ![Register OAuth2 Application](images/register-oauth-app-2.png)
 
 3. Configure oauth2_proxy values in the file [`oauth2-proxy.yaml`](https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/auth/oauth-external-auth/oauth2-proxy.yaml) with the values:
 
-- OAUTH2_PROXY_CLIENT_ID with the github `<Client ID>`
-- OAUTH2_PROXY_CLIENT_SECRET with the github `<Client Secret>`
-- OAUTH2_PROXY_COOKIE_SECRET with value of `python -c 'import os,base64; print(base64.b64encode(os.urandom(16)).decode("ascii"))'`
+    - OAUTH2_PROXY_CLIENT_ID with the github `<Client ID>`
+    - OAUTH2_PROXY_CLIENT_SECRET with the github `<Client Secret>`
+    - OAUTH2_PROXY_COOKIE_SECRET with value of `python -c 'import os,base64; print(base64.b64encode(os.urandom(16)).decode("ascii"))'`
 
 4. Customize the contents of the file [`dashboard-ingress.yaml`](https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/auth/oauth-external-auth/dashboard-ingress.yaml):
 
-Replace `__INGRESS_HOST__` with a valid FQDN and `__INGRESS_SECRET__` with a Secret with a valid SSL certificate.
+    Replace `__INGRESS_HOST__` with a valid FQDN and `__INGRESS_SECRET__` with a Secret with a valid SSL certificate.
 
 5. Deploy the oauth2 proxy and the ingress rules running:
 
-```console
-$ kubectl create -f oauth2-proxy.yaml,dashboard-ingress.yaml
-```
+    ```console
+    $ kubectl create -f oauth2-proxy.yaml,dashboard-ingress.yaml
+    ```
 
 ### Test
 
