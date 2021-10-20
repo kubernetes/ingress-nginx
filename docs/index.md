@@ -116,7 +116,7 @@ The `.spec.ingressClassName` behavior has precedence over the deprecated `kubern
 
 - If you have only one instance of the Ingress-NGINX controller running in your cluster, and you still want to use IngressClass, you should add the annotation `ingressclass.kubernetes.io/is-default-class` in your IngressClass, so that any new Ingress objects will have this one as default IngressClass.
 
-In this case, you need to make your controller aware of the objects. If you have any Ingress objects that don't yet have either the [`.spec.ingressClassName`](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec) field set in their manifest, or the ingress annotation (`kubernetes.io/ingress.class`), then you should start your Ingress-NGINX controller with the flag `--watch-ingress-without-class=true`.
+In this case, you need to make your controller aware of the objects. If you have any Ingress objects that don't yet have either the [`.spec.ingressClassName`](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec) field set in their manifest, or the ingress annotation (`kubernetes.io/ingress.class`), then you should start your Ingress-NGINX controller with the flag [--watch-ingress-without-class=true](#what-is-the-flag-watch-ingress-without-class).
 
 You can configure your Helm chart installation's values file with `.controller.watchIngressWithoutClass: true`. 
 
