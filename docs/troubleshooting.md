@@ -284,7 +284,7 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
     root       172     0  0 20:43 pts/0    00:00:00 bash
     ```
 
-7. Attach gdb to the nginx master process
+6. Attach gdb to the nginx master process
 
     ```console
     $ gdb -p 21
@@ -295,7 +295,7 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
     (gdb)
     ```
 
-8. Copy and paste the following:
+7. Copy and paste the following:
 
     ```console
     set $cd = ngx_cycle->config_dump
@@ -309,9 +309,9 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
     end
     ```
 
-9. Quit GDB by pressing CTRL+D
+8. Quit GDB by pressing CTRL+D
 
-10. Open nginx_conf.txt
+9. Open nginx_conf.txt
 
     ```console
     cat nginx_conf.txt
