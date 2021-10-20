@@ -134,7 +134,8 @@ metadata:
 spec:
   controller: k8s.io/ingress-nginx
 ```
-And add the value "spec.ingressClassName=nginx" in your Ingress objects
+
+And add the value `spec.ingressClassName=nginx` in your Ingress objects.
 
 
 ## I have multiple ingress objects in my cluster. What should I do ?

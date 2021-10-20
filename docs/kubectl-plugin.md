@@ -272,7 +272,7 @@ Checking deployments...
       https://github.com/kubernetes/ingress-nginx/issues/3808
 ```
 
-to show the lints added **only** for a particular `ingress-nginx` release, use the `--from-version` and `--to-version` flags:
+To show the lints added **only** for a particular `ingress-nginx` release, use the `--from-version` and `--to-version` flags:
 
 ```console
 $ kubectl ingress-nginx lint --all-namespaces --verbose --from-version 0.24.0 --to-version 0.24.0
