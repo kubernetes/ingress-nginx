@@ -14,4 +14,4 @@ Before applying any objects, first apply the PSP permissions by running:
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/psp/psp.yaml
 ```
 
-Note: PSP permissions must be granted before to the creation of the Deployment and the ReplicaSet.
+Note: PSP permissions must be granted before the creation of the Deployment and the ReplicaSet.
