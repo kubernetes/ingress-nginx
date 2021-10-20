@@ -1,6 +1,6 @@
 
 
-# e2e test suite for [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx/tree/main/)
+# e2e test suite for [Ingress NGINX Controller](https://github.com/kubernetes/ingress-nginx/tree/main/)
 
 
 

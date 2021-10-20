@@ -1,6 +1,6 @@
 # Static IPs
 
-This example demonstrates how to assign a static-ip to an Ingress on through the Nginx controller.
+This example demonstrates how to assign a static-ip to an Ingress on through the Ingress-NGINX controller.
 
 ## Prerequisites
 

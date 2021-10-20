@@ -1,6 +1,6 @@
 # Overview
 
-This is the documentation for the NGINX Ingress Controller.
+This is the documentation for the Ingress NGINX Controller.
 
 It is built around the [Kubernetes Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/), using a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) to store the controller configuration.
 
