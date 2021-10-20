@@ -22,11 +22,11 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   --set-string controller.podAnnotations."prometheus\.io/scrape"="true" \
   --set-string controller.podAnnotations."prometheus\.io/port"="10254"
   ```
-  - You can validate that the controller is configured for metrics by looking at the values of the installed release, like this ;
+  - You can validate that the controller is configured for metrics by looking at the values of the installed release, like this:
   ```
   helm get values ingress-controller --namespace ingress-nginx
   ```
-  - You should be able to see the values shown below ;
+  - You should be able to see the values shown below:
   ```
   ..
   controller:

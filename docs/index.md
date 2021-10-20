@@ -142,7 +142,7 @@ And add the value "spec.ingressClassName=nginx" in your Ingress objects
 
 
 ### What is the flag '--watch-ingress-without-class' ?
-- Its a flag that is passed,as an argument, to the `nginx-ingress-controller` executable. In the configuration, it looks like this ;
+- Its a flag that is passed,as an argument, to the `nginx-ingress-controller` executable. In the configuration, it looks like this:
 ```
 ...
 ...
@@ -213,7 +213,7 @@ If you start Ingress-Nginx B with the command line argument `--watch-ingress-wit
   ```
   helm repo update
   ```
-- Now, install an additional instance of the ingress-NGINX controller like this ;
+- Now, install an additional instance of the ingress-NGINX controller like this:
   ```
   helm install ingress-nginx-2 ingress-nginx/ingress-nginx  \
   --namespace ingress-nginx-2 \
