@@ -1,7 +1,8 @@
 # Client Certificate Authentication
 
 It is possible to enable Client-Certificate Authentication by adding additional annotations to your Ingress Resource.
-Before getting started you must have the following Certificates Setup:
+
+Before getting started you must have the following Certificates configured:
 
 1. CA certificate and Key (Intermediate Certs need to be in CA)
 2. Server Certificate (Signed by CA) and Key (CN should be equal the hostname you will use)
