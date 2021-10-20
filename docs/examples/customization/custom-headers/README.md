@@ -1,5 +1,16 @@
 # Custom Headers
 
+## Caveats
+
+ingress-nginx-controllers do not live apply changes made to customer header config maps.
+
+### Workaround
+
+In order to workaround this limitation, you can:
+
+* make a change to some other tracked configuration field and then revert it
+* use a third party reloader
+
 ## Example
 
 This example demonstrates configuration of the nginx ingress controller via
