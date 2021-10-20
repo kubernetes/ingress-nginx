@@ -27,7 +27,7 @@ $ kubectl create -f configmap.yaml
 ## Custom DH parameters secret
 
 ```console
-$> openssl dhparam 4096 2> /dev/null | base64
+$ openssl dhparam 4096 2> /dev/null | base64
 LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ...
 ```
 
@@ -52,4 +52,6 @@ $ kubectl create -f ssl-dh-param.yaml
 ## Test
 
 Check the contents of the configmap is present in the nginx.conf file using:
-`kubectl exec ingress-nginx-controller-873061567-4n3k2 -n kube-system -- cat /etc/nginx/nginx.conf`
+```console
+$ kubectl exec ingress-nginx-controller-873061567-4n3k2 -n kube-system -- cat /etc/nginx/nginx.conf
+```

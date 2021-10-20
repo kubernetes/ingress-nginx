@@ -37,7 +37,7 @@ type: Opaque
 ## Using kubectl, create an ingress tied to the basic-auth secret
 
 ```console
-echo "
+$ echo "
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

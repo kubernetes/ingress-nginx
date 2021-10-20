@@ -13,7 +13,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 ### Step 1: Create a Kubernetes `Deployment` for gRPC app
 
 - Make sure your gRPC application pod is running and listening for connections. For example you can try a kubectl command like this below:
-  ```
+  ```console
   $ kubectl get po -A -o wide | grep go-grpc-greeter-server
   ```
 - If you have a gRPC app deployed in your cluster, then skip further notes in this Step 1, and continue from Step 2 below.

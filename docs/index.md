@@ -26,7 +26,7 @@ Its important because until now, a default install of the Ingress-NGINX controll
 
 On clusters with more than one instance of the Ingress-NGINX controller, all instances of the controllers must be aware of which Ingress objects they serve. The `ingressClassName` field of an Ingress is the way to let the controller know about that. 
 
-```
+```console
 kubectl explain ingressclass                                                           
 ```
 ```
@@ -89,7 +89,7 @@ If you are already using the Ingress-NGINX controller and then upgrade to K8s ve
 ```shell
 kubectl explain ingress.spec.ingressClassName
 ```
-```
+```console
 KIND:     Ingress
 VERSION:  networking.k8s.io/v1
 
