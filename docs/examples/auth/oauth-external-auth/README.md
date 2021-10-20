@@ -42,7 +42,7 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using G
     kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/ddons/kubernetes-dashboard/v1.10.1.yaml
     ```
 
-2. Create a [custom Github OAuth application](https://github.com/settings/applications/new)
+2. Create a [custom GitHub OAuth application](https://github.com/settings/applications/new)
 
     ![Register OAuth2 Application](images/register-oauth-app.png)
 
@@ -73,6 +73,6 @@ Test the oauth integration accessing the configured URL, e.g. `https://foo.bar.c
 
 ![Register OAuth2 Application](images/github-auth.png)
 
-![Github authentication](images/oauth-login.png)
+![GitHub authentication](images/oauth-login.png)
 
 ![Kubernetes dashboard](images/dashboard.png)
