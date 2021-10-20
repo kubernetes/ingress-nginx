@@ -226,7 +226,9 @@ Use the `--service <service>` flag if your `ingress-nginx` `LoadBalancer` servic
 
 ### ingresses
 
-`kubectl ingress-nginx ingresses`, alternately `kubectl ingress-nginx ing`, shows a more detailed view of the ingress definitions in a namespace. Compare:
+`kubectl ingress-nginx ingresses`, alternately `kubectl ingress-nginx ing`, shows a more detailed view of the ingress definitions in a namespace.
+
+Compare:
 
 ```console
 $ kubectl get ingresses --all-namespaces
@@ -235,7 +237,7 @@ default     example-ingress1   testaddr.local,testaddr2.local   localhost   80  
 default     test-ingress-2     *                                localhost   80      5d
 ```
 
-vs
+vs.
 
 ```console
 $ kubectl ingress-nginx ingresses --all-namespaces
