@@ -21,6 +21,6 @@ data:
   ssl-dh-param: {{ printf "%s/%s" .Release.Namespace (include "ingress-nginx.controller.fullname" .) }}
 {{- end }}
 {{- range $key, $value := .Values.controller.config }}
-    {{ $key | nindent 2 }}: {{ $value | quote }}
+    {{- $key | nindent 2 }}: {{ $value | quote }}
 {{- end }}
 
