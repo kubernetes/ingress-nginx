@@ -3,9 +3,9 @@
 It is possible to enable Client-Certificate Authentication by adding additional annotations to your Ingress Resource.
 Before getting started you must have the following Certificates Setup:
 
-1. CA certificate and Key(Intermediate Certs need to be in CA)
-2. Server Certificate(Signed by CA) and Key (CN should be equal the hostname you will use)
-3. Client Certificate(Signed by CA) and Key
+1. CA certificate and Key (Intermediate Certs need to be in CA)
+2. Server Certificate (Signed by CA) and Key (CN should be equal the hostname you will use)
+3. Client Certificate (Signed by CA) and Key
 
 For more details on the generation process, checkout the Prerequisite [docs](../../PREREQUISITES.md#client-certificate-authentication).
 
@@ -15,13 +15,13 @@ You can have as many certificates as you want. If they're in the binary DER form
 openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
 ```
 
-Then, you can concatenate them all in only one file, named 'ca.crt' as the following:
+Then, you can concatenate them all into one file, named 'ca.crt' with the following:
 
 ```bash
 cat certificate1.crt certificate2.crt certificate3.crt >> ca.crt
 ```
 
-**Note:** Make sure that the Key Size is greater than 1024 and Hashing Algorithm(Digest) is something better than md5
+**Note:** Make sure that the Key Size is greater than 1024 and Hashing Algorithm (Digest) is something better than md5
 for each certificate generated. Otherwise you will receive an error.
 
 ## Creating Certificate Secrets
