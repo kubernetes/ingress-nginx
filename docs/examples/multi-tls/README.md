@@ -2,9 +2,8 @@
 
 This example uses 2 different certificates to terminate SSL for 2 hostnames.
 
-1. Deploy the controller by creating the rc in the parent dir
-2. Create tls secrets for foo.bar.com and bar.baz.com as indicated in the yaml
-3. Create [multi-tls.yaml](multi-tls.yaml)
+1. Create tls secrets for foo.bar.com and bar.baz.com as indicated in the yaml
+2. Create [multi-tls.yaml](multi-tls.yaml)
 
 This should generate a segment like:
 ```console
