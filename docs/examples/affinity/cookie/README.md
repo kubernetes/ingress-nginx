@@ -73,6 +73,8 @@ If the backend pool grows NGINX will keep sending the requests through the same 
 
 When the backend server is removed, the requests are re-routed to another upstream server. This does not require the cookie to be updated because the key's [consistent hash][consistent-hashing] will change.
 
+## Caveats
+
 When you have a Service pointing to more than one Ingress, with only one containing affinity configuration, the first created Ingress will be used.
 This means that you can face the situation that you've configured session affinity on one Ingress and it doesn't work because the Service is pointing to another Ingress that doesn't configure this.
 

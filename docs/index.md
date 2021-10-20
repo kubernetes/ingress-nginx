@@ -67,7 +67,9 @@ FIELDS:
 
 There are 2 reasons primarily.
 
-_(Reason #1)_ Until K8s version 1.21, it was possible to create an Ingress resource using deprecated versions of the Ingress API, such as:
+### Reason #1
+
+Until K8s version 1.21, it was possible to create an Ingress resource using deprecated versions of the Ingress API, such as:
 
   - `extensions/v1beta1`
   - `networking.k8s.io/v1beta1`
@@ -76,7 +78,9 @@ You would get a message about deprecation, but the Ingress resource would get cr
 
 From K8s version 1.22 onwards, you can **only** access the Ingress API via the stable, `networking.k8s.io/v1` API. The reason is explained in the [official blog on deprecated ingress API versions](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/).
 
-_(Reason #2)_ if you are already using the Ingress-NGINX controller and then upgrade to K8s version v1.22 , there are several scenarios where your existing Ingress objects will not work how you expect. Read this FAQ to check which scenario matches your use case.
+### Reason #2
+
+If you are already using the Ingress-NGINX controller and then upgrade to K8s version v1.22 , there are several scenarios where your existing Ingress objects will not work how you expect. Read this FAQ to check which scenario matches your use case.
 
 ## What is ingressClassName field ?
 

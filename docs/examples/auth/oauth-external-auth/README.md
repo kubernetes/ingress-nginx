@@ -67,6 +67,8 @@ Replace `__INGRESS_HOST__` with a valid FQDN and `__INGRESS_SECRET__` with a Sec
 $ kubectl create -f oauth2-proxy.yaml,dashboard-ingress.yaml
 ```
 
+### Test
+
 Test the oauth integration accessing the configured URL, like `https://foo.bar.com`
 
 ![Register OAuth2 Application](images/github-auth.png)

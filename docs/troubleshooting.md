@@ -13,7 +13,7 @@ Do not move it without providing redirects.
 There are many ways to troubleshoot the ingress-controller. The following are basic troubleshooting
 methods to obtain more information.
 
-Check the Ingress Resource Events
+### Check the Ingress Resource Events
 
 ```console
 $ kubectl get ing -n <namespace-of-ingress-resource>
@@ -41,7 +41,7 @@ Events:
   Normal  UPDATE  58s   ingress-nginx-controller  Ingress default/cafe-ingress
 ```
 
-Check the Ingress Controller Logs
+### Check the Ingress Controller Logs
 
 ```console
 $ kubectl get pods -n <namespace-of-ingress-controller>
@@ -58,7 +58,7 @@ NGINX Ingress controller
 ....
 ```
 
-Check the Nginx Configuration
+### Check the Nginx Configuration
 
 ```console
 $ kubectl get pods -n <namespace-of-ingress-controller>
@@ -80,7 +80,7 @@ http {
 ....
 ```
 
-Check if used Services Exist
+### Check if used Services Exist
 
 ```console
 $ kubectl get svc --all-namespaces

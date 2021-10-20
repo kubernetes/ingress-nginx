@@ -1,5 +1,7 @@
 # Custom Headers
 
+## Example
+
 This example demonstrates configuration of the nginx ingress controller via
 a ConfigMap to pass a custom list of headers to the upstream
 server.
