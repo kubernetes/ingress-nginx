@@ -69,7 +69,7 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using G
 
 ### Test
 
-Test the oauth integration accessing the configured URL, like `https://foo.bar.com`
+Test the oauth integration accessing the configured URL, e.g. `https://foo.bar.com`
 
 ![Register OAuth2 Application](images/github-auth.png)
 
