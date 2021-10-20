@@ -20,7 +20,7 @@ Session affinity can be configured using the following annotations:
 |nginx.ingress.kubernetes.io/session-cookie-expires|Legacy version of the previous annotation for compatibility with older browsers, generates an `Expires` cookie directive by adding the seconds to the current date|number of seconds|
 |nginx.ingress.kubernetes.io/session-cookie-change-on-failure|When set to `false` nginx ingress will send request to upstream pointed by sticky cookie even if previous attempt failed. When set to `true` and previous attempt failed, sticky cookie will be changed to point to another upstream.|`true` or `false` (defaults to `false`)|
 
-You can create the [example Ingress](ingress.yaml) to test this:
+You can create the [session affinity example Ingress](ingress.yaml) to test this:
 
 ```console
 kubectl create -f ingress.yaml
