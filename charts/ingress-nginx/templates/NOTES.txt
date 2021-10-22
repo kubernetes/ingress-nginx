@@ -32,8 +32,6 @@ An example Ingress that makes use of the controller:
   apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
-    annotations:
-      kubernetes.io/ingress.class: {{ .Values.controller.ingressClassResource.name }}
     name: example
     namespace: foo
   spec:
