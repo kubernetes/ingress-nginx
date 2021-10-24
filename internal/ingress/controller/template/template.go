@@ -1692,32 +1692,22 @@ func buildOriginRegex(origin string) string {
 }
 
 // buildCorsOriginRegex builds the regex string required by nginx
-func buildCorsOriginRegex(origins string) string {
-	var originSplitList = strings.Split(origins, ",")
-	if searchCorsOrigins(originSplitList, "*") {
+func buildCorsOriginRegex(corsOrigins []string) string {
+	if len(corsOrigins) == 1 && corsOrigins[0] == "*" {
 		return "set $http_origin *;\nset $cors 'true';"
 	}
 
 	var originsRegex string = "if ($http_origin ~* ("
-	for i, origin := range originSplitList {
+	for i, origin := range corsOrigins {
 		originTrimmed := strings.TrimSpace(origin)
 		if len(originTrimmed) > 0 {
 			builtOrigin := buildOriginRegex(originTrimmed)
 			originsRegex += builtOrigin
-			if i != len(originSplitList)-1 {
+			if i != len(corsOrigins)-1 {
 				originsRegex = originsRegex + "|"
 			}
 		}
 	}
 	originsRegex = originsRegex + ")$ ) { set $cors 'true'; }"
 	return originsRegex
-}
-
-func searchCorsOrigins(splice []string, search string) bool {
-	for _, element := range splice {
-		if strings.TrimSpace(element) == search {
-			return true
-		}
-	}
-	return false
 }

@@ -56,13 +56,13 @@ type cors struct {
 
 // Config contains the Cors configuration to be used in the Ingress
 type Config struct {
-	CorsEnabled          bool   `json:"corsEnabled"`
-	CorsAllowOrigin      string `json:"corsAllowOrigin"`
-	CorsAllowMethods     string `json:"corsAllowMethods"`
-	CorsAllowHeaders     string `json:"corsAllowHeaders"`
-	CorsAllowCredentials bool   `json:"corsAllowCredentials"`
-	CorsExposeHeaders    string `json:"corsExposeHeaders"`
-	CorsMaxAge           int    `json:"corsMaxAge"`
+	CorsEnabled          bool     `json:"corsEnabled"`
+	CorsAllowOrigin      []string `json:"corsAllowOrigin"`
+	CorsAllowMethods     string   `json:"corsAllowMethods"`
+	CorsAllowHeaders     string   `json:"corsAllowHeaders"`
+	CorsAllowCredentials bool     `json:"corsAllowCredentials"`
+	CorsExposeHeaders    string   `json:"corsExposeHeaders"`
+	CorsMaxAge           int      `json:"corsMaxAge"`
 }
 
 // NewParser creates a new CORS annotation parser
@@ -93,11 +93,18 @@ func (c1 *Config) Equal(c2 *Config) bool {
 	if c1.CorsAllowMethods != c2.CorsAllowMethods {
 		return false
 	}
-	if c1.CorsAllowOrigin != c2.CorsAllowOrigin {
-		return false
-	}
 	if c1.CorsEnabled != c2.CorsEnabled {
 		return false
+	}
+
+	if len(c1.CorsAllowOrigin) != len(c2.CorsAllowOrigin) {
+		return false
+	}
+
+	for i, v := range c1.CorsAllowOrigin {
+		if v != c2.CorsAllowOrigin[i] {
+			return false
+		}
 	}
 
 	return true
@@ -114,18 +121,23 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.CorsEnabled = false
 	}
 
-	config.CorsAllowOrigin, err = parser.GetStringAnnotation("cors-allow-origin", ing)
+	unparsedOrigins, err := parser.GetStringAnnotation("cors-allow-origin", ing)
 	if err == nil {
-		for _, origin := range strings.Split(config.CorsAllowOrigin, ",") {
-			if !corsOriginRegex.MatchString(strings.TrimSpace(origin)) {
-				klog.Errorf("Error parsing cors-allow-origin parameters using '*', supplied incorrect origin: %s", config.CorsAllowOrigin)
-				config.CorsAllowOrigin = "*"
+		config.CorsAllowOrigin = strings.Split(unparsedOrigins, ",")
+		for i, origin := range config.CorsAllowOrigin {
+			origin = strings.TrimSpace(origin)
+			if origin == "*" {
+				config.CorsAllowOrigin = []string{"*"}
 				break
 			}
+			if !corsOriginRegex.MatchString(origin) {
+				klog.Errorf("Error parsing cors-allow-origin parameters. Supplied incorrect origin: %s. Skipping.", origin)
+				config.CorsAllowOrigin = append(config.CorsAllowOrigin[:i], config.CorsAllowOrigin[i+1:]...)
+			}
+			klog.Infof("Current config.corsAllowOrigin %v", config.CorsAllowOrigin)
 		}
-	} else {
-		config.CorsAllowOrigin = "*"
 	}
+
 	config.CorsAllowHeaders, err = parser.GetStringAnnotation("cors-allow-headers", ing)
 	if err != nil || !corsHeadersRegex.MatchString(config.CorsAllowHeaders) {
 		config.CorsAllowHeaders = defaultCorsHeaders

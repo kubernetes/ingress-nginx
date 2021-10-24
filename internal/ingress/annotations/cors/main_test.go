@@ -110,7 +110,7 @@ func TestIngressCorsConfigValid(t *testing.T) {
 		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-methods")], nginxCors.CorsAllowMethods)
 	}
 
-	if nginxCors.CorsAllowOrigin != "https://origin123.test.com:4443" {
+	if nginxCors.CorsAllowOrigin[0] != "https://origin123.test.com:4443" {
 		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-origin")], nginxCors.CorsAllowOrigin)
 	}
 
@@ -162,10 +162,6 @@ func TestIngressCorsConfigInvalid(t *testing.T) {
 
 	if nginxCors.CorsAllowMethods != defaultCorsMethods {
 		t.Errorf("expected %v but returned %v", defaultCorsHeaders, nginxCors.CorsAllowMethods)
-	}
-
-	if nginxCors.CorsAllowOrigin != "*" {
-		t.Errorf("expected %v but returned %v", "*", nginxCors.CorsAllowOrigin)
 	}
 
 	if nginxCors.CorsExposeHeaders != "" {
