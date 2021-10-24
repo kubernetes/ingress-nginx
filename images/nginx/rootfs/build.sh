@@ -137,12 +137,15 @@ export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
 
-export USE_OPENTELEMETRY=true
 if [[ ${ARCH} == "s390x" ]]; then
   export LUAJIT_VERSION=9d5750d28478abfdcaefdfdc408f87752a21e431
   export LUA_RESTY_CORE=0.1.17
   export LUA_NGX_VERSION=0.10.15
   export LUA_STREAM_NGX_VERSION=0.0.7
+fi
+
+export USE_OPENTELEMETRY=true
+if [[ ${ARCH} == "s390x" ]] || [[ ${ARCH} == "armv7l" ]]; then
   export USE_OPENTELEMETRY=false
 fi
 
