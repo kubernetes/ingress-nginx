@@ -62,6 +62,9 @@ const (
 
 // Writer is the interface to render a template
 type Writer interface {
+	// Write renders the template.
+	// NOTE: Implementors must ensure that the content of the returned slice is not modified by the implementation
+	// after the return of this function.
 	Write(conf config.TemplateConfig) ([]byte, error)
 }
 
@@ -201,7 +204,12 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 		return nil, err
 	}
 
-	return outCmdBuf.Bytes(), nil
+	// make a copy to ensure that we are no longer modifying the content of the buffer
+	out := outCmdBuf.Bytes()
+	res := make([]byte, len(out))
+	copy(res, out)
+
+	return res, nil
 }
 
 var (
