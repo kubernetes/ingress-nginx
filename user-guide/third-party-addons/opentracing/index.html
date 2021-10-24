@@ -13,6 +13,9 @@ opentracing-operation-name
 # specifies specifies the name to use for the location span
 opentracing-location-operation-name
 
+# sets whether or not to trust incoming tracing spans
+opentracing-trust-incoming-span
+
 # specifies the port to use when uploading traces, Default: 9411
 zipkin-collector-port
 
@@ -77,7 +80,11 @@ datadog-priority-sampling
 
 # specifies sample rate for any traces created, Default: 1.0
 datadog-sample-rate
-</code></pre></div></p> <p>All these options (including host) allow environment variables, such as <code>$HOSTNAME</code> or <code>$HOST_IP</code>. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like <code>$HOST_IP</code> (which can be 'mounted' with the <code>status.hostIP</code> fieldpath, as described <a href=https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api>here</a>) to make sure traces will be sent to the local agent.</p> <h2 id=examples>Examples<a class=headerlink href=#examples title="Permanent link"> ¶</a></h2> <p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed using Minikube.</p> <h3 id=zipkin>Zipkin<a class=headerlink href=#zipkin title="Permanent link"> ¶</a></h3> <p>In the <a href=https://github.com/rnburn/zipkin-date-server>rnburn/zipkin-date-server</a> GitHub repository is an example of a dockerized date service. To install the example and Zipkin collector run:</p> <div class=highlight><pre><span></span><code>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
+</code></pre></div></p> <p>All these options (including host) allow environment variables, such as <code>$HOSTNAME</code> or <code>$HOST_IP</code>. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like <code>$HOST_IP</code> (which can be 'mounted' with the <code>status.hostIP</code> fieldpath, as described <a href=https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api>here</a>) to make sure traces will be sent to the local agent.</p> <p>Note that you can also set whether to trust incoming spans (global default is true) per-location using annotations like the following: <div class=highlight><pre><span></span><code>kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/opentracing-trust-incoming-span: &quot;true&quot;
+</code></pre></div></p> <h2 id=examples>Examples<a class=headerlink href=#examples title="Permanent link"> ¶</a></h2> <p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed using Minikube.</p> <h3 id=zipkin>Zipkin<a class=headerlink href=#zipkin title="Permanent link"> ¶</a></h3> <p>In the <a href=https://github.com/rnburn/zipkin-date-server>rnburn/zipkin-date-server</a> GitHub repository is an example of a dockerized date service. To install the example and Zipkin collector run:</p> <div class=highlight><pre><span></span><code>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
 kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml
 </code></pre></div> <p>Also we need to configure the NGINX controller ConfigMap with the required values:</p> <div class=highlight><pre><span></span><code>$ echo &#39;
 apiVersion: v1
