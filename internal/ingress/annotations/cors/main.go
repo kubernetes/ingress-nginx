@@ -136,6 +136,8 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 			}
 			klog.Infof("Current config.corsAllowOrigin %v", config.CorsAllowOrigin)
 		}
+	} else {
+		config.CorsAllowOrigin = []string{"*"}
 	}
 
 	config.CorsAllowHeaders, err = parser.GetStringAnnotation("cors-allow-headers", ing)

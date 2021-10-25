@@ -868,7 +868,7 @@ stream {
      # Cors Preflight methods needs additional options and different Return Code
      {{ if $cors.CorsAllowOrigin }}
         {{ buildCorsOriginRegex $cors.CorsAllowOrigin }}
-
+     {{ end }}
      if ($request_method = 'OPTIONS') {
         set $cors ${cors}options;
      }
@@ -893,7 +893,6 @@ stream {
         more_set_headers 'Content-Length: 0';
         return 204;
      }
-     {{ end }}
 {{ end }}
 
 {{/* definition of server-template to avoid repetitions with server-alias */}}

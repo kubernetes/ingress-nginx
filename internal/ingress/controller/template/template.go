@@ -1679,9 +1679,6 @@ func buildOriginRegex(origin string) string {
 	if !strings.HasPrefix(origin, "*") {
 		escapedOrigin := regexp.QuoteMeta(origin)
 		escapedOrigin = strings.Replace(escapedOrigin, "\\*", "[A-Za-z0-9]+", 1)
-		if len(strings.Split(escapedOrigin, ":")) < 3 {
-			escapedOrigin += "(:[0-9][0-9]+)?"
-		}
 		return escapedOrigin
 	}
 

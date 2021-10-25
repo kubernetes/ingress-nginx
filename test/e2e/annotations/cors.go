@@ -324,17 +324,18 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			Headers().NotContainsKey("Access-Control-Allow-Origin")
 	})
 
-	ginkgo.It("should allow - single origin with optional port", func() {
+	ginkgo.It("should allow - single origin with required port", func() {
 		host := "cors.foo.com"
 		origin := "http://origin.com:8080"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin2.cors.com, http://origin.com",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://origin.com:8080",
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
+		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
@@ -351,7 +352,26 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			ValueEqual("Access-Control-Allow-Origin", []string{origin})
 	})
 
-	ginkgo.It("should not allow - single origin with optional port", func() {
+	ginkgo.It("should not allow - single origin with port and origin without port", func() {
+		host := "cors.foo.com"
+		origin := "http://origin.com:8080"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin2.cors.com, http://origin.com",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().NotContainsKey("Access-Control-Allow-Origin")
+	})
+
+	ginkgo.It("should not allow - single origin without port and origin with required port", func() {
 		host := "cors.foo.com"
 		origin := "http://origin.com"
 		annotations := map[string]string{
@@ -485,7 +505,7 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			Headers().NotContainsKey("Access-Control-Allow-Origin")
 	})
 
-	ginkgo.It("should not allow - missing origins (should block all origins)", func() {
+	ginkgo.It("should allow - missing origins (should allow all origins)", func() {
 		host := "cors.foo.com"
 		origin := "http://origin.com"
 		origin2 := "http://book.origin.com"
@@ -504,20 +524,44 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
+			Headers().ContainsKey("Access-Control-Allow-Origin")
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
 
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin2).
 			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
+			Headers().ContainsKey("Access-Control-Allow-Origin")
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin2).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
 
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin3).
 			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
+			Headers().ContainsKey("Access-Control-Allow-Origin")
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin3).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
 	})
 })
