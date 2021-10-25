@@ -2,14 +2,11 @@
 
 ## Caveats
 
-ingress-nginx-controllers do not live apply changes made to customer header config maps.
+Changes to the custom header config maps do not force a reload of the ingress-nginx-controllers.
 
 ### Workaround
 
-In order to workaround this limitation, you can:
-
-* make a change to some other tracked configuration field and then revert it
-* use a third party reloader
+To work around this limitation, perform a rolling restart of the deployment.
 
 ## Example
 
