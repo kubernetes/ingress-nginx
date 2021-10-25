@@ -30,3 +30,6 @@ aliases:
   ingress-nginx-helm-reviewers:
   - ChiefAlexander
   - cpanato
+
+  ingress-nginx-kube-webhook-certgen-reviewers:
+  - invidian
