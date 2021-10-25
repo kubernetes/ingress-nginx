@@ -38,7 +38,7 @@ You can wait until it is ready to run the next command:
   - [Digital Ocean](#digital-ocean)
   - [Scaleway](#scaleway)
   - [Exoscale](#exoscale)
-  - [Oracle Cloud Infrastructure](#oracle-cloud-infrastructure)  
+  - [Oracle Cloud Infrastructure](#oracle-cloud-infrastructure)
   - [Bare-metal](#bare-metal)
   - [Verify installation](#verify-installation)
   - [Detect installed version](#detect-installed-version)
@@ -82,13 +82,17 @@ Please check the microk8s [documentation page](https://microk8s.io/docs/addon-in
 
 In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
 
+!!! info
+    The provided templates illustrate the setup for legacy in-tree service load balancer for AWS NLB.
+    AWS provides the documentation on how to use [Network load balancing on Amazon EKS](https://docs.aws.amazon.com/eks/latest/userguide/network-load-balancing.html) with [AWS Load Balancer Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller).
+
 ##### Network Load Balancer (NLB)
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.4/deploy/static/provider/aws/deploy.yaml
 ```
 
-##### TLS termination in AWS Load Balancer (ELB)
+##### TLS termination in AWS Load Balancer (NLB)
 
 In some scenarios is required to terminate TLS in the Load Balancer and not in the ingress controller.
 
