@@ -1674,21 +1674,12 @@ func convertGoSliceIntoLuaTable(goSliceInterface interface{}, emptyStringAsNil b
 	}
 }
 
-// buildOriginRegex returns an origin as a regex
 func buildOriginRegex(origin string) string {
-	if !strings.HasPrefix(origin, "*") {
-		escapedOrigin := regexp.QuoteMeta(origin)
-		escapedOrigin = strings.Replace(escapedOrigin, "\\*", "[A-Za-z0-9]+", 1)
-		return escapedOrigin
-	}
-
-	origin = strings.Replace(origin, "*.", "", 1)
-	parts := strings.Split(origin, ".")
-
-	return "(" + strings.Join(parts, ".") + ")"
+	origin = regexp.QuoteMeta(origin)
+	origin = strings.Replace(origin, "\\*", "[A-Za-z0-9]+", 1)
+	return fmt.Sprintf("(%s)", origin)
 }
 
-// buildCorsOriginRegex builds the regex string required by nginx
 func buildCorsOriginRegex(corsOrigins []string) string {
 	if len(corsOrigins) == 1 && corsOrigins[0] == "*" {
 		return "set $http_origin *;\nset $cors 'true';"
