@@ -59,6 +59,7 @@ var _ = framework.IngressNginxDescribe("brotli", func() {
 			WithHeader("Accept-Encoding", "br").
 			Expect().
 			Status(http.StatusOK).
+			ContentType(contentEncoding).
 			ContentEncoding("br")
 
 		f.HTTPTestClient().
@@ -67,6 +68,7 @@ var _ = framework.IngressNginxDescribe("brotli", func() {
 			WithHeader("Accept-Encoding", "br").
 			Expect().
 			Status(http.StatusOK).
+			ContentType(contentEncoding).
 			ContentEncoding()
 	})
 })
