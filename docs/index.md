@@ -154,10 +154,12 @@ In this scenario, you need to create multiple ingressClasses (see example one). 
 
 - Ingress-Nginx-IngressClass-1 with .spec.controller equals to "k8s.io/ingress-nginx1"
 - Ingress-Nginx-IngressClass-2 with .spec.controller equals to "k8s.io/ingress-nginx2"
+
 When deploying your ingress controllers, you will have to change the `--controller-class` field as follows:
 
-Ingress-Nginx-Controller-nginx1 with `k8s.io/ingress-nginx1`
-Ingress-Nginx-Controller-nginx2 with `k8s.io/ingress-nginx2`
+- Ingress-Nginx-Controller-nginx1 with `k8s.io/ingress-nginx1`
+- Ingress-Nginx-Controller-nginx2 with `k8s.io/ingress-nginx2`
+
 Then, when you create an Ingress Object with IngressClassName = `ingress-nginx2`, it will look for controllers with `controller-class=k8s.io/ingress-nginx2` and as `Ingress-Nginx-Controller-nginx2` is watching objects that points to `ingressClass="k8s.io/ingress-nginx2`, it will serve that object, while `Ingress-Nginx-Controller-nginx1` will ignore the ingress object.
 
 Bear in mind that, if your `Ingress-Nginx-Controller-nginx2` is started with the flag `--watch-ingress-without-class=true`, then it will serve:
