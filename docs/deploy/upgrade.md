@@ -41,11 +41,11 @@ For interactive editing, use `kubectl edit deployment nginx-ingress-controller -
 
 ## With Helm
 
-If you installed ingress-nginx using the Helm command in the deployment docs so its name is `ngx-ingress`,
+If you installed ingress-nginx using the Helm command in the deployment docs so its name is `ingress-nginx`,
 you should be able to upgrade using
 
 ```shell
-helm upgrade --reuse-values ngx-ingress ingress-nginx/ingress-nginx
+helm upgrade --reuse-values ingress-nginx ingress-nginx/ingress-nginx
 ```
 
 ### Migrating from stable/nginx-ingress
