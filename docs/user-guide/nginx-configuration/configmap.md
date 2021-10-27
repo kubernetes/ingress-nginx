@@ -98,6 +98,7 @@ The following table shows a configuration option's name, type, and the default v
 |[use-geoip2](#use-geoip2)|bool|"false"|
 |[enable-brotli](#enable-brotli)|bool|"false"|
 |[brotli-level](#brotli-level)|int|4|
+|[brotli-min-length](#brotli-min-length)|int|20|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
 |[gzip-level](#gzip-level)|int|1|
@@ -664,6 +665,10 @@ The default mime type list to compress is: `application/xml+rss application/atom
 ## brotli-level
 
 Sets the Brotli Compression Level that will be used. _**default:**_ 4
+
+## brotli-min-length
+
+Minimum length of responses, in bytes, that will be eligible for brotli compression. _**default:**_ 20
 
 ## brotli-types
 
