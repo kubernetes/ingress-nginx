@@ -51,10 +51,10 @@ func (dc DummyCollector) IncCheckErrorCount(string, string) {}
 func (dc DummyCollector) RemoveMetrics(ingresses, endpoints []string) {}
 
 // Start ...
-func (dc DummyCollector) Start() {}
+func (dc DummyCollector) Start(admissionStatus string) {}
 
 // Stop ...
-func (dc DummyCollector) Stop() {}
+func (dc DummyCollector) Stop(admissionStatus string) {}
 
 // SetSSLExpireTime ...
 func (dc DummyCollector) SetSSLExpireTime([]*ingress.Server) {}

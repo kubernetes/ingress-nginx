@@ -51,8 +51,8 @@ type Collector interface {
 	// SetHosts sets the hostnames that are being served by the ingress controller
 	SetHosts(sets.String)
 
-	Start()
-	Stop()
+	Start(string)
+	Stop(string)
 }
 
 type collector struct {
@@ -133,10 +133,12 @@ func (c *collector) RemoveMetrics(ingresses, hosts []string) {
 	c.ingressController.RemoveMetrics(hosts, c.registry)
 }
 
-func (c *collector) Start() {
+func (c *collector) Start(admissionStatus string) {
 	c.registry.MustRegister(c.nginxStatus)
 	c.registry.MustRegister(c.nginxProcess)
-	c.registry.MustRegister(c.admissionController)
+	if admissionStatus != "" {
+		c.registry.MustRegister(c.admissionController)
+	}
 	c.registry.MustRegister(c.ingressController)
 	c.registry.MustRegister(c.socket)
 
@@ -150,10 +152,12 @@ func (c *collector) Start() {
 	go c.socket.Start()
 }
 
-func (c *collector) Stop() {
+func (c *collector) Stop(admissionStatus string) {
 	c.registry.Unregister(c.nginxStatus)
 	c.registry.Unregister(c.nginxProcess)
-	c.registry.Unregister(c.admissionController)
+	if admissionStatus != "" {
+		c.registry.Unregister(c.admissionController)
+	}
 	c.registry.Unregister(c.ingressController)
 	c.registry.Unregister(c.socket)
 
