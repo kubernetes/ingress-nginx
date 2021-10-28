@@ -138,6 +138,8 @@ func main() {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}
 	}
+	// Pass the ValidationWebhook status to determine if we need to start the collector
+	// for the admissionWebhook
 	mc.Start(conf.ValidationWebhook)
 
 	if conf.EnableProfiling {

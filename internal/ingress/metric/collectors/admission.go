@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2021 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -123,6 +123,7 @@ func (am AdmissionCollector) Collect(ch chan<- prometheus.Metric) {
 	am.admissionTime.Collect(ch)
 }
 
+// ByteFormat formats humanReadable bytes
 func ByteFormat(bytes int64) string {
 	const unit = 1000
 	if bytes < unit {
@@ -137,6 +138,7 @@ func ByteFormat(bytes int64) string {
 		float64(bytes)/float64(div), "kMGTPE"[exp])
 }
 
+// SetAdmissionMetrics sets the values for AdmissionMetrics that can be called externally
 func (am *AdmissionCollector) SetAdmissionMetrics(testedIngressLength float64, testedIngressTime float64, renderingIngressLength float64, renderingIngressTime float64, testedConfigurationSize float64, admissionTime float64) {
 	am.testedIngressLength.Set(testedIngressLength)
 	am.testedIngressTime.Set(testedIngressTime)
