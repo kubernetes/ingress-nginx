@@ -255,6 +255,31 @@ local function route_to_alternative_balancer(balancer)
     end
   end
 
+  local target_query = traffic_shaping_policy.query
+  local query = ngx.var["arg_" .. target_query]
+  if query then
+    if traffic_shaping_policy.queryValue
+    and #traffic_shaping_policy.queryValue > 0 then
+      if traffic_shaping_policy.queryValue == query then
+       return true
+      end
+    elseif traffic_shaping_policy.queryPattern
+       and #traffic_shaping_policy.queryPattern > 0 then
+      local m, err = ngx.re.match(query, traffic_shaping_policy.queryPattern)
+      if m then
+        return true
+      elseif  err then
+          ngx.log(ngx.ERR, "error when matching canary-by-query-pattern: '",
+                 traffic_shaping_policy.queryPattern, "', error: ", err)
+          return false
+      end
+    elseif query == "always" then
+      return true
+    elseif query == "never" then
+      return false
+    end
+  end
+
   local weightTotal = 100
   if traffic_shaping_policy.weightTotal ~= nil and traffic_shaping_policy.weightTotal > 100 then
     weightTotal = traffic_shaping_policy.weightTotal

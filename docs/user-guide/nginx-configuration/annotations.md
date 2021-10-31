@@ -43,6 +43,9 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-header-pattern](#canary)|string|
+|[nginx.ingress.kubernetes.io/canary-by-query](#canary)|string|
+|[nginx.ingress.kubernetes.io/canary-by-query-value](#canary)|string|
+|[nginx.ingress.kubernetes.io/canary-by-query-pattern](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-weight](#canary)|number|
 |[nginx.ingress.kubernetes.io/canary-weight-total](#canary)|number|
@@ -145,12 +148,18 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 
 * `nginx.ingress.kubernetes.io/canary-by-cookie`: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to `always`, it will be routed to the canary. When the cookie is set to `never`, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence.
 
+* `nginx.ingress.kubernetes.io/canary-by-query`: The query parameter to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request query parameter is set to `always`, it will be routed to the canary. When the query parameter is set to `never`, it will never be routed to the canary. For any other value, the query parameter will be ignored and the request compared against the other canary rules by precedence.
+
+* `nginx.ingress.kubernetes.io/canary-by-query-value`: The query parameter value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request query parameter is set to this value, it will be routed to the canary. For any other query parameter value, the query parameter will be ignored and the request compared against the other canary rules by precedence. This annotation has to be used together with . The annotation is an extension of the `nginx.ingress.kubernetes.io/canary-by-query` to allow customizing the query parameter value instead of using hardcoded values. It doesn't have any effect if the `nginx.ingress.kubernetes.io/canary-by-query` annotation is not defined.
+
+* `nginx.ingress.kubernetes.io/canary-by-query-pattern`: This works the same way as `canary-by-query-value` except it does PCRE Regex matching. Note that when `canary-by-query-value` is set this annotation will be ignored. When the given Regex causes error during request processing, the request will be considered as not matching.
+
 * `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - <weight-total>) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of <weight-total> means implies all requests will be sent to the alternative service specified in the Ingress. `<weight-total>` defaults to 100, and can be increased via `nginx.ingress.kubernetes.io/canary-weight-total`.
 
 * `nginx.ingress.kubernetes.io/canary-weight-total`: The total weight of traffic. If unspecified, it defaults to 100.
 
 Canary rules are evaluated in order of precedence. Precedence is as follows:
-`canary-by-header -> canary-by-cookie -> canary-weight`
+`canary-by-header -> canary-by-cookie -> canary-by-query -> canary-weight`
 
 **Note** that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except `nginx.ingress.kubernetes.io/load-balance`, `nginx.ingress.kubernetes.io/upstream-hash-by`, and [annotations related to session affinity](#session-affinity). If you want to restore the original behavior of canaries when session affinity was ignored, set `nginx.ingress.kubernetes.io/affinity-canary-behavior` annotation with value `legacy` on the canary ingress definition.
 

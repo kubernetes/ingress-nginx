@@ -260,7 +260,15 @@ func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
 	if tsp1.Cookie != tsp2.Cookie {
 		return false
 	}
-
+	if tsp1.Query != tsp2.Query {
+		return false
+	}
+	if tsp1.QueryValue != tsp2.QueryValue {
+		return false
+	}
+	if tsp1.QueryPattern != tsp2.QueryPattern {
+		return false
+	}
 	return true
 }
 

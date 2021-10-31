@@ -125,6 +125,12 @@ type TrafficShapingPolicy struct {
 	HeaderPattern string `json:"headerPattern"`
 	// Cookie on which to redirect requests to this backend
 	Cookie string `json:"cookie"`
+	// Query on which to redirect requests to this backend
+	Query string `json:"query"`
+	// QueryValue on which to redirect requests to this backend
+	QueryValue string `json:"queryValue"`
+	// QueryPattern on which to redirect requests to this backend
+	QueryPattern string `json:"queryPattern"`
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash

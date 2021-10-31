@@ -56,7 +56,9 @@ local function reset_backends()
         weight = 0,
         header = "",
         headerValue = "",
-        cookie = ""
+        cookie = "",
+        query = "",
+        queryValue = "",
       },
     },
     {
@@ -122,7 +124,9 @@ describe("Balancer", function()
           weight = 0,
           header = "",
           headerValue = "",
-          cookie = ""
+          cookie = "",
+          query = "",
+          queryValue = "",
         },
       }
       local canary_backend = {
@@ -133,7 +137,9 @@ describe("Balancer", function()
           weight = 5,
           header = "",
           headerValue = "",
-          cookie = ""
+          cookie = "",
+          query = "",
+          queryValue = "",
         },
       }
 
@@ -339,7 +345,85 @@ describe("Balancer", function()
         end)
       end)
 
+    describe("canary by query", function()
+      it("returns correct result for given querys", function()
+        local test_patterns = {
+          -- with no query value setting
+          {
+            case_title = "no custom query value and query value is 'always'",
+            query_name = "canaryQuery",
+            query_value = "",
+            request_query_name = "canaryQuery",
+            request_query_value = "always",
+            expected_result = true,
+          },
+          {
+            case_title = "no custom query value and query value is 'never'",
+            query_name = "canaryQuery",
+            query_value = "",
+            request_query_name = "canaryQuery",
+            request_query_value = "never",
+            expected_result = false,
+          },
+          {
+            case_title = "no custom query value and query value is undefined",
+            query_name = "canaryQuery",
+            query_value = "",
+            request_query_name = "canaryQuery",
+            request_query_value = "foo",
+            expected_result = false,
+          },
+          {
+            case_title = "no custom query value and query name is undefined",
+            query_name = "canaryQuery",
+            query_value = "",
+            request_query_name = "foo",
+            request_query_value = "always",
+            expected_result = false,
+          },
+          -- with query value setting
+          {
+            case_title = "custom query value is set and query value is 'always'",
+            query_name = "canaryQuery",
+            query_value = "foo",
+            request_query_name = "canaryQuery",
+            request_query_value = "always",
+            expected_result = false,
+          },
+          {
+            case_title = "custom query value is set and query value match custom query value",
+            query_name = "canaryQuery",
+            query_value = "foo",
+            request_query_name = "canaryQuery",
+            request_query_value = "foo",
+            expected_result = true,
+          },
+          {
+            case_title = "custom query value is set and query name is undefined",
+            query_name = "canaryQuery",
+            query_value = "foo",
+            request_query_name = "bar",
+            request_query_value = "foo",
+            expected_result = false
+          },
+        }
+
+        for _, test_pattern in pairs(test_patterns) do
+          mock_ngx({ var = {
+            ["arg_" .. test_pattern.request_query_name] = test_pattern.request_query_value,
+            request_uri = "/"
+          }})
+          backend.trafficShapingPolicy.query = test_pattern.query_name
+          backend.trafficShapingPolicy.queryValue = test_pattern.query_value
+          balancer.sync_backend(backend)
+          assert.message("\nTest data pattern: " .. test_pattern.case_title)
+            .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_primaryBalancer))
+          reset_ngx()
+        end
+      end)
     end)
+
+  end)
 
     -- Affinitized request prefers backend it is affinitized to.
     describe("affinitized", function()
@@ -518,7 +602,9 @@ describe("Balancer", function()
             weight = 0,
             header = "",
             headerValue = "",
-            cookie = ""
+            cookie = "",
+            query = "",
+            queryValue = "",
           },
         }
       }

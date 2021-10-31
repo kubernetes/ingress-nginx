@@ -36,6 +36,9 @@ type Config struct {
 	Header        string
 	HeaderValue   string
 	HeaderPattern string
+	Query         string
+	QueryValue    string
+	QueryPattern  string
 	Cookie        string
 }
 
@@ -85,8 +88,23 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.Cookie = ""
 	}
 
+	config.Query, err = parser.GetStringAnnotation("canary-by-query", ing)
+	if err != nil {
+		config.Query = ""
+	}
+
+	config.QueryValue, err = parser.GetStringAnnotation("canary-by-query-value", ing)
+	if err != nil {
+		config.QueryValue = ""
+	}
+
+	config.QueryPattern, err = parser.GetStringAnnotation("canary-by-query-pattern", ing)
+	if err != nil {
+		config.QueryPattern = ""
+	}
+
 	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0 ||
-		len(config.HeaderPattern) > 0) {
+		len(config.HeaderPattern) > 0 || len(config.Query) > 0 || len(config.QueryValue) > 0 || len(config.QueryPattern) > 0) {
 		return nil, errors.NewInvalidAnnotationConfiguration("canary", "configured but not enabled")
 	}
 
