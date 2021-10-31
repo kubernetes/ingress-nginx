@@ -653,7 +653,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				})
 
 			canaryAnnotations := map[string]string{
-				"nginx.ingress.kubernetes.io/canary":           "true",
+				"nginx.ingress.kubernetes.io/canary":          "true",
 				"nginx.ingress.kubernetes.io/canary-by-query": "CanaryByQuery",
 			}
 
@@ -708,7 +708,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				})
 
 			canaryAnnotations := map[string]string{
-				"nginx.ingress.kubernetes.io/canary":                 "true",
+				"nginx.ingress.kubernetes.io/canary":                "true",
 				"nginx.ingress.kubernetes.io/canary-by-query":       "CanaryByQuery",
 				"nginx.ingress.kubernetes.io/canary-by-query-value": "DoCanary",
 			}
@@ -771,7 +771,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				})
 
 			canaryAnnotations := map[string]string{
-				"nginx.ingress.kubernetes.io/canary":                   "true",
+				"nginx.ingress.kubernetes.io/canary":                  "true",
 				"nginx.ingress.kubernetes.io/canary-by-query":         "CanaryByQuery",
 				"nginx.ingress.kubernetes.io/canary-by-query-pattern": "^Do[A-Z][a-z]+y$",
 			}
@@ -870,7 +870,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 	})
 
-	ginkgo.Context("when canaried by header with value and cookie", func() {
+	ginkgo.Context("when canaried by query with value and weight", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
 			host := "foo"
 			annotations := map[string]string{}
@@ -885,10 +885,10 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				})
 
 			canaryAnnotations := map[string]string{
-				"nginx.ingress.kubernetes.io/canary":                 "true",
-				"nginx.ingress.kubernetes.io/canary-by-header":       "CanaryByHeader",
-				"nginx.ingress.kubernetes.io/canary-by-header-value": "DoCanary",
-				"nginx.ingress.kubernetes.io/canary-by-cookie":       "CanaryByCookie",
+				"nginx.ingress.kubernetes.io/canary":                "true",
+				"nginx.ingress.kubernetes.io/canary-by-query":       "CanaryByQuery",
+				"nginx.ingress.kubernetes.io/canary-by-query-value": "DoCanary",
+				"nginx.ingress.kubernetes.io/canary-weight":         "100",
 			}
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
@@ -897,12 +897,11 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			ginkgo.By("routing requests to the canary upstream when header value does not match and cookie is set to 'always'")
+			ginkgo.By("routing requests to the canary upstream when query value does not match and weight is set to '100'")
 			f.HTTPTestClient().
 				GET("/").
 				WithHeader("Host", host).
-				WithHeader("CanaryByHeader", "otherheadervalue").
-				WithCookie("CanaryByCookie", "always").
+				WithQuery("CanaryByQuery", "otherqueryvalue").
 				Expect().
 				Status(http.StatusOK).
 				Body().Contains(canaryService)
