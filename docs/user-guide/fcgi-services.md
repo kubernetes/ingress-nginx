@@ -74,9 +74,13 @@ spec:
   - host: app.example.com
     http:
       paths:
-      - backend:
-          serviceName: example-service
-          servicePort: fastcgi
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: example-service
+            port:
+              name: fastcgi
 ```
 
 ## FastCGI Ingress Annotations

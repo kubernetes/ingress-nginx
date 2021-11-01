@@ -64,7 +64,15 @@ metadata:
   name: nginxhello-ingress
   namespace: default
 spec:
-  backend:
-    serviceName: nginxhello
-    servicePort: 80
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: nginxhello
+              port:
+                number: 80
 

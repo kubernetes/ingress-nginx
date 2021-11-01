@@ -115,14 +115,20 @@ spec:
   - host: foo.bar.com
     http:
       paths:
-      - backend:
-          serviceName: http-svc
-          servicePort: 80
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: http-svc
+            port:
+              number: 80
   - host: bar.baz.com
     http:
       paths:
-      - backend:
-          serviceName: nginx
-          servicePort: 80
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service
+            name: nginx
+            port:
+              number: 80
