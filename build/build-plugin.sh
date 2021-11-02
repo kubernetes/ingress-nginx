@@ -57,7 +57,7 @@ function build_for_arch(){
     -trimpath -ldflags="-buildid= -w -s" \
       -X ${PKG}/version.RELEASE=${TAG} \
       -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
-      -X ${PKG}/version.REPO=${REPO_INFO}" \
+      -X ${PKG}/version.REPO=${REPO_INFO} \
     -o "${release}/kubectl-ingress_nginx${extension}" "${PKG}/cmd/plugin"
 
     cp LICENSE ${release}
