@@ -11,10 +11,13 @@
 <span class=go>  - host: rewrite.bar.com</span>
 <span class=go>    http:</span>
 <span class=go>      paths:</span>
-<span class=go>      - backend:</span>
-<span class=go>          serviceName: http-svc</span>
-<span class=go>          servicePort: 80</span>
-<span class=go>        path: /something(/|$)(.*)</span>
+<span class=go>      - path: /something(/|$)(.*)</span>
+<span class=go>        pathType: Prefix</span>
+<span class=go>        backend:</span>
+<span class=go>          service:</span>
+<span class=go>            name: http-svc</span>
+<span class=go>            port: </span>
+<span class=go>              number: 80</span>
 <span class=go>&#39; | kubectl create -f -</span>
 </code></pre></div> <p>In this ingress definition, any characters captured by <code>(.*)</code> will be assigned to the placeholder <code>$2</code>, which is then used as a parameter in the <code>rewrite-target</code> annotation.</p> <p>For example, the ingress definition above will result in the following rewrites:</p> <ul> <li><code>rewrite.bar.com/something</code> rewrites to <code>rewrite.bar.com/</code></li> <li><code>rewrite.bar.com/something/</code> rewrites to <code>rewrite.bar.com/</code></li> <li><code>rewrite.bar.com/something/new</code> rewrites to <code>rewrite.bar.com/new</code></li> </ul> <h3 id=app-root>App Root<a class=headerlink href=#app-root title="Permanent link"> ¶</a></h3> <p>Create an Ingress rule with an app-root annotation: <div class=highlight><pre><span></span><code>$ echo &quot;
 apiVersion: networking.k8s.io/v1
@@ -29,10 +32,13 @@ spec:
   - host: approot.bar.com
     http:
       paths:
-      - backend:
-          serviceName: http-svc
-          servicePort: 80
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: http-svc
+            port: 
+              number: 80
 &quot; | kubectl create -f -
 </code></pre></div></p> <p>Check the rewrite is working</p> <div class=highlight><pre><span></span><code>$ curl -I -k http://approot.bar.com/
 HTTP/1.1 302 Moved Temporarily

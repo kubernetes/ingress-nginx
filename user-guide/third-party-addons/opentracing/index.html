@@ -115,10 +115,13 @@ $ echo &#39;
     - host: example.com
       http:
         paths:
-        - backend:
-            serviceName: echoheaders-x
-            servicePort: 80
-          path: /echo
+        - path: /echo
+          pathType: Prefix
+          backend:
+            service:
+              name: echoheaders-x
+              port:
+                number: 80
   &#39; | kubectl apply -f -
 </code></pre></div></p> </li> <li> <p>Enable OpenTracing and set the jaeger-collector-host: <div class=highlight><pre><span></span><code>$ echo &#39;
   apiVersion: v1

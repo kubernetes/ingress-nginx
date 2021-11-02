@@ -14,10 +14,13 @@
       <span class=nt>http</span><span class=p>:</span>
         <span class=nt>paths</span><span class=p>:</span>
         <span class="p p-Indicator">-</span> <span class=nt>path</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">/</span>
+          <span class=nt>pathType</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Prefix</span>
           <span class=nt>backend</span><span class=p>:</span>
             <span class=c1># This assumes http-svc exists and routes to healthy endpoints</span>
-            <span class=nt>serviceName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">http-svc</span>
-            <span class=nt>servicePort</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+            <span class=nt>service</span><span class=p>:</span>
+              <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">http-svc</span>
+              <span class=nt>port</span><span class=p>:</span> 
+                <span class=nt>number</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </code></pre></div> <p>The following command instructs the controller to terminate traffic using the provided TLS cert, and forward un-encrypted HTTP traffic to the test HTTP service.</p> <div class=highlight><pre><span></span><code><span class=go>kubectl apply -f ingress.yaml</span>
 </code></pre></div> <h2 id=validation>Validation<a class=headerlink href=#validation title="Permanent link"> ¶</a></h2> <p>You can confirm that the Ingress works.</p> <div class=highlight><pre><span></span><code><span class=gp>$</span> kubectl describe ing nginx-test
 <span class=go>Name:           nginx-test</span>

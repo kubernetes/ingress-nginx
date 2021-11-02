@@ -10,9 +10,12 @@
     <span class=nt>http</span><span class=p>:</span>
       <span class=nt>paths</span><span class=p>:</span>
       <span class="p p-Indicator">-</span> <span class=nt>path</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/.*</span>
+        <span class=nt>pathType</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Prefix</span>
         <span class=nt>backend</span><span class=p>:</span>
-          <span class=nt>serviceName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-          <span class=nt>servicePort</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+          <span class=nt>service</span><span class=p>:</span>
+            <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+            <span class=nt>port</span><span class=p>:</span>
+              <span class=nt>number</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </code></pre></div> <p>The preceding ingress definition would translate to the following location block within the NGINX configuration for the <code>test.com</code> server:</p> <div class=highlight><pre><span></span><code>location ~* &quot;^/foo/.*&quot; {
   ...
 }
@@ -26,13 +29,19 @@
     <span class=nt>http</span><span class=p>:</span>
       <span class=nt>paths</span><span class=p>:</span>
       <span class="p p-Indicator">-</span> <span class=nt>path</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar</span>
+        <span class=nt>pathType</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Prefix</span>
         <span class=nt>backend</span><span class=p>:</span>
-          <span class=nt>serviceName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">service1</span>
-          <span class=nt>servicePort</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+          <span class=nt>service</span><span class=p>:</span>
+            <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">service1</span>
+            <span class=nt>port</span><span class=p>:</span>
+              <span class=nt>number</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
       <span class="p p-Indicator">-</span> <span class=nt>path</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/</span>
+        <span class=nt>pathType</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Prefix</span>
         <span class=nt>backend</span><span class=p>:</span>
-          <span class=nt>serviceName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">service2</span>
-          <span class=nt>servicePort</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+          <span class=nt>service</span><span class=p>:</span>
+            <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">service2</span>
+            <span class=nt>port</span><span class=p>:</span>
+              <span class=nt>number</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </code></pre></div> <div class=highlight><pre><span></span><code><span class=nt>apiVersion</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1</span>
 <span class=nt>kind</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class=nt>metadata</span><span class=p>:</span>
@@ -45,9 +54,12 @@
     <span class=nt>http</span><span class=p>:</span>
       <span class=nt>paths</span><span class=p>:</span>
       <span class="p p-Indicator">-</span> <span class=nt>path</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/(.+)</span>
+        <span class=nt>pathType</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Prefix</span>
         <span class=nt>backend</span><span class=p>:</span>
-          <span class=nt>serviceName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">service3</span>
-          <span class=nt>servicePort</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+          <span class=nt>service</span><span class=p>:</span>
+            <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">service3</span>
+            <span class=nt>port</span><span class=p>:</span> 
+              <span class=nt>number</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </code></pre></div> <p>The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the <code>test.com</code> server:</p> <div class=highlight><pre><span></span><code>location ~* ^/foo/bar/.+ {
   ...
 }
@@ -71,13 +83,19 @@ location ~* &quot;^/foo/bar&quot; {
     <span class=nt>http</span><span class=p>:</span>
       <span class=nt>paths</span><span class=p>:</span>
       <span class="p p-Indicator">-</span> <span class=nt>path</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/bar</span>
+        <span class=nt>pathType</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Prefix</span>
         <span class=nt>backend</span><span class=p>:</span>
-          <span class=nt>serviceName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-          <span class=nt>servicePort</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+          <span class=nt>service</span><span class=p>:</span>
+            <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+            <span class=nt>port</span><span class=p>:</span> 
+              <span class=nt>number</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
       <span class="p p-Indicator">-</span> <span class=nt>path</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/[A-Z0-9]{3}</span>
+        <span class=nt>pathType</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Prefix</span>
         <span class=nt>backend</span><span class=p>:</span>
-          <span class=nt>serviceName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-          <span class=nt>servicePort</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+          <span class=nt>service</span><span class=p>:</span>
+            <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+            <span class=nt>port</span><span class=p>:</span> 
+              <span class=nt>number</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </code></pre></div> <p>The ingress controller would define the following location blocks (in this order) within the NGINX template for the <code>test.com</code> server:</p> <div class=highlight><pre><span></span><code>location ~* &quot;^/foo/bar/[A-Z0-9]{3}&quot; {
   ...
 }
