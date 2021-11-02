@@ -413,6 +413,9 @@ type Configuration struct {
 	// Brotli Compression Level that will be used
 	BrotliLevel int `json:"brotli-level,omitempty"`
 
+	// Minimum length of responses, in bytes, that will be eligible for brotli compression
+	BrotliMinLength int `json:"brotli-min-length,omitempty"`
+
 	// MIME Types that will be compressed on-the-fly using Brotli module
 	BrotliTypes string `json:"brotli-types,omitempty"`
 
@@ -778,6 +781,7 @@ func NewDefault() Configuration {
 		BlockUserAgents:                  defBlockEntity,
 		BlockReferers:                    defBlockEntity,
 		BrotliLevel:                      4,
+		BrotliMinLength:                  20,
 		BrotliTypes:                      brotliTypes,
 		ClientHeaderBufferSize:           "1k",
 		ClientHeaderTimeout:              60,
