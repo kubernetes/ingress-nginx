@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+Copyright 2021 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ var _ = framework.IngressNginxDescribe("brotli", func() {
 			ContentEncoding("br")
 
 		f.HTTPTestClient().
-			GET(fmt.Sprintf("/bytes/%d", brotliMinLength - 1)).
+			GET(fmt.Sprintf("/bytes/%d", brotliMinLength-1)).
 			WithHeader("Host", host).
 			WithHeader("Accept-Encoding", "br").
 			Expect().
@@ -72,4 +72,3 @@ var _ = framework.IngressNginxDescribe("brotli", func() {
 			ContentEncoding()
 	})
 })
-
