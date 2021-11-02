@@ -241,7 +241,8 @@ type NGINXController struct {
 
 	store store.Storer
 
-	metricCollector metric.Collector
+	metricCollector    metric.Collector
+	admissionCollector metric.Collector
 
 	validationWebhookServer *http.Server
 
