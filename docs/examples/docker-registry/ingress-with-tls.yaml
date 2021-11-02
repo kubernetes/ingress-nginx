@@ -17,7 +17,10 @@ spec:
   - host: registry.<your domain>
     http:
       paths:
-      - backend:
-          serviceName: docker-registry
-          servicePort: 5000
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: docker-registry
+            port:
+              number: 5000

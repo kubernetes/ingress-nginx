@@ -27,10 +27,13 @@ spec:
       http:
         paths:
         - path: /
+          pathType: Prefix
           backend:
             # This assumes http-svc exists and routes to healthy endpoints
-            serviceName: http-svc
-            servicePort: 80
+            service:
+              name: http-svc
+              port: 
+                number: 80
 ```
 
 The following command instructs the controller to terminate traffic using the provided
