@@ -215,6 +215,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 // CheckIngress returns an error in case the provided ingress, when added
 // to the current configuration, generates an invalid configuration
 func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
+	startCheck := time.Now().UnixNano() / 1000000
+
 	if ing == nil {
 		// no ingress to add, no state change
 		return nil
@@ -233,7 +235,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if n.cfg.DisableCatchAll && ing.Spec.DefaultBackend != nil {
 		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.backend' or set DisableCatchAll flag to false.")
 	}
-
+	startRender := time.Now().UnixNano() / 1000000
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
 
@@ -267,7 +269,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		Ingress:           *ing,
 		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
 	})
-
+	startTest := time.Now().UnixNano() / 1000000
 	_, servers, pcfg := n.getConfiguration(ings)
 
 	err := checkOverlap(ing, allIngresses, servers)
@@ -275,9 +277,10 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
 	}
-
+	testedSize := len(ings)
 	if n.cfg.DisableFullValidationTest {
 		_, _, pcfg = n.getConfiguration(ings[len(ings)-1:])
+		testedSize = 1
 	}
 
 	content, err := n.generateTemplate(cfg, *pcfg)
@@ -291,8 +294,16 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
 	}
-
 	n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
+	endCheck := time.Now().UnixNano() / 1000000
+	n.metricCollector.SetAdmissionMetrics(
+		float64(testedSize),
+		float64(endCheck-startTest)/1000,
+		float64(len(ings)),
+		float64(startTest-startRender)/1000,
+		float64(len(content)),
+		float64(endCheck-startCheck)/1000,
+	)
 	return nil
 }
 

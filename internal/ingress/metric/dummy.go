@@ -32,6 +32,9 @@ type DummyCollector struct{}
 // ConfigSuccess ...
 func (dc DummyCollector) ConfigSuccess(uint64, bool) {}
 
+// SetAdmissionMetrics ...
+func (dc DummyCollector) SetAdmissionMetrics(float64, float64, float64, float64, float64, float64) {}
+
 // IncReloadCount ...
 func (dc DummyCollector) IncReloadCount() {}
 
@@ -48,10 +51,10 @@ func (dc DummyCollector) IncCheckErrorCount(string, string) {}
 func (dc DummyCollector) RemoveMetrics(ingresses, endpoints []string) {}
 
 // Start ...
-func (dc DummyCollector) Start() {}
+func (dc DummyCollector) Start(admissionStatus string) {}
 
 // Stop ...
-func (dc DummyCollector) Stop() {}
+func (dc DummyCollector) Stop(admissionStatus string) {}
 
 // SetSSLExpireTime ...
 func (dc DummyCollector) SetSSLExpireTime([]*ingress.Server) {}
