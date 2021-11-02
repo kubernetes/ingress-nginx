@@ -189,10 +189,13 @@ In the Zipkin interface we can see the details:
         - host: example.com
           http:
             paths:
-            - backend:
-                serviceName: echoheaders-x
-                servicePort: 80
-              path: /echo
+            - path: /echo
+              pathType: Prefix
+              backend:
+                service:
+                  name: echoheaders-x
+                  port:
+                    number: 80
       ' | kubectl apply -f -
     ```
 
