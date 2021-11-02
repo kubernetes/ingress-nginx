@@ -124,6 +124,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{origin})
 	})
 
 	ginkgo.It("should allow headers for cors", func() {
