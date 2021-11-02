@@ -18,8 +18,10 @@ package cors
 
 import (
 	"regexp"
+	"strings"
 
 	networking "k8s.io/api/networking/v1"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -36,7 +38,7 @@ var (
 	// Regex are defined here to prevent information leak, if user tries to set anything not valid
 	// that could cause the Response to contain some internal value/variable (like returning $pid, $upstream_addr, etc)
 	// Origin must contain a http/s Origin (including or not the port) or the value '*'
-	corsOriginRegex = regexp.MustCompile(`^(https?://[A-Za-z0-9\-\.]*(:[0-9]+)?|\*)?$`)
+	corsOriginRegex = regexp.MustCompile(`^(https?://(\*\.)?[A-Za-z0-9\-\.]*(:[0-9]+)?|\*)?$`)
 	// Method must contain valid methods list (PUT, GET, POST, BLA)
 	// May contain or not spaces between each verb
 	corsMethodsRegex = regexp.MustCompile(`^([A-Za-z]+,?\s?)+$`)
@@ -54,13 +56,13 @@ type cors struct {
 
 // Config contains the Cors configuration to be used in the Ingress
 type Config struct {
-	CorsEnabled          bool   `json:"corsEnabled"`
-	CorsAllowOrigin      string `json:"corsAllowOrigin"`
-	CorsAllowMethods     string `json:"corsAllowMethods"`
-	CorsAllowHeaders     string `json:"corsAllowHeaders"`
-	CorsAllowCredentials bool   `json:"corsAllowCredentials"`
-	CorsExposeHeaders    string `json:"corsExposeHeaders"`
-	CorsMaxAge           int    `json:"corsMaxAge"`
+	CorsEnabled          bool     `json:"corsEnabled"`
+	CorsAllowOrigin      []string `json:"corsAllowOrigin"`
+	CorsAllowMethods     string   `json:"corsAllowMethods"`
+	CorsAllowHeaders     string   `json:"corsAllowHeaders"`
+	CorsAllowCredentials bool     `json:"corsAllowCredentials"`
+	CorsExposeHeaders    string   `json:"corsExposeHeaders"`
+	CorsMaxAge           int      `json:"corsMaxAge"`
 }
 
 // NewParser creates a new CORS annotation parser
@@ -91,11 +93,18 @@ func (c1 *Config) Equal(c2 *Config) bool {
 	if c1.CorsAllowMethods != c2.CorsAllowMethods {
 		return false
 	}
-	if c1.CorsAllowOrigin != c2.CorsAllowOrigin {
-		return false
-	}
 	if c1.CorsEnabled != c2.CorsEnabled {
 		return false
+	}
+
+	if len(c1.CorsAllowOrigin) != len(c2.CorsAllowOrigin) {
+		return false
+	}
+
+	for i, v := range c1.CorsAllowOrigin {
+		if v != c2.CorsAllowOrigin[i] {
+			return false
+		}
 	}
 
 	return true
@@ -112,9 +121,23 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.CorsEnabled = false
 	}
 
-	config.CorsAllowOrigin, err = parser.GetStringAnnotation("cors-allow-origin", ing)
-	if err != nil || !corsOriginRegex.MatchString(config.CorsAllowOrigin) {
-		config.CorsAllowOrigin = "*"
+	unparsedOrigins, err := parser.GetStringAnnotation("cors-allow-origin", ing)
+	if err == nil {
+		config.CorsAllowOrigin = strings.Split(unparsedOrigins, ",")
+		for i, origin := range config.CorsAllowOrigin {
+			origin = strings.TrimSpace(origin)
+			if origin == "*" {
+				config.CorsAllowOrigin = []string{"*"}
+				break
+			}
+			if !corsOriginRegex.MatchString(origin) {
+				klog.Errorf("Error parsing cors-allow-origin parameters. Supplied incorrect origin: %s. Skipping.", origin)
+				config.CorsAllowOrigin = append(config.CorsAllowOrigin[:i], config.CorsAllowOrigin[i+1:]...)
+			}
+			klog.Infof("Current config.corsAllowOrigin %v", config.CorsAllowOrigin)
+		}
+	} else {
+		config.CorsAllowOrigin = []string{"*"}
 	}
 
 	config.CorsAllowHeaders, err = parser.GetStringAnnotation("cors-allow-headers", ing)
@@ -143,5 +166,4 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	return config, nil
-
 }

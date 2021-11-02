@@ -276,6 +276,7 @@ var (
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
 		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
 		"buildServerName":                    buildServerName,
+		"buildCorsOriginRegex":               buildCorsOriginRegex,
 	}
 )
 
@@ -1675,4 +1676,30 @@ func convertGoSliceIntoLuaTable(goSliceInterface interface{}, emptyStringAsNil b
 	default:
 		return "", fmt.Errorf("could not process type: %s", kind)
 	}
+}
+
+func buildOriginRegex(origin string) string {
+	origin = regexp.QuoteMeta(origin)
+	origin = strings.Replace(origin, "\\*", "[A-Za-z0-9]+", 1)
+	return fmt.Sprintf("(%s)", origin)
+}
+
+func buildCorsOriginRegex(corsOrigins []string) string {
+	if len(corsOrigins) == 1 && corsOrigins[0] == "*" {
+		return "set $http_origin *;\nset $cors 'true';"
+	}
+
+	var originsRegex string = "if ($http_origin ~* ("
+	for i, origin := range corsOrigins {
+		originTrimmed := strings.TrimSpace(origin)
+		if len(originTrimmed) > 0 {
+			builtOrigin := buildOriginRegex(originTrimmed)
+			originsRegex += builtOrigin
+			if i != len(corsOrigins)-1 {
+				originsRegex = originsRegex + "|"
+			}
+		}
+	}
+	originsRegex = originsRegex + ")$ ) { set $cors 'true'; }"
+	return originsRegex
 }
