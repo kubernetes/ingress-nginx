@@ -10,10 +10,10 @@ spec:
   - host: external-auth-01.sample.com
     http:
       paths:
-      - backend:
+      - path: /
+        pathType: Prefix
+        backend:
           service:
             name: http-svc
             port:
               number: 80
-        pathType: Prefix
-        path: /

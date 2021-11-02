@@ -112,12 +112,13 @@ echo "
     - host: foo.bar
       http:
         paths:
-        - backend:
+        - path: /
+          pathType: Prefix
+          backend:
             service:
               name: http-svc
-              port:
+              port: 
                 number: 80
-          path: /
 " | kubectl apply -f -
 
 ## make a request

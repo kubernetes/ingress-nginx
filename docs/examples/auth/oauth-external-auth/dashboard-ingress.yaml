@@ -12,14 +12,13 @@ spec:
   - host: __INGRESS_HOST__
     http:
       paths:
-      - backend:
+      - path: /
+        pathType: Prefix
+        backend:
           service:
             name: kubernetes-dashboard
             port:
               number: 80
-        pathType: Prefix
-        path: /
-
 ---
 
 apiVersion: networking.k8s.io/v1
@@ -33,13 +32,13 @@ spec:
   - host: __INGRESS_HOST__
     http:
       paths:
-      - backend:
+      - path: /oauth2
+        pathType: Prefix
+        backend:
           service:
             name: oauth2-proxy
             port:
               number: 4180
-        pathType: Prefix
-        path: /oauth2
   tls:
   - hosts:
     - __INGRESS_HOST__

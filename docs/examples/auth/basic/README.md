@@ -48,12 +48,12 @@ spec:
     http:
       paths:
       - path: /
-        backend:
-          service:
-            name: http-svc
-            port:
-              number: 80
         pathType: Prefix
+        backend:
+          service: 
+            name: http-svc
+            port: 
+              number: 80
 " | kubectl create -f -
 ```
 

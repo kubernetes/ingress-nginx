@@ -66,13 +66,13 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: nginxhello.sample.com
+  - host: foo.bar.com
     http:
       paths:
-      - backend:
-          service:
-            name: nginxhello
-            port:
-              number: 80
-        pathType: Prefix
-        path: /
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: nginxhello
+              port:
+                number: 80

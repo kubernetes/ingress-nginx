@@ -47,13 +47,13 @@ spec:
   - host: rewrite.bar.com
     http:
       paths:
-      - backend:
+      - path: /something(/|$)(.*)
+        pathType: Prefix
+        backend:
           service:
             name: http-svc
-            port:
+            port: 
               number: 80
-        pathType: Prefix
-        path: /something(/|$)(.*)
 ' | kubectl create -f -
 ```
 
@@ -83,13 +83,13 @@ spec:
   - host: approot.bar.com
     http:
       paths:
-      - backend:
+      - path: /
+        pathType: Prefix
+        backend:
           service:
             name: http-svc
-            port:
+            port: 
               number: 80
-        pathType: Prefix
-        path: /
 " | kubectl create -f -
 ```
 

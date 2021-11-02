@@ -25,6 +25,9 @@ blocks.  If they're super-long, please use the details tag like
 
 <!-- Does it require a particular kubernetes version? -->
 
-<!-- If this is actually about documentation, add `/kind documentation` below -->
+<!-- If this is actually about documentation, uncomment the following block -->
 
-/kind feature
+<!-- 
+/kind documentation
+/remove-kind feature
+-->

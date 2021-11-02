@@ -57,13 +57,13 @@ spec:
   - host: public-demo-echo-service.kube.local
     http:
       paths:
-      - backend:
+      - path: /
+        pathType: Prefix
+        backend:
           service:
             name: demo-echo-service
             port:
               number: 80
-        pathType: Prefix
-        path: /
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -79,10 +79,10 @@ spec:
   - host: secure-demo-echo-service.kube.local
     http:
       paths:
-      - backend:
+      - path: /
+        pathType: Prefix
+        backend:
           service:
             name: demo-echo-service
             port:
               number: 80
-        pathType: Prefix
-        path: /

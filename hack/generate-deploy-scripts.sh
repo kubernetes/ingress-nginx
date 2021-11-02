@@ -89,11 +89,12 @@ controller:
     externalTrafficPolicy: Local
 
     annotations:
-      service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
-      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+      # This example is for legacy in-tree service load balancer controller for AWS NLB,
+      # that has been phased out from Kubernetes mainline.
+      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
       service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
       service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"
-      service.beta.kubernetes.io/aws-load-balancer-type: elb
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
       # Ensure the ELB idle timeout is less than nginx keep-alive timeout. By default,
       # NGINX keep-alive is set to 75s. If using WebSockets, the value will need to be
       # increased to '3600' to avoid any potential issues.

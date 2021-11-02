@@ -28,6 +28,7 @@ spec:
       http:
         paths:
         - path: /
+          pathType: Prefix
           backend:
             # This assumes http-svc exists and routes to healthy endpoints
             service:

@@ -30,13 +30,13 @@ spec:
   - host: external-auth-01.sample.com
     http:
       paths:
-      - backend:
-          service:
-            name: http-svc
-            port:
-              number: 80
+      - path: /
         pathType: Prefix
-        path: /
+        backend:
+          service: 
+            name: http-svc
+            port: 
+              number: 80
 status:
   loadBalancer:
     ingress:

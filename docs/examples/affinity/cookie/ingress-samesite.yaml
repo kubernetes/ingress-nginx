@@ -16,13 +16,13 @@ spec:
   - host: stickyingress-samesite-none.example.com
     http:
       paths:
-      - backend:
+      - path: /
+        pathType: Prefix
+        backend:
           service:
             name: http-svc
             port:
               number: 80
-        pathType: Prefix
-        path: /
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -40,10 +40,10 @@ spec:
   - host: stickyingress-samesite-strict.example.com
     http:
       paths:
-      - backend:
+      - path: /
+        pathType: Prefix
+        backend:
           service:
             name: http-svc
             port:
               number: 80
-        pathType: Prefix
-        path: /
