@@ -320,6 +320,7 @@ http {
     {{ if $cfg.EnableBrotli }}
     brotli on;
     brotli_comp_level {{ $cfg.BrotliLevel }};
+    brotli_min_length {{ $cfg.BrotliMinLength }};
     brotli_types {{ $cfg.BrotliTypes }};
     {{ end }}
 
