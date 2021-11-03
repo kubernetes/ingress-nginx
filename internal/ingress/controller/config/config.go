@@ -766,6 +766,8 @@ func NewDefault() Configuration {
 		"_by_lua",
 		"location",
 		"root",
+		"proxy_pass",
+		"serviceaccount",
 		"{",
 		"}",
 		"'",
