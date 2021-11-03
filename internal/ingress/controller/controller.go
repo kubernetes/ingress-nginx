@@ -237,6 +237,8 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
 
+	arraybadWords := strings.Split(strings.TrimSpace(cfg.AnnotationValueWordBlocklist), ",")
+
 	for key, value := range ing.ObjectMeta.GetAnnotations() {
 
 		if parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
@@ -245,14 +247,9 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 			}
 		}
 		if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.AnnotationsPrefix)) {
-			for _, forbiddenvalue := range cfg.AnnotationValueWordBlocklist {
+			for _, forbiddenvalue := range arraybadWords {
 				if strings.Contains(value, forbiddenvalue) {
 					return fmt.Errorf("%s annotation contains invalid word %s", key, forbiddenvalue)
-				}
-			}
-			for _, invalidchar := range cfg.AnnotationValueCharBlocklist {
-				if strings.ContainsAny(value, invalidchar) {
-					return fmt.Errorf("%s annotation contains invalid character %s", key, invalidchar)
 				}
 			}
 		}

@@ -735,17 +735,14 @@ func hasCatchAllIngressRule(spec networkingv1.IngressSpec) bool {
 	return spec.DefaultBackend != nil
 }
 
-func checkBadAnnotationValue(annotations map[string]string, badwords, badchars []string) error {
+func checkBadAnnotationValue(annotations map[string]string, badwords string) error {
+	arraybadWords := strings.Split(strings.TrimSpace(badwords), ",")
+
 	for annotation, value := range annotations {
 		if strings.HasPrefix(annotation, fmt.Sprintf("%s/", parser.AnnotationsPrefix)) {
-			for _, forbiddenvalue := range badwords {
+			for _, forbiddenvalue := range arraybadWords {
 				if strings.Contains(value, forbiddenvalue) {
 					return fmt.Errorf("%s annotation contains invalid word %s", annotation, forbiddenvalue)
-				}
-			}
-			for _, invalidchar := range badchars {
-				if strings.ContainsAny(value, invalidchar) {
-					return fmt.Errorf("%s annotation contains invalid character %s", annotation, invalidchar)
 				}
 			}
 		}
@@ -762,8 +759,9 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 	copyIng := &networkingv1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 
-	if err := checkBadAnnotationValue(copyIng.Annotations, s.backendConfig.AnnotationValueWordBlocklist, s.backendConfig.AnnotationValueCharBlocklist); err != nil {
-		klog.Error("skipping ingress %v: %s", err)
+	klog.Errorf("Blocklist: %v", s.backendConfig.AnnotationValueWordBlocklist)
+	if err := checkBadAnnotationValue(copyIng.Annotations, s.backendConfig.AnnotationValueWordBlocklist); err != nil {
+		klog.Errorf("skipping ingress %s: %s", key, err)
 		return
 	}
 

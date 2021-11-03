@@ -40,6 +40,11 @@ var _ = framework.DescribeAnnotation("annotation-global-rate-limit", func() {
 		annotations["nginx.ingress.kubernetes.io/global-rate-limit"] = "5"
 		annotations["nginx.ingress.kubernetes.io/global-rate-limit-window"] = "2m"
 
+		// We need to allow { and } characters for this annotation to work
+		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "load_module, lua_package, _by_lua, location, root")
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
+
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		ing = f.EnsureIngress(ing)
 		namespace := strings.Replace(string(ing.UID), "-", "", -1)

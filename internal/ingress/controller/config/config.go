@@ -18,6 +18,7 @@ package config
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"k8s.io/klog/v2"
@@ -97,13 +98,10 @@ type Configuration struct {
 	// If disabled, only snippets added via ConfigMap are added to ingress.
 	AllowSnippetAnnotations bool `json:"allow-snippet-annotations"`
 
-	// AnnotationValueCharBlocklist defines characters that should not be part of an user annotation value
-	// (can be used to escape strings, for example) and that should be dropped
-	AnnotationValueCharBlocklist []string `json:"annotation-value-char-blocklist"`
-
 	// AnnotationValueWordBlocklist defines words that should not be part of an user annotation value
-	// (can be used to run arbitrary code or configs, for example) and that should be dropped
-	AnnotationValueWordBlocklist []string `json:"annotation-value-word-blocklist"`
+	// (can be used to run arbitrary code or configs, for example) and that should be dropped.
+	// This list should be separated by "," character
+	AnnotationValueWordBlocklist string `json:"annotation-value-word-blocklist"`
 
 	// Sets the name of the configmap that contains the headers to pass to the client
 	AddHeaders string `json:"add-headers,omitempty"`
@@ -762,8 +760,17 @@ func NewDefault() Configuration {
 	defNginxStatusIpv6Whitelist := make([]string, 0)
 	defResponseHeaders := make([]string, 0)
 
-	defAnnotationValueWordBlocklist := []string{"load_module", "lua_package", "_by_lua", "location", "root"}
-	defAnnotationValueCharBlocklist := []string{"{", "}", "'", "\"", "\\"}
+	defAnnotationValueWordBlocklist := []string{
+		"load_module",
+		"lua_package",
+		"_by_lua",
+		"location",
+		"root",
+		"{",
+		"}",
+		"'",
+		"\\",
+	}
 
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
@@ -775,8 +782,7 @@ func NewDefault() Configuration {
 
 		AllowSnippetAnnotations:          true,
 		AllowBackendServerHeader:         false,
-		AnnotationValueWordBlocklist:     defAnnotationValueWordBlocklist,
-		AnnotationValueCharBlocklist:     defAnnotationValueCharBlocklist,
+		AnnotationValueWordBlocklist:     strings.Join(defAnnotationValueWordBlocklist, ","),
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,

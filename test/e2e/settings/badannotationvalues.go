@@ -96,7 +96,7 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 			Status(http.StatusNotFound)
 	})
 
-	ginkgo.It("should drop an ingress if there is a custom blocklisted word in some annotation", func() {
+	ginkgo.It("should drop an ingress if there is a custom blocklist config in place and allow others to pass", func() {
 		host := "custom-forbidden-value-test"
 
 		annotations := map[string]string{
@@ -104,15 +104,28 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 			# something_forbidden`,
 		}
 
+		hostValid := "custom-allowed-value-test"
+		annotationsValid := map[string]string{
+			"nginx.ingress.kubernetes.io/configuration-snippet": `
+			# bla_by_lua`,
+		}
+
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		ingValid := framework.NewSingleIngress(hostValid, "/", hostValid, f.Namespace, framework.EchoService, 80, annotationsValid)
 		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "something_forbidden,otherthing_forbidden")
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()
 		f.EnsureIngress(ing)
+		f.EnsureIngress(ingValid)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return !strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		f.WaitForNginxServer(hostValid,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", hostValid))
 			})
 
 		f.WaitForNginxServer(host,
@@ -120,10 +133,21 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 				return !strings.Contains(server, "# something_forbidden")
 			})
 
+		f.WaitForNginxServer(hostValid,
+			func(server string) bool {
+				return strings.Contains(server, "# bla_by_lua")
+			})
+
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", hostValid).
+			Expect().
+			Status(http.StatusOK)
 	})
 })

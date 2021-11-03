@@ -272,7 +272,7 @@ func TestCheckIngress(t *testing.T) {
 			nginx.store = fakeIngressStore{
 				ingresses: []*ingress.Ingress{},
 				configuration: ngx_config.Configuration{
-					AnnotationValueWordBlocklist: []string{"invalid_directive"},
+					AnnotationValueWordBlocklist: "invalid_directive, another_directive",
 				},
 			}
 			nginx.command = testNginxTestCommand{
@@ -282,23 +282,6 @@ func TestCheckIngress(t *testing.T) {
 			ing.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/custom-headers"] = "invalid_directive"
 			if err := nginx.CheckIngress(ing); err == nil {
 				t.Errorf("with an invalid value in annotation the ingress should be rejected")
-			}
-		})
-
-		t.Run("When invalid chars are used in annotation values", func(t *testing.T) {
-			nginx.store = fakeIngressStore{
-				ingresses: []*ingress.Ingress{},
-				configuration: ngx_config.Configuration{
-					AnnotationValueCharBlocklist: []string{"{", "}"},
-				},
-			}
-			nginx.command = testNginxTestCommand{
-				t:   t,
-				err: nil,
-			}
-			ing.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/custom-headers"] = "{differentheader"
-			if err := nginx.CheckIngress(ing); err == nil {
-				t.Errorf("with an invalid chars in annotation the ingress should be rejected")
 			}
 		})
 
