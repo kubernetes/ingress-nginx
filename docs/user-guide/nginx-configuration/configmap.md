@@ -312,7 +312,7 @@ _References:_
 
 ## disable-access-log
 
-Disables the Access Log from the entire Ingress Controller. _**default:**_ '"false"'
+Disables the Access Log from the entire Ingress Controller. _**default:**_ `false`
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log](http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log)
