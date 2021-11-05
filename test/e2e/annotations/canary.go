@@ -863,7 +863,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			f.HTTPTestClient().
 				GET("/").
 				WithHeader("Host", host).
-				WithQuery("CanaryByHeader", "DoCanary").
+				WithQuery("CanaryByQuery", "DoCanary").
 				Expect().
 				Status(http.StatusOK).
 				Body().Contains(framework.EchoService).NotContains(canaryService)
