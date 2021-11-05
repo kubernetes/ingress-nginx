@@ -860,6 +860,7 @@ stream {
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
             proxy_set_header       X-Request-ID       $req_id;
+            proxy_set_header       X-Forwarded-For    $remote_addr;
             proxy_set_header       Host               $best_http_host;
 
             set $proxy_upstream_name {{ $upstreamName | quote }};
