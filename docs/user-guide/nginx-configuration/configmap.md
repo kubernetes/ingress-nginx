@@ -496,7 +496,7 @@ _**default:**_ "0.0.0.0/0"
 
 ## proxy-set-headers
 
-Sets custom headers from named configmap before sending traffic to backends. The value format is namespace/name.  See [example](https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/custom-headers)
+Sets custom headers from named configmap before sending traffic to backends. The value format is namespace/name.  See [example](https://kubernetes.github.io/ingress-nginx/examples/customization/custom-headers/)
 
 ## server-name-hash-max-size
 
