@@ -38,12 +38,12 @@
 <span class=nt>kind</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class=nt>metadata</span><span class=p>:</span>
   <span class=nt>annotations</span><span class=p>:</span>
-    <span class=nt>kubernetes.io/ingress.class</span><span class=p>:</span> <span class=s>&quot;nginx&quot;</span>
     <span class=nt>nginx.ingress.kubernetes.io/backend-protocol</span><span class=p>:</span> <span class=s>&quot;FCGI&quot;</span>
     <span class=nt>nginx.ingress.kubernetes.io/fastcgi-index</span><span class=p>:</span> <span class=s>&quot;index.php&quot;</span>
     <span class=nt>nginx.ingress.kubernetes.io/fastcgi-params-configmap</span><span class=p>:</span> <span class=s>&quot;example-cm&quot;</span>
   <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">example-app</span>
 <span class=nt>spec</span><span class=p>:</span>
+  <span class=nt>ingressClassName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">nginx</span>
   <span class=nt>rules</span><span class=p>:</span>
   <span class="p p-Indicator">-</span> <span class=nt>host</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">app.example.com</span>
     <span class=nt>http</span><span class=p>:</span>

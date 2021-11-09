@@ -5,6 +5,7 @@
   <span class=nt>annotations</span><span class=p>:</span>
     <span class=nt>nginx.ingress.kubernetes.io/use-regex</span><span class=p>:</span> <span class=s>&quot;true&quot;</span>
 <span class=nt>spec</span><span class=p>:</span>
+  <span class=nt>ingressClassName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">nginx</span>
   <span class=nt>rules</span><span class=p>:</span>
   <span class="p p-Indicator">-</span> <span class=nt>host</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
     <span class=nt>http</span><span class=p>:</span>
@@ -24,6 +25,7 @@
 <span class=nt>metadata</span><span class=p>:</span>
   <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-1</span>
 <span class=nt>spec</span><span class=p>:</span>
+  <span class=nt>ingressClassName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">nginx</span>
   <span class=nt>rules</span><span class=p>:</span>
   <span class="p p-Indicator">-</span> <span class=nt>host</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
     <span class=nt>http</span><span class=p>:</span>
@@ -49,6 +51,7 @@
   <span class=nt>annotations</span><span class=p>:</span>
     <span class=nt>nginx.ingress.kubernetes.io/rewrite-target</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">/$1</span>
 <span class=nt>spec</span><span class=p>:</span>
+  <span class=nt>ingressClassName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">nginx</span>
   <span class=nt>rules</span><span class=p>:</span>
   <span class="p p-Indicator">-</span> <span class=nt>host</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
     <span class=nt>http</span><span class=p>:</span>
@@ -78,6 +81,7 @@ location ~* &quot;^/foo/bar&quot; {
   <span class=nt>annotations</span><span class=p>:</span>
     <span class=nt>nginx.ingress.kubernetes.io/use-regex</span><span class=p>:</span> <span class=s>&quot;true&quot;</span>
 <span class=nt>spec</span><span class=p>:</span>
+  <span class=nt>ingressClassName</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">nginx</span>
   <span class=nt>rules</span><span class=p>:</span>
   <span class="p p-Indicator">-</span> <span class=nt>host</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
     <span class=nt>http</span><span class=p>:</span>

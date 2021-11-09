@@ -7,6 +7,7 @@
 <span class=go>  name: rewrite</span>
 <span class=go>  namespace: default</span>
 <span class=go>spec:</span>
+<span class=go>  ingressClassName: nginx</span>
 <span class=go>  rules:</span>
 <span class=go>  - host: rewrite.bar.com</span>
 <span class=go>    http:</span>
@@ -28,6 +29,7 @@ metadata:
   name: approot
   namespace: default
 spec:
+  ingressClassName: nginx
   rules:
   - host: approot.bar.com
     http:

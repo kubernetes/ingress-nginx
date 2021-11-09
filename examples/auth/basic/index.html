@@ -27,6 +27,7 @@
 <span class=gp>    #</span> message to display with an appropriate context why the authentication is required
 <span class=go>    nginx.ingress.kubernetes.io/auth-realm: &#39;Authentication Required - foo&#39;</span>
 <span class=go>spec:</span>
+<span class=go>  ingressClassName: nginx</span>
 <span class=go>  rules:</span>
 <span class=go>  - host: foo.bar.com</span>
 <span class=go>    http:</span>

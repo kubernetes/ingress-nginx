@@ -6,6 +6,7 @@ metadata:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       more_set_headers "Request-Id: $req_id";
 spec:
+  ingressClassName: nginx
   rules:
   - host: custom.configuration.com
     http:
