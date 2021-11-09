@@ -64,6 +64,7 @@ metadata:
   name: nginxhello-ingress
   namespace: default
 spec:
+  ingressClassName: nginx
   rules:
   - host: foo.bar.com
     http:
@@ -75,4 +76,3 @@ spec:
               name: nginxhello
               port:
                 number: 80
-

@@ -9,6 +9,7 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
 
 spec:
+  ingressClassName: nginx
   rules:
   - host: stickyingress.example.com
     http:

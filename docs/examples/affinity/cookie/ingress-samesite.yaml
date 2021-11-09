@@ -11,6 +11,7 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-samesite: "None"
     nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true" # omits SameSite=None for older browsers which reject cookies with SameSite=None
 spec:
+  ingressClassName: nginx
   rules:
   - host: stickyingress-samesite-none.example.com
     http:
@@ -34,6 +35,7 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
     nginx.ingress.kubernetes.io/session-cookie-samesite: "Strict"
 spec:
+  ingressClassName: nginx
   rules:
   - host: stickyingress-samesite-strict.example.com
     http:
