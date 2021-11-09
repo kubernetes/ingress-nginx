@@ -3,6 +3,7 @@ kind: Ingress
 metadata:
   name: ingress-nginx
 spec:
+  ingressClassName: nginx
   tls:
   # This assumes tls-secret exists.
   - secretName: tls-secret

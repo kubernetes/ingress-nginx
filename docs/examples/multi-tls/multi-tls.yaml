@@ -98,6 +98,7 @@ metadata:
   name: foo-tls
   namespace: default
 spec:
+  ingressClassName: nginx
   tls:
   - hosts:
     - foo.bar.com

@@ -185,6 +185,7 @@ In the Zipkin interface we can see the details:
       metadata:
         name: echo-ingress
       spec:
+        ingressClassName: nginx
         rules:
         - host: example.com
           http:

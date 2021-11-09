@@ -13,10 +13,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-myservicea
-  annotations:
-    # use the shared ingress-nginx
-    kubernetes.io/ingress.class: "nginx"
 spec:
+  ingressClassName: nginx
   rules:
   - host: myservicea.foo.org
     http:
@@ -67,7 +65,7 @@ spec:
         backend:
           service:
             name: myservicea
-            port: 
+            port:
               number: 80
   ingressClassName: nginx
 ---
@@ -85,7 +83,7 @@ spec:
         backend:
           service:
             name: myserviceb
-            port: 
+            port:
               number: 80
   ingressClassName: nginx
 ```

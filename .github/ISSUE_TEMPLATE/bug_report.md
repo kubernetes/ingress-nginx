@@ -105,7 +105,10 @@ echo "
   kind: Ingress
   metadata:
     name: foo-bar
+    annotations:
+      kubernetes.io/ingress.class: nginx
   spec:
+    ingressClassName: nginx # omit this if you're on controller version below 1.0.0
     rules:
     - host: foo.bar
       http:

@@ -22,6 +22,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
+  ingressClassName: nginx
   rules:
   - host: test.com
     http:
@@ -59,6 +60,7 @@ kind: Ingress
 metadata:
   name: test-ingress-1
 spec:
+  ingressClassName: nginx
   rules:
   - host: test.com
     http:
@@ -87,6 +89,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
+  ingressClassName: nginx
   rules:
   - host: test.com
     http:
@@ -144,6 +147,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
+  ingressClassName: nginx
   rules:
   - host: test.com
     http:

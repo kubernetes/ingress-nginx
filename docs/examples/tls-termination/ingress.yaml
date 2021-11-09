@@ -3,6 +3,7 @@ kind: Ingress
 metadata:
   name: nginx-test
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
       - foo.bar.com
