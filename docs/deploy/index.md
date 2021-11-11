@@ -272,7 +272,7 @@ A [complete list of available annotations for Oracle Cloud Infrastructure](https
 
 ### Bare metal clusters
 
-Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport):
+Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.4/deploy/static/provider/baremetal/deploy.yaml
