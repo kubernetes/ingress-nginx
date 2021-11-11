@@ -425,6 +425,7 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 	ginkgo.It("should allow - matching origin with wildcard origin (2 subdomains)", func() {
 		host := "cors.foo.com"
 		origin := "http://foo.origin.cors.com"
+		origin2 := "http://bar-foo.origin.cors.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":       "true",
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://*.origin.cors.com, http://*.origin.com:8080",
@@ -447,6 +448,21 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			Expect().
 			Status(http.StatusOK).Headers().
 			ValueEqual("Access-Control-Allow-Origin", []string{origin})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin2).
+			Expect().
+			Headers().ContainsKey("Access-Control-Allow-Origin")
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin2).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{origin2})
 	})
 
 	ginkgo.It("should not allow - unmatching origin with wildcard origin (2 subdomains)", func() {
