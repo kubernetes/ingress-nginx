@@ -1667,7 +1667,7 @@ func convertGoSliceIntoLuaTable(goSliceInterface interface{}, emptyStringAsNil b
 
 func buildOriginRegex(origin string) string {
 	origin = regexp.QuoteMeta(origin)
-	origin = strings.Replace(origin, "\\*", "[A-Za-z0-9]+", 1)
+	origin = strings.Replace(origin, "\\*", `[A-Za-z0-9\-]+`, 1)
 	return fmt.Sprintf("(%s)", origin)
 }
 
