@@ -239,10 +239,20 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
 
-	for key := range ing.ObjectMeta.GetAnnotations() {
+	arraybadWords := strings.Split(strings.TrimSpace(cfg.AnnotationValueWordBlocklist), ",")
+
+	for key, value := range ing.ObjectMeta.GetAnnotations() {
+
 		if parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
 			if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.DefaultAnnotationsPrefix)) {
 				return fmt.Errorf("This deployment has a custom annotation prefix defined. Use '%s' instead of '%s'", parser.AnnotationsPrefix, parser.DefaultAnnotationsPrefix)
+			}
+		}
+		if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.AnnotationsPrefix)) {
+			for _, forbiddenvalue := range arraybadWords {
+				if strings.Contains(value, forbiddenvalue) {
+					return fmt.Errorf("%s annotation contains invalid word %s", key, forbiddenvalue)
+				}
 			}
 		}
 
