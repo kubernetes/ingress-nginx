@@ -4,6 +4,9 @@
 
 Anytime we reference a TLS secret, we mean a PEM-encoded X.509, RSA (2048) secret.
 
+!!! warning
+    Ensure that the certificate order is leaf->intermediate->root, otherwise the controller will not be able to import the certificate, and you'll see this error in the logs ```W1012 09:15:45.920000       6 backend_ssl.go:46] Error obtaining X.509 certificate: unexpected error creating SSL Cert: certificate and private key does not have a matching public key: tls: private key does not match public key```
+
 You can generate a self-signed certificate and private key with:
 
 ```bash
