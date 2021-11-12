@@ -65,3 +65,4 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--version`                        | Show release information about the NGINX Ingress controller and exit. |
 | `--vmodule`                        | comma-separated list of pattern=N settings for file-filtered logging |
 | `--watch-namespace`                | Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty. |
+| `--watch-namespace-selector`       | The controller will watch namespaces whose labels match the given selector. This flag only takes effective when `--watch-namespace` is empty. |
