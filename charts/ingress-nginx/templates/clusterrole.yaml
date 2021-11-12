@@ -20,6 +20,9 @@ rules:
       - nodes
       - pods
       - secrets
+{{- if not .Values.controller.scope.enabled }}
+      - namespaces
+{{- end}}
     verbs:
       - list
       - watch

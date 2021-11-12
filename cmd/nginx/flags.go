@@ -24,6 +24,7 @@ import (
 
 	"github.com/spf13/pflag"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -99,6 +100,9 @@ either be a port name or number.`)
 			`Namespace the controller watches for updates to Kubernetes objects.
 This includes Ingresses, Services and all configuration resources. All
 namespaces are watched if this parameter is left empty.`)
+
+		watchNamespaceSelector = flags.String("watch-namespace-selector", "",
+			`Selector selects namespaces the controller watches for updates to Kubernetes objects.`)
 
 		profiling = flags.Bool("profiling", true,
 			`Enable profiling via web interface host:port/debug/pprof/`)
@@ -266,6 +270,19 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
 	}
 
+	if len(*watchNamespace) != 0 && len(*watchNamespaceSelector) != 0 {
+		return false, nil, fmt.Errorf("flags --watch-namespace and --watch-namespace-selector are mutually exclusive")
+	}
+
+	var namespaceSelector labels.Selector
+	if len(*watchNamespaceSelector) != 0 {
+		var err error
+		namespaceSelector, err = labels.Parse(*watchNamespaceSelector)
+		if err != nil {
+			return false, nil, fmt.Errorf("failed to parse --watch-namespace-selector=%s, error: %v", *watchNamespaceSelector, err)
+		}
+	}
+
 	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
 
 	config := &controller.Configuration{
@@ -282,6 +299,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		ResyncPeriod:               *resyncPeriod,
 		DefaultService:             *defaultSvc,
 		Namespace:                  *watchNamespace,
+		WatchNamespaceSelector:     namespaceSelector,
 		ConfigMapName:              *configMap,
 		TCPConfigMapName:           *tcpConfigMapName,
 		UDPConfigMapName:           *udpConfigMapName,

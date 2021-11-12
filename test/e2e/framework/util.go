@@ -85,14 +85,15 @@ func RestclientConfig(config, context string) (*api.Config, error) {
 // RunID unique identifier of the e2e run
 var RunID = uuid.NewUUID()
 
-// CreateKubeNamespace creates a new namespace in the cluster
-func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
+func createNamespace(baseName string, labels map[string]string, c kubernetes.Interface) (string, error) {
 	ts := time.Now().UnixNano()
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("e2e-tests-%v-%v-", baseName, ts),
+			Labels:       labels,
 		},
 	}
+
 	// Be robust about making the namespace creation call.
 	var got *corev1.Namespace
 	var err error
@@ -111,8 +112,20 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error
 	return got.Name, nil
 }
 
-// deleteKubeNamespace deletes a namespace and all the objects inside
-func deleteKubeNamespace(c kubernetes.Interface, namespace string) error {
+// CreateKubeNamespace creates a new namespace in the cluster
+func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
+
+	return createNamespace(baseName, nil, c)
+}
+
+// CreateKubeNamespaceWithLabel creates a new namespace with given labels in the cluster
+func CreateKubeNamespaceWithLabel(baseName string, labels map[string]string, c kubernetes.Interface) (string, error) {
+
+	return createNamespace(baseName, labels, c)
+}
+
+// DeleteKubeNamespace deletes a namespace and all the objects inside
+func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
 	grace := int64(0)
 	pb := metav1.DeletePropagationBackground
 	return c.CoreV1().Namespaces().Delete(context.TODO(), namespace, metav1.DeleteOptions{

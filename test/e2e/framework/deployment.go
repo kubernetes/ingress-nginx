@@ -55,7 +55,15 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int) {
 // replicas is configurable and
 // name is configurable
 func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas int) {
-	deployment := newDeployment(name, f.Namespace, "k8s.gcr.io/ingress-nginx/e2e-test-echo@sha256:131ece0637b29231470cfaa04690c2966a2e0b147d3c9df080a0857b78982410", 80, int32(replicas),
+	f.newEchoDeployment(f.Namespace, name, replicas)
+}
+
+func (f *Framework) NewEchoDeploymentWithNamespaceAndReplicas(namespace string, replicas int) {
+	f.newEchoDeployment(namespace, EchoService, replicas)
+}
+
+func (f *Framework) newEchoDeployment(namespace, name string, replicas int) {
+	deployment := newDeployment(name, namespace, "k8s.gcr.io/ingress-nginx/e2e-test-echo@sha256:131ece0637b29231470cfaa04690c2966a2e0b147d3c9df080a0857b78982410", 80, int32(replicas),
 		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
@@ -66,7 +74,7 @@ func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas i
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: f.Namespace,
+			Namespace: namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
@@ -85,7 +93,7 @@ func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas i
 
 	f.EnsureService(service)
 
-	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, replicas)
+	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, namespace, replicas)
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
