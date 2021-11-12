@@ -23,6 +23,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -630,6 +631,21 @@ func hasCatchAllIngressRule(spec networkingv1beta1.IngressSpec) bool {
 	return spec.Backend != nil
 }
 
+func checkBadAnnotationValue(annotations map[string]string, badwords string) error {
+	arraybadWords := strings.Split(strings.TrimSpace(badwords), ",")
+
+	for annotation, value := range annotations {
+		if strings.HasPrefix(annotation, fmt.Sprintf("%s/", parser.AnnotationsPrefix)) {
+			for _, forbiddenvalue := range arraybadWords {
+				if strings.Contains(value, forbiddenvalue) {
+					return fmt.Errorf("%s annotation contains invalid word %s", annotation, forbiddenvalue)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // syncIngress parses ingress annotations converting the value of the
 // annotation to a go struct
 func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
@@ -638,6 +654,13 @@ func (s *k8sStore) syncIngress(ing *networkingv1beta1.Ingress) {
 
 	copyIng := &networkingv1beta1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
+
+	klog.Errorf("Blocklist: %v", s.backendConfig.AnnotationValueWordBlocklist)
+	if err := checkBadAnnotationValue(copyIng.Annotations, s.backendConfig.AnnotationValueWordBlocklist); err != nil {
+		klog.Errorf("skipping ingress %s: %s", key, err)
+		return
+	}
+
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
 	ing.Status.DeepCopyInto(&copyIng.Status)
 

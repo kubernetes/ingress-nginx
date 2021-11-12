@@ -38,7 +38,7 @@ const (
 	Poll = 2 * time.Second
 
 	// DefaultTimeout time to wait for operations to complete
-	DefaultTimeout = 5 * time.Minute
+	DefaultTimeout = 30 * time.Second
 )
 
 func nowStamp() string {

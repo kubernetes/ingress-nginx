@@ -165,7 +165,9 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 			"nginx.ingress.kubernetes.io/enable-modsecurity":  "true",
 			"nginx.ingress.kubernetes.io/modsecurity-snippet": snippet,
 		}
-
+		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "load_module, lua_package, _by_lua, location, root, {, }")
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
@@ -198,7 +200,9 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/modsecurity-snippet": snippet,
 		}
-
+		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "load_module, lua_package, _by_lua, location, root, {, }")
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
@@ -232,7 +236,9 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/modsecurity-snippet": snippet,
 		}
-
+		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "load_module, lua_package, _by_lua, location, root, {, }")
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
@@ -268,7 +274,9 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/modsecurity-snippet": snippet,
 		}
-
+		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "load_module, lua_package, _by_lua, location, root, {, }")
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
@@ -307,7 +315,9 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/modsecurity-snippet": snippet,
 		}
-
+		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "load_module, lua_package, _by_lua, location, root, {, }")
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
