@@ -26,7 +26,7 @@ Note: If using CA Authentication, described below, you will need to sign the ser
 CA Authentication also known as Mutual Authentication allows both the server and client to verify each others
 identity via a common CA.
 
-We have a CA Certificate which we obtain usually from a Certificate Authority and use that to sign
+We have a CA Certificate which we usually obtain from a Certificate Authority and use that to sign
 both our server certificate and client certificate. Then every time we want to access our backend, we must
 pass the client certificate.
 
@@ -53,6 +53,8 @@ openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set
 ```
 
 Once this is complete you can continue to follow the instructions [here](./auth/client-certs/README.md#creating-certificate-secrets)
+
+
 
 ## Test HTTP Service
 
