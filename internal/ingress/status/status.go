@@ -128,8 +128,10 @@ func (s statusSync) Shutdown() {
 		return
 	}
 
-	klog.InfoS("removing value from ingress status", "address", addrs)
-	s.updateStatus([]apiv1.LoadBalancerIngress{})
+	klog.InfoS("removing value from Ingress status", "address", addrs)
+	if err := s.updateStatus(true); err != nil {
+		klog.ErrorS(err, "error removing value from Ingress status")
+	}
 }
 
 func (s *statusSync) sync(key interface{}) error {
@@ -138,11 +140,9 @@ func (s *statusSync) sync(key interface{}) error {
 		return nil
 	}
 
-	addrs, err := s.runningAddresses()
-	if err != nil {
+	if err := s.updateStatus(false); err != nil {
 		return err
 	}
-	s.updateStatus(standardizeLoadBalancerIngresses(addrs))
 
 	return nil
 }
@@ -249,27 +249,35 @@ func (s *statusSync) isRunningMultiplePods() bool {
 	return len(pods.Items) > 1
 }
 
-// standardizeLoadBalancerIngresses sorts the list of loadbalancer by
-// IP
-func standardizeLoadBalancerIngresses(lbi []apiv1.LoadBalancerIngress) []apiv1.LoadBalancerIngress {
-	sort.SliceStable(lbi, func(a, b int) bool {
-		return lbi[a].IP < lbi[b].IP
-	})
-
-	return lbi
-}
-
 // updateStatus changes the status information of Ingress rules
-func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
-	ings := s.IngressLister.ListIngresses()
+func (s *statusSync) updateStatus(erase bool) error {
+	defaultIngressPoint := []apiv1.LoadBalancerIngress{}
+	if !erase {
+		defaultIngressPoint, err := s.runningAddresses()
+		if err != nil {
+			return err
+		}
+		sort.SliceStable(defaultIngressPoint, lessLoadBalancerIngress(defaultIngressPoint))
+	}
+
+	ings := s.Config.IngressLister.ListIngresses()
 
 	p := pool.NewLimited(10)
 	defer p.Close()
 
 	batch := p.Batch()
-	sort.SliceStable(newIngressPoint, lessLoadBalancerIngress(newIngressPoint))
 
 	for _, ing := range ings {
+		newIngressPoint := defaultIngressPoint
+		if !erase && ing.ParsedAnnotations.PublishService != "" {
+			newIngressPoint, err := statusAddressFromService(ing.ParsedAnnotations.PublishService, s.Client)
+			if err != nil {
+				klog.ErrorS(err, "error updating status address of Ingress", "namespace", ing.Namespace, "ingress", ing.Name)
+				continue
+			}
+			sort.SliceStable(newIngressPoint, lessLoadBalancerIngress(newIngressPoint))
+		}
+
 		curIPs := ing.Status.LoadBalancer.Ingress
 		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
 		if ingressSliceEqual(curIPs, newIngressPoint) {
@@ -282,6 +290,8 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 
 	batch.QueueComplete()
 	batch.WaitAll()
+
+	return nil
 }
 
 func runUpdate(ing *ingress.Ingress, status []apiv1.LoadBalancerIngress,

@@ -51,6 +51,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/portinredirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/publishservice"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
@@ -94,6 +95,7 @@ type Ingress struct {
 	Opentracing        opentracing.Config
 	Proxy              proxy.Config
 	ProxySSL           proxyssl.Config
+	PublishService     string
 	RateLimit          ratelimit.Config
 	GlobalRateLimit    globalratelimit.Config
 	Redirect           redirect.Config
@@ -143,6 +145,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Opentracing":          opentracing.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"ProxySSL":             proxyssl.NewParser(cfg),
+			"PublishService":       publishservice.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"GlobalRateLimit":      globalratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
