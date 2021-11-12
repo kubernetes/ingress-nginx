@@ -41,14 +41,14 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] mix Exact and Prefi
 		host := "mixed.path"
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: exact";more_set_input_headers "pathlocation: /";`,
+			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: exact";more_set_input_headers "pathheader: /";`,
 		}
 		ing := framework.NewSingleIngress("exact-root", "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &exactPathType
 		f.EnsureIngress(ing)
 
 		annotations = map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: prefix";more_set_input_headers "pathlocation: /";`,
+			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: prefix";more_set_input_headers "pathheader: /";`,
 		}
 		ing = framework.NewSingleIngress("prefix-root", "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -71,7 +71,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] mix Exact and Prefi
 
 		assert.NotContains(ginkgo.GinkgoT(), body, "pathtype=prefix")
 		assert.Contains(ginkgo.GinkgoT(), body, "pathtype=exact")
-		assert.Contains(ginkgo.GinkgoT(), body, "pathlocation=/")
+		assert.Contains(ginkgo.GinkgoT(), body, "pathheader=/")
 
 		ginkgo.By("Checking prefix request to /bar")
 		body = f.HTTPTestClient().
@@ -84,17 +84,17 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] mix Exact and Prefi
 
 		assert.Contains(ginkgo.GinkgoT(), body, "pathtype=prefix")
 		assert.NotContains(ginkgo.GinkgoT(), body, "pathtype=exact")
-		assert.Contains(ginkgo.GinkgoT(), body, "pathlocation=/")
+		assert.Contains(ginkgo.GinkgoT(), body, "pathheader=/")
 
 		annotations = map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: exact";more_set_input_headers "pathlocation: /foo";`,
+			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: exact";more_set_input_headers "pathheader: /foo";`,
 		}
 		ing = framework.NewSingleIngress("exact-foo", "/foo", host, f.Namespace, framework.EchoService, 80, annotations)
 		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &exactPathType
 		f.EnsureIngress(ing)
 
 		annotations = map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: prefix";more_set_input_headers "pathlocation: /foo";`,
+			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: prefix";more_set_input_headers "pathheader: /foo";`,
 		}
 		ing = framework.NewSingleIngress("prefix-foo", "/foo", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -117,7 +117,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] mix Exact and Prefi
 
 		assert.NotContains(ginkgo.GinkgoT(), body, "pathtype=prefix")
 		assert.Contains(ginkgo.GinkgoT(), body, "pathtype=exact")
-		assert.Contains(ginkgo.GinkgoT(), body, "pathlocation=/foo")
+		assert.Contains(ginkgo.GinkgoT(), body, "pathheader=/foo")
 
 		ginkgo.By("Checking prefix request to /foo/bar")
 		body = f.HTTPTestClient().
@@ -129,7 +129,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] mix Exact and Prefi
 			Raw()
 
 		assert.Contains(ginkgo.GinkgoT(), body, "pathtype=prefix")
-		assert.Contains(ginkgo.GinkgoT(), body, "pathlocation=/foo")
+		assert.Contains(ginkgo.GinkgoT(), body, "pathheader=/foo")
 
 		ginkgo.By("Checking prefix request to /foobar")
 		body = f.HTTPTestClient().
@@ -141,6 +141,6 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] mix Exact and Prefi
 			Raw()
 
 		assert.Contains(ginkgo.GinkgoT(), body, "pathtype=prefix")
-		assert.Contains(ginkgo.GinkgoT(), body, "pathlocation=/")
+		assert.Contains(ginkgo.GinkgoT(), body, "pathheader=/")
 	})
 })

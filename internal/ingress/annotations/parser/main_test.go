@@ -116,6 +116,12 @@ rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/serv
 			}
 			continue
 		}
+		if !test.expErr {
+			if err != nil {
+				t.Errorf("%v: didn't expected error but error was returned: %v", test.name, err)
+			}
+			continue
+		}
 		if s != test.exp {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.name, test.exp, s)
 		}
