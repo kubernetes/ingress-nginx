@@ -46,23 +46,26 @@ fi
 export CGO_ENABLED=0
 export GOARCH=${ARCH}
 
-go build \
-  -trimpath -ldflags="-buildid= -w -s \
-    -X ${PKG}/version.RELEASE=${TAG} \
-    -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
-    -X ${PKG}/version.REPO=${REPO_INFO}" \
-  -o "rootfs/bin/${ARCH}/nginx-ingress-controller" "${PKG}/cmd/nginx"
+TARGETS_DIR="rootfs/bin/${ARCH}"
+echo "Building targets for ${ARCH}, generated targets in ${TARGETS_DIR} directory."
 
 go build \
   -trimpath -ldflags="-buildid= -w -s \
     -X ${PKG}/version.RELEASE=${TAG} \
     -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
     -X ${PKG}/version.REPO=${REPO_INFO}" \
-  -o "rootfs/bin/${ARCH}/dbg" "${PKG}/cmd/dbg"
+  -o "${TARGETS_DIR}/nginx-ingress-controller" "${PKG}/cmd/nginx"
 
 go build \
   -trimpath -ldflags="-buildid= -w -s \
     -X ${PKG}/version.RELEASE=${TAG} \
     -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
     -X ${PKG}/version.REPO=${REPO_INFO}" \
-  -o "rootfs/bin/${ARCH}/wait-shutdown" "${PKG}/cmd/waitshutdown"
+  -o "${TARGETS_DIR}/dbg" "${PKG}/cmd/dbg"
+
+go build \
+  -trimpath -ldflags="-buildid= -w -s \
+    -X ${PKG}/version.RELEASE=${TAG} \
+    -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
+    -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -o "${TARGETS_DIR}/wait-shutdown" "${PKG}/cmd/waitshutdown"
