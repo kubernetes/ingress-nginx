@@ -576,6 +576,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 
 		if !n.store.GetBackendConfiguration().AllowSnippetAnnotations {
 			dropSnippetDirectives(anns, ingKey)
+			n.recorder.Eventf(ing.Ingress.DeepCopyObject(),apiv1.EventTypeWarning,"SNIPPET USE DISALLOWED",fmt.Sprintf("Ingress %v tried to use snippet and the annotation is disabled by the admin", ingKey))
 		}
 
 		for _, rule := range ing.Spec.Rules {
@@ -856,6 +857,8 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 		if !n.store.GetBackendConfiguration().AllowSnippetAnnotations {
 			dropSnippetDirectives(anns, ingKey)
+			n.recorder.Eventf(ing.Ingress.DeepCopyObject(),apiv1.EventTypeWarning,"SNIPPET USE DISALLOWED",fmt.Sprintf("Ingress %v tried to use configuration-snippet and the annotation is disabled by the admin", ingKey))
+
 		}
 
 		var defBackend string
@@ -1150,6 +1153,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 		if !n.store.GetBackendConfiguration().AllowSnippetAnnotations {
 			dropSnippetDirectives(anns, ingKey)
+			n.recorder.Eventf(ing.Ingress.DeepCopyObject(),apiv1.EventTypeWarning,"SNIPPET USE DISALLOWED",fmt.Sprintf("Ingress %v tried to use configuration-snippet and the annotation is disabled by the admin", ingKey))
+
 		}
 
 		// default upstream name
@@ -1230,6 +1235,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 		if !n.store.GetBackendConfiguration().AllowSnippetAnnotations {
 			dropSnippetDirectives(anns, ingKey)
+			n.recorder.Eventf(ing.Ingress.DeepCopyObject(),apiv1.EventTypeWarning,"SNIPPET USE DISALLOWED",fmt.Sprintf("Ingress %v tried to use configuration-snippet and the annotation is disabled by the admin", ingKey))
+
 		}
 
 		if anns.Canary.Enabled {
