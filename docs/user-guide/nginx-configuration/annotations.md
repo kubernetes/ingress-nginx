@@ -610,6 +610,14 @@ To enable this feature use the annotation `nginx.ingress.kubernetes.io/from-to-w
 !!! attention
     For HTTPS to HTTPS redirects is mandatory the SSL Certificate defined in the Secret, located in the TLS section of Ingress, contains both FQDN in the common name of the certificate.
 
+!!! attention
+    Cannot use with wildcard host. (like *.domain.com)
+
+    Tips:
+
+    If you want to redirect example.org to www.example.org and use *.example.org to handle all traffic, then you should create two ingresses. One is ingress with host *.example.org (without this annotation). Another is ingress with host example.org and enable this annotation.
+
+
 ### Whitelist source range
 
 You can specify allowed client IP source ranges through the `nginx.ingress.kubernetes.io/whitelist-source-range` annotation.

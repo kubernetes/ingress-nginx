@@ -149,6 +149,42 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid annotation value should return an error")
 	})
 
+	ginkgo.It("should return an error when an ingress with wildcard host enables annotation from-to-www-redirect", func() {
+		host := "*.bar.com"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/from-to-www-redirect": "true",
+		}
+
+		ing := framework.NewSingleIngress("wildcard-hostname", "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with wildcard host and enable annotation from-to-www-redirect should return an error")
+	})
+
+	ginkgo.It("should not return an error when an ingress with wildcard host explicitly disable annotation from-to-www-redirect", func() {
+		host := "*.bar.com"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/from-to-www-redirect": "false",
+		}
+
+		ing := framework.NewSingleIngress("wildcard-hostname", "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with wildcard host and explicitly disable annotation from-to-www-redirect should not return an error")
+	})
+
+	ginkgo.It("should return an error when an ingress with tls wildcard host enables annotation from-to-www-redirect", func() {
+		host := "*.bar.com"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/from-to-www-redirect": "true",
+		}
+
+		ing := framework.NewSingleIngressWithTLS("tls-wildcard-hostname", "/", "", []string{host}, f.Namespace, framework.EchoService, 80, annotations)
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with wildcard host and enable annotation from-to-www-redirect should return an error")
+	})
+
 	ginkgo.It("should not return an error if the Ingress V1 definition is valid with Ingress Class", func() {
 		err := createIngress(f.Namespace, validV1Ingress)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")

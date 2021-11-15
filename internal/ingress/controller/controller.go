@@ -248,6 +248,8 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		arrayBadWords = strings.Split(strings.TrimSpace(cfg.AnnotationValueWordBlocklist), ",")
 	}
 
+	fromToWWWAnnotation := fmt.Sprintf("%s/%s", parser.AnnotationsPrefix, "from-to-www-redirect")
+
 	for key, value := range ing.ObjectMeta.GetAnnotations() {
 
 		if parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
@@ -272,6 +274,23 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 			return fmt.Errorf("'global-rate-limit*' annotations require 'global-rate-limit-memcached-host' settings configured in the global configmap")
 		}
 
+		if key == fromToWWWAnnotation {
+			if v, _ := strconv.ParseBool(value); v == true {
+				for _, rule := range ing.Spec.Rules {
+					if strings.HasPrefix(rule.Host, "*.") {
+						return fmt.Errorf("%s annotation cannot use with wildcard host", fromToWWWAnnotation)
+					}
+				}
+
+				for _, tls := range ing.Spec.TLS {
+					for _, host := range tls.Hosts {
+						if strings.HasPrefix(host, "*.") {
+							return fmt.Errorf("%s annotation cannot use with wildcard host", fromToWWWAnnotation)
+						}
+					}
+				}
+			}
+		}
 	}
 
 	k8s.SetDefaultNGINXPathType(ing)
