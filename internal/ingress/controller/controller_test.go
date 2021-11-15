@@ -284,6 +284,10 @@ func TestCheckIngress(t *testing.T) {
 			if err := nginx.CheckIngress(ing); err == nil {
 				t.Errorf("with an invalid value in annotation the ingress should be rejected")
 			}
+			ing.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/custom-headers"] = "another_directive"
+			if err := nginx.CheckIngress(ing); err == nil {
+				t.Errorf("with an invalid value in annotation the ingress should be rejected")
+			}
 		})
 
 		t.Run("When a new catch-all ingress is being created despite catch-alls being disabled ", func(t *testing.T) {
