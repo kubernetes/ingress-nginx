@@ -249,7 +249,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		}
 		if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.AnnotationsPrefix)) {
 			for _, forbiddenvalue := range arraybadWords {
-				if strings.Contains(value, forbiddenvalue) {
+				if strings.Contains(value, strings.TrimSpace(forbiddenvalue)) {
 					return fmt.Errorf("%s annotation contains invalid word %s", key, forbiddenvalue)
 				}
 			}
