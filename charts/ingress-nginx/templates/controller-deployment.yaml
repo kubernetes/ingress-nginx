@@ -80,14 +80,7 @@ spec:
         {{- end }}
           args:
             {{- include "ingress-nginx.params" . | nindent 12 }}
-          securityContext:
-            capabilities:
-                drop:
-                - ALL
-                add:
-                - NET_BIND_SERVICE
-            runAsUser: {{ .Values.controller.image.runAsUser }}
-            allowPrivilegeEscalation: {{ .Values.controller.image.allowPrivilegeEscalation }}
+          securityContext: {{ include "controller.containerSecurityContext" . | nindent 12 }}
           env:
             - name: POD_NAME
               valueFrom:
