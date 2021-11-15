@@ -1,7 +1,74 @@
 # Multiple Ingress controllers
 
-If you're running multiple ingress controllers, or running on a cloud provider that natively handles ingress such as GKE,
-you need to specify the annotation `kubernetes.io/ingress.class: "nginx"` in all ingresses that you would like the ingress-nginx controller to claim.
+By default, deploying multiple Ingress controllers (e.g., `ingress-nginx` & `gce`) will result in all controllers simultaneously racing to update Ingress status fields in confusing ways.
+
+To fix this problem, you can either use [IngressClasses](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class) (preferred) or use the `kubernetes.io/ingress.class` annotation (in deprecation).
+
+## Using IngressClasses
+
+If all ingress controllers respect IngressClasses (e.g. multiple instances of ingress-nginx v1.0), you can deploy two Ingress controllers by granting them control over two different IngressClasses, then selecting one of the two IngressClasses with `ingressClassName`.
+
+First, ensure the `--controller-class=` is set to something different on each ingress controller:
+
+```yaml
+# ingress-nginx Deployment/Statfulset
+spec:
+  template:
+     spec:
+       containers:
+         - name: nginx-ingress-internal-controller
+           args:
+             - /nginx-ingress-controller
+             - '--controller-class=k8s.io/internal-ingress-nginx'
+            ...
+```
+
+Then use the same value in the IngressClass:
+
+```yaml
+# ingress-nginx IngressClass
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: internal-nginx
+spec:
+  controller: k8s.io/internal-ingress-nginx
+  ...
+```
+
+And refer to that IngressClass in your Ingress:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+spec:
+  ingressClassName: internal-nginx
+  ...
+```
+
+or if installing with Helm:
+
+```yaml
+controller:
+  ingressClassResource:
+    name: internal-nginx  # default: nginx
+    enabled: true
+    default: false
+    controllerValue: "k8s.io/internal-ingress-nginx"  # default: k8s.io/ingress-nginx
+```
+
+!!! important
+
+    When running multiple ingress-nginx controllers, it will only process an unset class annotation if one of the controllers uses the default
+    `--controller-class` value (see `IsValid` method in `internal/ingress/annotations/class/main.go`), otherwise the class annotation becomes required.
+
+    If `--controller-class` is set to the default value of `k8s.io/ingress-nginx`, the controller will monitor Ingresses with no class annotation *and* Ingresses with annotation class set to `nginx`. Use a non-default value for `--controller-class`, to ensure that the controller only satisfied the specific class of Ingresses.
+
+## Using the kubernetes.io/ingress.class annotation (in deprecation)
+
+If you're running multiple ingress controllers where one or more do not support IngressClasses, you must specify the annotation `kubernetes.io/ingress.class: "nginx"` in all ingresses that you would like ingress-nginx to claim.
 
 
 For instance,
@@ -24,16 +91,7 @@ metadata:
 
 will target the nginx controller, forcing the GCE controller to ignore it.
 
-To reiterate, setting the annotation to any value which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.
-If you are only running a single NGINX ingress controller, this can be achieved by setting the annotation to any value except "nginx" or an empty string.
-
-Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
-
-## Multiple ingress-nginx controllers
-
-This mechanism also provides users the ability to run _multiple_ NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).
-To do this, the option `--ingress-class` must be changed to a value unique for the cluster within the definition of the replication controller.
-Here is a partial example:
+You can change the value "nginx" to something else by setting the `--ingress-class` flag:
 
 ```yaml
 spec:
@@ -43,15 +101,12 @@ spec:
          - name: nginx-ingress-internal-controller
            args:
              - /nginx-ingress-controller
-             - '--ingress-class=nginx-internal'
-             - '--configmap=ingress/nginx-ingress-internal-controller'
+             - --ingress-class=internal-nginx
 ```
 
-!!! important
-    Deploying multiple Ingress controllers, of different types (e.g., `ingress-nginx` & `gce`), and not specifying a class annotation will
-    result in both or all controllers fighting to satisfy the Ingress, and all of them racing to update Ingress status field in confusing ways.
+then setting the corresponding `kubernetes.io/ingress.class: "internal-nginx"` annotation on your Ingresses.
 
-    When running multiple ingress-nginx controllers, it will only process an unset class annotation if one of the controllers uses the default
-    `--ingress-class` value (see `IsValid` method in `internal/ingress/annotations/class/main.go`), otherwise the class annotation become required.
+To reiterate, setting the annotation to any value which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.
+If you are only running a single NGINX ingress controller, this can be achieved by setting the annotation to any value except "nginx" or an empty string.
 
-    If `--ingress-class` is set to the default value of `nginx`, the controller will monitor Ingresses with no class annotation *and* Ingresses with annotation class set to `nginx`. Use a non-default value for `--ingress-class`, to ensure that the controller only satisfied the specific class of Ingresses.
+Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
