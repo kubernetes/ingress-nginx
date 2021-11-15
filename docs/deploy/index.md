@@ -23,7 +23,7 @@ On most Kubernetes clusters, the ingress controller will work without requiring 
   - [Scaleway](#scaleway)
   - [Exoscale](#exoscale)
   - [Oracle Cloud Infrastructure](#oracle-cloud-infrastructure)
-  - [Bare-metal](#bare-metal)
+  - [Bare-metal](#bare-metal-clusters)
 - [Miscellaneous](#miscellaneous)
 
 ## Quick start
