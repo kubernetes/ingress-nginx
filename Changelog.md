@@ -1,5 +1,27 @@
 # Changelog
 
+### 1.0.5
+
+**Image:**
+- k8s.gcr.io/ingress-nginx/controller:v1.0.5@sha256:55a1fcda5b7657c372515fe402c3e39ad93aa59f6e4378e82acd99912fe6028d
+
+_Possible Breaking Change_
+We now implement string sanitization in annotation values. This means that words like "location", "by_lua" and
+others will drop the reconciliation of an Ingress object. 
+
+Users from mod_security and other features should be aware that some blocked values may be used by those features 
+and must be manually unblocked by the Ingress Administrator.
+
+For more details please check [https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#annotation-value-word-blocklist]
+
+_Changes:_
+- [7874](https://github.com/kubernetes/ingress-nginx/pull/7874) Add option to sanitize annotation inputs
+- [7854](https://github.com/kubernetes/ingress-nginx/pull/7854) Add brotli-min-length configuration option
+- [7800](https://github.com/kubernetes/ingress-nginx/pull/7800) Fix thread synchronization issue
+- [7711](https://github.com/kubernetes/ingress-nginx/pull/7711) Added AdmissionController metrics
+- [7614](https://github.com/kubernetes/ingress-nginx/pull/7614) Support cors-allow-origin with multiple origins
+- [7472](https://github.com/kubernetes/ingress-nginx/pull/7472) Support watch multiple namespaces matched witch namespace selector
+
 ### 1.0.4
 
 **Image:**
