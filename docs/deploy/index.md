@@ -116,7 +116,7 @@ kubectl create ingress demo --class=nginx \
   --rule="www.demo.io/*=demo:80"
 ```
 
-Alternatively, the ```--rule``` opption and below can be rewritten as follows.
+Alternatively, the above command can be rewritten as follows for the ```--rule``` command and below.
 ```console
 kubectl create ingress demo --class=nginx \
   --rule www.demo.io/=demo:80
