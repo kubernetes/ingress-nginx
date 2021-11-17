@@ -37,8 +37,8 @@ Annotations:
 Events:
   Type    Reason  Age   From                      Message
   ----    ------  ----  ----                      -------
-  Normal  CREATE  1m    nginx-ingress-controller  Ingress default/cafe-ingress
-  Normal  UPDATE  58s   nginx-ingress-controller  Ingress default/cafe-ingress
+  Normal  CREATE  1m    ingress-nginx-controller  Ingress default/cafe-ingress
+  Normal  UPDATE  58s   ingress-nginx-controller  Ingress default/cafe-ingress
 ```
 
 Check the Ingress Controller Logs
@@ -46,9 +46,9 @@ Check the Ingress Controller Logs
 ```console
 $ kubectl get pods -n <namespace-of-ingress-controller>
 NAME                                        READY     STATUS    RESTARTS   AGE
-nginx-ingress-controller-67956bf89d-fv58j   1/1       Running   0          1m
+ingress-nginx-controller-67956bf89d-fv58j   1/1       Running   0          1m
 
-$ kubectl logs -n <namespace> nginx-ingress-controller-67956bf89d-fv58j
+$ kubectl logs -n <namespace> ingress-nginx-controller-67956bf89d-fv58j
 -------------------------------------------------------------------------------
 NGINX Ingress controller
   Release:    0.14.0
@@ -63,9 +63,9 @@ Check the Nginx Configuration
 ```console
 $ kubectl get pods -n <namespace-of-ingress-controller>
 NAME                                        READY     STATUS    RESTARTS   AGE
-nginx-ingress-controller-67956bf89d-fv58j   1/1       Running   0          1m
+ingress-nginx-controller-67956bf89d-fv58j   1/1       Running   0          1m
 
-$ kubectl exec -it -n <namespace-of-ingress-controller> nginx-ingress-controller-67956bf89d-fv58j -- cat /etc/nginx/nginx.conf
+$ kubectl exec -it -n <namespace-of-ingress-controller> ingress-nginx-controller-67956bf89d-fv58j -- cat /etc/nginx/nginx.conf
 daemon off;
 worker_processes 2;
 pid /run/nginx.pid;
@@ -102,9 +102,9 @@ the deployment.
 $ kubectl get deploy -n <namespace-of-ingress-controller>
 NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 default-http-backend       1         1         1            1           35m
-nginx-ingress-controller   1         1         1            1           35m
+ingress-nginx-controller   1         1         1            1           35m
 
-$ kubectl edit deploy -n <namespace-of-ingress-controller> nginx-ingress-controller
+$ kubectl edit deploy -n <namespace-of-ingress-controller> ingress-nginx-controller
 # Add --v=X to "- args", where X is an integer
 ```
 
@@ -254,9 +254,9 @@ $ ssh user@workerIP
 2. Obtain the Docker Container Running nginx
 
 ```console
-$ docker ps | grep nginx-ingress-controller
+$ docker ps | grep ingress-nginx-controller
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
-d9e1d243156a        quay.io/kubernetes-ingress-controller/nginx-ingress-controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_nginx-ingress-controller_nginx-ingress-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
+d9e1d243156a        k8s.gcr.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
 ```
 
 3. Exec into the container
@@ -277,7 +277,7 @@ $ nginx -V 2>&1 | grep -- '--with-debug'
 $ ps -ef
 UID        PID  PPID  C STIME TTY          TIME CMD
 root         1     0  0 20:23 ?        00:00:00 /usr/bin/dumb-init /nginx-ingres
-root         5     1  0 20:23 ?        00:00:05 /nginx-ingress-controller --defa
+root         5     1  0 20:23 ?        00:00:05 /ingress-nginx-controller --defa
 root        21     5  0 20:23 ?        00:00:00 nginx: master process /usr/sbin/
 nobody     106    21  0 20:23 ?        00:00:00 nginx: worker process
 nobody     107    21  0 20:23 ?        00:00:00 nginx: worker process

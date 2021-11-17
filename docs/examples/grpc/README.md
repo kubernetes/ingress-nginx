@@ -6,7 +6,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 
 1. You have a kubernetes cluster running.
 2. You have a domain name such as `example.com` that is configured to route traffic to the ingress controller.
-3. You have the nginx-ingress controller installed as per docs.
+3. You have the ingress-nginx-controller installed as per docs.
 4. You have a backend application running a gRPC server and listening for TCP traffic.  If you want, you can use <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go> as an example.
 5. You're also responsible for provisioning an SSL certificate for the ingress. So you need to have a valid SSL certificate, deployed as a Kubernetes secret of type tls, in the same namespace as the gRPC application.
 
@@ -151,7 +151,7 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 ### Debugging Hints
 
 1. Obviously, watch the logs on your app.
-2. Watch the logs for the nginx-ingress-controller (increasing verbosity as
+2. Watch the logs for the ingress-nginx-controller (increasing verbosity as
    needed).
 3. Double-check your address and ports.
 4. Set the `GODEBUG=http2debug=2` environment variable to get detailed http/2
@@ -173,4 +173,4 @@ This example demonstrates how to route traffic to a gRPC service through the ngi
 
 Values for the timeouts must be specified as e.g. `"1200s"`.
 
-> On the most recent versions of nginx-ingress, changing these timeouts requires using the `nginx.ingress.kubernetes.io/server-snippet` annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout separately.
+> On the most recent versions of ingress-nginx, changing these timeouts requires using the `nginx.ingress.kubernetes.io/server-snippet` annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout separately.

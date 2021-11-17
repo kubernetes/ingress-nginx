@@ -8,7 +8,7 @@ This example uses 2 different certificates to terminate SSL for 2 hostnames.
 
 This should generate a segment like:
 ```console
-$ kubectl exec -it nginx-ingress-controller-6vwd1 -- cat /etc/nginx/nginx.conf | grep "foo.bar.com" -B 7 -A 35
+$ kubectl exec -it ingress-nginx-controller-6vwd1 -- cat /etc/nginx/nginx.conf | grep "foo.bar.com" -B 7 -A 35
     server {
         listen 80;
         listen 443 ssl http2;
