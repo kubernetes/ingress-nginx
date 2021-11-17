@@ -116,6 +116,13 @@ kubectl create ingress demo --class=nginx \
   --rule="www.demo.io/*=demo:80"
 ```
 
+Alternatively, the ```--rule``` opption and below can be rewritten as follows.
+```console
+kubectl create ingress demo --class=nginx \
+  --rule www.demo.io/=demo:80
+```
+
+
 You should then be able to see the "It works!" page when you connect to http://www.demo.io/. Congratulations, you are serving a public web site hosted on a Kubernetes cluster! 🎉
 
 ## Environment-specific instructions
