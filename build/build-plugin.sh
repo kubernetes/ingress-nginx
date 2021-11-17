@@ -79,5 +79,6 @@ sed -i "s/%%%tag%%%/${TAG}/g" ${release}/ingress-nginx.yaml
 echo "Generated targets in ${release} directory."
 
 build_for_arch darwin amd64 ''
+build_for_arch darwin arm64 ''
 build_for_arch linux amd64 ''
 build_for_arch windows amd64 '.exe'
