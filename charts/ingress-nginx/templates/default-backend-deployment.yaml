@@ -27,6 +27,9 @@ spec:
       labels:
         {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: default-backend
+        {{- with .Values.defaultBackend.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- if .Values.defaultBackend.podLabels }}
         {{- toYaml .Values.defaultBackend.podLabels | nindent 8 }}
       {{- end }}
