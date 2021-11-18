@@ -2,6 +2,10 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.0.9
+
+- [6992] https://github.com/kubernetes/ingress-nginx/pull/6992 Add ability to specify labels for all resources
+
 ### 4.0.7
 
 - [7923] https://github.com/kubernetes/ingress-nginx/pull/7923 Release v1.0.5 of ingress-nginx
