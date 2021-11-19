@@ -38,6 +38,7 @@ metadata:
   namespace: ingress-nginx
 data:
   allow-snippet-annotations: 'true'
+  proxy-buffer-size: "16k"
 ---
 # Source: ingress-nginx/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1

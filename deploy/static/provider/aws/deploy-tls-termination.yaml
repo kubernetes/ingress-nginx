@@ -45,6 +45,7 @@ data:
     }
   proxy-real-ip-cidr: XXX.XXX.XXX/XX
   use-forwarded-headers: 'true'
+  proxy-buffer-size: "16k"
 ---
 # Source: ingress-nginx/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
