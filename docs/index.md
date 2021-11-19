@@ -111,10 +111,9 @@ DESCRIPTION:
 The `.spec.ingressClassName` behavior has precedence over the deprecated `kubernetes.io/ingress.class` annotation.
 
 
+## I have only one ingress controller in my cluster. What should I do?
 
-## I have only one instance of the Ingress-NGINX controller in my cluster. What should I do ?
-
-If you have only one instance of the Ingress-NGINX controller running in your cluster, and you still want to use IngressClass, you should add the annotation `ingressclass.kubernetes.io/is-default-class` in your IngressClass, so that any new Ingress objects will have this one as default IngressClass.
+If a single instance of the Ingress-NGINX controller is the sole Ingress controller running in your cluster, you should add the annotation "ingressclass.kubernetes.io/is-default-class" in your IngressClass, so any new Ingress objects will have this one as default IngressClass.
 
 When using Helm, you can enable this annotation by setting `.controller.ingressClassResource.default: true` in your Helm chart installation's values file.
 
