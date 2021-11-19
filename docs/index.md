@@ -114,9 +114,15 @@ The `.spec.ingressClassName` behavior has precedence over the deprecated `kubern
 
 ## I have only one instance of the Ingress-NGINX controller in my cluster. What should I do ?
 
-- If you have only one instance of the Ingress-NGINX controller running in your cluster, and you still want to use IngressClass, you should add the annotation `ingressclass.kubernetes.io/is-default-class` in your IngressClass, so that any new Ingress objects will have this one as default IngressClass.
+If you have only one instance of the Ingress-NGINX controller running in your cluster, and you still want to use IngressClass, you should add the annotation `ingressclass.kubernetes.io/is-default-class` in your IngressClass, so that any new Ingress objects will have this one as default IngressClass.
 
-In this case, you need to make your controller aware of the objects. If you have any Ingress objects that don't yet have either the [`.spec.ingressClassName`](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec) field set in their manifest, or the ingress annotation (`kubernetes.io/ingress.class`), then you should start your Ingress-NGINX controller with the flag [--watch-ingress-without-class=true](#what-is-the-flag-watch-ingress-without-class).
+When using Helm, you can enable this annotation by setting `.controller.ingressClassResource.default: true` in your Helm chart installation's values file.
+
+If you have any old Ingress objects remaining without an IngressClass set, you can do one or more of the following to make the Ingress-NGINX controller aware of the old objects:
+
+- You can manually set the [`.spec.ingressClassName`](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec) field in the manifest of your own Ingress resources.
+- You can re-create them after adding the "ingressclass.kubernetes.io/is-default-class" annotation to the IngressClass
+- Alternatively you can make the Ingress-NGINX controller watch Ingress objects without the ingressClassName field set by starting your Ingress-NGINX with the flag [--watch-ingress-without-class=true](## What is the flag '--watch-ingress-without-class' ?) . When using Helm, you can configure your Helm chart installation's values file with `.controller.watchIngressWithoutClass: true`
 
 You can configure your Helm chart installation's values file with `.controller.watchIngressWithoutClass: true`. 
 
