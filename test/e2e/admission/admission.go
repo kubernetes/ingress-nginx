@@ -144,7 +144,8 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 	})
 
 	ginkgo.It("should not return an error if the Ingress V1 definition is valid with Ingress Class", func() {
-		err := createIngress(f.Namespace, validV1Ingress)
+		out, err := createIngress(f.Namespace, validV1Ingress)
+		assert.Equal(ginkgo.GinkgoT(), "ingress.networking.k8s.io/extensions created\n", out)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
@@ -159,7 +160,8 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 	})
 
 	ginkgo.It("should not return an error if the Ingress V1 definition is valid with IngressClass annotation", func() {
-		err := createIngress(f.Namespace, validV1IngressAnnotation)
+		out, err := createIngress(f.Namespace, validV1IngressAnnotation)
+		assert.Equal(ginkgo.GinkgoT(), "ingress.networking.k8s.io/extensions-class created\n", out)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
@@ -174,7 +176,8 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 	})
 
 	ginkgo.It("should return an error if the Ingress V1 definition contains invalid annotations", func() {
-		err := createIngress(f.Namespace, invalidV1Ingress)
+		out, err := createIngress(f.Namespace, invalidV1Ingress)
+		assert.Empty(ginkgo.GinkgoT(), out)
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress using kubectl")
 
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), "extensions-invalid", metav1.GetOptions{})
@@ -264,20 +267,22 @@ spec:
 `
 )
 
-func createIngress(namespace, ingressDefinition string) error {
+func createIngress(namespace, ingressDefinition string) (string, error) {
 	var (
+		execOut bytes.Buffer
 		execErr bytes.Buffer
 	)
 
 	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v --warnings-as-errors=false apply --namespace %s -f -", framework.KubectlPath, namespace))
 	cmd.Stdin = strings.NewReader(ingressDefinition)
+	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 
 	err := cmd.Run()
 	if err != nil {
 		stderr := strings.TrimSpace(execErr.String())
-		return fmt.Errorf("Kubectl error: %v\n%v", err, stderr)
+		return "", fmt.Errorf("kubectl error: %v\n%v", err, stderr)
 	}
 
-	return nil
+	return execOut.String(), nil
 }
