@@ -23,7 +23,6 @@ local ngx = ngx
 -- it will take <the delay until controller POSTed the backend object to the
 -- Nginx endpoint> + BACKENDS_SYNC_INTERVAL
 local BACKENDS_SYNC_INTERVAL = 1
-local BACKENDS_FORCE_SYNC_INTERVAL = 30
 
 local DEFAULT_LB_ALG = "round_robin"
 local IMPLEMENTATIONS = {
@@ -146,10 +145,7 @@ end
 
 local function sync_backends()
   local raw_backends_last_synced_at = configuration.get_raw_backends_last_synced_at()
-  ngx.update_time()
-  local current_timestamp = ngx.time()
-  if current_timestamp - backends_last_synced_at < BACKENDS_FORCE_SYNC_INTERVAL
-      and raw_backends_last_synced_at <= backends_last_synced_at then
+  if raw_backends_last_synced_at <= backends_last_synced_at then
     return
   end
 
