@@ -256,7 +256,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 				return fmt.Errorf("This deployment has a custom annotation prefix defined. Use '%s' instead of '%s'", parser.AnnotationsPrefix, parser.DefaultAnnotationsPrefix)
 			}
 		}
-		
+
 		if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.AnnotationsPrefix)) && len(arrayBadWords) != 0 {
 			for _, forbiddenvalue := range arrayBadWords {
 				if strings.Contains(value, strings.TrimSpace(forbiddenvalue)) {

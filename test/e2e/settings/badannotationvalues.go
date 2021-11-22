@@ -44,7 +44,7 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.UpdateNginxConfigMapData("allow-snippet-annotations", "true")
 		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "something_forbidden,otherthing_forbidden,{")
-		
+
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -138,7 +138,6 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 			# something_forbidden`,
 		}
 
-
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "something_forbidden,otherthing_forbidden")
 		// Sleep a while just to guarantee that the configmap is applied
@@ -150,12 +149,10 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 				return !strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
-
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return !strings.Contains(server, "# something_forbidden")
 			})
-
 
 		f.HTTPTestClient().
 			GET("/").

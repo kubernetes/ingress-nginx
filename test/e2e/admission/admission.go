@@ -126,7 +126,6 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/connection-proxy-header": "a;}",
-
 		}
 
 		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "}")
@@ -143,7 +142,7 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 			"nginx.ingress.kubernetes.io/connection-proxy-header": "set_by_lua",
 		}
 
-		f.UpdateNginxConfigMapData( "annotation-value-word-blocklist", "set_by_lua")
+		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "set_by_lua")
 
 		firstIngress := framework.NewSingleIngress("first-ingress", "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
