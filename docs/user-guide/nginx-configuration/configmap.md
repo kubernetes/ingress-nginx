@@ -172,6 +172,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-redirect-from](#proxy-redirect-from)|string|"off"|
 |[proxy-request-buffering](#proxy-request-buffering)|string|"on"|
 |[ssl-redirect](#ssl-redirect)|bool|"true"|
+|[force-ssl-redirect](#force-ssl-redirect)|bool|"false"|
 |[whitelist-source-range](#whitelist-source-range)|[]string|[]string{}|
 |[skip-access-log-urls](#skip-access-log-urls)|[]string|[]string{}|
 |[limit-rate](#limit-rate)|int|0|
@@ -1063,6 +1064,10 @@ Enables or disables [buffering of a client request body](http://nginx.org/en/doc
 
 Sets the global value of redirects (301) to HTTPS if the server has a TLS certificate (defined in an Ingress rule).
 _**default:**_ "true"
+
+## force-ssl-redirect
+Sets the global value of redirects (308) to HTTPS if the server has a default TLS certificate (defined in extra-args).
+_**default:**_ "false"
 
 ## whitelist-source-range
 

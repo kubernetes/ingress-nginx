@@ -44,6 +44,8 @@ add `--default-ssl-certificate=default/foo-tls` in the `nginx-controller` deploy
 The default certificate will also be used for ingress `tls:` sections that do not
 have a `secretName` option.
 
+To force redirects for Ingresses that do not specify a TLS-block at all, take a look at `force-ssl-redirect` in [ConfigMap][ConfigMap].
+
 ## SSL Passthrough
 
 The [`--enable-ssl-passthrough`](cli-arguments.md) flag enables the SSL Passthrough feature, which is disabled by
