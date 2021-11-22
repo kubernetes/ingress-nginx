@@ -83,7 +83,7 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 		}
 
 		review.Response = status
-		return review, err
+		return review, nil
 	}
 
 	if err := ia.Checker.CheckIngress(&ingress); err != nil {
@@ -95,7 +95,7 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 		}
 
 		review.Response = status
-		return review, err
+		return review, nil
 	}
 
 	klog.InfoS("successfully validated configuration, accepting", "ingress", fmt.Sprintf("%v/%v", review.Request.Name, review.Request.Namespace))
