@@ -18,7 +18,6 @@ package config
 
 import (
 	"strconv"
-	"strings"
 	"time"
 
 	"k8s.io/klog/v2"
@@ -767,21 +766,6 @@ func NewDefault() Configuration {
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
 	defResponseHeaders := make([]string, 0)
-
-	defAnnotationValueWordBlocklist := []string{
-		"load_module",
-		"lua_package",
-		"_by_lua",
-		"location",
-		"root",
-		"proxy_pass",
-		"serviceaccount",
-		"{",
-		"}",
-		"'",
-		"\\",
-	}
-
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
@@ -792,7 +776,7 @@ func NewDefault() Configuration {
 
 		AllowSnippetAnnotations:          true,
 		AllowBackendServerHeader:         false,
-		AnnotationValueWordBlocklist:     strings.Join(defAnnotationValueWordBlocklist, ","),
+		AnnotationValueWordBlocklist:     "",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,

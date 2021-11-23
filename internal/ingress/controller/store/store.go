@@ -823,10 +823,11 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 	copyIng := &networkingv1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 
-	klog.Errorf("Blocklist: %v", s.backendConfig.AnnotationValueWordBlocklist)
-	if err := checkBadAnnotationValue(copyIng.Annotations, s.backendConfig.AnnotationValueWordBlocklist); err != nil {
-		klog.Errorf("skipping ingress %s: %s", key, err)
-		return
+	if s.backendConfig.AnnotationValueWordBlocklist != "" {
+		if err := checkBadAnnotationValue(copyIng.Annotations, s.backendConfig.AnnotationValueWordBlocklist); err != nil {
+			klog.Errorf("skipping ingress %s: %s", key, err)
+			return
+		}
 	}
 
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
