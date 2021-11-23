@@ -242,7 +242,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 
 	if cfg.AnnotationValueWordBlocklist != "" {
 		arrayBadWords = strings.Split(strings.TrimSpace(cfg.AnnotationValueWordBlocklist), ",")
-		klog.Warningf("Blocklist is %s", cfg.AnnotationValueWordBlocklist)
 	}
 
 	for key, value := range ing.ObjectMeta.GetAnnotations() {
@@ -256,7 +255,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.AnnotationsPrefix)) && len(arrayBadWords) != 0 {
 			for _, forbiddenvalue := range arrayBadWords {
 				if strings.Contains(value, strings.TrimSpace(forbiddenvalue)) {
-					klog.Errorf("%s annotation contains invalid word %s", key, forbiddenvalue)
 					return fmt.Errorf("%s annotation contains invalid word %s", key, forbiddenvalue)
 				}
 			}
