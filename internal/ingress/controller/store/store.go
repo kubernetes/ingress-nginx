@@ -825,7 +825,7 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 
 	if s.backendConfig.AnnotationValueWordBlocklist != "" {
 		if err := checkBadAnnotationValue(copyIng.Annotations, s.backendConfig.AnnotationValueWordBlocklist); err != nil {
-			klog.Errorf("skipping ingress %s: %s", key, err)
+			klog.Warningf("skipping ingress %s: %s", key, err)
 			return
 		}
 	}
