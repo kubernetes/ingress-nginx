@@ -283,6 +283,30 @@ entries:
         - Fix selector for shuttind down Pods status
         - Fix overlap check when ingress is configured as canary
     apiVersion: v2
+    appVersion: 0.50.0
+    created: "2021-11-24T20:16:26.460509271Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    digest: 71e029d485e9f95c83d41a969a0a17329e07d2c7111e80db6851865f2a9bc24e
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-3.40.0/ingress-nginx-3.40.0.tgz
+    version: 3.40.0
+  - annotations:
+      artifacthub.io/changes: |
+        - Fix selector for shuttind down Pods status
+        - Fix overlap check when ingress is configured as canary
+    apiVersion: v2
     appVersion: 0.49.3
     created: "2021-10-04T14:18:01.90589552Z"
     description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
