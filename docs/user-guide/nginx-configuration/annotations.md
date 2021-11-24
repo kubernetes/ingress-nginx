@@ -576,7 +576,7 @@ By default the NGINX ingress controller uses a list of all endpoints (Pod IP/por
 
 The `nginx.ingress.kubernetes.io/service-upstream` annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 
-This can be desirable for things like zero-downtime deployments as it reduces the need to reload NGINX configuration when Pods come up and down. See issue [#257](https://github.com/kubernetes/ingress-nginx/issues/257).
+This can be desirable for things like zero-downtime deployments . See issue [#257](https://github.com/kubernetes/ingress-nginx/issues/257).
 
 #### Known Issues
 
