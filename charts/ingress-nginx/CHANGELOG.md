@@ -2,6 +2,11 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 3.40.0
+- [7973](https://github.com/kubernetes/ingress-nginx/pull/7973) update controller version to v0.50.0
+- [7963](https://github.com/kubernetes/ingress-nginx/pull/7963) Change sanitization message from error to warning (#7963)
+- [7942](https://github.com/kubernetes/ingress-nginx/pull/7942) update default block list,docs, tests (#7942)
+
 ### 3.39.0
 - [7742] https://github.com/kubernetes/ingress-nginx/pull/7742 Release v0.49.3 with bugfixes
 

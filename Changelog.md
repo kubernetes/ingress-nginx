@@ -1,5 +1,21 @@
 # Changelog
 
+### 0.50.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.50.0@sha256:f46fc2d161c97a9d950635acb86fb3f8d4adcfb03ee241ea89c6cde16aa3fdf8`
+
+This release makes the annotation `annotation-value-word-blocklist` backwards compatible by being an empty list instead of prescribed defaults.
+Effectively reverting [7874](https://github.com/kubernetes/ingress-nginx/pull/7874) but keeping the functionality of `annotation-value-word-blocklist`
+
+See Issue [7939](https://github.com/kubernetes/ingress-nginx/pull/7939) for more discussion
+
+Admins should still consider putting a reasonable block list in place, more information on why can be found [here](https://github.com/kubernetes/ingress-nginx/issues/7837) and how in our documentation [here](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#annotation-value-word-blocklist)
+
+_Changes:_
+- [7963](https://github.com/kubernetes/ingress-nginx/pull/7963) Change sanitization message from error to warning (#7963)
+- [7942](https://github.com/kubernetes/ingress-nginx/pull/7942) update default block list,docs, tests (#7942)
 
 ### 0.49.0
 
