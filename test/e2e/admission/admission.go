@@ -217,17 +217,6 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid annotation value should return an error")
 	})
-
-	ginkgo.It("should return an error if there is a forbidden value in some annotation", func() {
-		host := "admission-test"
-
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/connection-proxy-header": "set_by_lua",
-		}
-		firstIngress := framework.NewSingleIngress("first-ingress", "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		_, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
-		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid annotation value should return an error")
-	})
 })
 
 func uninstallChart(f *framework.Framework) error {
