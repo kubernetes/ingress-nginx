@@ -906,6 +906,10 @@ stream {
 
         set $proxy_upstream_name "-";
 
+        {{ if eq $server.Hostname "_" }}
+        ssl_reject_handshake {{ if $all.Cfg.SSLRejectHandshake }}on{{ else }}off{{ end }};
+        {{ end }}
+
         ssl_certificate_by_lua_block {
             certificate.call()
         }
