@@ -5,6 +5,7 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 ### 4.0.11
 
 - [7978] https://github.com/kubernetes/ingress-nginx/pull/7979 Support custom annotations in admissions Jobs
+- [7873] https://github.com/kubernetes/ingress-nginx/pull/7873 Makes the [appProtocol](https://kubernetes.io/docs/concepts/services-networking/_print/#application-protocol) field optional.
 
 ### 4.0.10
 
