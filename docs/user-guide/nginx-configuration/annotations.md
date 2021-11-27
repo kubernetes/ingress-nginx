@@ -531,11 +531,11 @@ for that error to decide if you need to bump the cache size. Without cache the c
 request is two memcached commands: `GET`, and `INCR`. With the cache it is only `INCR`.
 1. Log NGINX variable `$global_rate_limit_exceeding`'s value to have some visibility into
 what portion of requests are rejected (value `y`), whether they are rejected using cached decision (value `c`),
-or if they are not rejeced (default value `n`). You can use [log-format-upstream](./configmap.md#log-format-upstream)
+or if they are not rejected (default value `n`). You can use [log-format-upstream](./configmap.md#log-format-upstream)
 to include that in access logs.
 1. In case of an error it will log the error message and **fail open**.
 1. The annotations below creates Global Rate Limiting instance per ingress.
-That means if there are multuple paths configured under the same ingress,
+That means if there are multiple paths configured under the same ingress,
 the Global Rate Limiting will count requests to all the paths under the same counter.
 Extract a path out into its own ingress if you need to isolate a certain path.
 
