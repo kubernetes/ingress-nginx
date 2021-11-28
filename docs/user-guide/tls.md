@@ -123,7 +123,7 @@ spec:
 
 To provide the most secure baseline configuration possible,
 
-nginx-ingress defaults to using TLS 1.2 and 1.3 only, with a [secure set of TLS ciphers][ssl-ciphers].
+ingress-nginx defaults to using TLS 1.2 and 1.3 only, with a [secure set of TLS ciphers][ssl-ciphers].
 
 ### Legacy TLS
 
@@ -131,7 +131,7 @@ The default configuration, though secure, does not support some older browsers a
 
 For instance, TLS 1.1+ is only enabled by default from Android 5.0 on. At the time of writing,
 May 2018, [approximately 15% of Android devices](https://developer.android.com/about/dashboards/#Platform)
-are not compatible with nginx-ingress's default configuration.
+are not compatible with ingress-nginx's default configuration.
 
 To change this default behavior, use a [ConfigMap][ConfigMap].
 

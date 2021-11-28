@@ -2,7 +2,7 @@
 
 The following command line arguments are accepted by the Ingress controller executable.
 
-They are set in the container spec of the `nginx-ingress-controller` Deployment manifest
+They are set in the container spec of the `ingress-nginx-controller` Deployment manifest
 
 | Argument | Description |
 |----------|-------------|

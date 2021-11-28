@@ -16,7 +16,7 @@ spec:
   template:
      spec:
        containers:
-         - name: nginx-ingress-internal-controller
+         - name: ingress-nginx-internal-controller
            args:
              - /nginx-ingress-controller
              - '--controller-class=k8s.io/internal-ingress-nginx'
@@ -98,7 +98,7 @@ spec:
   template:
      spec:
        containers:
-         - name: nginx-ingress-internal-controller
+         - name: ingress-nginx-internal-controller
            args:
              - /nginx-ingress-controller
              - --ingress-class=internal-nginx

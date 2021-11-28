@@ -14,7 +14,7 @@ I.e. if your deployment resource looks like (partial example):
 ```yaml
 kind: Deployment
 metadata:
-  name: nginx-ingress-controller
+  name: ingress-nginx-controller
   namespace: ingress-nginx
 spec:
   replicas: 1
@@ -23,21 +23,21 @@ spec:
     metadata: ...
     spec:
       containers:
-        - name: nginx-ingress-controller
-          image: k8s.gcr.io/ingress-nginx/controller:v0.34.0@sha256:56633bd00dab33d92ba14c6e709126a762d54a75a6e72437adefeaaca0abb069
+        - name: ingress-nginx-controller
+          image: k8s.gcr.io/ingress-nginx/controller:v1.0.4@sha256:545cff00370f28363dad31e3b59a94ba377854d3a11f18988f5f9e56841ef9ef
           args: ...
 ```
 
-simply change the `0.34.0` tag to the version you wish to upgrade to.
+simply change the `v1.0.4` tag to the version you wish to upgrade to.
 The easiest way to do this is e.g. (do note you may need to change the name parameter according to your installation):
 
 ```
-kubectl set image deployment/nginx-ingress-controller \
-  nginx-ingress-controller=k8s.gcr.io/ingress-nginx/controller:v0.34.1@sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20 \
+kubectl set image deployment/ingress-nginx-controller \
+  controller=k8s.gcr.io/ingress-nginx/controller:v1.0.5@sha256:55a1fcda5b7657c372515fe402c3e39ad93aa59f6e4378e82acd99912fe6028d \
   -n ingress-nginx
 ```
 
-For interactive editing, use `kubectl edit deployment nginx-ingress-controller -n ingress-nginx`.
+For interactive editing, use `kubectl edit deployment ingress-nginx-controller -n ingress-nginx`.
 
 ## With Helm
 
