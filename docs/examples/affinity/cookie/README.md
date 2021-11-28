@@ -49,7 +49,7 @@ Annotations:
 Events:
   FirstSeen	LastSeen	Count	From				SubObjectPath	Type		Reason	Message
   ---------	--------	-----	----				-------------	--------	------	-------
-  7s		7s		1	{nginx-ingress-controller }			Normal		CREATE	default/nginx-test
+  7s		7s		1	{ingress-nginx-controller }			Normal		CREATE	default/nginx-test
 
 
 $ curl -I http://stickyingress.example.com

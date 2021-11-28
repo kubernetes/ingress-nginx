@@ -68,7 +68,7 @@ Use "ingress-nginx [command] --help" for more information about a command.
 ## Common Flags
 
 - Every subcommand supports the basic `kubectl` configuration flags like `--namespace`, `--context`, `--client-key` and so on.
-- Subcommands that act on a particular `ingress-nginx` pod (`backends`, `certs`, `conf`, `exec`, `general`, `logs`, `ssh`), support the `--deployment <deployment>` and `--pod <pod>` flags to select either a pod from a deployment with the given name, or a pod with the given name. The `--deployment` flag defaults to `nginx-ingress-controller`.
+- Subcommands that act on a particular `ingress-nginx` pod (`backends`, `certs`, `conf`, `exec`, `general`, `logs`, `ssh`), support the `--deployment <deployment>` and `--pod <pod>` flags to select either a pod from a deployment with the given name, or a pod with the given name. The `--deployment` flag defaults to `ingress-nginx-controller`.
 - Subcommands that inspect resources (`ingresses`, `lint`) support the `--all-namespaces` flag, which causes them to inspect resources in every namespace.
 
 ## Subcommands
@@ -263,7 +263,7 @@ Checking ingresses...
       https://github.com/kubernetes/ingress-nginx/issues/3174
 
 Checking deployments...
-✗ namespace2/nginx-ingress-controller
+✗ namespace2/ingress-nginx-controller
   - Uses removed config flag --sort-backends
       Lint added for version 0.22.0
       https://github.com/kubernetes/ingress-nginx/issues/3655
@@ -283,7 +283,7 @@ Checking ingresses...
        https://github.com/kubernetes/ingress-nginx/issues/3743
 
 Checking deployments...
-✗ namespace2/nginx-ingress-controller
+✗ namespace2/ingress-nginx-controller
   - Uses removed config flag --enable-dynamic-certificates
       Lint added for version 0.24.0
       https://github.com/kubernetes/ingress-nginx/issues/3808
@@ -318,5 +318,5 @@ I0405 16:53:46.193913       7 event.go:209] Event(v1.ObjectReference{Kind:"Confi
 
 ```console
 $ kubectl ingress-nginx ssh -n ingress-nginx
-www-data@nginx-ingress-controller-7cbf77c976-wx5pn:/etc/nginx$
+www-data@ingress-nginx-controller-7cbf77c976-wx5pn:/etc/nginx$
 ```

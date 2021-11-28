@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-ingress-controller
+  name: ingress-nginx-controller
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
@@ -18,14 +18,14 @@ spec:
         app.kubernetes.io/part-of: ingress-nginx
     spec:
       # hostNetwork makes it possible to use ipv6 and to preserve the source IP correctly regardless of docker configuration
-      # however, it is not a hard dependency of the nginx-ingress-controller itself and it may cause issues if port 10254 already is taken on the host
+      # however, it is not a hard dependency of the ingress-nginx-controller itself and it may cause issues if port 10254 already is taken on the host
       # that said, since hostPort is broken on CNI (https://github.com/kubernetes/kubernetes/issues/31307) we have to use hostNetwork where CNI is used
       # like with kubeadm
       # hostNetwork: true
       terminationGracePeriodSeconds: 60
       containers:
-      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.33.0
-        name: nginx-ingress-controller
+      - image: k8s.gcr.io/ingress-nginx/controller:v1.0.5
+        name: controller
         readinessProbe:
           httpGet:
             path: /healthz
@@ -54,4 +54,4 @@ spec:
                 fieldPath: metadata.namespace
         args:
         - /nginx-ingress-controller
-        - --publish-service=$(POD_NAMESPACE)/nginx-ingress-lb
+        - --publish-service=$(POD_NAMESPACE)/ingress-nginx-lb

@@ -65,10 +65,10 @@ Annotations:
 Events:
   FirstSeen	LastSeen	Count	From				SubObjectPath	Type		Reason	Message
   ---------	--------	-----	----				-------------	--------	------	-------
-  7s		7s		1	{nginx-ingress-controller }			Normal		CREATE	default/nginx-test
-  7s		7s		1	{nginx-ingress-controller }			Normal		UPDATE	default/nginx-test
-  7s		7s		1	{nginx-ingress-controller }			Normal		CREATE	ip: 104.198.183.6
-  7s		7s		1	{nginx-ingress-controller }			Warning		MAPPING	Ingress rule 'default/nginx-test' contains no path definition. Assuming /
+  7s		7s		1	{ingress-nginx-controller }			Normal		CREATE	default/nginx-test
+  7s		7s		1	{ingress-nginx-controller }			Normal		UPDATE	default/nginx-test
+  7s		7s		1	{ingress-nginx-controller }			Normal		CREATE	ip: 104.198.183.6
+  7s		7s		1	{ingress-nginx-controller }			Warning		MAPPING	Ingress rule 'default/nginx-test' contains no path definition. Assuming /
 
 $ curl 104.198.183.6 -L
 curl: (60) SSL certificate problem: self signed certificate

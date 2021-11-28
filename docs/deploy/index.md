@@ -288,7 +288,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 ### Checking ingress controller version
 
-Run `nginx-ingress-controller --version` within the pod, for instance with `kubectl exec`:
+Run `ingress-nginx-controller --version` within the pod, for instance with `kubectl exec`:
 
 ```console
 POD_NAMESPACE=ingress-nginx

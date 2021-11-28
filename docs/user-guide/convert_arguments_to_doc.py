@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """
-Convert the output of `nginx-ingress-controller --help` to
+Convert the output of `ingress-nginx-controller --help` to
 a Markdown table.
 """
 
