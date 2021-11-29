@@ -843,6 +843,7 @@ func NewDefault() Configuration {
 		SSLECDHCurve:                     "auto",
 		SSLProtocols:                     sslProtocols,
 		SSLEarlyData:                     sslEarlyData,
+		SSLRejectHandshake:               false,
 		SSLSessionCache:                  true,
 		SSLSessionCacheSize:              sslSessionCacheSize,
 		SSLSessionTickets:                false,
