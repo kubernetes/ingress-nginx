@@ -1,6 +1,5 @@
 local require = require
 local ngx = ngx
-local pairs = pairs
 local ipairs = ipairs
 local string_format = string.format
 local ngx_log = ngx.log
