@@ -113,8 +113,15 @@ Set up a DNS record pointing to that IP address or FQDN; then create an ingress 
 
 ```console
 kubectl create ingress demo --class=nginx \
-  --rule=www.demo.io/*=demo:80
+  --rule="www.demo.io/*=demo:80"
 ```
+
+Alternatively, the above command can be rewritten as follows for the ```--rule``` command and below.
+```console
+kubectl create ingress demo --class=nginx \
+  --rule www.demo.io/=demo:80
+```
+
 
 You should then be able to see the "It works!" page when you connect to http://www.demo.io/. Congratulations, you are serving a public web site hosted on a Kubernetes cluster! 🎉
 
