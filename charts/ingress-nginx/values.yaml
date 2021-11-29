@@ -563,6 +563,11 @@ controller:
 
   admissionWebhooks:
     annotations: {}
+    # ignore-check.kube-linter.io/no-read-only-rootfs: "This deployment needs write access to root filesystem".
+
+    ## Additional annotations to the admission webhooks.
+    ## These annotations will be added to the ValidatingWebhookConfiguration and
+    ## the Jobs Spec of the admission webhooks.
     enabled: true
     failurePolicy: Fail
     # timeoutSeconds: 10
