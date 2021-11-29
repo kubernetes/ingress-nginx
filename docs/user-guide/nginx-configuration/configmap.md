@@ -208,6 +208,7 @@ The following table shows a configuration option's name, type, and the default v
 |[global-rate-limit-memcached-pool-size](#global-rate-limit)|int|50|
 |[global-rate-limit-status-code](#global-rate-limit)|int|429|
 |[service-upstream](#service-upstream)|bool|"false"|
+|[ssl-reject-handshake](#ssl-reject-handshake)|bool|"false"|
 
 ## add-headers
 
@@ -1263,3 +1264,11 @@ that ingress-nginx includes. Refer to the link to learn more about `lua-resty-gl
 
 Set if the service's Cluster IP and port should be used instead of a list of all endpoints. This can be overwritten by an annotation on an Ingress rule.
 _**default:**_ "false"
+
+## ssl-reject-handshake
+
+Set to reject SSL handshake to an unknown virtualhost. This paramter helps to mitigate the fingerprinting using default certificate of ingress.
+_**default:**_ "false"
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_reject_handshake](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_reject_handshake)

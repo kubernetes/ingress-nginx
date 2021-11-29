@@ -388,6 +388,11 @@ type Configuration struct {
 	// https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
 	SSLBufferSize string `json:"ssl-buffer-size,omitempty"`
 
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_reject_handshake
+	// If enabled, SSL handshakes to an invalid virtualhost will be rejected
+	// Default: false
+	SSLRejectHandshake bool `json:"ssl-reject-handshake"`
+
 	// Enables or disables the use of the PROXY protocol to receive client connection
 	// (real IP address) information passed through proxy servers and load balancers
 	// such as HAproxy and Amazon Elastic Load Balancer (ELB).
@@ -838,6 +843,7 @@ func NewDefault() Configuration {
 		SSLECDHCurve:                     "auto",
 		SSLProtocols:                     sslProtocols,
 		SSLEarlyData:                     sslEarlyData,
+		SSLRejectHandshake:               false,
 		SSLSessionCache:                  true,
 		SSLSessionCacheSize:              sslSessionCacheSize,
 		SSLSessionTickets:                false,
