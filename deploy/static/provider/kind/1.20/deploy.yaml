@@ -1,4 +1,3 @@
-#GENERATED FOR K8S 1.20
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -339,10 +338,7 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  annotations: null
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: ingress-nginx
@@ -353,7 +349,6 @@ metadata:
   name: ingress-nginx-controller
   namespace: ingress-nginx
 spec:
-  externalTrafficPolicy: Local
   ipFamilies:
   - IPv4
   ipFamilyPolicy: SingleStack
@@ -372,7 +367,7 @@ spec:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
-  type: LoadBalancer
+  type: NodePort
 ---
 apiVersion: v1
 kind: Service
@@ -418,6 +413,10 @@ spec:
       app.kubernetes.io/component: controller
       app.kubernetes.io/instance: ingress-nginx
       app.kubernetes.io/name: ingress-nginx
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -428,13 +427,14 @@ spec:
       containers:
       - args:
         - /nginx-ingress-controller
-        - --publish-service=$(POD_NAMESPACE)/ingress-nginx-controller
         - --election-id=ingress-controller-leader
         - --controller-class=k8s.io/ingress-nginx
         - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
         - --validating-webhook=:8443
         - --validating-webhook-certificate=/usr/local/certificates/cert
         - --validating-webhook-key=/usr/local/certificates/key
+        - --watch-ingress-without-class=true
+        - --publish-status-address=localhost
         env:
         - name: POD_NAME
           valueFrom:
@@ -466,9 +466,11 @@ spec:
         name: controller
         ports:
         - containerPort: 80
+          hostPort: 80
           name: http
           protocol: TCP
         - containerPort: 443
+          hostPort: 443
           name: https
           protocol: TCP
         - containerPort: 8443
@@ -502,9 +504,14 @@ spec:
           readOnly: true
       dnsPolicy: ClusterFirst
       nodeSelector:
+        ingress-ready: "true"
         kubernetes.io/os: linux
       serviceAccountName: ingress-nginx
-      terminationGracePeriodSeconds: 300
+      terminationGracePeriodSeconds: 0
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Equal
       volumes:
       - name: webhook-cert
         secret:
