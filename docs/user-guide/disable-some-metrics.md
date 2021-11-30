@@ -29,7 +29,7 @@ we can change "upstreamLatency = tonumber(ngx.var.upstream_connect_time) or -1,"
 
 # create a configmap
 
-get monitor.lua from repository
+get monitor.lua from repository,create a configmap
 
 ```
 kubectl create configmap monitor-lua --from-file=monitor.lua -n ingress-nginx
