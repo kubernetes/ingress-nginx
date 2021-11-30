@@ -55,8 +55,11 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 !!! info
     The YAML manifest in the command above was generated with `helm template`, so you will end up with almost the same resources as if you had used Helm to install the controller.
 
-If you are running an old version of Kubernetes (1.18 or earlier), please read
-[this paragraph](#running-on-Kubernetes-versions-older-than-1.19) for specific instructions.
+!!! attention
+  If you are running an old version of Kubernetes (1.18 or earlier), please read
+  [this paragraph](#running-on-Kubernetes-versions-older-than-1.19) for specific instructions.
+  Because of api deprecations, the default manifest may not work on your cluster.
+  Specific manifests for supported Kubernetes versions are available within a subfolder of each provider.
 
 ### Pre-flight check
 
@@ -186,12 +189,13 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 ##### TLS termination in AWS Load Balancer (NLB)
 
-By default, TLS is terminated in the ingress controller. But it is also possible to terminate TLS in the Load Balancer. This section explains how to do that on AWS with using an NLB.
+By default, TLS is terminated in the ingress controller. But it is also possible to terminate TLS in the Load Balancer. This section explains how to do that on AWS using an NLB.
 
-1. Download the the [deploy-tls-termination.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/aws/deploy-tls-termination.yaml) template:
-   ```console
-   wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/aws/deploy-tls-termination.yaml
-   ```
+1. Download the [deploy.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml) template
+
+  ```console
+  wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml
+  ```
 
 2. Edit the file and change the VPC CIDR in use for the Kubernetes cluster:
    ```
@@ -205,7 +209,7 @@ By default, TLS is terminated in the ingress controller. But it is also possible
 
 4. Deploy the manifest:
    ```console
-   kubectl apply -f deploy-tls-termination.yaml
+   kubectl apply -f deploy.yaml
    ```
 
 ##### NLB Idle Timeouts
