@@ -1,0 +1,36 @@
+# AWS NLB with TLS termination
+controller:
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+
+    annotations:
+      # This example is for legacy in-tree service load balancer controller for AWS NLB,
+      # that has been phased out from Kubernetes mainline.
+      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+      service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+      service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
+      # Ensure the ELB idle timeout is less than nginx keep-alive timeout. By default,
+      # NGINX keep-alive is set to 75s. If using WebSockets, the value will need to be
+      # increased to '3600' to avoid any potential issues.
+      service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+
+    targetPorts:
+      http: tohttps
+      https: http
+
+  # Configures the ports the nginx-controller listens on
+  containerPort:
+    http: 80
+    https: 80
+    tohttps: 2443
+
+  config:
+    proxy-real-ip-cidr: XXX.XXX.XXX/XX
+    use-forwarded-headers: "true"
+    http-snippet: |
+      server {
+        listen 2443;
+        return 308 https://$host$request_uri;
+      }

@@ -24,36 +24,27 @@ set -o pipefail
 
 DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 
-RELEASE_NAME=ingress-nginx
-NAMESPACE=ingress-nginx
-
-NAMESPACE_VAR="
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: $NAMESPACE
-  labels:
-    app.kubernetes.io/name: $RELEASE_NAME
-    app.kubernetes.io/instance: ingress-nginx
-"
-
 # clean
-# BUG # TODO
-# rm -rf ${DIR}/deploy/static/provider/*
+rm -rf ${DIR}/deploy/static/provider/*
 
+TEMPLATE_DIR="${DIR}/hack/manifest-templates"
 
-
-  # VALUES_FILE="./helm-values/baremetal/deploy.yaml"
-  # OUTPUT_FILE="${DIR}/deploy/static/provider/baremetal/deploy.yaml"
-TARGET_FILES=$(cd $DIR/hack/helm-values/ && find . -type f -name "*.yaml" | cut -d'/' -f2-)
-# echo $TARGET_FILES
-# exit 2
-for TARGET_FILE in ${TARGET_FILES}
+# each helm values file `values.yaml` will be generated as provider/<provider>[/variant]/deploy.yaml
+# TARGET is provider/<provider>[/variant]
+TARGETS=$(dirname $(cd $DIR/hack/manifest-templates/ && find . -type f -name "values.yaml" ) | cut -d'/' -f2-)
+echo $TARGETS
+for TARGET in ${TARGETS}
 do
-  VALUES_FILE="$DIR/hack/helm-values/${TARGET_FILE}"
-  OUTPUT_FILE="${DIR}/deploy/static/provider/${TARGET_FILE}"
+  TARGET_DIR="${TEMPLATE_DIR}/${TARGET}"
+  OUTPUT_DIR="${DIR}/deploy/static/${TARGET}"
+  MANIFEST=manifest.yaml # intermediate manifest
 
-  echo "${NAMESPACE_VAR}" > ${OUTPUT_FILE}
-  helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --values ${VALUES_FILE} --namespace $NAMESPACE | $DIR/hack/add-namespace.py $NAMESPACE >> ${OUTPUT_FILE}
-  # helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --values ${VALUES_FILE} --namespace $NAMESPACE >> ${OUTPUT_FILE}
+  mkdir -p ${OUTPUT_DIR}
+  pushd ${TARGET_DIR}
+  helm template ingress-nginx ${DIR}/charts/ingress-nginx --values values.yaml --namespace ingress-nginx > $MANIFEST
+  kustomize --load-restrictor=LoadRestrictionsNone build . > $OUTPUT_DIR/deploy.yaml
+  rm $MANIFEST
+  popd
+  # automatically generate the (unsupported) kustomization.yaml for each target
+  sed "s_{TARGET}_${TARGET}_" $TEMPLATE_DIR/kustomization-template.yaml > $OUTPUT_DIR/kustomization.yaml
 done

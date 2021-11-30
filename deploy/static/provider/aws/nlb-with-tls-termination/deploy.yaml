@@ -323,6 +323,13 @@ subjects:
 apiVersion: v1
 data:
   allow-snippet-annotations: "true"
+  http-snippet: |
+    server {
+      listen 2443;
+      return 308 https://$host$request_uri;
+    }
+  proxy-real-ip-cidr: XXX.XXX.XXX/XX
+  use-forwarded-headers: "true"
 kind: ConfigMap
 metadata:
   labels:
@@ -339,15 +346,11 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    service.beta.kubernetes.io/exoscale-loadbalancer-description: NGINX Ingress Controller
-      load balancer
-    service.beta.kubernetes.io/exoscale-loadbalancer-name: nginx-ingress-controller
-    service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-interval: 10s
-    service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-mode: http
-    service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-retries: "1"
-    service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-timeout: 3s
-    service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-uri: /
-    service.beta.kubernetes.io/exoscale-loadbalancer-service-strategy: source-hash
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: https
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: ingress-nginx
@@ -367,12 +370,12 @@ spec:
     name: http
     port: 80
     protocol: TCP
-    targetPort: http
+    targetPort: tohttps
   - appProtocol: https
     name: https
     port: 443
     protocol: TCP
-    targetPort: https
+    targetPort: http
   selector:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: ingress-nginx
@@ -404,7 +407,7 @@ spec:
   type: ClusterIP
 ---
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/component: controller
@@ -417,6 +420,7 @@ metadata:
   namespace: ingress-nginx
 spec:
   minReadySeconds: 0
+  replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -473,8 +477,11 @@ spec:
         - containerPort: 80
           name: http
           protocol: TCP
-        - containerPort: 443
+        - containerPort: 80
           name: https
+          protocol: TCP
+        - containerPort: 2443
+          name: tohttps
           protocol: TCP
         - containerPort: 8443
           name: webhook
