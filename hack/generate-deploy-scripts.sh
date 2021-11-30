@@ -37,179 +37,23 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
 "
 
-# Baremetal
-OUTPUT_FILE="${DIR}/deploy/static/provider/baremetal/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
-controller:
-  service:
-    type: NodePort
-
-  publishService:
-    enabled: false
-EOF
-
-echo "${NAMESPACE_VAR}
-$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
-
-# Cloud - generic
-OUTPUT_FILE="${DIR}/deploy/static/provider/cloud/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
-controller:
-  service:
-    type: LoadBalancer
-    externalTrafficPolicy: Local
-EOF
-
-echo "${NAMESPACE_VAR}
-$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
+# clean
+# BUG # TODO
+# rm -rf ${DIR}/deploy/static/provider/*
 
 
-# AWS - NLB
-OUTPUT_FILE="${DIR}/deploy/static/provider/aws/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
-controller:
-  service:
-    type: LoadBalancer
-    externalTrafficPolicy: Local
-    annotations:
-      service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
-      service.beta.kubernetes.io/aws-load-balancer-type: nlb
-      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-EOF
 
-echo "${NAMESPACE_VAR}
-$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
+  # VALUES_FILE="./helm-values/baremetal/deploy.yaml"
+  # OUTPUT_FILE="${DIR}/deploy/static/provider/baremetal/deploy.yaml"
+TARGET_FILES=$(cd $DIR/hack/helm-values/ && find . -type f -name "*.yaml" | cut -d'/' -f2-)
+# echo $TARGET_FILES
+# exit 2
+for TARGET_FILE in ${TARGET_FILES}
+do
+  VALUES_FILE="$DIR/hack/helm-values/${TARGET_FILE}"
+  OUTPUT_FILE="${DIR}/deploy/static/provider/${TARGET_FILE}"
 
-
-OUTPUT_FILE="${DIR}/deploy/static/provider/aws/deploy-tls-termination.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
-controller:
-  service:
-    type: LoadBalancer
-    externalTrafficPolicy: Local
-
-    annotations:
-      # This example is for legacy in-tree service load balancer controller for AWS NLB,
-      # that has been phased out from Kubernetes mainline.
-      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-      service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
-      service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"
-      service.beta.kubernetes.io/aws-load-balancer-type: nlb
-      # Ensure the ELB idle timeout is less than nginx keep-alive timeout. By default,
-      # NGINX keep-alive is set to 75s. If using WebSockets, the value will need to be
-      # increased to '3600' to avoid any potential issues.
-      service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
-
-    targetPorts:
-      http: tohttps
-      https: http
-
-  # Configures the ports the nginx-controller listens on
-  containerPort:
-    http: 80
-    https: 80
-    tohttps: 2443
-
-  config:
-    proxy-real-ip-cidr: XXX.XXX.XXX/XX
-    use-forwarded-headers: "true"
-    http-snippet: |
-      server {
-        listen 2443;
-        return 308 https://\$host\$request_uri;
-      }
-EOF
-
-echo "${NAMESPACE_VAR}
-$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
-
-# Kind - https://kind.sigs.k8s.io/docs/user/ingress/
-OUTPUT_FILE="${DIR}/deploy/static/provider/kind/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
-controller:
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-  hostPort:
-    enabled: true
-  terminationGracePeriodSeconds: 0
-  service:
-    type: NodePort
-  watchIngressWithoutClass: true
-
-  nodeSelector:
-    ingress-ready: "true"
-  tolerations:
-    - key: "node-role.kubernetes.io/master"
-      operator: "Equal"
-      effect: "NoSchedule"
-
-  publishService:
-    enabled: false
-  extraArgs:
-    publish-status-address: localhost
-EOF
-
-# Digital Ocean
-echo "${NAMESPACE_VAR}
-$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
-
-OUTPUT_FILE="${DIR}/deploy/static/provider/do/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
-controller:
-  service:
-    type: LoadBalancer
-    externalTrafficPolicy: Local
-    annotations:
-      service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
-  config:
-    use-proxy-protocol: "true"
-  admissionWebhooks:
-    timeoutSeconds: 29
-
-EOF
-
-# Scaleway
-echo "${NAMESPACE_VAR}
-$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
-
-OUTPUT_FILE="${DIR}/deploy/static/provider/scw/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
-controller:
-  service:
-    type: LoadBalancer
-    externalTrafficPolicy: Local
-    annotations:
-      service.beta.kubernetes.io/scw-loadbalancer-proxy-protocol-v2: "true"
-  config:
-    use-proxy-protocol: "true"
-
-EOF
-
-# Exoscale
-echo "${NAMESPACE_VAR}
-$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
-
-OUTPUT_FILE="${DIR}/deploy/static/provider/exoscale/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
-controller:
-  kind: DaemonSet
-  service:
-    type: LoadBalancer
-    externalTrafficPolicy: Local
-    annotations:
-      service.beta.kubernetes.io/exoscale-loadbalancer-name: "nginx-ingress-controller"
-      service.beta.kubernetes.io/exoscale-loadbalancer-description: "NGINX Ingress Controller load balancer"
-      service.beta.kubernetes.io/exoscale-loadbalancer-service-strategy: "source-hash"
-      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-mode: "http"
-      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-uri: "/"
-      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-interval: "10s"
-      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-timeout: "3s"
-      service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-retries: "1"
-  publishService:
-      enabled: true
-EOF
-
-echo "${NAMESPACE_VAR}
-$(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
+  echo "${NAMESPACE_VAR}" > ${OUTPUT_FILE}
+  helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --values ${VALUES_FILE} --namespace $NAMESPACE | $DIR/hack/add-namespace.py $NAMESPACE >> ${OUTPUT_FILE}
+  # helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --values ${VALUES_FILE} --namespace $NAMESPACE >> ${OUTPUT_FILE}
+done
