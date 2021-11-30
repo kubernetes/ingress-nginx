@@ -66,3 +66,9 @@ modify your deployment of ingress-nginx as below!
 ```
 
 ## restart ingress nginx controller
+
+rollout deployment of ingress nginx controller
+
+```
+kubectl rollout restart deployment  ingress-nginx-controller -n ingress-nginx
+```
