@@ -1,5 +1,6 @@
 # modify monitor.lua
 all metrics in monitor.lua
+
 ```
 local function metrics()
   return {
@@ -23,7 +24,7 @@ local function metrics()
   }
 end
 ```
-in some times we do not need upstreamLatency,
+for example, some times we do not need upstreamLatency,
 we can change "upstreamLatency = tonumber(ngx.var.upstream_connect_time) or -1," to "--upstreamLatency = -1,"
 
 # create a configmap
