@@ -37,7 +37,7 @@ for TARGET in ${TARGETS}
 do
   TARGET_DIR="${TEMPLATE_DIR}/${TARGET}"
   OUTPUT_DIR="${DIR}/deploy/static/${TARGET}"
-  MANIFEST=manifest.yaml # intermediate manifest
+  MANIFEST="${TEMPLATE_DIR}/common/manifest.yaml" # intermediate manifest
 
   mkdir -p ${OUTPUT_DIR}
   pushd ${TARGET_DIR}
@@ -46,5 +46,5 @@ do
   rm $MANIFEST
   popd
   # automatically generate the (unsupported) kustomization.yaml for each target
-  sed "s_{TARGET}_${TARGET}_" $TEMPLATE_DIR/kustomization-template.yaml > $OUTPUT_DIR/kustomization.yaml
+  sed "s_{TARGET}_${TARGET}_" $TEMPLATE_DIR/static-kustomization-template.yaml > $OUTPUT_DIR/kustomization.yaml
 done
