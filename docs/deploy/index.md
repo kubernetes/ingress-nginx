@@ -1,6 +1,7 @@
 # Installation Guide
 
 There are multiple ways to install the NGINX ingress controller:
+
 - with [Helm](https://helm.sh), using the project repository chart;
 - with `kubectl apply`, using YAML manifests;
 - with specific addons (e.g. for [minikube](#minikube) or [MicroK8s](#microk8s)).
@@ -12,23 +13,24 @@ On most Kubernetes clusters, the ingress controller will work without requiring 
 <!-- Quick tip: run `grep '^##' index.md` to check that the table of contents is up to date. -->
 
 - [Quick start](#quick-start)
+
 - [Environment-specific instructions](#environment-specific-instructions)
-  - [Docker Desktop](#docker-desktop)
-  - [minikube](#minikube)
-  - [MicroK8s](#microk8s)
-  - [AWS](#aws)
-  - [GCE - GKE](#gce-gke)
-  - [Azure](#azure)
-  - [Digital Ocean](#digital-ocean)
-  - [Scaleway](#scaleway)
-  - [Exoscale](#exoscale)
-  - [Oracle Cloud Infrastructure](#oracle-cloud-infrastructure)
-  - [Bare-metal](#bare-metal-clusters)
+  - ... [Docker Desktop](#docker-desktop)
+  - ... [minikube](#minikube)
+  - ... [MicroK8s](#microk8s)
+  - ... [AWS](#aws)
+  - ... [GCE - GKE](#gce-gke)
+  - ... [Azure](#azure)
+  - ... [Digital Ocean](#digital-ocean)
+  - ... [Scaleway](#scaleway)
+  - ... [Exoscale](#exoscale)
+  - ... [Oracle Cloud Infrastructure](#oracle-cloud-infrastructure)
+  - ... [Bare-metal](#bare-metal-clusters)
 - [Miscellaneous](#miscellaneous)
 
 ## Quick start
 
-You can deploy the ingress controller with the following command:
+**If you have Helm,** you can deploy the ingress controller with the following command:
 
 ```console
 helm upgrade --install ingress-nginx ingress-nginx \
@@ -40,13 +42,11 @@ It will install the controller in the `ingress-nginx` namespace, creating that n
 
 !!! info
     This command is *idempotent*:
+
     - if the ingress controller is not installed, it will install it,
     - if the ingress controller is already installed, it will upgrade it.
 
-This requires Helm version 3. If you prefer to use a YAML manifest, you can run the following command instead:
-
-!!! attention
-    Before running the command at your terminal, make sure Kubernetes is enabled at Docker settings
+**If you don't have Helm** or if you prefer to use a YAML manifest, you can run the following command instead:
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/cloud/deploy.yaml
@@ -109,7 +109,9 @@ You can see that IP address or FQDN with the following command:
 kubectl get service ingress-nginx-controller --namespace=ingress-nginx
 ```
 
-Set up a DNS record pointing to that IP address or FQDN; then create an ingress resource. The following example assumes that you have set up a DNS record for `www.demo.io`:
+It will be the `EXTERNAL-IP` field. If that field shows `<pending>`, this means that your Kubernetes cluster wasn't able to provision the load balancer (generally, this is because it doesn't support services of type `LoadBalancer`).
+
+Once you have the external IP address (or FQDN), set up a DNS record pointing to it. Then you can create an ingress resource. The following example assumes that you have set up a DNS record for `www.demo.io`:
 
 ```console
 kubectl create ingress demo --class=nginx \
@@ -154,6 +156,8 @@ Kubernetes is available in Docker Desktop:
 - Mac, from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018)
 - Windows, from [version 18.06.0-ce](https://docs.docker.com/docker-for-windows/release-notes/#docker-community-edition-18060-ce-win70-2018-07-25)
 
+First, make sure that Kubernetes is enabled in the Docker settings. The command `kubectl get nodes` should show a single node called `docker-destkop`.
+
 The ingress controller can be installed on Docker Desktop using the default [quick start](#quick-start) instructions.
 
 On most systems, if you don't have any other service of type `LoadBalancer` bound to port 80, the ingress controller will be assigned the `EXTERNAL-IP` of `localhost`, which means that it will be reachable on localhost:80. If that doesn't work, you might have to fall back to the `kubectl port-forward` method described in the [local testing section](#local-testing).
@@ -182,31 +186,27 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 ##### TLS termination in AWS Load Balancer (NLB)
 
-In some scenarios is required to terminate TLS in the Load Balancer and not in the ingress controller.
+By default, TLS is terminated in the ingress controller. But it is also possible to terminate TLS in the Load Balancer. This section explains how to do that on AWS with using an NLB.
 
-For this purpose we provide a template:
+1. Download the the [deploy-tls-termination.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/aws/deploy-tls-termination.yaml) template:
+   ```console
+   wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/aws/deploy-tls-termination.yaml
+   ```
 
-- Download [deploy-tls-termination.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/aws/deploy-tls-termination.yaml)
+2. Edit the file and change the VPC CIDR in use for the Kubernetes cluster:
+   ```
+   proxy-real-ip-cidr: XXX.XXX.XXX/XX
+   ```
 
-```console
-wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/aws/deploy-tls-termination.yaml
-```
+3. Change the AWS Certificate Manager (ACM) ID as well:
+   ```
+   arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX
+   ```
 
-- Edit the file and change:
-
-  - VPC CIDR in use for the Kubernetes cluster:
-
-  `proxy-real-ip-cidr: XXX.XXX.XXX/XX`
-
-  - AWS Certificate Manager (ACM) ID
-
-  `arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX`
-
-- Deploy the manifest:
-
-```console
-kubectl apply -f deploy-tls-termination.yaml
-```
+4. Deploy the manifest:
+   ```console
+   kubectl apply -f deploy-tls-termination.yaml
+   ```
 
 ##### NLB Idle Timeouts
 
@@ -220,26 +220,28 @@ More information with regards to timeouts can be found in the [official AWS docu
 
 #### GCE-GKE
 
-!!! info
-    Initialize your user as a cluster-admin with the following command:
-    ```console
-    kubectl create clusterrolebinding cluster-admin-binding \
-      --clusterrole cluster-admin \
-      --user $(gcloud config get-value account)
-    ```
+First, your user needs to have `cluster-admin` permissions on the cluster. This can be done with the following command:
 
-!!! danger
-    For private clusters, you will need to either add an additional firewall rule that allows master nodes access to port `8443/tcp` on worker nodes, or change the existing rule that allows access to ports `80/tcp`, `443/tcp` and `10254/tcp` to also allow access to port `8443/tcp`.
+```console
+kubectl create clusterrolebinding cluster-admin-binding \
+  --clusterrole cluster-admin \
+  --user $(gcloud config get-value account)
+```
 
-    See the [GKE documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules) on adding rules and the [Kubernetes issue](https://github.com/kubernetes/kubernetes/issues/79739) for more detail.
+Then, the ingress controller can be installed like this:
 
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
-!!! failure Important
-    Proxy protocol is not supported in GCE/GKE
+!!! warning
+    For private clusters, you will need to either add an additional firewall rule that allows master nodes access to port `8443/tcp` on worker nodes, or change the existing rule that allows access to ports `80/tcp`, `443/tcp` and `10254/tcp` to also allow access to port `8443/tcp`.
+
+    See the [GKE documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules) on adding rules and the [Kubernetes issue](https://github.com/kubernetes/kubernetes/issues/79739) for more detail.
+
+!!! warning
+    Proxy protocol is not supported in GCE/GKE.
 
 #### Azure
 
@@ -279,17 +281,15 @@ A [complete list of available annotations for Oracle Cloud Infrastructure](https
 
 ### Bare metal clusters
 
-Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
+This section is applicable to Kubernetes clusters deployed on bare metal servers, as well as "raw" VMs where Kubernetes was installed manually, using generic Linux distros (like CentOS, Ubuntu...)
+
+For quick testing, you can use a [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport). This should work on almost every cluster, but it will typically use a port in the range 30000-32767.
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.0/deploy/static/provider/baremetal/deploy.yaml
 ```
 
-!!! tip
-    Applicable on kubernetes clusters deployed on bare-metal with generic Linux distro(Such as CentOs, Ubuntu ...).
-
-!!! info
-    For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
+For more information about bare metal deployments (and how to use port 80 instead of a random port in the 30000-32767 range), see [bare-metal considerations](./baremetal.md).
 
 ## Miscellaneous
 
