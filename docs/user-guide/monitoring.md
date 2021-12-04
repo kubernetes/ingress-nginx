@@ -166,5 +166,5 @@ According to the above example, this URL will be http://10.192.0.3:31086
     - This will open the currently deployed service grafana in the default editor configured in your shell (vi/nvim/nano/other)
     - scroll down to line 34 that looks like "type: NodePort"
     - change it to look like "type: ClusterIP". Save and exit.
-    - create a ingress reource with backend as "grafana" and port as "3000"
+    - create a ingress resource with backend as "grafana" and port as "3000"
   - Similarly, you can edit the service "prometheus-server" and add a ingress resource.
