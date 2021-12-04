@@ -22,7 +22,7 @@
 
 ### d. Merge
 
-- Merging will fire cloudbuild, which will result in images beeing promoted to the [staging container registry](https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx).
+- Merging will fire cloudbuild, which will result in images being promoted to the [staging container registry](https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx).
 
 ### e. Make sure cloudbuild is a success
 
@@ -68,7 +68,7 @@
 
 ### d. Merge
 
-- Merging will fire cloudbuild, which will result in images beeing promoted to the [staging container registry](https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx).
+- Merging will fire cloudbuild, which will result in images being promoted to the [staging container registry](https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx).
 
 ### e. Make sure cloudbuild is a success
 
