@@ -1,4 +1,6 @@
-# Copyright 2021 The Kubernetes Authors. All rights reserved.
+#!/bin/bash
+
+# Copyright 2021 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -o errexit
+set -o nounset
+set -o pipefail
 
-FROM alpine:3.14.2 as builder
-
-COPY . /
-
-RUN apk update \
-	&& apk upgrade \
-	&& apk add -U bash \
-	&& /build.sh
-
-FROM busybox:latest 
-
-COPY --from=builder /usr/local/bin/init_module.sh /usr/local/bin/init_module.sh
-COPY --from=builder /etc/nginx/ /etc/nginx/
-COPY --from=builder /usr/local/lib/ /usr/local/lib
-COPY --from=builder /usr/local/include/opentelemetry /usr/local/include/opentelemetry
-COPY --from=builder /usr/local/include/nlohmann /usr/local/include/nlohmann
+cp -r /etc/nginx/* /modules_mount/etc/nginx/
+cp -r /usr/local/lib/* /modules_mount/usr/local/lib
+cp -r /usr/local/include/opentelemetry/* /modules_mount/usr/local/include/opentelemetry
+cp -r /usr/local/include/nlohmann/* /modules_mount/usr/local/include/nlohmann
