@@ -29,7 +29,7 @@ Start a local Kubernetes cluster using [kind](https://kind.sigs.k8s.io/), build 
 ```console
 make dev-env
 ```
-- If you are working on the v1.x.x version of this controler, and you want to create a cluster with kubernetes version 1.22, then please visit the [documentation for kind](https://kind.sigs.k8s.io/docs/user/configuration/#a-note-on-cli-parameters-and-configuration-files), and look for how to set a custom image for the kind node (image: kindest/node...), in the kind config file.
+- If you are working on the v1.x.x version of this controller, and you want to create a cluster with kubernetes version 1.22, then please visit the [documentation for kind](https://kind.sigs.k8s.io/docs/user/configuration/#a-note-on-cli-parameters-and-configuration-files), and look for how to set a custom image for the kind node (image: kindest/node...), in the kind config file.
 
 ### Testing
 

@@ -103,7 +103,7 @@ Describe here `kubectl plugin`, `dbg`, `waitshutdown` and cover the hack scripts
 
 ## Deploy files
 
-This directory contains the `yaml` deploy files used as examples or references in the docs to deploy Ingress NGINX and other componentes.
+This directory contains the `yaml` deploy files used as examples or references in the docs to deploy Ingress NGINX and other components.
 
 Those files are in [deploy](https://github.com/kubernetes/ingress-nginx/tree/main/deploy) directory.
 
