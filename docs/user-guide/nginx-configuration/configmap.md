@@ -1267,7 +1267,7 @@ _**default:**_ "false"
 
 ## ssl-reject-handshake
 
-Set to reject SSL handshake to an unknown virtualhost. This paramter helps to mitigate the fingerprinting using default certificate of ingress.
+Set to reject SSL handshake to an unknown virtualhost. This parameter helps to mitigate the fingerprinting using default certificate of ingress.
 _**default:**_ "false"
 
 _References:_
