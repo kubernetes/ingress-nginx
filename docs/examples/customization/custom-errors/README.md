@@ -4,7 +4,9 @@ This example demonstrates how to use a custom backend to render custom error pag
 
 ## Customized default backend
 
-First, create the custom `default-backend`. It will be used by the Ingress controller later on.
+First, create the custom `default-backend`. It will be used by the Ingress controller later on.  
+To do that, you can take a look at the [example manifest](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/customization/custom-errors/custom-default-backend.yaml)
+in this project's GitHub repository.
 
 ```
 $ kubectl create -f custom-default-backend.yaml
