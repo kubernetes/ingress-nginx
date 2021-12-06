@@ -663,6 +663,7 @@ controller:
       scrapeInterval: 30s
       # honorLabels: true
       targetLabels: []
+      relabelings: []
       metricRelabelings: []
 
     prometheusRule:
