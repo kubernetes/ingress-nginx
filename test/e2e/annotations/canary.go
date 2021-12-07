@@ -773,6 +773,39 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				Contains(canaryService)
 		})
 
+		ginkgo.It("should route requests only to canary if canary weight is equal to canary weight total", func() {
+			host := "foo"
+			annotations := map[string]string{}
+
+			ing := framework.NewSingleIngress(host, "/", host,
+				f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":              "true",
+				"nginx.ingress.kubernetes.io/canary-weight":       "1000",
+				"nginx.ingress.kubernetes.io/canary-weight-total": "1000",
+			}
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
+				f.Namespace, canaryService, 80, canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK).
+				Body().
+				Contains(canaryService)
+		})
+
 		ginkgo.It("should route requests evenly split between mainline and canary if canary weight is 50", func() {
 			host := "foo"
 			annotations := map[string]string{}
