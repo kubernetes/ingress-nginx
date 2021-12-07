@@ -143,7 +143,7 @@ spec:
         {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
           volumeMounts:
           {{- if .Values.controller.extraModules }}
-            - name: modules_mount
+            - name: modules
               mountPath: /modules_mount
           {{- end }}
           {{- if .Values.controller.customTemplate.configMapName }}
@@ -173,8 +173,8 @@ spec:
       {{- end }}
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
-          - name: {{ .Title }}
-            image: {{ .Image }}
+          - name: {{ .name }}
+            image: {{ .image }}
             command: ['sh', '-c', '/usr/local/bin/init_module.sh']
         {{- end }}
       {{- end }}
@@ -199,8 +199,7 @@ spec:
     {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
       volumes:
       {{- if .Values.controller.extraModules }}
-        - name: modules_mount
-          mountPath: /modules_mount
+        - name: modules
           emptyDir: {}
       {{- end }}
       {{- if .Values.controller.customTemplate.configMapName }}
