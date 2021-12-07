@@ -19,10 +19,14 @@ set -o nounset
 set -o pipefail
 
 if [ -d "/modules_mount/etc/nginx" ]; then
-	cp -r /modules_mount/etc/nginx/* /etc/nginx
+	for dir in /modules_mount/etc/nginx/*; do
+		cp "$dir"/* "/etc/nginx/$(basename "$dir")"
+	done
 fi
 if [ -d "/modules_mount/usr/local" ]; then
-	cp -r /modules_mount/usr/local/* /usr/local
+	for dir in /modules_mount/usr/local/*; do
+		cp "$dir"/* "/usr/local/$(basename "$dir")"
+	done
 fi
 
 exec "$@"
