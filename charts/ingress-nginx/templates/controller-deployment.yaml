@@ -176,6 +176,9 @@ spec:
           - name: {{ .name }}
             image: {{ .image }}
             command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+            volumeMounts:
+              - name: modules
+                mountPath: /modules_mount
         {{- end }}
       {{- end }}
     {{- end }}
