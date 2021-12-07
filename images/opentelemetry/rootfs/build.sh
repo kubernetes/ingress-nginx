@@ -104,7 +104,8 @@ cd "$BUILD_PATH/nginx-$NGINX_VERSION"
   --add-dynamic-module=$BUILD_PATH/opentelemetry-cpp-contrib-$OPENTELEMETRY_CONTRIB_COMMIT/instrumentation/nginx
 
 make modules
-mv objs/otel_ngx_module.so /etc/nginx/modules
+mkdir -p /etc/nginx/modules
+cp objs/otel_ngx_module.so /etc/nginx/modules/otel_ngx_module.so
 
 # remove .a files
 find /usr/local -name "*.a" -print | xargs /bin/rm

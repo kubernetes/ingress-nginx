@@ -24,7 +24,7 @@ RUN apk update \
 
 FROM busybox:latest 
 
-COPY --from=builder /usr/local/bin/init_module.sh /usr/local/bin/init_module.sh
+COPY --from=builder init_module.sh /usr/local/bin/init_module.sh
 COPY --from=builder /etc/nginx/ /etc/nginx/
 COPY --from=builder /usr/local/lib/ /usr/local/lib
 COPY --from=builder /usr/local/include/opentelemetry /usr/local/include/opentelemetry

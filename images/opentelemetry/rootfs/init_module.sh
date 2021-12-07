@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright 2021 The Kubernetes Authors.
 #
@@ -18,7 +18,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-cp -r /etc/nginx/* /modules_mount/etc/nginx/
-cp -r /usr/local/lib/* /modules_mount/usr/local/lib
-cp -r /usr/local/include/opentelemetry/* /modules_mount/usr/local/include/opentelemetry
-cp -r /usr/local/include/nlohmann/* /modules_mount/usr/local/include/nlohmann
+mkdir -p /modules_mount/etc
+mkdir -p /modules_mount/usr/local/include
+
+cp -R /etc/nginx/ /modules_mount/etc/nginx/
+cp -R /usr/local/lib/ /modules_mount/usr/local/lib
+cp -R /usr/local/include/opentelemetry/ /modules_mount/usr/local/include/opentelemetry
+cp -R /usr/local/include/nlohmann/ /modules_mount/usr/local/include/nlohmann
