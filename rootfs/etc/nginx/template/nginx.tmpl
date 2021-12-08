@@ -155,11 +155,10 @@ http {
     ';
     {{ end }}
     
-    {{ if (not (empty $all.Cfg.ModsecuritySnippet)) }}
-    # modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-    {{ else }}
+    {{ if (empty $all.Cfg.ModsecuritySnippet) }}
     modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
     {{ end }}
+    
     {{ if $all.Cfg.EnableOWASPCoreRules }}
     modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
     {{ end }}
