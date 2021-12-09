@@ -155,7 +155,7 @@ http {
     ';
     {{ end }}
     
-    {{ if (empty $all.Cfg.ModsecuritySnippet) }}
+    {{ if not $all.Cfg.ModsecuritySnippet }}
     modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
     {{ end }}
     
