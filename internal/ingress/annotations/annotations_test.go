@@ -220,6 +220,7 @@ func TestCors(t *testing.T) {
 		expose      string
 	}{
 		{map[string]string{annotationCorsEnabled: "true"}, true, defaultCorsMethods, defaultCorsHeaders, []string{"*"}, true, ""},
+		{map[string]string{annotationCorsEnabled: "true"}, true, defaultCorsMethods, defaultCorsHeaders, []string{"$http_origin"}, true, ""},
 		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowMethods: "POST, GET, OPTIONS", annotationCorsAllowHeaders: "$nginx_version", annotationCorsAllowCredentials: "false", annotationCorsExposeHeaders: "X-CustomResponseHeader"}, true, "POST, GET, OPTIONS", defaultCorsHeaders, []string{"*"}, false, "X-CustomResponseHeader"},
 		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowCredentials: "false"}, true, defaultCorsMethods, defaultCorsHeaders, []string{"*"}, false, ""},
 		{map[string]string{}, false, defaultCorsMethods, defaultCorsHeaders, []string{"*"}, true, ""},
