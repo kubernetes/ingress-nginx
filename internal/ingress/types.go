@@ -76,6 +76,8 @@ type Configuration struct {
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 
 	DefaultSSLCertificate *SSLCert `json:"-"`
+
+	StreamSnippets []string
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
