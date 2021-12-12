@@ -9,16 +9,15 @@ aliases:
   ingress-nginx-admins:
   - bowei
   - rikatz
+  - strongjz
 
   ingress-nginx-maintainers:
   - ElvinEfendi
-  - justinsb
   - rikatz
   - strongjz
 
   ingress-nginx-reviewers:
   - ElvinEfendi
-  - cmluciano
   - rikatz
   - strongjz
   - tao12345666333
