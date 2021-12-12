@@ -368,7 +368,8 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, "modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;")
+				return !strings.Contains(server, "modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;") &&
+					strings.Contains(server, "SecAuditLog /var/tmp/modsec_audit.log")
 			})
 
 		f.HTTPTestClient().
