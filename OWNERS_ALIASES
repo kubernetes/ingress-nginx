@@ -30,5 +30,10 @@ aliases:
   - ChiefAlexander
   - cpanato
 
+  ingress-nginx-docs-maintainers:
+  - IamNoah1
+  - longwuyuan
+  - tao12345666333
+
   ingress-nginx-kube-webhook-certgen-reviewers:
   - invidian
