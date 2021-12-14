@@ -43,8 +43,6 @@ var _ = framework.DescribeSetting("stream-snippet", func() {
 
 		snippet := `server {listen 8000; proxy_pass 127.0.0.1:80;}`
 
-
-
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, map[string]string{
 			"nginx.ingress.kubernetes.io/stream-snippet": snippet,
 		})
@@ -69,8 +67,6 @@ var _ = framework.DescribeSetting("stream-snippet", func() {
 			Update(context.TODO(), svc, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
 
-
-
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()
 
@@ -93,10 +89,9 @@ var _ = framework.DescribeSetting("stream-snippet", func() {
 		cmSnippet := `server {listen 8000; proxy_pass 127.0.0.1:80;}`
 		annotSnippet := `server {listen 8001; proxy_pass 127.0.0.1:80;}`
 
-
 		f.SetNginxConfigMapData(map[string]string{
 			"allow-snippet-annotations": "false",
-			"stream-snippet": cmSnippet,
+			"stream-snippet":            cmSnippet,
 		})
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
@@ -125,7 +120,6 @@ var _ = framework.DescribeSetting("stream-snippet", func() {
 			Services(f.Namespace).
 			Update(context.TODO(), svc, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
-
 
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()

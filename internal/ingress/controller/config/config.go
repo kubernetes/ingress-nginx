@@ -959,10 +959,10 @@ type TemplateConfig struct {
 	MaxmindEditionFiles      *[]string
 	MonitorMaxBatchSize      int
 
-	PID        string
-	StatusPath string
-	StatusPort int
-	StreamPort int
+	PID            string
+	StatusPath     string
+	StatusPort     int
+	StreamPort     int
 	StreamSnippets []string
 }
 

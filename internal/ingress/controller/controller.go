@@ -1789,7 +1789,7 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 func (n *NGINXController) getStreamSnippets(ingresses []*ingress.Ingress) []string {
 	snippets := make([]string, 0, len(ingresses))
 	for _, i := range ingresses {
-		if i.ParsedAnnotations.StreamSnippet ==  "" {
+		if i.ParsedAnnotations.StreamSnippet == "" {
 			continue
 		}
 		snippets = append(snippets, i.ParsedAnnotations.StreamSnippet)

@@ -68,7 +68,6 @@ var _ = framework.DescribeSetting("configmap stream-snippet", func() {
 			Update(context.TODO(), svc, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
 
-
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()
 
