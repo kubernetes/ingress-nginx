@@ -4,7 +4,7 @@ options:
   # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
   machineType: N1_HIGHCPU_32
 steps:
-  - name: gcr.io/k8s-testimages/gcb-docker-gcloud:v20210722-085d930
+  - name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20211118-2f2d816b90
     entrypoint: bash
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled

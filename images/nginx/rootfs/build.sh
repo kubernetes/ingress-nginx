@@ -637,7 +637,7 @@ WITH_FLAGS="--with-debug \
 
 # "Combining -flto with -g is currently experimental and expected to produce unexpected results."
 # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
-CC_OPT="-g -Og -fPIE -fstack-protector-strong \
+CC_OPT="-g -O2 -fPIE -fstack-protector-strong \
   -Wformat \
   -Werror=format-security \
   -Wno-deprecated-declarations \
@@ -656,7 +656,7 @@ if [[ ${ARCH} != "aarch64" ]]; then
 fi
 
 if [[ ${ARCH} == "x86_64" ]]; then
-  CC_OPT+=' -m64 -mtune=native'
+  CC_OPT+=' -m64 -mtune=generic'
 fi
 
 WITH_MODULES=" \
