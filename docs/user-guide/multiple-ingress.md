@@ -2,13 +2,14 @@
 
 By default, deploying multiple Ingress controllers (e.g., `ingress-nginx` & `gce`) will result in all controllers simultaneously racing to update Ingress status fields in confusing ways.
 
-To fix this problem, you can either use [IngressClasses](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class) (preferred) or use the `kubernetes.io/ingress.class` annotation (in deprecation).
+To fix this problem, use [IngressClasses](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class), the `kubernetes.io/ingress.class` annotation  is deprecated from kubernetes v1.22+.
 
 ## Using IngressClasses
 
 If all ingress controllers respect IngressClasses (e.g. multiple instances of ingress-nginx v1.0), you can deploy two Ingress controllers by granting them control over two different IngressClasses, then selecting one of the two IngressClasses with `ingressClassName`.
+When two or more 
 
-First, ensure the `--controller-class=` is set to something different on each ingress controller:
+First, ensure the `--controller-class=` and `--ingress-class` are set to something different on each ingress controller:
 
 ```yaml
 # ingress-nginx Deployment/Statfulset
@@ -19,7 +20,8 @@ spec:
          - name: ingress-nginx-internal-controller
            args:
              - /nginx-ingress-controller
-             - '--controller-class=k8s.io/internal-ingress-nginx'
+             - '--controller-class=k8s.io/internal-nginx'
+             - '--ingress-class=k8s.io/internal-nginx'
             ...
 ```
 
