@@ -9,16 +9,15 @@ aliases:
   ingress-nginx-admins:
   - bowei
   - rikatz
+  - strongjz
 
   ingress-nginx-maintainers:
   - ElvinEfendi
-  - justinsb
   - rikatz
   - strongjz
 
   ingress-nginx-reviewers:
   - ElvinEfendi
-  - cmluciano
   - rikatz
   - strongjz
   - tao12345666333
@@ -30,6 +29,11 @@ aliases:
   ingress-nginx-helm-reviewers:
   - ChiefAlexander
   - cpanato
+
+  ingress-nginx-docs-maintainers:
+  - IamNoah1
+  - longwuyuan
+  - tao12345666333
 
   ingress-nginx-kube-webhook-certgen-reviewers:
   - invidian
