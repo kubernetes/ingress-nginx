@@ -342,7 +342,7 @@ var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
-	
+
 	ginkgo.It("should disable default modsecurity conf setting when modsecurity-snippet is specified", func() {
 		host := "modsecurity.foo.com"
 		nameSpace := f.Namespace
