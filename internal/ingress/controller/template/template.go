@@ -1530,9 +1530,6 @@ func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Loc
 %v
 ';
 `, location.ModSecurity.Snippet))
-	} else {
-		buffer.WriteString(`modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-`)
 	}
 
 	if location.ModSecurity.TransactionID != "" {
