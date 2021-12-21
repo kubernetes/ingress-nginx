@@ -1,0 +1,19 @@
+# Custom error page configMap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom_error_pages
+data:
+  404: |
+    <!DOCTYPE html>
+    <html>
+      <head><title>PAGE NOT FOUND</title></head>
+      <body>PAGE NOT FOUND</body>
+    </html>
+  503: |
+    <!DOCTYPE html>
+    <html>
+      <head><title>CUSTOM SERVICE UNAVAILABLE</title></head>
+      <body>CUSTOM SERVICE UNAVAILABLE</body>
+    </html>
