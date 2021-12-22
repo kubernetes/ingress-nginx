@@ -132,8 +132,10 @@ spec:
 ```
 And add the value "spec.ingressClassName=nginx" in your Ingress objects
 
-## I have multiple Ingress objects in my cluster. What should I do ?
-- If you don't care about ingress classes, or you have a lot of Ingress objects without any IngressClass configuration, you can run the ingress-controller with the flag `--watch-ingress-without-class=true`.
+
+## I have multiple ingress objects in my cluster. What should I do ?
+- If you have lot of ingress objects without ingressClass configuration, you can run the ingress-controller with the flag `--watch-ingress-without-class=true`.
+
 
 ### What is the flag '--watch-ingress-without-class' ?
 - Its a flag that is passed,as an argument, to the `nginx-ingress-controller` executable. In the configuration, it looks like this ;
