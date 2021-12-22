@@ -637,6 +637,8 @@ In some scenarios is required to have different values. To allow this we provide
 - `nginx.ingress.kubernetes.io/proxy-request-buffering`
 
 Note: All timeout values are unitless and in seconds e.g. `nginx.ingress.kubernetes.io/proxy-read-timeout: "120"` sets a valid 120 seconds proxy read timeout.
+Note: This settings are only valid when using HTTP (the default) or HTTPS as the
+value for `nginx.ingress.kubernetes.io/backend-protocol`[backend-protocol](#backend-protocol)`.
 
 ### Proxy redirect
 
@@ -863,6 +865,11 @@ It's important to remember that there's no DNS resolver at this stage so you wil
 an ip address to `nginx.ingress.kubernetes.io/influxdb-host`. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use `127.0.0.1`.
 
 ### Backend Protocol
+
+!!! attention
+Be aware that many annotations described in this document assume HTTP or HTTPS
+as the backend protocol; you might need to use a server snippet and use
+backend-specific nginx settings.
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
 Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP and FCGI
