@@ -19,6 +19,7 @@ package store
 import (
 	"fmt"
 	"strings"
+        "os/exec"
 
 	"k8s.io/klog/v2"
 
@@ -57,6 +58,26 @@ func (s *k8sStore) syncSecret(key string) {
 		}
 		klog.InfoS("Updating secret in local store", "name", key)
 		s.sslStore.Update(key, cert)
+
+		klog.InfoS("Running nginx -s reload to re-read certificates")
+
+
+		app := "nginx"
+
+		arg0 := "-s"
+		arg1 := "reload"
+
+		cmd := exec.Command(app, arg0, arg1)
+		stdout, err := cmd.Output()
+
+		if err != nil {
+		    fmt.Println(err.Error())
+		    return
+		}
+
+		fmt.Println(string(stdout))
+
+
 		// this update must trigger an update
 		// (like an update event from a change in Ingress)
 		s.sendDummyEvent()
