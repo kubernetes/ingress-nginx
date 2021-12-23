@@ -1781,8 +1781,8 @@ func TestModSecurityForLocation(t *testing.T) {
 		{"configmap enabled, configmap OWASP enabled, annotation enabled, OWASP disabled", true, true, true, true, false, "", "", ""},
 		{"configmap disabled, annotation enabled, OWASP disabled", false, false, true, true, false, "", "", fmt.Sprintf("%v%v", loadModule, modSecCfg)},
 		{"configmap disabled, annotation disabled, OWASP disabled", false, false, false, true, false, "", "", ""},
-		{"configmap disabled, annotation enabled, OWASP disabled", false, false, true, true, false, testRule, "", fmt.Sprintf("%v%v%v", loadModule, modsecRule, modSecCfg)},
-		{"configmap disabled, annotation enabled, OWASP enabled", false, false, true, true, false, testRule, "", fmt.Sprintf("%v%v%v", loadModule, modsecRule, modSecCfg)},
+		{"configmap disabled, annotation enabled, OWASP disabled", false, false, true, true, false, testRule, "", fmt.Sprintf("%v%v", loadModule, modsecRule)},
+		{"configmap disabled, annotation enabled, OWASP enabled", false, false, true, true, false, testRule, "", fmt.Sprintf("%v%v", loadModule, modsecRule)},
 	}
 
 	for _, testCase := range testCases {
