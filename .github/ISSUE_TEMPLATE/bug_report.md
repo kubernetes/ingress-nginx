@@ -131,6 +131,9 @@ kubectl exec -it -n ingress-nginx $POD_NAME -- curl -H 'Host: foo.bar' localhost
 
 **Anything else we need to know**:
 
-<!-- If this is actually about documentation, add `/kind documentation` below -->
+<!-- If this is actually about documentation, uncomment the following block -->
 
-/kind bug
+<!-- 
+/kind documentation
+/remove-kind bug
+-->
