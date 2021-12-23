@@ -28,6 +28,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--http-port`                      | Port to use for servicing HTTP traffic. (default 80) |
 | `--https-port`                     | Port to use for servicing HTTPS traffic. (default 443) |
 | `--ingress-class`                  | Name of the ingress class this controller satisfies. The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.18.0 or higher or the annotation "kubernetes.io/ingress.class" (deprecated). If this parameter is not set, or set to the default value of "nginx", it will handle ingresses with either an empty or "nginx" class name. |
+| `--ingress-class-by-name`          | Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class. (default false) |
 | `--kubeconfig`                     | Path to a kubeconfig file containing authorization and API server information. |
 | `--log_backtrace_at`               | when logging hits line file:N, emit a stack trace (default :0) |
 | `--log_dir`                        | If non-empty, write log files in this directory |
