@@ -1537,7 +1537,7 @@ func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Loc
 `, location.ModSecurity.TransactionID))
 	}
 
-	if !isMSEnabled {
+	if !isMSEnabled && location.ModSecurity.Snippet == "" {
 		buffer.WriteString(`modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
 `)
 	}

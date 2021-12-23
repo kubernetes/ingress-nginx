@@ -153,10 +153,10 @@ http {
     modsecurity_rules '
       {{ $all.Cfg.ModsecuritySnippet }}
     ';
-    {{ end }}
-
+    {{ else }}
     modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-
+    {{ end }}
+    
     {{ if $all.Cfg.EnableOWASPCoreRules }}
     modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
     {{ end }}
