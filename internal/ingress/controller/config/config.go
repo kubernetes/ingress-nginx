@@ -659,6 +659,9 @@ type Configuration struct {
 	// ServerSnippet adds custom configuration to all the servers in the nginx configuration
 	ServerSnippet string `json:"server-snippet"`
 
+	// StreamSnippet adds custom configuration to the stream section of the nginx configuration
+	StreamSnippet string `json:"stream-snippet"`
+
 	// LocationSnippet adds custom configuration to all the locations in the nginx configuration
 	LocationSnippet string `json:"location-snippet"`
 
@@ -956,10 +959,11 @@ type TemplateConfig struct {
 	MaxmindEditionFiles      *[]string
 	MonitorMaxBatchSize      int
 
-	PID        string
-	StatusPath string
-	StatusPort int
-	StreamPort int
+	PID            string
+	StatusPath     string
+	StatusPort     int
+	StreamPort     int
+	StreamSnippets []string
 }
 
 // ListenPorts describe the ports required to run the

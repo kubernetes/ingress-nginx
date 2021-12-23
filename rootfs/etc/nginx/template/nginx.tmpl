@@ -827,6 +827,11 @@ stream {
         proxy_pass              upstream_balancer;
     }
     {{ end }}
+
+    # Stream Snippets
+    {{ range $snippet := .StreamSnippets }}
+    {{ $snippet }}
+    {{ end }}
 }
 
 {{/* definition of templates to avoid repetitions */}}
