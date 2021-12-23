@@ -156,6 +156,7 @@ The following table shows a configuration option's name, type, and the default v
 |[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
+|[stream-snippet](#stream-snippet)|string|""|
 |[location-snippet](#location-snippet)|string|""|
 |[custom-http-errors](#custom-http-errors)|[]int|[]int{}|
 |[proxy-body-size](#proxy-body-size)|string|"1m"|
@@ -987,6 +988,10 @@ Adds custom configuration to the http section of the nginx configuration.
 ## server-snippet
 
 Adds custom configuration to all the servers in the nginx configuration.
+
+## stream-snippet
+
+Adds custom configuration to the stream section of the nginx configuration.
 
 ## location-snippet
 
