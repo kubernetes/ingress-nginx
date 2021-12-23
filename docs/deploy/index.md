@@ -295,7 +295,7 @@ For more information about bare metal deployments (and how to use port 80 instea
 
 ### Checking ingress controller version
 
-Run `ingress-nginx-controller --version` within the pod, for instance with `kubectl exec`:
+Run `/nginx-ingress-controller --version` within the pod, for instance with `kubectl exec`:
 
 ```console
 POD_NAMESPACE=ingress-nginx
