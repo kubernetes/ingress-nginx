@@ -181,6 +181,7 @@ http {
     geoip2 /etc/nginx/geoip/GeoLite2-Country.mmdb {
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_continent_code source=$remote_addr continent code;
         $geoip2_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
@@ -189,6 +190,7 @@ http {
     geoip2 /etc/nginx/geoip/GeoIP2-Country.mmdb {
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_continent_code source=$remote_addr continent code;
         $geoip2_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
