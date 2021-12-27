@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/pflag"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -126,6 +127,9 @@ Requires setting the publish-service parameter to a valid Service reference.`)
 
 		electionID = flags.String("election-id", "ingress-controller-leader",
 			`Election id to use for Ingress status updates.`)
+
+		leaderElectionResourceLock = flags.String("leader-election-resource-lock", resourcelock.ConfigMapsResourceLock,
+			`Resourcelock to use for ingress-controller leader-election. Supported values are "configmaps", "configmapsleases", "leases".`)
 
 		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true,
 			`Update the load-balancer status of Ingress objects when the controller shuts down.
@@ -309,6 +313,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		KubeConfigFile:              *kubeConfigFile,
 		UpdateStatus:                *updateStatus,
 		ElectionID:                  *electionID,
+		LeaderElectionResourceLock:  *leaderElectionResourceLock,
 		EnableProfiling:             *profiling,
 		EnableMetrics:               *enableMetrics,
 		MetricsPerHost:              *metricsPerHost,

@@ -47,6 +47,8 @@ permissions are granted to the Role named `ingress-nginx`
 
 Furthermore to support leader-election, the ingress-nginx-controller needs to
 have access to a `configmap` using the resourceName `ingress-controller-leader-nginx`
+and also a `lease` using the resourceName `ingress-controller-leader-nginx` 
+if `configmapsleases` or `leases` is used as default leader-election resource-lock.
 
 > Note that resourceNames can NOT be used to limit requests using the “create”
 > verb because authorizers only have access to information that can be obtained
@@ -55,6 +57,8 @@ have access to a `configmap` using the resourceName `ingress-controller-leader-n
 
 * `configmaps`: get, update (for resourceName `ingress-controller-leader-nginx`)
 * `configmaps`: create
+* `leases`: get, update (for resourceName `ingress-controller-leader-nginx`)
+* `leases`: create
 
 This resourceName is the concatenation of the `election-id` and the
 `ingress-class` as defined by the ingress-controller, which defaults to:

@@ -83,10 +83,11 @@ type Configuration struct {
 	PublishService       string
 	PublishStatusAddress string
 
-	UpdateStatus           bool
-	UseNodeInternalIP      bool
-	ElectionID             string
-	UpdateStatusOnShutdown bool
+	UpdateStatus               bool
+	UseNodeInternalIP          bool
+	ElectionID                 string
+	LeaderElectionResourceLock string
+	UpdateStatusOnShutdown     bool
 
 	HealthCheckHost string
 	ListenPorts     *ngx_config.ListenPorts
