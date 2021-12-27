@@ -432,7 +432,7 @@ name = "ingress-nginx"
 `,
 		},
 		{
-			name: "with no a collector host and port",
+			name: "with a collector host and port",
 			config: ngx_config.Configuration{
 				EnableOpenTelemetry: true,
 				OtlpCollectorHost:   "example.com",
