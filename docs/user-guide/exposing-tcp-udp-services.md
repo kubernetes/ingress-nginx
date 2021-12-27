@@ -10,6 +10,9 @@ This allows an incoming connection to be decoded or an outgoing connection to be
 
 The next example shows how to expose the service `example-go` running in the namespace `default` in the port `8080` using the port `9000`
 
+!!! warning
+  With kustomize a dictionary key value cannot be an integer, the workaround is set as a string ([Support for integer keys #3446](https://github.com/kubernetes-sigs/kustomize/issues/3446))
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
