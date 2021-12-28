@@ -10,9 +10,6 @@ This allows an incoming connection to be decoded or an outgoing connection to be
 
 The next example shows how to expose the service `example-go` running in the namespace `default` in the port `8080` using the port `9000`
 
-!!! warning
-  With kustomize a dictionary key value cannot be an integer, the workaround is set as a string ([Support for integer keys #3446](https://github.com/kubernetes-sigs/kustomize/issues/3446))
-
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -22,6 +19,29 @@ metadata:
 data:
   9000: "default/example-go:8080"
 ```
+
+!!! warning
+  With [kustomize](https://kustomize.io/)(Kubernetes configuration management tool) a dictionary key value cannot be an integer, and you have this issue: `Error: map[string]interface {}{"apiVersion":"v1", "data":map[interface {}]interface {}{9000:"default/example-go:8080"}, "kind":"ConfigMap", "metadata":map[string]interface {}{"name":"tcp-services", "namespace":"ingress-nginx"}}: json: unsupported type: map[interface {}]interface {}`. The workaround is set as a string ([Support for integer keys #3446](https://github.com/kubernetes-sigs/kustomize/issues/3446)) like this:
+
+  ```
+  $ cat kustomization.yaml
+  ---
+  apiVersion: kustomize.config.k8s.io/v1beta1
+  kind: Kustomization
+
+  resources:
+    - nginx-ingress.yaml
+
+  $ cat nginx-ingress.yaml
+  ---
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: tcp-services
+    namespace: ingress-nginx
+  data:
+    '9000': "default/example-go:8080"
+  ```
 
 Since 1.9.13 NGINX provides [UDP Load Balancing](https://www.nginx.com/blog/announcing-udp-load-balancing/).
 The next example shows how to expose the service `kube-dns` running in the namespace `kube-system` in the port `53` using the port `53`
