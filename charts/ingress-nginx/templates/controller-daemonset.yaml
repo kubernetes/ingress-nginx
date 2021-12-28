@@ -121,6 +121,9 @@ spec:
             - name: metrics
               containerPort: {{ .Values.controller.metrics.port }}
               protocol: TCP
+              {{- if and .Values.controller.hostPort.enabled (hasKey .Values.controller.hostPort.ports "metrics") }}
+              hostPort: {{ .Values.controller.hostPort.ports.metrics }}
+              {{- end }}
           {{- end }}
           {{- if .Values.controller.admissionWebhooks.enabled }}
             - name: webhook

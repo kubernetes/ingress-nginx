@@ -88,6 +88,7 @@ controller:
     ports:
       http: 80
       https: 443
+      # metrics: 10254
 
   ## Election ID to use for status update
   ##
