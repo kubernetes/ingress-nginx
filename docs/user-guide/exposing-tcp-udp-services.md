@@ -23,16 +23,18 @@ data:
 !!! warning
   With [kustomize](https://kustomize.io/) (Kubernetes configuration management tool) a dictionary key value cannot be an integer, and you have this issue: `Error: map[string]interface {}{"apiVersion":"v1", "data":map[interface {}]interface {}{9000:"default/example-go:8080"}, "kind":"ConfigMap", "metadata":map[string]interface {}{"name":"tcp-services", "namespace":"ingress-nginx"}}: json: unsupported type: map[interface {}]interface {}`. The workaround is set as a string ([Support for integer keys #3446](https://github.com/kubernetes-sigs/kustomize/issues/3446)) like this:
 
-  ```
-  $ cat kustomization.yaml
+  **kustomization.yaml**
+  ```yaml
   ---
   apiVersion: kustomize.config.k8s.io/v1beta1
   kind: Kustomization
 
   resources:
     - nginx-ingress.yaml
+  ```
 
-  $ cat nginx-ingress.yaml
+  **nginx-ingress.yaml**
+  ```yaml
   ---
   apiVersion: v1
   kind: ConfigMap
