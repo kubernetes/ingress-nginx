@@ -2,6 +2,7 @@
 -- always, we return the same subset always.
 
 local resty_chash = require("resty.chash")
+local ck = require("resty.cookie")
 local util = require("util")
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
@@ -10,6 +11,7 @@ local tostring = tostring
 local math = math
 local table = table
 local pairs = pairs
+local tonumber = tonumber
 
 local _M = { name = "chashsubset" }
 
@@ -57,11 +59,24 @@ function _M.new(self, backend)
     ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by: ", err)
   end
 
+  local cookie_name = backend["upstreamHashByConfig"]["upstream-hash-by-subset-cookie-name"]
+  if cookie_name == nil then
+    cookie_name = "subsetRouteCookie"
+  end
+
+  local cookie_value, err =
+    util.parse_complex_value("$cookie_" .. cookie_name)
+  if err ~= nil then
+    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-subset-cookie-name: ", err)
+  end
+
   local o = {
     instance = resty_chash:new(subset_map),
     hash_by = complex_val,
     subsets = subsets,
-    current_endpoints = backend.endpoints
+    current_endpoints = backend.endpoints,
+    cookie_name = cookie_name,
+    cookie_value = cookie_value
   }
   setmetatable(o, self)
   self.__index = self
@@ -76,7 +91,24 @@ function _M.balance(self)
   local key = util.generate_var_value(self.hash_by)
   local subset_id = self.instance:find(key)
   local endpoints = self.subsets[subset_id]
-  local endpoint = endpoints[math.random(#endpoints)]
+
+  local cookie_value = util.generate_var_value(self.cookie_value)
+  
+  local cookie_value_num = tonumber(cookie_value)
+  if cookie_value_num ~= nil  then
+    local endpoint = endpoints[(cookie_value_num%(#endpoints))+1]
+    return endpoint.address .. ":" .. endpoint.port
+  end
+
+ 
+  local randomEndpoint = math.random(#endpoints)
+  local endpoint = endpoints[randomEndpoint]
+  local cookie = ck:new()
+  local cookie_data = {
+    key = tostring(self.cookie_name),
+    value = randomEndpoint,
+  }
+  cookie:set(cookie_data)
   return endpoint.address .. ":" .. endpoint.port
 end
 

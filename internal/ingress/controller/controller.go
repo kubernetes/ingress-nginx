@@ -879,6 +879,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
+			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetCookieName = anns.UpstreamHashBy.UpstreamHashBySubsetCookieName
 
 			upstreams[defBackend].LoadBalancing = anns.LoadBalancing
 			if upstreams[defBackend].LoadBalancing == "" {
@@ -951,6 +952,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
+				upstreams[name].UpstreamHashBy.UpstreamHashBySubsetCookieName = anns.UpstreamHashBy.UpstreamHashBySubsetCookieName
 
 				upstreams[name].LoadBalancing = anns.LoadBalancing
 				if upstreams[name].LoadBalancing == "" {
