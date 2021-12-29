@@ -2,6 +2,7 @@ site_name: NGINX Ingress Controller
 repo_name: "kubernetes/ingress-nginx"
 repo_url: https://github.com/kubernetes/ingress-nginx
 site_url: https://kubernetes.github.io/ingress-nginx
+edit_uri: edit/main/docs/
 
 # Extensions
 markdown_extensions:
