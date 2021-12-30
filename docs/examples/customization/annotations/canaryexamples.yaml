@@ -1,0 +1,374 @@
+
+#
+# To test by  Canary Weights
+# Command to Create a PROD Deployment : kubectl create deploy prod --image nginx:alpine --port 80 && kl expose deploy prod --port 80
+# Command to Create a canary Deployment: kubectl deploy canary --image httpd:alpine --port 80 && kl expose deploy canary --port 80
+# Ingress for PROD Service:
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prod-exmple-com
+spec:
+  rules:
+  - host: canary.testexample.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prod
+            port:
+              number: 80
+  ingressClassName: nginx
+
+#Ingress to access Canary on Canary Weights apiVersion:
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-exmple-com
+  annotations:
+          nginx.ingress.kubernetes.io/canary: "true"
+          nginx.ingress.kubernetes.io/canary-weight: "40"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: canary.testexample.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canary
+            port:
+              number: 80
+#Bash Script to get the output counts is in counts.sh
+#~ ./count.sh #below output shows the requests flow, where 40%(approx) going to cannary pod.
+# Total number of requests routed to Pod stable-whoami-6ddd8d7ccc-hk787 are: 57
+# Total number of requests routed to Pod canary-whoami-7dbc6bf7dc-tc74n are: 43
+# ~ ./count.sh
+# Total number of requests routed to Pod stable-whoami-6ddd8d7ccc-hk787 are: 51
+# Total number of requests routed to Pod canary-whoami-7dbc6bf7dc-tc74n are: 49
+
+# ingress-nginx-controller Logs where the Requests are divided 60 - 40 between canary and prod pods:
+
+# 10.244.0.1 - - [03/Feb/2022:20:09:14 +0000] "GET / HTTP/1.1" 200 433 "-" "curl/7.81.0" 76 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 433 0.004 200 4e4e5cc5e602e069301f7744cd18c519
+# 10.244.0.1 - - [03/Feb/2022:20:09:14 +0000] "GET / HTTP/1.1" 200 433 "-" "curl/7.81.0" 76 0.000 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 433 0.000 200 a1bf752138c1dda263f0978e64eee0c6
+# 10.244.0.1 - - [03/Feb/2022:20:09:14 +0000] "GET / HTTP/1.1" 200 434 "-" "curl/7.81.0" 76 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 434 0.000 200 f546e9866eb07f41890f408effaeeabe
+# 10.244.0.1 - - [03/Feb/2022:20:09:14 +0000] "GET / HTTP/1.1" 200 434 "-" "curl/7.81.0" 76 0.001 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 434 0.004 200 1858368117d1ef27f42b25b10175a7bb
+# 10.244.0.1 - - [03/Feb/2022:20:09:14 +0000] "GET / HTTP/1.1" 200 434 "-" "curl/7.81.0" 76 0.001 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 434 0.000 200 60b4a37dfbcdbfa9ec8daf6f45e559e8
+---
+# Ingress Example of canary-by-header
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-exmple-com
+  annotations:
+          nginx.ingress.kubernetes.io/canary: "true"
+          nginx.ingress.kubernetes.io/canary-by-header: "you-can-use-anything-here"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: canary.testexample.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canary
+            port:
+              number: 80
+ 
+# to test
+# ~ for i in $(seq 1 10); do curl -s -H "you-can-use-anything-here: never" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+
+# 10.244.0.1 - - [03/Feb/2022:20:25:51 +0000] "GET / HTTP/1.1" 200 468 "-" "curl/7.81.0" 110 0.001 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 468 0.000 200 cd8d0c75eca5ab919799b2ad3d958357
+# 10.244.0.1 - - [03/Feb/2022:20:25:51 +0000] "GET / HTTP/1.1" 200 468 "-" "curl/7.81.0" 110 0.001 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 468 0.000 200 2e97cfab5610c6526adf2aee4cfcb92c
+# 10.244.0.1 - - [03/Feb/2022:20:25:51 +0000] "GET / HTTP/1.1" 200 468 "-" "curl/7.81.0" 110 0.001 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 468 0.000 200 01dfb2476e4a1ed7d1c8d2b006894f0f
+# 
+# for i in $(seq 1 10); do curl -s -H "you-can-use-anything-here: always" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+
+#ingress-nginx-controller Log where request was routed to canary Pod because of header 'always'
+# 10.244.0.1 - - [03/Feb/2022:20:22:07 +0000] "GET / HTTP/1.1" 200 468 "-" "curl/7.81.0" 111 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 468 0.004 200 7c2edac735379ed65fdb18e38862aa79
+# 10.244.0.1 - - [03/Feb/2022:20:22:07 +0000] "GET / HTTP/1.1" 200 468 "-" "curl/7.81.0" 111 0.000 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 468 0.000 200 3294cbad1fea9e019ffd9e4fffc5f32f
+# 10.244.0.1 - - [03/Feb/2022:20:22:07 +0000] "GET / HTTP/1.1" 200 468 "-" "curl/7.81.0" 111 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 468 0.000 200 5de81d7351c9a824fc22e05ecc522725
+
+---
+# Ingress Example of canary-by-cookie
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-exmple-com
+  annotations:
+          nginx.ingress.kubernetes.io/canary: "true"
+          nginx.ingress.kubernetes.io/canary-by-cookie: "use_under_30_feature"
+
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: canary.testexample.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canary
+            port:
+              number: 80
+#to test
+# for i in $(seq 1 10); do curl -s --cookie "use_under_30_feature=always" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+#When cookie 'use_under_30_feature' is set to always request is routed to canary
+#ingress-nginx-controller logs where request was routed to canary Pod
+# 10.244.0.1 - - [03/Feb/2022:20:34:00 +0000] "GET / HTTP/1.1" 200 470 "-" "curl/7.81.0" 113 0.002 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 470 0.004 200 746e0f05cb54b1a70936d67969a8266a
+# 10.244.0.1 - - [03/Feb/2022:20:34:00 +0000] "GET / HTTP/1.1" 200 470 "-" "curl/7.81.0" 113 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 470 0.000 200 864f316998fcf1b80dd066a43ad117d9
+# 10.244.0.1 - - [03/Feb/2022:20:34:00 +0000] "GET / HTTP/1.1" 200 470 "-" "curl/7.81.0" 113 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 470 0.000 200 9c1e88bfa1e720b1aa2e73002041d516
+# for i in $(seq 1 10); do curl -s --cookie "use_under_30_feature=never" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+#When cookie 'use_under_30_feature' is set to 'never' request is routed to prod
+# ingress-nginx-controller Logs where the Request is routed to prod Pod
+# 10.244.0.1 - - [03/Feb/2022:20:36:44 +0000] "GET / HTTP/1.1" 200 470 "-" "curl/7.81.0" 112 0.001 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 470 0.004 200 78e152360e4acff54c8bcaaa0f789a56
+# 10.244.0.1 - - [03/Feb/2022:20:36:44 +0000] "GET / HTTP/1.1" 200 470 "-" "curl/7.81.0" 112 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 470 0.000 200 43bee133c64cf1411eeb700568f9152b
+# 10.244.0.1 - - [03/Feb/2022:20:36:44 +0000] "GET / HTTP/1.1" 200 470 "-" "curl/7.81.0" 112 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 470 0.000 200 1a01d8108679e541cc4447af30aa6f5c
+# 
+---
+# Ingress Example of canary-by-header-pattern
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-exmple-com
+  annotations:
+          nginx.ingress.kubernetes.io/canary: "true"
+          nginx.ingress.kubernetes.io/canary-by-header: "Region"
+          nginx.ingress.kubernetes.io/canary-by-header-pattern: "cd|sz"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: canary.testexample.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canary
+            port:
+              number: 80
+#to test
+# ~ for i in $(seq 1 10); do curl -s -H "Region: sz" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+
+# ~ for i in $(seq 1 10); do curl -s -H "Region: cd" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+
+#When header 'Regions' is set to pattern 'cd' or 'sz' request is routed to canary
+# #ingress-nginx-controller logs where request was routed to canary Pod
+# 10.244.0.1 - - [03/Feb/2022:20:50:18 +0000] "GET / HTTP/1.1" 200 445 "-" "curl/7.81.0" 88 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 445 0.004 200 4a31f9363e9c7f4c2a1c10493a65769f
+# 10.244.0.1 - - [03/Feb/2022:20:50:18 +0000] "GET / HTTP/1.1" 200 445 "-" "curl/7.81.0" 88 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 445 0.004 200 8b79f806a61d2b4994cbfab0ebc52481
+# 10.244.0.1 - - [03/Feb/2022:20:50:18 +0000] "GET / HTTP/1.1" 200 445 "-" "curl/7.81.0" 88 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 445 0.004 200 e5f7a5b35ed5298417fe27048a4b0d77
+# 10.244.0.1 - - [03/Feb/2022:20:50:18 +0000] "GET / HTTP/1.1" 200 445 "-" "curl/7.81.0" 88 0.000 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 445 0.004 200 4415670ef9657068c35c5e615024d3ea
+# ~ for i in $(seq 1 10); do curl -s -H "Region: AM" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787 
+#When header 'Regions' is set to pattern Non pattern like 'AM' request routed to prod Pod
+# # ingress-nginx-controller Logs where the Requests is routed to prod Pod
+# 10.244.0.1 - - [03/Feb/2022:20:55:14 +0000] "GET / HTTP/1.1" 200 446 "-" "curl/7.81.0" 88 0.001 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 446 0.000 200 c6a7d082085034d41b70aed12dbcc946
+# 10.244.0.1 - - [03/Feb/2022:20:55:14 +0000] "GET / HTTP/1.1" 200 446 "-" "curl/7.81.0" 88 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 446 0.000 200 569258440a46580260f4cb56ba051f0b
+# 10.244.0.1 - - [03/Feb/2022:20:55:14 +0000] "GET / HTTP/1.1" 200 446 "-" "curl/7.81.0" 88 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 446 0.000 200 7b323581b12919e19880d36980fef9f3
+# 10.244.0.1 - - [03/Feb/2022:20:55:14 +0000] "GET / HTTP/1.1" 200 446 "-" "curl/7.81.0" 88 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 446 0.000 200 96d463b1170e9f07941b3b3b44c3d871
+
+
+---
+
+# Ingress Example of canary-by-header-value
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-exmple-com
+  annotations:
+          nginx.ingress.kubernetes.io/canary: "true"
+          nginx.ingress.kubernetes.io/canary-by-header: "Canary"
+          nginx.ingress.kubernetes.io/canary-by-header-value: "DoCanary"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: canary.testexample.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: canary
+            port:
+              number: 80
+#to test
+# ~ for i in $(seq 1 10); do curl -s -H "Canary: DoCanary" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+# canary-whoami-7dbc6bf7dc-tc74n
+#When header and header-value are set to 'Canary ' and 'DoCanary' request is routed to canary
+# #ingress-nginx-controller logs where request was routed to canary Pod
+# 10.244.0.1 - - [03/Feb/2022:21:02:13 +0000] "GET / HTTP/1.1" 200 451 "-" "curl/7.81.0" 94 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 451 0.004 200 21db2d1423140260c1c8da3b7b24658b
+# 10.244.0.1 - - [03/Feb/2022:21:02:13 +0000] "GET / HTTP/1.1" 200 451 "-" "curl/7.81.0" 94 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 451 0.000 200 1eeba375ef9df64ff46ef7daa3eeeb22
+# 10.244.0.1 - - [03/Feb/2022:21:02:13 +0000] "GET / HTTP/1.1" 200 451 "-" "curl/7.81.0" 94 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 451 0.000 200 2bea564bd56d6f1992509e0551dff15a
+# 10.244.0.1 - - [03/Feb/2022:21:02:13 +0000] "GET / HTTP/1.1" 200 451 "-" "curl/7.81.0" 94 0.001 [ingress-nginx-stable-whoami-80] [ingress-nginx-canary-whoami-80] 10.244.0.7:80 451 0.004 200 bac9ae06d47e322100f3058855b17236
+# ~ for i in $(seq 1 10); do curl -s -H "Canary: PRD" http://172.18.0.251/ | grep Hostname | awk '{print $2}';done
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+# stable-whoami-6ddd8d7ccc-hk787
+#When header value for header 'Canary' is not set to the one defined as canary-by-header-value request is routed to prod Pod
+# 10.244.0.1 - - [03/Feb/2022:21:04:30 +0000] "GET / HTTP/1.1" 200 447 "-" "curl/7.81.0" 89 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 447 0.000 200 5657189f8c9e364c582c874007df6749
+# 10.244.0.1 - - [03/Feb/2022:21:04:30 +0000] "GET / HTTP/1.1" 200 447 "-" "curl/7.81.0" 89 0.001 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 447 0.000 200 7e60eca98854f10c2f6d3bf11561fa04
+# 10.244.0.1 - - [03/Feb/2022:21:04:30 +0000] "GET / HTTP/1.1" 200 447 "-" "curl/7.81.0" 89 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 447 0.000 200 8310ee5ef8ef6e65edc555d286170d30
+# 10.244.0.1 - - [03/Feb/2022:21:04:30 +0000] "GET / HTTP/1.1" 200 447 "-" "curl/7.81.0" 89 0.000 [ingress-nginx-stable-whoami-80] [] 10.244.0.8:80 447 0.000 200 3e98fa6e8a2814dd8007a801d9ae9d31
+
+---
+#one more example 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-whoami
+  labels:
+    app: canary-whoami
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canary-whoami
+  template:
+    metadata:
+      labels:
+        app: canary-whoami
+    spec:
+      containers:
+      - name: whoami
+        image: containous/whoami
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stable-whoami
+  labels:
+    app: stable-whoami
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stable-whoami
+  template:
+    metadata:
+      labels:
+        app: stable-whoami
+    spec:
+      containers:
+      - name: stablewhoami
+        image: containous/whoami
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-whoami
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: canary-whoami
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stable-whoami
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: stable-whoami
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stable-whoami
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: stable-whoami
+            port:
+              number: 80
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: stable-whoami
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: stable-whoami
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-whoami
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-by-header: "Canary"
+    nginx.ingress.kubernetes.io/canary-by-header-value: "DoCanary"
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: canary-whoami
+            port:
+              number: 80
