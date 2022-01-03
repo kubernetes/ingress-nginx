@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.20.1
+export NGINX_VERSION=1.19.9
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.0.0...main
 export OPENTELEMETRY_CPP_VERSION=1.0.0
