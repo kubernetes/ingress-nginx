@@ -18,14 +18,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -d "/modules_mount/etc/nginx" ]; then
-	for dir in /modules_mount/etc/nginx/*; do
-		cp "$dir"/* "/etc/nginx/$(basename "$dir")"
-	done
-fi
-if [ -d "/modules_mount/usr/local" ]; then
-	for dir in /modules_mount/usr/local/*; do
-		cp "$dir"/* "/usr/local/$(basename "$dir")"
+if [ -d "/modules_mount/etc/nginx/modules" ]; then
+	for dir in /modules_mount/etc/nginx/modules/*; do
+		cp "$dir"/* "/etc/nginx/modules/$(basename "$dir")"
 	done
 fi
 

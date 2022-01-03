@@ -18,10 +18,4 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-mkdir -p /modules_mount/etc
-mkdir -p /modules_mount/usr/local/include
-
-cp -R /etc/nginx/ /modules_mount/etc/nginx/
-cp -R /usr/local/lib/ /modules_mount/usr/local/lib
-cp -R /usr/local/include/opentelemetry/ /modules_mount/usr/local/include/opentelemetry
-cp -R /usr/local/include/nlohmann/ /modules_mount/usr/local/include/nlohmann
+cp -R /etc/nginx/modules /modules_mount/etc/nginx/modules
