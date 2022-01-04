@@ -20,7 +20,9 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   --namespace ingress-nginx \
   --set controller.metrics.enabled=true \
   --set-string controller.podAnnotations."prometheus\.io/scrape"="true" \
-  --set-string controller.podAnnotations."prometheus\.io/port"="10254"
+  --set-string controller.podAnnotations."prometheus\.io/port"="10254" \
+  --set-string controller.service.annotations."prometheus\.io/scrape"="true" \
+  --set-string controller.service.annotations."prometheus\.io/port"="10254"
   ```
   - You can validate that the controller is configured for metrics by looking at the values of the installed release, like this ;
   ```
@@ -32,6 +34,9 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   controller:
     metrics:
       enabled: true
+      podAnnotations:
+        prometheus.io/port: "10254"
+        prometheus.io/scrape: "true"
       service:
         annotations:
           prometheus.io/port: "10254"
@@ -39,6 +44,19 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   ..
   ```
    - If you are **not using helm**, you will have to edit your manifests like this:
+     
+     - Deployment manifest:
+       ```
+       apiVersion: apps/v1
+       kind: Deployment
+       metadata:
+        ..
+        annotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "10254"
+        ..
+       ```
+     
      - Service manifest:
        ```
        apiVersion: v1
