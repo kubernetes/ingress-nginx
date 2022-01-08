@@ -2,6 +2,10 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.0.14
+
+- [8061] https://github.com/kubernetes/ingress-nginx/pull/8061 Using helm-docs to populate values table in README.md
+
 ### 4.0.13
 
 - [8008] https://github.com/kubernetes/ingress-nginx/pull/8008 Add relabelings in controller-servicemonitor.yaml

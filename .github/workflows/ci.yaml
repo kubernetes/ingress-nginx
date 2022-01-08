@@ -123,6 +123,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.17'
+
       - name: cache
         uses: actions/download-artifact@v2
         with:
@@ -131,6 +136,13 @@ jobs:
       - name: Lint
         run: |
           ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
+
+      - name: Run helm-docs
+        run: |
+          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.6.0
+          ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
+          git diff --exit-code
+          rm -f ./helm-docs
 
       - name: fix permissions
         run: |
