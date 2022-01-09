@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/ncabatoff/process-exporter/proc"
-	"github.com/pkg/errors"
 
 	"k8s.io/ingress-nginx/internal/nginx"
 )
@@ -43,27 +42,27 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	// check the nginx master process is running
 	fs, err := proc.NewFS("/proc", false)
 	if err != nil {
-		return errors.Wrap(err, "reading /proc directory")
+		return fmt.Errorf("reading /proc directory: %w", err)
 	}
 
 	f, err := os.ReadFile(nginx.PID)
 	if err != nil {
-		return errors.Wrapf(err, "reading %v", nginx.PID)
+		return fmt.Errorf("reading %v: %w", nginx.PID, err)
 	}
 
 	pid, err := strconv.Atoi(strings.TrimRight(string(f), "\r\n"))
 	if err != nil {
-		return errors.Wrapf(err, "reading NGINX PID from file %v", nginx.PID)
+		return fmt.Errorf("reading NGINX PID from file %v: %w", nginx.PID, err)
 	}
 
 	_, err = fs.Proc(pid)
 	if err != nil {
-		return errors.Wrapf(err, "checking for NGINX process with PID %v", pid)
+		return fmt.Errorf("checking for NGINX process with PID %v: %w", pid, err)
 	}
 
 	statusCode, _, err := nginx.NewGetStatusRequest("/is-dynamic-lb-initialized")
 	if err != nil {
-		return errors.Wrapf(err, "checking if the dynamic load balancer started")
+		return fmt.Errorf("checking if the dynamic load balancer started: %w", err)
 	}
 
 	if statusCode != 200 {

@@ -17,9 +17,8 @@ limitations under the License.
 package errors
 
 import (
+	"errors"
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 var (
@@ -50,7 +49,7 @@ func NewInvalidAnnotationContent(name string, val interface{}) error {
 // NewLocationDenied returns a new LocationDenied error
 func NewLocationDenied(reason string) error {
 	return LocationDenied{
-		Reason: errors.Errorf("Location denied, reason: %v", reason),
+		Reason: fmt.Errorf("Location denied, reason: %v", reason),
 	}
 }
 
@@ -109,5 +108,5 @@ func New(m string) error {
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 func Errorf(format string, args ...interface{}) error {
-	return errors.Errorf(format, args...)
+	return fmt.Errorf(format, args...)
 }

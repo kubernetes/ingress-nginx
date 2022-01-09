@@ -24,7 +24,6 @@ import (
 
 	"github.com/gavv/httpexpect/v2"
 	"github.com/onsi/ginkgo"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -508,7 +507,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		deployment.Spec.Replicas = NewInt32(int32(replicas))
 		_, err = kubeClientSet.AppsV1().Deployments(namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "scaling the number of replicas to %v", replicas)
+			return fmt.Errorf("scaling the number of replicas to %d: %w", replicas, err)
 		}
 
 		err = waitForDeploymentRollout(kubeClientSet, deployment)
@@ -521,7 +520,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {
-		return errors.Wrapf(err, "waiting for nginx-ingress-controller replica count to be %v", replicas)
+		return fmt.Errorf("waiting for nginx-ingress-controller replica count to be %d: %w", replicas, err)
 	}
 
 	return nil
