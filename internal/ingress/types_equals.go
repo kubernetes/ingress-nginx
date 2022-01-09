@@ -317,6 +317,9 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.AuthTLSError != s2.AuthTLSError {
 		return false
 	}
+	if !(&s1.ProxySSL).Equal(&s2.ProxySSL) {
+		return false
+	}
 
 	if len(s1.Locations) != len(s2.Locations) {
 		return false
@@ -399,6 +402,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 	if !(&l1.Proxy).Equal(&l2.Proxy) {
+		return false
+	}
+	if !(&l1.ProxySSL).Equal(&l2.ProxySSL) {
 		return false
 	}
 	if l1.UsePortInRedirects != l2.UsePortInRedirects {
@@ -556,6 +562,12 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 		return false
 	}
 	if s1.PemSHA != s2.PemSHA {
+		return false
+	}
+	if s1.CAFileName != s2.CAFileName {
+		return false
+	}
+	if s1.CRLFileName != s2.CRLFileName {
 		return false
 	}
 	if !s1.ExpireTime.Equal(s2.ExpireTime) {
