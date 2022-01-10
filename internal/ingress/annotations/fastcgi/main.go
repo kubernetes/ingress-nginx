@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/client-go/tools/cache"
 
@@ -85,7 +84,7 @@ func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 	cmns, cmn, err := cache.SplitMetaNamespaceKey(cm)
 	if err != nil {
 		return fcgiConfig, ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "error reading configmap name from annotation"),
+			Reason: fmt.Errorf("error reading configmap name from annotation: %w", err),
 		}
 	}
 
@@ -97,7 +96,7 @@ func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 	cmap, err := a.r.GetConfigMap(cm)
 	if err != nil {
 		return fcgiConfig, ing_errors.LocationDenied{
-			Reason: errors.Wrapf(err, "unexpected error reading configmap %v", cm),
+			Reason: fmt.Errorf("unexpected error reading configmap %s: %w", cm, err),
 		}
 	}
 

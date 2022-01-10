@@ -17,9 +17,8 @@ limitations under the License.
 package file
 
 import (
+	"fmt"
 	"os"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -50,13 +49,13 @@ func CreateRequiredDirectories() error {
 			if os.IsNotExist(err) {
 				err = os.MkdirAll(directory, ReadWriteByUser)
 				if err != nil {
-					return errors.Wrapf(err, "creating directory '%v'", directory)
+					return fmt.Errorf("creating directory %s: %w", directory, err)
 				}
 
 				continue
 			}
 
-			return errors.Wrapf(err, "checking directory %v", directory)
+			return fmt.Errorf("checking directory %s: %w", directory, err)
 		}
 	}
 

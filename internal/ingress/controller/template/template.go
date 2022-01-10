@@ -36,8 +36,6 @@ import (
 	text_template "text/template"
 	"time"
 
-	"github.com/pkg/errors"
-
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
@@ -81,7 +79,7 @@ type Template struct {
 func NewTemplate(file string) (*Template, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unexpected error reading template %v", file)
+		return nil, fmt.Errorf("unexpected error reading template %s: %w", file, err)
 	}
 
 	tmpl, err := text_template.New("nginx.tmpl").Funcs(funcMap).Parse(string(data))

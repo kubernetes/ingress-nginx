@@ -17,10 +17,9 @@ limitations under the License.
 package ipwhitelist
 
 import (
+	"fmt"
 	"sort"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/internal/net"
@@ -75,7 +74,7 @@ func (a ipwhitelist) Parse(ing *networking.Ingress) (interface{}, error) {
 	ipnets, ips, err := net.ParseIPNets(values...)
 	if err != nil && len(ips) == 0 {
 		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "the annotation does not contain a valid IP address or network"),
+			Reason: fmt.Errorf("the annotation does not contain a valid IP address or network: %w", err),
 		}
 	}
 

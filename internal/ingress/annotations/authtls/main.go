@@ -17,7 +17,7 @@ limitations under the License.
 package authtls
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 	networking "k8s.io/api/networking/v1"
 
 	"regexp"
@@ -102,7 +102,7 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
 	if err != nil {
-		e := errors.Wrap(err, "error obtaining certificate")
+		e := fmt.Errorf("error obtaining certificate: %w", err)
 		return &Config{}, ing_errors.LocationDenied{Reason: e}
 	}
 	config.AuthSSLCert = *authCert

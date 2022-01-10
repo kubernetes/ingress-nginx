@@ -22,7 +22,6 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -180,7 +179,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 	if secretName == s.defaultSSLCertificate {
 		path, err := ssl.StoreSSLCertOnDisk(nsSecName, sslCert)
 		if err != nil {
-			return nil, errors.Wrap(err, "storing default SSL Certificate")
+			return nil, fmt.Errorf("storing default SSL Certificate: %w", err)
 		}
 
 		sslCert.PemFileName = path

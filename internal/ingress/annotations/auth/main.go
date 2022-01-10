@@ -22,7 +22,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/client-go/tools/cache"
@@ -118,14 +117,14 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	s, err := parser.GetStringAnnotation("auth-secret", ing)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "error reading secret name from annotation"),
+			Reason: fmt.Errorf("error reading secret name from annotation: %w", err),
 		}
 	}
 
 	sns, sname, err := cache.SplitMetaNamespaceKey(s)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "error reading secret name from annotation"),
+			Reason: fmt.Errorf("error reading secret name from annotation: %w", err),
 		}
 	}
 
@@ -137,7 +136,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	secret, err := a.r.GetSecret(name)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
-			Reason: errors.Wrapf(err, "unexpected error reading secret %v", name),
+			Reason: fmt.Errorf("unexpected error reading secret %s: %w", name, err),
 		}
 	}
 
@@ -158,7 +157,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 		}
 	default:
 		return nil, ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "invalid auth-secret-type in annotation, must be 'auth-file' or 'auth-map'"),
+			Reason: fmt.Errorf("invalid auth-secret-type in annotation, must be 'auth-file' or 'auth-map': %w", err),
 		}
 	}
 
@@ -179,14 +178,14 @@ func dumpSecretAuthFile(filename string, secret *api.Secret) error {
 	val, ok := secret.Data["auth"]
 	if !ok {
 		return ing_errors.LocationDenied{
-			Reason: errors.Errorf("the secret %v does not contain a key with value auth", secret.Name),
+			Reason: fmt.Errorf("the secret %s does not contain a key with value auth", secret.Name),
 		}
 	}
 
 	err := os.WriteFile(filename, val, file.ReadWriteByUser)
 	if err != nil {
 		return ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "unexpected error creating password file"),
+			Reason: fmt.Errorf("unexpected error creating password file: %w", err),
 		}
 	}
 
@@ -205,7 +204,7 @@ func dumpSecretAuthMap(filename string, secret *api.Secret) error {
 	err := os.WriteFile(filename, []byte(builder.String()), file.ReadWriteByUser)
 	if err != nil {
 		return ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "unexpected error creating password file"),
+			Reason: fmt.Errorf("unexpected error creating password file: %w", err),
 		}
 	}
 
