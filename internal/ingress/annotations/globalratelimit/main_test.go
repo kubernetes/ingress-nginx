@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pkg/errors"
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -159,8 +158,7 @@ func TestGlobalRateLimiting(t *testing.T) {
 			},
 			&Config{},
 			ing_errors.LocationDenied{
-				Reason: errors.Wrap(fmt.Errorf(`time: unknown unit "mb" in duration "2mb"`),
-					"failed to parse 'global-rate-limit-window' value"),
+				Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: time: unknown unit \"mb\" in duration \"2mb\""),
 			},
 		},
 	}

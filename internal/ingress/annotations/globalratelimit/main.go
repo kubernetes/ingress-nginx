@@ -17,10 +17,10 @@ limitations under the License.
 package globalratelimit
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	networking "k8s.io/api/networking/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -86,7 +86,7 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 	windowSize, err := time.ParseDuration(rawWindowSize)
 	if err != nil {
 		return config, ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "failed to parse 'global-rate-limit-window' value"),
+			Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: %w", err),
 		}
 	}
 
