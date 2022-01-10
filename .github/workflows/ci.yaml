@@ -67,7 +67,7 @@ jobs:
         id: go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: '1.17.6'
 
       - name: Set up Docker Buildx
         id: buildx
@@ -126,7 +126,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '^1.17'
+          go-version: '1.17.6'
 
       - name: cache
         uses: actions/download-artifact@v2
@@ -319,7 +319,7 @@ jobs:
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: '1.17.6'
 
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
