@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.0.14](https://img.shields.io/badge/Version-4.0.14-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.0](https://img.shields.io/badge/AppVersion-1.1.0-informational?style=flat-square)
+![Version: 4.0.15](https://img.shields.io/badge/Version-4.0.15-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.1](https://img.shields.io/badge/AppVersion-1.1.1-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -303,17 +303,17 @@ Kubernetes: `>=1.19.0-0`
 | controller.hostPort.ports.https | int | `443` | 'hostPort' https port |
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
-| controller.image.digest | string | `"sha256:f766669fdcf3dc26347ed273a55e754b427eb4411ee075a53f30718b4499076a"` |  |
+| controller.image.digest | string | `"sha256:0bc88eb15f9e7f84e8e56c14fa5735aaa488b840983f87bd79b1054190e660de"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"k8s.gcr.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.1.0"` |  |
+| controller.image.tag | string | `"v1.1.1"` |  |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller) |
-| controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` |  |
-| controller.ingressClassResource.default | bool | `false` |  |
-| controller.ingressClassResource.enabled | bool | `true` |  |
-| controller.ingressClassResource.name | string | `"nginx"` |  |
+| controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
+| controller.ingressClassResource.default | bool | `false` | Is this the default ingressClass for the cluster |
+| controller.ingressClassResource.enabled | bool | `true` | Is this ingressClass enabled or not |
+| controller.ingressClassResource.name | string | `"nginx"` | Name of the ingressClass |
 | controller.ingressClassResource.parameters | object | `{}` | Parameters is a link to a custom resource containing additional configuration for the controller. This is optional if the controller does not require extra parameters. |
 | controller.keda.apiVersion | string | `"keda.sh/v1alpha1"` |  |
 | controller.keda.behavior | object | `{}` |  |

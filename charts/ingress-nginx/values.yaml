@@ -15,8 +15,8 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.1.0"
-    digest: sha256:f766669fdcf3dc26347ed273a55e754b427eb4411ee075a53f30718b4499076a
+    tag: "v1.1.1"
+    digest: sha256:0bc88eb15f9e7f84e8e56c14fa5735aaa488b840983f87bd79b1054190e660de
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -96,9 +96,13 @@ controller:
   ## This section refers to the creation of the IngressClass resource
   ## IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
   ingressClassResource:
+    # -- Name of the ingressClass
     name: nginx
+    # -- Is this ingressClass enabled or not
     enabled: true
+    # -- Is this the default ingressClass for the cluster
     default: false
+    # -- Controller-value of the controller that is processing this ingressClass
     controllerValue: "k8s.io/ingress-nginx"
 
     # -- Parameters is a link to a custom resource containing additional
