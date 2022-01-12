@@ -262,7 +262,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
   labels:
     helm.sh/chart: ingress-nginx-4.0.15
     app.kubernetes.io/name: ingress-nginx
