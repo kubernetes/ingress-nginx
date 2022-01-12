@@ -3,12 +3,72 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - #8120    Update go in runner and release v1.1.1
+        - #8119    Update to go v1.17.6
+        - #8118    Remove deprecated libraries, update other libs
+        - #8117    Fix codegen errors
+        - #8115    chart/ghaction: set the correct permission to have access to push a release
+        - #8098    generating SHA for CA only certs in backend_ssl.go + comparision of P…
+        - #8088    Fix Edit this page link to use main branch
+        - #8072    Expose GeoIP2 Continent code as variable
+        - #8061    docs(charts): using helm-docs for chart
+        - #8058    Bump github.com/spf13/cobra from 1.2.1 to 1.3.0
+        - #8054    Bump google.golang.org/grpc from 1.41.0 to 1.43.0
+        - #8051    align bug report with feature request regarding kind documentation
+        - #8046    Report expired certificates (#8045)
+        - #8044    remove G109 check till gosec resolves issues
+        - #8042    docs_multiple_instances_one_cluster_ticket_7543
+        - #8041    docs: fix typo'd executible name
+        - #8035    Comment busy owners
+        - #8029    Add stream-snippet as a ConfigMap and Annotation option
+        - #8023    fix nginx compilation flags
+        - #8021    Disable default modsecurity_rules_file if modsecurity-snippet is specified
+        - #8019    Revise main documentation page
+        - #8018    Preserve order of plugin invocation
+        - #8015    Add newline indenting to admission webhook annotations
+        - #8014    Add link to example error page manifest in docs
+        - #8009    Fix spelling in documentation and top-level files
+        - #8008    Add relabelings in controller-servicemonitor.yaml
+        - #8003    Minor improvements (formatting, consistency) in install guide
+        - #8001    fix: go-grpc Dockerfile
+        - #7999    images: use k8s-staging-test-infra/gcb-docker-gcloud
+        - #7996    doc: improvement
+        - #7983    Fix a couple of misspellings in the annotations documentation.
+        - #7979    allow set annotations for admission Jobs
+        - #7977    Add ssl_reject_handshake to defaul server
+        - #7975    add legacy version update v0.50.0 to main changelog
+        - #7972    updated service upstream definition
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2022-01-12T16:49:39.145957918Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: 945c441325d1420b146724dcf2496228e091cfb0e17c03a37b33dda09f169fc3
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.19.0-0'
+    maintainers:
+    - name: ChiefAlexander
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.0.15/ingress-nginx-4.0.15.tgz
+    version: 4.0.15
+  - annotations:
+      artifacthub.io/changes: |
         - use controller v1.1.0
       artifacthub.io/prerelease: "false"
     apiVersion: v2
     appVersion: 1.1.0
     created: "2021-12-06T13:51:24.638229487Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 1627b3878f53bcac7bbf45ab56db47a12bc10d5abddea5d4b1678cb141c708d6
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -32,7 +92,8 @@ entries:
     apiVersion: v2
     appVersion: 1.1.0
     created: "2021-11-29T11:34:20.144337382Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 3d4af112730dff744f451756a541e76f95caeb553b7f55cfed5152cf3db2f88a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -56,7 +117,8 @@ entries:
     apiVersion: v2
     appVersion: 1.1.0
     created: "2021-11-26T10:37:45.299686249Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 7e4108c3da54b7fef241d34ad6a8bee74dc89456429cc976b190963f36cf32e3
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -80,7 +142,8 @@ entries:
     apiVersion: v2
     appVersion: 1.1.0
     created: "2021-11-23T23:08:42.916090909Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 5b8582089a5f60eeb46144bb50f62b70d5960e09e9057aad4de7c40b5f506a1a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -105,7 +168,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.5
     created: "2021-11-19T14:53:42.164148367Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: caad1dbc663dea6d594dff7f25e7f23dc718f490c4761d0cf136a977e67a1df4
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -130,7 +194,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.5
     created: "2021-11-16T12:46:01.052431102Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 9699f6c394ac0f93be0a8f58b3d66d39809d45b2ceaa977cd10063cd9e019046
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -157,7 +222,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.4
     created: "2021-10-13T03:26:31.120975982Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 30cc58457945667224bee646e1c714ab4add9a4ac519783f873cf9804ff6f9bb
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -183,7 +249,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.3
     created: "2021-10-04T23:22:36.880099863Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 1d0666d3f6be8dd27e56e8a26c154bd45e5b033a0049f73eda55bebd81ff6546
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -209,7 +276,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.2
     created: "2021-09-27T03:26:14.183959797Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 3ef0e2ae17a84df80717443daf7dc4883f86730b6ea2bf2e860fab111c85b42a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -234,7 +302,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.1
     created: "2021-09-22T12:12:53.686381828Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 7daf7c134a867ce2d195ba9d52251eb423335a66dca5e05aaf1364223625a4f5
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -260,7 +329,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.0
     created: "2021-08-24T15:32:20.26472923Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 8ec593a5d3b7dea0295305b384d993817c40e4047b4ae2ed549b895435c5b417
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -284,7 +354,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.0-beta.3
     created: "2021-08-13T22:32:20.870784614Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: c395a66693111c72094aad7badf42960ebcc9ce7ae06515dd0e9a8f114423eff
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -309,7 +380,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.0-beta.2
     created: "2021-08-12T19:06:45.388350164Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 643985bd1c8b7f8f7281256bef473c46c400d733ab231d31f6c308da2982cd67
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -333,7 +405,8 @@ entries:
     apiVersion: v2
     appVersion: 1.0.0-beta.1
     created: "2021-08-03T17:45:45.653466723Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 4a944a97aad87bc955c93e1c7a40f2a3d1fdb928a5cc363ed52a11398cd6f280
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -357,7 +430,8 @@ entries:
     apiVersion: v2
     appVersion: 0.50.0
     created: "2021-11-24T20:16:26.460509271Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 71e029d485e9f95c83d41a969a0a17329e07d2c7111e80db6851865f2a9bc24e
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -381,7 +455,8 @@ entries:
     apiVersion: v2
     appVersion: 0.49.3
     created: "2021-10-04T14:18:01.90589552Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: fa2c21df47e2b9cc4648fbf95c256ae01016aa9d97a2f7c51407e0c0fa999066
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -404,7 +479,8 @@ entries:
     apiVersion: v2
     appVersion: 0.49.2
     created: "2021-09-27T03:01:05.419010283Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 0ffc1c0ef99cc3bd86d0a0fbf900323be6b6e0e96a0e8a4eb9a5d95a16a37ba7
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -428,7 +504,8 @@ entries:
     apiVersion: v2
     appVersion: 0.49.1
     created: "2021-09-22T12:45:13.932318132Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 1f9589f72163516cb3d2c254d1c9010a7af5d86e4c6cddb979ae5a84694fd711
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -452,7 +529,8 @@ entries:
     apiVersion: v2
     appVersion: 0.49.0
     created: "2021-08-21T16:50:39.035205422Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 2e3681e052c9ae62674fd83db02f33f7fb45a98582c6c999b217d62a936e58da
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -475,7 +553,8 @@ entries:
     apiVersion: v2
     appVersion: 0.48.1
     created: "2021-08-03T14:35:46.714056139Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: f2843a2b9f1f8fe2716f1761784e4f4712161d5dd0c6bd58bea4bd0f3abb6ea1
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -498,7 +577,8 @@ entries:
     apiVersion: v2
     appVersion: 0.47.0
     created: "2021-06-22T11:38:53.525189187Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 0f0f856ceef4c05023ac9d4ce1d1937711290059b33824a7c37f2c0810623fb6
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -521,7 +601,8 @@ entries:
     apiVersion: v2
     appVersion: 0.47.0
     created: "2021-06-06T16:23:21.535360996Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 52ec03a3ebbca9ff08de5087ecf45c444db317f73d2e4b12845625db1e10fb3a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -544,7 +625,8 @@ entries:
     apiVersion: v2
     appVersion: 0.46.0
     created: "2021-06-02T09:53:22.403057445Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 147258822cff2e0efc736fe045f3843f1b1bd5244abfa0e806797ef092b81730
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -567,7 +649,8 @@ entries:
     apiVersion: v2
     appVersion: 0.46.0
     created: "2021-05-18T13:38:49.491675977Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 5d90062df12d7f6459248252e79c7e58c9390d3be685de97ccb81429bd1530fd
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -590,7 +673,8 @@ entries:
     apiVersion: v2
     appVersion: 0.46.0
     created: "2021-04-30T23:04:46.976559126Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 07661d7eee5d14daac6414f146754eb010f564c8b9423d5fca00262fa87bf862
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -613,7 +697,8 @@ entries:
     apiVersion: v2
     appVersion: 0.45.0
     created: "2021-04-08T14:14:19.369056733Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: e3d16be993a0b29fa05f92560efcc01032c9c932c0faa77e64d732a12ac85d99
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -636,7 +721,8 @@ entries:
     apiVersion: v2
     appVersion: 0.45.0
     created: "2021-04-07T19:35:58.835361184Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 1594370766664cb18beffd5fad8aae7e0baa81a1bca581c54625b249b70f16c4
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -659,7 +745,8 @@ entries:
     apiVersion: v2
     appVersion: 0.45.0
     created: "2021-04-06T17:51:15.276561635Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: d1b54dc6ad22492d1c2dd9f8899a44a73b09107929d97309dd68b1f632a2b558
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -682,7 +769,8 @@ entries:
     apiVersion: v2
     appVersion: 0.44.0
     created: "2021-03-31T14:58:12.224359164Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: a38f8b71465fca2719242cebeacf9b1deed95347b277dcc24eac4fd958756ed4
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -705,7 +793,8 @@ entries:
     apiVersion: v2
     appVersion: 0.44.0
     created: "2021-03-23T15:34:35.111253962Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 3e271eb6fb789e4fa461f9f4574d921faafae5f14aa3ac77ce74bbc1078755ce
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -728,7 +817,8 @@ entries:
     apiVersion: v2
     appVersion: 0.44.0
     created: "2021-03-09T22:29:53.552530464Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 270c83e6ac7d82af7caab73c94aefd213364077417baa5b5316cca32e2b6b57d
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -751,7 +841,8 @@ entries:
     apiVersion: v2
     appVersion: 0.44.0
     created: "2021-02-04T14:17:20.136149563Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: a1999d0ed90ab34418fb3f3e54024a9ff74d77c9ea3b7d3ec42e0bd5adc5e6f8
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -775,7 +866,8 @@ entries:
     apiVersion: v2
     appVersion: 0.43.0
     created: "2021-01-28T14:10:44.867923184Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: c1b27d3aa897fa3d29d4a04d327912540504145192e4ecd81b151ca2ba579176
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -801,7 +893,8 @@ entries:
     apiVersion: v2
     appVersion: 0.43.0
     created: "2021-01-20T18:51:15.626180939Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 04d64852d144673a920602a5598ddd7e78f9a852605bbe0f9f0c68e5c7910f9b
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -825,7 +918,8 @@ entries:
     apiVersion: v2
     appVersion: 0.43.0
     created: "2021-01-14T12:22:03.120395174Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 42b25dc4c178cefc912c00f63d556333b84afeb30fefa1fa634367521ad1d1c4
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -848,7 +942,8 @@ entries:
     apiVersion: v2
     appVersion: 0.43.0
     created: "2021-01-12T17:19:00.718560731Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: d5888efdd69caa153e124e4cb80a6ea08fbaf8115f7e64423b4b4750945e25d0
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -871,7 +966,8 @@ entries:
     apiVersion: v2
     appVersion: 0.43.0
     created: "2020-12-30T17:54:55.067699023Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 9f5525f135e7744c47273aff512bb514a5a39500bd8150734eb5bcef5d0183cb
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -895,7 +991,8 @@ entries:
     apiVersion: v2
     appVersion: 0.42.0
     created: "2020-12-29T14:42:10.526202515Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 966a6fc9bf7099c977d05de70ca354b911b9a4d40a48153baf1d80d3d4931636
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -918,7 +1015,8 @@ entries:
     apiVersion: v2
     appVersion: 0.42.0
     created: "2020-12-24T19:11:58.359434862Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: b6b928d4a96bcade471071c7477da17c340976aeb413241bbb8e4d56061c0aa6
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -942,7 +1040,8 @@ entries:
     apiVersion: v2
     appVersion: 0.41.2
     created: "2020-12-21T20:16:59.198784939Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: f3349cf2f21c0086d99d84ef504b3029a4bf5311788e99b6eaf62ab4235a3744
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -965,7 +1064,8 @@ entries:
     apiVersion: v2
     appVersion: 0.41.2
     created: "2020-12-09T10:50:23.15848791Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 78764f04aac60035cd8a30f61651b9928c34a6be6635c82c74f526bdf5c858c8
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -988,7 +1088,8 @@ entries:
     apiVersion: v2
     appVersion: 0.41.2
     created: "2020-12-04T23:03:37.278739515Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 65c6cc3155ca7c72b68eaf996b822fce4139ba512adb35ce57b717c768e4f3c7
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1011,7 +1112,8 @@ entries:
     apiVersion: v2
     appVersion: 0.41.2
     created: "2020-11-24T22:27:44.779638585Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 1f255ab987240954c4c58cc4a945133b7613305d53018bd58f60dd835d12789a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1034,7 +1136,8 @@ entries:
     apiVersion: v1
     appVersion: 0.41.2
     created: "2020-11-24T14:32:11.095003146Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: fdbf20ba639c04bba3939e0598c3925f709dfe533eb277e3690cc8db6f9dea27
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1056,7 +1159,8 @@ entries:
     apiVersion: v1
     appVersion: 0.41.2
     created: "2020-11-19T20:29:53.701721878Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: c332a5b8ededca9b585d592ab4b509bc18f25d0ad776771688056e91bc0e9510
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1078,7 +1182,8 @@ entries:
     apiVersion: v1
     appVersion: 0.41.2
     created: "2020-11-12T20:35:26.997076283Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 20f6b9b904af9fe03832d353268420a5d1f7d9f3042e164eaac8e4bafcf22f15
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1100,7 +1205,8 @@ entries:
     apiVersion: v1
     appVersion: 0.41.1
     created: "2020-11-12T15:37:45.28389953Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: ad988537e2859760f0237a4e3ef2e11086ab6c96add4de5a94596f22bdef34fc
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1122,7 +1228,8 @@ entries:
     apiVersion: v1
     appVersion: 0.41.0
     created: "2020-11-09T14:51:41.630921401Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 2d4e6b62b26ecb59f377d315405392f2c5c6bfe1cfcb217dea6528872849903c
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1148,7 +1255,8 @@ entries:
     apiVersion: v1
     appVersion: 0.41.0
     created: "2020-11-03T17:59:12.100537283Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 4bad599094fd711a6e22d747b53e8d0586622b1be8a032eb2082ee15be35601a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1167,7 +1275,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.40.2
     created: "2020-10-14T14:59:04.62947683Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 32352efe42f3a9bf3f5cf755c01859f66260bcfa3fbe681c73a2cb46e7e5a544
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1186,7 +1295,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.40.2
     created: "2020-10-12T19:01:49.912498143Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 924f82cc2f46225eba4424fe696cdbf13e18ba00cd2ab4a5b20e516a7697a0ab
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1205,7 +1315,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.40.2
     created: "2020-10-09T20:03:58.141787497Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 4df147555e70747aec4be2fef1500c021b7f5f80a2b90f23df6e6e70ded1cc27
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1224,7 +1335,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.40.2
     created: "2020-10-08T21:46:10.645821958Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 1c9816c809f8339790c3afe1dacd6540f7bfe8fa31cde663e0ede6fc644e48fe
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1243,7 +1355,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.40.2
     created: "2020-10-06T19:50:22.138422579Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 271f67309c7d378d643a290debdbaa26582045ea6e4a3740941fd2642f6e08b8
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1262,7 +1375,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.40.1
     created: "2020-10-02T18:31:07.240129482Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 118d334a59337089bb2bebb37464d7ff04463a45e318361b1ff2f77df1e2014a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1281,7 +1395,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.40.0
     created: "2020-10-01T20:54:44.845807571Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 21bd1f9f98996f725261f7c6c2728f7af907d80aa72f93c75e2c91a7234caad1
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1300,7 +1415,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.35.0
     created: "2020-09-21T17:21:32.79195958Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: fb678de328cafe1fa628fdd3c40d9be5c57bd55cf0b0f791454ac9fa65579a87
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1319,7 +1435,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.35.0
     created: "2020-09-21T14:17:43.963256351Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 7ae28747b924d8a9009cfb88991381048b449708ad66775ec02caaa75b95302a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1338,7 +1455,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.35.0
     created: "2020-09-16T13:15:09.235343163Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 99d234768fd39ed3b7d11fd8d60a8e94f10ba0956159548074621289d7a6fc3a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1357,7 +1475,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.35.0
     created: "2020-09-15T17:51:26.814955106Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: b07847ba03dff09a04f3c42c821abd24a3654a9d96626ae6fb3628f3a1adf8f8
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1376,7 +1495,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.35.0
     created: "2020-09-11T13:53:18.035377754Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: e218dc24614f64e2886314c71c804ca10d159298aaa56a1dcc0097e64d6ebd5f
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1395,7 +1515,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.35.0
     created: "2020-09-01T18:42:57.491168879Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 5d04ac849c6c85d611c83e7d605942a73f267b90f9b002ff4c4d8e33253b8e89
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1414,7 +1535,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.35.0
     created: "2020-09-01T14:52:50.361525043Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: a776425159a63fd6b74c5ab0ff20b41f0b1076aafd814111c44605a211adce66
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1433,7 +1555,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.35.0
     created: "2020-08-28T14:25:45.065736329Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: e36d605e06c4fedbfaafb66e7c9d223aa9f1b84ef56ac3f10861230e2349eb83
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1452,7 +1575,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.34.1
     created: "2020-08-26T02:46:57.571285025Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 66d6ef8f8a05d84726303ad56ba5b65d44a6a6990f48aff8f71c6f825ea2a3af
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1471,7 +1595,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.34.1
     created: "2020-08-24T14:06:44.989188865Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: bff9a8de9d5bd824138bb1f2eb06b958bd94d5e7ff67adc1f78c8490ca064b4c
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1490,7 +1615,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.34.1
     created: "2020-08-19T01:22:10.202597859Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: ba9e441868e5fcd561beb770525f608d2dcf25f654974b622eaa17de6a5768d4
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1509,7 +1635,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.34.1
     created: "2020-07-29T15:13:02.213075959Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 2f3658373cf878d11b981e2179e3d165106dccc03f39904d35b2c7d6e90e88f4
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1528,7 +1655,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.34.1
     created: "2020-07-15T20:34:34.000504331Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 98e6395947d9eeda47659aa6965e55c6ddb2619f72dc5c9c94b248a71a732b3b
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1547,7 +1675,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.34.0
     created: "2020-07-10T12:58:40.29783269Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 5260dc4d867ae022559033a28ca9e3f4e8bee7a2aae6f17e024d3d58127f5f30
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1566,7 +1695,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-07-03T20:51:51.642367633Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 9e11874e9d25fd2601f67bd28d060df56054c3cb9e4fc85778e821ba15f7d95c
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1585,7 +1715,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-07-01T14:04:03.664286769Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: b2343b03f4616e1130c75e2014ee5e922e8a52192cca00b293271b69addc2a95
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1604,7 +1735,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-06-25T22:42:55.271983213Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 47a9cef18e43c8e74e98e442554beb5a17f59f7b996f439baa83c44d08d14486
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1623,7 +1755,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-06-24T15:28:34.151526148Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: fac551b3c305d67d8e2c48cb1408d9f842d0e27d33a1210a54ec15e61613b1bf
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1642,7 +1775,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-06-22T23:54:54.19860699Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 172821bba934f69615bc2e4ae4e9e8cd577cf7f9e8be8dc7f2802257ab16d1c0
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1661,7 +1795,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-06-18T16:09:50.450966019Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: c7fbc7010a30218abf33b233f57dbbed683626cc61ac912d395e91f9050bc15d
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1680,7 +1815,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-06-16T17:41:27.490151615Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 61c157786624550245a0e19a41aa0ca5578b02d266ce7b499f6b657fb76e489a
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1699,7 +1835,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-06-16T15:29:24.916415837Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: a1145fcf60ad669d0fa78eaae94bad1463d4fa4cef8101f442adaa156e034623
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1718,7 +1855,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.33.0
     created: "2020-06-11T14:26:27.77612335Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 9154aba3231ba69b23a9c80a7451258a1429aa2ba60a9e7185ec80943ba89ad3
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1737,7 +1875,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.32.0
     created: "2020-05-21T14:53:57.568416196Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: e4ce612f4947a0d8e196e4a030f13f4b29a9ba9b7e4d81406098f7a0b2139c7f
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1756,7 +1895,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.32.0
     created: "2020-05-20T16:02:50.526507073Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 216956498286a7a791ecf453f5dce37c00002c05df42356c4f3b48bfb1b7a990
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1775,7 +1915,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.32.0
     created: "2020-05-04T20:49:33.702713789Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 52e8f50066c6d3d81d0b9f8f5cc064f49da784344c92e109e0c0b6b0bd925c8e
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1794,7 +1935,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.32.0
     created: "2020-05-01T15:17:43.751789075Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: f62f6a20858f4bf5acb68e18f31a148002fae7378b68cff7325d135a99d6c30c
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1813,7 +1955,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.31.1
     created: "2020-04-30T02:45:13.213308357Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: fa43fb36ceb7ad739c1cec020c979d0b4e6f93945bcef9f6db91c7d836a1c0df
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1832,7 +1975,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.31.1
     created: "2020-04-27T14:44:46.676012721Z"
-    description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
     digest: 65f3797b58e9bc94eeaa0238b8e50db0153288f6081b251e95406dfde5ab2d3f
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1851,7 +1995,8 @@ entries:
   - apiVersion: v1
     appVersion: 0.31.0
     created: "2020-04-26T21:05:22.019562847Z"
-    description: An nginx Ingress controller that uses ConfigMap to store the nginx configuration.
+    description: An nginx Ingress controller that uses ConfigMap to store the nginx
+      configuration.
     digest: 6b64d60da3b00130210b58a346c3f6a62dbebfcd3a9d8845a9137c9b0f02df1d
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -1867,4 +2012,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2020-04-26T21:05:21.59370903Z"
+generated: "2022-01-12T16:49:39.147301208Z"
