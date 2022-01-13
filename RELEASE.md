@@ -167,7 +167,49 @@ Promoting the images basically means that images, that were pushed to staging co
     - annotations
       - artifacthub.io/prerelease: "true" 
       - artifacthub.io/changes: |
-        - Add the titles of the PRs merged after previous release here. I used the github-cli to get that list like so `gh pr list -s merged -L 38 -B main | cut -f1,2`
+        - Replace this line and other lines under this annotation with the Changelog. One process to generate the Changelog is described below
+          - Install and configure github cli as per the docs of gh-cli  https://cli.github.com/,
+          - Change dir to your clone, of your fork, of the ingress-nginx project
+          - Run the below command and save the output to a txt file
+
+            ```
+            gh pr list -s merged -L 38 -B main | cut -f1,2 > ~/tmp/prlist.txt
+            ```
+            - The -L 38 was used for 2 reasons.
+              - Default number of results is 30 and there were more than 30 PRs merged while releasing v1.1.1.
+              -  The other reason to use -L 38 was to ommit the 39th, the 40th and the 41st line in the resulting list. These were non-relevant PRs.
+            - If you save the output of above command to a file called prlist.txt. It looks somewhat like this ;
+
+              ```
+              % cat ~/Downloads/prlist.txt 
+              8129    fix syntax in docs for multi-tls example
+              8120    Update go in runner and release v1.1.1
+              8119    Update to go v1.17.6
+              8118    Remove deprecated libraries, update other libs
+              8117    Fix codegen errors
+              8115    chart/ghaction: set the correct permission to have access to push a release 
+              ....
+              ```
+              You can delete the lines, that refer to PRs of the release process itself. We only need to list the feature/bugfix PRs.
+          - Now you use some easy automation in bash/python/other, to get the PR-List that can be used in the changelog. For example, its possible to use a bash scripty way, seen below, to convert those plaintext PR numbers into clickable links. 
+
+            ```
+            #!/usr/bin/bash
+
+            file="$1"
+
+            while read -r line; do
+              pr_num=`echo "$line" | cut -f1`
+              pr_title=`echo "$line" | cut -f2`
+              echo "[$pr_num](https://github.com/kubernetes/ingress-nginx/pull/$pr_num) $pr_title"
+            done <$file
+
+            ```
+          - If you saved the bash script content above, in a file called `prlist_to_changelog.sh`, then you could execute a command like this to get your prlist in a text file called changelog_content.txt;`
+
+          ```
+          prlist_to_changelog.sh prlist.txt > changelog_content.txt`
+          ```
 
 ### d. Edit the values.yaml and run helm-docs
   - [Fields to edit in values.yaml](https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml)
@@ -182,7 +224,7 @@ Promoting the images basically means that images, that were pushed to staging co
           git diff --exit-code
           rm -f ./helm-docs
     ```
-    Watchout for mistakes like leaving the helm-docs executable in your clone workspace or not not checking the new README.md manually etc.
+    Watchout for mistakes like leaving the helm-docs executable in your clone workspace or not checking the new README.md manually etc.
 
 ### e. Edit the static manifests
 
@@ -223,46 +265,16 @@ Promoting the images basically means that images, that were pushed to staging co
 
 ### f. Edit the changelog
   [Changelog.md](https://github.com/kubernetes/ingress-nginx/blob/main/Changelog.md) 
-- Add the PRs merged after previous release
-- If you use the github cli https://cli.github.com/, then that is one useful command to get this list of PRs
-- One way of using gh cli and getting the list of PRs for changelog is described below
-  - Install and configure github cli as per the docs of gh-cli
-  - Change dir to your clone, of your fork, of the ingress-nginx project
-  - Run the below command and save the output to a txt file
-
-    ```
-    gh pr list -s merged -L 38 -B main | cut -f1,2 > ~/tmp/prlist.txt
-    ```
-    - The -L 38 was used for 2 reasons.
-      - Default number of results is 30 and there were more than 30 PRs merged while releasing v1.1.1.
-      -  The other reason to use -L 38 was to ommit the 39th, the 40th and the 41st line in the resulting list. These were non-relevant PRs.
-  - Then use some easy automation in bash/python/whathaveyou to get the PR-List that can be used in the changelog
-  - I save output of above command to a file called prlist.txt. It looks somewhat like this ;
-
-    ```
-    % cat ~/Downloads/prlist.txt 
-    8129    fix syntax in docs for multi-tls example
-    8120    Update go in runner and release v1.1.1
-    8119    Update to go v1.17.6
-    8118    Remove deprecated libraries, update other libs
-    8117    Fix codegen errors
-    8115    chart/ghaction: set the correct permission to have access to push a release 
-    ....
-    ```
-  - Then I use the bash scripty way seen below to convert those PR numbers into links. If I saved the below content in a script called prlist_to_changelog.sh, then I run the command `prlist_to_changelog.sh prlist.txt`
-
-    ```
-    #!/usr/bin/bash
-
-    file="$1"
-
-    while read -r line; do
-      pr_num=`echo "$line" | cut -f1`
-      pr_title=`echo "$line" | cut -f2`
-      echo "[$pr_num](https://github.com/kubernetes/ingress-nginx/pull/$pr_num) $pr_title"
-    done <$file
-
-    ```
+- Each time a release is made, a new section is added to the Changelog.md file
+- A new section in the Changelog.md file consists of 3 components listed below
+  - the "Image"
+  - the "Description"
+  - the "PRs list"
+- Look at the previous content to understand what the 3 components look like.
+- You can easily get the "Image" from a yaml manifest but be sure to look at a manifest in your git clone now and not the upstream on github. This is because, if you are following this documentation, then you generated manifests with new updated digest for the image, in step 4e above. You also most likely promoted the new image in a step above. Look at the previous release section in Changelog.md. The format looks like `k8s.gcr.io/ingress-nginx/controller:.......`. One example of a yaml file to look at is /deploy/static/provider/baremetal/deploy.yaml (in your git clone branch and not on the upstream).
+- Next, you need to have a good overview of the changes introduced in this release and based on that you write a description. Look at previous descriptions. Ask the ingress-nginx-dev channel if required.
+- And then you need to add a list of the PRs merged, since the previous release.
+- One process to generate this list of PRs is already described above in step 4c. So if you are following this document, then you have done this already and very likely have retained the file containing the list of PRs, in the format that is needed.
 
 ### g. Edit the Documentation:
 - Update the version in [docs/deploy/index.md](docs/deploy/index.md)
@@ -296,3 +308,6 @@ Promoting the images basically means that images, that were pushed to staging co
 - Release to github
 
 - Edit the ghpages file as needed
+
+## TODO
+- Automate & simplify as much as possible, whenever possible, however possible
