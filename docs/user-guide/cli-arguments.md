@@ -40,6 +40,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--maxmind-retries-count`          | Number of attempts to download the GeoIP DB. (default 1) |
 | `--maxmind-license-key`            | Maxmind license key to download GeoLite2 Databases. https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases |
 | `--metrics-per-host`               | Export metrics per-host (default true) |
+| `--post-shutdown-grace-period`     | Additional delay in seconds before controller container exits. (default 10) |
 | `--profiler-port`                  | Port to use for expose the ingress controller Go profiler when it is enabled. (default 10245) |
 | `--profiling`                      | Enable profiling via web interface host:port/debug/pprof/ (default true) |
 | `--publish-service`                | Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies. |

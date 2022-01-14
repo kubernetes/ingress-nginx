@@ -116,7 +116,8 @@ type Configuration struct {
 
 	MonitorMaxBatchSize int
 
-	ShutdownGracePeriod int
+	PostShutdownGracePeriod int
+	ShutdownGracePeriod     int
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
