@@ -68,6 +68,17 @@ func TestNewUDPLogListener(t *testing.T) {
 }
 
 func TestCollector(t *testing.T) {
+
+	buckets := struct {
+		TimeBuckets   []float64
+		LengthBuckets []float64
+		SizeBuckets   []float64
+	}{
+		prometheus.DefBuckets,
+		prometheus.LinearBuckets(10, 10, 10),
+		prometheus.ExponentialBuckets(10, 10, 7),
+	}
+
 	cases := []struct {
 		name            string
 		data            []string
@@ -338,7 +349,7 @@ func TestCollector(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			registry := prometheus.NewPedanticRegistry()
 
-			sc, err := NewSocketCollector("pod", "default", "ingress", true)
+			sc, err := NewSocketCollector("pod", "default", "ingress", true, buckets)
 			if err != nil {
 				t.Errorf("%v: unexpected error creating new SocketCollector: %v", c.name, err)
 			}

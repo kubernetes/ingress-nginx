@@ -133,7 +133,7 @@ func main() {
 
 	mc := metric.NewDummyCollector()
 	if conf.EnableMetrics {
-		mc, err = metric.NewCollector(conf.MetricsPerHost, reg, conf.IngressClassConfiguration.Controller)
+		mc, err = metric.NewCollector(conf.MetricsPerHost, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets)
 		if err != nil {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}

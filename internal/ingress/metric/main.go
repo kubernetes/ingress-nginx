@@ -68,7 +68,7 @@ type collector struct {
 }
 
 // NewCollector creates a new metric collector the for ingress controller
-func NewCollector(metricsPerHost bool, registry *prometheus.Registry, ingressclass string) (Collector, error) {
+func NewCollector(metricsPerHost bool, registry *prometheus.Registry, ingressclass string, buckets collectors.HistogramBuckets) (Collector, error) {
 	podNamespace := os.Getenv("POD_NAMESPACE")
 	if podNamespace == "" {
 		podNamespace = "default"
@@ -86,7 +86,7 @@ func NewCollector(metricsPerHost bool, registry *prometheus.Registry, ingresscla
 		return nil, err
 	}
 
-	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost)
+	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost, buckets)
 	if err != nil {
 		return nil, err
 	}
