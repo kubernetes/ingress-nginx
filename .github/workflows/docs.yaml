@@ -37,6 +37,9 @@ jobs:
       (github.repository == 'kubernetes/ingress-nginx') &&
       (needs.changes.outputs.docs == 'true')
 
+    permissions:
+      contents: write # needed to write releases
+
     steps:
 
       - name: Checkout master
@@ -45,4 +48,4 @@ jobs:
       - name: Deploy
         uses: ./.github/actions/mkdocs
         env:
-          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          PERSONAL_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
