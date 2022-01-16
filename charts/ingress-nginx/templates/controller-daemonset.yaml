@@ -143,8 +143,12 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled) }}
+        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
           volumeMounts:
+          {{- if .Values.controller.extraModules }}
+            - name: modules
+              mountPath: /modules_mount
+          {{- end }}
           {{- if .Values.controller.customTemplate.configMapName }}
             - mountPath: /etc/nginx/template
               name: nginx-template-volume
@@ -165,8 +169,20 @@ spec:
       {{- if .Values.controller.extraContainers }}
         {{ toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
-    {{- if .Values.controller.extraInitContainers }}
-      initContainers: {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
+
+
+    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
+      initContainers:
+      {{- if .Values.controller.extraInitContainers }}
+        {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
+      {{- end }}
+      {{- if .Values.controller.extraModules }}
+        {{- range .Values.controller.extraModules }}
+          - name: {{ .Name }}
+            image: {{ .Image }}
+            command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+        {{- end }}
+      {{- end }}
     {{- end }}
     {{- if .Values.controller.hostNetwork }}
       hostNetwork: {{ .Values.controller.hostNetwork }}
@@ -185,8 +201,12 @@ spec:
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
-    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes) }}
+    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
       volumes:
+      {{- if .Values.controller.extraModules }}
+        - name: modules
+          emptyDir: {}
+      {{- end }}
       {{- if .Values.controller.customTemplate.configMapName }}
         - name: nginx-template-volume
           configMap:

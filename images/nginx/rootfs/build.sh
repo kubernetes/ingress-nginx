@@ -35,12 +35,6 @@ export NGINX_DIGEST_AUTH=1.0.0
 # Check for recent changes: https://github.com/yaoweibin/ngx_http_substitutions_filter_module/compare/v0.6.4...master
 export NGINX_SUBSTITUTIONS=b8a71eacc7f986ba091282ab8b1bbbc6ae1807e0
 
-# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.0.0...main
-export OPENTELEMETRY_CPP_VERSION=1.0.0
-
-# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/c655b8...main
-export OPENTELEMETRY_CONTRIB_COMMIT=c655b849f017a5363085a4b4e6fcae8a4b7621ad
-
 # Check for recent changes: https://github.com/opentracing-contrib/nginx-opentracing/compare/v0.19.0...master
 export NGINX_OPENTRACING_VERSION=0.19.0
 
@@ -144,11 +138,6 @@ if [[ ${ARCH} == "s390x" ]]; then
   export LUA_STREAM_NGX_VERSION=0.0.7
 fi
 
-export USE_OPENTELEMETRY=true
-if [[ ${ARCH} == "s390x" ]] || [[ ${ARCH} == "armv7l" ]]; then
-  export USE_OPENTELEMETRY=false
-fi
-
 get_src()
 {
   hash="$1"
@@ -225,9 +214,6 @@ get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
 
 get_src a98b48947359166326d58700ccdc27256d2648218072da138ab6b47de47fbd8f \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
-
-get_src 37b2a2abf75e865449ff1425cee96dbd74659ac0c612c84ee5f381244360cab2 \
-        "https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/$OPENTELEMETRY_CONTRIB_COMMIT.tar.gz"
 
 get_src 6f97776ebdf019b105a755c7736b70bdbd7e575c7f0d39db5fe127873c7abf17 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
@@ -482,32 +468,6 @@ cmake -DCMAKE_BUILD_TYPE=Release \
 make
 make install
 
-if [ $USE_OPENTELEMETRY = true ]; then
-  # build opentelemetry lib
-  apk add protobuf-dev \
-    grpc \
-    grpc-dev \
-    gtest-dev \
-    c-ares-dev
-
-  cd $BUILD_PATH
-  git clone --recursive https://github.com/open-telemetry/opentelemetry-cpp opentelemetry-cpp-$OPENTELEMETRY_CPP_VERSION
-  cd "opentelemetry-cpp-$OPENTELEMETRY_CPP_VERSION"
-  git checkout v$OPENTELEMETRY_CPP_VERSION
-  mkdir .build
-  cd .build
-
-  cmake -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_TESTING=OFF \
-        -DWITH_EXAMPLES=OFF \
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-        -DWITH_OTLP=ON \
-        -DWITH_OTLP_HTTP=OFF \
-        ..
-  make
-  make install
-fi
-
 # Get Brotli source and deps
 cd "$BUILD_PATH"
 git clone --depth=1 https://github.com/google/ngx_brotli.git
@@ -674,11 +634,6 @@ WITH_MODULES=" \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
   --add-dynamic-module=$BUILD_PATH/ngx_brotli"
-
-if [ $USE_OPENTELEMETRY = true ]; then
-  WITH_MODULES+=" \
-    --add-dynamic-module=$BUILD_PATH/opentelemetry-cpp-contrib-$OPENTELEMETRY_CONTRIB_COMMIT/instrumentation/nginx"
-fi
 
 ./configure \
   --prefix=/usr/local/nginx \
