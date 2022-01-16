@@ -174,10 +174,7 @@ func handleSigterm(ngx *controller.NGINXController, delay int, exit exiter) {
 		exitCode = 1
 	}
 
-	klog.Infof(
-		"Handled quit, delaying controller exit for %d seconds",
-		delay,
-	)
+	klog.Infof("Handled quit, delaying controller exit for %d seconds", delay)
 	time.Sleep(time.Duration(delay) * time.Second)
 
 	klog.InfoS("Exiting", "code", exitCode)
