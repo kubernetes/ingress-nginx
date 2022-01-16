@@ -44,3 +44,19 @@ spec:
         # env:
         # - name: DEBUG
         #   value: "true"
+
+        # Mounting custom error page from configMap
+        # volumeMounts:
+        # - name: custom_error_pages
+        #   mountPath: /www
+
+      # Mounting custom error page from configMap
+      # volumes:
+      # - name: custom_error_pages
+      #   configMap:
+      #     name: custom_error_pages
+      #     items:
+      #     - key: "404"
+      #       path: "404.html"
+      #     - key: "503"
+      #       path: "503.html"

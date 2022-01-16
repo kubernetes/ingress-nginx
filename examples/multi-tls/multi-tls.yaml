@@ -129,7 +129,7 @@ spec:
       - path: /
         pathType: Prefix
         backend:
-          service
+          service:
             name: nginx
             port:
               number: 80
