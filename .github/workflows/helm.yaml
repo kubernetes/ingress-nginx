@@ -64,6 +64,8 @@ jobs:
           go-version: 1.17
 
       - name: Run helm-docs
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         run: |
           cd ${GITHUB_WORKSPACE}
           GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.6.0
@@ -72,7 +74,7 @@ jobs:
           if [ ! -z "$DIFF" ]; then
              git add ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md
              git commit -m "Update helm README"
-             git push --quiet https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git main > /dev/null 2>&1 
+             git push --force https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git main  
           fi
           rm ./helm-docs
 

@@ -71,7 +71,7 @@ controller:
   # Defaults to false
   watchIngressWithoutClass: false
 
-  # -- Process IngressClass per name (additionally as per spec.controller)
+  # -- Process IngressClass per name (additionally as per spec.controller).
   ingressClassByName: false
 
   # -- This configuration defines if Ingress Controller should allow users to set
