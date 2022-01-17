@@ -1,6 +1,6 @@
 # How it works
 
-The objective of this document is to explain how the NGINX Ingress controller works, in particular how the NGINX model is built and why we need one.
+The objective of this document is to explain how the Ingress-NGINX controller works, in particular how the NGINX model is built and why we need one.
 
 ## NGINX configuration
 

@@ -1,7 +1,7 @@
 # External authentication, authentication service response headers propagation
 
 This example demonstrates propagation of selected authentication service response headers
-to backend service.
+to a backend service.
 
 Sample configuration includes:
 
@@ -37,7 +37,7 @@ public-demo-echo-service   public-demo-echo-service.kube.local             80   
 secure-demo-echo-service   secure-demo-echo-service.kube.local             80        1m
 ```
 
-Test 1: public service with no auth header
+## Test 1: public service with no auth header
 
 ```console
 $ curl -H 'Host: public-demo-echo-service.kube.local' -v 192.168.99.100
@@ -60,7 +60,7 @@ $ curl -H 'Host: public-demo-echo-service.kube.local' -v 192.168.99.100
 UserID: , UserRole:
 ```
 
-Test 2: secure service with no auth header
+## Test 2: secure service with no auth header
 
 ```console
 $ curl -H 'Host: secure-demo-echo-service.kube.local' -v 192.168.99.100
@@ -89,7 +89,7 @@ $ curl -H 'Host: secure-demo-echo-service.kube.local' -v 192.168.99.100
 * Connection #0 to host 192.168.99.100 left intact
 ```
 
-Test 3: public service with valid auth header
+## Test 3: public service with valid auth header
 
 ```console
 $ curl -H 'Host: public-demo-echo-service.kube.local' -H 'User:internal' -v 192.168.99.100
@@ -113,7 +113,7 @@ $ curl -H 'Host: public-demo-echo-service.kube.local' -H 'User:internal' -v 192.
 UserID: 1443635317331776148, UserRole: admin
 ```
 
-Test 4: secure service with valid auth header
+## Test 4: secure service with valid auth header
 
 ```console
 $ curl -H 'Host: secure-demo-echo-service.kube.local' -H 'User:internal' -v 192.168.99.100

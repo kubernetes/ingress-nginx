@@ -1,6 +1,6 @@
 # Docker registry
 
-This example demonstrates how to deploy a [docker registry](https://github.com/docker/distribution) in the cluster and configure Ingress enable access from Internet
+This example demonstrates how to deploy a [docker registry](https://github.com/docker/distribution) in the cluster and configure Ingress to enable access from the Internet.
 
 ## Deployment
 

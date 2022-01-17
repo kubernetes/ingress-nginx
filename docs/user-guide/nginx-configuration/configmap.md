@@ -221,7 +221,7 @@ Enables the return of the header Server from the backend instead of the generic 
 
 ## allow-snippet-annotations
 
-Enables Ingress to parse and add *-snippet annotations/directives created by the user. _**default:**_ `true`;
+Enables Ingress to parse and add *-snippet annotations/directives created by the user. _**default:**_ `true`
 
 Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this 
 may allow a user to add restricted configurations to the final nginx.conf file
