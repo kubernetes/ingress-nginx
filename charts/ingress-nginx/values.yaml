@@ -34,7 +34,7 @@ controller:
   # -- Configures the controller container name
   containerName: controller
 
-  # -- Configures the ports the nginx-controller listens on
+  # -- Configures the ports that the nginx-controller listens on
   containerPort:
     http: 80
     https: 443
