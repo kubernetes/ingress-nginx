@@ -3,8 +3,8 @@
 --set controller.metrics.enabled=true \
 --set-string controller.podAnnotations.&quot;prometheus\.io/scrape&quot;=&quot;true&quot; \
 --set-string controller.podAnnotations.&quot;prometheus\.io/port&quot;=&quot;10254&quot;
-</code></pre></div></p> </li> <li>You can validate that the controller is configured for metrics by looking at the values of the installed release, like this ; <div class=highlight><pre><span></span><code>helm get values ingress-controller --namespace ingress-nginx
-</code></pre></div></li> <li>You should be able to see the values shown below ; <div class=highlight><pre><span></span><code>..
+</code></pre></div></p> </li> <li>You can validate that the controller is configured for metrics by looking at the values of the installed release, like this: <div class=highlight><pre><span></span><code>helm get values ingress-controller --namespace ingress-nginx
+</code></pre></div></li> <li>You should be able to see the values shown below: <div class=highlight><pre><span></span><code>..
 controller:
   metrics:
     enabled: true

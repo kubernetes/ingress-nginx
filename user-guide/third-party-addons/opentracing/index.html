@@ -86,7 +86,7 @@ metadata:
     nginx.ingress.kubernetes.io/opentracing-trust-incoming-span: &quot;true&quot;
 </code></pre></div></p> <h2 id=examples>Examples<a class=headerlink href=#examples title="Permanent link"> ¶</a></h2> <p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed using Minikube.</p> <h3 id=zipkin>Zipkin<a class=headerlink href=#zipkin title="Permanent link"> ¶</a></h3> <p>In the <a href=https://github.com/rnburn/zipkin-date-server>rnburn/zipkin-date-server</a> GitHub repository is an example of a dockerized date service. To install the example and Zipkin collector run:</p> <div class=highlight><pre><span></span><code>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
 kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml
-</code></pre></div> <p>Also we need to configure the NGINX controller ConfigMap with the required values:</p> <div class=highlight><pre><span></span><code>$ echo &#39;
+</code></pre></div> <p>Also we need to configure the Ingress-NGINX controller ConfigMap with the required values:</p> <div class=highlight><pre><span></span><code>$ echo &#39;
 apiVersion: v1
 kind: ConfigMap
 data:

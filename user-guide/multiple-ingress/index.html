@@ -34,11 +34,11 @@
   <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
   <span class=nt>annotations</span><span class=p>:</span>
     <span class=nt>kubernetes.io/ingress.class</span><span class=p>:</span> <span class=s>&quot;gce&quot;</span>
-</code></pre></div> <p>will target the GCE controller, forcing the nginx controller to ignore it, while an annotation like</p> <div class=highlight><pre><span></span><code><span class=nt>metadata</span><span class=p>:</span>
+</code></pre></div> <p>will target the GCE controller, forcing the Ingress-NGINX controller to ignore it, while an annotation like:</p> <div class=highlight><pre><span></span><code><span class=nt>metadata</span><span class=p>:</span>
   <span class=nt>name</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
   <span class=nt>annotations</span><span class=p>:</span>
     <span class=nt>kubernetes.io/ingress.class</span><span class=p>:</span> <span class=s>&quot;nginx&quot;</span>
-</code></pre></div> <p>will target the nginx controller, forcing the GCE controller to ignore it.</p> <p>You can change the value "nginx" to something else by setting the <code>--ingress-class</code> flag:</p> <div class=highlight><pre><span></span><code><span class=nt>spec</span><span class=p>:</span>
+</code></pre></div> <p>will target the Ingress-NGINX controller, forcing the GCE controller to ignore it.</p> <p>You can change the value "nginx" to something else by setting the <code>--ingress-class</code> flag:</p> <div class=highlight><pre><span></span><code><span class=nt>spec</span><span class=p>:</span>
   <span class=nt>template</span><span class=p>:</span>
      <span class=nt>spec</span><span class=p>:</span>
        <span class=nt>containers</span><span class=p>:</span>

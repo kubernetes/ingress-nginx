@@ -152,11 +152,11 @@ Do not move it without providing redirects.
 </code></pre></div> <h3 id=info>info<a class=headerlink href=#info title="Permanent link"> ¶</a></h3> <p>Shows the internal and external IP/CNAMES for an <code>ingress-nginx</code> service.</p> <div class=highlight><pre><span></span><code><span class=gp>$</span> kubectl ingress-nginx info -n ingress-nginx
 <span class=go>Service cluster IP address: 10.187.253.31</span>
 <span class=go>LoadBalancer IP|CNAME: 35.123.123.123</span>
-</code></pre></div> <p>Use the <code>--service &lt;service&gt;</code> flag if your <code>ingress-nginx</code> <code>LoadBalancer</code> service is not named <code>ingress-nginx</code>.</p> <h3 id=ingresses>ingresses<a class=headerlink href=#ingresses title="Permanent link"> ¶</a></h3> <p><code>kubectl ingress-nginx ingresses</code>, alternately <code>kubectl ingress-nginx ing</code>, shows a more detailed view of the ingress definitions in a namespace. Compare:</p> <div class=highlight><pre><span></span><code><span class=gp>$</span> kubectl get ingresses --all-namespaces
+</code></pre></div> <p>Use the <code>--service &lt;service&gt;</code> flag if your <code>ingress-nginx</code> <code>LoadBalancer</code> service is not named <code>ingress-nginx</code>.</p> <h3 id=ingresses>ingresses<a class=headerlink href=#ingresses title="Permanent link"> ¶</a></h3> <p><code>kubectl ingress-nginx ingresses</code>, alternately <code>kubectl ingress-nginx ing</code>, shows a more detailed view of the ingress definitions in a namespace.</p> <p>Compare:</p> <div class=highlight><pre><span></span><code><span class=gp>$</span> kubectl get ingresses --all-namespaces
 <span class=go>NAMESPACE   NAME               HOSTS                            ADDRESS     PORTS   AGE</span>
 <span class=go>default     example-ingress1   testaddr.local,testaddr2.local   localhost   80      5d</span>
 <span class=go>default     test-ingress-2     *                                localhost   80      5d</span>
-</code></pre></div> <p>vs</p> <div class=highlight><pre><span></span><code><span class=gp>$</span> kubectl ingress-nginx ingresses --all-namespaces
+</code></pre></div> <p>vs.</p> <div class=highlight><pre><span></span><code><span class=gp>$</span> kubectl ingress-nginx ingresses --all-namespaces
 <span class=go>NAMESPACE   INGRESS NAME       HOST+PATH                        ADDRESSES   TLS   SERVICE         SERVICE PORT   ENDPOINTS</span>
 <span class=go>default     example-ingress1   testaddr.local/etameta           localhost   NO    pear-service    5678           5</span>
 <span class=go>default     example-ingress1   testaddr2.local/otherpath        localhost   NO    apple-service   5678           1</span>
@@ -181,7 +181,7 @@ Do not move it without providing redirects.
 <span class=go>  - Uses removed config flag --enable-dynamic-certificates</span>
 <span class=go>      Lint added for version 0.24.0</span>
 <span class=go>      https://github.com/kubernetes/ingress-nginx/issues/3808</span>
-</code></pre></div> <p>to show the lints added <strong>only</strong> for a particular <code>ingress-nginx</code> release, use the <code>--from-version</code> and <code>--to-version</code> flags:</p> <div class=highlight><pre><span></span><code><span class=gp>$</span> kubectl ingress-nginx lint --all-namespaces --verbose --from-version <span class=m>0</span>.24.0 --to-version <span class=m>0</span>.24.0
+</code></pre></div> <p>To show the lints added <strong>only</strong> for a particular <code>ingress-nginx</code> release, use the <code>--from-version</code> and <code>--to-version</code> flags:</p> <div class=highlight><pre><span></span><code><span class=gp>$</span> kubectl ingress-nginx lint --all-namespaces --verbose --from-version <span class=m>0</span>.24.0 --to-version <span class=m>0</span>.24.0
 <span class=go>Checking ingresses...</span>
 <span class=go>✗ anamespace/this-nginx</span>
 <span class=go>  - Contains the removed session-cookie-hash annotation.</span>
