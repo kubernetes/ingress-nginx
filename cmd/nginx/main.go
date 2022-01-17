@@ -155,14 +155,14 @@ func main() {
 	go startHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
 	go ngx.Start()
 
-	handleSigterm(ngx, func(code int) {
+	handleSigterm(ngx, conf.PostShutdownGracePeriod, func(code int) {
 		os.Exit(code)
 	})
 }
 
 type exiter func(code int)
 
-func handleSigterm(ngx *controller.NGINXController, exit exiter) {
+func handleSigterm(ngx *controller.NGINXController, delay int, exit exiter) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan
@@ -174,8 +174,8 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 		exitCode = 1
 	}
 
-	klog.InfoS("Handled quit, awaiting Pod deletion")
-	time.Sleep(10 * time.Second)
+	klog.Infof("Handled quit, delaying controller exit for %d seconds", delay)
+	time.Sleep(time.Duration(delay) * time.Second)
 
 	klog.InfoS("Exiting", "code", exitCode)
 	exit(exitCode)
