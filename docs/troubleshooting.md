@@ -13,7 +13,7 @@ Do not move it without providing redirects.
 There are many ways to troubleshoot the ingress-controller. The following are basic troubleshooting
 methods to obtain more information.
 
-Check the Ingress Resource Events
+### Check the Ingress Resource Events
 
 ```console
 $ kubectl get ing -n <namespace-of-ingress-resource>
@@ -41,7 +41,7 @@ Events:
   Normal  UPDATE  58s   ingress-nginx-controller  Ingress default/cafe-ingress
 ```
 
-Check the Ingress Controller Logs
+### Check the Ingress Controller Logs
 
 ```console
 $ kubectl get pods -n <namespace-of-ingress-controller>
@@ -58,7 +58,7 @@ NGINX Ingress controller
 ....
 ```
 
-Check the Nginx Configuration
+### Check the Nginx Configuration
 
 ```console
 $ kubectl get pods -n <namespace-of-ingress-controller>
@@ -80,7 +80,7 @@ http {
 ....
 ```
 
-Check if used Services Exist
+### Check if used Services Exist
 
 ```console
 $ kubectl get svc --all-namespaces
@@ -130,14 +130,14 @@ Both authentications must work:
 
 **Service authentication**
 
-The Ingress controller needs information from apiserver. Therefore, authentication is required, which can be achieved in two different ways:
+The Ingress controller needs information from apiserver. Therefore, authentication is required, which can be achieved in a couple of ways:
 
-1. _Service Account:_ This is recommended, because nothing has to be configured. The Ingress controller will use information provided by the system to communicate with the API server. See 'Service Account' section for details.
+* _Service Account:_ This is recommended, because nothing has to be configured. The Ingress controller will use information provided by the system to communicate with the API server. See 'Service Account' section for details.
 
-2. _Kubeconfig file:_ In some Kubernetes environments service accounts are not available. In this case a manual configuration is required. The Ingress controller binary can be started with the `--kubeconfig` flag. The value of the flag is a path to a file specifying how to connect to the API server. Using the `--kubeconfig` does not requires the flag `--apiserver-host`.
+* _Kubeconfig file:_ In some Kubernetes environments service accounts are not available. In this case a manual configuration is required. The Ingress controller binary can be started with the `--kubeconfig` flag. The value of the flag is a path to a file specifying how to connect to the API server. Using the `--kubeconfig` does not requires the flag `--apiserver-host`.
    The format of the file is identical to `~/.kube/config` which is used by kubectl to connect to the API server. See 'kubeconfig' section for details.
 
-3. _Using the flag `--apiserver-host`:_ Using this flag `--apiserver-host=http://localhost:8080` it is possible to specify an unsecured API server or reach a remote kubernetes cluster using [kubectl proxy](https://kubernetes.io/docs/user-guide/kubectl/kubectl_proxy/).
+* _Using the flag `--apiserver-host`:_ Using this flag `--apiserver-host=http://localhost:8080` it is possible to specify an unsecured API server or reach a remote kubernetes cluster using [kubectl proxy](https://kubernetes.io/docs/user-guide/kubectl/kubectl_proxy/).
    Please do not use this approach in production.
 
 In the diagram below you can see the full authentication flow with all options, starting with the browser
@@ -247,72 +247,72 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
 
 1. SSH into the worker
 
-```console
-$ ssh user@workerIP
-```
+    ```console
+    $ ssh user@workerIP
+    ```
 
 2. Obtain the Docker Container Running nginx
 
-```console
-$ docker ps | grep ingress-nginx-controller
-CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
-d9e1d243156a        k8s.gcr.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
-```
+    ```console
+    $ docker ps | grep ingress-nginx-controller
+    CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+    d9e1d243156a        k8s.gcr.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
+    ```
 
 3. Exec into the container
 
-```console
-$ docker exec -it --user=0 --privileged d9e1d243156a bash
-```
+    ```console
+    $ docker exec -it --user=0 --privileged d9e1d243156a bash
+    ```
 
 4. Make sure nginx is running in `--with-debug`
 
-```console
-$ nginx -V 2>&1 | grep -- '--with-debug'
-```
+    ```console
+    $ nginx -V 2>&1 | grep -- '--with-debug'
+    ```
 
 5. Get list of processes running on container
 
-```console
-$ ps -ef
-UID        PID  PPID  C STIME TTY          TIME CMD
-root         1     0  0 20:23 ?        00:00:00 /usr/bin/dumb-init /nginx-ingres
-root         5     1  0 20:23 ?        00:00:05 /ingress-nginx-controller --defa
-root        21     5  0 20:23 ?        00:00:00 nginx: master process /usr/sbin/
-nobody     106    21  0 20:23 ?        00:00:00 nginx: worker process
-nobody     107    21  0 20:23 ?        00:00:00 nginx: worker process
-root       172     0  0 20:43 pts/0    00:00:00 bash
-```
+    ```console
+    $ ps -ef
+    UID        PID  PPID  C STIME TTY          TIME CMD
+    root         1     0  0 20:23 ?        00:00:00 /usr/bin/dumb-init /nginx-ingres
+    root         5     1  0 20:23 ?        00:00:05 /ingress-nginx-controller --defa
+    root        21     5  0 20:23 ?        00:00:00 nginx: master process /usr/sbin/
+    nobody     106    21  0 20:23 ?        00:00:00 nginx: worker process
+    nobody     107    21  0 20:23 ?        00:00:00 nginx: worker process
+    root       172     0  0 20:43 pts/0    00:00:00 bash
+    ```
 
-7. Attach gdb to the nginx master process
+6. Attach gdb to the nginx master process
 
-```console
-$ gdb -p 21
-....
-Attaching to process 21
-Reading symbols from /usr/sbin/nginx...done.
-....
-(gdb)
-```
+    ```console
+    $ gdb -p 21
+    ....
+    Attaching to process 21
+    Reading symbols from /usr/sbin/nginx...done.
+    ....
+    (gdb)
+    ```
 
-8. Copy and paste the following:
+7. Copy and paste the following:
 
-```console
-set $cd = ngx_cycle->config_dump
-set $nelts = $cd.nelts
-set $elts = (ngx_conf_dump_t*)($cd.elts)
-while ($nelts-- > 0)
-set $name = $elts[$nelts]->name.data
-printf "Dumping %s to nginx_conf.txt\n", $name
-append memory nginx_conf.txt \
-        $elts[$nelts]->buffer.start $elts[$nelts]->buffer.end
-end
-```
+    ```console
+    set $cd = ngx_cycle->config_dump
+    set $nelts = $cd.nelts
+    set $elts = (ngx_conf_dump_t*)($cd.elts)
+    while ($nelts-- > 0)
+    set $name = $elts[$nelts]->name.data
+    printf "Dumping %s to nginx_conf.txt\n", $name
+    append memory nginx_conf.txt \
+            $elts[$nelts]->buffer.start $elts[$nelts]->buffer.end
+    end
+    ```
 
-9. Quit GDB by pressing CTRL+D
+8. Quit GDB by pressing CTRL+D
 
-10. Open nginx_conf.txt
+9. Open nginx_conf.txt
 
-```console
-cat nginx_conf.txt
-```
+    ```console
+    cat nginx_conf.txt
+    ```

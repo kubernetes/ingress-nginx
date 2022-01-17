@@ -140,7 +140,7 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
 kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml
 ```
 
-Also we need to configure the NGINX controller ConfigMap with the required values:
+Also we need to configure the Ingress-NGINX controller ConfigMap with the required values:
 
 ```
 $ echo '

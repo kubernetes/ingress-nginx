@@ -1,6 +1,6 @@
 # Static IPs
 
-This example demonstrates how to assign a static-ip to an Ingress on through the Nginx controller.
+This example demonstrates how to assign a static-ip to an Ingress on through the Ingress-NGINX controller.
 
 ## Prerequisites
 
@@ -11,15 +11,15 @@ and that you have an ingress controller [running](../../deploy/) in your cluster
 
 ## Acquiring an IP
 
-Since instances of the nginx controller actually run on nodes in your cluster,
+Since instances of the ingress nginx controller actually run on nodes in your cluster,
 by default nginx Ingresses will only get static IPs if your cloudprovider
 supports static IP assignments to nodes. On GKE/GCE for example, even though
-nodes get static IPs, the IPs are not retained across upgrade.
+nodes get static IPs, the IPs are not retained across upgrades.
 
 To acquire a static IP for the ingress-nginx-controller, simply put it
 behind a Service of `Type=LoadBalancer`.
 
-First, create a loadbalancer Service and wait for it to acquire an IP
+First, create a loadbalancer Service and wait for it to acquire an IP:
 
 ```console
 $ kubectl create -f static-ip-svc.yaml
@@ -30,7 +30,7 @@ NAME               CLUSTER-IP     EXTERNAL-IP       PORT(S)                     
 ingress-nginx-lb   10.0.138.113   104.154.109.191   80:31457/TCP,443:32240/TCP   15m
 ```
 
-then, update the ingress controller so it adopts the static IP of the Service
+Then, update the ingress controller so it adopts the static IP of the Service
 by passing the `--publish-service` flag (the example yaml used in the next step
 already has it set to "ingress-nginx-lb").
 
@@ -42,7 +42,7 @@ deployment "ingress-nginx-controller" created
 ## Assigning the IP to an Ingress
 
 From here on every Ingress created with the `ingress.class` annotation set to
-`nginx` will get the IP allocated in the previous step
+`nginx` will get the IP allocated in the previous step.
 
 ```console
 $ kubectl create -f ingress-nginx.yaml
@@ -65,7 +65,7 @@ request_uri=http://104.154.109.191:8080/
 
 ## Retaining the IP
 
-You can test retention by deleting the Ingress
+You can test retention by deleting the Ingress:
 
 ```console
 $ kubectl delete ing ingress-nginx
@@ -85,16 +85,16 @@ ingress-nginx   *         104.154.109.191   80, 443   13m
 
 ## Promote ephemeral to static IP
 
-To promote the allocated IP to static, you can update the Service manifest
+To promote the allocated IP to static, you can update the Service manifest:
 
 ```console
 $ kubectl patch svc ingress-nginx-lb -p '{"spec": {"loadBalancerIP": "104.154.109.191"}}'
 "ingress-nginx-lb" patched
 ```
 
-and promote the IP to static (promotion works differently for cloudproviders,
-provided example is for GKE/GCE)
-`
+... and promote the IP to static (promotion works differently for cloudproviders,
+provided example is for GKE/GCE):
+
 ```console
 $ gcloud compute addresses create ingress-nginx-lb --addresses 104.154.109.191 --region us-central1
 Created [https://www.googleapis.com/compute/v1/projects/kubernetesdev/regions/us-central1/addresses/ingress-nginx-lb].
@@ -114,4 +114,3 @@ users:
 
 Now even if the Service is deleted, the IP will persist, so you can recreate the
 Service with `spec.loadBalancerIP` set to `104.154.109.191`.
-

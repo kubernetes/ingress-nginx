@@ -1,6 +1,6 @@
 # Overview
 
-This is the documentation for the NGINX Ingress Controller.
+This is the documentation for the Ingress NGINX Controller.
 
 It is built around the [Kubernetes Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/), using a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) to store the controller configuration.
 
@@ -26,7 +26,7 @@ Its important because until now, a default install of the Ingress-NGINX controll
 
 On clusters with more than one instance of the Ingress-NGINX controller, all instances of the controllers must be aware of which Ingress objects they serve. The `ingressClassName` field of an Ingress is the way to let the controller know about that. 
 
-```
+```console
 kubectl explain ingressclass                                                           
 ```
 ```
@@ -67,7 +67,9 @@ FIELDS:
 
 There are 2 reasons primarily.
 
-_(Reason #1)_ Until K8s version 1.21, it was possible to create an Ingress resource using deprecated versions of the Ingress API, such as:
+### Reason #1
+
+Until K8s version 1.21, it was possible to create an Ingress resource using deprecated versions of the Ingress API, such as:
 
   - `extensions/v1beta1`
   - `networking.k8s.io/v1beta1`
@@ -76,7 +78,9 @@ You would get a message about deprecation, but the Ingress resource would get cr
 
 From K8s version 1.22 onwards, you can **only** access the Ingress API via the stable, `networking.k8s.io/v1` API. The reason is explained in the [official blog on deprecated ingress API versions](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/).
 
-_(Reason #2)_ if you are already using the Ingress-NGINX controller and then upgrade to K8s version v1.22 , there are several scenarios where your existing Ingress objects will not work how you expect. Read this FAQ to check which scenario matches your use case.
+### Reason #2
+
+If you are already using the Ingress-NGINX controller and then upgrade to K8s version v1.22 , there are several scenarios where your existing Ingress objects will not work how you expect. Read this FAQ to check which scenario matches your use case.
 
 ## What is ingressClassName field ?
 
@@ -85,7 +89,7 @@ _(Reason #2)_ if you are already using the Ingress-NGINX controller and then upg
 ```shell
 kubectl explain ingress.spec.ingressClassName
 ```
-```
+```console
 KIND:     Ingress
 VERSION:  networking.k8s.io/v1
 
@@ -112,7 +116,7 @@ The `.spec.ingressClassName` behavior has precedence over the deprecated `kubern
 
 - If you have only one instance of the Ingress-NGINX controller running in your cluster, and you still want to use IngressClass, you should add the annotation `ingressclass.kubernetes.io/is-default-class` in your IngressClass, so that any new Ingress objects will have this one as default IngressClass.
 
-In this case, you need to make your controller aware of the objects. If you have any Ingress objects that don't yet have either the [`.spec.ingressClassName`](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec) field set in their manifest, or the ingress annotation (`kubernetes.io/ingress.class`), then you should start your Ingress-NGINX controller with the flag `--watch-ingress-without-class=true`.
+In this case, you need to make your controller aware of the objects. If you have any Ingress objects that don't yet have either the [`.spec.ingressClassName`](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec) field set in their manifest, or the ingress annotation (`kubernetes.io/ingress.class`), then you should start your Ingress-NGINX controller with the flag [--watch-ingress-without-class=true](#what-is-the-flag-watch-ingress-without-class).
 
 You can configure your Helm chart installation's values file with `.controller.watchIngressWithoutClass: true`. 
 
@@ -130,7 +134,8 @@ metadata:
 spec:
   controller: k8s.io/ingress-nginx
 ```
-And add the value "spec.ingressClassName=nginx" in your Ingress objects
+
+And add the value `spec.ingressClassName=nginx` in your Ingress objects.
 
 
 ## I have multiple ingress objects in my cluster. What should I do ?
@@ -138,7 +143,7 @@ And add the value "spec.ingressClassName=nginx" in your Ingress objects
 
 
 ### What is the flag '--watch-ingress-without-class' ?
-- Its a flag that is passed,as an argument, to the `nginx-ingress-controller` executable. In the configuration, it looks like this ;
+- Its a flag that is passed,as an argument, to the `nginx-ingress-controller` executable. In the configuration, it looks like this:
 ```
 ...
 ...
@@ -209,7 +214,7 @@ If you start Ingress-Nginx B with the command line argument `--watch-ingress-wit
   ```
   helm repo update
   ```
-- Now, install an additional instance of the ingress-NGINX controller like this ;
+- Now, install an additional instance of the ingress-NGINX controller like this:
   ```
   helm install ingress-nginx-2 ingress-nginx/ingress-nginx  \
   --namespace ingress-nginx-2 \
