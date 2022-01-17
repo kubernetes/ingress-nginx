@@ -247,6 +247,7 @@ http {
     geoip2 /etc/nginx/geoip/GeoIP2-ISP.mmdb {
         $geoip2_isp isp;
         $geoip2_isp_org organization;
+        $geoip2_asn source=$remote_addr default=0 autonomous_system_number;
     }
     {{ end }}
 
@@ -259,8 +260,11 @@ http {
     {{ if eq $file "GeoIP2-Anonymous-IP.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoIP2-Anonymous-IP.mmdb {
         $geoip2_is_anon source=$remote_addr is_anonymous;
-        $geoip2_is_hosting_provider source=$remote_addr is_hosting_provider;
-        $geoip2_is_public_proxy source=$remote_addr is_public_proxy;
+        $geoip2_is_anonymous source=$remote_addr default=0 is_anonymous;
+        $geoip2_is_anonymous_vpn source=$remote_addr default=0 is_anonymous_vpn;
+        $geoip2_is_hosting_provider source=$remote_addr default=0 is_hosting_provider;
+        $geoip2_is_public_proxy source=$remote_addr default=0 is_public_proxy;
+        $geoip2_is_tor_exit_node source=$remote_addr default=0 is_tor_exit_node;
     }
     {{ end }}
 
