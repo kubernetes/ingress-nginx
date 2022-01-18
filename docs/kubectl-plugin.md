@@ -226,7 +226,9 @@ Use the `--service <service>` flag if your `ingress-nginx` `LoadBalancer` servic
 
 ### ingresses
 
-`kubectl ingress-nginx ingresses`, alternately `kubectl ingress-nginx ing`, shows a more detailed view of the ingress definitions in a namespace. Compare:
+`kubectl ingress-nginx ingresses`, alternately `kubectl ingress-nginx ing`, shows a more detailed view of the ingress definitions in a namespace.
+
+Compare:
 
 ```console
 $ kubectl get ingresses --all-namespaces
@@ -235,7 +237,7 @@ default     example-ingress1   testaddr.local,testaddr2.local   localhost   80  
 default     test-ingress-2     *                                localhost   80      5d
 ```
 
-vs
+vs.
 
 ```console
 $ kubectl ingress-nginx ingresses --all-namespaces
@@ -272,7 +274,7 @@ Checking deployments...
       https://github.com/kubernetes/ingress-nginx/issues/3808
 ```
 
-to show the lints added **only** for a particular `ingress-nginx` release, use the `--from-version` and `--to-version` flags:
+To show the lints added **only** for a particular `ingress-nginx` release, use the `--from-version` and `--to-version` flags:
 
 ```console
 $ kubectl ingress-nginx lint --all-namespaces --verbose --from-version 0.24.0 --to-version 0.24.0

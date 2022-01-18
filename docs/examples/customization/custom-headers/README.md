@@ -1,5 +1,15 @@
 # Custom Headers
 
+## Caveats
+
+Changes to the custom header config maps do not force a reload of the ingress-nginx-controllers.
+
+### Workaround
+
+To work around this limitation, perform a rolling restart of the deployment.
+
+## Example
+
 This example demonstrates configuration of the nginx ingress controller via
 a ConfigMap to pass a custom list of headers to the upstream
 server.

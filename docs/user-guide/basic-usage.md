@@ -6,7 +6,7 @@ First of all follow the instructions to install ingress-nginx. Then imagine that
 
 Let's say that you want to expose the first at `myServiceA.foo.org` and the second at `myServiceB.foo.org`.
 
-If cluster version < 1.19 you can create two **ingress** resources like this:
+If the cluster version is < 1.19, you can create two **ingress** resources like this:
 
 ```
 apiVersion: networking.k8s.io/v1beta1

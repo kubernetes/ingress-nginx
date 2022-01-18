@@ -82,7 +82,7 @@ metadata:
     kubernetes.io/ingress.class: "gce"
 ```
 
-will target the GCE controller, forcing the nginx controller to ignore it, while an annotation like
+will target the GCE controller, forcing the Ingress-NGINX controller to ignore it, while an annotation like:
 
 ```yaml
 metadata:
@@ -91,7 +91,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
 ```
 
-will target the nginx controller, forcing the GCE controller to ignore it.
+will target the Ingress-NGINX controller, forcing the GCE controller to ignore it.
 
 You can change the value "nginx" to something else by setting the `--ingress-class` flag:
 

@@ -1,4 +1,4 @@
-# NGINX Ingress Controller
+# Ingress NGINX Controller
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx)
 [![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/main/LICENSE)
@@ -28,7 +28,7 @@ For detailed changes on the `ingress-nginx` helm chart, please check the followi
 
 ### Support Versions table 
 
-| Ingress-nginx version | k8s supported version        | Alpine Version | Nginx Version |
+| Ingress-NGINX version | k8s supported version        | Alpine Version | Nginx Version |
 |-----------------------|------------------------------|----------------|---------------|
 | v1.1.1                | 1.23, 1.22, 1.21, 1.20, 1.19 | 3.14.2         |  1.19.9†      |
 | v1.1.0                | 1.22, 1.21, 1.20, 1.19       | 3.14.2         |  1.19.9†      |

@@ -22,6 +22,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -29,6 +30,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
+	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/nginx"
@@ -161,6 +163,9 @@ Requires the update-status parameter.`)
 			`Enables the collection of NGINX metrics`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host`)
+		timeBuckets         = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime")
+		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength")
+		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent")
 		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics")
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
@@ -192,6 +197,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
 
 		shutdownGracePeriod = flags.Int("shutdown-grace-period", 0, "Seconds to wait after receiving the shutdown signal, before stopping the nginx process.")
+
+		postShutdownGracePeriod = flags.Int("post-shutdown-grace-period", 10, "Seconds to wait after the nginx process has stopped before controller exits.")
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases`)
@@ -283,6 +290,12 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		}
 	}
 
+	var histogramBuckets = &collectors.HistogramBuckets{
+		TimeBuckets:   *timeBuckets,
+		LengthBuckets: *lengthBuckets,
+		SizeBuckets:   *sizeBuckets,
+	}
+
 	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
 
 	config := &controller.Configuration{
@@ -293,6 +306,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		EnableProfiling:            *profiling,
 		EnableMetrics:              *enableMetrics,
 		MetricsPerHost:             *metricsPerHost,
+		MetricsBuckets:             histogramBuckets,
 		MonitorMaxBatchSize:        *monitorMaxBatchSize,
 		DisableServiceExternalName: *disableServiceExternalName,
 		EnableSSLPassthrough:       *enableSSLPassthrough,
@@ -309,6 +323,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		PublishStatusAddress:       *publishStatusAddress,
 		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
 		ShutdownGracePeriod:        *shutdownGracePeriod,
+		PostShutdownGracePeriod:    *postShutdownGracePeriod,
 		UseNodeInternalIP:          *useNodeInternalIP,
 		SyncRateLimit:              *syncRateLimit,
 		HealthCheckHost:            *healthzHost,

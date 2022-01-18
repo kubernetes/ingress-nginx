@@ -1,6 +1,6 @@
 # Default backend
 
-The default backend is a service which handles all URL paths and hosts the nginx controller doesn't understand
+The default backend is a service which handles all URL paths and hosts the Ingress-NGINX controller doesn't understand
 (i.e., all the requests that are not mapped with an Ingress).
 
 Basically a default backend exposes two URLs:

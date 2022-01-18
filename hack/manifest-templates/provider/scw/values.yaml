@@ -1,0 +1,9 @@
+# Scaleway
+controller:
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+    annotations:
+      service.beta.kubernetes.io/scw-loadbalancer-proxy-protocol-v2: "true"
+  config:
+    use-proxy-protocol: "true"

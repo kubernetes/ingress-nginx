@@ -14,13 +14,13 @@ Session affinity can be configured using the following annotations:
 |nginx.ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be created|string (defaults to `INGRESSCOOKIE`)|
 |nginx.ingress.kubernetes.io/session-cookie-secure|Set the cookie as secure regardless the protocol of the incoming request|`"true"` or `"false"`|
 |nginx.ingress.kubernetes.io/session-cookie-path|Path that will be set on the cookie (required if your [Ingress paths][ingress-paths] use regular expressions)|string (defaults to the currently [matched path][ingress-paths])|
-|nginx.ingress.kubernetes.io/session-cookie-samesite|SameSite attribute to apply to the cookie|Browser accepted values are `None`, `Lax`, and `Strict`|
+|nginx.ingress.kubernetes.io/session-cookie-samesite|`SameSite` attribute to apply to the cookie|Browser accepted values are `None`, `Lax`, and `Strict`|
 |nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none|Will omit `SameSite=None` attribute for older browsers which reject the more-recently defined `SameSite=None` value|`"true"` or `"false"`
 |nginx.ingress.kubernetes.io/session-cookie-max-age|Time until the cookie expires, corresponds to the `Max-Age` cookie directive|number of seconds|
 |nginx.ingress.kubernetes.io/session-cookie-expires|Legacy version of the previous annotation for compatibility with older browsers, generates an `Expires` cookie directive by adding the seconds to the current date|number of seconds|
 |nginx.ingress.kubernetes.io/session-cookie-change-on-failure|When set to `false` nginx ingress will send request to upstream pointed by sticky cookie even if previous attempt failed. When set to `true` and previous attempt failed, sticky cookie will be changed to point to another upstream.|`true` or `false` (defaults to `false`)|
 
-You can create the [example Ingress](ingress.yaml) to test this:
+You can create the [session affinity example Ingress](ingress.yaml) to test this:
 
 ```console
 kubectl create -f ingress.yaml
@@ -66,12 +66,14 @@ Accept-Ranges: bytes
 ```
 
 In the example above, you can see that the response contains a `Set-Cookie` header with the settings we have defined.
-This cookie is created by NGINX, it contains a randomly generated key corresponding to the upstream used for that request (selected using [consistent hashing][consistent-hashing]) and has an `Expires` directive.
-If the user changes this cookie, NGINX creates a new one and redirects the user to another upstream.
+This cookie is created by the NGINX Ingress Controller, it contains a randomly generated key corresponding to the upstream used for that request (selected using [consistent hashing][consistent-hashing]) and has an `Expires` directive.
+If a client sends a cookie that doesn't correspond to an upstream, NGINX selects an upstream and creates a corresponding cookie.
 
 If the backend pool grows NGINX will keep sending the requests through the same server of the first request, even if it's overloaded.
 
 When the backend server is removed, the requests are re-routed to another upstream server. This does not require the cookie to be updated because the key's [consistent hash][consistent-hashing] will change.
+
+## Caveats
 
 When you have a Service pointing to more than one Ingress, with only one containing affinity configuration, the first created Ingress will be used.
 This means that you can face the situation that you've configured session affinity on one Ingress and it doesn't work because the Service is pointing to another Ingress that doesn't configure this.

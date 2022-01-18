@@ -7,6 +7,12 @@
 # nameOverride:
 # fullnameOverride:
 
+## Labels to apply to all resources
+##
+commonLabels: {}
+# scmhash: abc123
+# myLabel: aakkmd
+
 controller:
   name: controller
   image:
@@ -28,7 +34,7 @@ controller:
   # -- Configures the controller container name
   containerName: controller
 
-  # -- Configures the ports the nginx-controller listens on
+  # -- Configures the ports that the nginx-controller listens on
   containerPort:
     http: 80
     https: 443
@@ -36,7 +42,7 @@ controller:
   # -- Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}
 
-  # -- Annotations to be added to the controller config configuration configmap
+  # -- Annotations to be added to the controller config configuration configmap.
   configAnnotations: {}
 
   # -- Will add custom headers before sending traffic to backends according to https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/custom-headers
@@ -65,7 +71,7 @@ controller:
   # Defaults to false
   watchIngressWithoutClass: false
 
-  # -- Process IngressClass per name (additionally as per spec.controller)
+  # -- Process IngressClass per name (additionally as per spec.controller).
   ingressClassByName: false
 
   # -- This configuration defines if Ingress Controller should allow users to set
@@ -558,6 +564,15 @@ controller:
   # - name: init-myservice
   #   image: busybox
   #   command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
+
+  extraModules: []
+  ## Modules, which are mounted into the core nginx image
+  # - name: opentelemetry
+  #   image: busybox
+  #
+  # The image must contain a `/usr/local/bin/init_module.sh` executable, which
+  # will be executed as initContainers, to move its config files within the
+  # mounted volume.
 
   admissionWebhooks:
     annotations: {}

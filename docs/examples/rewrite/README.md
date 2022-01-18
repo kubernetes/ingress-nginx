@@ -1,6 +1,6 @@
 # Rewrite
 
-This example demonstrates how to use the Rewrite annotations
+This example demonstrates how to use `Rewrite` annotations.
 
 ## Prerequisites
 
@@ -15,9 +15,9 @@ Rewriting can be controlled using the following annotations:
 |Name|Description|Values|
 | --- | --- | --- |
 |nginx.ingress.kubernetes.io/rewrite-target|Target URI where the traffic must be redirected|string|
-|nginx.ingress.kubernetes.io/ssl-redirect|Indicates if the location section is accessible SSL only (defaults to True when Ingress contains a Certificate)|bool|
+|nginx.ingress.kubernetes.io/ssl-redirect|Indicates if the location section is only accessible via SSL (defaults to True when Ingress contains a Certificate)|bool|
 |nginx.ingress.kubernetes.io/force-ssl-redirect|Forces the redirection to HTTPS even if the Ingress is not TLS Enabled|bool|
-|nginx.ingress.kubernetes.io/app-root|Defines the Application Root that the Controller must redirect if it's in '/' context|string|
+|nginx.ingress.kubernetes.io/app-root|Defines the Application Root that the Controller must redirect if it's in `/` context|string|
 |nginx.ingress.kubernetes.io/use-regex|Indicates if the paths defined on an Ingress use regular expressions|bool|
 
 ## Examples
