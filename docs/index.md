@@ -120,7 +120,7 @@ When using Helm, you can enable this annotation by setting `.controller.ingressC
 If you have any old Ingress objects remaining without an IngressClass set, you can do one or more of the following to make the Ingress-NGINX controller aware of the old objects:
 
 - You can manually set the [`.spec.ingressClassName`](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec) field in the manifest of your own Ingress resources.
-- You can re-create them after adding the "ingressclass.kubernetes.io/is-default-class" annotation to the IngressClass
+- You can re-create them after setting the `ingressclass.kubernetes.io/is-default-class` annotation to `true` on the IngressClass
 - Alternatively you can make the Ingress-NGINX controller watch Ingress objects without the ingressClassName field set by starting your Ingress-NGINX with the flag [--watch-ingress-without-class=true](#what-is-the-flag-watch-ingress-without-class) . When using Helm, you can configure your Helm chart installation's values file with `.controller.watchIngressWithoutClass: true`
 
 You can configure your Helm chart installation's values file with `.controller.watchIngressWithoutClass: true`. 
