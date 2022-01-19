@@ -70,7 +70,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
 
 ## Deploy and configure Prometheus Server
 
-## Using helm
+### Using helm
 
 ```
 helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
@@ -81,9 +81,7 @@ helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
 
 Further info: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#prometheusioscrape
 
-## Using Customize
-
-## Deploy and configure Prometheus Server
+### Using Customize
 
 Note that the kustomize bases used in this tutorial are stored in the [deploy](https://github.com/kubernetes/ingress-nginx/tree/main/deploy) folder of the GitHub repository [kubernetes/ingress-nginx](https://github.com/kubernetes/ingress-nginx).
 
