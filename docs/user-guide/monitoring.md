@@ -22,6 +22,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   --set-string controller.podAnnotations."prometheus\.io/scrape"="true" \
   --set-string controller.podAnnotations."prometheus\.io/port"="10254"
   ```
+  - If you use Prometheus operator pod annotations are not obeyed and you need to follow these instructions instead: https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx#prometheus-metrics
   - You can validate that the controller is configured for metrics by looking at the values of the installed release, like this:
   ```
   helm get values ingress-controller --namespace ingress-nginx
@@ -66,6 +67,21 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
              ..
            ```
 
+
+## Deploy and configure Prometheus Server
+
+## Using helm
+
+```
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+-n prometheus --create-namespace \
+--set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
+--set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+```
+
+Further info: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#prometheusioscrape
+
+## Using Customize
 
 ## Deploy and configure Prometheus Server
 
