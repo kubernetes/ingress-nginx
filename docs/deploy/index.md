@@ -159,7 +159,7 @@ Kubernetes is available in Docker Desktop:
 - Mac, from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018)
 - Windows, from [version 18.06.0-ce](https://docs.docker.com/docker-for-windows/release-notes/#docker-community-edition-18060-ce-win70-2018-07-25)
 
-First, make sure that Kubernetes is enabled in the Docker settings. The command `kubectl get nodes` should show a single node called `docker-destkop`.
+First, make sure that Kubernetes is enabled in the Docker settings. The command `kubectl get nodes` should show a single node called `docker-desktop`.
 
 The ingress controller can be installed on Docker Desktop using the default [quick start](#quick-start) instructions.
 
