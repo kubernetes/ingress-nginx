@@ -389,14 +389,19 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
+				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{
+						Enabled: true, // merge is only called with canary ingresses
+					},
+				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:     "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:     "example-http-svc-80-noncanary",
 					NoServer: false,
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -410,19 +415,19 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:                "example-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -436,7 +441,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
@@ -495,26 +500,31 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
+				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{
+						Enabled: true, // merge is only called with canary ingresses
+					},
+				},
 			},
 			map[string]*ingress.Backend{
-				"example-foo-http-svc-80": {
-					Name:     "example-foo-http-svc-80",
+				"example-foo-http-svc-80-noncanary": {
+					Name:     "example-foo-http-svc-80-noncanary",
 					NoServer: false,
 				},
-				"example-foo-http-svc-canary-80": {
-					Name:     "example-foo-http-svc-canary-80",
+				"example-foo-http-svc-canary-80-canary": {
+					Name:     "example-foo-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
 					},
 				},
-				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:                "example-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -528,7 +538,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-foo-http-svc-80",
+							Backend:  "example-foo-http-svc-80-noncanary",
 						},
 					},
 				},
@@ -538,31 +548,31 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-foo-http-svc-80": {
-					Name:                "example-foo-http-svc-80",
+				"example-foo-http-svc-80-noncanary": {
+					Name:                "example-foo-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-foo-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-foo-http-svc-canary-80-canary"},
 				},
-				"example-foo-http-svc-canary-80": {
-					Name:     "example-foo-http-svc-canary-80",
+				"example-foo-http-svc-canary-80-canary": {
+					Name:     "example-foo-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
 					},
 				},
-				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:                "example-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -576,7 +586,17 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
+						},
+					},
+				},
+				"foo.bar": {
+					Hostname: "foo.bar",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-foo-http-svc-80-noncanary",
 						},
 					},
 				},
@@ -614,10 +634,13 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
+				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{Enabled: true},
+				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -625,7 +648,17 @@ func TestMergeAlternativeBackends(t *testing.T) {
 				},
 			},
 			map[string]*ingress.Server{},
-			map[string]*ingress.Backend{},
+			map[string]*ingress.Backend{
+				// Since the host look in servers fails, the code continues and does not
+				// delete this canary upstream
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
 			map[string]*ingress.Server{},
 		},
 		"catch-all alternative backend has no server and embeds into matching real backend": {
@@ -645,14 +678,19 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
+				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{
+						Enabled: true, // merge is only called with canary ingresses
+					},
+				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:     "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:     "example-http-svc-80-noncanary",
 					NoServer: false,
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -666,19 +704,19 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:                "example-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -692,7 +730,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
@@ -715,14 +753,19 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
+				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{
+						Enabled: true, // merge is only called with canary ingresses
+					},
+				},
 			},
 			map[string]*ingress.Backend{
-				"upstream-default-backend": {
-					Name:     "upstream-default-backend",
+				"upstream-default-backend-noncanary": {
+					Name:     "upstream-default-backend-noncanary",
 					NoServer: false,
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -736,12 +779,25 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "upstream-default-backend",
+							Backend:  "upstream-default-backend-noncanary",
 						},
 					},
 				},
 			},
-			map[string]*ingress.Backend{},
+			map[string]*ingress.Backend{
+				"upstream-default-backend-noncanary": {
+					Name:                "upstream-default-backend-noncanary",
+					NoServer:            false,
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
+				},
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
 			map[string]*ingress.Server{
 				"_": {
 					Hostname: "_",
@@ -749,7 +805,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "upstream-default-backend",
+							Backend:  "upstream-default-backend-noncanary",
 						},
 					},
 				},
@@ -786,14 +842,19 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
+				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{
+						Enabled: true, // merge is only called with canary ingresses
+					},
+				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:     "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:     "example-http-svc-80-noncanary",
 					NoServer: false,
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -807,19 +868,19 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:                "example-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -833,7 +894,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
@@ -872,14 +933,17 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					},
 				},
 				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{
+						Enabled: true,
+					},
 					SessionAffinity: sessionaffinity.Config{
 						CanaryBehavior: "sticky",
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:     "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:     "example-http-svc-80-noncanary",
 					NoServer: false,
 					SessionAffinity: ingress.SessionAffinityConfig{
 						AffinityType: "cookie",
@@ -889,8 +953,8 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -904,16 +968,16 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:                "example-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
 					SessionAffinity: ingress.SessionAffinityConfig{
 						AffinityType: "cookie",
 						AffinityMode: "balanced",
@@ -922,8 +986,8 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -944,7 +1008,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
@@ -983,14 +1047,17 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					},
 				},
 				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{
+						Enabled: true,
+					},
 					SessionAffinity: sessionaffinity.Config{
 						CanaryBehavior: "", // In fact any value but 'legacy' would do the trick.
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:     "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:     "example-http-svc-80-noncanary",
 					NoServer: false,
 					SessionAffinity: ingress.SessionAffinityConfig{
 						AffinityType: "cookie",
@@ -1000,8 +1067,8 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -1015,16 +1082,16 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:                "example-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
 					SessionAffinity: ingress.SessionAffinityConfig{
 						AffinityType: "cookie",
 						AffinityMode: "balanced",
@@ -1033,8 +1100,8 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -1055,7 +1122,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
@@ -1094,14 +1161,17 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					},
 				},
 				ParsedAnnotations: &annotations.Ingress{
+					Canary: canary.Config{
+						Enabled: true,
+					},
 					SessionAffinity: sessionaffinity.Config{
 						CanaryBehavior: "legacy",
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:     "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:     "example-http-svc-80-noncanary",
 					NoServer: false,
 					SessionAffinity: ingress.SessionAffinityConfig{
 						AffinityType: "cookie",
@@ -1111,8 +1181,8 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -1126,16 +1196,16 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
 			},
 			map[string]*ingress.Backend{
-				"example-http-svc-80": {
-					Name:                "example-http-svc-80",
+				"example-http-svc-80-noncanary": {
+					Name:                "example-http-svc-80-noncanary",
 					NoServer:            false,
-					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					AlternativeBackends: []string{"example-http-svc-canary-80-canary"},
 					SessionAffinity: ingress.SessionAffinityConfig{
 						AffinityType: "cookie",
 						AffinityMode: "balanced",
@@ -1144,8 +1214,8 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						},
 					},
 				},
-				"example-http-svc-canary-80": {
-					Name:     "example-http-svc-canary-80",
+				"example-http-svc-canary-80-canary": {
+					Name:     "example-http-svc-canary-80-canary",
 					NoServer: true,
 					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
 						Weight: 20,
@@ -1159,7 +1229,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 						{
 							Path:     "/",
 							PathType: &pathTypePrefix,
-							Backend:  "example-http-svc-80",
+							Backend:  "example-http-svc-80-noncanary",
 						},
 					},
 				},
@@ -1171,10 +1241,18 @@ func TestMergeAlternativeBackends(t *testing.T) {
 		t.Run(title, func(t *testing.T) {
 			mergeAlternativeBackends(tc.ingress, tc.upstreams, tc.servers)
 
+			numUpstreams := len(tc.upstreams)
+			numExpUpstreams := len(tc.expUpstreams)
+
+			if numUpstreams != numExpUpstreams {
+				t.Errorf("Number of upstreams %d is not what is expected %d", numUpstreams, numExpUpstreams)
+			}
+
 			for upsName, expUpstream := range tc.expUpstreams {
 				actualUpstream, ok := tc.upstreams[upsName]
 				if !ok {
 					t.Errorf("expected upstream %s to exist but it did not", upsName)
+					t.FailNow()
 				}
 
 				if !actualUpstream.Equal(expUpstream) {
@@ -1182,6 +1260,13 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					t.Logf("expected upstream %s alternative backends: %s", expUpstream.Name, expUpstream.AlternativeBackends)
 					t.Errorf("upstream %s was not equal to what was expected", actualUpstream.Name)
 				}
+			}
+
+			numServers := len(tc.servers)
+			numExpServers := len(tc.expServers)
+
+			if numServers != numExpServers {
+				t.Errorf("Number of servers %d is not what is expected %d", numServers, numExpServers)
 			}
 
 			for serverName, expServer := range tc.expServers {

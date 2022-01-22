@@ -29,6 +29,7 @@ import (
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/klog/v2"
 )
 
@@ -47,13 +48,18 @@ func newUpstream(name string) *ingress.Backend {
 }
 
 // upstreamName returns a formatted upstream name based on namespace, service, and port
-func upstreamName(namespace string, service *networking.IngressServiceBackend) string {
+func upstreamName(namespace string, service *networking.IngressServiceBackend, anns *annotations.Ingress) string {
+	canaryS := "noncanary"
+	if anns != nil && anns.Canary.Enabled {
+		canaryS = "canary"
+	}
+
 	if service != nil {
 		if service.Port.Number > 0 {
-			return fmt.Sprintf("%s-%s-%d", namespace, service.Name, service.Port.Number)
+			return fmt.Sprintf("%s-%s-%d-%s", namespace, service.Name, service.Port.Number, canaryS)
 		}
 		if service.Port.Name != "" {
-			return fmt.Sprintf("%s-%s-%s", namespace, service.Name, service.Port.Name)
+			return fmt.Sprintf("%s-%s-%s-%s", namespace, service.Name, service.Port.Name, canaryS)
 		}
 	}
 	return fmt.Sprintf("%s-INVALID", namespace)

@@ -657,7 +657,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					continue
 				}
 
-				upsName := upstreamName(ing.Namespace, path.Backend.Service)
+				upsName := upstreamName(ing.Namespace, path.Backend.Service, anns)
 
 				ups := upstreams[upsName]
 
@@ -882,7 +882,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 		var defBackend string
 		if ing.Spec.DefaultBackend != nil && ing.Spec.DefaultBackend.Service != nil {
-			defBackend = upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service)
+			defBackend = upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service, anns)
 
 			klog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
@@ -949,7 +949,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					continue
 				}
 
-				name := upstreamName(ing.Namespace, path.Backend.Service)
+				name := upstreamName(ing.Namespace, path.Backend.Service, ing.ParsedAnnotations)
 				svcName, svcPort := upstreamServiceNameAndPort(path.Backend.Service)
 				if _, ok := upstreams[name]; ok {
 					continue
@@ -985,6 +985,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					upstreams[name].NoServer = true
 					upstreams[name].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
 						Weight:        anns.Canary.Weight,
+						WeightTotal:   anns.Canary.WeightTotal,
 						Header:        anns.Canary.Header,
 						HeaderValue:   anns.Canary.HeaderValue,
 						HeaderPattern: anns.Canary.HeaderPattern,
@@ -1184,7 +1185,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		}
 
 		if ing.Spec.DefaultBackend != nil && ing.Spec.DefaultBackend.Service != nil {
-			defUpstream := upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service)
+			defUpstream := upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service, anns)
 
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
 				// use backend specified in Ingress as the default backend for all its rules
@@ -1461,7 +1462,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 
 	// merge catch-all alternative backends
 	if ing.Spec.DefaultBackend != nil {
-		upsName := upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service)
+		upsName := upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service, ing.ParsedAnnotations)
 
 		altUps := upstreams[upsName]
 
@@ -1485,7 +1486,10 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
-					merged = mergeAlternativeBackend(ing, priUps, altUps)
+					merged = merged || mergeAlternativeBackend(ing, priUps, altUps)
+					if merged {
+						klog.V(2).Infof("canary backend %s merged with non-canary backend %s", altUps.Name, priUps.Name)
+					}
 				}
 			}
 
@@ -1509,7 +1513,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 				continue
 			}
 
-			upsName := upstreamName(ing.Namespace, path.Backend.Service)
+			upsName := upstreamName(ing.Namespace, path.Backend.Service, ing.ParsedAnnotations)
 
 			altUps := upstreams[upsName]
 
@@ -1544,7 +1548,10 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
-					merged = mergeAlternativeBackend(ing, priUps, altUps)
+					merged = merged || mergeAlternativeBackend(ing, priUps, altUps)
+					if merged {
+						klog.V(2).Infof("canary backend %s merged with non-canary backend %s", altUps.Name, priUps.Name)
+					}
 				}
 			}
 
