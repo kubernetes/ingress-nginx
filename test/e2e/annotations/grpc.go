@@ -257,4 +257,68 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		metadata := res.GetMetadata()
 		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"].Values[0], "application/grpc")
 	})
+
+	ginkgo.It("should return OK for service with proxy-ssl-secret", func() {
+		f.NewGRPCBinDeployment()
+
+		host := "echo"
+		port := 9002
+
+		svc := &core.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "grpcbin-test",
+				Namespace: f.Namespace,
+			},
+			Spec: corev1.ServiceSpec{
+				ExternalName: fmt.Sprintf("grpcbin.%v.svc.cluster.local", f.Namespace),
+				Type:         corev1.ServiceTypeExternalName,
+				Ports: []corev1.ServicePort{
+					{
+						Name:       host,
+						Port:       int32(port),
+						TargetPort: intstr.FromInt(port),
+						Protocol:   "TCP",
+					},
+				},
+			},
+		}
+		f.EnsureService(svc)
+
+		_, err := framework.CreateIngressMASecret(f.KubeClientSet, host, host, f.Namespace)
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/backend-protocol": "GRPCS",
+			"nginx.ingress.kubernetes.io/proxy-ssl-secret": f.Namespace + "/" + host,
+			"nginx.ingress.kubernetes.io/proxy-ssl-verify": "off", // grpcbin uses a self-signed cert
+		}
+
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin-test", port, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "grpc_pass grpcs://upstream_balancer;")
+			})
+
+		conn, _ := grpc.Dial(f.GetNginxIP()+":443",
+			grpc.WithTransportCredentials(
+				credentials.NewTLS(&tls.Config{
+					ServerName:         "echo",
+					InsecureSkipVerify: true,
+				}),
+			),
+		)
+		defer conn.Close()
+
+		client := pb.NewGRPCBinClient(conn)
+		ctx := context.Background()
+
+		res, err := client.HeadersUnary(ctx, &pb.EmptyMessage{})
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		metadata := res.GetMetadata()
+		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"].Values[0], "application/grpc")
+
+	})
 })

@@ -950,6 +950,7 @@ stream {
 
         {{ if not (empty $server.ProxySSL.CAFileName) }}
         # PEM sha: {{ $server.ProxySSL.CASHA }}
+        {{ if needsProxyDirective $server }}
         proxy_ssl_trusted_certificate           {{ $server.ProxySSL.CAFileName }};
         proxy_ssl_ciphers                       {{ $server.ProxySSL.Ciphers }};
         proxy_ssl_protocols                     {{ $server.ProxySSL.Protocols }};
@@ -960,10 +961,28 @@ stream {
         proxy_ssl_server_name                   {{ $server.ProxySSL.ProxySSLServerName }};
         {{ end }}
         {{ end }}
+        {{ if needsGRPCDirective $server }}
+        grpc_ssl_trusted_certificate            {{ $server.ProxySSL.CAFileName }};
+        grpc_ssl_ciphers                        {{ $server.ProxySSL.Ciphers }};
+        grpc_ssl_protocols                      {{ $server.ProxySSL.Protocols }};
+        grpc_ssl_verify                         {{ $server.ProxySSL.Verify }};
+        grpc_ssl_verify_depth                   {{ $server.ProxySSL.VerifyDepth }};
+        {{ if not (empty $server.ProxySSL.ProxySSLName) }}
+        grpc_ssl_name                           {{ $server.ProxySSL.ProxySSLName }};
+        grpc_ssl_server_name                    {{ $server.ProxySSL.ProxySSLServerName }};
+        {{ end }}
+        {{ end }}
+        {{ end }}
 
         {{ if not (empty $server.ProxySSL.PemFileName) }}
+        {{ if needsProxyDirective $server }}
         proxy_ssl_certificate                   {{ $server.ProxySSL.PemFileName }};
         proxy_ssl_certificate_key               {{ $server.ProxySSL.PemFileName }};
+        {{ end }}
+        {{ if needsGRPCDirective $server }}
+        grpc_ssl_certificate                    {{ $server.ProxySSL.PemFileName }};
+        grpc_ssl_certificate_key                {{ $server.ProxySSL.PemFileName }};
+        {{ end }}
         {{ end }}
 
         {{ if not (empty $server.SSLCiphers) }}
@@ -1381,23 +1400,45 @@ stream {
             {{ end }}
             {{ if not (empty $location.ProxySSL.CAFileName) }}
             # PEM sha: {{ $location.ProxySSL.CASHA }}
+            {{ if needsProxyDirective $location }}
             proxy_ssl_trusted_certificate           {{ $location.ProxySSL.CAFileName }};
             proxy_ssl_ciphers                       {{ $location.ProxySSL.Ciphers }};
             proxy_ssl_protocols                     {{ $location.ProxySSL.Protocols }};
             proxy_ssl_verify                        {{ $location.ProxySSL.Verify }};
             proxy_ssl_verify_depth                  {{ $location.ProxySSL.VerifyDepth }};
             {{ end }}
+            {{ if needsGRPCDirective $location }}
+            grpc_ssl_trusted_certificate            {{ $location.ProxySSL.CAFileName }};
+            grpc_ssl_ciphers                        {{ $location.ProxySSL.Ciphers }};
+            grpc_ssl_protocols                      {{ $location.ProxySSL.Protocols }};
+            grpc_ssl_verify                         {{ $location.ProxySSL.Verify }};
+            grpc_ssl_verify_depth                   {{ $location.ProxySSL.VerifyDepth }};
+            {{ end }}
+            {{ end }}
 
+            {{ if needsProxyDirective $location }}
             {{ if not (empty $location.ProxySSL.ProxySSLName) }}
             proxy_ssl_name                          {{ $location.ProxySSL.ProxySSLName }};
             {{ end }}
             {{ if not (empty $location.ProxySSL.ProxySSLServerName) }}
             proxy_ssl_server_name                   {{ $location.ProxySSL.ProxySSLServerName }};
             {{ end }}
-
             {{ if not (empty $location.ProxySSL.PemFileName) }}
             proxy_ssl_certificate                   {{ $location.ProxySSL.PemFileName }};
             proxy_ssl_certificate_key               {{ $location.ProxySSL.PemFileName }};
+            {{ end }}
+            {{ end }}
+            {{ if needsGRPCDirective $location }}
+            {{ if not (empty $location.ProxySSL.ProxySSLName) }}
+            grpc_ssl_name                           {{ $location.ProxySSL.ProxySSLName }};
+            {{ end }}
+            {{ if not (empty $location.ProxySSL.ProxySSLServerName) }}
+            grpc_ssl_server_name                    {{ $location.ProxySSL.ProxySSLServerName }};
+            {{ end }}
+            {{ if not (empty $location.ProxySSL.PemFileName) }}
+            grpc_ssl_certificate                    {{ $location.ProxySSL.PemFileName }};
+            grpc_ssl_certificate_key                {{ $location.ProxySSL.PemFileName }};
+            {{ end }}
             {{ end }}
         }
         {{ end }}
