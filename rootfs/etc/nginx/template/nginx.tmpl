@@ -245,8 +245,8 @@ http {
 
     {{ if eq $file "GeoIP2-ISP.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoIP2-ISP.mmdb {
-        $geoip2_isp isp;
-        $geoip2_isp_org organization;
+        $geoip2_isp source=$remote_addr isp;
+        $geoip2_isp_org source=$remote_addr organization;
         $geoip2_asn source=$remote_addr default=0 autonomous_system_number;
     }
     {{ end }}
