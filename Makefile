@@ -62,12 +62,16 @@ help:  ## Display this help
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
 	@docker build \
+                --network host \
 		--no-cache \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg TARGETARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
+                --build-arg http_proxy=http://127.0.0.1:1080 \
+                --build-arg https_proxy=http://127.0.0.1:1080 \
+                --build-arg ftp_proxy=http://127.0.0.1:1080 \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
 
 .PHONY: clean-image

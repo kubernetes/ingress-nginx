@@ -19,8 +19,10 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"k8s.io/klog/v2"
 
@@ -89,25 +91,21 @@ type PodInfo struct {
 
 // GetIngressPod load the ingress-nginx pod
 func GetIngressPod(kubeClient clientset.Interface) error {
-	podName := os.Getenv("POD_NAME")
 	podNs := os.Getenv("POD_NAMESPACE")
-
-	if podName == "" || podNs == "" {
-		return fmt.Errorf("unable to get POD information (missing POD_NAME or POD_NAMESPACE environment variable")
+	if podNs == "" {
+		return fmt.Errorf("unable to get POD information (missing POD_NAMESPACE environment variable)")
 	}
-
-	pod, err := kubeClient.CoreV1().Pods(podNs).Get(context.TODO(), podName, metav1.GetOptions{})
+	pods, err := kubeClient.CoreV1().Pods(podNs).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("unable to get POD information: %v", err)
+		return fmt.Errorf("unable to list PODS: %v", err)
 	}
-
+	rand.Seed(time.Now().UnixNano())
+	pod := pods.Items[rand.Intn(len(pods.Items))]
 	IngressPodDetails = &PodInfo{
 		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"},
 	}
-
 	pod.ObjectMeta.DeepCopyInto(&IngressPodDetails.ObjectMeta)
 	IngressPodDetails.SetLabels(pod.GetLabels())
-
 	return nil
 }
 

@@ -59,9 +59,11 @@ if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   /bin/bash -c "${FLAGS}"
 else
   docker run                                            \
+    --net=host                                          \
     --tty                                               \
     --rm                                                \
     ${DOCKER_OPTS}                                      \
+    -e GOPROXY="https://goproxy.cn,direct"              \
     -e GOCACHE="/go/src/${PKG}/.cache"                  \
     -e GOMODCACHE="/go/src/${PKG}/.modcache"                  \
     -e DOCKER_IN_DOCKER_ENABLED="true"                  \
