@@ -63,7 +63,7 @@ FIELDS:
 
 ```
 
-## What has caused this change in behaviour ?
+## What has caused this change in behavior?
 
 There are 2 reasons primarily.
 
