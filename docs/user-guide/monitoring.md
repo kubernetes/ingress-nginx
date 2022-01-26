@@ -1,5 +1,9 @@
 # Prometheus and Grafana installation
+Two different methods to install and configure Prometheus and Grafana are described in this doc. 
+- Prometheus and Grafana installation using Pod Annotations. This installs Prometheus and Grafana in the same namespace as NGINX Ingress
+- Prometheus and Grafana installation using Service Monitors. This is more suited for existing Prometheus and Grafana installations that can be configured with NGINX Ingress for scraping the metrics. 
 
+# Prometheus and Grafana installation using Pod Annotations
 This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the NGINX Ingress controller.
 
 !!! important
@@ -171,9 +175,9 @@ According to the above example, this URL will be http://10.192.0.3:31086
 
 # Prometheus and Grafana installation using Service Monitors 
 
-## 1. Verify NGINX Ingress controller is installed
+## Verify NGINX Ingress controller is installed
 
-The NGINX Ingress controller should already be deployed according to the deployment instructions here.
+The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
 To check if Ingress controller is deployed, 
 ```
@@ -185,7 +189,7 @@ NAME                                        READY   STATUS    RESTARTS   AGE
 ingress-nginx-controller-7c489dc7b7-ccrf6   1/1     Running   0          19h
 ```
 
-## 2. Verify prometheus is installed
+## Verify prometheus is installed
 
 ```
 helm ls -A
@@ -197,9 +201,9 @@ prometheus   	prometheus   	1       	2022-01-20 16:07:25.086828 -0800 PST	deploy
 ```
 Notice that prometheus is installed in a differenet namespace than ingress-nginx
 
-If prometheus is not installed, then you can install from here <Insert link here>
+If prometheus is not installed, then you can install from [here](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack)
 
-## 3. Configure NGINX Ingress controller
+## Configure NGINX Ingress controller
 
 The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are :
 ```
@@ -230,9 +234,9 @@ controller:
         release: prometheus
       enabled: true
 ```
-## 4. Configure Prometheus
+## Configure Prometheus
 
-Since Prometheus is running in a different namespace as ingress-nginx it would not be able to discover ServiceMonitors in other namespaces when installed, upgrade your Prometheus Helm installation to set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues to false. By default, Prometheus only discovers PodMonitors within its namespace. This should be disabled by setting podMonitorSelectorNilUsesHelmValues to false
+Since Prometheus is running in a different namespace as ingress-nginx it would not be able to discover ServiceMonitors in other namespaces when installed, upgrade your Prometheus Helm installation to set `serviceMonitorSelectorNilUsesHelmValues` to false. By default, Prometheus only discovers PodMonitors within its namespace. This should be disabled by setting `podMonitorSelectorNilUsesHelmValues` to false
 The configurations required are:
 ```
 prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false 
@@ -245,7 +249,7 @@ helm upgrade prometheus prometheus-community/kube-prometheus-stack \
 --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
 --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
 ```
-You can validate that the Prometheus is configured for metrics by looking at the values of the installed release, like this:
+You can validate that Prometheus is configured for metrics by looking at the values of the installed release, like this:
 ```
 helm get values prometheus --namespace prometheus
 ```
@@ -257,7 +261,7 @@ prometheus:
     serviceMonitorSelectorNilUsesHelmValues: false
 ```
 
-## 5. Connect and view Prometheus dashboard
+## Connect and view Prometheus dashboard
 - Port forward to Prometheus pod. Find out the name of the prometheus pod by using the following command: 
   ```
   kubectl get pods -n prometheus
@@ -286,7 +290,7 @@ prometheus:
   
   ![Prometheus Dashboard](../images/prometheus-dashboard1.png)
 
-## 6. Connect and View Grafana dashboard 
+## Connect and View Grafana dashboard 
 
 - Port forward to Grafana pod. Find out the name of the Grafana pod by using the following command: 
   ```
@@ -314,19 +318,19 @@ prometheus:
   ```
 - Open your browser and visit the following URL http://localhost:{port-forwarded-port} according to the above example it would be, http://localhost:3000
   The default username/ password is admin/prom-operator
-  - After the login you can import the Grafana dashboard from [official dashboards](https://github.com/kubernetes/ingress-nginx/tree/main/deploy/grafana/dashboards), by following steps given below :
+- After the login you can import the Grafana dashboard from [official dashboards](https://github.com/kubernetes/ingress-nginx/tree/main/deploy/grafana/dashboards), by following steps given below :
 
-    - Navigate to lefthand panel of grafana
-    - Hover on the gearwheel icon for Configuration and click "Data Sources"
-    - Click "Add data source"
-    - Select "Prometheus"
-    - Enter the details (note: I used http://127.0.0.1:9090)
-    - Left menu (hover over +) -> Dashboard
-    - Click "Import"
-    - Enter the copy pasted json from https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json
-    - Click Import JSON
-    - Select the Prometheus data source
-    - Click "Import"
+  - Navigate to lefthand panel of grafana
+  - Hover on the gearwheel icon for Configuration and click "Data Sources"
+  - Click "Add data source"
+  - Select "Prometheus"
+  - Enter the details (note: I used http://127.0.0.1:9090)
+  - Left menu (hover over +) -> Dashboard
+  - Click "Import"
+  - Enter the copy pasted json from https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json
+  - Click Import JSON
+  - Select the Prometheus data source
+  - Click "Import"
 
-  ![Grafana Dashboard](../images/grafana-dashboard1.png)
+![Grafana Dashboard](../images/grafana-dashboard1.png)
  
