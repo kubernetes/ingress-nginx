@@ -39,10 +39,10 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.BeforeEach(func() {
 		// Deployment for main backend
-		f.NewEchoDeploymentWithReplicas(1)
+		f.NewEchoDeployment()
 
 		// Deployment for canary backend
-		f.NewEchoDeploymentWithNameAndReplicas(canaryService, 1)
+		f.NewEchoDeployment(framework.WithDeploymentName(canaryService))
 	})
 
 	ginkgo.Context("when canary is created", func() {
@@ -132,7 +132,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 				ginkgo.By("returning a 503 status when the mainline deployment has 0 replicas and a request is sent to the canary")
 
-				f.NewEchoDeploymentWithReplicas(0)
+				f.NewEchoDeployment(framework.WithDeploymentReplicas(0))
 
 				resp, _, errs := gorequest.New().
 					Get(f.GetURL(framework.HTTP)).
@@ -145,7 +145,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 				ginkgo.By("returning a 200 status when the canary deployment has 0 replicas and a request is sent to the mainline ingress")
 
-				f.NewEchoDeploymentWithReplicas(1)
+				f.NewEchoDeployment()
 				f.NewDeployment(canaryService, "k8s.gcr.io/e2e-test-images/echoserver:2.3", 8080, 0)
 
 				resp, _, errs = gorequest.New().

@@ -29,7 +29,7 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 	f := framework.NewDefaultFramework("cors")
 
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
 	})
 
 	ginkgo.It("should enable cors", func() {

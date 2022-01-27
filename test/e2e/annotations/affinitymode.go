@@ -34,7 +34,10 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 	ginkgo.It("Balanced affinity mode should balance", func() {
 		deploymentName := "affinitybalanceecho"
 		replicas := 5
-		f.NewEchoDeploymentWithNameAndReplicas(deploymentName, replicas)
+		f.NewEchoDeployment(
+			framework.WithDeploymentName(deploymentName),
+			framework.WithDeploymentReplicas(replicas),
+		)
 
 		host := "affinity-mode-balance.com"
 		annotations := make(map[string]string)
@@ -64,7 +67,10 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 	ginkgo.It("Check persistent affinity mode", func() {
 		deploymentName := "affinitypersistentecho"
 		replicas := 5
-		f.NewEchoDeploymentWithNameAndReplicas(deploymentName, replicas)
+		f.NewEchoDeployment(
+			framework.WithDeploymentName(deploymentName),
+			framework.WithDeploymentReplicas(replicas),
+		)
 
 		host := "affinity-mode-persistent.com"
 		annotations := make(map[string]string)

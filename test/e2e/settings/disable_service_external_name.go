@@ -35,7 +35,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", f
 	f := framework.NewDefaultFramework("disabled-service-external-name")
 
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
 
 		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
 			args := deployment.Spec.Template.Spec.Containers[0].Args
