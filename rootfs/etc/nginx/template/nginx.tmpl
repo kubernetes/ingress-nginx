@@ -694,7 +694,7 @@ http {
         access_log off;
 
         {{ if $cfg.EnableOpenTelemetry }}
-          opentelemtry off;
+          opentelemetry off;
         {{ end }}
 
         {{ if $cfg.EnableOpentracing }}
