@@ -168,3 +168,165 @@ According to the above example, this URL will be http://10.192.0.3:31086
     - change it to look like "type: ClusterIP". Save and exit.
     - create a ingress resource with backend as "grafana" and port as "3000"
   - Similarly, you can edit the service "prometheus-server" and add a ingress resource.
+
+# Prometheus and Grafana installation using Service Monitors 
+
+## 1. Verify NGINX Ingress controller is installed
+
+The NGINX Ingress controller should already be deployed according to the deployment instructions here.
+
+To check if Ingress controller is deployed, 
+```
+kubectl get pods -n ingress-nginx 
+```
+The result should look something like: 
+```
+NAME                                        READY   STATUS    RESTARTS   AGE
+ingress-nginx-controller-7c489dc7b7-ccrf6   1/1     Running   0          19h
+```
+
+## 2. Verify prometheus is installed
+
+```
+helm ls -A
+```
+```
+NAME         	NAMESPACE    	REVISION	UPDATED                             	STATUS  	CHART                       	APP VERSION
+ingress-nginx	ingress-nginx	10      	2022-01-20 18:08:55.267373 -0800 PST	deployed	ingress-nginx-4.0.16        	1.1.1      
+prometheus   	prometheus   	1       	2022-01-20 16:07:25.086828 -0800 PST	deployed	kube-prometheus-stack-30.1.0	0.53.1  
+```
+Notice that prometheus is installed in a differenet namespace than ingress-nginx
+
+If prometheus is not installed, then you can install from here <Insert link here>
+
+## 3. Configure NGINX Ingress controller
+
+The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are :
+```
+controller.metrics.enabled=true
+controller.metrics.serviceMonitor.enabled=true
+controller.metrics.serviceMonitor.enabled=true 
+```
+The easiest way of doing this is to helm upgrade 
+```
+helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
+--namespace ingress-nginx \
+--set controller.metrics.enabled=true \
+--set controller.metrics.serviceMonitor.enabled=true \
+--set controller.metrics.serviceMonitor.additionalLabels.release="prometheus"
+```
+Here release="prometheus" should match the prometheus release that was installed in the previous step. 
+
+You can validate that the controller is configured for metrics by looking at the values of the installed release, like this:
+```
+helm get values ingress-nginx --namespace ingress-nginx
+```
+```
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      additionalLabels:
+        release: prometheus
+      enabled: true
+```
+## 4. Configure Prometheus
+
+Since Prometheus is running in a different namespace as ingress-nginx it would not be able to discover ServiceMonitors in other namespaces when installed, upgrade your Prometheus Helm installation to set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues to false. By default, Prometheus only discovers PodMonitors within its namespace. This should be disabled by setting podMonitorSelectorNilUsesHelmValues to false
+The configurations required are:
+```
+prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false 
+prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+```
+The easiest way of doing this is to helm upgrade
+```
+helm upgrade prometheus prometheus-community/kube-prometheus-stack \
+--namespace prometheus  \
+--set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
+--set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+```
+You can validate that the Prometheus is configured for metrics by looking at the values of the installed release, like this:
+```
+helm get values prometheus --namespace prometheus
+```
+You should be able to see the values shown below:
+```
+prometheus:
+  prometheusSpec:
+    podMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+```
+
+## 5. Connect and view Prometheus dashboard
+- Port forward to Prometheus pod. Find out the name of the prometheus pod by using the following command: 
+  ```
+  kubectl get pods -n prometheus
+  ```
+
+  The result of this command would look like: 
+  ```
+  alertmanager-prometheus-kube-prometheus-alertmanager-0   2/2     Running     0                4d15h
+  prometheus-grafana-576c7f5d97-6fgjj                      3/3     Running     0                4d15h
+  prometheus-kube-prometheus-admission-create-twc8r        0/1     Completed   0                3d17h
+  prometheus-kube-prometheus-operator-549c98f8df-4tzst     1/1     Running     0                4d15h
+  prometheus-kube-state-metrics-859c9b764-86kt2            1/1     Running     7 (2d13h ago)    4d15h
+  prometheus-prometheus-kube-prometheus-prometheus-0       2/2     Running     0                4d15h
+  prometheus-prometheus-node-exporter-6xnqj                1/1     Running     10 (2d13h ago)   4d15h
+  ```
+  prometheus-prometheus-kube-prometheus-prometheus-0 is the pod we want to port forward to. We can do so using the following command:
+  ```
+  kubectl port-forward prometheus-prometheus-kube-prometheus-prometheus-0 9090 -n prometheus
+  ```
+  When you run the above command, you should see something like: 
+  ```
+  Forwarding from 127.0.0.1:9090 -> 9090
+  Forwarding from [::1]:9090 -> 9090
+  ```
+- Open your browser and visit the following URL http://localhost:{port-forwarded-port} according to the above example it would be, http://localhost:9090
+  
+  ![Prometheus Dashboard](../images/prometheus-dashboard1.png)
+
+## 6. Connect and View Grafana dashboard 
+
+- Port forward to Grafana pod. Find out the name of the Grafana pod by using the following command: 
+  ```
+  kubectl get pods -n prometheus
+  ```
+
+  The result of this command would look like: 
+  ```
+  alertmanager-prometheus-kube-prometheus-alertmanager-0   2/2     Running     0                4d15h
+  prometheus-grafana-576c7f5d97-6fgjj                      3/3     Running     0                4d15h
+  prometheus-kube-prometheus-admission-create-twc8r        0/1     Completed   0                3d17h
+  prometheus-kube-prometheus-operator-549c98f8df-4tzst     1/1     Running     0                4d15h
+  prometheus-kube-state-metrics-859c9b764-86kt2            1/1     Running     7 (2d13h ago)    4d15h
+  prometheus-prometheus-kube-prometheus-prometheus-0       2/2     Running     0                4d15h
+  prometheus-prometheus-node-exporter-6xnqj                1/1     Running     10 (2d13h ago)   4d15h
+  ```
+  prometheus-grafana-576c7f5d97-6fgjj is the pod we want to port forward to. We can do so using the following command:
+  ```
+  kubectl port-forward prometheus-grafana-576c7f5d97-6fgjj 3000 -n prometheus
+  ```
+  When you run the above command, you should see something like: 
+  ```
+  Forwarding from 127.0.0.1:3000 -> 3000
+  Forwarding from [::1]:3000 -> 3000
+  ```
+- Open your browser and visit the following URL http://localhost:{port-forwarded-port} according to the above example it would be, http://localhost:3000
+  The default username/ password is admin/prom-operator
+  - After the login you can import the Grafana dashboard from [official dashboards](https://github.com/kubernetes/ingress-nginx/tree/main/deploy/grafana/dashboards), by following steps given below :
+
+    - Navigate to lefthand panel of grafana
+    - Hover on the gearwheel icon for Configuration and click "Data Sources"
+    - Click "Add data source"
+    - Select "Prometheus"
+    - Enter the details (note: I used http://127.0.0.1:9090)
+    - Left menu (hover over +) -> Dashboard
+    - Click "Import"
+    - Enter the copy pasted json from https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json
+    - Click Import JSON
+    - Select the Prometheus data source
+    - Click "Import"
+
+  ![Grafana Dashboard](../images/grafana-dashboard1.png)
+ 
