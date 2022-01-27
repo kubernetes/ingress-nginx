@@ -98,7 +98,7 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 			_, err = f.KubeClientSet.CoreV1().Namespaces().Update(context.TODO(), ns, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err, "labeling not matched namespace")
 
-			// update ingress to trigger reconcilation
+			// update ingress to trigger reconciliation
 			ing, err := f.KubeClientSet.NetworkingV1().Ingresses(notMatchedNs).Get(context.TODO(), notMatchedHost, metav1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err, "retrieve test ingress")
 			if ing.Labels == nil {

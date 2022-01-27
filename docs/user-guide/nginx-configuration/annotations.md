@@ -251,7 +251,7 @@ Client Certificate Authentication is applied per host and it is not possible to 
 
 To enable, add the annotation `nginx.ingress.kubernetes.io/auth-tls-secret: namespace/secretName`. This secret must have a file named `ca.crt` containing the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
 
-You can further customize client certificate authentication and behaviour with these annotations:
+You can further customize client certificate authentication and behavior with these annotations:
 
 * `nginx.ingress.kubernetes.io/auth-tls-verify-depth`: The validation depth between the provided client certificate and the Certification Authority chain. (default: 1)
 * `nginx.ingress.kubernetes.io/auth-tls-verify-client`: Enables verification of client certificates. Possible values are:
