@@ -3,13 +3,13 @@ Two different methods to install and configure Prometheus and Grafana are descri
 - Prometheus and Grafana installation using Pod Annotations. This installs Prometheus and Grafana in the same namespace as NGINX Ingress
 - Prometheus and Grafana installation using Service Monitors. This is more suited for existing Prometheus and Grafana installations that can be configured with NGINX Ingress for scraping the metrics. 
 
-# Prometheus and Grafana installation using Pod Annotations
+## Prometheus and Grafana installation using Pod Annotations
 This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the NGINX Ingress controller.
 
 !!! important
     This example uses `emptyDir` volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.
 
-## Before You Begin
+### Before You Begin
 
 - The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
@@ -71,7 +71,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
            ```
 
 
-## Deploy and configure Prometheus Server
+### Deploy and configure Prometheus Server
 
 Note that the kustomize bases used in this tutorial are stored in the [deploy](https://github.com/kubernetes/ingress-nginx/tree/main/deploy) folder of the GitHub repository [kubernetes/ingress-nginx](https://github.com/kubernetes/ingress-nginx).
 
@@ -85,7 +85,7 @@ Note that the kustomize bases used in this tutorial are stored in the [deploy](h
   kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/
   ```
 
-### Prometheus Dashboard
+#### Prometheus Dashboard
 
 - Open Prometheus dashboard in a web browser:
 
@@ -116,8 +116,7 @@ Note that the kustomize bases used in this tutorial are stored in the [deploy](h
 
   ![Prometheus Dashboard](../images/prometheus-dashboard.png)
 
-### Grafana
-
+#### Grafana
   - Install grafana using the below command
   ```
   kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/grafana/
@@ -155,13 +154,13 @@ According to the above example, this URL will be http://10.192.0.3:31086
 
   ![Grafana Dashboard](../images/grafana.png)
 
-## Caveats
+### Caveats
 
-### Wildcard ingresses
+#### Wildcard ingresses
 
   - By default request metrics are labeled with the hostname. When you have a wildcard domain ingress, then there will be no metrics for that ingress (to prevent the metrics from exploding in cardinality). To get metrics in this case you need to run the ingress controller with `--metrics-per-host=false` (you will lose labeling by hostname, but still have labeling by ingress).
 
-## Grafana dashboard using ingress resource
+### Grafana dashboard using ingress resource
   - If you want to expose the dashboard for grafana using a ingress resource, then you can : 
     - change the service type of the prometheus-server service and the grafana service to "ClusterIP" like this :
     ```
@@ -173,23 +172,23 @@ According to the above example, this URL will be http://10.192.0.3:31086
     - create a ingress resource with backend as "grafana" and port as "3000"
   - Similarly, you can edit the service "prometheus-server" and add a ingress resource.
 
-# Prometheus and Grafana installation using Service Monitors 
+## Prometheus and Grafana installation using Service Monitors 
 
-## Verify NGINX Ingress controller is installed
+### Verify NGINX Ingress controller is installed
 
-The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
+- The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
-To check if Ingress controller is deployed, 
+- To check if Ingress controller is deployed, 
 ```
 kubectl get pods -n ingress-nginx 
 ```
-The result should look something like: 
+- The result should look something like: 
 ```
 NAME                                        READY   STATUS    RESTARTS   AGE
 ingress-nginx-controller-7c489dc7b7-ccrf6   1/1     Running   0          19h
 ```
 
-## Verify prometheus is installed
+### Verify prometheus is installed
 
 ```
 helm ls -A
@@ -199,19 +198,19 @@ NAME         	NAMESPACE    	REVISION	UPDATED                             	STATUS
 ingress-nginx	ingress-nginx	10      	2022-01-20 18:08:55.267373 -0800 PST	deployed	ingress-nginx-4.0.16        	1.1.1      
 prometheus   	prometheus   	1       	2022-01-20 16:07:25.086828 -0800 PST	deployed	kube-prometheus-stack-30.1.0	0.53.1  
 ```
-Notice that prometheus is installed in a differenet namespace than ingress-nginx
+- Notice that prometheus is installed in a differenet namespace than ingress-nginx
 
-If prometheus is not installed, then you can install from [here](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack)
+- If prometheus is not installed, then you can install from [here](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack)
 
-## Configure NGINX Ingress controller
+### Configure NGINX Ingress controller
 
-The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are :
+- The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are :
 ```
 controller.metrics.enabled=true
 controller.metrics.serviceMonitor.enabled=true
 controller.metrics.serviceMonitor.enabled=true 
 ```
-The easiest way of doing this is to helm upgrade 
+- The easiest way of doing this is to helm upgrade 
 ```
 helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
 --namespace ingress-nginx \
@@ -219,9 +218,9 @@ helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
 --set controller.metrics.serviceMonitor.enabled=true \
 --set controller.metrics.serviceMonitor.additionalLabels.release="prometheus"
 ```
-Here release="prometheus" should match the prometheus release that was installed in the previous step. 
+- Here release="prometheus" should match the prometheus release that was installed in the previous step. 
 
-You can validate that the controller is configured for metrics by looking at the values of the installed release, like this:
+- You can validate that the controller is configured for metrics by looking at the values of the installed release, like this:
 ```
 helm get values ingress-nginx --namespace ingress-nginx
 ```
@@ -234,26 +233,26 @@ controller:
         release: prometheus
       enabled: true
 ```
-## Configure Prometheus
+### Configure Prometheus
 
-Since Prometheus is running in a different namespace as ingress-nginx it would not be able to discover ServiceMonitors in other namespaces when installed, upgrade your Prometheus Helm installation to set `serviceMonitorSelectorNilUsesHelmValues` to false. By default, Prometheus only discovers PodMonitors within its namespace. This should be disabled by setting `podMonitorSelectorNilUsesHelmValues` to false
-The configurations required are:
+- Since Prometheus is running in a different namespace as ingress-nginx it would not be able to discover ServiceMonitors in other namespaces when installed, upgrade your Prometheus Helm installation to set `serviceMonitorSelectorNilUsesHelmValues` to false. By default, Prometheus only discovers PodMonitors within its namespace. This should be disabled by setting `podMonitorSelectorNilUsesHelmValues` to false
+- The configurations required are:
 ```
 prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false 
 prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
 ```
-The easiest way of doing this is to helm upgrade
+- The easiest way of doing this is to helm upgrade
 ```
 helm upgrade prometheus prometheus-community/kube-prometheus-stack \
 --namespace prometheus  \
 --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
 --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
 ```
-You can validate that Prometheus is configured for metrics by looking at the values of the installed release, like this:
+- You can validate that Prometheus is configured for metrics by looking at the values of the installed release, like this:
 ```
 helm get values prometheus --namespace prometheus
 ```
-You should be able to see the values shown below:
+- You should be able to see the values shown below:
 ```
 prometheus:
   prometheusSpec:
@@ -261,7 +260,7 @@ prometheus:
     serviceMonitorSelectorNilUsesHelmValues: false
 ```
 
-## Connect and view Prometheus dashboard
+### Connect and view Prometheus dashboard
 - Port forward to Prometheus pod. Find out the name of the prometheus pod by using the following command: 
   ```
   kubectl get pods -n prometheus
@@ -290,7 +289,7 @@ prometheus:
   
   ![Prometheus Dashboard](../images/prometheus-dashboard1.png)
 
-## Connect and View Grafana dashboard 
+### Connect and view Grafana dashboard 
 
 - Port forward to Grafana pod. Find out the name of the Grafana pod by using the following command: 
   ```
