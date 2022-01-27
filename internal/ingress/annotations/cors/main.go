@@ -121,6 +121,7 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.CorsEnabled = false
 	}
 
+	config.CorsAllowOrigin = []string{}
 	unparsedOrigins, err := parser.GetStringAnnotation("cors-allow-origin", ing)
 	if err == nil {
 		origins := strings.Split(unparsedOrigins, ",")
@@ -131,11 +132,11 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 				break
 			}
 
-			if corsOriginRegex.MatchString(origin) {
-				config.CorsAllowOrigin = append(config.CorsAllowOrigin, origin)
-			} else {
+			if !corsOriginRegex.MatchString(origin) {
 				klog.Errorf("Error parsing cors-allow-origin parameters. Supplied incorrect origin: %s. Skipping.", origin)
+				continue
 			}
+			config.CorsAllowOrigin = append(config.CorsAllowOrigin, origin)
 			klog.Infof("Current config.corsAllowOrigin %v", config.CorsAllowOrigin)
 		}
 	} else {
