@@ -850,6 +850,8 @@ stream {
         location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
 
+            modsecurity off;
+
             proxy_intercept_errors off;
 
             proxy_set_header       X-Code             {{ $errCode }};
