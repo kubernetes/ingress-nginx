@@ -22,7 +22,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   --set-string controller.podAnnotations."prometheus\.io/scrape"="true" \
   --set-string controller.podAnnotations."prometheus\.io/port"="10254"
   ```
-  - If you use Prometheus operator pod annotations are not obeyed and you need to follow these instructions instead: https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx#prometheus-metrics
+  - If you use Prometheus operator, pod annotations are not obeyed and you need to follow these instructions instead: https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx#prometheus-metrics
   - You can validate that the controller is configured for metrics by looking at the values of the installed release, like this:
   ```
   helm get values ingress-controller --namespace ingress-nginx
@@ -81,7 +81,7 @@ helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
 
 Further info: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#prometheusioscrape
 
-### Using Customize
+### Using Kustomize
 
 Note that the kustomize bases used in this tutorial are stored in the [deploy](https://github.com/kubernetes/ingress-nginx/tree/main/deploy) folder of the GitHub repository [kubernetes/ingress-nginx](https://github.com/kubernetes/ingress-nginx).
 
