@@ -52,7 +52,7 @@ func (bd1 *Config) Equal(bd2 *Config) bool {
 	return true
 }
 
-// NewParser creates a new serviceUpstream annotation parser
+// NewParser creates a new OpenTelemetry annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return opentelemetry{r}
 }
