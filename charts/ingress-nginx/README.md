@@ -473,6 +473,7 @@ Kubernetes: `>=1.19.0-0`
 | rbac.create | bool | `true` |  |
 | rbac.scope | bool | `false` |  |
 | revisionHistoryLimit | int | `10` | Rollback limit |
+| serviceAccount.annotations | object | `{}` | Annotations for the controller service account |
 | serviceAccount.automountServiceAccountToken | bool | `true` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
