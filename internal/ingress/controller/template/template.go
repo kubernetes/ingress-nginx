@@ -1653,6 +1653,14 @@ func shouldLoadOpenTelemetryModule(c interface{}, s interface{}) bool {
 		return false
 	}
 
+	if _, err := os.Stat("/etc/nginx/modules/otel_ngx_module.so"); err != nil {
+		klog.Errorf("couldn't retrieve otel_ngx_module.so. Got %#v", err)
+
+		// Switch the config to false so the templates don't try loading the plugin
+		cfg.EnableOpenTelemetry = false
+		return false
+	}
+
 	if cfg.EnableOpenTelemetry {
 		return true
 	}
