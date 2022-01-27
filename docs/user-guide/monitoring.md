@@ -179,25 +179,27 @@ According to the above example, this URL will be http://10.192.0.3:31086
 - The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
 - To check if Ingress controller is deployed, 
-```
-kubectl get pods -n ingress-nginx 
-```
+  ```
+  kubectl get pods -n ingress-nginx 
+  ```
 - The result should look something like: 
-```
-NAME                                        READY   STATUS    RESTARTS   AGE
-ingress-nginx-controller-7c489dc7b7-ccrf6   1/1     Running   0          19h
-```
+  ```
+  NAME                                        READY   STATUS    RESTARTS   AGE
+  ingress-nginx-controller-7c489dc7b7-ccrf6   1/1     Running   0          19h
+    ```
 
 ### Verify prometheus is installed
 
-```
-helm ls -A
-```
-```
-NAME         	NAMESPACE    	REVISION	UPDATED                             	STATUS  	CHART                       	APP VERSION
-ingress-nginx	ingress-nginx	10      	2022-01-20 18:08:55.267373 -0800 PST	deployed	ingress-nginx-4.0.16        	1.1.1      
-prometheus   	prometheus   	1       	2022-01-20 16:07:25.086828 -0800 PST	deployed	kube-prometheus-stack-30.1.0	0.53.1  
-```
+- To check if Prometheus is already deployed, run the following command:
+
+  ```
+  helm ls -A
+  ```
+  ```
+  NAME         	NAMESPACE    	REVISION	UPDATED                             	STATUS  	CHART                       	APP VERSION
+  ingress-nginx	ingress-nginx	10      	2022-01-20 18:08:55.267373 -0800 PST	deployed	ingress-nginx-4.0.16        	1.1.1      
+  prometheus   	prometheus   	1       	2022-01-20 16:07:25.086828 -0800 PST	deployed	kube-prometheus-stack-30.1.0	0.53.1  
+  ```
 - Notice that prometheus is installed in a differenet namespace than ingress-nginx
 
 - If prometheus is not installed, then you can install from [here](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack)
@@ -205,60 +207,60 @@ prometheus   	prometheus   	1       	2022-01-20 16:07:25.086828 -0800 PST	deploy
 ### Configure NGINX Ingress controller
 
 - The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are :
-```
-controller.metrics.enabled=true
-controller.metrics.serviceMonitor.enabled=true
-controller.metrics.serviceMonitor.enabled=true 
-```
+  ```
+  controller.metrics.enabled=true
+  controller.metrics.serviceMonitor.enabled=true
+  controller.metrics.serviceMonitor.enabled=true 
+  ```
 - The easiest way of doing this is to helm upgrade 
-```
-helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
---namespace ingress-nginx \
---set controller.metrics.enabled=true \
---set controller.metrics.serviceMonitor.enabled=true \
---set controller.metrics.serviceMonitor.additionalLabels.release="prometheus"
-```
+  ```
+  helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --set controller.metrics.enabled=true \
+  --set controller.metrics.serviceMonitor.enabled=true \
+  --set controller.metrics.serviceMonitor.additionalLabels.release="prometheus"
+  ```
 - Here release="prometheus" should match the prometheus release that was installed in the previous step. 
 
 - You can validate that the controller is configured for metrics by looking at the values of the installed release, like this:
-```
-helm get values ingress-nginx --namespace ingress-nginx
-```
-```
-controller:
-  metrics:
-    enabled: true
-    serviceMonitor:
-      additionalLabels:
-        release: prometheus
+    ```
+  helm get values ingress-nginx --namespace ingress-nginx
+  ```
+  ```
+  controller:
+    metrics:
       enabled: true
-```
+      serviceMonitor:
+        additionalLabels:
+          release: prometheus
+        enabled: true
+  ```
 ### Configure Prometheus
 
 - Since Prometheus is running in a different namespace as ingress-nginx it would not be able to discover ServiceMonitors in other namespaces when installed, upgrade your Prometheus Helm installation to set `serviceMonitorSelectorNilUsesHelmValues` to false. By default, Prometheus only discovers PodMonitors within its namespace. This should be disabled by setting `podMonitorSelectorNilUsesHelmValues` to false
 - The configurations required are:
-```
-prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false 
-prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
-```
+  ```
+  prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false 
+  prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+  ```
 - The easiest way of doing this is to helm upgrade
-```
-helm upgrade prometheus prometheus-community/kube-prometheus-stack \
---namespace prometheus  \
---set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
---set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
-```
+  ```
+  helm upgrade prometheus prometheus-community/kube-prometheus-stack \
+  --namespace prometheus  \
+  --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
+  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+  ```
 - You can validate that Prometheus is configured for metrics by looking at the values of the installed release, like this:
-```
-helm get values prometheus --namespace prometheus
-```
+  ```
+  helm get values prometheus --namespace prometheus
+  ```
 - You should be able to see the values shown below:
-```
-prometheus:
-  prometheusSpec:
-    podMonitorSelectorNilUsesHelmValues: false
-    serviceMonitorSelectorNilUsesHelmValues: false
-```
+  ```
+  prometheus:
+    prometheusSpec:
+      podMonitorSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+  ```
 
 ### Connect and view Prometheus dashboard
 - Port forward to Prometheus pod. Find out the name of the prometheus pod by using the following command: 
