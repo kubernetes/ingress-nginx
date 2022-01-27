@@ -1207,7 +1207,7 @@ stream {
 
             {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $all.Cfg.OpentracingTrustIncomingSpan $location }}
 
-            {{ buildOpenTelemetryForLocation $all.Cfg.EnableOpenTelemetry $location }}
+            {{ buildOpenTelemetryForLocation $all.Cfg.EnableOpenTelemetry $all.Cfg.OpenTelemetryTrustIncomingSpan $location }}
 
             {{ if $location.Mirror.Source }}
             mirror {{ $location.Mirror.Source }};

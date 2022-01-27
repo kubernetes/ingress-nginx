@@ -567,6 +567,11 @@ type Configuration struct {
 	// OpenTelemetryOperationName specifies a custom name for the server span
 	OpenTelemetryOperationName string `json:"opentelemetry-operation-name"`
 
+	// OpenTelemetryTrustIncomingSpan sets whether or not to trust incoming trace spans
+	// If false, incoming span headers will be rejected
+	// Default: true
+	OpenTelemetryTrustIncomingSpan bool `json:"opentelemetry-trust-incoming-span"`
+
 	// OtlpExporterHost defines the host of the OpenTelemetry collector instance
 	// where the data will be transmitted
 	OtlpCollectorHost string `json:"otlp-collector-host"`
@@ -925,6 +930,7 @@ func NewDefault() Configuration {
 		BindAddressIpv4:                        defBindAddress,
 		BindAddressIpv6:                        defBindAddress,
 		OpentracingTrustIncomingSpan:           true,
+		OpenTelemetryTrustIncomingSpan:         true,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,

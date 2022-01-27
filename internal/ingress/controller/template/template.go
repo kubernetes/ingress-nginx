@@ -1612,7 +1612,7 @@ func buildOpentracingForLocation(isOTEnabled bool, isOTTrustSet bool, location *
 	return opc
 }
 
-func buildOpenTelemetryForLocation(isOTEnabled bool, location *ingress.Location) string {
+func buildOpenTelemetryForLocation(isOTEnabled bool, isOTTrustSet bool, location *ingress.Location) string {
 	isOTEnabledInLoc := location.OpenTelemetry.Enabled
 	isOTSetInLoc := location.OpenTelemetry.Set
 
@@ -1620,25 +1620,21 @@ func buildOpenTelemetryForLocation(isOTEnabled bool, location *ingress.Location)
 		if isOTSetInLoc && !isOTEnabledInLoc {
 			return "opentelemetry off;"
 		}
-
-		opc := openTelemetryPropagateContext(location)
-		if opc != "" {
-			opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
-		}
-
-		return opc
+	} else if !isOTSetInLoc || !isOTEnabledInLoc {
+		return ""
 	}
 
-	if isOTSetInLoc && isOTEnabledInLoc {
-		opc := openTelemetryPropagateContext(location)
-		if opc != "" {
-			opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
-		}
-
-		return opc
+	opc := openTelemetryPropagateContext(location)
+	if opc != "" {
+		opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
 	}
 
-	return ""
+	if (!isOTTrustSet && !location.OpenTelemetry.TrustSet) ||
+		(location.OpenTelemetry.TrustSet && !location.OpenTelemetry.TrustEnabled) {
+		opc = opc + "\nopentelemetry_trust_incoming_span off;"
+	}
+
+	return opc
 }
 
 // shouldLoadOpenTelemetryModule determines whether or not the OpenTelemetry module needs to be loaded.
