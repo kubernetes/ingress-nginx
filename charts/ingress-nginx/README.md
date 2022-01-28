@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.0.15](https://img.shields.io/badge/Version-4.0.15-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.1](https://img.shields.io/badge/AppVersion-1.1.1-informational?style=flat-square)
+![Version: 4.0.16](https://img.shields.io/badge/Version-4.0.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.1](https://img.shields.io/badge/AppVersion-1.1.1-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -237,6 +237,7 @@ Kubernetes: `>=1.19.0-0`
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| commonLabels | object | `{}` |  |
 | controller.addHeaders | object | `{}` | Will add custom headers before sending response traffic to the client according to: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers |
 | controller.admissionWebhooks.annotations | object | `{}` |  |
 | controller.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
@@ -278,10 +279,10 @@ Kubernetes: `>=1.19.0-0`
 | controller.autoscaling.targetMemoryUtilizationPercentage | int | `50` |  |
 | controller.autoscalingTemplate | list | `[]` |  |
 | controller.config | object | `{}` | Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/ |
-| controller.configAnnotations | object | `{}` | Annotations to be added to the controller config configuration configmap |
+| controller.configAnnotations | object | `{}` | Annotations to be added to the controller config configuration configmap. |
 | controller.configMapNamespace | string | `""` | Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE) |
 | controller.containerName | string | `"controller"` | Configures the controller container name |
-| controller.containerPort | object | `{"http":80,"https":443}` | Configures the ports the nginx-controller listens on |
+| controller.containerPort | object | `{"http":80,"https":443}` | Configures the ports that the nginx-controller listens on |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
 | controller.dnsConfig | object | `{}` | Optionally customize the pod dnsConfig. |
@@ -293,6 +294,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.extraContainers | list | `[]` | Additional containers to be added to the controller pod. See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example. |
 | controller.extraEnvs | list | `[]` | Additional environment variables to set |
 | controller.extraInitContainers | list | `[]` | Containers, which are run before the app containers are started. |
+| controller.extraModules | list | `[]` |  |
 | controller.extraVolumeMounts | list | `[]` | Additional volumeMounts to the controller main container. |
 | controller.extraVolumes | list | `[]` | Additional volumes to the controller pod. |
 | controller.healthCheckHost | string | `""` | Address to bind the health check endpoint. It is better to set this option to the internal node address if the ingress nginx controller is running in the `hostNetwork: true` mode. |
@@ -309,7 +311,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.image.registry | string | `"k8s.gcr.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
 | controller.image.tag | string | `"v1.1.1"` |  |
-| controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller) |
+| controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
 | controller.ingressClassResource.default | bool | `false` | Is this the default ingressClass for the cluster |
 | controller.ingressClassResource.enabled | bool | `true` | Is this ingressClass enabled or not |
