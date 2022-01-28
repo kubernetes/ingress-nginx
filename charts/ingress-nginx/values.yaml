@@ -888,6 +888,7 @@ serviceAccount:
   create: true
   name: ""
   automountServiceAccountToken: true
+  # -- Annotations for the controller service account
   annotations: {}
 
 # -- Optional array of imagePullSecrets containing private registry credentials

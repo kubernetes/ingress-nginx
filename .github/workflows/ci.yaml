@@ -148,6 +148,13 @@ jobs:
           git diff --exit-code
           rm -f ./helm-docs
 
+      - name: Run Artifact Hub lint
+        run: |
+          wget https://github.com/artifacthub/hub/releases/download/v1.5.0/ah_1.5.0_linux_amd64.tar.gz
+          tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
+          ./ah lint -p charts/ingress-nginx || exit 1
+          rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
+
       - name: fix permissions
         run: |
           sudo mkdir -p $HOME/.kube
