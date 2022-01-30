@@ -190,7 +190,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, bucke
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
-			[]string{"ingress", "namespace", "status", "service", "canary"},
+			requestTags,
 		),
 
 		bytesSent: prometheus.NewHistogramVec(
