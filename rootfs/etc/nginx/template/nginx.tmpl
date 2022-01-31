@@ -629,7 +629,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics $cfg.EnableModsecurity) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -845,12 +845,16 @@ stream {
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
         {{ $enableMetrics := .EnableMetrics }}
+        {{ $modsecurityEnabled := .ModsecurityEnabled }}
         {{ $upstreamName := .UpstreamName }}
         {{ range $errCode := .ErrorCodes }}
         location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
 
+            # Ensure that modsecurity will not run on custom error pages or they might be blocked
+            {{ if $modsecurityEnabled }}
             modsecurity off;
+            {{ end }}
 
             proxy_intercept_errors off;
 
@@ -982,7 +986,7 @@ stream {
         {{ end }}
 
         {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics $cfg.EnableModsecurity) }}
         {{ end }}
 
         {{ buildMirrorLocations $server.Locations }}
