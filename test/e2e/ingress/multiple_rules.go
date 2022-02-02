@@ -31,8 +31,8 @@ var _ = framework.IngressNginxDescribe("single ingress - multiple hosts", func()
 	f := framework.NewDefaultFramework("simh")
 	pathprefix := networking.PathTypePrefix
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithNameAndReplicas("first-service", 1)
-		f.NewEchoDeploymentWithNameAndReplicas("second-service", 1)
+		f.NewEchoDeployment(framework.WithDeploymentName("first-service"))
+		f.NewEchoDeployment(framework.WithDeploymentName("second-service"))
 	})
 
 	ginkgo.It("should set the correct $service_name NGINX variable", func() {

@@ -150,7 +150,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 	ginkgo.It("proxy-ssl-location-only flag should change the nginx config server part", func() {
 		host := "proxyssl.com"
 
-		f.NewEchoDeploymentWithNameAndReplicas("echodeployment", 1)
+		f.NewEchoDeployment(framework.WithDeploymentName("echodeployment"))
 
 		secretName := "secretone"
 		annotations := make(map[string]string)
