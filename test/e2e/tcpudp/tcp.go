@@ -38,7 +38,7 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 	f := framework.NewDefaultFramework("tcp")
 
 	ginkgo.It("should expose a TCP service", func() {
-		f.NewEchoDeploymentWithReplicas(1)
+		f.NewEchoDeployment()
 
 		config, err := f.KubeClientSet.
 			CoreV1().

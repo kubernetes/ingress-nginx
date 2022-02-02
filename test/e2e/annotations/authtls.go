@@ -30,7 +30,7 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 	f := framework.NewDefaultFramework("authtls")
 
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(2)
+		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
 	})
 
 	ginkgo.It("should set sslClientCertificate, sslVerifyClient and sslVerifyDepth with auth-tls-secret", func() {

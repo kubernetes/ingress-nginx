@@ -37,7 +37,7 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 	prepareTestIngress := func(baseName string, host string, labels map[string]string) string {
 		ns, err := framework.CreateKubeNamespaceWithLabel(f.BaseName, labels, f.KubeClientSet)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating test namespace")
-		f.NewEchoDeploymentWithNamespaceAndReplicas(ns, 1)
+		f.NewEchoDeployment(framework.WithDeploymentNamespace(ns))
 		ing := framework.NewSingleIngressWithIngressClass(host, "/", host, ns, framework.EchoService, f.IngressClass, 80, nil)
 		f.EnsureIngress(ing)
 		return ns
