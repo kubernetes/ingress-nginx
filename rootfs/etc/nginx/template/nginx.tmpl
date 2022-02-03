@@ -609,8 +609,26 @@ http {
     ## end server {{ $redirect.From }}
     {{ end }}
 
+    ## start auth upstream
     {{ range $server := $servers }}
+    {{ range $location := $server.Locations }}
+    {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+    {{ $applyAuthUpstream := shouldApplyAuthUpstream $location }}
+    {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
+    upstream {{ buildAuthUpstreamName $location $server.Hostname }} {
+        {{ $externalAuth := $location.ExternalAuth }}
+        server {{ extractHostPort $externalAuth.URL }};
 
+        keepalive {{ $externalAuth.KeepaliveConnections }};
+        keepalive_requests {{ $externalAuth.KeepaliveRequests }};
+        keepalive_timeout {{ $externalAuth.KeepaliveTimeout }}s;
+    }
+    {{ end }}
+    {{ end }}
+    {{ end }}
+    ## end auth upstream
+
+    {{ range $server := $servers }}
     ## start server {{ $server.Hostname }}
     server {
         server_name {{ buildServerName $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
@@ -995,6 +1013,7 @@ stream {
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
         {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+        {{ $applyAuthUpstream := shouldApplyAuthUpstream $location }}
 
         {{ $externalAuth := $location.ExternalAuth }}
         {{ if eq $applyGlobalAuth true }}
@@ -1074,7 +1093,6 @@ stream {
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
             proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
-            proxy_http_version                      {{ $location.Proxy.ProxyHTTPVersion }};
 
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
@@ -1103,7 +1121,15 @@ stream {
             {{ $externalAuth.AuthSnippet }}
             {{ end }}
 
+            {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
+            {{ $authUpstreamName := buildAuthUpstreamName $location $server.Hostname }}
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            set $target {{ changeHostPort $externalAuth.URL $authUpstreamName }};
+            {{ else }}
+            proxy_http_version {{ $location.Proxy.ProxyHTTPVersion }};
             set $target {{ $externalAuth.URL }};
+            {{ end }}
             proxy_pass $target;
         }
         {{ end }}

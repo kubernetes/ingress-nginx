@@ -42,6 +42,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
@@ -228,6 +229,10 @@ var (
 		"shouldApplyGlobalAuth":           shouldApplyGlobalAuth,
 		"buildAuthResponseHeaders":        buildAuthResponseHeaders,
 		"buildAuthProxySetHeaders":        buildAuthProxySetHeaders,
+		"buildAuthUpstreamName":           buildAuthUpstreamName,
+		"shouldApplyAuthUpstream":         shouldApplyAuthUpstream,
+		"extractHostPort":                 extractHostPort,
+		"changeHostPort":                  changeHostPort,
 		"buildProxyPass":                  buildProxyPass,
 		"filterRateLimits":                filterRateLimits,
 		"buildRateLimitZones":             buildRateLimitZones,
@@ -600,6 +605,64 @@ func buildAuthProxySetHeaders(headers map[string]string) []string {
 	}
 	sort.Strings(res)
 	return res
+}
+
+func buildAuthUpstreamName(input interface{}, host string) string {
+	authPath := buildAuthLocation(input, "")
+	if authPath == "" || host == "" {
+		return ""
+	}
+
+	host = strings.Replace(host, ".", "_", -1)
+	return fmt.Sprintf("%v-%v", host, authPath[2:])
+}
+
+// shouldApplyAuthUpstream returns true only in case when ExternalAuth.URL and
+// ExternalAuth.KeeapliveConnections are all set
+func shouldApplyAuthUpstream(input interface{}) bool {
+	location, ok := input.(*ingress.Location)
+	if !ok {
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+		return false
+	}
+
+	if location.ExternalAuth.URL == "" || location.ExternalAuth.KeepaliveConnections == 0 {
+		return false
+	}
+
+	return true
+}
+
+// extractHostPort will extract the host:port part from the URL specified by url
+func extractHostPort(url string) string {
+	if url == "" {
+		return ""
+	}
+
+	authURL, err := parser.StringToURL(url)
+	if err != nil {
+		klog.Errorf("expected a valid URL but %v was returned", url)
+		return ""
+	}
+
+	return authURL.Host
+}
+
+// changeHostPort will change the host:port part of the url to value
+func changeHostPort(url string, value string) string {
+	if url == "" {
+		return ""
+	}
+
+	authURL, err := parser.StringToURL(url)
+	if err != nil {
+		klog.Errorf("expected a valid URL but %v was returned", url)
+		return ""
+	}
+
+	authURL.Host = value
+
+	return authURL.String()
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects

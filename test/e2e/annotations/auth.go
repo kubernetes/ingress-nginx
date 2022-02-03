@@ -476,6 +476,45 @@ http {
 				Body().
 				NotContainsFold(fmt.Sprintf("%s=%s", rewriteHeader, rewriteVal))
 		})
+
+		ginkgo.It(`should not create additional upstream block when auth-keepalive is not set`, func() {
+			annotations["nginx.ingress.kubernetes.io/auth-url"] = "http://foo.bar.baz:5000/path"
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer("",
+				func(server string) bool {
+					return strings.Contains(server, "http://foo.bar.baz:5000/path") &&
+						!strings.Contains(server, `upstream auth-external-auth`)
+				})
+		})
+
+		ginkgo.It(`should not create additional upstream block when host part of auth-url contains a variable`, func() {
+			annotations["nginx.ingress.kubernetes.io/auth-url"] = "http://$host/path"
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "123"
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer("",
+				func(server string) bool {
+					return strings.Contains(server, "http://$host/path") &&
+						!strings.Contains(server, `upstream auth-external-auth`) &&
+						!strings.Contains(server, `keeaplive 123;`)
+				})
+		})
+
+		ginkgo.It(`should create additional upstream block when auth-keepalive is set`, func() {
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "123"
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive-requests"] = "456"
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive-timeout"] = "789"
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer("",
+				func(server string) bool {
+					return strings.Contains(server, `upstream auth-external-auth`) &&
+						strings.Contains(server, `keepalive 123;`) &&
+						strings.Contains(server, `keepalive_requests 456;`) &&
+						strings.Contains(server, `keepalive_timeout 789s;`)
+				})
+		})
 	})
 
 	ginkgo.Context("when external authentication is configured with a custom redirect param", func() {

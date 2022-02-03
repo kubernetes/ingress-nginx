@@ -44,11 +44,21 @@ type Config struct {
 	AuthSnippet            string            `json:"authSnippet"`
 	AuthCacheKey           string            `json:"authCacheKey"`
 	AuthCacheDuration      []string          `json:"authCacheDuration"`
+	KeepaliveConnections   int               `json:"keepaliveConnections"`
+	KeepaliveRequests      int               `json:"keepaliveRequests"`
+	KeepaliveTimeout       int               `json:"keepaliveTimeout"`
 	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
 }
 
 // DefaultCacheDuration is the fallback value if no cache duration is provided
 const DefaultCacheDuration = "200 202 401 5m"
+
+// fallback values when no keepalive parameters are set
+const (
+	defaultKeepaliveConnections = 0
+	defaultKeepaliveRequests    = 1000
+	defaultKeepaliveTimeout     = 60
+)
 
 // Equal tests for equality between two Config types
 func (e1 *Config) Equal(e2 *Config) bool {
@@ -87,6 +97,18 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	}
 
 	if e1.AuthCacheKey != e2.AuthCacheKey {
+		return false
+	}
+
+	if e1.KeepaliveConnections != e2.KeepaliveConnections {
+		return false
+	}
+
+	if e1.KeepaliveRequests != e2.KeepaliveRequests {
+		return false
+	}
+
+	if e1.KeepaliveTimeout != e2.KeepaliveTimeout {
 		return false
 	}
 
@@ -193,6 +215,29 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		klog.V(3).InfoS("auth-cache-key annotation is undefined and will not be set")
 	}
 
+	keepaliveConnections, err := parser.GetIntAnnotation("auth-keepalive", ing)
+	if err != nil {
+		klog.V(3).InfoS("auth-keepalive annotation is undefined and will be set to its default value")
+		keepaliveConnections = defaultKeepaliveConnections
+	}
+	// NOTE: upstream block cannot reference a variable in the server directive
+	if keepaliveConnections != 0 && strings.IndexByte(authURL.Host, '$') != -1 {
+		klog.V(3).InfoS("auth-url annotation contains $ in the host:port part, setting auth-keepalive to 0")
+		keepaliveConnections = 0
+	}
+
+	keepaliveRequests, err := parser.GetIntAnnotation("auth-keepalive-requests", ing)
+	if err != nil {
+		klog.V(3).InfoS("auth-keepalive-requests annotation is undefined and will be set to its default value")
+		keepaliveRequests = defaultKeepaliveRequests
+	}
+
+	keepaliveTimeout, err := parser.GetIntAnnotation("auth-keepalive-timeout", ing)
+	if err != nil {
+		klog.V(3).InfoS("auth-keepalive-timeout annotation is undefined and will be set to its default value")
+		keepaliveTimeout = defaultKeepaliveTimeout
+	}
+
 	durstr, _ := parser.GetStringAnnotation("auth-cache-duration", ing)
 	authCacheDuration, err := ParseStringToCacheDurations(durstr)
 	if err != nil {
@@ -249,6 +294,9 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		AuthSnippet:            authSnippet,
 		AuthCacheKey:           authCacheKey,
 		AuthCacheDuration:      authCacheDuration,
+		KeepaliveConnections:   keepaliveConnections,
+		KeepaliveRequests:      keepaliveRequests,
+		KeepaliveTimeout:       keepaliveTimeout,
 		ProxySetHeaders:        proxySetHeaders,
 	}, nil
 }

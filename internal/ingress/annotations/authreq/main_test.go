@@ -243,6 +243,66 @@ func TestCacheDurationAnnotations(t *testing.T) {
 	}
 }
 
+func TestKeepaliveAnnotations(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	tests := []struct {
+		title                string
+		url                  string
+		keepaliveConnections string
+		keepaliveRequests    string
+		keepaliveTimeout     string
+		expectedConnections  int
+		expectedRequests     int
+		expectedTimeout      int
+	}{
+		{"all set", "http://goog.url", "5", "500", "50", 5, 500, 50},
+		{"no annotation", "http://goog.url", "", "", "", defaultKeepaliveConnections, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"default for connections", "http://goog.url", "x", "500", "50", defaultKeepaliveConnections, 500, 50},
+		{"default for requests", "http://goog.url", "5", "x", "50", 5, defaultKeepaliveRequests, 50},
+		{"default for invalid timeout", "http://goog.url", "5", "500", "x", 5, 500, defaultKeepaliveTimeout},
+		{"variable in host", "http://$host:5000/a/b", "5", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"variable in path", "http://goog.url:5000/$path", "5", "", "", 5, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+	}
+
+	for _, test := range tests {
+		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
+		data[parser.GetAnnotationWithPrefix("auth-keepalive")] = test.keepaliveConnections
+		data[parser.GetAnnotationWithPrefix("auth-keepalive-timeout")] = test.keepaliveTimeout
+		data[parser.GetAnnotationWithPrefix("auth-keepalive-requests")] = test.keepaliveRequests
+
+		i, err := NewParser(&resolver.Mock{}).Parse(ing)
+		if err != nil {
+			t.Errorf("expected no error")
+		}
+
+		u, ok := i.(*Config)
+		if !ok {
+			t.Errorf("%v: expected an External type", test.title)
+			continue
+		}
+
+		if u.URL != test.url {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.url, u.URL)
+		}
+
+		if u.KeepaliveConnections != test.expectedConnections {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedConnections, u.KeepaliveConnections)
+		}
+
+		if u.KeepaliveRequests != test.expectedRequests {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedRequests, u.KeepaliveRequests)
+		}
+
+		if u.KeepaliveTimeout != test.expectedTimeout {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedTimeout, u.KeepaliveTimeout)
+		}
+	}
+}
+
 func TestParseStringToCacheDurations(t *testing.T) {
 
 	tests := []struct {

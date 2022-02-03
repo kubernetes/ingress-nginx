@@ -31,6 +31,9 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-keepalive](#external-authentication)|number|
+|[nginx.ingress.kubernetes.io/auth-keepalive-requests](#external-authentication)|number|
+|[nginx.ingress.kubernetes.io/auth-keepalive-timeout](#external-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
@@ -453,6 +456,15 @@ nginx.ingress.kubernetes.io/auth-url: "URL to the authentication service"
 
 Additionally it is possible to set:
 
+* `nginx.ingress.kubernetes.io/auth-keepalive`:
+  `<Connections>` to specify the maximum number of keepalive connections to `auth-url`. Only takes effect
+   when no variables are used in the host part of the URL. Defaults to `0` (keepalive disabled).
+* `nginx.ingress.kubernetes.io/auth-keepalive-requests`:
+  `<Requests>` to specify the maximum number of requests that can be served through one keepalive connection.
+  Defaults to `1000` and only applied if `auth-keepalive` is set to higher than `0`.
+* `nginx.ingress.kubernetes.io/auth-keepalive-timeout`:
+  `<Timeout>` to specify a duration in seconds which an idle keepalive connection to an upstream server will stay open.
+  Defaults to `60` and only applied if `auth-keepalive` is set to higher than `0`.
 * `nginx.ingress.kubernetes.io/auth-method`:
   `<Method>` to specify the HTTP method to use.
 * `nginx.ingress.kubernetes.io/auth-signin`:
