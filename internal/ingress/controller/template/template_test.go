@@ -588,7 +588,7 @@ func TestShouldApplyAuthUpstream(t *testing.T) {
 		expected             bool
 	}{
 		{"authURL, no keepalive", authURL, 0, false},
-		{"authURL, keeaplive", authURL, 10, true},
+		{"authURL, keepalive", authURL, 10, true},
 		{"empty, no keepalive", "", 0, false},
 		{"empty, keepalive", "", 10, false},
 	}

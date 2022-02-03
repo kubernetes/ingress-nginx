@@ -497,7 +497,7 @@ http {
 				func(server string) bool {
 					return strings.Contains(server, "http://$host/path") &&
 						!strings.Contains(server, `upstream auth-external-auth`) &&
-						!strings.Contains(server, `keeaplive 123;`)
+						!strings.Contains(server, `keepalive 123;`)
 				})
 		})
 

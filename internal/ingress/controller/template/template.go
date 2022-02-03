@@ -618,7 +618,7 @@ func buildAuthUpstreamName(input interface{}, host string) string {
 }
 
 // shouldApplyAuthUpstream returns true only in case when ExternalAuth.URL and
-// ExternalAuth.KeeapliveConnections are all set
+// ExternalAuth.KeepaliveConnections are all set
 func shouldApplyAuthUpstream(input interface{}) bool {
 	location, ok := input.(*ingress.Location)
 	if !ok {
