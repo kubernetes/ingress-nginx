@@ -217,6 +217,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, bucke
 	}
 
 	sc.metricMapping = map[string]interface{}{
+		prometheus.BuildFQName(PrometheusNamespace, "", "requests"):                 sc.requests,
 		prometheus.BuildFQName(PrometheusNamespace, "", "request_duration_seconds"): sc.requestTime,
 		prometheus.BuildFQName(PrometheusNamespace, "", "request_size"):             sc.requestLength,
 
@@ -268,6 +269,9 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"status":    stats.Status,
 			"service":   stats.Service,
 			"canary":    stats.Canary,
+			"host":      stats.Host,
+			"method":    stats.Method,
+			"path":      stats.Path,
 		}
 
 		latencyLabels := prometheus.Labels{
@@ -412,6 +416,12 @@ func (sc *SocketCollector) RemoveMetrics(ingresses []string, registry prometheus
 			if ok {
 				removed := s.Delete(labels)
 				if !removed {
+					klog.V(2).InfoS("metric not removed", "name", metricName, "ingress", ingKey, "labels", labels)
+				}
+			}
+
+			if c, ok := metric.(*prometheus.CounterVec); ok {
+				if removed := c.Delete(labels); !removed {
 					klog.V(2).InfoS("metric not removed", "name", metricName, "ingress", ingKey, "labels", labels)
 				}
 			}
