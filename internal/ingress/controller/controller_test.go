@@ -63,6 +63,10 @@ type fakeIngressStore struct {
 	configuration ngx_config.Configuration
 }
 
+func (fakeIngressStore) GetIngressClass(ing *networking.Ingress, icConfig *ingressclass.IngressClassConfiguration) (string, error) {
+	return "nginx", nil
+}
+
 func (fis fakeIngressStore) GetBackendConfiguration() ngx_config.Configuration {
 	return fis.configuration
 }
