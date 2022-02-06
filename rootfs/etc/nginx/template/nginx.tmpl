@@ -1018,6 +1018,11 @@ stream {
             opentracing_propagate_context;
             {{ end }}
 
+            # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity off;
+            {{ end }}
+
             {{ if $externalAuth.AuthCacheKey }}
             set $tmp_cache_key '{{ $server.Hostname }}{{ $authPath }}{{ $externalAuth.AuthCacheKey }}';
             set $cache_key '';
@@ -1116,6 +1121,11 @@ stream {
             internal;
 
             add_header Set-Cookie $auth_cookie;
+
+            # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity off;
+            {{ end }}
 
             return 302 {{ buildAuthSignURL $externalAuth.SigninURL $externalAuth.SigninURLRedirectParam }};
         }
