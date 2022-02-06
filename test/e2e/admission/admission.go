@@ -191,6 +191,12 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 			assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid configuration should return an error")
 		}
 	})
+
+	ginkgo.It("should not return an error for an invalid Ingress when it has unknown class", func() {
+		out, err := createIngress(f.Namespace, invalidV1IngressWithOtherClass)
+		assert.Equal(ginkgo.GinkgoT(), "ingress.networking.k8s.io/extensions-invalid-other created\n", out)
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an invalid ingress with unknown class using kubectl")
+	})
 })
 
 func uninstallChart(f *framework.Framework) error {
@@ -258,6 +264,29 @@ metadata:
       invalid directive
 spec:
   ingressClassName: nginx
+  rules:
+  - host: extensions-invalid
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: echo
+            port:
+              number: 80
+---
+`
+	invalidV1IngressWithOtherClass = `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: extensions-invalid-other
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      invalid directive
+spec:
+  ingressClassName: nginx-other
   rules:
   - host: extensions-invalid
     http:

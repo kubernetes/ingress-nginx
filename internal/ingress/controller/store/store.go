@@ -98,6 +98,9 @@ type Storer interface {
 
 	// Run initiates the synchronization of the controllers
 	Run(stopCh chan struct{})
+
+	// GetIngressClass validates given ingress against ingress class configuration and returns the ingress class.
+	GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.IngressClassConfiguration) (string, error)
 }
 
 // EventType type of event associated with an informer
