@@ -44,6 +44,7 @@ type deploymentOptions struct {
 	name      string
 	replicas  int
 	image     string
+	modules   map[string]string
 }
 
 // WithDeploymentNamespace allows configuring the deployment's namespace
@@ -67,21 +68,55 @@ func WithDeploymentReplicas(r int) func(*deploymentOptions) {
 	}
 }
 
+// WithDeploymentModule allows specifying a module which will be loaded onto the deployment
+func WithDeploymentModule(name, image string) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.modules[name] = image
+	}
+}
+
 // NewEchoDeployment creates a new single replica deployment of the echo server image in a particular namespace
 func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 	options := &deploymentOptions{
 		namespace: f.Namespace,
 		name:      EchoService,
 		replicas:  1,
+		modules:   map[string]string{},
 	}
 	for _, o := range opts {
 		o(options)
 	}
 
+	volumeMounts := []corev1.VolumeMount{}
+	volumes := []corev1.Volume{}
+	initContainers := []corev1.Container{}
+
+	if len(options.modules) > 0 {
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "modules",
+			MountPath: "/modules_mount",
+		})
+		volumes = append(volumes, corev1.Volume{
+			Name: "modules",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
+
+		for n, i := range options.modules {
+			initContainers = append(initContainers, corev1.Container{
+				Name:    n,
+				Image:   i,
+				Command: []string{"sh", "-c", "/usr/local/bin/init_module.sh"},
+			})
+		}
+	}
+
 	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:05948cf43aa41050943b2c887adcc2f7630893b391c1201e99a6c12ed06ba51b", 80, int32(options.replicas),
 		nil,
-		[]corev1.VolumeMount{},
-		[]corev1.Volume{},
+		volumeMounts,
+		volumes,
+		initContainers,
 	)
 
 	f.EnsureDeployment(deployment)
@@ -198,6 +233,7 @@ func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) 
 				},
 			},
 		},
+		nil,
 	)
 
 	f.EnsureDeployment(deployment)
@@ -329,7 +365,7 @@ func (f *Framework) NewGRPCBinDeployment() {
 }
 
 func newDeployment(name, namespace, image string, port int32, replicas int32, command []string,
-	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume) *appsv1.Deployment {
+	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, initContainers []corev1.Container) *appsv1.Deployment {
 	probe := &corev1.Probe{
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       1,
@@ -380,7 +416,8 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 							VolumeMounts:   volumeMounts,
 						},
 					},
-					Volumes: volumes,
+					InitContainers: initContainers,
+					Volumes:        volumes,
 				},
 			},
 		},
@@ -400,7 +437,7 @@ func (f *Framework) NewHttpbinDeployment() {
 
 // NewDeployment creates a new deployment in a particular namespace.
 func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {
-	deployment := newDeployment(name, f.Namespace, image, port, replicas, nil, nil, nil)
+	deployment := newDeployment(name, f.Namespace, image, port, replicas, nil, nil, nil, nil)
 
 	f.EnsureDeployment(deployment)
 
