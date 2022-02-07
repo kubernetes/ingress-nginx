@@ -1220,7 +1220,7 @@ func buildOpenTelemetry(c interface{}, s interface{}) string {
 	}
 
 	buf := bytes.NewBufferString("")
-	buf.WriteString("opentelemetry_config /etc/nginx/opentelemetry.toml;\r\n")
+	buf.WriteString("opentelemetry_config /etc/nginx/opentelemetry.toml;\n")
 
 	if cfg.OpenTelemetryOperationName != "" {
 		buf.WriteString(fmt.Sprintf("opentelemetry_operation_name \"%s\";\n", cfg.OpenTelemetryOperationName))
