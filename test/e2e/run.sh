@@ -83,7 +83,7 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   fi
 
   echo "[dev-env] building image"
-  make -C ${DIR}/../../ clean-image build image image-chroot
+  make -C ${DIR}/../../ clean-image build image image-chroot image-modules
   echo "[dev-env] .. done building controller images"
   echo "[dev-env] now building e2e-image.."
   make -C ${DIR}/../e2e-image image
@@ -102,6 +102,8 @@ if [ "${IS_CHROOT:-false}" = "true" ]; then
 fi
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
+
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/opentelemetry:${TAG}
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test
