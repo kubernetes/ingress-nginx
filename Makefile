@@ -139,6 +139,15 @@ build-plugin:  ## Build ingress-nginx krew plugin.
 		build/build-plugin.sh
 
 
+.PHONY: image-modules
+image-modules: image-module-opentelemetry ## Builds images for all the modules
+
+image-module-%: ## Builds the image for the required module
+	echo "Building $* docker image ($(ARCH))..."
+	@docker build \
+		--no-cache \
+		-t $(REGISTRY)/$*:$(TAG) images/$*/rootfs
+
 .PHONY: clean
 clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
