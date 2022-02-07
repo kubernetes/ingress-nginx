@@ -103,7 +103,7 @@ jobs:
           REGISTRY: ingress-controller
         run: |
           echo "building images..."
-          make clean-image build image image-chroot
+          make clean-image build image image-chroot image-modules
           make -C test/e2e-image image
 
           echo "creating images cache..."
@@ -111,6 +111,7 @@ jobs:
             nginx-ingress-controller:e2e \
             ingress-controller/controller:1.0.0-dev \
             ingress-controller/controller-chroot:1.0.0-dev \
+            ingress-controller/opentelemetry:1.0.0-dev \
             | pigz > docker.tar.gz
 
       - name: cache
