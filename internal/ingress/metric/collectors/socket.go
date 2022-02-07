@@ -259,9 +259,6 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"service":   stats.Service,
 			"canary":    stats.Canary,
 		}
-		if sc.metricsPerHost {
-			requestLabels["host"] = stats.Host
-		}
 
 		collectorLabels := prometheus.Labels{
 			"namespace": stats.Namespace,
@@ -269,9 +266,12 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"status":    stats.Status,
 			"service":   stats.Service,
 			"canary":    stats.Canary,
-			"host":      stats.Host,
 			"method":    stats.Method,
 			"path":      stats.Path,
+		}
+		if sc.metricsPerHost {
+			requestLabels["host"] = stats.Host
+			collectorLabels["host"] = stats.Host
 		}
 
 		latencyLabels := prometheus.Labels{
