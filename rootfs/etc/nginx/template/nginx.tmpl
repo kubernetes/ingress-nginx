@@ -1123,6 +1123,10 @@ stream {
 
             {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
             {{ $authUpstreamName := buildAuthUpstreamName $location $server.Hostname }}
+            # The target is an upstream with HTTP keepalive, that is why the
+            # Connection header is cleared and the HTTP version is set to 1.1 as
+            # the Nginx documentation suggests:
+            # http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
             proxy_http_version 1.1;
             proxy_set_header Connection "";
             set $target {{ changeHostPort $externalAuth.URL $authUpstreamName }};

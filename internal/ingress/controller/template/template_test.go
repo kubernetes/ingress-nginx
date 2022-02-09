@@ -557,8 +557,8 @@ func TestBuildAuthUpstreamName(t *testing.T) {
 		host     string
 		expected string
 	}{
-		{"valid host", "auth.my.site", fmt.Sprintf("%s-%s", "auth_my_site", externalAuthPath)},
-		{"valid host", "your.auth.site", fmt.Sprintf("%s-%s", "your_auth_site", externalAuthPath)},
+		{"valid host", "auth.my.site", fmt.Sprintf("%s-%s", "auth.my.site", externalAuthPath)},
+		{"valid host", "your.auth.site", fmt.Sprintf("%s-%s", "your.auth.site", externalAuthPath)},
 		{"empty host", "", ""},
 	}
 

@@ -613,7 +613,6 @@ func buildAuthUpstreamName(input interface{}, host string) string {
 		return ""
 	}
 
-	host = strings.Replace(host, ".", "_", -1)
 	return fmt.Sprintf("%v-%v", host, authPath[2:])
 }
 
