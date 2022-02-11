@@ -16,16 +16,21 @@ commonLabels: {}
 controller:
   name: controller
   image:
+    ## This directory is for tools and things that are used to administer the GCR repositories used to publish official container images for Kubernetes.
     registry: k8s.gcr.io
+    ## image of ingress-nginx controller
     image: ingress-nginx/controller
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
     tag: "v1.1.1"
+    ## 
+    ## digest uniquely identifies a specific version of the image
     digest: sha256:0bc88eb15f9e7f84e8e56c14fa5735aaa488b840983f87bd79b1054190e660de
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
+    ## The allowPrivilegeEscalation pod security policy controls whether or not a user is allowed to set the security context of a container to True
     allowPrivilegeEscalation: true
 
   # -- Use an existing PSP instead of creating one
@@ -36,7 +41,9 @@ controller:
 
   # -- Configures the ports that the nginx-controller listens on
   containerPort:
+    ## controller's http port
     http: 80
+    ## controller's https port
     https: 443
 
   # -- Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
