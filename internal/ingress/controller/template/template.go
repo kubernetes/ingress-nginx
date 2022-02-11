@@ -228,6 +228,8 @@ var (
 		"buildAuthLocation":               buildAuthLocation,
 		"shouldApplyGlobalAuth":           shouldApplyGlobalAuth,
 		"buildAuthResponseHeaders":        buildAuthResponseHeaders,
+		"buildAuthUpstreamHeaders":        buildAuthUpstreamHeaders,
+		"buildAuthUpstreamLuaHeaders":     buildAuthUpstreamLuaHeaders,
 		"buildAuthProxySetHeaders":        buildAuthProxySetHeaders,
 		"buildAuthUpstreamName":           buildAuthUpstreamName,
 		"shouldApplyAuthUpstream":         shouldApplyAuthUpstream,
@@ -593,6 +595,33 @@ func buildAuthResponseHeaders(proxySetHeader string, headers []string) []string 
 	return res
 }
 
+func buildAuthUpstreamHeaders(proxySetHeader string, headers []string) []string {
+	res := []string{}
+
+	if len(headers) == 0 {
+		return res
+	}
+
+	for i, h := range headers {
+		res = append(res, fmt.Sprintf("set $authHeader%v '';", i))
+		res = append(res, fmt.Sprintf("%s '%v' $authHeader%v;", proxySetHeader, h, i))
+	}
+	return res
+}
+
+func buildAuthUpstreamLuaHeaders(proxySetHeader string, headers []string) []string {
+	res := []string{}
+
+	if len(headers) == 0 {
+		return res
+	}
+
+	for i, h := range headers {
+		res = append(res, fmt.Sprintf("ngx.var.authHeader%v = res.header['%v']", i, h))
+	}
+	return res
+}
+
 func buildAuthProxySetHeaders(headers map[string]string) []string {
 	res := []string{}
 
@@ -618,14 +647,27 @@ func buildAuthUpstreamName(input interface{}, host string) string {
 
 // shouldApplyAuthUpstream returns true only in case when ExternalAuth.URL and
 // ExternalAuth.KeepaliveConnections are all set
-func shouldApplyAuthUpstream(input interface{}) bool {
-	location, ok := input.(*ingress.Location)
+func shouldApplyAuthUpstream(l interface{}, c interface{}) bool {
+	location, ok := l.(*ingress.Location)
 	if !ok {
-		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", l)
+		return false
+	}
+
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
 		return false
 	}
 
 	if location.ExternalAuth.URL == "" || location.ExternalAuth.KeepaliveConnections == 0 {
+		return false
+	}
+
+	// Unfortunately, `auth_request` module ignores keepalive in upstream block: https://trac.nginx.org/nginx/ticket/1579
+	// The workaround is to use `ngx.location.capture` Lua subrequests but it is not supported with HTTP/2
+	if cfg.UseHTTP2 {
+		klog.Warning("Upstream keepalive is not supported with HTTP/2")
 		return false
 	}
 

@@ -516,6 +516,36 @@ func TestBuildAuthResponseHeaders(t *testing.T) {
 	}
 }
 
+func TestBuildAuthResponseHeadersUpstream(t *testing.T) {
+	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
+	expected := []string{
+		"set $authHeader0 '';",
+		"proxy_set_header 'h1' $authHeader0;",
+		"set $authHeader1 '';",
+		"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
+	}
+
+	headers := buildAuthUpstreamHeaders(proxySetHeader(nil), externalAuthResponseHeaders)
+
+	if !reflect.DeepEqual(expected, headers) {
+		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
+	}
+}
+
+func TestBuildAuthResponseLua(t *testing.T) {
+	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
+	expected := []string{
+		"ngx.var.authHeader0 = res.header['h1']",
+		"ngx.var.authHeader1 = res.header['H-With-Caps-And-Dashes']",
+	}
+
+	headers := buildAuthUpstreamLuaHeaders(proxySetHeader(nil), externalAuthResponseHeaders)
+
+	if !reflect.DeepEqual(expected, headers) {
+		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
+	}
+}
+
 func TestBuildAuthProxySetHeaders(t *testing.T) {
 	proxySetHeaders := map[string]string{
 		"header1": "value1",
@@ -581,6 +611,10 @@ func TestShouldApplyAuthUpstream(t *testing.T) {
 		Path: "/cat",
 	}
 
+	cfg := config.Configuration{
+		UseHTTP2: false,
+	}
+
 	testCases := []struct {
 		title                string
 		authURL              string
@@ -597,9 +631,21 @@ func TestShouldApplyAuthUpstream(t *testing.T) {
 		loc.ExternalAuth.URL = testCase.authURL
 		loc.ExternalAuth.KeepaliveConnections = testCase.keepaliveConnections
 
-		result := shouldApplyAuthUpstream(loc)
+		result := shouldApplyAuthUpstream(loc, cfg)
 		if result != testCase.expected {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+		}
+	}
+
+	// keepalive is not supported with UseHTTP2
+	cfg.UseHTTP2 = true
+	for _, testCase := range testCases {
+		loc.ExternalAuth.URL = testCase.authURL
+		loc.ExternalAuth.KeepaliveConnections = testCase.keepaliveConnections
+
+		result := shouldApplyAuthUpstream(loc, cfg)
+		if result != false {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, false, result)
 		}
 	}
 }

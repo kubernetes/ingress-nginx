@@ -459,6 +459,10 @@ Additionally it is possible to set:
 * `nginx.ingress.kubernetes.io/auth-keepalive`:
   `<Connections>` to specify the maximum number of keepalive connections to `auth-url`. Only takes effect
    when no variables are used in the host part of the URL. Defaults to `0` (keepalive disabled).
+
+> Note: does not work with HTTP/2 listener because of a limitation in Lua [subrequests](https://github.com/openresty/lua-nginx-module#spdy-mode-not-fully-supported).
+> [UseHTTP2](./configmap.md#use-http2) configuration should be disabled!
+
 * `nginx.ingress.kubernetes.io/auth-keepalive-requests`:
   `<Requests>` to specify the maximum number of requests that can be served through one keepalive connection.
   Defaults to `1000` and only applied if `auth-keepalive` is set to higher than `0`.

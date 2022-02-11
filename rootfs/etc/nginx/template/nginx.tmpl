@@ -609,24 +609,24 @@ http {
     ## end server {{ $redirect.From }}
     {{ end }}
 
-    ## start auth upstream
     {{ range $server := $servers }}
     {{ range $location := $server.Locations }}
     {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
-    {{ $applyAuthUpstream := shouldApplyAuthUpstream $location }}
+    {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
     {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
+    ## start auth upstream {{ $server.Hostname }}{{ $location.Path }}
     upstream {{ buildAuthUpstreamName $location $server.Hostname }} {
-        {{ $externalAuth := $location.ExternalAuth }}
+        {{- $externalAuth := $location.ExternalAuth }}
         server {{ extractHostPort $externalAuth.URL }};
 
         keepalive {{ $externalAuth.KeepaliveConnections }};
         keepalive_requests {{ $externalAuth.KeepaliveRequests }};
         keepalive_timeout {{ $externalAuth.KeepaliveTimeout }}s;
     }
+    ## end auth upstream {{ $server.Hostname }}{{ $location.Path }}
     {{ end }}
     {{ end }}
     {{ end }}
-    ## end auth upstream
 
     {{ range $server := $servers }}
     ## start server {{ $server.Hostname }}
@@ -1013,7 +1013,7 @@ stream {
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
         {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
-        {{ $applyAuthUpstream := shouldApplyAuthUpstream $location }}
+        {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
 
         {{ $externalAuth := $location.ExternalAuth }}
         {{ if eq $applyGlobalAuth true }}
@@ -1238,12 +1238,36 @@ stream {
             {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}
             {{ if $authPath }}
             # this location requires authentication
+            {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
+            set $auth_cookie '';
+            add_header Set-Cookie $auth_cookie;
+            {{- range $line := buildAuthUpstreamHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
+            {{ $line }}
+            {{- end }}
+            # `auth_request` module does not support HTTP keepalives in upstream block:
+            # https://trac.nginx.org/nginx/ticket/1579
+            access_by_lua_block {
+                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '' })
+                if res.status == ngx.HTTP_OK then
+                    ngx.var.auth_cookie = res.header['Set-Cookie']
+                    {{- range $line := buildAuthUpstreamLuaHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
+                    {{ $line }}
+                    {{- end }}
+                    return
+                end
+                if res.status == ngx.HTTP_FORBIDDEN then
+                    ngx.exit(res.status)
+                end
+                ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+            }
+            {{ else }}
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
             {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
             {{ $line }}
             {{- end }}
+            {{ end }}
             {{ end }}
 
             {{ if $externalAuth.SigninURL }}
