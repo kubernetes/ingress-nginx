@@ -72,7 +72,6 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 	codec := json.NewSerializerWithOptions(json.DefaultMetaFactory, scheme, scheme, json.SerializerOptions{
 		Pretty: true,
 	})
-	codec.Decode(review.Request.Object.Raw, nil, nil)
 	_, _, err := codec.Decode(review.Request.Object.Raw, nil, &ingress)
 	if err != nil {
 		klog.ErrorS(err, "failed to decode ingress")
