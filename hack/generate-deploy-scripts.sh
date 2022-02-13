@@ -26,8 +26,7 @@ set -o pipefail
 # with enough docs updates, this could be removed
 # see     # DEFAULT VERSION HANDLING
 K8S_DEFAULT_VERSION=1.20
-# K8S_TARGET_VERSIONS=("1.19" "1.20" "1.21" "1.22") TODO @afirth revert for #8000
-K8S_TARGET_VERSIONS=("1.20")
+K8S_TARGET_VERSIONS=("1.19" "1.20" "1.21" "1.22")
 
 DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 
@@ -66,7 +65,6 @@ do
     then
       cp ${OUTPUT_DIR}/*.yaml ${OUTPUT_DIR}/../
       sed -i "1s/^/#GENERATED FOR K8S ${K8S_VERSION}\n/" ${OUTPUT_DIR}/../deploy.yaml
-      rm -rf ${OUTPUT_DIR} # TODO @afirth remove for #8000 - this avoids the duplicate files for easier review of the build script changes
     fi
   done
 done
