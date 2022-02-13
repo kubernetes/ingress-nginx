@@ -603,8 +603,8 @@ func buildAuthUpstreamHeaders(proxySetHeader string, headers []string) []string 
 	}
 
 	for i, h := range headers {
-		res = append(res, fmt.Sprintf("set $authHeader%v '';", i))
-		res = append(res, fmt.Sprintf("%s '%v' $authHeader%v;", proxySetHeader, h, i))
+		res = append(res, fmt.Sprintf("set $authHeader%d '';", i))
+		res = append(res, fmt.Sprintf("%s '%s' $authHeader%d;", proxySetHeader, h, i))
 	}
 	return res
 }
@@ -617,7 +617,7 @@ func buildAuthUpstreamLuaHeaders(proxySetHeader string, headers []string) []stri
 	}
 
 	for i, h := range headers {
-		res = append(res, fmt.Sprintf("ngx.var.authHeader%v = res.header['%v']", i, h))
+		res = append(res, fmt.Sprintf("ngx.var.authHeader%d = res.header['%s']", i, h))
 	}
 	return res
 }
@@ -642,7 +642,7 @@ func buildAuthUpstreamName(input interface{}, host string) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%v-%v", host, authPath[2:])
+	return fmt.Sprintf("%s-%s", host, authPath[2:])
 }
 
 // shouldApplyAuthUpstream returns true only in case when ExternalAuth.URL and
@@ -682,7 +682,7 @@ func extractHostPort(url string) string {
 
 	authURL, err := parser.StringToURL(url)
 	if err != nil {
-		klog.Errorf("expected a valid URL but %v was returned", url)
+		klog.Errorf("expected a valid URL but %s was returned", url)
 		return ""
 	}
 
@@ -697,7 +697,7 @@ func changeHostPort(url string, value string) string {
 
 	authURL, err := parser.StringToURL(url)
 	if err != nil {
-		klog.Errorf("expected a valid URL but %v was returned", url)
+		klog.Errorf("expected a valid URL but %s was returned", url)
 		return ""
 	}
 
