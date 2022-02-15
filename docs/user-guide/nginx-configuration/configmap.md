@@ -1208,6 +1208,11 @@ Enables caching for global auth requests. Specify a lookup key for auth response
 
 Set a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
 
+## global-auth-always-set-cookie
+
+Always set a cookie returned by auth request. By default, the cookie will be set only if an upstream reports with the code 200, 201, 204, 206, 301, 302, 303, 304, 307, or 308.
+_**default:**_ false
+
 ## no-auth-locations
 
 A comma-separated list of locations that should not get authenticated.

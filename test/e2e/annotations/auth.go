@@ -313,8 +313,11 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			})
 	})
 
-	ginkgo.It("retains cookie set by external authentication server", func() {
+	ginkgo.Context("cookie set by external authentication server", func() {
 		host := "auth-check-cookies"
+
+		var annotations map[string]string
+		var ing1, ing2 *networking.Ingress
 
 		cfg := `#
 events {
@@ -342,40 +345,81 @@ http {
 		location / {
 			return 200;
 		}
+
+		location /error {
+			return 503;
+		}
 	}
 }
 `
+		ginkgo.BeforeEach(func() {
+			f.NGINXWithConfigDeployment("http-cookie-with-error", cfg)
 
-		f.NGINXWithConfigDeployment(framework.HTTPBinService, cfg)
+			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), "http-cookie-with-error", metav1.GetOptions{})
+			assert.Nil(ginkgo.GinkgoT(), err)
 
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err)
+			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
+			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
 
-		assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
-		assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
+			httpbinIP := e.Subsets[0].Addresses[0].IP
 
-		httpbinIP := e.Subsets[0].Addresses[0].IP
+			annotations = map[string]string{
+				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbinIP),
+				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
+			}
 
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbinIP),
-			"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
-		}
+			ing1 = framework.NewSingleIngress(host, "/", host, f.Namespace, "http-cookie-with-error", 80, annotations)
+			f.EnsureIngress(ing1)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+			ing2 = framework.NewSingleIngress(host+"-error", "/error", host, f.Namespace, "http-cookie-with-error", 80, annotations)
+			f.EnsureIngress(ing2)
 
-		f.WaitForNginxServer(host, func(server string) bool {
-			return strings.Contains(server, "server_name auth")
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, "server_name "+host)
+			})
+
 		})
 
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithQuery("a", "b").
-			WithQuery("c", "d").
-			Expect().
-			Status(http.StatusOK).
-			Header("Set-Cookie").Contains("alma=armud")
+		ginkgo.It("user retains cookie by default", func() {
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithQuery("a", "b").
+				WithQuery("c", "d").
+				Expect().
+				Status(http.StatusOK).
+				Header("Set-Cookie").Contains("alma=armud")
+		})
+
+		ginkgo.It("user does not retain cookie if upstream returns error status code", func() {
+			f.HTTPTestClient().
+				GET("/error").
+				WithHeader("Host", host).
+				WithQuery("a", "b").
+				WithQuery("c", "d").
+				Expect().
+				Status(http.StatusServiceUnavailable).
+				Header("Set-Cookie").Contains("")
+		})
+
+		ginkgo.It("user with annotated ingress retains cookie if upstream returns error status code", func() {
+			annotations["nginx.ingress.kubernetes.io/auth-always-set-cookie"] = "true"
+			f.UpdateIngress(ing1)
+			f.UpdateIngress(ing2)
+
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, "server_name "+host)
+			})
+
+			f.HTTPTestClient().
+				GET("/error").
+				WithHeader("Host", host).
+				WithQuery("a", "b").
+				WithQuery("c", "d").
+				Expect().
+				Status(http.StatusServiceUnavailable).
+				Header("Set-Cookie").Contains("alma=armud")
+		})
 	})
 
 	ginkgo.Context("when external authentication is configured", func() {

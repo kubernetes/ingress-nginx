@@ -1263,7 +1263,11 @@ stream {
             {{ else }}
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
+            {{ if $externalAuth.AlwaysSetCookie }}
+            add_header          Set-Cookie $auth_cookie always;
+            {{ else }}
             add_header          Set-Cookie $auth_cookie;
+            {{ end }}
             {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders false }}
             {{ $line }}
             {{- end }}

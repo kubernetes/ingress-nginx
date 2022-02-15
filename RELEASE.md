@@ -256,6 +256,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - Update the version in [docs/deploy/index.md](docs/deploy/index.md)
 - Update Supported versions in the Support Versions table in the README.md
+- Execute the script to update e2e docs [hack/generate-e2e-suite-doc.sh](https://github.com/kubernetes/ingress-nginx/blob/main/hack/generate-e2e-suite-doc.sh)
 
 ### h. Edit stable.txt
 
