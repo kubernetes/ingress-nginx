@@ -134,6 +134,8 @@ type Configuration struct {
 	DeepInspector         bool
 
 	DynamicConfigurationRetries int
+	
+	EnableAnnotationsPrefixCheck bool
 
 	DisableSyncEvents bool
 
@@ -310,7 +312,8 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 
 	for key, value := range ing.ObjectMeta.GetAnnotations() {
 
-		if parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
+		klog.Warningf("EnableAnnotationsPrefixCheck set to false, Ignoring annotation check.")
+		if n.cfg.EnableAnnotationsPrefixCheck && parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
 			if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.DefaultAnnotationsPrefix)) {
 				return fmt.Errorf("This deployment has a custom annotation prefix defined. Use '%s' instead of '%s'", parser.AnnotationsPrefix, parser.DefaultAnnotationsPrefix)
 			}
