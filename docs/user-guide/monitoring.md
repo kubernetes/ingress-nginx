@@ -20,7 +20,8 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
 
   - The easiest way to configure the controller for metrics is via helm upgrade. Assuming you have installed the ingress-nginx controller as a helm release named ingress-controller, then you can simply type the command show below :
   ```
-  helm upgrade ingress-controller ingress-nginx/ingress-nginx \
+  helm upgrade ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
   --namespace ingress-nginx \
   --set controller.metrics.enabled=true \
   --set-string controller.podAnnotations."prometheus\.io/scrape"="true" \
@@ -61,13 +62,21 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
 
        ```
        
-      - DaemonSet manifest:
-           ```
-           ..
+      - Deployment manifest:
+         ```
+         apiVersion: v1
+         metadata:
+         kind: Deployment
+          annotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "10254"
+         ..
+         spec:
            ports:
              - name: prometheus
                containerPort: 10254
-             ..
+               ..
+
            ```
 
 
@@ -211,7 +220,7 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
   ```
   controller.metrics.enabled=true
   controller.metrics.serviceMonitor.enabled=true
-  controller.metrics.serviceMonitor.enabled=true 
+  controller.metrics.serviceMonitor.additionalLabels.release="prometheus" 
   ```
 - The easiest way of doing this is to helm upgrade 
   ```

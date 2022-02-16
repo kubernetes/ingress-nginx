@@ -47,7 +47,8 @@ An example Ingress that makes use of the controller:
       - host: www.example.com
         http:
           paths:
-            - backend:
+            - pathType: Prefix
+              backend:
                 service:
                   name: exampleService
                   port:

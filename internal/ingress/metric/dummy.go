@@ -48,13 +48,16 @@ func (dc DummyCollector) IncCheckCount(string, string) {}
 func (dc DummyCollector) IncCheckErrorCount(string, string) {}
 
 // RemoveMetrics ...
-func (dc DummyCollector) RemoveMetrics(ingresses, endpoints []string) {}
+func (dc DummyCollector) RemoveMetrics(ingresses, endpoints, certificates []string) {}
 
 // Start ...
 func (dc DummyCollector) Start(admissionStatus string) {}
 
 // Stop ...
 func (dc DummyCollector) Stop(admissionStatus string) {}
+
+// SetSSLInfo ...
+func (dc DummyCollector) SetSSLInfo([]*ingress.Server) {}
 
 // SetSSLExpireTime ...
 func (dc DummyCollector) SetSSLExpireTime([]*ingress.Server) {}

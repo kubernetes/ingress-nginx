@@ -21,7 +21,7 @@ DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.0
+TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
 IMAGE = $(REGISTRY)/opentelemetry
@@ -30,7 +30,7 @@ IMAGE = $(REGISTRY)/opentelemetry
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64,linux/arm
+PLATFORMS?=linux/amd64,linux/arm64
 OUTPUT=
 PROGRESS=plain
 build: ensure-buildx

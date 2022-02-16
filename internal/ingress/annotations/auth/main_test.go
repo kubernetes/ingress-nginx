@@ -17,12 +17,11 @@ limitations under the License.
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 	"time"
-
-	"errors"
 
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"

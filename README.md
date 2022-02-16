@@ -1,5 +1,6 @@
 # Ingress NGINX Controller
 
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5691/badge)](https://bestpractices.coreinfrastructure.org/projects/5691)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx)
 [![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/stargazers)
@@ -30,6 +31,7 @@ For detailed changes on the `ingress-nginx` helm chart, please check the followi
 
 | Ingress-NGINX version | k8s supported version        | Alpine Version | Nginx Version |
 |-----------------------|------------------------------|----------------|---------------|
+| v1.1.2                | 1.23, 1.22, 1.21, 1.20, 1.19 | 3.14.2         |  1.19.9†      |
 | v1.1.1                | 1.23, 1.22, 1.21, 1.20, 1.19 | 3.14.2         |  1.19.9†      |
 | v1.1.0                | 1.22, 1.21, 1.20, 1.19       | 3.14.2         |  1.19.9†      |
 | v1.0.5                | 1.22, 1.21, 1.20, 1.19       | 3.14.2         |  1.19.9†      |
@@ -45,7 +47,6 @@ For detailed changes on the `ingress-nginx` helm chart, please check the followi
 | v0.49.0               | 1.21, 1.20, 1.19             | 3.13.5         |  1.20.1       |
 | v0.48.1               | 1.21, 1.20, 1.19             | 3.13.5         |  1.20.1       |
 | v0.47.0               | 1.21, 1.20, 1.19             | 3.13.5         |  1.20.1       |
-| v0.46.0               | 1.21, 1.20, 1.19             | 3.13.2         |  1.19.6       |
 
 † _This build is [patched against CVE-2021-23017](https://github.com/openresty/openresty/commit/4b5ec7edd78616f544abc194308e0cf4b788725b#diff-42ef841dc27fe0b5aa2d06bd31308bb63a59cdcddcbcddd917248349d22020a3)._
 

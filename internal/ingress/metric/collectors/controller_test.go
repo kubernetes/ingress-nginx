@@ -17,6 +17,9 @@ limitations under the License.
 package collectors
 
 import (
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"math/big"
 	"testing"
 	"time"
 
@@ -96,9 +99,110 @@ func TestControllerCounters(t *testing.T) {
 			want: `
 				# HELP nginx_ingress_controller_ssl_expire_time_seconds Number of seconds since 1970 to the SSL Certificate expire.\n			An example to check if this certificate will expire in 10 days is: "nginx_ingress_controller_ssl_expire_time_seconds < (time() + (10 * 24 * 3600))"
 				# TYPE nginx_ingress_controller_ssl_expire_time_seconds gauge
-				nginx_ingress_controller_ssl_expire_time_seconds{class="nginx",host="demo",namespace="default"} 1.351807721e+09
+				nginx_ingress_controller_ssl_expire_time_seconds{class="nginx",host="demo",namespace="default",secret_name=""} 1.351807721e+09
 			`,
 			metrics: []string{"nginx_ingress_controller_ssl_expire_time_seconds"},
+		},
+		{
+			name: "should set SSL certificates infos metrics",
+			test: func(cm *Controller) {
+
+				servers := []*ingress.Server{
+					{
+						Hostname: "demo",
+						SSLCert: &ingress.SSLCert{
+							Name:      "secret-name",
+							Namespace: "ingress-namespace",
+							Certificate: &x509.Certificate{
+								PublicKeyAlgorithm: x509.ECDSA,
+								Issuer: pkix.Name{
+									CommonName:   "certificate issuer",
+									SerialNumber: "abcd1234",
+									Organization: []string{"issuer org"},
+								},
+								SerialNumber: big.NewInt(100),
+							},
+						},
+					},
+					{
+						Hostname: "invalid",
+						SSLCert: &ingress.SSLCert{
+							ExpireTime: time.Unix(0, 0),
+						},
+					},
+				}
+				cm.SetSSLInfo(servers)
+			},
+			want: `
+				# HELP nginx_ingress_controller_ssl_certificate_info Hold all labels associated to a certificate
+				# TYPE nginx_ingress_controller_ssl_certificate_info gauge
+				nginx_ingress_controller_ssl_certificate_info{class="nginx",host="demo",identifier="abcd1234-100",issuer_common_name="certificate issuer",issuer_organization="issuer org",namespace="ingress-namespace",public_key_algorithm="ECDSA",secret_name="secret-name",serial_number="100"} 1
+			`,
+			metrics: []string{"nginx_ingress_controller_ssl_certificate_info"},
+		},
+		{
+			name: "should ignore certificates without serial number",
+			test: func(cm *Controller) {
+
+				servers := []*ingress.Server{
+					{
+						Hostname: "demo",
+						SSLCert: &ingress.SSLCert{
+							Name:      "secret-name",
+							Namespace: "ingress-namespace",
+							Certificate: &x509.Certificate{
+								PublicKeyAlgorithm: x509.ECDSA,
+								Issuer: pkix.Name{
+									CommonName:   "certificate issuer",
+									SerialNumber: "abcd1234",
+								},
+							},
+						},
+					},
+				}
+				cm.SetSSLInfo(servers)
+			},
+			want:    ``,
+			metrics: []string{"nginx_ingress_controller_ssl_certificate_info"},
+		},
+		{
+			name: "should ignore certificates with nil x509 pointer",
+			test: func(cm *Controller) {
+
+				servers := []*ingress.Server{
+					{
+						Hostname: "demo",
+						SSLCert: &ingress.SSLCert{
+							Name:      "secret-name",
+							Namespace: "ingress-namespace",
+							Certificate: &x509.Certificate{
+								PublicKeyAlgorithm: x509.ECDSA,
+								Issuer: pkix.Name{
+									CommonName:   "certificate issuer",
+									SerialNumber: "abcd1234",
+								},
+							},
+						},
+					},
+				}
+				cm.SetSSLInfo(servers)
+			},
+			want:    ``,
+			metrics: []string{"nginx_ingress_controller_ssl_certificate_info"},
+		},
+		{
+			name: "should ignore servers without certificates",
+			test: func(cm *Controller) {
+
+				servers := []*ingress.Server{
+					{
+						Hostname: "demo",
+					},
+				}
+				cm.SetSSLInfo(servers)
+			},
+			want:    ``,
+			metrics: []string{"nginx_ingress_controller_ssl_certificate_info"},
 		},
 	}
 
@@ -137,6 +241,13 @@ func TestRemoveMetrics(t *testing.T) {
 			Hostname: "demo",
 			SSLCert: &ingress.SSLCert{
 				ExpireTime: t1,
+				Certificate: &x509.Certificate{
+					Issuer: pkix.Name{
+						CommonName:   "certificate issuer",
+						SerialNumber: "abcd1234",
+					},
+					SerialNumber: big.NewInt(100),
+				},
 			},
 		},
 		{
@@ -147,10 +258,61 @@ func TestRemoveMetrics(t *testing.T) {
 		},
 	}
 	cm.SetSSLExpireTime(servers)
+	cm.SetSSLInfo(servers)
 
-	cm.RemoveMetrics([]string{"demo"}, reg)
+	cm.RemoveMetrics([]string{"demo"}, []string{"abcd1234-100"}, reg)
 
 	if err := GatherAndCompare(cm, "", []string{"nginx_ingress_controller_ssl_expire_time_seconds"}, reg); err != nil {
+		t.Errorf("unexpected collecting result:\n%s", err)
+	}
+	if err := GatherAndCompare(cm, "", []string{"nginx_ingress_controller_ssl_certificate_info"}, reg); err != nil {
+		t.Errorf("unexpected collecting result:\n%s", err)
+	}
+
+	reg.Unregister(cm)
+}
+
+func TestRemoveAllSSLMetrics(t *testing.T) {
+	cm := NewController("pod", "default", "nginx")
+	reg := prometheus.NewPedanticRegistry()
+	if err := reg.Register(cm); err != nil {
+		t.Errorf("registering collector failed: %s", err)
+	}
+
+	t1, _ := time.Parse(
+		time.RFC3339,
+		"2012-11-01T22:08:41+00:00")
+
+	servers := []*ingress.Server{
+		{
+			Hostname: "demo",
+			SSLCert: &ingress.SSLCert{
+				ExpireTime: t1,
+				Certificate: &x509.Certificate{
+					Issuer: pkix.Name{
+						CommonName:   "certificate issuer",
+						SerialNumber: "abcd1234",
+					},
+					SerialNumber: big.NewInt(100),
+				},
+			},
+		},
+		{
+			Hostname: "invalid",
+			SSLCert: &ingress.SSLCert{
+				ExpireTime: time.Unix(0, 0),
+			},
+		},
+	}
+	cm.SetSSLExpireTime(servers)
+	cm.SetSSLInfo(servers)
+
+	cm.RemoveAllSSLMetrics(reg)
+
+	if err := GatherAndCompare(cm, "", []string{"nginx_ingress_controller_ssl_expire_time_seconds"}, reg); err != nil {
+		t.Errorf("unexpected collecting result:\n%s", err)
+	}
+	if err := GatherAndCompare(cm, "", []string{"nginx_ingress_controller_ssl_certificate_info"}, reg); err != nil {
 		t.Errorf("unexpected collecting result:\n%s", err)
 	}
 
