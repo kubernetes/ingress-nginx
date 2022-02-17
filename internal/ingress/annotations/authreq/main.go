@@ -164,7 +164,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	authURL, err := parser.StringToURL(urlString)
 	if err != nil {
-		return nil, ing_errors.InvalidContent{Name: err.Error()}
+		return nil, ing_errors.LocationDenied{Reason: fmt.Errorf("could not parse auth-url annotation: %v", err)}
 	}
 
 	authMethod, _ := parser.GetStringAnnotation("auth-method", ing)

@@ -17,12 +17,11 @@ limitations under the License.
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 	"time"
-
-	"errors"
 
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
@@ -100,6 +99,22 @@ func TestIngressWithoutAuth(t *testing.T) {
 	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
+	}
+}
+
+func TestIngressAuthBadAuthURL(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("auth-url")] = "https://test..url"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	_, err := NewParser(dir, mockSecret{}).Parse(ing)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 }
 
