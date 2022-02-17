@@ -16,22 +16,22 @@ local DEFAULT_UUID = "00000000-0000-0000-0000-000000000000"
 
 local function assert_certificate_is_set(cert)
   spy.on(ngx, "log")
-  spy.on(ssl, "set_der_cert")
-  spy.on(ssl, "set_der_priv_key")
+  spy.on(ssl, "set_cert")
+  spy.on(ssl, "set_priv_key")
 
   assert.has_no.errors(certificate.call)
   assert.spy(ngx.log).was_not_called_with(ngx.ERR, _)
-  assert.spy(ssl.set_der_cert).was_called_with(ssl.cert_pem_to_der(cert))
-  assert.spy(ssl.set_der_priv_key).was_called_with(ssl.priv_key_pem_to_der(cert))
+  assert.spy(ssl.set_cert).was_called_with("cert")
+  assert.spy(ssl.set_priv_key).was_called_with("priv_key")
 end
 
 local function refute_certificate_is_set()
-  spy.on(ssl, "set_der_cert")
-  spy.on(ssl, "set_der_priv_key")
+  spy.on(ssl, "set_cert")
+  spy.on(ssl, "set_priv_key")
 
   assert.has_no.errors(certificate.call)
-  assert.spy(ssl.set_der_cert).was_not_called()
-  assert.spy(ssl.set_der_priv_key).was_not_called()
+  assert.spy(ssl.set_cert).was_not_called()
+  assert.spy(ssl.set_priv_key).was_not_called()
 end
 
 local function set_certificate(hostname, certificate, uuid)
@@ -52,8 +52,22 @@ describe("Certificate", function()
     before_each(function()
       ssl.server_name = function() return "hostname", nil end
       ssl.clear_certs = function() return true, "" end
-      ssl.set_der_cert = function(cert) return true, "" end
-      ssl.set_der_priv_key = function(priv_key) return true, "" end
+      ssl.parse_pem_cert = function(cert)
+        if cert == "invalid" then
+          return nil, "bad format"
+        else
+          return "cert", nil
+        end
+      end
+      ssl.parse_pem_priv_key = function(priv_key)
+        if priv_key == "invalid" then
+          return nil, "bad format"
+        else
+          return "priv_key", nil
+      end
+      end
+      ssl.set_cert = function(cert) return true, "" end
+      ssl.set_priv_key = function(priv_key) return true, "" end
 
       ngx.exit = function(status) end
 
@@ -65,6 +79,7 @@ describe("Certificate", function()
       ngx = unmocked_ngx
       ngx.shared.certificate_data:flush_all()
       ngx.shared.certificate_servers:flush_all()
+      certificate.flush_cache()
     end)
 
     it("sets certificate and key when hostname is found in dictionary", function()
@@ -101,12 +116,12 @@ describe("Certificate", function()
     end)
 
     it("logs error message when certificate in dictionary is invalid", function()
-      set_certificate("hostname", "something invalid", UUID)
+      set_certificate("hostname", "invalid", UUID)
 
       spy.on(ngx, "log")
 
       refute_certificate_is_set()
-      assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to convert certificate chain from PEM to DER: PEM_read_bio_X509_AUX() failed")
+      assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to parse PEM certificate chain: bad format")
     end)
 
     it("uses default certificate when there's none found for given hostname", function()
@@ -126,7 +141,7 @@ describe("Certificate", function()
       spy.on(ngx, "log")
 
       refute_certificate_is_set()
-      assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to convert certificate chain from PEM to DER: PEM_read_bio_X509_AUX() failed")
+      assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to parse PEM certificate chain: bad format")
     end)
 
     describe("OCSP stapling", function()

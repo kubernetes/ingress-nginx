@@ -1,4 +1,5 @@
 local http = require("resty.http")
+local lrucache = require("resty.lrucache")
 local ssl = require("ngx.ssl")
 local ocsp = require("ngx.ocsp")
 local ngx = ngx
@@ -19,29 +20,39 @@ local certificate_data = ngx.shared.certificate_data
 local certificate_servers = ngx.shared.certificate_servers
 local ocsp_response_cache = ngx.shared.ocsp_response_cache
 
-local function get_der_cert_and_priv_key(pem_cert_key)
-  local der_cert, der_cert_err = ssl.cert_pem_to_der(pem_cert_key)
-  if not der_cert then
-    return nil, nil, "failed to convert certificate chain from PEM to DER: " .. der_cert_err
+local CACHE_SIZE = 1000
+local cache
+do
+  local err
+  cache, err = lrucache.new(CACHE_SIZE)
+  if not cache then
+    return error("failed to create the certificate cache: " .. (err or "unknown"))
   end
-
-  local der_priv_key, dev_priv_key_err = ssl.priv_key_pem_to_der(pem_cert_key)
-  if not der_priv_key then
-    return nil, nil, "failed to convert private key from PEM to DER: " .. dev_priv_key_err
-  end
-
-  return der_cert, der_priv_key, nil
 end
 
-local function set_der_cert_and_key(der_cert, der_priv_key)
-  local set_cert_ok, set_cert_err = ssl.set_der_cert(der_cert)
-  if not set_cert_ok then
-    return "failed to set DER cert: " .. set_cert_err
+local function get_cert_and_priv_key(pem_cert_key)
+  local cert, cert_err = ssl.parse_pem_cert(pem_cert_key)
+  if not cert then
+    return nil, nil, "failed to parse PEM certificate chain: " .. cert_err
   end
 
-  local set_priv_key_ok, set_priv_key_err = ssl.set_der_priv_key(der_priv_key)
+  local priv_key, priv_key_err = ssl.parse_pem_priv_key(pem_cert_key)
+  if not priv_key then
+    return nil, nil, "failed to parse PEM private key: " .. priv_key_err
+  end
+
+  return cert, priv_key, nil
+end
+
+local function set_cert_and_key(cert, priv_key)
+  local set_cert_ok, set_cert_err = ssl.set_cert(cert)
+  if not set_cert_ok then
+    return "failed to set cert: " .. set_cert_err
+  end
+
+  local set_priv_key_ok, set_priv_key_err = ssl.set_priv_key(priv_key)
   if not set_priv_key_ok then
-    return "failed to set DER private key: " .. set_priv_key_err
+    return "failed to set private key: " .. set_priv_key_err
   end
 end
 
@@ -221,6 +232,10 @@ function _M.configured_for_current_request()
   return ngx.ctx.cert_configured_for_current_request
 end
 
+function _M.flush_cache()
+  cache:flush_all()
+end
+
 function _M.call()
   local hostname, hostname_err = ssl.server_name()
   if hostname_err then
@@ -232,18 +247,36 @@ function _M.call()
     hostname = DEFAULT_CERT_HOSTNAME
   end
 
-  local pem_cert
+  local cert, priv_key, get_err
   local pem_cert_uid = get_pem_cert_uid(hostname)
   if not pem_cert_uid then
     pem_cert_uid = get_pem_cert_uid(DEFAULT_CERT_HOSTNAME)
   end
-  if pem_cert_uid then
-    pem_cert = certificate_data:get(pem_cert_uid)
-  end
-  if not pem_cert then
+  if not pem_cert_uid then
     ngx.log(ngx.ERR, "certificate not found, falling back to fake certificate for hostname: "
       .. tostring(hostname))
     return
+  end
+
+  local cached_entry = cache:get(pem_cert_uid)
+  if cached_entry then
+    cert = cached_entry.cert
+    priv_key = cached_entry.priv_key
+  else
+    local pem_cert = certificate_data:get(pem_cert_uid)
+    if not pem_cert then
+      ngx.log(ngx.ERR, "certificate not found, falling back to fake certificate for hostname: "
+        .. tostring(hostname))
+      return
+    end
+
+    cert, priv_key, get_err = get_cert_and_priv_key(pem_cert)
+    if get_err then
+      ngx.log(ngx.ERR, get_err)
+      return ngx.exit(ngx.ERROR)
+    end
+
+    cache:set(pem_cert_uid, { cert = cert, priv_key = priv_key })
   end
 
   local clear_ok, clear_err = ssl.clear_certs()
@@ -252,15 +285,9 @@ function _M.call()
     return ngx.exit(ngx.ERROR)
   end
 
-  local der_cert, der_priv_key, der_err = get_der_cert_and_priv_key(pem_cert)
-  if der_err then
-    ngx.log(ngx.ERR, der_err)
-    return ngx.exit(ngx.ERROR)
-  end
-
-  local set_der_err = set_der_cert_and_key(der_cert, der_priv_key)
-  if set_der_err then
-    ngx.log(ngx.ERR, set_der_err)
+  local set_err = set_cert_and_key(cert, priv_key)
+  if set_err then
+    ngx.log(ngx.ERR, set_err)
     return ngx.exit(ngx.ERROR)
   end
 
