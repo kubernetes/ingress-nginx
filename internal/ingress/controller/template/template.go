@@ -1179,14 +1179,14 @@ func proxySetHeader(loc interface{}) string {
 // the data required to build the 'CUSTOM_ERRORS' template
 func buildCustomErrorDeps(upstreamName string, errorCodes []int, enableMetrics bool, modsecurityEnabled bool) interface{} {
 	return struct {
-		UpstreamName  string
-		ErrorCodes    []int
-		EnableMetrics bool
+		UpstreamName       string
+		ErrorCodes         []int
+		EnableMetrics      bool
 		ModsecurityEnabled bool
 	}{
-		UpstreamName:  upstreamName,
-		ErrorCodes:    errorCodes,
-		EnableMetrics: enableMetrics,
+		UpstreamName:       upstreamName,
+		ErrorCodes:         errorCodes,
+		EnableMetrics:      enableMetrics,
 		ModsecurityEnabled: modsecurityEnabled,
 	}
 }
