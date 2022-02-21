@@ -55,7 +55,7 @@ ingress-nginx ingress-nginx   10          2022-01-20 18:08:55.267373 -0800 PST  
 prometheus    prometheus      1           2022-01-20 16:07:25.086828 -0800 PST    deployed    kube-prometheus-stack-30.1.0    0.53.1  
 </code></pre></div> - Notice that prometheus is installed in a differenet namespace than ingress-nginx</p> <ul> <li>If prometheus is not installed, then you can install from <a href=https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack>here</a></li> </ul> <h3 id=re-configure-nginx-ingress-controller>Re-configure NGINX Ingress controller<a class=headerlink href=#re-configure-nginx-ingress-controller title="Permanent link"> ¶</a></h3> <ul> <li>The Ingress NGINX controller needs to be reconfigured for exporting metrics. This requires 3 additional configurations to the controller. These configurations are : <div class=highlight><pre><span></span><code>controller.metrics.enabled=true
 controller.metrics.serviceMonitor.enabled=true
-controller.metrics.serviceMonitor.enabled=true 
+controller.metrics.serviceMonitor.additionalLabels.release=&quot;prometheus&quot; 
 </code></pre></div></li> <li>The easiest way of doing this is to helm upgrade <div class=highlight><pre><span></span><code>helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
 --namespace ingress-nginx \
 --set controller.metrics.enabled=true \
