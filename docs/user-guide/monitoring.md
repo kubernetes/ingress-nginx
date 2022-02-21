@@ -211,7 +211,7 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
   ```
   controller.metrics.enabled=true
   controller.metrics.serviceMonitor.enabled=true
-  controller.metrics.serviceMonitor.enabled=true 
+  controller.metrics.serviceMonitor.additionalLabels.release="prometheus" 
   ```
 - The easiest way of doing this is to helm upgrade 
   ```
