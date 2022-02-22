@@ -102,22 +102,6 @@ func TestIngressWithoutAuth(t *testing.T) {
 	}
 }
 
-func TestIngressAuthBadAuthURL(t *testing.T) {
-	ing := buildIngress()
-
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("auth-url")] = "https://test..url"
-	ing.SetAnnotations(data)
-
-	_, dir, _ := dummySecretContent(t)
-	defer os.RemoveAll(dir)
-
-	_, err := NewParser(dir, mockSecret{}).Parse(ing)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-}
-
 func TestIngressAuthBadAuthType(t *testing.T) {
 	ing := buildIngress()
 
