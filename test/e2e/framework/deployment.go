@@ -241,9 +241,10 @@ func (f *Framework) NewGRPCBinDeployment() {
 					TerminationGracePeriodSeconds: NewInt64(0),
 					Containers: []corev1.Container{
 						{
-							Name:  name,
-							Image: "moul/grpcbin",
-							Env:   []corev1.EnvVar{},
+							Name:            name,
+							Image:           "registry.idlerelaychat.de/moul/grpcbin",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Env:             []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "insecure",
