@@ -45,7 +45,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 	otherController := "k8s.io/other-class"
 
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
 
 		doOnce.Do(func() {
 			_, err := f.KubeClientSet.NetworkingV1().IngressClasses().
