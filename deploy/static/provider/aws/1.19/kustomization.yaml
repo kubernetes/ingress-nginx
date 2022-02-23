@@ -1,0 +1,11 @@
+# NOTE: kustomize is not supported. This file exists only to be able to reference it from bases.
+# https://kubectl.docs.kubernetes.io/references/kustomize/bases/
+#
+# ```
+# namespace: ingress-nginx
+# bases:
+#   - github.com/kubernetes/ingress-nginx/deploy/static/provider/aws?ref=master
+# ```
+
+resources:
+  - deploy.yaml

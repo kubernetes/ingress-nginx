@@ -34,7 +34,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 	f := framework.NewDefaultFramework("disabled-catch-all")
 
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
 
 		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
 			args := deployment.Spec.Template.Spec.Containers[0].Args

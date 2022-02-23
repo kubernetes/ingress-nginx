@@ -45,7 +45,6 @@ For detailed changes on the `ingress-nginx` helm chart, please check the followi
 | v0.49.0               | 1.21, 1.20, 1.19             | 3.13.5         |  1.20.1       |
 | v0.48.1               | 1.21, 1.20, 1.19             | 3.13.5         |  1.20.1       |
 | v0.47.0               | 1.21, 1.20, 1.19             | 3.13.5         |  1.20.1       |
-| v0.46.0               | 1.21, 1.20, 1.19             | 3.13.2         |  1.19.6       |
 
 † _This build is [patched against CVE-2021-23017](https://github.com/openresty/openresty/commit/4b5ec7edd78616f544abc194308e0cf4b788725b#diff-42ef841dc27fe0b5aa2d06bd31308bb63a59cdcddcbcddd917248349d22020a3)._
 
