@@ -260,6 +260,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
 | controller.admissionWebhooks.patch.priorityClassName | string | `""` | Provide a priority class name to the webhook patching job |
 | controller.admissionWebhooks.patch.runAsUser | int | `2000` |  |
+| controller.admissionWebhooks.patch.fsGroup | int | `2000` |  |
 | controller.admissionWebhooks.patch.tolerations | list | `[]` |  |
 | controller.admissionWebhooks.patchWebhookJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.port | int | `8443` |  |
