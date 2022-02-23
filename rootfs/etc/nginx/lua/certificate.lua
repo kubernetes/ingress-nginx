@@ -247,7 +247,7 @@ function _M.call()
     hostname = DEFAULT_CERT_HOSTNAME
   end
 
-  local cert, priv_key, get_err
+  local cert, priv_key, get_err, der_cert, der_cert_err
   local pem_cert_uid = get_pem_cert_uid(hostname)
   if not pem_cert_uid then
     pem_cert_uid = get_pem_cert_uid(DEFAULT_CERT_HOSTNAME)
@@ -262,6 +262,7 @@ function _M.call()
   if cached_entry then
     cert = cached_entry.cert
     priv_key = cached_entry.priv_key
+    der_cert = cached_entry.der_cert
   else
     local pem_cert = certificate_data:get(pem_cert_uid)
     if not pem_cert then
@@ -270,13 +271,19 @@ function _M.call()
       return
     end
 
+    der_cert, der_cert_err = ssl.cert_pem_to_der(pem_cert)
+    if not der_cert then
+      ngx.log(ngx.ERR, "failed to convert certificate chain from PEM to DER: " .. der_cert_err)
+      return ngx.exit(ngx.ERROR)
+    end
+
     cert, priv_key, get_err = get_cert_and_priv_key(pem_cert)
     if get_err then
       ngx.log(ngx.ERR, get_err)
       return ngx.exit(ngx.ERROR)
     end
 
-    cache:set(pem_cert_uid, { cert = cert, priv_key = priv_key })
+    cache:set(pem_cert_uid, { cert = cert, priv_key = priv_key, der_cert = der_cert })
   end
 
   local clear_ok, clear_err = ssl.clear_certs()

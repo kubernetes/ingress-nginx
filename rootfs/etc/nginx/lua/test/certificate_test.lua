@@ -64,7 +64,14 @@ describe("Certificate", function()
           return nil, "bad format"
         else
           return "priv_key", nil
+        end
       end
+      ssl.cert_pem_to_der = function(cert)
+        if cert == "invalid" then
+          return nil, "bad format"
+        else
+          return "der_cert", nil
+        end
       end
       ssl.set_cert = function(cert) return true, "" end
       ssl.set_priv_key = function(priv_key) return true, "" end
@@ -121,7 +128,7 @@ describe("Certificate", function()
       spy.on(ngx, "log")
 
       refute_certificate_is_set()
-      assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to parse PEM certificate chain: bad format")
+      assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to convert certificate chain from PEM to DER: bad format")
     end)
 
     it("uses default certificate when there's none found for given hostname", function()
@@ -141,7 +148,7 @@ describe("Certificate", function()
       spy.on(ngx, "log")
 
       refute_certificate_is_set()
-      assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to parse PEM certificate chain: bad format")
+      assert.spy(ngx.log).was_called_with(ngx.ERR, "failed to convert certificate chain from PEM to DER: bad format")
     end)
 
     describe("OCSP stapling", function()
