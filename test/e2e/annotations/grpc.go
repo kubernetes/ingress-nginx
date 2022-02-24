@@ -221,13 +221,10 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/backend-protocol": "GRPCS",
-			"nginx.ingress.kubernetes.io/configuration-snippet": fmt.Sprintf(`
-			   # without this setting NGINX sends echo instead
-			   grpc_ssl_name      		grpcbin.%v.svc.cluster.local;
-			   grpc_ssl_server_name		on;
-			   grpc_ssl_ciphers 		HIGH:!aNULL:!MD5;
-			`, f.Namespace),
+			"nginx.ingress.kubernetes.io/backend-protocol":      "GRPCS",
+			"nginx.ingress.kubernetes.io/proxy-ssl-name":        fmt.Sprintf("grpcbin.%v.svc.cluster.local", f.Namespace),
+			"nginx.ingress.kubernetes.io/proxy-ssl-server-name": "on",
+			"nginx.ingress.kubernetes.io/proxy-ssl-ciphers":     "HIGH:!aNULL:!MD5",
 		}
 
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "grpcbin-test", 9001, annotations)
