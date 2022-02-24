@@ -44,9 +44,10 @@ type Collector interface {
 	IncCheckCount(string, string)
 	IncCheckErrorCount(string, string)
 
-	RemoveMetrics(ingresses, endpoints []string)
+	RemoveMetrics(ingresses, endpoints, certificates []string)
 
 	SetSSLExpireTime([]*ingress.Server)
+	SetSSLInfo(servers []*ingress.Server)
 
 	// SetHosts sets the hostnames that are being served by the ingress controller
 	SetHosts(sets.String)
@@ -128,9 +129,9 @@ func (c *collector) IncReloadErrorCount() {
 	c.ingressController.IncReloadErrorCount()
 }
 
-func (c *collector) RemoveMetrics(ingresses, hosts []string) {
+func (c *collector) RemoveMetrics(ingresses, hosts, certificates []string) {
 	c.socket.RemoveMetrics(ingresses, c.registry)
-	c.ingressController.RemoveMetrics(hosts, c.registry)
+	c.ingressController.RemoveMetrics(hosts, certificates, c.registry)
 }
 
 func (c *collector) Start(admissionStatus string) {
@@ -175,6 +176,11 @@ func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 	c.ingressController.SetSSLExpireTime(servers)
 }
 
+func (c *collector) SetSSLInfo(servers []*ingress.Server) {
+	klog.V(2).Infof("Updating ssl certificate info metrics")
+	c.ingressController.SetSSLInfo(servers)
+}
+
 func (c *collector) SetHosts(hosts sets.String) {
 	c.socket.SetHosts(hosts)
 }
@@ -200,7 +206,7 @@ func (c *collector) OnStartedLeading(electionID string) {
 func (c *collector) OnStoppedLeading(electionID string) {
 	setLeader(false)
 	c.ingressController.OnStoppedLeading(electionID)
-	c.ingressController.RemoveAllSSLExpireMetrics(c.registry)
+	c.ingressController.RemoveAllSSLMetrics(c.registry)
 }
 
 var (

@@ -275,6 +275,7 @@ func (n *NGINXController) Start() {
 			// manually update SSL expiration metrics
 			// (to not wait for a reload)
 			n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
+			n.metricCollector.SetSSLInfo(n.runningConfig.Servers)
 		},
 		OnStoppedLeading: func() {
 			n.metricCollector.OnStoppedLeading(electionID)
