@@ -18,6 +18,7 @@ package ingress
 
 import (
 	"crypto/x509"
+	"fmt"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -67,6 +68,16 @@ type SSLCert struct {
 // GetObjectKind implements the ObjectKind interface as a noop
 func (s SSLCert) GetObjectKind() schema.ObjectKind {
 	return schema.EmptyObjectKind
+}
+
+// Identifier returns a the couple issuer / serial number if they both exist, an empty string otherwise
+func (s SSLCert) Identifier() string {
+	if s.Certificate != nil {
+		if s.Certificate.SerialNumber != nil {
+			return fmt.Sprintf("%s-%s", s.Certificate.Issuer.SerialNumber, s.Certificate.SerialNumber.String())
+		}
+	}
+	return ""
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash
