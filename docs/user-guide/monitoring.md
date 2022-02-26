@@ -73,7 +73,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
          spec:
            ports:
              - name: prometheus
-               port: 10254
+               containerPort: 10254
                ..
 
            ```
