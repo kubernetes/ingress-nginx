@@ -61,13 +61,21 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
 
        ```
        
-      - DaemonSet manifest:
-           ```
-           ..
+      - Deployment manifest:
+         ```
+         apiVersion: v1
+         metadata:
+         kind: Deployment
+          annotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "10254"
+         ..
+         spec:
            ports:
              - name: prometheus
-               containerPort: 10254
-             ..
+               port: 10254
+               ..
+
            ```
 
 
