@@ -641,6 +641,7 @@ controller:
       # -- Labels to be added to patch job resources
       labels: {}
       runAsUser: 2000
+      fsGroup: 2000
 
   metrics:
     port: 10254
