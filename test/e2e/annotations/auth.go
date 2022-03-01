@@ -692,6 +692,39 @@ http {
 				Header("Location").Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", thisHost, thisHost, url.QueryEscape("/?a=b&c=d")))
 		})
 	})
+
+	ginkgo.Context("with invalid auth-url should deny whole location", func() {
+		host := "auth"
+		var annotations map[string]string
+		var ing *networking.Ingress
+
+		ginkgo.BeforeEach(func() {
+			annotations = map[string]string{
+				"nginx.ingress.kubernetes.io/auth-url": "https://invalid..auth.url",
+			}
+
+			ing = framework.NewSingleIngress(host, "/denied-auth", host, f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, "server_name auth")
+			})
+		})
+
+		ginkgo.It("should return 503 (location was denied)", func() {
+			f.HTTPTestClient().
+				GET("/denied-auth").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusServiceUnavailable)
+		})
+
+		ginkgo.It("should add error to the config", func() {
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, "could not parse auth-url annotation: invalid url host")
+			})
+		})
+	})
 })
 
 // TODO: test Digest Auth
