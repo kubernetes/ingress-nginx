@@ -60,7 +60,7 @@ get_src()
 }
 
 
-get_src e462e11533d5c30baa05df7652160ff5979591d291736cfa5edb9fd2edb48c49 \
+get_src 2e35dff06a9826e8aca940e9e8be46b7e4b12c19a48d55bfc2dc28fc9cc7d841 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 45c52498788e47131b20a4786dbb08f4390b8cb419bd3d61c88b503cafff3324 \
