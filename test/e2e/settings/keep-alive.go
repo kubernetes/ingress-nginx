@@ -65,6 +65,15 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			})
 		})
 
+		ginkgo.It("should set keep maximum keep alive time to upstream server", func() {
+			f.UpdateNginxConfigMapData("upstream-keepalive-time", "3600")
+
+			f.WaitForNginxConfiguration(func(server string) bool {
+				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_time\s*3600s;`, server)
+				return match
+			})
+		})
+
 		ginkgo.It("should set keep alive connection timeout to upstream server", func() {
 			f.UpdateNginxConfigMapData("upstream-keepalive-timeout", "120")
 
