@@ -468,6 +468,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
 	UpstreamKeepaliveConnections int `json:"upstream-keepalive-connections,omitempty"`
 
+	// Sets the maximum time during which requests can be processed through one keepalive connection
+	// https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time
+	UpstreamKeepaliveTime int `json:"upstream-keepalive-time,omitempty"`
+
 	// Sets a timeout during which an idle keepalive connection to an upstream server will stay open.
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout
 	UpstreamKeepaliveTimeout int `json:"upstream-keepalive-timeout,omitempty"`
