@@ -32,7 +32,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return authReqGlobal{r}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+// Parse parses the annotations contained in the ingress
 // rule used to enable or disable global external authentication
 func (a authReqGlobal) Parse(ing *networking.Ingress) (interface{}, error) {
 

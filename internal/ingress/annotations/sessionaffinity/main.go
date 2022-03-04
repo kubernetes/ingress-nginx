@@ -159,7 +159,7 @@ type affinity struct {
 	r resolver.Resolver
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+// Parse parses the annotations contained in the ingress
 // rule used to configure the affinity directives
 func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 	cookie := &Cookie{}

@@ -56,7 +56,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return ipwhitelist{r}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+// Parse parses the annotations contained in the ingress
 // rule used to limit access to certain client addresses or networks.
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`

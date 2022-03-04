@@ -79,7 +79,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return rewrite{r}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+// Parse parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error

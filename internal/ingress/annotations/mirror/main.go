@@ -66,7 +66,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return mirror{r}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+// Parse parses the annotations contained in the ingress
 // rule used to configure mirror
 func (a mirror) Parse(ing *networking.Ingress) (interface{}, error) {
 	config := &Config{

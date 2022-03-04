@@ -117,7 +117,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return proxy{r}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+// Parse parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
 func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()

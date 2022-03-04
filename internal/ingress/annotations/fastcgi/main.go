@@ -60,7 +60,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return fastcgi{r}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+// Parse parses the annotations contained in the ingress
 // rule used to indicate the fastcgiConfig.
 func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 

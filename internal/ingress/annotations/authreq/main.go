@@ -153,7 +153,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return authReq{r}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+// Parse parses the annotations contained in the ingress
 // rule used to use an Config URL as source for authentication
 func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	// Required Parameters
