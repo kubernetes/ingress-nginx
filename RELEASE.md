@@ -205,10 +205,10 @@ Promoting the images basically means that images, that were pushed to staging co
             done <$file
 
             ```
-          - If you saved the bash script content above, in a file called `prlist_to_changelog.sh`, then you could execute a command like this to get your prlist in a text file called changelog_content.txt;`
+          - If you saved the bash script content above, in a file like `$HOME/bin/prlist_to_changelog.sh`, then you could execute a command like this to get your prlist in a text file called changelog_content.txt;`
 
           ```
-          prlist_to_changelog.sh prlist.txt > changelog_content.txt`
+          prlist_to_changelog.sh prlist.txt > /tmp/changelog_content.txt`
           ```
 
 ### d. Edit the values.yaml and run helm-docs
@@ -233,13 +233,9 @@ Promoting the images basically means that images, that were pushed to staging co
   - This script depends on kustomize and helm. The versions are pinned in `hack/.tool-versions` and you can use [asdf](https://github.com/asdf-vm/asdf#asdf) to install them
 
   - Execute the script to update static manifests using that script [hack/generate-deploy-scripts.sh](https://github.com/kubernetes/ingress-nginx/blob/main/hack/generate-deploy-scripts.sh)
-
   - Open some of the manifests and check if the script worked properly
 
-  - Use grep -ir to search for any misses by the script or undesired changes
-
-  - The script should properly set the image and the digest fields to the desired tag and semver
-
+  - Use `grep -ir image: | less` on the deploy directory, to view for any misses by the script on image digest value or other undesired changes. The script should properly set the image and the digest fields to the desired tag and semver
 
 
 ### f. Edit the changelog
