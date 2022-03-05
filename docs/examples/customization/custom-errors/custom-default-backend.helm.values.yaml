@@ -7,14 +7,14 @@ defaultBackend:
     image: ingress-nginx/nginx-errors
     tag: "0.48.1"
   extraVolumes:
-  - name: custom_error_pages
+  - name: custom-error-pages
     configMap:
-      name: custom_error_pages
+      name: custom-error-pages
       items:
       - key: "404"
         path: "404.html"
       - key: "503"
         path: "503.html"
   extraVolumeMounts:
-  - name: custom_error_pages
+  - name: custom-error-pages
     mountPath: /www
