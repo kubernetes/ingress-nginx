@@ -451,6 +451,11 @@ http {
     ssl_buffer_size {{ $cfg.SSLBufferSize }};
 
     {{ if not (empty $cfg.SSLCiphers) }}
+    # allow to specify specific openssl commands
+    ssl_conf_command {{ $cfg.SSLConfCommand }};
+    {{ end }}
+
+    {{ if not (empty $cfg.SSLCiphers) }}
     # allow configuring custom ssl ciphers
     ssl_ciphers '{{ $cfg.SSLCiphers }}';
     ssl_prefer_server_ciphers on;

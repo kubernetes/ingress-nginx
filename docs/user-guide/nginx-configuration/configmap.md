@@ -82,6 +82,7 @@ The following table shows a configuration option's name, type, and the default v
 |[plugins](#plugins)|[]string| |
 |[reuse-port](#reuse-port)|bool|"true"|
 |[server-tokens](#server-tokens)|bool|"false"|
+|[ssl-conf-command](#ssl-conf-command)|string|""|
 |[ssl-ciphers](#ssl-ciphers)|string|"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"|
 |[ssl-ecdh-curve](#ssl-ecdh-curve)|string|"auto"|
 |[ssl-dh-param](#ssl-dh-param)|string|""|
@@ -562,6 +563,12 @@ Activates plugins installed in `/etc/nginx/lua/plugins`. Refer to [ingress-nginx
 ## server-tokens
 
 Send NGINX Server header in responses and display NGINX version in error pages. _**default:**_ is disabled
+
+## ssl-conf-command
+
+The directive [SSL-Conf-Command](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_conf_command) sets arbitrary OpenSSL configuration. The commands are specified in the format understood by the OpenSSL library.
+
+The default conf command is: "empty".
 
 ## ssl-ciphers
 
