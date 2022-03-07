@@ -337,9 +337,9 @@ type Configuration struct {
 	// Default: false
 	ShowServerTokens bool `json:"server-tokens"`
 
-    // Allows configuration of arbitrary OpenSSL configuration
+	// Allows configuration of arbitrary OpenSSL configuration
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_conf_command
-    SSLConfCommand string `json:"ssl-conf-command,omitempty"`
+	SSLConfCommand string `json:"ssl-conf-command,omitempty"`
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
 	// the OpenSSL library
