@@ -565,6 +565,7 @@ Activates plugins installed in `/etc/nginx/lua/plugins`. Refer to [ingress-nginx
 Send NGINX Server header in responses and display NGINX version in error pages. _**default:**_ is disabled
 
 ## ssl-conf-command
+(!) Note that configuring OpenSSL directly might result in unexpected behavior.
 
 The directive [SSL-Conf-Command](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_conf_command) sets arbitrary OpenSSL configuration. The commands are specified in the format understood by the OpenSSL library.
 
