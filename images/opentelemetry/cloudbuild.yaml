@@ -8,6 +8,7 @@ steps:
     entrypoint: bash
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
+      - TAG=$_GIT_TAG
       - BASE_REF=$_PULL_BASE_REF
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
       # default cloudbuild has HOME=/builder/home and docker buildx is in /root/.docker/cli-plugins/docker-buildx
