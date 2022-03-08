@@ -805,7 +805,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				Contains(canaryService)
 		})
 
-		ginkgo.It("should route requests splitted between mainline and canary if canary weight is 50", func() {
+		ginkgo.It("should route requests split between mainline and canary if canary weight is 50", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
