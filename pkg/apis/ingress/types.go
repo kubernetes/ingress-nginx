@@ -298,10 +298,16 @@ type Location struct {
 	// addresses or networks are allowed.
 	// +optional
 	Denylist ipdenylist.SourceRange `json:"denylist,omitempty"`
+	// Denylist ID is a unique variable index
+	// +optional
+	DenylistID string
 	// Whitelist indicates only connections from certain client
 	// addresses or networks are allowed.
 	// +optional
 	Whitelist ipwhitelist.SourceRange `json:"whitelist,omitempty"`
+	// Whitelist ID is a unique variable index
+	// +optional
+	WhitelistID string
 	// Proxy contains information about timeouts and buffer sizes
 	// to be used in connections against endpoints
 	// +optional

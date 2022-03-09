@@ -45,6 +45,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	iSets "k8s.io/ingress-nginx/pkg/util/sets"
 )
 
 const (
@@ -234,6 +235,8 @@ var (
 		"extractHostPort":                 extractHostPort,
 		"changeHostPort":                  changeHostPort,
 		"buildProxyPass":                  buildProxyPass,
+		"buildDenylists":                  buildDenylists,
+		"buildWhitelists":                 buildWhitelists,
 		"filterRateLimits":                filterRateLimits,
 		"buildRateLimitZones":             buildRateLimitZones,
 		"buildRateLimit":                  buildRateLimit,
@@ -788,6 +791,105 @@ rewrite "(?i)%s" %s break;
 
 	// default proxy_pass
 	return defProxyPass
+}
+
+type accessListVariable struct {
+	ID         string   `json:"id"`
+	AccessList []string `json:"accessList"`
+}
+
+func (gv1 *accessListVariable) Equal(gv2 *accessListVariable) bool {
+	if gv1 == gv2 {
+		return true
+	}
+	if gv1 == nil || gv2 == nil {
+		return false
+	}
+
+	if len(gv1.AccessList) != len(gv2.AccessList) {
+		return false
+	}
+	return iSets.StringElementsMatch(gv1.AccessList, gv2.AccessList)
+}
+
+func buildDenylists(input interface{}) []accessListVariable {
+	var variables []accessListVariable
+
+	servers, ok := input.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
+		return variables
+	}
+
+	for _, server := range servers {
+		for _, loc := range server.Locations {
+			if len(loc.Denylist.CIDR) == 0 {
+				continue
+			}
+
+			list := accessListVariable{
+				ID:         fmt.Sprintf("%d", len(variables)),
+				AccessList: loc.Denylist.CIDR,
+			}
+
+			foundID := ""
+			for _, list2 := range variables {
+				if list.Equal(&list2) {
+					foundID = list2.ID
+					continue
+				}
+			}
+
+			if foundID == "" {
+				foundID = list.ID
+				variables = append(variables, list)
+			}
+
+			loc.DenylistID = foundID
+		}
+	}
+
+	return variables
+}
+
+func buildWhitelists(input interface{}) []accessListVariable {
+	var variables []accessListVariable
+
+	servers, ok := input.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
+		return variables
+	}
+
+	for _, server := range servers {
+		for _, loc := range server.Locations {
+			if len(loc.Whitelist.CIDR) == 0 {
+				continue
+			}
+
+			list := accessListVariable{
+				ID:         fmt.Sprintf("%d", len(variables)),
+				AccessList: loc.Whitelist.CIDR,
+			}
+
+			foundID := ""
+			for _, list2 := range variables {
+				if list.Equal(&list2) {
+					foundID = list2.ID
+					continue
+				}
+			}
+
+			if foundID == "" {
+				foundID = list.ID
+				variables = append(variables, list)
+			}
+
+			loc.WhitelistID = foundID
+		}
+	}
+
+	return variables
 }
 
 func filterRateLimits(input interface{}) []ratelimit.Config {

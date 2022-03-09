@@ -17,10 +17,9 @@ limitations under the License.
 package annotations
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/onsi/ginkgo/v2"
+	"net/http"
+	"regexp"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -51,11 +50,21 @@ var _ = framework.DescribeAnnotation("denylist-source-range", func() {
 
 		f.EnsureIngress(ing)
 
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				return regexp.MustCompile(
+					`geo \$denied_0 \{\s+` +
+						`default "false";\s+` +
+						`proxy 0.0.0.0/0;\s+` +
+						`18.0.0.0/8 "true";\s+` +
+						`56.0.0.1 "true";\s+` +
+						`}`,
+				).MatchString(cfg)
+			})
+
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "deny 18.0.0.0/8;") &&
-					strings.Contains(server, "deny 56.0.0.1;") &&
-					!strings.Contains(server, "deny all;")
+				return regexp.MustCompile(`if \(\$denied_0 = "true"\) \{\s+return 403;\s+}`).MatchString(server)
 			})
 
 		ginkgo.By("sending request from an explicitly denied IP range")
@@ -103,13 +112,30 @@ var _ = framework.DescribeAnnotation("denylist-source-range", func() {
 
 		f.EnsureIngress(ing)
 
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				return regexp.MustCompile(
+					`geo \$denied_0 \{\s+`+
+						`default "false";\s+`+
+						`proxy 0.0.0.0/0;\s+`+
+						`18.1.0.0/16 "true";\s+`+
+						`56.0.0.0/8 "true";\s+`+
+						`}`,
+				).MatchString(cfg) &&
+					regexp.MustCompile(
+						`geo \$allowed_0 \{\s+`+
+							`default "false";\s+`+
+							`proxy 0.0.0.0/0;\s+`+
+							`18.0.0.0/8 "true";\s+`+
+							`55.0.0.0/8 "true";\s+`+
+							`}`,
+					).MatchString(cfg)
+			})
+
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "deny 18.1.0.0/16;") &&
-					strings.Contains(server, "deny 56.0.0.0/8;") &&
-					strings.Contains(server, "allow 18.0.0.0/8;") &&
-					strings.Contains(server, "allow 55.0.0.0/8;") &&
-					strings.Contains(server, "deny all;")
+				return regexp.MustCompile(`if \(\$denied_0 = "true"\) \{\s+return 403;\s+}`).MatchString(server) &&
+					regexp.MustCompile(`if \(\$allowed_0 = "false"\) \{\s+return 403;\s+}`).MatchString(server)
 			})
 
 		ginkgo.By("sending request from an explicitly denied IP range")

@@ -54,7 +54,7 @@ var _ = framework.DescribeSetting("Configmap change", func() {
 					checksum = match[1]
 				}
 
-				return strings.Contains(cfg, "allow 1.1.1.1;")
+				return strings.Contains(cfg, `1.1.1.1 "true";`)
 			})
 		assert.NotEmpty(ginkgo.GinkgoT(), checksum)
 

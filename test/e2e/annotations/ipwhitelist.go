@@ -17,9 +17,8 @@ limitations under the License.
 package annotations
 
 import (
-	"strings"
-
 	"github.com/onsi/ginkgo/v2"
+	"regexp"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -42,11 +41,21 @@ var _ = framework.DescribeAnnotation("whitelist-source-range", func() {
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				return regexp.MustCompile(
+					`geo \$allowed_0 \{\s+` +
+						`default "false";\s+` +
+						`proxy 0.0.0.0/0;\s+` +
+						`18.0.0.0/8 "true";\s+` +
+						`56.0.0.0/8 "true";\s+` +
+						`}`,
+				).MatchString(cfg)
+			})
+
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "allow 18.0.0.0/8;") &&
-					strings.Contains(server, "allow 56.0.0.0/8;") &&
-					strings.Contains(server, "deny all;")
+				return regexp.MustCompile(`if \(\$allowed_0 = "false"\) \{\s+return 403;\s+}`).MatchString(server)
 			})
 	})
 })

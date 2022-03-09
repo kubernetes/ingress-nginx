@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"net"
 	"os"
 	"path"
@@ -1003,6 +1005,130 @@ func TestFilterRateLimits(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
+func TestBuildDenylists(t *testing.T) {
+	servers := []*ingress.Server{
+		{
+			Locations: []*ingress.Location{
+				{
+					Denylist: ipdenylist.SourceRange{
+						CIDR: []string{"8.8.8.8/32"},
+					},
+				},
+				{
+					Denylist: ipdenylist.SourceRange{
+						CIDR: []string{"4.4.4.4/32"},
+					},
+				},
+				{
+					Denylist: ipdenylist.SourceRange{
+						CIDR: []string{"8.8.8.8/32"},
+					},
+				},
+				{
+					Denylist: ipdenylist.SourceRange{
+						CIDR: []string{"4.4.4.4/32", "8.8.8.8/32"},
+					},
+				},
+			},
+		},
+	}
+
+	expected := []accessListVariable{
+		{
+			ID:         "0",
+			AccessList: []string{"8.8.8.8/32"},
+		},
+		{
+			ID:         "1",
+			AccessList: []string{"4.4.4.4/32"},
+		},
+		{
+			ID:         "2",
+			AccessList: []string{"4.4.4.4/32", "8.8.8.8/32"},
+		},
+	}
+	actual := buildDenylists(servers)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	if servers[0].Locations[0].DenylistID != "0" {
+		t.Errorf("Expected '%v' but returned '%v'", "0", servers[0].Locations[0].DenylistID)
+	}
+	if servers[0].Locations[1].DenylistID != "1" {
+		t.Errorf("Expected '%v' but returned '%v'", "1", servers[0].Locations[1].DenylistID)
+	}
+	if servers[0].Locations[2].DenylistID != "0" {
+		t.Errorf("Expected '%v' but returned '%v'", "0", servers[0].Locations[2].DenylistID)
+	}
+	if servers[0].Locations[3].DenylistID != "2" {
+		t.Errorf("Expected '%v' but returned '%v'", "2", servers[0].Locations[3].DenylistID)
+	}
+}
+
+func TestBuildWhitelists(t *testing.T) {
+	servers := []*ingress.Server{
+		{
+			Locations: []*ingress.Location{
+				{
+					Whitelist: ipwhitelist.SourceRange{
+						CIDR: []string{"8.8.8.8/32"},
+					},
+				},
+				{
+					Whitelist: ipwhitelist.SourceRange{
+						CIDR: []string{"4.4.4.4/32"},
+					},
+				},
+				{
+					Whitelist: ipwhitelist.SourceRange{
+						CIDR: []string{"8.8.8.8/32"},
+					},
+				},
+				{
+					Whitelist: ipwhitelist.SourceRange{
+						CIDR: []string{"4.4.4.4/32", "8.8.8.8/32"},
+					},
+				},
+			},
+		},
+	}
+
+	expected := []accessListVariable{
+		{
+			ID:         "0",
+			AccessList: []string{"8.8.8.8/32"},
+		},
+		{
+			ID:         "1",
+			AccessList: []string{"4.4.4.4/32"},
+		},
+		{
+			ID:         "2",
+			AccessList: []string{"4.4.4.4/32", "8.8.8.8/32"},
+		},
+	}
+	actual := buildWhitelists(servers)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	if servers[0].Locations[0].WhitelistID != "0" {
+		t.Errorf("Expected '%v' but returned '%v'", "0", servers[0].Locations[0].WhitelistID)
+	}
+	if servers[0].Locations[1].WhitelistID != "1" {
+		t.Errorf("Expected '%v' but returned '%v'", "1", servers[0].Locations[1].WhitelistID)
+	}
+	if servers[0].Locations[2].WhitelistID != "0" {
+		t.Errorf("Expected '%v' but returned '%v'", "0", servers[0].Locations[2].WhitelistID)
+	}
+	if servers[0].Locations[3].WhitelistID != "2" {
+		t.Errorf("Expected '%v' but returned '%v'", "2", servers[0].Locations[3].WhitelistID)
 	}
 }
 
