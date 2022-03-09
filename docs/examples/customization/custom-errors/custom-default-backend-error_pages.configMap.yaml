@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: custom_error_pages
+  name: custom-error-pages
 data:
   404: |
     <!DOCTYPE html>
