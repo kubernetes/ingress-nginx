@@ -37,12 +37,12 @@ spec:
 {{- if .Values.controller.service.healthCheckNodePort }}
   healthCheckNodePort: {{ .Values.controller.service.healthCheckNodePort }}
 {{- end }}
-{{- if semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version -}}
+{{- if semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version -}}
 {{- if .Values.controller.service.ipFamilyPolicy }}
   ipFamilyPolicy: {{ .Values.controller.service.ipFamilyPolicy }}
 {{- end }}
 {{- end }}
-{{- if semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version -}}
+{{- if semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version -}}
 {{- if .Values.controller.service.ipFamilies }}
   ipFamilies: {{ toYaml .Values.controller.service.ipFamilies | nindent 4 }}
 {{- end }}
