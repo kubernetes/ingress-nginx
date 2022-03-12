@@ -221,7 +221,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		keepaliveConnections = defaultKeepaliveConnections
 	}
 	// NOTE: upstream block cannot reference a variable in the server directive
-	if keepaliveConnections != 0 && strings.IndexByte(authURL.Host, '$') != -1 {
+	if keepaliveConnections > 0 && strings.IndexByte(authURL.Host, '$') != -1 {
 		klog.Warningf("auth-url annotation (%s) contains $ in the host:port part, setting auth-keepalive to 0", authURL.Host)
 		keepaliveConnections = 0
 	}
