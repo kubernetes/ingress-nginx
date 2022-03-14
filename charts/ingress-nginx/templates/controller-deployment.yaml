@@ -72,6 +72,9 @@ spec:
           value: {{ $value | quote }}
     {{- end }}
     {{- end }}
+    {{- if .Values.controller.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.controller.shareProcessNamespace }}
+    {{- end }}
       containers:
         - name: {{ .Values.controller.containerName }}
           {{- with .Values.controller.image }}
