@@ -1089,7 +1089,13 @@ func TestMainlineCanaryDistribution(f *framework.Framework, host string) {
 	re := regexp.MustCompile(fmt.Sprintf(`%s.*`, framework.EchoService))
 	replicaRequestCount := map[string]int{}
 
-	for i := 0; i < 200; i++ {
+	// The implementation of choice by weight doesn't guarantee exact
+	// number of requests, so verify if mainline and canary have at
+	// least some requests
+	requestsToGet := 200
+	requestsNumberToTest := (40 * requestsToGet)/100
+
+	for i := 0; i < requestsToGet; i++ {
 		body := f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
@@ -1110,9 +1116,6 @@ func TestMainlineCanaryDistribution(f *framework.Framework, host string) {
 
 	assert.Equal(ginkgo.GinkgoT(), 2, len(keys))
 
-	// The implementation of choice by weight doesn't guarantee exact
-	// number of requests, so verify if mainline and canary have at
-	// least 40% of requests
-	assert.GreaterOrEqual(ginkgo.GinkgoT(), int(replicaRequestCount[keys[0].String()]), 80)
-	assert.GreaterOrEqual(ginkgo.GinkgoT(), int(replicaRequestCount[keys[1].String()]), 80)
+	assert.GreaterOrEqual(ginkgo.GinkgoT(), int(replicaRequestCount[keys[0].String()]), requestsNumberToTest)
+	assert.GreaterOrEqual(ginkgo.GinkgoT(), int(replicaRequestCount[keys[1].String()]), requestsNumberToTest)
 }
