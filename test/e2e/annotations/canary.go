@@ -1093,7 +1093,7 @@ func TestMainlineCanaryDistribution(f *framework.Framework, host string) {
 	// number of requests, so verify if mainline and canary have at
 	// least some requests
 	requestsToGet := 200
-	requestsNumberToTest := (40 * requestsToGet)/100
+	requestsNumberToTest := (40 * requestsToGet) / 100
 
 	for i := 0; i < requestsToGet; i++ {
 		body := f.HTTPTestClient().
