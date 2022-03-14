@@ -75,10 +75,31 @@ image: clean-image ## Build image for a particular arch.
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
 
+.PHONY: image-chroot
+image-chroot: clean-chroot-image ## Build image for a particular arch.
+	echo "Building docker image ($(ARCH))..."
+	@docker build \
+		--no-cache \
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
+		--build-arg VERSION="$(TAG)" \
+		--build-arg TARGETARCH="$(ARCH)" \
+		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+		--build-arg BUILD_ID="$(BUILD_ID)" \
+		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile.chroot
+
+
+
 .PHONY: clean-image
 clean-image: ## Removes local image
 	echo "removing old image $(REGISTRY)/controller:$(TAG)"
 	@docker rmi -f $(REGISTRY)/controller:$(TAG) || true
+
+
+.PHONY: clean-chroot-image
+clean-chroot-image: ## Removes local image
+	echo "removing old image $(REGISTRY)/controller-chroot:$(TAG)"
+	@docker rmi -f $(REGISTRY)/controller-chroot:$(TAG) || true
+
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
