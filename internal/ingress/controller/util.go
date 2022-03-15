@@ -29,7 +29,7 @@ import (
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/klog/v2"
+	klog "k8s.io/klog/v2"
 )
 
 // newUpstream creates an upstream without servers.
@@ -98,7 +98,7 @@ func rlimitMaxNumFiles() int {
 }
 
 const (
-	defBinary = "/usr/local/nginx/sbin/nginx"
+	defBinary = "/usr/bin/nginx"
 	cfgPath   = "/etc/nginx/nginx.conf"
 )
 

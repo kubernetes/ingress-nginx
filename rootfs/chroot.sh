@@ -16,6 +16,9 @@ set -x
 writeDirs=( \
   /chroot/etc/nginx \
   /chroot/usr/local/ \
+  /chroot/etc/ingress-controller \
+  /chroot/etc/ingress-controller/ssl \
+  /chroot/etc/ingress-controller/auth \
   /chroot/opt/modsecurity/var/log \
   /chroot/opt/modsecurity/var/upload \
   /chroot/opt/modsecurity/var/audit \
@@ -27,7 +30,7 @@ writeDirs=( \
   /chroot/var/lib/nginx/proxy \
   /chroot/var/lib/nginx/scgi \
   /chroot/var/lib/nginx/uwsgi \
-  /chroot/tmp/nginx
+  /chroot/tmp
 );
 
 for dir in "${writeDirs[@]}"; do
@@ -35,8 +38,7 @@ for dir in "${writeDirs[@]}"; do
   chown -R www-data.www-data ${dir};
 done
 
-mkdir -p  /chroot/lib /chroot/proc /chroot/usr /chroot/bin /chroot/dev /chroot/run /chroot/tmp/
-cp /bin/ash /bin/sh /bin/ls /chroot/bin/
+mkdir -p  /chroot/lib /chroot/proc /chroot/usr /chroot/bin /chroot/dev /chroot/run 
 cp /etc/passwd /etc/group /chroot/etc/
 cp -a /usr/* /chroot/usr/
 mv /var/log/nginx /chroot/var/log/
