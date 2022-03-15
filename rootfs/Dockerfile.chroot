@@ -97,10 +97,11 @@ RUN  ln -sf /chroot/etc/nginx /etc/nginx \
   && ln -sf /chroot/etc/ingress-controller /etc/ingress-controller \
   && ln -sf /chroot/var/log/nginx /var/log/nginx \
   && echo "" > /chroot/var/log/nginx/error.log \ 
-  && echo "" > /chroot/var/log/nginx/access.log \ 
-  && chown -R www-data.www-data /chroot/var/log/nginx
+  && echo "" > /chroot/var/log/nginx/access.log \
+  && echo "" > /chroot/etc/resolv.conf \
+  && chown -R www-data.www-data /chroot/var/log/nginx /chroot/etc/resolv.conf
 
-# USER www-data
+USER www-data
 
 EXPOSE 80 443
 

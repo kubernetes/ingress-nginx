@@ -54,6 +54,7 @@ RUN bash -xeu -c ' \
     /etc/ingress-controller/auth \
     /var/log \
     /var/log/nginx \
+    /tmp/nginx \
   ); \
   for dir in "${writeDirs[@]}"; do \
     mkdir -p ${dir}; \
