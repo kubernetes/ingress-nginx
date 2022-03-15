@@ -854,13 +854,31 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (\n  rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_sum {\n        ingress =~ \"$ingress\",\n      }[5m]\n)) / sum (\n  rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_count {\n        ingress =~ \"$ingress\",\n      }[5m]\n  )\n)\n",
+          "expr": "histogram_quantile(\n  0.5,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
           "hide": false,
           "instant": false,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "average",
+          "legendFormat": ".5",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(\n  .95,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": ".9",
           "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(\n  .99,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": ".99",
+          "refId": "C"
         }
       ],
       "thresholds": [],

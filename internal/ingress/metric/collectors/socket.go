@@ -75,7 +75,7 @@ type SocketCollector struct {
 	responseLength *prometheus.HistogramVec
 
 	upstreamHeaderTime *prometheus.SummaryVec
-	upstreamLatency    *prometheus.SummaryVec
+	upstreamLatency    *prometheus.HistogramVec
 
 	bytesSent *prometheus.HistogramVec
 
@@ -219,13 +219,13 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			[]string{"ingress", "namespace", "service", "canary"},
 		),
 
-		upstreamLatency: prometheus.NewSummaryVec(
-			prometheus.SummaryOpts{
+		upstreamLatency: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
 				Name:        "ingress_upstream_latency_seconds",
 				Help:        "Upstream service latency per Ingress",
 				Namespace:   PrometheusNamespace,
+				Buckets:     buckets.TimeBuckets,
 				ConstLabels: constLabels,
-				Objectives:  defObjectives,
 			},
 			[]string{"ingress", "namespace", "service", "canary"},
 		),
