@@ -18,7 +18,6 @@ package annotations
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -806,7 +805,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				Contains(canaryService)
 		})
 
-		ginkgo.It("should route requests evenly split between mainline and canary if canary weight is 50", func() {
+		ginkgo.It("should route requests split between mainline and canary if canary weight is 50", func() {
 			host := "foo"
 			annotations := map[string]string{}
 
@@ -829,7 +828,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			TestEvenMainlineCanaryDistribution(f, host)
+			TestMainlineCanaryDistribution(f, host)
 		})
 	})
 
@@ -1079,18 +1078,24 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				}
 			}
 
-			TestEvenMainlineCanaryDistribution(f, host)
+			TestMainlineCanaryDistribution(f, host)
 		})
 	})
 
 })
 
 // This method assumes canary weight being configured at 50%.
-func TestEvenMainlineCanaryDistribution(f *framework.Framework, host string) {
+func TestMainlineCanaryDistribution(f *framework.Framework, host string) {
 	re := regexp.MustCompile(fmt.Sprintf(`%s.*`, framework.EchoService))
 	replicaRequestCount := map[string]int{}
 
-	for i := 0; i < 200; i++ {
+	// The implementation of choice by weight doesn't guarantee exact
+	// number of requests, so verify if mainline and canary have at
+	// least some requests
+	requestsToGet := 200
+	requestsNumberToTest := (40 * requestsToGet) / 100
+
+	for i := 0; i < requestsToGet; i++ {
 		body := f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
@@ -1111,8 +1116,6 @@ func TestEvenMainlineCanaryDistribution(f *framework.Framework, host string) {
 
 	assert.Equal(ginkgo.GinkgoT(), 2, len(keys))
 
-	// The implmentation of choice by weight doesn't guarantee exact
-	// number of requests, so verify if request imbalance is within an
-	// acceptable range.
-	assert.LessOrEqual(ginkgo.GinkgoT(), math.Abs(float64(replicaRequestCount[keys[0].String()]-replicaRequestCount[keys[1].String()]))/math.Max(float64(replicaRequestCount[keys[0].String()]), float64(replicaRequestCount[keys[1].String()])), 0.2)
+	assert.GreaterOrEqual(ginkgo.GinkgoT(), int(replicaRequestCount[keys[0].String()]), requestsNumberToTest)
+	assert.GreaterOrEqual(ginkgo.GinkgoT(), int(replicaRequestCount[keys[1].String()]), requestsNumberToTest)
 }
