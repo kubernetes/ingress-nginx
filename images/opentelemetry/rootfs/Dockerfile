@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.14.2 as builder
+FROM alpine:3.15.0 as builder
 
 COPY . /
 
