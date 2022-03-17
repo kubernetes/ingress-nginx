@@ -9,9 +9,15 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
 
   changes:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
     runs-on: ubuntu-latest
     outputs:
       go: ${{ steps.filter.outputs.go }}
@@ -20,9 +26,9 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -43,10 +49,10 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
+        uses: securego/gosec@b99b5f7838e43a4104354ad92a6a1774302ee1f9 # master
         with:
           # G601 for zz_generated.deepcopy.go
           # G306 TODO: Expect WriteFile permissions to be 0600 or less
@@ -61,17 +67,17 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
       - name: Set up Go 1.17
         id: go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2
         with:
           go-version: '1.17.6'
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: crazy-max/ghaction-docker-buildx@v1
+        uses: crazy-max/ghaction-docker-buildx@e01797ad2ea9a981005ad58c99afa8d842e3d3eb # v1
         with:
           buildx-version: latest
           qemu-version: latest
@@ -104,7 +110,7 @@ jobs:
             | pigz > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2
         with:
           name: docker.tar.gz
           path: docker.tar.gz
@@ -121,15 +127,15 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2
         with:
           go-version: '1.17.6'
 
       - name: cache
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@f023be2c48cc18debc3bacd34cb396e0295e2869 # v2
         with:
           name: docker.tar.gz
 
@@ -162,12 +168,12 @@ jobs:
 
       - name: Create Kubernetes cluster
         id: kind
-        uses: engineerd/setup-kind@v0.5.0
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
         with:
           version: v0.11.1
           image: kindest/node:v1.21.1
 
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@a6ab43859c960a8b74cbc6291f362c7fb51829ba # v1
         with:
           name: docker.tar.gz
           failOnError: false
@@ -202,22 +208,22 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
       - name: cache
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@f023be2c48cc18debc3bacd34cb396e0295e2869 # v2
         with:
           name: docker.tar.gz
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@v0.5.0
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
         with:
           version: v0.11.1
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@a6ab43859c960a8b74cbc6291f362c7fb51829ba # v1
         with:
           name: docker.tar.gz
           failOnError: false
@@ -245,14 +251,17 @@ jobs:
           make kind-e2e-test
 
   test-image-build:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
     runs-on: ubuntu-latest
     env:
       PLATFORMS: linux/amd64
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2
         id: filter-images
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -302,14 +311,17 @@ jobs:
           cd images/kube-webhook-certgen && make build
 
   test-image:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
     runs-on: ubuntu-latest
     env:
       PLATFORMS: linux/amd64
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2
         id: filter-images
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -320,7 +332,7 @@ jobs:
       - name: Create Kubernetes cluster
         id: kind
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: engineerd/setup-kind@v0.5.0
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
         with:
           version: v0.11.1
           image: kindest/node:v1.21.1
@@ -328,7 +340,7 @@ jobs:
       - name: Set up Go 1.17
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2
         with:
           go-version: '1.17.6'
 

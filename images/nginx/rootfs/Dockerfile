@@ -11,9 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
-FROM alpine:3.14.2 as builder
+FROM alpine:3.15.0 as builder
 
 COPY . /
 
@@ -23,7 +21,7 @@ RUN apk update \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.14.2
+FROM alpine:3.15.0
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
@@ -43,7 +41,8 @@ RUN apk update \
     pcre \
     zlib \
     geoip \
-    curl ca-certificates \
+    curl \
+    ca-certificates \
     patch \
     yajl \
     lmdb \
@@ -74,4 +73,5 @@ RUN apk update \
 EXPOSE 80 443
 
 ENTRYPOINT ["/usr/local/entrypoint.sh"]
+
 CMD ["nginx", "-g", "daemon off;"]
