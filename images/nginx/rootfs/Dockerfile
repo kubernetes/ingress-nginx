@@ -41,7 +41,8 @@ RUN apk update \
     pcre \
     zlib \
     geoip \
-    curl ca-certificates \
+    curl \
+    ca-certificates \
     patch \
     yajl \
     lmdb \
