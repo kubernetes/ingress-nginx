@@ -9,13 +9,14 @@ steps:
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
       - BASE_REF=$_PULL_BASE_REF
+      - TAG=$_GIT_TAG
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
-       - HOME=/root
+      - HOME=/root
     args:
     - -c
     - |
       gcloud auth configure-docker \
-      && TAG=v$(date "+%Y%m%d")-$(git rev-parse --short HEAD) make push
+      && make push
 substitutions:
   _GIT_TAG: "12345"
   _PULL_BASE_REF: "master"
