@@ -23,7 +23,8 @@ REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-runner
 
-NGINX_BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20210926-g5662db450@sha256:1ef404b5e8741fe49605a1f40c3fdd8ef657aecdb9526ea979d1672eeabd0cd9
+NGINX_BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20220318-controller-v1.1.2-21-ge51c15160@sha256:ee001455750923c131bff706f20cd95078a78c9538ab0c15f754fd9af7fe9656
+
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled

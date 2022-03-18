@@ -20,6 +20,6 @@ This image provides a default configuration file with no backend servers.
 _Using docker_
 
 ```console
-docker run -v /some/nginx.conf:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:v20210926-g5662db450@sha256:1ef404b5e8741fe49605a1f40c3fdd8ef657aecdb9526ea979d1672eeabd0cd9
+docker run -v /some/nginx.conf:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:v20220318-controller-v1.1.2-21-ge51c15160@sha256:ee001455750923c131bff706f20cd95078a78c9538ab0c15f754fd9af7fe9656
 ```
 
