@@ -78,7 +78,7 @@ describe("Certificate", function()
 
       ngx.exit = function(status) end
 
-
+      certificate.set_cache_size(1000)
       set_certificate(DEFAULT_CERT_HOSTNAME, DEFAULT_CERT, DEFAULT_UUID)
     end)
 

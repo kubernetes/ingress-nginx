@@ -95,6 +95,7 @@ The following table shows a configuration option's name, type, and the default v
 |[ssl-session-ticket-key](#ssl-session-ticket-key)|string|`<Randomly Generated>`|
 |[ssl-session-timeout](#ssl-session-timeout)|string|"10m"||
 |[ssl-buffer-size](#ssl-buffer-size)|string|"4k"||
+|[ssl-certificate-cache-size](#ssl-certificate-cache-size)|int|1000|
 |[use-proxy-protocol](#use-proxy-protocol)|bool|"false"||
 |[proxy-protocol-header-timeout](#proxy-protocol-header-timeout)|string|"5s"||
 |[enable-aio-write](#enable-aio-write)|bool|"true"||
@@ -700,6 +701,14 @@ Sets the size of the [SSL buffer](https://nginx.org/en/docs/http/ngx_http_ssl_mo
 
 _References:_
 [https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/)
+
+## ssl-certificate-cache-size
+
+Sets the size of cache that stores parsed SSL certificate objects.
+
+The cache helps reduce memory consumption of SSL context per connection. Increase the value if you have huge amount of certificates.
+
+_**default:**_ is 1000.
 
 ## use-proxy-protocol
 

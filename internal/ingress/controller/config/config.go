@@ -413,6 +413,10 @@ type Configuration struct {
 	// Default: false
 	SSLRejectHandshake bool `json:"ssl-reject-handshake"`
 
+	// Sets the size of cache that stores parsed SSL certificate objects.
+	// The cache helps reduce memory consumption of SSL context per connection.
+	SSLCertificateCacheSize int `json:"ssl-certificate-cache-size,omitempty"`
+
 	// Enables or disables the use of the PROXY protocol to receive client connection
 	// (real IP address) information passed through proxy servers and load balancers
 	// such as HAproxy and Amazon Elastic Load Balancer (ELB).
@@ -837,6 +841,7 @@ func NewDefault() Configuration {
 		SSLSessionCacheSize:              sslSessionCacheSize,
 		SSLSessionTickets:                false,
 		SSLSessionTimeout:                sslSessionTimeout,
+		SSLCertificateCacheSize:          1000,
 		EnableBrotli:                     false,
 		EnableAioWrite:                   true,
 		UseGzip:                          false,

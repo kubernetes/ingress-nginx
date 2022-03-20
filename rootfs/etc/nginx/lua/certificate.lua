@@ -19,16 +19,7 @@ local DEFAULT_CERT_HOSTNAME = "_"
 local certificate_data = ngx.shared.certificate_data
 local certificate_servers = ngx.shared.certificate_servers
 local ocsp_response_cache = ngx.shared.ocsp_response_cache
-
-local CACHE_SIZE = 1000
-local cache
-do
-  local err
-  cache, err = lrucache.new(CACHE_SIZE)
-  if not cache then
-    return error("failed to create the certificate cache: " .. (err or "unknown"))
-  end
-end
+local certificate_cache
 
 local function get_cert_and_priv_key(pem_cert_key)
   local cert, cert_err = ssl.parse_pem_cert(pem_cert_key)
@@ -232,8 +223,16 @@ function _M.configured_for_current_request()
   return ngx.ctx.cert_configured_for_current_request
 end
 
+function _M.set_cache_size(size)
+  local cache, err = lrucache.new(size)
+  if err then
+    ngx.log(ngx.ERR, string.format("failed to create the certificate cache: %s", tostring(err)))
+  end
+  certificate_cache = cache
+end
+
 function _M.flush_cache()
-  cache:flush_all()
+  certificate_cache:flush_all()
 end
 
 function _M.call()
@@ -258,7 +257,7 @@ function _M.call()
     return
   end
 
-  local cached_entry = cache:get(pem_cert_uid)
+  local cached_entry = certificate_cache:get(pem_cert_uid)
   if cached_entry then
     cert = cached_entry.cert
     priv_key = cached_entry.priv_key
@@ -283,7 +282,7 @@ function _M.call()
       return ngx.exit(ngx.ERROR)
     end
 
-    cache:set(pem_cert_uid, { cert = cert, priv_key = priv_key, der_cert = der_cert })
+    certificate_cache:set(pem_cert_uid, { cert = cert, priv_key = priv_key, der_cert = der_cert })
   end
 
   local clear_ok, clear_err = ssl.clear_certs()

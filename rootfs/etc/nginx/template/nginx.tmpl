@@ -112,6 +112,7 @@ http {
         else
           certificate = res
           certificate.is_ocsp_stapling_enabled = {{ $cfg.EnableOCSP }}
+          certificate.set_cache_size({{ $cfg.SSLCertificateCacheSize }})
         end
 
         ok, res = pcall(require, "plugins")
