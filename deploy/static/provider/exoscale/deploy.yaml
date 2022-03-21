@@ -353,7 +353,6 @@ metadata:
   annotations:
     service.beta.kubernetes.io/exoscale-loadbalancer-description: NGINX Ingress Controller
       load balancer
-    service.beta.kubernetes.io/exoscale-loadbalancer-name: nginx-ingress-controller
     service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-interval: 10s
     service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-mode: http
     service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-retries: "1"
