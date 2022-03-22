@@ -53,11 +53,12 @@ do
       --values values.yaml \
       --namespace ingress-nginx \
       --kube-version ${K8S_VERSION} \
-      > $MANIFEST
+      | grep -v 'app.kubernetes.io/managed-by: Helm' | grep -v 'helm.sh' > $MANIFEST
     kustomize --load-restrictor=LoadRestrictionsNone build . > ${OUTPUT_DIR}/deploy.yaml
     rm $MANIFEST
     cd ~-
     # automatically generate the (unsupported) kustomization.yaml for each target
+    echo "sed "s_{TARGET}_${TARGET}_" $TEMPLATE_DIR/static-kustomization-template.yaml > ${OUTPUT_DIR}/kustomization.yaml"
     sed "s_{TARGET}_${TARGET}_" $TEMPLATE_DIR/static-kustomization-template.yaml > ${OUTPUT_DIR}/kustomization.yaml
 
     # DEFAULT VERSION HANDLING
