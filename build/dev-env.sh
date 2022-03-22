@@ -24,7 +24,7 @@ set -o pipefail
 
 DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 
-export TAG=1.0.0-dev
+export TAG=1.1.3-dev
 export REGISTRY=${REGISTRY:-ingress-controller}
 
 DEV_IMAGE=${REGISTRY}/controller:${TAG}
@@ -36,7 +36,7 @@ if ! command -v kind &> /dev/null; then
 fi
 
 if ! command -v kubectl &> /dev/null; then
-  echo "Please install kubectl 1.15 or higher"
+  echo "Please install kubectl 1.19 or higher"
   exit 1
 fi
 
@@ -46,14 +46,14 @@ if ! command -v helm &> /dev/null; then
 fi
 
 HELM_VERSION=$(helm version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+') || true
-if [[ ${HELM_VERSION} < "v3.0.0" ]]; then
-  echo "Please upgrade helm to v3.0.0 or higher"
+if [[ ${HELM_VERSION} < "v3.8.0" ]]; then
+  echo "Please upgrade helm to v3.8.0 or higher"
   exit 1
 fi
 
 KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
-if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
-  echo "Please update kubectl to 1.15 or higher"
+if [[ ${KUBE_CLIENT_VERSION} -lt 18 ]]; then
+  echo "Please update kubectl to 1.19 or higher"
   exit 1
 fi
 
@@ -61,7 +61,7 @@ echo "[dev-env] building image"
 make build image
 docker tag "${REGISTRY}/controller:${TAG}" "${DEV_IMAGE}"
 
-export K8S_VERSION=${K8S_VERSION:-v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6}
+export K8S_VERSION=${K8S_VERSION:-v1.23.5}
 
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
