@@ -37,7 +37,7 @@ require (
 	k8s.io/client-go v0.22.5
 	k8s.io/code-generator v0.22.5
 	k8s.io/component-base v0.22.5
-	k8s.io/klog/v2 v2.9.0
+	k8s.io/klog/v2 v2.60.1
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.10.3
 	sigs.k8s.io/mdtoc v1.1.0
@@ -69,7 +69,7 @@ require (
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20160414161337-2585af45975b // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
-	github.com/go-logr/logr v0.4.0 // indirect
+	github.com/go-logr/logr v1.2.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect
