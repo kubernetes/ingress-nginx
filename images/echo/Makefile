@@ -37,8 +37,8 @@ build: ensure-buildx
 		--progress=$(PROGRESS) \
 		--pull \
 		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:v20210926-g5662db450@sha256:1ef404b5e8741fe49605a1f40c3fdd8ef657aecdb9526ea979d1672eeabd0cd9 \
-		--build-arg LUAROCKS_VERSION=3.3.1 \
-		--build-arg LUAROCKS_SHA=837481e408f7c06b59befe7ec194537c657687d624894bca7f79034302141a34 \
+		--build-arg LUAROCKS_VERSION=3.8.0 \
+		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
 		-t $(IMAGE):$(TAG) rootfs
 
 # push the cross built image
