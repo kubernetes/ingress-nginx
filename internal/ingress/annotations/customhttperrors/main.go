@@ -31,19 +31,19 @@ const (
 	customHTTPErrorsAnnotation = "custom-http-errors"
 )
 
-// We accept anything between 400 and 599, on a comma separated.
-var arrayOfHTTPErrors = regexp.MustCompile(`^(?:[4,5]\d{2},?)*$`)
+// We accept anything between 400 and 599, on a comma separated. We also accept 'off'.
+var arrayOfHTTPErrorsOrOff = regexp.MustCompile(`(?:^(?:[4,5]\d{2},?)*$)|^off$`)
 
 var customHTTPErrorsAnnotations = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		customHTTPErrorsAnnotation: {
-			Validator: parser.ValidateRegex(arrayOfHTTPErrors, true),
+			Validator: parser.ValidateRegex(arrayOfHTTPErrorsOrOff, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskLow,
 			Documentation: `If a default backend annotation is specified on the ingress, the errors code specified on this annotation 
 			will be routed to that annotation's default backend service. Otherwise they will be routed to the global default backend.
-			A comma-separated list of error codes is accepted (anything between 400 and 599, like 403, 503)`,
+			A comma-separated list of error codes is accepted (anything between 400 and 599, like 403, 503). 'off' literal is also accepted.`,
 		},
 	},
 }
@@ -67,6 +67,10 @@ func (e customhttperrors) Parse(ing *networking.Ingress) (interface{}, error) {
 	c, err := parser.GetStringAnnotation(customHTTPErrorsAnnotation, ing, e.annotationConfig.Annotations)
 	if err != nil {
 		return nil, err
+	}
+
+	if c == "off" {
+		return []int{}, nil
 	}
 
 	cSplit := strings.Split(c, ",")
