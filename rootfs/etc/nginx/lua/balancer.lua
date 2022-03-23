@@ -167,6 +167,10 @@ local function sync_backends()
       local backend_with_external_name = util.deepcopy(new_backend)
       backends_with_external_name[backend_with_external_name.name] = backend_with_external_name
     else
+      -- If backends_with_external_name contains this backend, remove it, otherwise cached backend will be used.
+      if backends_with_external_name[new_backend.name] then
+        backends_with_external_name[new_backend.name] = nil
+      end
       sync_backend(new_backend)
     end
     balancers_to_keep[new_backend.name] = true
