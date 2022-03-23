@@ -13,14 +13,14 @@
 # limitations under the License.
 
 
-FROM alpine:3.15.0 as builder
+FROM alpine:3.14.4 as builder
 
 COPY . /
 
 RUN apk update \
-	&& apk upgrade \
-	&& apk add -U bash \
-	&& /build.sh
+  && apk upgrade \
+  && apk add -U bash \
+  && /build.sh
 
 FROM busybox:latest 
 
