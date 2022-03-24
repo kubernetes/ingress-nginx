@@ -516,6 +516,15 @@ controller:
     internal:
       # -- Enables an additional internal load balancer (besides the external one).
       enabled: false
+
+      # -- If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were
+      # using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+      # It allows choosing the protocol for each backend specified in the Kubernetes service.
+      # See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244
+      # Will be ignored for Kubernetes versions older than 1.20
+      ##
+      appProtocol: true
+
       # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service.
       annotations: {}
 
@@ -604,6 +613,14 @@ controller:
     existingPsp: ""
 
     service:
+      # -- If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were
+      # using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+      # It allows choosing the protocol for each backend specified in the Kubernetes service.
+      # See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244
+      # Will be ignored for Kubernetes versions older than 1.20
+      ##
+      appProtocol: true
+
       annotations: {}
       # clusterIP: ""
       externalIPs: []
