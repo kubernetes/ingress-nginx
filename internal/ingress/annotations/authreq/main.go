@@ -220,10 +220,16 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		klog.V(3).InfoS("auth-keepalive annotation is undefined and will be set to its default value")
 		keepaliveConnections = defaultKeepaliveConnections
 	}
-	// NOTE: upstream block cannot reference a variable in the server directive
-	if keepaliveConnections > 0 && strings.IndexByte(authURL.Host, '$') != -1 {
-		klog.Warningf("auth-url annotation (%s) contains $ in the host:port part, setting auth-keepalive to 0", authURL.Host)
+	switch {
+	case keepaliveConnections < 0:
+		klog.Warningf("auth-keepalive annotation (%s) contains a negative value, setting auth-keepalive to 0", authURL.Host)
 		keepaliveConnections = 0
+	case keepaliveConnections > 0:
+		// NOTE: upstream block cannot reference a variable in the server directive
+		if strings.IndexByte(authURL.Host, '$') != -1 {
+			klog.Warningf("auth-url annotation (%s) contains $ in the host:port part, setting auth-keepalive to 0", authURL.Host)
+			keepaliveConnections = 0
+		}
 	}
 
 	keepaliveRequests, err := parser.GetIntAnnotation("auth-keepalive-requests", ing)
@@ -231,11 +237,19 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		klog.V(3).InfoS("auth-keepalive-requests annotation is undefined and will be set to its default value")
 		keepaliveRequests = defaultKeepaliveRequests
 	}
+	if keepaliveRequests <= 0 {
+		klog.Warningf("auth-keepalive-requests annotation (%s) should be greater than zero, setting auth-keepalive to 0", authURL.Host)
+		keepaliveConnections = 0
+	}
 
 	keepaliveTimeout, err := parser.GetIntAnnotation("auth-keepalive-timeout", ing)
 	if err != nil {
 		klog.V(3).InfoS("auth-keepalive-timeout annotation is undefined and will be set to its default value")
 		keepaliveTimeout = defaultKeepaliveTimeout
+	}
+	if keepaliveTimeout <= 0 {
+		klog.Warningf("auth-keepalive-timeout annotation (%s) should be greater than zero, setting auth-keepalive 0", authURL.Host)
+		keepaliveConnections = 0
 	}
 
 	durstr, _ := parser.GetStringAnnotation("auth-cache-duration", ing)

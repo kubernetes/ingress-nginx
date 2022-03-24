@@ -515,6 +515,25 @@ http {
 				})
 		})
 
+		ginkgo.It(`should not create additional upstream block when auth-keepalive is negative`, func() {
+			f.UpdateNginxConfigMapData("use-http2", "false")
+			defer func() {
+				f.UpdateNginxConfigMapData("use-http2", "true")
+			}()
+			// Sleep a while just to guarantee that the configmap is applied
+			framework.Sleep()
+
+			annotations["nginx.ingress.kubernetes.io/auth-url"] = "http://foo.bar.baz:5000/path"
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "-1"
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer("",
+				func(server string) bool {
+					return strings.Contains(server, "http://foo.bar.baz:5000/path") &&
+						!strings.Contains(server, `upstream auth-external-auth`)
+				})
+		})
+
 		ginkgo.It(`should not create additional upstream block when auth-keepalive is set with HTTP/2`, func() {
 			annotations["nginx.ingress.kubernetes.io/auth-url"] = "http://foo.bar.baz:5000/path"
 			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "123"

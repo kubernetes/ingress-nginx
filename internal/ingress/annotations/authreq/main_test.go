@@ -266,6 +266,10 @@ func TestKeepaliveAnnotations(t *testing.T) {
 		{"default for invalid timeout", "http://goog.url", "5", "500", "x", 5, 500, defaultKeepaliveTimeout},
 		{"variable in host", "http://$host:5000/a/b", "5", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
 		{"variable in path", "http://goog.url:5000/$path", "5", "", "", 5, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"negative connections", "http://goog.url", "-2", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"negative requests", "http://goog.url", "5", "-1", "", 0, -1, defaultKeepaliveTimeout},
+		{"negative timeout", "http://goog.url", "5", "", "-1", 0, defaultKeepaliveRequests, -1},
+		{"negative request and timeout", "http://goog.url", "5", "-2", "-3", 0, -2, -3},
 	}
 
 	for _, test := range tests {
