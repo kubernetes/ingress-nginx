@@ -264,7 +264,6 @@ Kubernetes: `>=1.19.0-0`
 | controller.admissionWebhooks.patch.tolerations | list | `[]` |  |
 | controller.admissionWebhooks.patchWebhookJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.port | int | `8443` |  |
-| controller.admissionWebhooks.service.appProtocol | bool | `true` | If enabled, includes appProtocol in Kubernetes webhook service ports. The appProtocol field replaces annotations that were used to set a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http. This value specifies the protocol used for each backend specified in the Service. See the following GitHub issue for more details about it's purpose: https://github.com/kubernetes/kubernetes/issues/40244. Will be ignored for Kubernetes versions older than 1.20 |
 | controller.admissionWebhooks.service.annotations | object | `{}` |  |
 | controller.admissionWebhooks.service.externalIPs | list | `[]` |  |
 | controller.admissionWebhooks.service.loadBalancerSourceRanges | list | `[]` |  |
@@ -388,13 +387,12 @@ Kubernetes: `>=1.19.0-0`
 | controller.scope.namespace | string | `""` | Namespace to limit the controller to; defaults to $(POD_NAMESPACE) |
 | controller.scope.namespaceSelector | string | `""` | When scope.enabled == false, instead of watching all namespaces, we watching namespaces whose labels only match with namespaceSelector. Format like foo=bar. Defaults to empty, means watching all namespaces. |
 | controller.service.annotations | object | `{}` |  |
-| controller.service.appProtocol | bool | `true` | If enabled, includes appProtocol in Kubernetes service ports. The appProtocol field replaces annotations that were used to set a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http. This value specifies the protocol used for each backend specified in the Service. See the following GitHub issue for more details about it's purpose: https://github.com/kubernetes/kubernetes/issues/40244. Will be ignored for Kubernetes versions older than 1.20 |
+| controller.service.appProtocol | bool | `true` | If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http It allows choosing the protocol for each backend specified in the Kubernetes service. See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244 Will be ignored for Kubernetes versions older than 1.20 |
 | controller.service.enableHttp | bool | `true` |  |
 | controller.service.enableHttps | bool | `true` |  |
 | controller.service.enabled | bool | `true` |  |
 | controller.service.external.enabled | bool | `true` |  |
 | controller.service.externalIPs | list | `[]` | List of IP addresses at which the controller services are available |
-| controller.service.internal.appProtocol | bool | `true` | If enabled, includes appProtocol in Kubernetes internal service ports. The appProtocol field replaces annotations that were used to set a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http. This value specifies the protocol used for each backend specified in the Service. See the following GitHub issue for more details about it's purpose: https://github.com/kubernetes/kubernetes/issues/40244. Will be ignored for Kubernetes versions older than 1.20 |
 | controller.service.internal.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. |
 | controller.service.internal.enabled | bool | `false` | Enables an additional internal load balancer (besides the external one). |
 | controller.service.internal.loadBalancerSourceRanges | list | `[]` | Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0. |
@@ -486,3 +484,4 @@ Kubernetes: `>=1.19.0-0`
 | serviceAccount.name | string | `""` |  |
 | tcp | object | `{}` | TCP service key:value pairs |
 | udp | object | `{}` | UDP service key:value pairs |
+
