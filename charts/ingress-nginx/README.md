@@ -128,7 +128,7 @@ controller:
 
 ### AWS route53-mapper
 
-To configure the LoadBalancer service with the [route53-mapper addon](https://github.com/kubernetes/kops/tree/master/addons/route53-mapper), add the `domainName` annotation and `dns` label:
+To configure the LoadBalancer service with the [route53-mapper addon](https://github.com/kubernetes/kops/blob/be63d4f1a7a46daaf1c4c482527328236850f111/addons/route53-mapper/README.md), add the `domainName` annotation and `dns` label:
 
 ```yaml
 controller:
