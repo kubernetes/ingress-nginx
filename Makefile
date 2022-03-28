@@ -146,7 +146,7 @@ check_dead_links: ## Check if the documentation contains dead links.
 	@docker run -t \
 	  -v $$PWD:/tmp aledbf/awesome_bot:0.1 \
 	  --allow-dupe \
-	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
+	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" | grep -v vendor | grep -v Changelog.md | sed -e "s#$$PWD/##")
 
 .PHONY: dev-env
 dev-env:  ## Starts a local Kubernetes cluster using kind, building and deploying the ingress controller.
