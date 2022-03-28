@@ -40,7 +40,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
       service:
         annotations:
           prometheus.io/port: "10254"
-          prometheus.io/scrape: "true" 
+          prometheus.io/scrape: "true"
   ..
   ```
    - If you are **not using helm**, you will have to edit your manifests like this:
@@ -61,7 +61,6 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
              ..
 
        ```
-       
       - Deployment manifest:
          ```
          apiVersion: v1
@@ -76,8 +75,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
              - name: prometheus
                containerPort: 10254
                ..
-
-           ```
+         ```
 
 
 ### Deploy and configure Prometheus Server
