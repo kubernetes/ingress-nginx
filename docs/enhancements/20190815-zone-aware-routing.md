@@ -17,13 +17,15 @@ status: implementable
 ## Table of Contents
 
 <!-- toc -->
-- [Summary](#summary)
-- [Motivation](#motivation)
-  - [Goals](#goals)
-  - [Non-Goals](#non-goals)
-- [Proposal](#proposal)
-- [Implementation History](#implementation-history)
-- [Drawbacks [optional]](#drawbacks-optional)
+- [Availability zone aware routing](#availability-zone-aware-routing)
+  - [Table of Contents](#table-of-contents)
+  - [Summary](#summary)
+  - [Motivation](#motivation)
+    - [Goals](#goals)
+    - [Non-Goals](#non-goals)
+  - [Proposal](#proposal)
+  - [Implementation History](#implementation-history)
+  - [Drawbacks [optional]](#drawbacks-optional)
 <!-- /toc -->
 
 ## Summary
