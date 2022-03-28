@@ -49,6 +49,10 @@ ifeq ($(ARCH),)
     $(error mandatory variable ARCH is empty, either set it when calling the command or make sure 'go env GOARCH' works)
 endif
 
+ifneq ($(PLATFORM),)
+	PLATFORM_FLAG="--platform"
+endif
+
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
 BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20210926-g5662db450@sha256:1ef404b5e8741fe49605a1f40c3fdd8ef657aecdb9526ea979d1672eeabd0cd9
@@ -62,6 +66,7 @@ help:  ## Display this help
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
 	@docker build \
+		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
@@ -143,7 +148,7 @@ vet:
 
 .PHONY: check_dead_links
 check_dead_links: ## Check if the documentation contains dead links.
-	@docker run -t \
+	@docker run ${PLATFORM_FLAG} ${PLATFORM} -t \
 	  -v $$PWD:/tmp aledbf/awesome_bot:0.1 \
 	  --allow-dupe \
 	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" | grep -v vendor | grep -v Changelog.md | sed -e "s#$$PWD/##")
@@ -158,8 +163,8 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:8000
-	@docker build -t ingress-nginx-docs .github/actions/mkdocs
-	@docker run --rm -it \
+	@docker build ${PLATFORM_FLAG} ${PLATFORM} -t ingress-nginx-docs .github/actions/mkdocs
+	@docker run ${PLATFORM_FLAG} ${PLATFORM} --rm -it \
 		-p 8000:8000 \
 		-v ${PWD}:/docs \
 		--entrypoint mkdocs \
