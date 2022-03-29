@@ -50,6 +50,8 @@ export TAG=1.0.0-dev
 export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
+export NGINX_BASE_IMAGE = $(cat ../../NGINX_BASE)
+
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
