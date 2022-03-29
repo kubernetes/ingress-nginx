@@ -90,6 +90,8 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   echo "[dev-env] ..done building e2e-image"
 fi
 
+export E2E_BASE_IMAGE=nginx-ingress-controller:e2e
+
 # Preload images used in e2e tests
 KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
 
