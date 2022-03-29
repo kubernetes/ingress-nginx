@@ -18,4 +18,5 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+mkdir -p /modules_mount/etc/nginx/modules
 cp -R /etc/nginx/modules /modules_mount/etc/nginx/modules
