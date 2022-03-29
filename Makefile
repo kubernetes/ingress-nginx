@@ -152,7 +152,7 @@ check_dead_links: ## Check if the documentation contains dead links.
 	  -w /tmp \
 	  -v $$PWD:/tmp dkhamsing/awesome_bot:1.20.0 \
 	  --allow-dupe \
-	  --allow-redirect $(shell find $$PWD -mindepth 1 -name vendor -prune -o -name .modcache -prune -o -name "*.md" | grep -v Changelog.md | sed -e "s#$$PWD/##")
+	  --allow-redirect $(shell find $$PWD -mindepth 1 -name vendor -prune -o -name .modcache -prune -o -name Changelog.md -prune -o -name "*.md" | sed -e "s#$$PWD/##")
 
 .PHONY: dev-env
 dev-env:  ## Starts a local Kubernetes cluster using kind, building and deploying the ingress controller.
