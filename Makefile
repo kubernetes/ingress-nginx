@@ -149,7 +149,8 @@ vet:
 .PHONY: check_dead_links
 check_dead_links: ## Check if the documentation contains dead links.
 	@docker run ${PLATFORM_FLAG} ${PLATFORM} -t \
-	  -v $$PWD:/tmp aledbf/awesome_bot:0.1 \
+	  -w /tmp \
+	  -v $$PWD:/tmp dkhamsing/awesome_bot:1.20.0 \
 	  --allow-dupe \
 	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" | grep -v vendor | grep -v Changelog.md | sed -e "s#$$PWD/##")
 
