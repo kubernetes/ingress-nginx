@@ -20,11 +20,11 @@ set -o pipefail
 
 export NGINX_VERSION=1.19.10
 
-# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.0.0...main
-export OPENTELEMETRY_CPP_VERSION=1.0.0
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.2.0...main
+export OPENTELEMETRY_CPP_VERSION=1.2.0
 
-# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/f4850...main
-export OPENTELEMETRY_CONTRIB_COMMIT=f48500884b1b32efc456790bbcdc2e6cf7a8e630
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
+export OPENTELEMETRY_CONTRIB_COMMIT=2656a4072e257b6794da86ddd1b773b49f5517b3
 
 export BUILD_PATH=/tmp/build
 
@@ -63,7 +63,7 @@ get_src()
 get_src e8d0290ff561986ad7cd6c33307e12e11b137186c4403a6a5ccdb4914c082d88 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
-get_src 45c52498788e47131b20a4786dbb08f4390b8cb419bd3d61c88b503cafff3324 \
+get_src 360cdcbd1a235ec62119cc53956b2d31b6ff5f41d44415be53acc544709d58b8 \
         "https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/$OPENTELEMETRY_CONTRIB_COMMIT.tar.gz"
 
 # improve compilation times
