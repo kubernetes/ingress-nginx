@@ -64,8 +64,8 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
       - Deployment manifest:
          ```
          apiVersion: v1
-         metadata:
          kind: Deployment
+         metadata:
           annotations:
             prometheus.io/scrape: "true"
             prometheus.io/port: "10254"
