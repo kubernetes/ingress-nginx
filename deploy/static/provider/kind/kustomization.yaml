@@ -4,7 +4,7 @@
 # ```
 # namespace: ingress-nginx
 # bases:
-#   - github.com/kubernetes/ingress-nginx/deploy/static/provider/kind?ref=master
+#   - github.com/kubernetes/ingress-nginx/tree/main/deploy/static/provider/kind
 # ```
 
 resources:
