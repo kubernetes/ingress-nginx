@@ -575,8 +575,8 @@ controller:
 
   extraModules: []
   ## Modules, which are mounted into the core nginx image
-  # - name: opentelemetry
-  #   image: busybox
+  # - name: opentelemetry:v20220331-controller-v1.1.2-36-g7517b7ecf@sha256:e3f635474b5da24ccd0ea6b078fb190dae68b8b4a44b52bea19ec2561f0102ec
+  #   image: k8s.gcr.io/ingress-nginx/opentelemetry:
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
