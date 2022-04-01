@@ -1,5 +1,43 @@
 # Changelog
 
+### 1.1.3
+
+**Image:**
+- k8s.gcr.io/ingress-nginx/controller:v1.1.3@sha256:31f47c1e202b39fadecf822a9b76370bd4baed199a005b3e7d4d1455f4fd3fe2
+
+This release upgrades Alpine to 3.14.4 and nginx to 1.19.10 
+
+Patches [OpenSSL CVE-2022-0778](https://github.com/kubernetes/ingress-nginx/issues/8339)
+
+Patches [Libxml2 CVE-2022-23308](https://github.com/kubernetes/ingress-nginx/issues/8321)
+
+_Changes:_
+
+[8415](https://github.com/kubernetes/ingress-nginx/pull/8415) base img update for e2e-test-runner & opentelemetry
+[8403](https://github.com/kubernetes/ingress-nginx/pull/8403) Add execute permissions to nginx image entrypoint.sh
+[8392](https://github.com/kubernetes/ingress-nginx/pull/8392) fix document for monitoring
+[8386](https://github.com/kubernetes/ingress-nginx/pull/8386) downgrade to 3.14.4 and fix tag
+[8379](https://github.com/kubernetes/ingress-nginx/pull/8379) bump luarocks to 3.8.0
+[8368](https://github.com/kubernetes/ingress-nginx/pull/8368) Updated semver in install docs URLs
+[8360](https://github.com/kubernetes/ingress-nginx/pull/8360) Bump github.com/stretchr/testify from 1.7.0 to 1.7.1
+[8334](https://github.com/kubernetes/ingress-nginx/pull/8334) Pinned GitHub workflows by SHA
+[8324](https://github.com/kubernetes/ingress-nginx/pull/8324) Added missing "repo" option on "helm upgrade" command
+[8315](https://github.com/kubernetes/ingress-nginx/pull/8315) Fix 50% split between canary and mainline tests
+[8311](https://github.com/kubernetes/ingress-nginx/pull/8311) leaving it the git tag
+[8307](https://github.com/kubernetes/ingress-nginx/pull/8307) Nginx v1.19.10
+[8302](https://github.com/kubernetes/ingress-nginx/pull/8302) docs: fix changelog formatting for 1.1.2
+[8300](https://github.com/kubernetes/ingress-nginx/pull/8300) Names cannot contain _ (underscore)! So I changed it to -.
+[8288](https://github.com/kubernetes/ingress-nginx/pull/8288) [docs] Missing annotations
+[8287](https://github.com/kubernetes/ingress-nginx/pull/8287) Add the shareProcessNamespace as a configurable setting in the helm chart
+[8286](https://github.com/kubernetes/ingress-nginx/pull/8286) Fix OpenTelemetry sidecar image build
+[8281](https://github.com/kubernetes/ingress-nginx/pull/8281) force prow job by changing something in images/ot dir
+[8273](https://github.com/kubernetes/ingress-nginx/pull/8273) Issue#8241
+[8267](https://github.com/kubernetes/ingress-nginx/pull/8267) Add fsGroup value to admission-webhooks/job-patch charts
+[8262](https://github.com/kubernetes/ingress-nginx/pull/8262) Updated confusing error
+[8258](https://github.com/kubernetes/ingress-nginx/pull/8258) remove 0.46.0 from supported versions table
+[8256](https://github.com/kubernetes/ingress-nginx/pull/8256) fix: deny locations with invalid auth-url annotation
+[8253](https://github.com/kubernetes/ingress-nginx/pull/8253) Add a certificate info metric
+
 ### 1.1.2
 
 **Image:** 

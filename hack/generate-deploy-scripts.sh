@@ -18,7 +18,7 @@ if [ -n "$DEBUG" ]; then
 	set -x
 fi
 
-set -o errexit
+#set -o errexit
 set -o nounset
 set -o pipefail
 
@@ -42,6 +42,7 @@ for K8S_VERSION in "${K8S_TARGET_VERSIONS[@]}"
 do
   for TARGET in ${TARGETS}
   do
+    echo "Running ${K8S_VERSION} for target ${TARGET}"
     TARGET_DIR="${TEMPLATE_DIR}/${TARGET}"
     MANIFEST="${TEMPLATE_DIR}/common/manifest.yaml" # intermediate manifest
     OUTPUT_DIR="${DIR}/deploy/static/${TARGET}/${K8S_VERSION}"
@@ -54,6 +55,9 @@ do
       --namespace ingress-nginx \
       --kube-version ${K8S_VERSION} \
       > $MANIFEST
+    sed -i '' '/app.kubernetes.io\/managed-by: Helm/d' $MANIFEST
+    sed -i '' '/helm.sh/d' $MANIFEST
+
     kustomize --load-restrictor=LoadRestrictionsNone build . > ${OUTPUT_DIR}/deploy.yaml
     rm $MANIFEST
     cd ~-
@@ -64,7 +68,7 @@ do
     if [[ ${K8S_VERSION} = ${K8S_DEFAULT_VERSION} ]]
     then
       cp ${OUTPUT_DIR}/*.yaml ${OUTPUT_DIR}/../
-      sed -i "1s/^/#GENERATED FOR K8S ${K8S_VERSION}\n/" ${OUTPUT_DIR}/../deploy.yaml
+      sed -i "s/^/#GENERATED FOR K8S ${K8S_VERSION}\n/" ${OUTPUT_DIR}/../deploy.yaml
     fi
   done
 done
