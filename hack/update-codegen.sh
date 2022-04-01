@@ -41,4 +41,4 @@ ${CODEGEN_PKG}/generate-groups.sh "deepcopy" \
   k8s.io/ingress-nginx/internal k8s.io/ingress-nginx/internal \
   .:ingress \
   --output-base "$(dirname ${BASH_SOURCE})/../../.." \
-  --go-header-file ${SCRIPT_ROOT}/hack/boilerplate/boilerplate.go.txt
+  --go-header-file ${SCRIPT_ROOT}/hack/boilerplate/boilerplate.generated.go.txt
