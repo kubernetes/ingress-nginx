@@ -60,9 +60,10 @@ jobs:
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
       
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@c25b74a986eb925b398320414b576227f375f946 # v1.2.1
+      - name: Helm Chart Releaser
+        uses: helm/chart-releaser-action@v1.4.0
         env:
+          CR_SKIP_EXISTING: "false"
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_RELEASE_NAME_TEMPLATE: "helm-chart-{{ .Version }}"
         with:

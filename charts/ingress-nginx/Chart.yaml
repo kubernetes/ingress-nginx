@@ -14,7 +14,9 @@ sources:
   - https://github.com/kubernetes/ingress-nginx
 type: application
 maintainers:
-  - name: ChiefAlexander
+  - name: rikatz
+  - name: strongjz
+  - name: tao12345666333
 engine: gotpl
 kubeVersion: ">=1.19.0-0"
 annotations:
@@ -26,3 +28,5 @@ annotations:
   artifacthub.io/changes: |
     - "#8307 Nginx v1.19.10"
     - "#8386 Alpine 3.14.4"
+    - "#8339 Patch OpenSSL CVE-2022-0778"
+    - "#8321 Vulnerability CVE-2022-23308 for libxml2"
