@@ -28,8 +28,8 @@ spec:
       targetPort: prometheus
       ..
 </code></pre></div></li> <li>Deployment manifest: <div class=highlight><pre><span></span><code>apiVersion: v1
-metadata:
 kind: Deployment
+metadata:
  annotations:
    prometheus.io/scrape: &quot;true&quot;
    prometheus.io/port: &quot;10254&quot;
