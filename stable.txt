@@ -1,1 +1,1 @@
-controller-v0.50.0
+controller-v0.51.0
