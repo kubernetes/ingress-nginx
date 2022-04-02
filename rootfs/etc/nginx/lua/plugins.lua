@@ -1,6 +1,5 @@
 local require = require
 local ngx = ngx
-local pairs = pairs
 local ipairs = ipairs
 local string_format = string.format
 local ngx_log = ngx.log
@@ -20,8 +19,11 @@ local function load_plugin(name)
     ngx_log(ERR, string_format("error loading plugin \"%s\": %s", path, plugin))
     return
   end
-
-  plugins[name] = plugin
+  local index = #plugins
+  if (plugin.name == nil or plugin.name == '') then
+    plugin.name = name
+  end
+  plugins[index + 1] = plugin
 end
 
 function _M.init(names)
@@ -39,9 +41,9 @@ end
 function _M.run()
   local phase = ngx.get_phase()
 
-  for name, plugin in pairs(plugins) do
+  for _, plugin in ipairs(plugins) do
     if plugin[phase] then
-      ngx_log(INFO, string_format("running plugin \"%s\" in phase \"%s\"", name, phase))
+      ngx_log(INFO, string_format("running plugin \"%s\" in phase \"%s\"", plugin.name, phase))
 
       -- TODO: consider sandboxing this, should we?
       -- probably yes, at least prohibit plugin from accessing env vars etc
@@ -50,7 +52,7 @@ function _M.run()
       local ok, err = pcall(plugin[phase])
       if not ok then
         ngx_log(ERR, string_format("error while running plugin \"%s\" in phase \"%s\": %s",
-            name, phase, err))
+            plugin.name, phase, err))
       end
     end
   end

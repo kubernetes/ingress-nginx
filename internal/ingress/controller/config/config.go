@@ -93,6 +93,15 @@ const (
 type Configuration struct {
 	defaults.Backend `json:",squash"`
 
+	// AllowSnippetAnnotations enable users to add their own snippets via ingress annotation.
+	// If disabled, only snippets added via ConfigMap are added to ingress.
+	AllowSnippetAnnotations bool `json:"allow-snippet-annotations"`
+
+	// AnnotationValueWordBlocklist defines words that should not be part of an user annotation value
+	// (can be used to run arbitrary code or configs, for example) and that should be dropped.
+	// This list should be separated by "," character
+	AnnotationValueWordBlocklist string `json:"annotation-value-word-blocklist"`
+
 	// Sets the name of the configmap that contains the headers to pass to the client
 	AddHeaders string `json:"add-headers,omitempty"`
 
@@ -379,6 +388,11 @@ type Configuration struct {
 	// https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
 	SSLBufferSize string `json:"ssl-buffer-size,omitempty"`
 
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_reject_handshake
+	// If enabled, SSL handshakes to an invalid virtualhost will be rejected
+	// Default: false
+	SSLRejectHandshake bool `json:"ssl-reject-handshake"`
+
 	// Enables or disables the use of the PROXY protocol to receive client connection
 	// (real IP address) information passed through proxy servers and load balancers
 	// such as HAproxy and Amazon Elastic Load Balancer (ELB).
@@ -408,6 +422,9 @@ type Configuration struct {
 
 	// Brotli Compression Level that will be used
 	BrotliLevel int `json:"brotli-level,omitempty"`
+
+	// Minimum length of responses, in bytes, that will be eligible for brotli compression
+	BrotliMinLength int `json:"brotli-min-length,omitempty"`
 
 	// MIME Types that will be compressed on-the-fly using Brotli module
 	BrotliTypes string `json:"brotli-types,omitempty"`
@@ -533,6 +550,11 @@ type Configuration struct {
 	// OpentracingOperationName specifies a custom name for the location span
 	OpentracingLocationOperationName string `json:"opentracing-location-operation-name"`
 
+	// OpentracingTrustIncomingSpan sets whether or not to trust incoming trace spans
+	// If false, incoming span headers will be rejected
+	// Default: true
+	OpentracingTrustIncomingSpan bool `json:"opentracing-trust-incoming-span"`
+
 	// ZipkinCollectorHost specifies the host to use when uploading traces
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
 
@@ -636,6 +658,9 @@ type Configuration struct {
 
 	// ServerSnippet adds custom configuration to all the servers in the nginx configuration
 	ServerSnippet string `json:"server-snippet"`
+
+	// StreamSnippet adds custom configuration to the stream section of the nginx configuration
+	StreamSnippet string `json:"stream-snippet"`
 
 	// LocationSnippet adds custom configuration to all the locations in the nginx configuration
 	LocationSnippet string `json:"location-snippet"`
@@ -749,7 +774,6 @@ func NewDefault() Configuration {
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
 	defResponseHeaders := make([]string, 0)
-
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
@@ -757,7 +781,10 @@ func NewDefault() Configuration {
 	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}}
 
 	cfg := Configuration{
+
+		AllowSnippetAnnotations:          true,
 		AllowBackendServerHeader:         false,
+		AnnotationValueWordBlocklist:     "",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,
@@ -767,6 +794,7 @@ func NewDefault() Configuration {
 		BlockUserAgents:                  defBlockEntity,
 		BlockReferers:                    defBlockEntity,
 		BrotliLevel:                      4,
+		BrotliMinLength:                  20,
 		BrotliTypes:                      brotliTypes,
 		ClientHeaderBufferSize:           "1k",
 		ClientHeaderTimeout:              60,
@@ -818,6 +846,7 @@ func NewDefault() Configuration {
 		SSLECDHCurve:                     "auto",
 		SSLProtocols:                     sslProtocols,
 		SSLEarlyData:                     sslEarlyData,
+		SSLRejectHandshake:               false,
 		SSLSessionCache:                  true,
 		SSLSessionCacheSize:              sslSessionCacheSize,
 		SSLSessionTickets:                false,
@@ -860,6 +889,7 @@ func NewDefault() Configuration {
 			ProxyBuffering:           "off",
 			ProxyHTTPVersion:         "1.1",
 			ProxyMaxTempFileSize:     "1024m",
+			ServiceUpstream:          false,
 		},
 		UpstreamKeepaliveConnections:           320,
 		UpstreamKeepaliveTimeout:               60,
@@ -867,6 +897,7 @@ func NewDefault() Configuration {
 		LimitConnZoneVariable:                  defaultLimitConnZoneVariable,
 		BindAddressIpv4:                        defBindAddress,
 		BindAddressIpv6:                        defBindAddress,
+		OpentracingTrustIncomingSpan:           true,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,
@@ -925,13 +956,14 @@ type TemplateConfig struct {
 	ListenPorts              *ListenPorts
 	PublishService           *apiv1.Service
 	EnableMetrics            bool
-	MaxmindEditionFiles      []string
+	MaxmindEditionFiles      *[]string
 	MonitorMaxBatchSize      int
 
-	PID        string
-	StatusPath string
-	StatusPort int
-	StreamPort int
+	PID            string
+	StatusPath     string
+	StatusPort     int
+	StreamPort     int
+	StreamSnippets []string
 }
 
 // ListenPorts describe the ports required to run the

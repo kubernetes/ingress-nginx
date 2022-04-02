@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-ingress-lb
+  name: ingress-nginx-lb
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
@@ -18,6 +18,6 @@ spec:
     name: https
     targetPort: 443
   selector:
-    # Selects nginx-ingress-controller pods
+    # Selects ingress-nginx-controller pods
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx

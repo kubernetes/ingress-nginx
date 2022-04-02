@@ -4,6 +4,9 @@
 
 Anytime we reference a TLS secret, we mean a PEM-encoded X.509, RSA (2048) secret.
 
+!!! warning
+    Ensure that the certificate order is leaf->intermediate->root, otherwise the controller will not be able to import the certificate, and you'll see this error in the logs ```W1012 09:15:45.920000       6 backend_ssl.go:46] Error obtaining X.509 certificate: unexpected error creating SSL Cert: certificate and private key does not have a matching public key: tls: private key does not match public key```
+
 You can generate a self-signed certificate and private key with:
 
 ```bash
@@ -40,6 +43,8 @@ add `--default-ssl-certificate=default/foo-tls` in the `nginx-controller` deploy
 
 The default certificate will also be used for ingress `tls:` sections that do not
 have a `secretName` option.
+
+To force redirects for Ingresses that do not specify a TLS-block at all, take a look at `force-ssl-redirect` in [ConfigMap][ConfigMap].
 
 ## SSL Passthrough
 
@@ -87,29 +92,38 @@ annotation in the particular resource.
     This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"`
     annotation in the particular resource.
 
-## Automated Certificate Management with Kube-Lego
+## Automated Certificate Management with cert-manager
 
-!!! tip
-    Kube-Lego has reached end-of-life and is being
-    replaced by [cert-manager](https://github.com/jetstack/cert-manager/).
+[cert-manager] automatically requests missing or expired certificates from a range of 
+[supported issuers][cert-manager-issuer-config] (including [Let's Encrypt]) by monitoring 
+ingress resources.
 
-[Kube-Lego] automatically requests missing or expired certificates from [Let's Encrypt]
-by monitoring ingress resources and their referenced secrets.
+To set up cert-manager you should take a look at this [full example][full-cert-manager-example].
 
-To enable this for an ingress resource you have to add an annotation:
+To enable it for an ingress resource you have to deploy cert-manager, configure a certificate 
+issuer update the manifest:
 
-```console
-kubectl annotate ing ingress-demo kubernetes.io/tls-acme="true"
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-demo
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-staging" # Replace this with a production issuer once you've tested it
+    [..]
+spec:
+  tls:
+    - hosts:
+        - ingress-demo.example.com
+      secretName: ingress-demo-tls
+    [...]
 ```
-
-To setup Kube-Lego you can take a look at this [full example][full-kube-lego-example].
-The first version to fully support Kube-Lego is Nginx Ingress controller 0.8.
 
 ## Default TLS Version and Ciphers
 
 To provide the most secure baseline configuration possible,
 
-nginx-ingress defaults to using TLS 1.2 and 1.3 only, with a [secure set of TLS ciphers][ssl-ciphers].
+ingress-nginx defaults to using TLS 1.2 and 1.3 only, with a [secure set of TLS ciphers][ssl-ciphers].
 
 ### Legacy TLS
 
@@ -117,7 +131,7 @@ The default configuration, though secure, does not support some older browsers a
 
 For instance, TLS 1.1+ is only enabled by default from Android 5.0 on. At the time of writing,
 May 2018, [approximately 15% of Android devices](https://developer.android.com/about/dashboards/#Platform)
-are not compatible with nginx-ingress's default configuration.
+are not compatible with ingress-nginx's default configuration.
 
 To change this default behavior, use a [ConfigMap][ConfigMap].
 
@@ -136,10 +150,11 @@ data:
 
 
 
-[full-kube-lego-example]:https://github.com/jetstack/kube-lego/tree/master/examples
-[Kube-Lego]:https://github.com/jetstack/kube-lego
 [Let's Encrypt]:https://letsencrypt.org
 [ConfigMap]: ./nginx-configuration/configmap.md
 [ssl-ciphers]: ./nginx-configuration/configmap.md#ssl-ciphers
 [SNI]: https://en.wikipedia.org/wiki/Server_Name_Indication
 [mozilla-ssl-config-old]: https://ssl-config.mozilla.org/#server=nginx&config=old
+[cert-manager]: https://github.com/jetstack/cert-manager/
+[full-cert-manager-example]:https://cert-manager.io/docs/tutorials/acme/nginx-ingress/
+[cert-manager-issuer-config]:https://cert-manager.io/docs/configuration/

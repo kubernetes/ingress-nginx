@@ -27,10 +27,11 @@ E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-""}
 ginkgo_args=(
   "-randomizeAllSpecs"
   "-flakeAttempts=2"
+  "-failFast"
   "-progress"
   "-slowSpecThreshold=${SLOW_E2E_THRESHOLD}"
   "-succinct"
-  "-timeout=45m" # Suite timeout should be lower than Prow job timeout to avoid abrupt termination
+  "-timeout=75m"
 )
 
 echo -e "${BGREEN}Running e2e test suite (FOCUS=${FOCUS})...${NC}"

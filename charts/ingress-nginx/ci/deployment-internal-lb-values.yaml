@@ -1,4 +1,8 @@
 controller:
+  image:
+    repository: ingress-controller/controller
+    tag: 1.0.0-dev
+    digest: null
   admissionWebhooks:
     enabled: false
   service:
@@ -6,4 +10,4 @@ controller:
     internal:
       enabled: true
       annotations:
-        service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+        service.beta.kubernetes.io/aws-load-balancer-internal: "true"

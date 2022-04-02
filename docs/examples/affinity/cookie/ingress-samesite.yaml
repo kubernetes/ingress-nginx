@@ -1,25 +1,30 @@
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: cookie-samesite-none
   annotations:
     nginx.ingress.kubernetes.io/affinity: "cookie"
     nginx.ingress.kubernetes.io/session-cookie-name: "SSNONE"
+    nginx.ingress.kubernetes.io/session-cookie-secure: "true"
     nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
     nginx.ingress.kubernetes.io/session-cookie-samesite: "None"
     nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true" # omits SameSite=None for older browsers which reject cookies with SameSite=None
 spec:
+  ingressClassName: nginx
   rules:
   - host: stickyingress-samesite-none.example.com
     http:
       paths:
-      - backend:
-          serviceName: http-svc
-          servicePort: 80
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: http-svc
+            port:
+              number: 80
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: cookie-samesite-strict
@@ -30,11 +35,15 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
     nginx.ingress.kubernetes.io/session-cookie-samesite: "Strict"
 spec:
+  ingressClassName: nginx
   rules:
   - host: stickyingress-samesite-strict.example.com
     http:
       paths:
-      - backend:
-          serviceName: http-svc
-          servicePort: 80
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: http-svc
+            port:
+              number: 80

@@ -18,7 +18,7 @@ SHELL=/bin/bash -o pipefail -o errexit
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
-TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
+TAG ?=v1.0.0
 REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-echo
@@ -36,9 +36,9 @@ build: ensure-buildx
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
-		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:v20210324-g8baef769d@sha256:fcfa3e9d1f8ec3141efedbf77cf659640f452a9c22165c78006ea462b84d06f6 \
-		--build-arg LUAROCKS_VERSION=3.3.1 \
-		--build-arg LUAROCKS_SHA=837481e408f7c06b59befe7ec194537c657687d624894bca7f79034302141a34 \
+		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180 \
+		--build-arg LUAROCKS_VERSION=3.8.0 \
+		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
 		-t $(IMAGE):$(TAG) rootfs
 
 # push the cross built image
@@ -49,7 +49,7 @@ push: build
 ensure-buildx:
 # this is required for cloudbuild
 ifeq ("$(wildcard $(INIT_BUILDX))","")
-	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/hack/init-buildx.sh | bash
+	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/hack/init-buildx.sh | bash
 else
 	@exec $(INIT_BUILDX)
 endif

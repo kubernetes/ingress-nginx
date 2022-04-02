@@ -1,4 +1,4 @@
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -9,6 +9,7 @@ metadata:
   name: docker-registry
   namespace: docker-registry
 spec:
+  ingressClassName: nginx
   tls:
   - hosts:
     - registry.<your domain>
@@ -17,7 +18,10 @@ spec:
   - host: registry.<your domain>
     http:
       paths:
-      - backend:
-          serviceName: docker-registry
-          servicePort: 5000
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: docker-registry
+            port:
+              number: 5000

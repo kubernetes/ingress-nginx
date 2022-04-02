@@ -40,7 +40,6 @@ RUN apk update \
   && rm -rf /var/cache/apk/*
 
 COPY --chown=www-data:www-data etc /etc
-COPY --chown=www-data:www-data ingress-controller /ingress-controller
 
 COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
 COPY --chown=www-data:www-data bin/${TARGETARCH}/nginx-ingress-controller /
@@ -66,6 +65,8 @@ RUN apk add --no-cache libcap \
   && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller \
   && setcap    cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
   && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
+  && setcap    cap_net_bind_service=+ep /usr/bin/dumb-init \
+  && setcap -v cap_net_bind_service=+ep /usr/bin/dumb-init \
   && apk del libcap
 
 USER www-data

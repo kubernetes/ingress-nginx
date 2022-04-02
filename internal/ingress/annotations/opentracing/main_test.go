@@ -20,17 +20,20 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
-		ServiceName: "default-backend",
-		ServicePort: intstr.FromInt(80),
+		Service: &networking.IngressServiceBackend{
+			Name: "default-backend",
+			Port: networking.ServiceBackendPort{
+				Number: 80,
+			},
+		},
 	}
 
 	return &networking.Ingress{
@@ -39,9 +42,13 @@ func buildIngress() *networking.Ingress {
 			Namespace: api.NamespaceDefault,
 		},
 		Spec: networking.IngressSpec{
-			Backend: &networking.IngressBackend{
-				ServiceName: "default-backend",
-				ServicePort: intstr.FromInt(80),
+			DefaultBackend: &networking.IngressBackend{
+				Service: &networking.IngressServiceBackend{
+					Name: "default-backend",
+					Port: networking.ServiceBackendPort{
+						Number: 80,
+					},
+				},
 			},
 			Rules: []networking.IngressRule{
 				{
@@ -96,6 +103,29 @@ func TestIngressAnnotationOpentracingSetFalse(t *testing.T) {
 
 	if openTracing.Enabled {
 		t.Errorf("expected annotation value to be false, got true")
+	}
+}
+
+func TestIngressAnnotationOpentracingTrustSetTrue(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("enable-opentracing")] = "true"
+	data[parser.GetAnnotationWithPrefix("opentracing-trust-incoming-span")] = "true"
+	ing.SetAnnotations(data)
+
+	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	openTracing, ok := val.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type")
+	}
+
+	if !openTracing.Enabled {
+		t.Errorf("expected annotation value to be true, got false")
+	}
+
+	if !openTracing.TrustEnabled {
+		t.Errorf("expected annotation value to be true, got false")
 	}
 }
 

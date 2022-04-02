@@ -3,12 +3,19 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "ingress-nginx.fullname" . }}-admission-patch
+  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- with .Values.controller.admissionWebhooks.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: admission-webhook
+    {{- with .Values.controller.admissionWebhooks.patch.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
 {{- if .Capabilities.APIVersions.Has "batch/v1alpha1" }}
   # Alpha feature since k8s 1.12
@@ -23,6 +30,9 @@ spec:
       labels:
         {{- include "ingress-nginx.labels" . | nindent 8 }}
         app.kubernetes.io/component: admission-webhook
+        {{- with .Values.controller.admissionWebhooks.patch.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
     {{- if .Values.controller.admissionWebhooks.patch.priorityClassName }}
       priorityClassName: {{ .Values.controller.admissionWebhooks.patch.priorityClassName }}
@@ -48,6 +58,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+          securityContext:
+            allowPrivilegeEscalation: false
+          {{- if .Values.controller.admissionWebhooks.patchWebhookJob.resources }}
+          resources: {{ toYaml .Values.controller.admissionWebhooks.patchWebhookJob.resources | nindent 12 }}
+          {{- end }}
       restartPolicy: OnFailure
       serviceAccountName: {{ include "ingress-nginx.fullname" . }}-admission
     {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
@@ -59,4 +74,5 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: {{ .Values.controller.admissionWebhooks.patch.runAsUser }}
+        fsGroup: {{ .Values.controller.admissionWebhooks.patch.fsGroup }}
 {{- end }}

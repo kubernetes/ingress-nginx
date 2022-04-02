@@ -2,6 +2,139 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.0.18
+"[8291](https://github.com/kubernetes/ingress-nginx/pull/8291) remove git tag env from cloud build"
+"[8286](https://github.com/kubernetes/ingress-nginx/pull/8286) Fix OpenTelemetry sidecar image build"
+"[8277](https://github.com/kubernetes/ingress-nginx/pull/8277) Add OpenSSF Best practices badge"
+"[8273](https://github.com/kubernetes/ingress-nginx/pull/8273) Issue#8241"
+"[8267](https://github.com/kubernetes/ingress-nginx/pull/8267) Add fsGroup value to admission-webhooks/job-patch charts"
+"[8262](https://github.com/kubernetes/ingress-nginx/pull/8262) Updated confusing error"
+"[8256](https://github.com/kubernetes/ingress-nginx/pull/8256) fix: deny locations with invalid auth-url annotation"
+"[8253](https://github.com/kubernetes/ingress-nginx/pull/8253) Add a certificate info metric"
+"[8236](https://github.com/kubernetes/ingress-nginx/pull/8236) webhook: remove useless code."
+"[8227](https://github.com/kubernetes/ingress-nginx/pull/8227) Update libraries in webhook image"
+"[8225](https://github.com/kubernetes/ingress-nginx/pull/8225) fix inconsistent-label-cardinality for prometheus metrics: nginx_ingress_controller_requests"
+"[8221](https://github.com/kubernetes/ingress-nginx/pull/8221) Do not validate ingresses with unknown ingress class in admission webhook endpoint"
+"[8210](https://github.com/kubernetes/ingress-nginx/pull/8210) Bump github.com/prometheus/client_golang from 1.11.0 to 1.12.1"
+"[8209](https://github.com/kubernetes/ingress-nginx/pull/8209) Bump google.golang.org/grpc from 1.43.0 to 1.44.0"
+"[8204](https://github.com/kubernetes/ingress-nginx/pull/8204) Add Artifact Hub lint"
+"[8203](https://github.com/kubernetes/ingress-nginx/pull/8203) Fix Indentation of example and link to cert-manager tutorial"
+"[8201](https://github.com/kubernetes/ingress-nginx/pull/8201) feat(metrics): add path and method labels to requests countera"
+"[8199](https://github.com/kubernetes/ingress-nginx/pull/8199) use functional options to reduce number of methods creating an EchoDeployment"
+"[8196](https://github.com/kubernetes/ingress-nginx/pull/8196) docs: fix inconsistent controller annotation"
+"[8191](https://github.com/kubernetes/ingress-nginx/pull/8191) Using Go install for misspell"
+"[8186](https://github.com/kubernetes/ingress-nginx/pull/8186) prometheus+grafana using servicemonitor"
+"[8185](https://github.com/kubernetes/ingress-nginx/pull/8185) Append elements on match, instead of removing for cors-annotations"
+"[8179](https://github.com/kubernetes/ingress-nginx/pull/8179) Bump github.com/opencontainers/runc from 1.0.3 to 1.1.0"
+"[8173](https://github.com/kubernetes/ingress-nginx/pull/8173) Adding annotations to the controller service account"
+"[8163](https://github.com/kubernetes/ingress-nginx/pull/8163) Update the $req_id placeholder description"
+"[8162](https://github.com/kubernetes/ingress-nginx/pull/8162) Versioned static manifests"
+"[8159](https://github.com/kubernetes/ingress-nginx/pull/8159) Adding some geoip variables and default values"
+"[8155](https://github.com/kubernetes/ingress-nginx/pull/8155) #7271 feat: avoid-pdb-creation-when-default-backend-disabled-and-replicas-gt-1"
+"[8151](https://github.com/kubernetes/ingress-nginx/pull/8151) Automatically generate helm docs"
+"[8143](https://github.com/kubernetes/ingress-nginx/pull/8143) Allow to configure delay before controller exits"
+"[8136](https://github.com/kubernetes/ingress-nginx/pull/8136) add ingressClass option to helm chart - back compatibility with ingress.class annotations"
+"[8126](https://github.com/kubernetes/ingress-nginx/pull/8126) Example for JWT"
+
+
+### 4.0.15
+
+- [8120] https://github.com/kubernetes/ingress-nginx/pull/8120    Update go in runner and release v1.1.1
+- [8119] https://github.com/kubernetes/ingress-nginx/pull/8119    Update to go v1.17.6
+- [8118] https://github.com/kubernetes/ingress-nginx/pull/8118    Remove deprecated libraries, update other libs
+- [8117] https://github.com/kubernetes/ingress-nginx/pull/8117    Fix codegen errors
+- [8115] https://github.com/kubernetes/ingress-nginx/pull/8115    chart/ghaction: set the correct permission to have access to push a release
+- [8098] https://github.com/kubernetes/ingress-nginx/pull/8098    generating SHA for CA only certs in backend_ssl.go + comparision of P…
+- [8088] https://github.com/kubernetes/ingress-nginx/pull/8088    Fix Edit this page link to use main branch
+- [8072] https://github.com/kubernetes/ingress-nginx/pull/8072    Expose GeoIP2 Continent code as variable
+- [8061] https://github.com/kubernetes/ingress-nginx/pull/8061    docs(charts): using helm-docs for chart
+- [8058] https://github.com/kubernetes/ingress-nginx/pull/8058    Bump github.com/spf13/cobra from 1.2.1 to 1.3.0
+- [8054] https://github.com/kubernetes/ingress-nginx/pull/8054    Bump google.golang.org/grpc from 1.41.0 to 1.43.0
+- [8051] https://github.com/kubernetes/ingress-nginx/pull/8051    align bug report with feature request regarding kind documentation
+- [8046] https://github.com/kubernetes/ingress-nginx/pull/8046    Report expired certificates (#8045)
+- [8044] https://github.com/kubernetes/ingress-nginx/pull/8044    remove G109 check till gosec resolves issues
+- [8042] https://github.com/kubernetes/ingress-nginx/pull/8042    docs_multiple_instances_one_cluster_ticket_7543
+- [8041] https://github.com/kubernetes/ingress-nginx/pull/8041    docs: fix typo'd executible name
+- [8035] https://github.com/kubernetes/ingress-nginx/pull/8035    Comment busy owners
+- [8029] https://github.com/kubernetes/ingress-nginx/pull/8029    Add stream-snippet as a ConfigMap and Annotation option
+- [8023] https://github.com/kubernetes/ingress-nginx/pull/8023    fix nginx compilation flags
+- [8021] https://github.com/kubernetes/ingress-nginx/pull/8021    Disable default modsecurity_rules_file if modsecurity-snippet is specified
+- [8019] https://github.com/kubernetes/ingress-nginx/pull/8019    Revise main documentation page
+- [8018] https://github.com/kubernetes/ingress-nginx/pull/8018    Preserve order of plugin invocation
+- [8015] https://github.com/kubernetes/ingress-nginx/pull/8015    Add newline indenting to admission webhook annotations
+- [8014] https://github.com/kubernetes/ingress-nginx/pull/8014    Add link to example error page manifest in docs
+- [8009] https://github.com/kubernetes/ingress-nginx/pull/8009    Fix spelling in documentation and top-level files
+- [8008] https://github.com/kubernetes/ingress-nginx/pull/8008    Add relabelings in controller-servicemonitor.yaml
+- [8003] https://github.com/kubernetes/ingress-nginx/pull/8003    Minor improvements (formatting, consistency) in install guide
+- [8001] https://github.com/kubernetes/ingress-nginx/pull/8001    fix: go-grpc Dockerfile
+- [7999] https://github.com/kubernetes/ingress-nginx/pull/7999    images: use k8s-staging-test-infra/gcb-docker-gcloud
+- [7996] https://github.com/kubernetes/ingress-nginx/pull/7996    doc: improvement
+- [7983] https://github.com/kubernetes/ingress-nginx/pull/7983    Fix a couple of misspellings in the annotations documentation.
+- [7979] https://github.com/kubernetes/ingress-nginx/pull/7979    allow set annotations for admission Jobs
+- [7977] https://github.com/kubernetes/ingress-nginx/pull/7977    Add ssl_reject_handshake to defaul server
+- [7975] https://github.com/kubernetes/ingress-nginx/pull/7975    add legacy version update v0.50.0 to main changelog
+- [7972] https://github.com/kubernetes/ingress-nginx/pull/7972    updated service upstream definition
+
+### 4.0.14
+
+- [8061] https://github.com/kubernetes/ingress-nginx/pull/8061 Using helm-docs to populate values table in README.md
+
+### 4.0.13
+
+- [8008] https://github.com/kubernetes/ingress-nginx/pull/8008 Add relabelings in controller-servicemonitor.yaml
+
+### 4.0.12
+
+- [7978] https://github.com/kubernetes/ingress-nginx/pull/7979 Support custom annotations in admissions Jobs
+
+### 4.0.11
+
+- [7873] https://github.com/kubernetes/ingress-nginx/pull/7873 Makes the [appProtocol](https://kubernetes.io/docs/concepts/services-networking/_print/#application-protocol) field optional.
+
+### 4.0.10
+
+- [7964] https://github.com/kubernetes/ingress-nginx/pull/7964 Update controller version to v1.1.0
+
+### 4.0.9
+
+- [6992] https://github.com/kubernetes/ingress-nginx/pull/6992 Add ability to specify labels for all resources
+
+### 4.0.7
+
+- [7923] https://github.com/kubernetes/ingress-nginx/pull/7923 Release v1.0.5 of ingress-nginx
+- [7806] https://github.com/kubernetes/ingress-nginx/pull/7806 Choice option for internal/external loadbalancer type service
+
+### 4.0.6
+
+- [7804] https://github.com/kubernetes/ingress-nginx/pull/7804 Release v1.0.4 of ingress-nginx
+- [7651] https://github.com/kubernetes/ingress-nginx/pull/7651 Support ipFamilyPolicy and ipFamilies fields in Helm Chart
+- [7798] https://github.com/kubernetes/ingress-nginx/pull/7798 Exoscale: use HTTP Healthcheck mode
+- [7793] https://github.com/kubernetes/ingress-nginx/pull/7793 Update kube-webhook-certgen to v1.1.1
+
+### 4.0.5
+
+- [7740] https://github.com/kubernetes/ingress-nginx/pull/7740 Release v1.0.3 of ingress-nginx
+
+### 4.0.3
+
+- [7707] https://github.com/kubernetes/ingress-nginx/pull/7707 Release v1.0.2 of ingress-nginx
+
+### 4.0.2 
+
+- [7681] https://github.com/kubernetes/ingress-nginx/pull/7681 Release v1.0.1 of ingress-nginx
+
+### 4.0.1 
+
+- [7535] https://github.com/kubernetes/ingress-nginx/pull/7535 Release v1.0.0 ingress-nginx
+
+### 3.34.0
+
+- [7256] https://github.com/kubernetes/ingress-nginx/pull/7256 Add namespace field in the namespace scoped resource templates
+
+### 3.33.0
+
+- [7164] https://github.com/kubernetes/ingress-nginx/pull/7164 Update nginx to v1.20.1
+
 ### 3.32.0
 
 - [7117] https://github.com/kubernetes/ingress-nginx/pull/7117 Add annotations for HPA

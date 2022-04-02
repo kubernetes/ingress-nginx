@@ -2,8 +2,8 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 3.33.0
-appVersion: 0.47.0
+version: 4.0.19
+appVersion: 1.1.3
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -14,11 +14,19 @@ sources:
   - https://github.com/kubernetes/ingress-nginx
 type: application
 maintainers:
-  - name: ChiefAlexander
+  - name: rikatz
+  - name: strongjz
+  - name: tao12345666333
 engine: gotpl
-kubeVersion: ">=1.16.0-0"
+kubeVersion: ">=1.19.0-0"
 annotations:
+  # Use this annotation to indicate that this chart version is a pre-release.
+  # https://artifacthub.io/docs/topics/annotations/helm/
+  artifacthub.io/prerelease: "false"
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - Update nginx to v1.20.1
+    - "#8307 Nginx v1.19.10"
+    - "#8386 Alpine 3.14.4"
+    - "#8339 Patch OpenSSL CVE-2022-0778"
+    - "#8321 Vulnerability CVE-2022-23308 for libxml2"

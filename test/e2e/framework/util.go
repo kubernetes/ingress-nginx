@@ -24,6 +24,8 @@ import (
 
 	"github.com/onsi/ginkgo"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -31,6 +33,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
+
+	"k8s.io/ingress-nginx/internal/k8s"
 )
 
 const (
@@ -38,7 +42,7 @@ const (
 	Poll = 2 * time.Second
 
 	// DefaultTimeout time to wait for operations to complete
-	DefaultTimeout = 5 * time.Minute
+	DefaultTimeout = 90 * time.Second
 )
 
 func nowStamp() string {
@@ -81,14 +85,15 @@ func RestclientConfig(config, context string) (*api.Config, error) {
 // RunID unique identifier of the e2e run
 var RunID = uuid.NewUUID()
 
-// CreateKubeNamespace creates a new namespace in the cluster
-func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
+func createNamespace(baseName string, labels map[string]string, c kubernetes.Interface) (string, error) {
 	ts := time.Now().UnixNano()
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("e2e-tests-%v-%v-", baseName, ts),
+			Labels:       labels,
 		},
 	}
+
 	// Be robust about making the namespace creation call.
 	var got *corev1.Namespace
 	var err error
@@ -107,14 +112,113 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error
 	return got.Name, nil
 }
 
-// deleteKubeNamespace deletes a namespace and all the objects inside
-func deleteKubeNamespace(c kubernetes.Interface, namespace string) error {
+// CreateKubeNamespace creates a new namespace in the cluster
+func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
+
+	return createNamespace(baseName, nil, c)
+}
+
+// CreateKubeNamespaceWithLabel creates a new namespace with given labels in the cluster
+func CreateKubeNamespaceWithLabel(baseName string, labels map[string]string, c kubernetes.Interface) (string, error) {
+
+	return createNamespace(baseName, labels, c)
+}
+
+// DeleteKubeNamespace deletes a namespace and all the objects inside
+func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
 	grace := int64(0)
 	pb := metav1.DeletePropagationBackground
 	return c.CoreV1().Namespaces().Delete(context.TODO(), namespace, metav1.DeleteOptions{
 		GracePeriodSeconds: &grace,
 		PropagationPolicy:  &pb,
 	})
+}
+
+// CreateIngressClass creates a new IngressClass related to a test/namespace and also
+// the required ClusterRole/ClusterRoleBinding
+func CreateIngressClass(namespace string, c kubernetes.Interface) (string, error) {
+	icname := fmt.Sprintf("ic-%s", namespace)
+	var err error
+
+	ic, err := c.NetworkingV1().IngressClasses().
+		Create(context.TODO(), &networkingv1.IngressClass{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: icname,
+			},
+			Spec: networkingv1.IngressClassSpec{
+				Controller: k8s.IngressNGINXController,
+			},
+		}, metav1.CreateOptions{})
+	if err != nil {
+		return "", fmt.Errorf("Unexpected error creating IngressClass %s: %v", icname, err)
+	}
+
+	_, err = c.RbacV1().ClusterRoles().Create(context.TODO(), &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{Name: icname},
+		Rules: []rbacv1.PolicyRule{{
+			APIGroups: []string{"networking.k8s.io"},
+			Resources: []string{"ingressclasses"},
+			Verbs:     []string{"get", "list", "watch"},
+		}},
+	}, metav1.CreateOptions{})
+	if err != nil {
+		return "", fmt.Errorf("Unexpected error creating IngressClass ClusterRole %s: %v", icname, err)
+	}
+
+	_, err = c.RbacV1().ClusterRoleBindings().Create(context.TODO(), &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: icname,
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     icname,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				APIGroup:  "",
+				Kind:      "ServiceAccount",
+				Namespace: namespace,
+				Name:      "nginx-ingress",
+			},
+		},
+	}, metav1.CreateOptions{})
+	if err != nil {
+		return "", fmt.Errorf("Unexpected error creating IngressClass ClusterRoleBinding %s: %v", icname, err)
+	}
+	return ic.Name, nil
+}
+
+//deleteIngressClass deletes an IngressClass and its related ClusterRole* objects
+func deleteIngressClass(c kubernetes.Interface, ingressclass string) error {
+	var err error
+	grace := int64(0)
+	pb := metav1.DeletePropagationBackground
+	deleteOptions := metav1.DeleteOptions{
+		GracePeriodSeconds: &grace,
+		PropagationPolicy:  &pb,
+	}
+	err = c.NetworkingV1().IngressClasses().Delete(context.TODO(), ingressclass, deleteOptions)
+	if err != nil {
+		return fmt.Errorf("Unexpected error deleting IngressClass %s: %v", ingressclass, err)
+	}
+
+	err = c.RbacV1().ClusterRoleBindings().Delete(context.TODO(), ingressclass, deleteOptions)
+	if err != nil {
+		return fmt.Errorf("Unexpected error deleting IngressClass ClusterRoleBinding %s: %v", ingressclass, err)
+	}
+	err = c.RbacV1().ClusterRoles().Delete(context.TODO(), ingressclass, deleteOptions)
+	if err != nil {
+		return fmt.Errorf("Unexpected error deleting IngressClass ClusterRole %s: %v", ingressclass, err)
+	}
+
+	return nil
+}
+
+//GetIngressClassName returns the default IngressClassName given a namespace
+func GetIngressClassName(namespace string) *string {
+	icname := fmt.Sprintf("ic-%s", namespace)
+	return &icname
 }
 
 // WaitForKubeNamespaceNotExist waits until a namespaces is not present in the cluster
@@ -223,7 +327,7 @@ func WaitForNoIngressInNamespace(c kubernetes.Interface, namespace, name string)
 
 func noIngressInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
 	return func() (bool, error) {
-		ing, err := c.NetworkingV1beta1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		ing, err := c.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return true, nil
 		}
@@ -245,7 +349,7 @@ func WaitForIngressInNamespace(c kubernetes.Interface, namespace, name string) e
 
 func ingressInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
 	return func() (bool, error) {
-		ing, err := c.NetworkingV1beta1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		ing, err := c.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
 		}

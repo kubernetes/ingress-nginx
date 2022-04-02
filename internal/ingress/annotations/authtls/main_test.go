@@ -20,9 +20,8 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -30,8 +29,12 @@ import (
 
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
-		ServiceName: "default-backend",
-		ServicePort: intstr.FromInt(80),
+		Service: &networking.IngressServiceBackend{
+			Name: "default-backend",
+			Port: networking.ServiceBackendPort{
+				Number: 80,
+			},
+		},
 	}
 
 	return &networking.Ingress{
@@ -40,9 +43,13 @@ func buildIngress() *networking.Ingress {
 			Namespace: api.NamespaceDefault,
 		},
 		Spec: networking.IngressSpec{
-			Backend: &networking.IngressBackend{
-				ServiceName: "default-backend",
-				ServicePort: intstr.FromInt(80),
+			DefaultBackend: &networking.IngressBackend{
+				Service: &networking.IngressServiceBackend{
+					Name: "default-backend",
+					Port: networking.ServiceBackendPort{
+						Number: 80,
+					},
+				},
 			},
 			Rules: []networking.IngressRule{
 				{
@@ -87,10 +94,6 @@ func TestAnnotations(t *testing.T) {
 	data := map[string]string{}
 
 	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "default/demo-secret"
-	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
-	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "1"
-	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
-	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
 
 	ing.SetAnnotations(data)
 
@@ -113,11 +116,44 @@ func TestAnnotations(t *testing.T) {
 	if u.AuthSSLCert.Secret != secret.Secret {
 		t.Errorf("expected %v but got %v", secret.Secret, u.AuthSSLCert.Secret)
 	}
-	if u.VerifyClient != "off" {
-		t.Errorf("expected %v but got %v", "off", u.VerifyClient)
+	if u.VerifyClient != "on" {
+		t.Errorf("expected %v but got %v", "on", u.VerifyClient)
 	}
 	if u.ValidationDepth != 1 {
 		t.Errorf("expected %v but got %v", 1, u.ValidationDepth)
+	}
+	if u.ErrorPage != "" {
+		t.Errorf("expected %v but got %v", "", u.ErrorPage)
+	}
+	if u.PassCertToUpstream != false {
+		t.Errorf("expected %v but got %v", false, u.PassCertToUpstream)
+	}
+
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "2"
+	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
+	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
+
+	ing.SetAnnotations(data)
+
+	i, err = NewParser(fakeSecret).Parse(ing)
+	if err != nil {
+		t.Errorf("Unexpected error with ingress: %v", err)
+	}
+
+	u, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+
+	if u.AuthSSLCert.Secret != secret.Secret {
+		t.Errorf("expected %v but got %v", secret.Secret, u.AuthSSLCert.Secret)
+	}
+	if u.VerifyClient != "off" {
+		t.Errorf("expected %v but got %v", "off", u.VerifyClient)
+	}
+	if u.ValidationDepth != 2 {
+		t.Errorf("expected %v but got %v", 2, u.ValidationDepth)
 	}
 	if u.ErrorPage != "ok.com/error" {
 		t.Errorf("expected %v but got %v", "ok.com/error", u.ErrorPage)

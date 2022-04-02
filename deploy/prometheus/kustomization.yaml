@@ -12,7 +12,6 @@ resources:
 - service.yaml
 images:
 - name: prom/prometheus
-  newTag: v2.3.2
 configMapGenerator:
 - name: prometheus-configuration
   files:

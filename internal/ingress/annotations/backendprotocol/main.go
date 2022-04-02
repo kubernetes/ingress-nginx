@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -31,7 +31,7 @@ import (
 const HTTP = "HTTP"
 
 var (
-	validProtocols = regexp.MustCompile(`^(HTTP|HTTPS|AJP|GRPC|GRPCS|FCGI)$`)
+	validProtocols = regexp.MustCompile(`^(AUTO_HTTP|HTTP|HTTPS|AJP|GRPC|GRPCS|FCGI)$`)
 )
 
 type backendProtocol struct {

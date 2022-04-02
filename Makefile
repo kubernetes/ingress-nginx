@@ -51,7 +51,7 @@ endif
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20210530-g6aab4c291@sha256:a7356029dd0c26cc3466bf7a27daec0f4df73aa14ca6c8b871a767022a812c0b
+BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180
 
 GOARCH=$(ARCH)
 
@@ -167,7 +167,7 @@ live-docs: ## Build and launch a local copy of the documentation website in http
 
 .PHONY: misspell
 misspell:  ## Check for spelling errors.
-	@go get github.com/client9/misspell/cmd/misspell
+	@go install github.com/client9/misspell/cmd/misspell@latest
 	misspell \
 		-locale US \
 		-error \

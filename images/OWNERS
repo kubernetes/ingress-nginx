@@ -1,7 +1,9 @@
+# See the OWNERS docs: https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md
+
 approvers:
-- aledbf
-- ElvinEfendi
+- ingress-nginx-admins
+- ingress-nginx-maintainers
 
 reviewers:
-- ElvinEfendi
-- aledbf
+- ingress-nginx-admins
+- ingress-nginx-maintainers

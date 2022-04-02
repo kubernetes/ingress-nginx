@@ -1,6 +1,6 @@
 # External Basic Authentication
 
-### Example 1:
+### Example 1
 
 Use an external service (Basic Auth) located in `https://httpbin.org`
 
@@ -13,7 +13,7 @@ NAME            HOSTS                         ADDRESS       PORTS     AGE
 external-auth   external-auth-01.sample.com   172.17.4.99   80        13s
 
 $ kubectl get ing external-auth -o yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -23,17 +23,20 @@ metadata:
   name: external-auth
   namespace: default
   resourceVersion: "2068378"
-  selfLink: /apis/networking/v1beta1/namespaces/default/ingresses/external-auth
+  selfLink: /apis/networking/v1/namespaces/default/ingresses/external-auth
   uid: 5c388f1d-8970-11e6-9004-080027d2dc94
 spec:
   rules:
   - host: external-auth-01.sample.com
     http:
       paths:
-      - backend:
-          serviceName: http-svc
-          servicePort: 80
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: http-svc
+            port: 
+              number: 80
 status:
   loadBalancer:
     ingress:
@@ -41,7 +44,7 @@ status:
 $
 ```
 
-Test 1: no username/password (expect code 401)
+## Test 1: no username/password (expect code 401)
 
 ```console
 $ curl -k http://172.17.4.99 -v -H 'Host: external-auth-01.sample.com'
@@ -71,7 +74,8 @@ $ curl -k http://172.17.4.99 -v -H 'Host: external-auth-01.sample.com'
 * Connection #0 to host 172.17.4.99 left intact
 ```
 
-Test 2: valid username/password (expect code 200)
+## Test 2: valid username/password (expect code 200)
+
 ```
 $ curl -k http://172.17.4.99 -v -H 'Host: external-auth-01.sample.com' -u 'user:passwd'
 * Rebuilt URL to: http://172.17.4.99/
@@ -118,7 +122,8 @@ BODY:
 -no body in request-
 ```
 
-Test 3: invalid username/password (expect code 401)
+## Test 3: invalid username/password (expect code 401)
+
 ```
 curl -k http://172.17.4.99 -v -H 'Host: external-auth-01.sample.com' -u 'user:user'
 * Rebuilt URL to: http://172.17.4.99/

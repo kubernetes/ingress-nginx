@@ -1,4 +1,4 @@
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -15,14 +15,18 @@ metadata:
   name: nginx-test
   namespace: default
 spec:
+  ingressClassName: nginx
   rules:
   - host: mydomain.com
     http:
       paths:
-      - backend:
-          serviceName: http-svc
-          servicePort: 80
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: http-svc
+            port:
+              number: 80
   tls:
   - hosts:
     - mydomain.com

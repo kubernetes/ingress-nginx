@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -113,6 +113,12 @@ rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/serv
 		if test.expErr {
 			if err == nil {
 				t.Errorf("%v: expected error but none returned", test.name)
+			}
+			continue
+		}
+		if !test.expErr {
+			if err != nil {
+				t.Errorf("%v: didn't expected error but error was returned: %v", test.name, err)
 			}
 			continue
 		}

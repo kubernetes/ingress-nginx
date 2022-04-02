@@ -3,11 +3,15 @@ name: Helm
 on:
   push:
     branches:
-      - master
+      - main
+      - legacy
 
 jobs:
 
   changes:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
     runs-on: ubuntu-latest
     if: |
       (github.repository == 'kubernetes/ingress-nginx')
@@ -18,9 +22,9 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,6 +36,10 @@ jobs:
   chart:
     name: Release Chart
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # needed to write releases
+
     needs:
       - changes
     if: |
@@ -41,7 +49,7 @@ jobs:
     steps:
 
       - name: Checkout master
-        uses: actions/checkout@v2
+        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
         with:
           # Fetch entire history. Required for chart-releaser; see https://github.com/helm/chart-releaser-action/issues/13#issuecomment-602063896
           fetch-depth: 0
@@ -51,11 +59,12 @@ jobs:
         run: |
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.1.0
+      
+      - name: Helm Chart Releaser
+        uses: helm/chart-releaser-action@v1.4.0
         env:
-          CR_TOKEN: "${{ secrets.PERSONAL_TOKEN }}"
+          CR_SKIP_EXISTING: "false"
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_RELEASE_NAME_TEMPLATE: "helm-chart-{{ .Version }}"
         with:
           charts_dir: charts

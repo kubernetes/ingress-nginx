@@ -17,14 +17,22 @@ limitations under the License.
 package settings
 
 import (
+	"context"
+	"fmt"
+	"path/filepath"
 	"strings"
 
 	"net/http"
 
 	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
+
+const testdataURL = "https://github.com/maxmind/MaxMind-DB/blob/5a0be1c0320490b8e4379dbd5295a18a648ff156/test-data/GeoLite2-Country-Test.mmdb?raw=true"
 
 var _ = framework.DescribeSetting("Geoip2", func() {
 	f := framework.NewDefaultFramework("geoip2")
@@ -33,6 +41,30 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
+	})
+
+	ginkgo.It("should include geoip2 line in config when enabled and db file exists", func() {
+		edition := "GeoLite2-Country"
+
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--maxmind-edition-ids="+edition)
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
+		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
+
+		filename := fmt.Sprintf("/etc/nginx/geoip/%s.mmdb", edition)
+		exec, err := f.ExecIngressPod(fmt.Sprintf(`sh -c "mkdir -p '%s' && wget -O '%s' '%s' 2>&1"`, filepath.Dir(filename), filename, testdataURL))
+		framework.Logf(exec)
+		assert.Nil(ginkgo.GinkgoT(), err, fmt.Sprintln("error downloading test geoip2 db", filename))
+
+		f.UpdateNginxConfigMapData("use-geoip2", "true")
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				return strings.Contains(cfg, fmt.Sprintf("geoip2 %s", filename))
+			})
 	})
 
 	ginkgo.It("should only allow requests from specific countries", func() {

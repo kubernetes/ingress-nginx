@@ -149,14 +149,16 @@ http {
     {{ if $all.Cfg.EnableModsecurity }}
     modsecurity on;
 
-    modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-
-    {{ if $all.Cfg.EnableOWASPCoreRules }}
-    modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
-    {{ else if (not (empty $all.Cfg.ModsecuritySnippet)) }}
+    {{ if (not (empty $all.Cfg.ModsecuritySnippet)) }}
     modsecurity_rules '
       {{ $all.Cfg.ModsecuritySnippet }}
     ';
+    {{ else }}
+    modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+    {{ end }}
+    
+    {{ if $all.Cfg.EnableOWASPCoreRules }}
+    modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
     {{ end }}
 
     {{ end }}
@@ -179,6 +181,7 @@ http {
     geoip2 /etc/nginx/geoip/GeoLite2-Country.mmdb {
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_continent_code source=$remote_addr continent code;
         $geoip2_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
@@ -187,6 +190,7 @@ http {
     geoip2 /etc/nginx/geoip/GeoIP2-Country.mmdb {
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_continent_code source=$remote_addr continent code;
         $geoip2_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
@@ -241,8 +245,9 @@ http {
 
     {{ if eq $file "GeoIP2-ISP.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoIP2-ISP.mmdb {
-        $geoip2_isp isp;
-        $geoip2_isp_org organization;
+        $geoip2_isp source=$remote_addr isp;
+        $geoip2_isp_org source=$remote_addr organization;
+        $geoip2_asn source=$remote_addr default=0 autonomous_system_number;
     }
     {{ end }}
 
@@ -255,8 +260,11 @@ http {
     {{ if eq $file "GeoIP2-Anonymous-IP.mmdb" }}
     geoip2 /etc/nginx/geoip/GeoIP2-Anonymous-IP.mmdb {
         $geoip2_is_anon source=$remote_addr is_anonymous;
-        $geoip2_is_hosting_provider source=$remote_addr is_hosting_provider;
-        $geoip2_is_public_proxy source=$remote_addr is_public_proxy;
+        $geoip2_is_anonymous source=$remote_addr default=0 is_anonymous;
+        $geoip2_is_anonymous_vpn source=$remote_addr default=0 is_anonymous_vpn;
+        $geoip2_is_hosting_provider source=$remote_addr default=0 is_hosting_provider;
+        $geoip2_is_public_proxy source=$remote_addr default=0 is_public_proxy;
+        $geoip2_is_tor_exit_node source=$remote_addr default=0 is_tor_exit_node;
     }
     {{ end }}
 
@@ -318,6 +326,7 @@ http {
     {{ if $cfg.EnableBrotli }}
     brotli on;
     brotli_comp_level {{ $cfg.BrotliLevel }};
+    brotli_min_length {{ $cfg.BrotliMinLength }};
     brotli_types {{ $cfg.BrotliTypes }};
     {{ end }}
 
@@ -427,7 +436,7 @@ http {
 
     # turn on session caching to drastically improve performance
     {{ if $cfg.SSLSessionCache }}
-    ssl_session_cache builtin:1000 shared:SSL:{{ $cfg.SSLSessionCacheSize }};
+    ssl_session_cache shared:SSL:{{ $cfg.SSLSessionCacheSize }};
     ssl_session_timeout {{ $cfg.SSLSessionTimeout }};
     {{ end }}
 
@@ -581,11 +590,17 @@ http {
                 request_uri = string.sub(request_uri, 1, -2)
             end
 
+            {{ if $cfg.UseForwardedHeaders }}
+            local redirectScheme = ngx.var.http_x_forwarded_proto
+            {{ else }}
+            local redirectScheme = ngx.var.scheme
+            {{ end }}
+
             {{ if ne $all.ListenPorts.HTTPS 443 }}
             {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-            return string.format("%s://%s%s%s", ngx.var.scheme, "{{ $redirect.To }}", "{{ $redirect_port }}", request_uri)
+            return string.format("%s://%s%s%s", redirectScheme, "{{ $redirect.To }}", "{{ $redirect_port }}", request_uri)
             {{ else }}
-            return string.format("%s://%s%s", ngx.var.scheme, "{{ $redirect.To }}", request_uri)
+            return string.format("%s://%s%s", redirectScheme, "{{ $redirect.To }}", request_uri)
             {{ end }}
         }
 
@@ -674,8 +689,8 @@ http {
         }
 
         location /configuration {
-            client_max_body_size                    {{ luaConfigurationRequestBodySize $cfg }}m;
-            client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }}m;
+            client_max_body_size                    {{ luaConfigurationRequestBodySize $cfg }};
+            client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }};
             proxy_buffering                         off;
 
             content_by_lua_block {
@@ -824,6 +839,11 @@ stream {
         proxy_pass              upstream_balancer;
     }
     {{ end }}
+
+    # Stream Snippets
+    {{ range $snippet := .StreamSnippets }}
+    {{ $snippet }}
+    {{ end }}
 }
 
 {{/* definition of templates to avoid repetitions */}}
@@ -864,8 +884,24 @@ stream {
 {{ define "CORS" }}
      {{ $cors := .CorsConfig }}
      # Cors Preflight methods needs additional options and different Return Code
+     {{ if $cors.CorsAllowOrigin }}
+        {{ buildCorsOriginRegex $cors.CorsAllowOrigin }}
+     {{ end }}
      if ($request_method = 'OPTIONS') {
-        more_set_headers 'Access-Control-Allow-Origin: {{ $cors.CorsAllowOrigin }}';
+        set $cors ${cors}options;
+     }
+
+     if ($cors = "true") {
+        more_set_headers 'Access-Control-Allow-Origin: $http_origin';
+        {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
+        more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
+        more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
+        {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
+        more_set_headers 'Access-Control-Max-Age: {{ $cors.CorsMaxAge }}';
+     }
+
+     if ($cors = "trueoptions") {
+        more_set_headers 'Access-Control-Allow-Origin: $http_origin';
         {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
         more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
         more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
@@ -875,11 +911,6 @@ stream {
         more_set_headers 'Content-Length: 0';
         return 204;
      }
-
-        more_set_headers 'Access-Control-Allow-Origin: {{ $cors.CorsAllowOrigin }}';
-        {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
-        {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
-
 {{ end }}
 
 {{/* definition of server-template to avoid repetitions with server-alias */}}
@@ -891,6 +922,10 @@ stream {
         {{ buildHTTPSListener $all $server.Hostname }}
 
         set $proxy_upstream_name "-";
+
+        {{ if eq $server.Hostname "_" }}
+        ssl_reject_handshake {{ if $all.Cfg.SSLRejectHandshake }}on{{ else }}off{{ end }};
+        {{ end }}
 
         ssl_certificate_by_lua_block {
             certificate.call()
@@ -1094,7 +1129,7 @@ stream {
             set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
             set $global_rate_limit_exceeding n;
 
-            {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $location }}
+            {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $all.Cfg.OpentracingTrustIncomingSpan $location }}
 
             {{ if $location.Mirror.Source }}
             mirror {{ $location.Mirror.Source }};
@@ -1176,7 +1211,7 @@ stream {
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthResponseHeaders $externalAuth.ResponseHeaders }}
+            {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
             {{ $line }}
             {{- end }}
             {{ end }}
@@ -1194,7 +1229,7 @@ stream {
             auth_digest {{ $location.BasicDigestAuth.Realm | quote }};
             auth_digest_user_file {{ $location.BasicDigestAuth.File }};
             {{ end }}
-            proxy_set_header Authorization "";
+            {{ $proxySetHeader }} Authorization "";
             {{ end }}
             {{ end }}
 

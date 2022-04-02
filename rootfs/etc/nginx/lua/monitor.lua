@@ -37,6 +37,7 @@ local function metrics()
     namespace = ngx.var.namespace or "-",
     ingress = ngx.var.ingress_name or "-",
     service = ngx.var.service_name or "-",
+    canary = ngx.var.proxy_alternative_upstream_name or "-",
     path = ngx.var.location_path or "-",
 
     method = ngx.var.request_method or "-",

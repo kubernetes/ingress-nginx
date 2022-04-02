@@ -25,9 +25,8 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -96,6 +95,7 @@ var _ = framework.DescribeSetting("[Security] no-auth-locations", func() {
 })
 
 func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName string) *networking.Ingress {
+	pathtype := networking.PathTypePrefix
 	return &networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      host,
@@ -106,6 +106,7 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 			},
 		},
 		Spec: networking.IngressSpec{
+			IngressClassName: framework.GetIngressClassName(namespace),
 			Rules: []networking.IngressRule{
 				{
 					Host: host,
@@ -113,17 +114,27 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 						HTTP: &networking.HTTPIngressRuleValue{
 							Paths: []networking.HTTPIngressPath{
 								{
-									Path: "/",
+									Path:     "/",
+									PathType: &pathtype,
 									Backend: networking.IngressBackend{
-										ServiceName: framework.EchoService,
-										ServicePort: intstr.FromInt(80),
+										Service: &networking.IngressServiceBackend{
+											Name: framework.EchoService,
+											Port: networking.ServiceBackendPort{
+												Number: int32(80),
+											},
+										},
 									},
 								},
 								{
-									Path: pathName,
+									Path:     pathName,
+									PathType: &pathtype,
 									Backend: networking.IngressBackend{
-										ServiceName: framework.EchoService,
-										ServicePort: intstr.FromInt(80),
+										Service: &networking.IngressServiceBackend{
+											Name: framework.EchoService,
+											Port: networking.ServiceBackendPort{
+												Number: int32(80),
+											},
+										},
 									},
 								},
 							},

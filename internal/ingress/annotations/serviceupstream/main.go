@@ -17,9 +17,10 @@ limitations under the License.
 package serviceupstream
 
 import (
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -33,5 +34,13 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 }
 
 func (s serviceUpstream) Parse(ing *networking.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation("service-upstream", ing)
+	defBackend := s.r.GetDefaultBackend()
+
+	val, err := parser.GetBoolAnnotation("service-upstream", ing)
+	// A missing annotation is not a problem, just use the default
+	if err == errors.ErrMissingAnnotations {
+		return defBackend.ServiceUpstream, nil
+	}
+
+	return val, nil
 }

@@ -23,7 +23,7 @@ REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-runner
 
-NGINX_BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:v20210530-g6aab4c291@sha256:a7356029dd0c26cc3466bf7a27daec0f4df73aa14ca6c8b871a767022a812c0b
+NGINX_BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -39,13 +39,13 @@ build: ensure-buildx
 		--progress=$(PROGRESS) \
 		--pull \
 		--build-arg BASE_IMAGE=$(NGINX_BASE_IMAGE) \
-		--build-arg GOLANG_VERSION=1.16.5 \
+		--build-arg GOLANG_VERSION=1.17.6 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
-		--build-arg K8S_RELEASE=v1.19.4 \
+		--build-arg K8S_RELEASE=v1.21.3 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
 		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
-		--build-arg LUAROCKS_VERSION=3.3.1 \
-		--build-arg LUAROCKS_SHA=837481e408f7c06b59befe7ec194537c657687d624894bca7f79034302141a34 \
+		--build-arg LUAROCKS_VERSION=3.8.0 \
+		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
 		--build-arg CHART_TESTING_VERSION=3.0.0 \
 		--build-arg YAML_LINT_VERSION=1.13.0 \
 		--build-arg YAMALE_VERSION=1.8.0 \
@@ -60,7 +60,7 @@ push: build
 ensure-buildx:
 # this is required for cloudbuild
 ifeq ("$(wildcard $(INIT_BUILDX))","")
-	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/hack/init-buildx.sh | bash
+	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/hack/init-buildx.sh | bash
 else
 	@exec $(INIT_BUILDX)
 endif

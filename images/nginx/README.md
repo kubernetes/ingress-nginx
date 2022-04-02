@@ -4,6 +4,8 @@ This custom image contains:
 
 - [nginx-http-auth-digest](https://github.com/atomx/nginx-http-auth-digest)
 - [ngx_http_substitutions_filter_module](https://github.com/yaoweibin/ngx_http_substitutions_filter_module)
+- [OpenTelemetry-CPP](https://github.com/open-telemetry/opentelemetry-cpp)
+- [OpenTelemetry-CPP-Nginx](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx)
 - [nginx-opentracing](https://github.com/opentracing-contrib/nginx-opentracing)
 - [opentracing-cpp](https://github.com/opentracing/opentracing-cpp)
 - [zipkin-cpp-opentracing](https://github.com/rnburn/zipkin-cpp-opentracing)
@@ -18,11 +20,6 @@ This image provides a default configuration file with no backend servers.
 _Using docker_
 
 ```console
-docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:v20210324-g8baef769d@sha256:fcfa3e9d1f8ec3141efedbf77cf659640f452a9c22165c78006ea462b84d06f6
+docker run -v /some/nginx.conf:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180
 ```
 
-_Creating a replication controller_
-
-```console
-kubectl create -f ./rc.yaml
-```

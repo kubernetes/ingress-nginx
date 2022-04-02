@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	corev1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -453,6 +453,29 @@ http {
 				Expect().
 				Status(http.StatusOK)
 		})
+
+		ginkgo.It("should overwrite Foo header with auth response", func() {
+			var (
+				rewriteHeader = "Foo"
+				rewriteVal    = "bar"
+			)
+			annotations["nginx.ingress.kubernetes.io/auth-response-headers"] = rewriteHeader
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("proxy_set_header '%s' $authHeader0;", rewriteHeader))
+			})
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				WithHeader(rewriteHeader, rewriteVal).
+				WithBasicAuth("user", "password").
+				Expect().
+				Status(http.StatusOK).
+				Body().
+				NotContainsFold(fmt.Sprintf("%s=%s", rewriteHeader, rewriteVal))
+		})
 	})
 
 	ginkgo.Context("when external authentication is configured with a custom redirect param", func() {
@@ -667,6 +690,39 @@ http {
 				Expect().
 				Status(http.StatusFound).
 				Header("Location").Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", thisHost, thisHost, url.QueryEscape("/?a=b&c=d")))
+		})
+	})
+
+	ginkgo.Context("with invalid auth-url should deny whole location", func() {
+		host := "auth"
+		var annotations map[string]string
+		var ing *networking.Ingress
+
+		ginkgo.BeforeEach(func() {
+			annotations = map[string]string{
+				"nginx.ingress.kubernetes.io/auth-url": "https://invalid..auth.url",
+			}
+
+			ing = framework.NewSingleIngress(host, "/denied-auth", host, f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, "server_name auth")
+			})
+		})
+
+		ginkgo.It("should return 503 (location was denied)", func() {
+			f.HTTPTestClient().
+				GET("/denied-auth").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusServiceUnavailable)
+		})
+
+		ginkgo.It("should add error to the config", func() {
+			f.WaitForNginxServer(host, func(server string) bool {
+				return strings.Contains(server, "could not parse auth-url annotation: invalid url host")
+			})
 		})
 	})
 })

@@ -32,7 +32,7 @@ var _ = framework.DescribeSetting("[Load Balancer] round-robin", func() {
 	f := framework.NewDefaultFramework("round-robin")
 
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(3)
+		f.NewEchoDeployment(framework.WithDeploymentReplicas(3))
 		f.UpdateNginxConfigMapData("worker-processes", "1")
 	})
 
@@ -66,7 +66,7 @@ var _ = framework.DescribeSetting("[Load Balancer] round-robin", func() {
 		}
 
 		for _, v := range replicaRequestCount {
-			assert.Equal(ginkgo.GinkgoT(), v, 200)
+			assert.Equal(ginkgo.GinkgoT(), 200, v)
 		}
 	})
 })

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: nginxhello
-          image: gcr.io/kubernetes-e2e-test-images/echoserver:2.2
+          image: k8s.gcr.io/e2e-test-images/echoserver:2.3
           ports:
             - containerPort: 8080
           env:
@@ -54,7 +54,7 @@ spec:
       targetPort: 8080
 
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -64,7 +64,15 @@ metadata:
   name: nginxhello-ingress
   namespace: default
 spec:
-  backend:
-    serviceName: nginxhello
-    servicePort: 80
-
+  ingressClassName: nginx
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: nginxhello
+              port:
+                number: 80

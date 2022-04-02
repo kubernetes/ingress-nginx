@@ -32,7 +32,7 @@ var _ = framework.DescribeSetting("[Load Balancer] EWMA", func() {
 	f := framework.NewDefaultFramework("ewma")
 
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(3)
+		f.NewEchoDeployment(framework.WithDeploymentReplicas(3))
 		f.SetNginxConfigMapData(map[string]string{
 			"worker-processes": "2",
 			"load-balance":     "ewma"},

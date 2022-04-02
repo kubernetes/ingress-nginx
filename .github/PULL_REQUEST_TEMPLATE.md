@@ -10,6 +10,7 @@
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] Documentation only
 
 ## Which issue/s this PR fixes
 <!--
@@ -28,6 +29,6 @@ fixes #
 <!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
 - [ ] My change requires a change to the documentation.
 - [ ] I have updated the documentation accordingly.
-- [ ] I've read the [CONTRIBUTION](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md) guide
+- [ ] I've read the [CONTRIBUTION](https://github.com/kubernetes/ingress-nginx/blob/main/CONTRIBUTING.md) guide
 - [ ] I have added tests to cover my changes.
 - [ ] All new and existing tests passed.

@@ -15,21 +15,25 @@ This can be enabled by setting the `nginx.ingress.kubernetes.io/use-regex` annot
 See the [description](./nginx-configuration/annotations.md#use-regex) of the `use-regex` annotation for more details.
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: test-ingress
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
+  ingressClassName: nginx
   rules:
   - host: test.com
     http:
       paths:
       - path: /foo/.*
+        pathType: Prefix
         backend:
-          serviceName: test
-          servicePort: 80
+          service:
+            name: test
+            port:
+              number: 80
 ```
 
 The preceding ingress definition would translate to the following location block within the NGINX configuration for the `test.com` server:
@@ -51,41 +55,52 @@ In NGINX, regular expressions follow a **first match** policy. In order to enabl
 Let the following two ingress definitions be created:
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: test-ingress-1
 spec:
+  ingressClassName: nginx
   rules:
   - host: test.com
     http:
       paths:
       - path: /foo/bar
+        pathType: Prefix
         backend:
-          serviceName: service1
-          servicePort: 80
+          service:
+            name: service1
+            port:
+              number: 80
       - path: /foo/bar/
+        pathType: Prefix
         backend:
-          serviceName: service2
-          servicePort: 80
+          service:
+            name: service2
+            port:
+              number: 80
 ```
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: test-ingress-2
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
+  ingressClassName: nginx
   rules:
   - host: test.com
     http:
       paths:
       - path: /foo/bar/(.+)
+        pathType: Prefix
         backend:
-          serviceName: service3
-          servicePort: 80
+          service:
+            name: service3
+            port: 
+              number: 80
 ```
 
 The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the `test.com` server:
@@ -125,25 +140,32 @@ This case is expected and a result of NGINX's a first match policy for paths tha
 Let the following ingress be defined:
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: test-ingress-3
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
+  ingressClassName: nginx
   rules:
   - host: test.com
     http:
       paths:
       - path: /foo/bar/bar
+        pathType: Prefix
         backend:
-          serviceName: test
-          servicePort: 80
+          service:
+            name: test
+            port: 
+              number: 80
       - path: /foo/bar/[A-Z0-9]{3}
+        pathType: Prefix
         backend:
-          serviceName: test
-          servicePort: 80
+          service:
+            name: test
+            port: 
+              number: 80
 ```
 
 The ingress controller would define the following location blocks (in this order) within the NGINX template for the `test.com` server:

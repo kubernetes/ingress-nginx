@@ -3,6 +3,8 @@
 This example shows how to add authentication in a Ingress rule using a secret that contains a file generated with `htpasswd`.
 It's important the file generated is named `auth` (actually - that the secret has a key `data.auth`), otherwise the ingress-controller returns a 503.
 
+## Create htpasswd file
+
 ```console
 $ htpasswd -c auth foo
 New password: <bar>
@@ -11,10 +13,14 @@ Re-type new password:
 Adding password for user foo
 ```
 
+## Convert htpasswd into a secret
+
 ```console
 $ kubectl create secret generic basic-auth --from-file=auth
 secret "basic-auth" created
 ```
+
+## Examine secret
 
 ```console
 $ kubectl get secret basic-auth -o yaml
@@ -28,9 +34,11 @@ metadata:
 type: Opaque
 ```
 
+## Using kubectl, create an ingress tied to the basic-auth secret
+
 ```console
-echo "
-apiVersion: networking.k8s.io/v1beta1
+$ echo "
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-with-auth
@@ -42,16 +50,22 @@ metadata:
     # message to display with an appropriate context why the authentication is required
     nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - foo'
 spec:
+  ingressClassName: nginx
   rules:
   - host: foo.bar.com
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: http-svc
-          servicePort: 80
+          service: 
+            name: http-svc
+            port: 
+              number: 80
 " | kubectl create -f -
 ```
+
+## Use curl to confirm authorization is required by the ingress
 
 ```
 $ curl -v http://10.2.29.4/ -H 'Host: foo.bar.com'
@@ -79,6 +93,8 @@ $ curl -v http://10.2.29.4/ -H 'Host: foo.bar.com'
 </html>
 * Connection #0 to host 10.2.29.4 left intact
 ```
+
+## Use curl with the correct credentials to connect to the ingress
 
 ```
 $ curl -v http://10.2.29.4/ -H 'Host: foo.bar.com' -u 'foo:bar'

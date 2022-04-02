@@ -11,7 +11,7 @@ You need a [TLS cert](../PREREQUISITES.md#tls-certificates) and a [test HTTP ser
 Create a `ingress.yaml` file.
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nginx-test
@@ -22,15 +22,19 @@ spec:
       # This assumes tls-secret exists and the SSL
       # certificate contains a CN for foo.bar.com
       secretName: tls-secret
+  ingressClassName: nginx
   rules:
     - host: foo.bar.com
       http:
         paths:
         - path: /
+          pathType: Prefix
           backend:
             # This assumes http-svc exists and routes to healthy endpoints
-            serviceName: http-svc
-            servicePort: 80
+            service:
+              name: http-svc
+              port:
+                number: 80
 ```
 
 The following command instructs the controller to terminate traffic using the provided
@@ -61,10 +65,10 @@ Annotations:
 Events:
   FirstSeen	LastSeen	Count	From				SubObjectPath	Type		Reason	Message
   ---------	--------	-----	----				-------------	--------	------	-------
-  7s		7s		1	{nginx-ingress-controller }			Normal		CREATE	default/nginx-test
-  7s		7s		1	{nginx-ingress-controller }			Normal		UPDATE	default/nginx-test
-  7s		7s		1	{nginx-ingress-controller }			Normal		CREATE	ip: 104.198.183.6
-  7s		7s		1	{nginx-ingress-controller }			Warning		MAPPING	Ingress rule 'default/nginx-test' contains no path definition. Assuming /
+  7s		7s		1	{ingress-nginx-controller }			Normal		CREATE	default/nginx-test
+  7s		7s		1	{ingress-nginx-controller }			Normal		UPDATE	default/nginx-test
+  7s		7s		1	{ingress-nginx-controller }			Normal		CREATE	ip: 104.198.183.6
+  7s		7s		1	{ingress-nginx-controller }			Warning		MAPPING	Ingress rule 'default/nginx-test' contains no path definition. Assuming /
 
 $ curl 104.198.183.6 -L
 curl: (60) SSL certificate problem: self signed certificate

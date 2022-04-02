@@ -2,7 +2,7 @@
 
 ## Overview
 
-This example applies to nginx-ingress-controllers being deployed in an environment with RBAC enabled.
+This example applies to ingress-nginx-controllers being deployed in an environment with RBAC enabled.
 
 Role Based Access Control is comprised of four layers:
 
@@ -11,25 +11,25 @@ Role Based Access Control is comprised of four layers:
 3. `Role` - permissions assigned to a role that apply to a specific namespace
 4. `RoleBinding` - binding a Role to a specific account
 
-In order for RBAC to be applied to an nginx-ingress-controller, that controller
+In order for RBAC to be applied to an ingress-nginx-controller, that controller
 should be assigned to a `ServiceAccount`.  That `ServiceAccount` should be
-bound to the `Role`s and `ClusterRole`s defined for the nginx-ingress-controller.
+bound to the `Role`s and `ClusterRole`s defined for the ingress-nginx-controller.
 
 ## Service Accounts created in this example
 
-One ServiceAccount is created in this example, `nginx-ingress-serviceaccount`.
+One ServiceAccount is created in this example, `ingress-nginx`.
 
 ## Permissions Granted in this example
 
 There are two sets of permissions defined in this example.  Cluster-wide
-permissions defined by the `ClusterRole` named `nginx-ingress-clusterrole`, and
-namespace specific permissions defined by the `Role` named `nginx-ingress-role`.
+permissions defined by the `ClusterRole` named `ingress-nginx`, and
+namespace specific permissions defined by the `Role` named `ingress-nginx`.
 
 ### Cluster Permissions
 
-These permissions are granted in order for the nginx-ingress-controller to be
+These permissions are granted in order for the ingress-nginx-controller to be
 able to function as an ingress across the cluster.  These permissions are
-granted to the ClusterRole named `nginx-ingress-clusterrole`
+granted to the ClusterRole named `ingress-nginx`
 
 * `configmaps`, `endpoints`, `nodes`, `pods`, `secrets`: list, watch
 * `nodes`: get
@@ -39,13 +39,13 @@ granted to the ClusterRole named `nginx-ingress-clusterrole`
 
 ### Namespace Permissions
 
-These permissions are granted specific to the nginx-ingress namespace.  These
-permissions are granted to the Role named `nginx-ingress-role`
+These permissions are granted specific to the ingress-nginx namespace.  These
+permissions are granted to the Role named `ingress-nginx`
 
 * `configmaps`, `pods`, `secrets`: get
 * `endpoints`: get
 
-Furthermore to support leader-election, the nginx-ingress-controller needs to
+Furthermore to support leader-election, the ingress-nginx-controller needs to
 have access to a `configmap` using the resourceName `ingress-controller-leader-nginx`
 
 > Note that resourceNames can NOT be used to limit requests using the “create”
@@ -64,13 +64,13 @@ This resourceName is the concatenation of the `election-id` and the
 * `resourceName` : `<election-id>-<ingress-class>`
 
 Please adapt accordingly if you overwrite either parameter when launching the
-nginx-ingress-controller.
+ingress-nginx-controller.
 
 ### Bindings
 
-The ServiceAccount `nginx-ingress-serviceaccount` is bound to the Role
-`nginx-ingress-role` and the ClusterRole `nginx-ingress-clusterrole`.
+The ServiceAccount `ingress-nginx` is bound to the Role
+`ingress-nginx` and the ClusterRole `ingress-nginx`.
 
 The serviceAccountName associated with the containers in the deployment must
 match the serviceAccount. The namespace references in the Deployment metadata, 
-container arguments, and POD_NAMESPACE should be in the nginx-ingress namespace.
+container arguments, and POD_NAMESPACE should be in the ingress-nginx namespace.

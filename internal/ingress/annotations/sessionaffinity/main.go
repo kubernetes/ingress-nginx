@@ -19,7 +19,7 @@ package sessionaffinity
 import (
 	"regexp"
 
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -27,13 +27,19 @@ import (
 )
 
 const (
-	annotationAffinityType = "affinity"
-	annotationAffinityMode = "affinity-mode"
+	annotationAffinityType           = "affinity"
+	annotationAffinityMode           = "affinity-mode"
+	annotationAffinityCanaryBehavior = "affinity-canary-behavior"
+
 	// If a cookie with this name exists,
 	// its value is used as an index into the list of available backends.
 	annotationAffinityCookieName = "session-cookie-name"
 
 	defaultAffinityCookieName = "INGRESSCOOKIE"
+
+	// This is used to force the Secure flag on the cookie even if the
+	// incoming request is not secured. (https://github.com/kubernetes/ingress-nginx/issues/6812)
+	annotationAffinityCookieSecure = "session-cookie-secure"
 
 	// This is used to control the cookie expires, its value is a number of seconds until the
 	// cookie expires
@@ -66,6 +72,8 @@ type Config struct {
 	Type string `json:"type"`
 	// The affinity mode, i.e. how sticky a session is
 	Mode string `json:"mode"`
+	// Affinity behavior for canaries (sticky or legacy)
+	CanaryBehavior string `json:"canaryBehavior"`
 	Cookie
 }
 
@@ -81,6 +89,8 @@ type Cookie struct {
 	Path string `json:"path"`
 	// Flag that allows cookie regeneration on request failure
 	ChangeOnFailure bool `json:"changeonfailure"`
+	// Secure flag to be set
+	Secure bool `json:"secure"`
 	// SameSite attribute value
 	SameSite string `json:"samesite"`
 	// Flag that conditionally applies SameSite=None attribute on cookie if user agent accepts it.
@@ -122,6 +132,11 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieSameSite)
 	}
 
+	cookie.Secure, err = parser.GetBoolAnnotation(annotationAffinityCookieSecure, ing)
+	if err != nil {
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieSecure)
+	}
+
 	cookie.ConditionalSameSiteNone, err = parser.GetBoolAnnotation(annotationAffinityCookieConditionalSameSiteNone, ing)
 	if err != nil {
 		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieConditionalSameSiteNone)
@@ -160,6 +175,11 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 		am = ""
 	}
 
+	cb, err := parser.GetStringAnnotation(annotationAffinityCanaryBehavior, ing)
+	if err != nil {
+		cb = ""
+	}
+
 	switch at {
 	case "cookie":
 		cookie = a.cookieAffinityParse(ing)
@@ -169,8 +189,9 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	return &Config{
-		Type:   at,
-		Mode:   am,
-		Cookie: *cookie,
+		Type:           at,
+		Mode:           am,
+		CanaryBehavior: cb,
+		Cookie:         *cookie,
 	}, nil
 }

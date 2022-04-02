@@ -1,6 +1,6 @@
 # Default backend
 
-The default backend is a service which handles all URL paths and hosts the nginx controller doesn't understand
+The default backend is a service which handles all URL paths and hosts the Ingress-NGINX controller doesn't understand
 (i.e., all the requests that are not mapped with an Ingress).
 
 Basically a default backend exposes two URLs:
@@ -9,5 +9,5 @@ Basically a default backend exposes two URLs:
 - `/` that returns 404
 
 !!! example
-    The sub-directory [`/images/custom-error-pages`](https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages)
+    The sub-directory [`/images/custom-error-pages`](https://github.com/kubernetes/ingress-nginx/tree/main/images/custom-error-pages)
     provides an additional service for the purpose of customizing the error pages served via the default backend.

@@ -2,9 +2,13 @@
 
 This example demonstrates how to use a custom backend to render custom error pages.
 
+If you are using Helm Chart, look at [example values](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/customization/custom-errors/custom-default-backend.helm.values.yaml) and don't forget to add [configMap](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/customization/custom-errors/custom-default-backend-error_pages.configMap.yaml) to your deployment, otherwise continue with [Customized default backend](#customized-default-backend) manual deployment.
+
 ## Customized default backend
 
-First, create the custom `default-backend`. It will be used by the Ingress controller later on.
+First, create the custom `default-backend`. It will be used by the Ingress controller later on.  
+To do that, you can take a look at the [example manifest](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/customization/custom-errors/custom-default-backend.yaml)
+in this project's GitHub repository.
 
 ```
 $ kubectl create -f custom-default-backend.yaml

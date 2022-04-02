@@ -105,7 +105,7 @@ func TestHandleSigterm(t *testing.T) {
 
 	ngx := controller.NewNGINXController(conf, nil)
 
-	go handleSigterm(ngx, func(code int) {
+	go handleSigterm(ngx, 10, func(code int) {
 		if code != 1 {
 			t.Errorf("Expected exit code 1 but %d received", code)
 		}

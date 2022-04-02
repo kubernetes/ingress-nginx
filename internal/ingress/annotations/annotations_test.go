@@ -20,9 +20,8 @@ import (
 	"testing"
 
 	apiv1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
@@ -30,19 +29,20 @@ import (
 )
 
 var (
-	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
-	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
-	annotationAffinityMode         = parser.GetAnnotationWithPrefix("affinity-mode")
-	annotationCorsEnabled          = parser.GetAnnotationWithPrefix("enable-cors")
-	annotationCorsAllowMethods     = parser.GetAnnotationWithPrefix("cors-allow-methods")
-	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
-	annotationCorsExposeHeaders    = parser.GetAnnotationWithPrefix("cors-expose-headers")
-	annotationCorsAllowCredentials = parser.GetAnnotationWithPrefix("cors-allow-credentials")
-	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
-	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
-	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
-	annotationUpstreamHashBy       = parser.GetAnnotationWithPrefix("upstream-hash-by")
-	annotationCustomHTTPErrors     = parser.GetAnnotationWithPrefix("custom-http-errors")
+	annotationPassthrough            = parser.GetAnnotationWithPrefix("ssl-passthrough")
+	annotationAffinityType           = parser.GetAnnotationWithPrefix("affinity")
+	annotationAffinityMode           = parser.GetAnnotationWithPrefix("affinity-mode")
+	annotationAffinityCanaryBehavior = parser.GetAnnotationWithPrefix("affinity-canary-behavior")
+	annotationCorsEnabled            = parser.GetAnnotationWithPrefix("enable-cors")
+	annotationCorsAllowMethods       = parser.GetAnnotationWithPrefix("cors-allow-methods")
+	annotationCorsAllowHeaders       = parser.GetAnnotationWithPrefix("cors-allow-headers")
+	annotationCorsExposeHeaders      = parser.GetAnnotationWithPrefix("cors-expose-headers")
+	annotationCorsAllowCredentials   = parser.GetAnnotationWithPrefix("cors-allow-credentials")
+	defaultCorsMethods               = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+	defaultCorsHeaders               = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+	annotationAffinityCookieName     = parser.GetAnnotationWithPrefix("session-cookie-name")
+	annotationUpstreamHashBy         = parser.GetAnnotationWithPrefix("upstream-hash-by")
+	annotationCustomHTTPErrors       = parser.GetAnnotationWithPrefix("custom-http-errors")
 )
 
 type mockCfg struct {
@@ -76,8 +76,12 @@ func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) 
 
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
-		ServiceName: "default-backend",
-		ServicePort: intstr.FromInt(80),
+		Service: &networking.IngressServiceBackend{
+			Name: "default-backend",
+			Port: networking.ServiceBackendPort{
+				Number: 80,
+			},
+		},
 	}
 
 	return &networking.Ingress{
@@ -86,9 +90,13 @@ func buildIngress() *networking.Ingress {
 			Namespace: apiv1.NamespaceDefault,
 		},
 		Spec: networking.IngressSpec{
-			Backend: &networking.IngressBackend{
-				ServiceName: "default-backend",
-				ServicePort: intstr.FromInt(80),
+			DefaultBackend: &networking.IngressBackend{
+				Service: &networking.IngressServiceBackend{
+					Name: "default-backend",
+					Port: networking.ServiceBackendPort{
+						Number: 80,
+					},
+				},
 			},
 			Rules: []networking.IngressRule{
 				{
@@ -162,29 +170,38 @@ func TestAffinitySession(t *testing.T) {
 	ing := buildIngress()
 
 	fooAnns := []struct {
-		annotations  map[string]string
-		affinitytype string
-		affinitymode string
-		name         string
+		annotations    map[string]string
+		affinitytype   string
+		affinitymode   string
+		cookiename     string
+		canarybehavior string
 	}{
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: "route"}, "cookie", "balanced", "route"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "persistent", annotationAffinityCookieName: "route1"}, "cookie", "persistent", "route1"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: ""}, "cookie", "balanced", "INGRESSCOOKIE"},
-		{map[string]string{}, "", "", ""},
-		{nil, "", "", ""},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: "route", annotationAffinityCanaryBehavior: ""}, "cookie", "balanced", "route", ""},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "persistent", annotationAffinityCookieName: "route1", annotationAffinityCanaryBehavior: "sticky"}, "cookie", "persistent", "route1", "sticky"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: "", annotationAffinityCanaryBehavior: "legacy"}, "cookie", "balanced", "INGRESSCOOKIE", "legacy"},
+		{map[string]string{}, "", "", "", ""},
+		{nil, "", "", "", ""},
 	}
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
 		r := ec.Extract(ing).SessionAffinity
-		t.Logf("Testing pass %v %v", foo.affinitytype, foo.name)
+		t.Logf("Testing pass %v %v", foo.affinitytype, foo.cookiename)
 
-		if r.Mode != foo.affinitymode {
-			t.Errorf("Returned %v but expected %v for Name", r.Mode, foo.affinitymode)
+		if r.Type != foo.affinitytype {
+			t.Errorf("Returned %v but expected %v for Type", r.Type, foo.affinitytype)
 		}
 
-		if r.Cookie.Name != foo.name {
-			t.Errorf("Returned %v but expected %v for Name", r.Cookie.Name, foo.name)
+		if r.Mode != foo.affinitymode {
+			t.Errorf("Returned %v but expected %v for Mode", r.Mode, foo.affinitymode)
+		}
+
+		if r.CanaryBehavior != foo.canarybehavior {
+			t.Errorf("Returned %v but expected %v for CanaryBehavior", r.CanaryBehavior, foo.canarybehavior)
+		}
+
+		if r.Cookie.Name != foo.cookiename {
+			t.Errorf("Returned %v but expected %v for Cookie.Name", r.Cookie.Name, foo.cookiename)
 		}
 	}
 }
@@ -198,15 +215,15 @@ func TestCors(t *testing.T) {
 		corsenabled bool
 		methods     string
 		headers     string
-		origin      string
+		origin      []string
 		credentials bool
 		expose      string
 	}{
-		{map[string]string{annotationCorsEnabled: "true"}, true, defaultCorsMethods, defaultCorsHeaders, "*", true, ""},
-		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowMethods: "POST, GET, OPTIONS", annotationCorsAllowHeaders: "$nginx_version", annotationCorsAllowCredentials: "false", annotationCorsExposeHeaders: "X-CustomResponseHeader"}, true, "POST, GET, OPTIONS", defaultCorsHeaders, "*", false, "X-CustomResponseHeader"},
-		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowCredentials: "false"}, true, defaultCorsMethods, defaultCorsHeaders, "*", false, ""},
-		{map[string]string{}, false, defaultCorsMethods, defaultCorsHeaders, "*", true, ""},
-		{nil, false, defaultCorsMethods, defaultCorsHeaders, "*", true, ""},
+		{map[string]string{annotationCorsEnabled: "true"}, true, defaultCorsMethods, defaultCorsHeaders, []string{"*"}, true, ""},
+		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowMethods: "POST, GET, OPTIONS", annotationCorsAllowHeaders: "$nginx_version", annotationCorsAllowCredentials: "false", annotationCorsExposeHeaders: "X-CustomResponseHeader"}, true, "POST, GET, OPTIONS", defaultCorsHeaders, []string{"*"}, false, "X-CustomResponseHeader"},
+		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowCredentials: "false"}, true, defaultCorsMethods, defaultCorsHeaders, []string{"*"}, false, ""},
+		{map[string]string{}, false, defaultCorsMethods, defaultCorsHeaders, []string{"*"}, true, ""},
+		{nil, false, defaultCorsMethods, defaultCorsHeaders, []string{"*"}, true, ""},
 	}
 
 	for _, foo := range fooAnns {
@@ -226,12 +243,18 @@ func TestCors(t *testing.T) {
 			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowMethods, foo.methods)
 		}
 
-		if r.CorsAllowOrigin != foo.origin {
-			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowOrigin, foo.origin)
+		if len(r.CorsAllowOrigin) != len(foo.origin) {
+			t.Errorf("Lengths of Cors Origins are not equal. Expected %v - Actual %v", r.CorsAllowOrigin, foo.origin)
+		}
+
+		for i, v := range r.CorsAllowOrigin {
+			if v != foo.origin[i] {
+				t.Errorf("Values of Cors Origins are not equal. Expected %v - Actual %v", r.CorsAllowOrigin, foo.origin)
+			}
 		}
 
 		if r.CorsAllowCredentials != foo.credentials {
-			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowCredentials, foo.credentials)
+			t.Errorf("Returned %v but expected %v for Cors Credentials", r.CorsAllowCredentials, foo.credentials)
 		}
 
 	}
@@ -271,48 +294,3 @@ func TestCustomHTTPErrors(t *testing.T) {
 		}
 	}
 }
-
-/*
-func TestMergeLocationAnnotations(t *testing.T) {
-	// initial parameters
-	keys := []string{"BasicDigestAuth", "CorsConfig", "ExternalAuth", "RateLimit", "Redirect", "Rewrite", "Whitelist", "Proxy", "UsePortInRedirects"}
-
-	loc := ingress.Location{}
-	annotations := &Ingress{
-		BasicDigestAuth:    &auth.Config{},
-		CorsConfig:         &cors.Config{},
-		ExternalAuth:       &authreq.Config{},
-		RateLimit:          &ratelimit.Config{},
-		Redirect:           &redirect.Config{},
-		Rewrite:            &rewrite.Config{},
-		Whitelist:          &ipwhitelist.SourceRange{},
-		Proxy:              &proxy.Config{},
-		UsePortInRedirects: true,
-	}
-
-	// create test table
-	type fooMergeLocationAnnotationsStruct struct {
-		fName string
-		er    interface{}
-	}
-	fooTests := []fooMergeLocationAnnotationsStruct{}
-	for name, value := range keys {
-		fva := fooMergeLocationAnnotationsStruct{name, value}
-		fooTests = append(fooTests, fva)
-	}
-
-	// execute test
-	MergeWithLocation(&loc, annotations)
-
-	// check result
-	for _, foo := range fooTests {
-		fv := reflect.ValueOf(loc).FieldByName(foo.fName).Interface()
-		if !reflect.DeepEqual(fv, foo.er) {
-			t.Errorf("Returned %v but expected %v for the field %s", fv, foo.er, foo.fName)
-		}
-	}
-	if _, ok := annotations[DeniedKeyName]; ok {
-		t.Errorf("%s should be removed after mergeLocationAnnotations", DeniedKeyName)
-	}
-}
-*/

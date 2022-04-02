@@ -19,6 +19,9 @@ spec:
     {{- if .Values.controller.metrics.serviceMonitor.honorLabels }}
       honorLabels: true
     {{- end }}
+    {{- if .Values.controller.metrics.serviceMonitor.relabelings }}
+      relabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.relabelings | nindent 8 }}
+    {{- end }}
     {{- if .Values.controller.metrics.serviceMonitor.metricRelabelings }}
       metricRelabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.metricRelabelings | nindent 8 }}
     {{- end }}
@@ -27,7 +30,7 @@ spec:
 {{- end }}
 {{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
   namespaceSelector: {{ toYaml .Values.controller.metrics.serviceMonitor.namespaceSelector | nindent 4 }}
-{{ else }}
+{{- else }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}

@@ -17,18 +17,15 @@ limitations under the License.
 package auth
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
-
 	api "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -36,8 +33,12 @@ import (
 
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
-		ServiceName: "default-backend",
-		ServicePort: intstr.FromInt(80),
+		Service: &networking.IngressServiceBackend{
+			Name: "default-backend",
+			Port: networking.ServiceBackendPort{
+				Number: 80,
+			},
+		},
 	}
 
 	return &networking.Ingress{
@@ -46,9 +47,13 @@ func buildIngress() *networking.Ingress {
 			Namespace: api.NamespaceDefault,
 		},
 		Spec: networking.IngressSpec{
-			Backend: &networking.IngressBackend{
-				ServiceName: "default-backend",
-				ServicePort: intstr.FromInt(80),
+			DefaultBackend: &networking.IngressBackend{
+				Service: &networking.IngressServiceBackend{
+					Name: "default-backend",
+					Port: networking.ServiceBackendPort{
+						Number: 80,
+					},
+				},
 			},
 			Rules: []networking.IngressRule{
 				{
@@ -75,7 +80,7 @@ type mockSecret struct {
 
 func (m mockSecret) GetSecret(name string) (*api.Secret, error) {
 	if name != "default/demo-secret" {
-		return nil, errors.Errorf("there is no secret with name %v", name)
+		return nil, fmt.Errorf("there is no secret with name %v", name)
 	}
 
 	return &api.Secret{
@@ -202,12 +207,12 @@ func TestIngressAuthInvalidSecretKey(t *testing.T) {
 }
 
 func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%v", time.Now().Unix()))
+	dir, err := os.MkdirTemp("", fmt.Sprintf("%v", time.Now().Unix()))
 	if err != nil {
 		t.Error(err)
 	}
 
-	tmpfile, err := ioutil.TempFile("", "example-")
+	tmpfile, err := os.CreateTemp("", "example-")
 	if err != nil {
 		t.Error(err)
 	}

@@ -25,7 +25,7 @@ import (
 	"k8s.io/klog/v2"
 
 	apiv1 "k8s.io/api/core/v1"
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
@@ -121,46 +121,37 @@ func MetaNamespaceKey(obj interface{}) string {
 	return key
 }
 
-// IsIngressV1Beta1Ready indicates if the running Kubernetes version is at least v1.18.0
-var IsIngressV1Beta1Ready bool
-
 // IsIngressV1Ready indicates if the running Kubernetes version is at least v1.19.0
 var IsIngressV1Ready bool
-
-// IngressClass indicates the class of the Ingress to use as filter
-var IngressClass *networkingv1beta1.IngressClass
 
 // IngressNGINXController defines the valid value of IngressClass
 // Controller field for ingress-nginx
 const IngressNGINXController = "k8s.io/ingress-nginx"
 
-// NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1beta1"
-// is available or not and if Ingress V1 is supported (k8s >= v1.18.0)
-func NetworkingIngressAvailable(client clientset.Interface) (bool, bool, bool) {
-	// check kubernetes version to use new ingress package or not
-	version114, _ := version.ParseGeneric("v1.14.0")
-	version118, _ := version.ParseGeneric("v1.18.0")
+// NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1"
+// is available or not and if Ingress V1 is supported (k8s >= v1.19.0)
+func NetworkingIngressAvailable(client clientset.Interface) bool {
 	version119, _ := version.ParseGeneric("v1.19.0")
 
 	serverVersion, err := client.Discovery().ServerVersion()
 	if err != nil {
-		return false, false, false
+		return false
 	}
 
 	runningVersion, err := version.ParseGeneric(serverVersion.String())
 	if err != nil {
 		klog.ErrorS(err, "unexpected error parsing running Kubernetes version")
-		return false, false, false
+		return false
 	}
 
-	return runningVersion.AtLeast(version114), runningVersion.AtLeast(version118), runningVersion.AtLeast(version119)
+	return runningVersion.AtLeast(version119)
 }
 
 // default path type is Prefix to not break existing definitions
-var defaultPathType = networkingv1beta1.PathTypePrefix
+var defaultPathType = networkingv1.PathTypePrefix
 
 // SetDefaultNGINXPathType sets a default PathType when is not defined.
-func SetDefaultNGINXPathType(ing *networkingv1beta1.Ingress) {
+func SetDefaultNGINXPathType(ing *networkingv1.Ingress) {
 	for _, rule := range ing.Spec.Rules {
 		if rule.IngressRuleValue.HTTP == nil {
 			continue
@@ -172,7 +163,7 @@ func SetDefaultNGINXPathType(ing *networkingv1beta1.Ingress) {
 				p.PathType = &defaultPathType
 			}
 
-			if *p.PathType == networkingv1beta1.PathTypeImplementationSpecific {
+			if *p.PathType == networkingv1.PathTypeImplementationSpecific {
 				p.PathType = &defaultPathType
 			}
 		}

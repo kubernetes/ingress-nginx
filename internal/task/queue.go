@@ -118,7 +118,7 @@ func (t *Queue) worker() {
 		ts := time.Now().UnixNano()
 
 		item := key.(Element)
-		if t.lastSync > item.Timestamp {
+		if item.Timestamp != 0 && t.lastSync > item.Timestamp {
 			klog.V(3).InfoS("skipping sync", "key", item.Key, "last", t.lastSync, "now", item.Timestamp)
 			t.queue.Forget(key)
 			t.queue.Done(key)
@@ -130,7 +130,7 @@ func (t *Queue) worker() {
 			klog.ErrorS(err, "requeuing", "key", item.Key)
 			t.queue.AddRateLimited(Element{
 				Key:       item.Key,
-				Timestamp: time.Now().UnixNano(),
+				Timestamp: 0,
 			})
 		} else {
 			t.queue.Forget(key)

@@ -20,7 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"strings"
 
@@ -66,7 +66,7 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		conn.Write([]byte(header))
 		conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
 
-		data, err := ioutil.ReadAll(conn)
+		data, err := io.ReadAll(conn)
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
 
 		body := string(data)
@@ -99,7 +99,7 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		conn.Write([]byte(header))
 		conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
 
-		data, err := ioutil.ReadAll(conn)
+		data, err := io.ReadAll(conn)
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
 
 		body := string(data)
@@ -141,7 +141,7 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		_, err = tlsConn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
 		assert.Nil(ginkgo.GinkgoT(), err, "writing HTTP request")
 
-		data, err := ioutil.ReadAll(tlsConn)
+		data, err := io.ReadAll(tlsConn)
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
 
 		body := string(data)
@@ -208,7 +208,7 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		conn.Write([]byte(header))
 		conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
 
-		_, err = ioutil.ReadAll(conn)
+		_, err = io.ReadAll(conn)
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
 
 		logs, err := f.NginxLogs()

@@ -19,8 +19,7 @@ package defaultbackend
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -46,7 +45,7 @@ func (db backend) Parse(ing *networking.Ingress) (interface{}, error) {
 	name := fmt.Sprintf("%v/%v", ing.Namespace, s)
 	svc, err := db.r.GetService(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unexpected error reading service %v", name)
+		return nil, fmt.Errorf("unexpected error reading service %s: %w", name, err)
 	}
 
 	return svc, nil

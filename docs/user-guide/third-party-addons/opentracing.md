@@ -46,6 +46,9 @@ opentracing-operation-name
 # specifies specifies the name to use for the location span
 opentracing-location-operation-name
 
+# sets whether or not to trust incoming tracing spans
+opentracing-trust-incoming-span
+
 # specifies the port to use when uploading traces, Default: 9411
 zipkin-collector-port
 
@@ -114,6 +117,15 @@ datadog-sample-rate
 
 All these options (including host) allow environment variables, such as `$HOSTNAME` or `$HOST_IP`. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like `$HOST_IP` (which can be 'mounted' with the `status.hostIP` fieldpath, as described [here](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api)) to make sure traces will be sent to the local agent.
 
+
+Note that you can also set whether to trust incoming spans (global default is true) per-location using annotations like the following:
+```
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/opentracing-trust-incoming-span: "true"
+```
+
 ## Examples
 
 The following examples show how to deploy and test different distributed tracing systems. These example can be performed using Minikube.
@@ -128,7 +140,7 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
 kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml
 ```
 
-Also we need to configure the NGINX controller ConfigMap with the required values:
+Also we need to configure the Ingress-NGINX controller ConfigMap with the required values:
 
 ```
 $ echo '
@@ -168,19 +180,23 @@ In the Zipkin interface we can see the details:
 
     # Apply the Ingress Resource
     $ echo '
-      apiVersion: networking.k8s.io/v1beta1
+      apiVersion: networking.k8s.io/v1
       kind: Ingress
       metadata:
         name: echo-ingress
       spec:
+        ingressClassName: nginx
         rules:
         - host: example.com
           http:
             paths:
-            - backend:
-                serviceName: echoheaders-x
-                servicePort: 80
-              path: /echo
+            - path: /echo
+              pathType: Prefix
+              backend:
+                service:
+                  name: echoheaders-x
+                  port:
+                    number: 80
       ' | kubectl apply -f -
     ```
 

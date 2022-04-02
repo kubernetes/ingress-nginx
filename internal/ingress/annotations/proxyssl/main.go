@@ -17,12 +17,12 @@ limitations under the License.
 package proxyssl
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -132,7 +132,7 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	proxyCert, err := p.r.GetAuthCertificate(proxysslsecret)
 	if err != nil {
-		e := errors.Wrap(err, "error obtaining certificate")
+		e := fmt.Errorf("error obtaining certificate: %w", err)
 		return &Config{}, ing_errors.LocationDenied{Reason: e}
 	}
 	config.AuthSSLCert = *proxyCert

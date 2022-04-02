@@ -1,7 +1,7 @@
 <!--
 -----------------NOTICE------------------------
 This file is referenced in code as
-https://github.com/kubernetes/ingress-nginx/blob/master/docs/kubectl-plugin.md
+https://github.com/kubernetes/ingress-nginx/blob/main/docs/kubectl-plugin.md
 Do not move it without providing redirects.
 -----------------------------------------------
 -->
@@ -68,7 +68,7 @@ Use "ingress-nginx [command] --help" for more information about a command.
 ## Common Flags
 
 - Every subcommand supports the basic `kubectl` configuration flags like `--namespace`, `--context`, `--client-key` and so on.
-- Subcommands that act on a particular `ingress-nginx` pod (`backends`, `certs`, `conf`, `exec`, `general`, `logs`, `ssh`), support the `--deployment <deployment>` and `--pod <pod>` flags to select either a pod from a deployment with the given name, or a pod with the given name. The `--deployment` flag defaults to `nginx-ingress-controller`.
+- Subcommands that act on a particular `ingress-nginx` pod (`backends`, `certs`, `conf`, `exec`, `general`, `logs`, `ssh`), support the `--deployment <deployment>` and `--pod <pod>` flags to select either a pod from a deployment with the given name, or a pod with the given name. The `--deployment` flag defaults to `ingress-nginx-controller`.
 - Subcommands that inspect resources (`ingresses`, `lint`) support the `--all-namespaces` flag, which causes them to inspect resources in every namespace.
 
 ## Subcommands
@@ -226,7 +226,9 @@ Use the `--service <service>` flag if your `ingress-nginx` `LoadBalancer` servic
 
 ### ingresses
 
-`kubectl ingress-nginx ingresses`, alternately `kubectl ingress-nginx ing`, shows a more detailed view of the ingress definitions in a namespace. Compare:
+`kubectl ingress-nginx ingresses`, alternately `kubectl ingress-nginx ing`, shows a more detailed view of the ingress definitions in a namespace.
+
+Compare:
 
 ```console
 $ kubectl get ingresses --all-namespaces
@@ -235,7 +237,7 @@ default     example-ingress1   testaddr.local,testaddr2.local   localhost   80  
 default     test-ingress-2     *                                localhost   80      5d
 ```
 
-vs
+vs.
 
 ```console
 $ kubectl ingress-nginx ingresses --all-namespaces
@@ -263,7 +265,7 @@ Checking ingresses...
       https://github.com/kubernetes/ingress-nginx/issues/3174
 
 Checking deployments...
-✗ namespace2/nginx-ingress-controller
+✗ namespace2/ingress-nginx-controller
   - Uses removed config flag --sort-backends
       Lint added for version 0.22.0
       https://github.com/kubernetes/ingress-nginx/issues/3655
@@ -272,7 +274,7 @@ Checking deployments...
       https://github.com/kubernetes/ingress-nginx/issues/3808
 ```
 
-to show the lints added **only** for a particular `ingress-nginx` release, use the `--from-version` and `--to-version` flags:
+To show the lints added **only** for a particular `ingress-nginx` release, use the `--from-version` and `--to-version` flags:
 
 ```console
 $ kubectl ingress-nginx lint --all-namespaces --verbose --from-version 0.24.0 --to-version 0.24.0
@@ -283,7 +285,7 @@ Checking ingresses...
        https://github.com/kubernetes/ingress-nginx/issues/3743
 
 Checking deployments...
-✗ namespace2/nginx-ingress-controller
+✗ namespace2/ingress-nginx-controller
   - Uses removed config flag --enable-dynamic-certificates
       Lint added for version 0.24.0
       https://github.com/kubernetes/ingress-nginx/issues/3808
@@ -318,5 +320,5 @@ I0405 16:53:46.193913       7 event.go:209] Event(v1.ObjectReference{Kind:"Confi
 
 ```console
 $ kubectl ingress-nginx ssh -n ingress-nginx
-www-data@nginx-ingress-controller-7cbf77c976-wx5pn:/etc/nginx$
+www-data@ingress-nginx-controller-7cbf77c976-wx5pn:/etc/nginx$
 ```

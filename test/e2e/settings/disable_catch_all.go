@@ -24,9 +24,8 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -35,7 +34,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 	f := framework.NewDefaultFramework("disabled-catch-all")
 
 	ginkgo.BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
 
 		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
 			args := deployment.Spec.Template.Spec.Containers[0].Args
@@ -98,9 +97,13 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 
 		err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *networking.Ingress) error {
 			ingress.Spec.Rules = nil
-			ingress.Spec.Backend = &networking.IngressBackend{
-				ServiceName: framework.EchoService,
-				ServicePort: intstr.FromInt(80),
+			ingress.Spec.DefaultBackend = &networking.IngressBackend{
+				Service: &networking.IngressServiceBackend{
+					Name: framework.EchoService,
+					Port: networking.ServiceBackendPort{
+						Number: int32(80),
+					},
+				},
 			}
 			return nil
 		})

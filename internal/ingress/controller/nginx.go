@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -50,7 +49,6 @@ import (
 	adm_controller "k8s.io/ingress-nginx/internal/admission/controller"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -124,6 +122,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 	n.store = store.New(
 		config.Namespace,
+		config.WatchNamespaceSelector,
 		config.ConfigMapName,
 		config.TCPConfigMapName,
 		config.UDPConfigMapName,
@@ -131,7 +130,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		config.ResyncPeriod,
 		config.Client,
 		n.updateCh,
-		config.DisableCatchAll)
+		config.DisableCatchAll,
+		config.IngressClassConfiguration)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -230,7 +230,7 @@ type NGINXController struct {
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
-	t ngx_template.TemplateWriter
+	t ngx_template.Writer
 
 	resolver []net.IP
 
@@ -242,7 +242,8 @@ type NGINXController struct {
 
 	store store.Storer
 
-	metricCollector metric.Collector
+	metricCollector    metric.Collector
+	admissionCollector metric.Collector
 
 	validationWebhookServer *http.Server
 
@@ -257,10 +258,10 @@ func (n *NGINXController) Start() {
 
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
-	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.DefaultClass)
-	if class.IngressClass != "" {
-		electionID = fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.IngressClass)
-	}
+	// TODO: For now, as the the IngressClass logics has changed, is up to the
+	// cluster admin to create different Leader Election IDs.
+	// Should revisit this in a future
+	electionID := n.cfg.ElectionID
 
 	setupLeaderElection(&leaderElectionConfig{
 		Client:     n.cfg.Client,
@@ -274,6 +275,7 @@ func (n *NGINXController) Start() {
 			// manually update SSL expiration metrics
 			// (to not wait for a reload)
 			n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
+			n.metricCollector.SetSSLInfo(n.runningConfig.Servers)
 		},
 		OnStoppedLeading: func() {
 			n.metricCollector.OnStoppedLeading(electionID)
@@ -512,12 +514,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 	if cfg.MaxWorkerOpenFiles == 0 {
 		// the limit of open files is per worker process
 		// and we leave some room to avoid consuming all the FDs available
-		wp, err := strconv.Atoi(cfg.WorkerProcesses)
-		klog.V(3).InfoS("Worker processes", "count", wp)
-		if err != nil {
-			wp = 1
-		}
-		maxOpenFiles := (rlimitMaxNumFiles() / wp) - 1024
+		maxOpenFiles := rlimitMaxNumFiles() - 1024
 		klog.V(3).InfoS("Maximum number of open file descriptors", "value", maxOpenFiles)
 		if maxOpenFiles < 1024 {
 			// this means the value of RLIMIT_NOFILE is too low.
@@ -603,6 +600,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		StatusPath:               nginx.StatusPath,
 		StatusPort:               nginx.StatusPort,
 		StreamPort:               nginx.StreamPort,
+		StreamSnippets:           append(ingressCfg.StreamSnippets, cfg.StreamSnippet),
 	}
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
@@ -616,12 +614,12 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
-	tmpfile, err := ioutil.TempFile("", tempNginxPattern)
+	tmpfile, err := os.CreateTemp("", tempNginxPattern)
 	if err != nil {
 		return err
 	}
 	defer tmpfile.Close()
-	err = ioutil.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
+	err = os.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
@@ -666,14 +664,14 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	if klog.V(2).Enabled() {
-		src, _ := ioutil.ReadFile(cfgPath)
+		src, _ := os.ReadFile(cfgPath)
 		if !bytes.Equal(src, content) {
-			tmpfile, err := ioutil.TempFile("", "new-nginx-cfg")
+			tmpfile, err := os.CreateTemp("", "new-nginx-cfg")
 			if err != nil {
 				return err
 			}
 			defer tmpfile.Close()
-			err = ioutil.WriteFile(tmpfile.Name(), content, file.ReadWriteByUser)
+			err = os.WriteFile(tmpfile.Name(), content, file.ReadWriteByUser)
 			if err != nil {
 				return err
 			}
@@ -696,7 +694,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 	}
 
-	err = ioutil.WriteFile(cfgPath, content, file.ReadWriteByUser)
+	err = os.WriteFile(cfgPath, content, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
@@ -1093,7 +1091,7 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	// Expand possible environment variables before writing the configuration to file.
 	expanded := os.ExpandEnv(tmplBuf.String())
 
-	return ioutil.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
+	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
 }
 
 func cleanTempNginxCfg() error {

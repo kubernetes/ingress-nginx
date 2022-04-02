@@ -29,27 +29,36 @@ Get the application URL by running these commands:
 
 An example Ingress that makes use of the controller:
 
-  apiVersion: networking.k8s.io/v1beta1
+{{- $isV1 := semverCompare ">=1" .Chart.AppVersion}}
+  apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
-    annotations:
-      kubernetes.io/ingress.class: {{ .Values.controller.ingressClass }}
     name: example
     namespace: foo
+    {{- if eq $isV1 false }}
+    annotations:
+      kubernetes.io/ingress.class: {{ .Values.controller.ingressClass }}
+    {{- end }}
   spec:
+    {{- if $isV1 }}
+    ingressClassName: {{ .Values.controller.ingressClassResource.name }}
+    {{- end }}
     rules:
       - host: www.example.com
         http:
           paths:
-            - backend:
-                serviceName: exampleService
-                servicePort: 80
+            - pathType: Prefix
+              backend:
+                service:
+                  name: exampleService
+                  port:
+                    number: 80
               path: /
     # This section is only required if TLS is to be enabled for the Ingress
     tls:
-        - hosts:
-            - www.example.com
-          secretName: example-tls
+      - hosts:
+        - www.example.com
+        secretName: example-tls
 
 If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided:
 

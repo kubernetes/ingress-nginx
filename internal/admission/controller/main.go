@@ -21,12 +21,10 @@ import (
 	"net/http"
 
 	admissionv1 "k8s.io/api/admission/v1"
-	admissionv1beta1 "k8s.io/api/admission/v1beta1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/klog/v2"
 )
@@ -46,7 +44,7 @@ type IngressAdmission struct {
 var (
 	ingressResource = metav1.GroupVersionKind{
 		Group:   networking.GroupName,
-		Version: "v1beta1",
+		Version: "v1",
 		Kind:    "Ingress",
 	}
 )
@@ -55,19 +53,10 @@ var (
 // with Allowed=false if the Object is an ingress that would prevent nginx to reload the configuration
 // with Allowed=true otherwise
 func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object, error) {
-	outputVersion := admissionv1.SchemeGroupVersion
 
 	review, isV1 := obj.(*admissionv1.AdmissionReview)
-
 	if !isV1 {
-		outputVersion = admissionv1beta1.SchemeGroupVersion
-		reviewv1beta1, isv1beta1 := obj.(*admissionv1beta1.AdmissionReview)
-		if !isv1beta1 {
-			return nil, fmt.Errorf("request is not of type AdmissionReview v1 or v1beta1")
-		}
-
-		review = &admissionv1.AdmissionReview{}
-		convertV1beta1AdmissionReviewToAdmissionAdmissionReview(reviewv1beta1, review)
+		return nil, fmt.Errorf("request is not of type AdmissionReview v1 or v1beta1")
 	}
 
 	if !apiequality.Semantic.DeepEqual(review.Request.Kind, ingressResource) {
@@ -83,7 +72,6 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 	codec := json.NewSerializerWithOptions(json.DefaultMetaFactory, scheme, scheme, json.SerializerOptions{
 		Pretty: true,
 	})
-	codec.Decode(review.Request.Object.Raw, nil, nil)
 	_, _, err := codec.Decode(review.Request.Object.Raw, nil, &ingress)
 	if err != nil {
 		klog.ErrorS(err, "failed to decode ingress")
@@ -94,11 +82,11 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 		}
 
 		review.Response = status
-		return convertResponse(review, outputVersion), nil
+		return review, nil
 	}
 
 	if err := ia.Checker.CheckIngress(&ingress); err != nil {
-		klog.ErrorS(err, "invalid ingress configuration", "ingress", fmt.Sprintf("%v/%v", review.Request.Name, review.Request.Namespace))
+		klog.ErrorS(err, "invalid ingress configuration", "ingress", fmt.Sprintf("%v/%v", review.Request.Namespace, review.Request.Name))
 		status.Allowed = false
 		status.Result = &metav1.Status{
 			Status: metav1.StatusFailure, Code: http.StatusBadRequest, Reason: metav1.StatusReasonBadRequest,
@@ -106,24 +94,12 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 		}
 
 		review.Response = status
-		return convertResponse(review, outputVersion), nil
+		return review, nil
 	}
 
-	klog.InfoS("successfully validated configuration, accepting", "ingress", fmt.Sprintf("%v/%v", review.Request.Name, review.Request.Namespace))
+	klog.InfoS("successfully validated configuration, accepting", "ingress", fmt.Sprintf("%v/%v", review.Request.Namespace, review.Request.Name))
 	status.Allowed = true
 	review.Response = status
 
-	return convertResponse(review, outputVersion), nil
-}
-
-func convertResponse(review *admissionv1.AdmissionReview, outputVersion schema.GroupVersion) runtime.Object {
-	// reply v1
-	if outputVersion.Version == admissionv1.SchemeGroupVersion.Version {
-		return review
-	}
-
-	// reply v1beta1
-	reviewv1beta1 := &admissionv1beta1.AdmissionReview{}
-	convertAdmissionAdmissionReviewToV1beta1AdmissionReview(review, reviewv1beta1)
-	return review
+	return review, nil
 }

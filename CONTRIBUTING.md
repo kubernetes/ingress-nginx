@@ -2,6 +2,8 @@
 
 Read the following guide if you're interested in contributing to Ingress. [Make Ingress-Nginx Work for you, and the Community](https://youtu.be/GDm-7BlmPPg) from KubeCon Europe 2018 is a great video to get you started!!
 
+Note that this guide refers to contributing to actual sources of the repository. If you interested in contributing through issue triaging, have a look at [this guide](./ISSUE_TRIAGE.md). 
+
 ## Contributor License Agreements
 
 We'd love to accept your patches! Before we can take them, we have to jump a couple of legal hurdles.
@@ -15,14 +17,16 @@ Follow either of the two links above to access the appropriate CLA and instructi
 
 ***NOTE***: Only original source code from you and other people that have signed the CLA can be accepted into the main repository.
 
-## Finding Things That Need Help
+## Finding Issues That Need Help
 
-If you're new to the project and want to help, but don't know where to start, we have a semi-curated list of issues that should not need deep knowledge of the system. [Have a look and see if anything sounds interesting](https://github.com/kubernetes/ingress-nginx/issues?utf8=%E2%9C%93&q=is%3Aopen%20is%3Aissue%20label%3A%22help+wanted%22). Alternatively, read some of the docs on other controllers and try to write your own, file and fix any/all issues that come up, including gaps in documentation!
+If you're new to the project and want to help, but don't know where to start, we have a semi-curated list of issues that should not need deep knowledge of the system. [Have a look and see if anything sounds interesting](https://github.com/kubernetes/ingress-nginx/issues?utf8=%E2%9C%93&q=is%3Aopen%20is%3Aissue%20label%3A%22help+wanted%22). 
+
+Alternatively, search for the label [`triage-accepted`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+is%3Aissue+label%3Atriage%2Faccepted+) if you have some experience with ingress-nginx. Note, that it could make sense to grab issues with higher priority first.
 
 ## Contributing a Patch
 
 1. If you haven't already done so, sign a Contributor License Agreement (see details above).
-1. Read the [Ingress development guide](docs/development.md).
+1. Read the [Ingress development guide](docs/developer-guide/getting-started.md).
 1. Fork the desired repo, develop and test your code changes.
 1. Submit a pull request.
 
@@ -30,7 +34,9 @@ All changes must be code reviewed. Coding conventions and standards are explaine
 
 ### Merge Approval
 
-Ingress collaborators may add "LGTM" (Looks Good To Me) or an equivalent comment to indicate that a PR is acceptable. Any change requires at least one LGTM.  No pull requests can be merged until at least one Ingress collaborator signs off with an LGTM.
+Ingress Nginx collaborators may add "/lgtm" (Looks Good To Me) to indicate that a PR is acceptable. Any change requires at least one LGTM.  No pull requests can be merged until at least one Ingress Nginx collaborator signs off with an LGTM. Adding the "/lgtm" comment result in the prow bot adding the `lgtm` label. Note that a pull request still needs an `approve` label from one of the owners. 
+
+Reviewers or members who want to become reviewers according to the [k8s membership ladder](https://github.com/kubernetes/community/blob/master/community-membership.md), could actively search for [pull requests that need a review](https://github.com/kubernetes/ingress-nginx/pulls?q=is%3Aopen+is%3Apr+label%3Atriage%2Faccepted). 
 
 ## Support Channels
 

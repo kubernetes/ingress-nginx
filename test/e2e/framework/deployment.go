@@ -38,24 +38,47 @@ const SlowEchoService = "slow-echo"
 const HTTPBinService = "httpbin"
 
 // NginxBaseImage use for testing
-const NginxBaseImage = "k8s.gcr.io/ingress-nginx/nginx:v20210530-g6aab4c291@sha256:a7356029dd0c26cc3466bf7a27daec0f4df73aa14ca6c8b871a767022a812c0b"
+const NginxBaseImage = "k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180"
+
+type deploymentOptions struct {
+	namespace string
+	name      string
+	replicas  int
+}
+
+// WithDeploymentNamespace allows configuring the deployment's namespace
+func WithDeploymentNamespace(n string) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.namespace = n
+	}
+}
+
+// WithDeploymentName allows configuring the deployment's names
+func WithDeploymentName(n string) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.name = n
+	}
+}
+
+// WithDeploymentReplicas allows configuring the deployment's replicas count
+func WithDeploymentReplicas(r int) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.replicas = r
+	}
+}
 
 // NewEchoDeployment creates a new single replica deployment of the echoserver image in a particular namespace
-func (f *Framework) NewEchoDeployment() {
-	f.NewEchoDeploymentWithReplicas(1)
-}
+func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
+	options := &deploymentOptions{
+		namespace: f.Namespace,
+		name:      EchoService,
+		replicas:  1,
+	}
+	for _, o := range opts {
+		o(options)
+	}
 
-// NewEchoDeploymentWithReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
-// replicas is configurable
-func (f *Framework) NewEchoDeploymentWithReplicas(replicas int) {
-	f.NewEchoDeploymentWithNameAndReplicas(EchoService, replicas)
-}
-
-// NewEchoDeploymentWithNameAndReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
-// replicas is configurable and
-// name is configurable
-func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas int) {
-	deployment := newDeployment(name, f.Namespace, "k8s.gcr.io/ingress-nginx/e2e-test-echo@sha256:b13e44f7bb6852b90633957e743e4a2b34f32f1694da556a9131b43950b8b2b1", 80, int32(replicas),
+	deployment := newDeployment(options.name, options.namespace, "k8s.gcr.io/ingress-nginx/e2e-test-echo@sha256:131ece0637b29231470cfaa04690c2966a2e0b147d3c9df080a0857b78982410", 80, int32(options.replicas),
 		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
@@ -65,8 +88,8 @@ func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas i
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: f.Namespace,
+			Name:      options.name,
+			Namespace: options.namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
@@ -78,14 +101,14 @@ func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas i
 				},
 			},
 			Selector: map[string]string{
-				"app": name,
+				"app": options.name,
 			},
 		},
 	}
 
 	f.EnsureService(service)
 
-	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, replicas)
+	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, options.name, options.namespace, options.replicas)
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 

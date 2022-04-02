@@ -8,7 +8,11 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend
+    {{- with .Values.defaultBackend.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   name: {{ include "ingress-nginx.defaultBackend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
 spec:
   type: {{ .Values.defaultBackend.service.type }}
 {{- if .Values.defaultBackend.service.clusterIP }}
@@ -28,6 +32,9 @@ spec:
       port: {{ .Values.defaultBackend.service.servicePort }}
       protocol: TCP
       targetPort: http
+    {{- if semverCompare ">=1.20" .Capabilities.KubeVersion.Version }}
+      appProtocol: http
+    {{- end }}
   selector:
     {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend

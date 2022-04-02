@@ -10,6 +10,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   {{- if .Values.controller.annotations }}
   annotations: {{ toYaml .Values.controller.annotations | nindent 4 }}
   {{- end }}
@@ -34,12 +35,18 @@ spec:
       labels:
         {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: controller
+        {{- with .Values.controller.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- if .Values.controller.podLabels }}
         {{- toYaml .Values.controller.podLabels | nindent 8 }}
       {{- end }}
     spec:
     {{- if .Values.controller.dnsConfig }}
       dnsConfig: {{ toYaml .Values.controller.dnsConfig | nindent 8 }}
+    {{- end }}
+    {{- if .Values.controller.hostname }}
+      hostname: {{ toYaml .Values.controller.hostname | nindent 8 }}
     {{- end }}
       dnsPolicy: {{ .Values.controller.dnsPolicy }}
     {{- if .Values.imagePullSecrets }}
@@ -61,6 +68,9 @@ spec:
           value: {{ $value | quote }}
     {{- end }}
     {{- end }}
+    {{- if .Values.controller.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.controller.shareProcessNamespace }}
+    {{- end }}
       containers:
         - name: {{ .Values.controller.containerName }}
           {{- with .Values.controller.image }}
@@ -71,50 +81,7 @@ spec:
           lifecycle: {{ toYaml .Values.controller.lifecycle | nindent 12 }}
         {{- end }}
           args:
-            - /nginx-ingress-controller
-          {{- if .Values.defaultBackend.enabled }}
-            - --default-backend-service={{ .Release.Namespace }}/{{ include "ingress-nginx.defaultBackend.fullname" . }}
-          {{- end }}
-          {{- if .Values.controller.publishService.enabled }}
-            - --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}
-          {{- end }}
-            - --election-id={{ .Values.controller.electionID }}
-            - --ingress-class={{ .Values.controller.ingressClass }}
-            - --configmap={{ .Release.Namespace }}/{{ include "ingress-nginx.controller.fullname" . }}
-          {{- if .Values.tcp }}
-            - --tcp-services-configmap={{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-tcp
-          {{- end }}
-          {{- if .Values.udp }}
-            - --udp-services-configmap={{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-udp
-          {{- end }}
-          {{- if .Values.controller.scope.enabled }}
-            - --watch-namespace={{ default .Release.Namespace .Values.controller.scope.namespace }}
-          {{- end }}
-          {{- if and .Values.controller.reportNodeInternalIp .Values.controller.hostNetwork }}
-            - --report-node-internal-ip-address={{ .Values.controller.reportNodeInternalIp }}
-          {{- end }}
-          {{- if .Values.controller.admissionWebhooks.enabled }}
-            - --validating-webhook=:{{ .Values.controller.admissionWebhooks.port }}
-            - --validating-webhook-certificate={{ .Values.controller.admissionWebhooks.certificate }}
-            - --validating-webhook-key={{ .Values.controller.admissionWebhooks.key }}
-          {{- end }}
-          {{- if .Values.controller.maxmindMirror }}
-            - --maxmind-mirror={{ .Values.controller.maxmindMirror }}
-          {{- end}}
-          {{- if .Values.controller.maxmindLicenseKey }}
-            - --maxmind-license-key={{ .Values.controller.maxmindLicenseKey }}
-          {{- end }}
-          {{- if not (eq .Values.controller.healthCheckPath "/healthz") }}
-            - --health-check-path={{ .Values.controller.healthCheckPath }}
-          {{- end }}
-          {{- range $key, $value := .Values.controller.extraArgs }}
-            {{- /* Accept keys without values or with false as value */}}
-            {{- if eq ($value | quote | len) 2 }}
-            - --{{ $key }}
-            {{- else }}
-            - --{{ $key }}={{ $value }}
-            {{- end }}
-          {{- end }}
+            {{- include "ingress-nginx.params" . | nindent 12 }}
           securityContext:
             capabilities:
                 drop:
@@ -179,8 +146,12 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled) }}
+        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
           volumeMounts:
+          {{- if .Values.controller.extraModules }}
+            - name: modules
+              mountPath: /modules_mount
+          {{- end }}
           {{- if .Values.controller.customTemplate.configMapName }}
             - mountPath: /etc/nginx/template
               name: nginx-template-volume
@@ -201,8 +172,20 @@ spec:
       {{- if .Values.controller.extraContainers }}
         {{ toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
-    {{- if .Values.controller.extraInitContainers }}
-      initContainers: {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
+
+
+    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
+      initContainers:
+      {{- if .Values.controller.extraInitContainers }}
+        {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
+      {{- end }}
+      {{- if .Values.controller.extraModules }}
+        {{- range .Values.controller.extraModules }}
+          - name: {{ .Name }}
+            image: {{ .Image }}
+            command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+        {{- end }}
+      {{- end }}
     {{- end }}
     {{- if .Values.controller.hostNetwork }}
       hostNetwork: {{ .Values.controller.hostNetwork }}
@@ -221,8 +204,12 @@ spec:
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
-    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes) }}
+    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
       volumes:
+      {{- if .Values.controller.extraModules }}
+        - name: modules
+          emptyDir: {}
+      {{- end }}
       {{- if .Values.controller.customTemplate.configMapName }}
         - name: nginx-template-volume
           configMap:

@@ -315,7 +315,50 @@ func TestGetEndpoints(t *testing.T) {
 			[]ingress.Endpoint{},
 		},
 		{
-			"should return no endpoint when the name of the port name do not match any port in the endpoint Subsets",
+			"should return no endpoint when the name of the port name do not match any port in the endpoint Subsets and TargetPort is string",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:      corev1.ServiceTypeClusterIP,
+					ClusterIP: "1.1.1.1",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromString("port-1"),
+						},
+					},
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "default",
+				TargetPort: intstr.FromString("port-1"),
+			},
+			corev1.ProtocolTCP,
+			func(string) (*corev1.Endpoints, error) {
+				nodeName := "dummy"
+				return &corev1.Endpoints{
+					Subsets: []corev1.EndpointSubset{
+						{
+							Addresses: []corev1.EndpointAddress{
+								{
+									IP:       "1.1.1.1",
+									NodeName: &nodeName,
+								},
+							},
+							Ports: []corev1.EndpointPort{
+								{
+									Protocol: corev1.ProtocolTCP,
+									Port:     int32(80),
+									Name:     "another-name",
+								},
+							},
+						},
+					},
+				}, nil
+			},
+			[]ingress.Endpoint{},
+		},
+		{
+			"should return one endpoint when the name of the port name do not match any port in the endpoint Subsets and TargetPort is int",
 			&corev1.Service{
 				Spec: corev1.ServiceSpec{
 					Type:      corev1.ServiceTypeClusterIP,
@@ -355,7 +398,12 @@ func TestGetEndpoints(t *testing.T) {
 					},
 				}, nil
 			},
-			[]ingress.Endpoint{},
+			[]ingress.Endpoint{
+				{
+					Address: "1.1.1.1",
+					Port:    "80",
+				},
+			},
 		},
 		{
 			"should return one endpoint when the name of the port name match a port in the endpoint Subsets",
