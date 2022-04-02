@@ -244,7 +244,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.enabled | bool | `true` |  |
 | controller.admissionWebhooks.existingPsp | string | `""` | Use an existing PSP instead of creating one |
-| controller.admissionWebhooks.existingScc | string | `""` | Use an existing OpenShift's instead of creating one |
+| controller.admissionWebhooks.existingScc | string | `""` | Use an existing SCC instead of creating one |
 | controller.admissionWebhooks.failurePolicy | string | `"Fail"` |  |
 | controller.admissionWebhooks.key | string | `"/usr/local/certificates/key"` |  |
 | controller.admissionWebhooks.labels | object | `{}` | Labels to be added to admission webhooks |
@@ -292,7 +292,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.electionID | string | `"ingress-controller-leader"` | Election ID to use for status update |
 | controller.enableMimalloc | bool | `true` | Enable mimalloc as a drop-in replacement for malloc. |
 | controller.existingPsp | string | `""` | Use an existing PSP instead of creating one |
-| controller.existingScc | string | `""` | Use an existing OpenShift's SCC instead of creating one |
+| controller.existingScc | string | `""` | Use an existing SCC instead of creating one |
 | controller.extraArgs | object | `{}` | Additional command line arguments to pass to nginx-ingress-controller E.g. to specify the default SSL certificate you can use |
 | controller.extraContainers | list | `[]` | Additional containers to be added to the controller pod. See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example. |
 | controller.extraEnvs | list | `[]` | Additional environment variables to set |
@@ -432,7 +432,7 @@ Kubernetes: `>=1.19.0-0`
 | defaultBackend.containerSecurityContext | object | `{}` | Security Context policies for controller main container. See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls |
 | defaultBackend.enabled | bool | `false` |  |
 | defaultBackend.existingPsp | string | `""` | Use an existing PSP instead of creating one |
-| defaultBackend.existingScc | string | `""` | Use an existing OpenShift's instead of creating one |
+| defaultBackend.existingScc | string | `""` | Use an existing SCC instead of creating one |
 | defaultBackend.extraArgs | object | `{}` |  |
 | defaultBackend.extraEnvs | list | `[]` | Additional environment variables to set for defaultBackend pods |
 | defaultBackend.extraVolumeMounts | list | `[]` |  |
@@ -478,10 +478,10 @@ Kubernetes: `>=1.19.0-0`
 | dhParam | string | `nil` | A base64-encoded Diffie-Hellman parameter. This can be generated with: `openssl dhparam 4096 2> /dev/null | base64` |
 | imagePullSecrets | list | `[]` | Optional array of imagePullSecrets containing private registry credentials |
 | podSecurityPolicy.enabled | bool | `false` |  |
-| securityContextConstraints.enabled | bool | `false` | Enable OpenShift's SecurityContextConstraints |
 | rbac.create | bool | `true` |  |
 | rbac.scope | bool | `false` |  |
 | revisionHistoryLimit | int | `10` | Rollback limit |
+| securityContextConstraints.enabled | bool | `false` |  |
 | serviceAccount.annotations | object | `{}` | Annotations for the controller service account |
 | serviceAccount.automountServiceAccountToken | bool | `true` |  |
 | serviceAccount.create | bool | `true` |  |
