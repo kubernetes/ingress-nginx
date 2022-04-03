@@ -2,8 +2,8 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, please make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 3.40.0
-appVersion: 0.50.0
+version: 3.41.0
+appVersion: 0.51.0
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -14,12 +14,16 @@ sources:
   - https://github.com/kubernetes/ingress-nginx
 type: application
 maintainers:
-  - name: ChiefAlexander
+  - name: rikatz
+  - name: strongjz
+  - name: tao12345666333
 engine: gotpl
 kubeVersion: ">=1.16.0-0"
 annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - Fix selector for shuttind down Pods status
-    - Fix overlap check when ingress is configured as canary
+    - "#8307 Nginx v1.19.10"
+    - "#8386 Alpine 3.14.4"
+    - "#8339 Patch OpenSSL CVE-2022-0778"
+    - "#8321 Vulnerability CVE-2022-23308 for libxml2"

@@ -1,5 +1,17 @@
 # Changelog
 
+### 0.51.0
+
+**Image:**
+
+- k8s.gcr.io/ingress-nginx/controller:v0.51.0@sha256:df2f0bcddb9295986f019231956fb0e78788032420b15ef99d48fcf9305e8a04
+
+This release upgrades Alpine to 3.14.4 and nginx to 1.19.10
+
+Patches [OpenSSL CVE-2022-0778](https://github.com/kubernetes/ingress-nginx/issues/8339)
+
+Patches [Libxml2 CVE-2022-23308](https://github.com/kubernetes/ingress-nginx/issues/8321)
+
 ### 0.50.0
 
 **Image:**
