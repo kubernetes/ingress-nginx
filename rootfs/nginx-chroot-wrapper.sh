@@ -15,7 +15,7 @@
 # limitations under the License.
 
 cat /etc/resolv.conf > /chroot/etc/resolv.conf
-tail -qf /var/log/nginx/* &
+tail -s 0 -qf /var/log/nginx/access.log &
 TAIL_PID=$!
 unshare  -S 101 -R /chroot nginx "$@"
 kill $TAIL_PID
