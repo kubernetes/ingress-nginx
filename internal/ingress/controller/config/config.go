@@ -958,12 +958,13 @@ type TemplateConfig struct {
 	EnableMetrics            bool
 	MaxmindEditionFiles      *[]string
 	MonitorMaxBatchSize      int
-
-	PID            string
-	StatusPath     string
-	StatusPort     int
-	StreamPort     int
-	StreamSnippets []string
+	IsChroot                 bool
+	InternalSyslogAddress    string
+	PID                      string
+	StatusPath               string
+	StatusPort               int
+	StreamPort               int
+	StreamSnippets           []string
 }
 
 // ListenPorts describe the ports required to run the

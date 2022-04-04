@@ -1,6 +1,8 @@
 {{ $all := . }}
 {{ $servers := .Servers }}
 {{ $cfg := .Cfg }}
+{{ $IsChroot := .IsChroot }}
+{{ $InternalLoggerAddress := .InternalSyslogAddress }}
 {{ $IsIPV6Enabled := .IsIPV6Enabled }}
 {{ $healthzURI := .HealthzURI }}
 {{ $backends := .Backends }}
@@ -374,14 +376,22 @@ http {
     {{ if $cfg.EnableSyslog }}
     access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
     {{ else }}
+    {{ if $IsChroot }}
+    access_log syslog:server={{ $InternalLoggerAddress }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
+    {{ else }}
     access_log {{ or $cfg.HttpAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
+    {{ end }}
     {{ end }}
     {{ end }}
 
     {{ if $cfg.EnableSyslog }}
     error_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} {{ $cfg.ErrorLogLevel }};
     {{ else }}
+    {{ if $IsChroot }}
+    error_log syslog:server={{ $InternalLoggerAddress }} {{ $cfg.ErrorLogLevel }};
+    {{ else }}
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
+    {{ end }}
     {{ end }}
 
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
@@ -752,11 +762,18 @@ stream {
     {{ if or $cfg.DisableAccessLog $cfg.DisableStreamAccessLog }}
     access_log off;
     {{ else }}
+    {{ if $IsChroot }}
+    access_log syslog:server={{ $InternalLoggerAddress }} log_stream {{ $cfg.AccessLogParams }};
+    {{ else }}
     access_log {{ or $cfg.StreamAccessLogPath $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
     {{ end }}
+    {{ end }}
 
+    {{ if $IsChroot }}
+    error_log syslog:server={{ $InternalLoggerAddress }} {{ $cfg.ErrorLogLevel }};
+    {{ else }}
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
-
+    {{ end }}
     {{ if $cfg.EnableRealIp }}
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
     set_real_ip_from    {{ $trusted_ip }};
