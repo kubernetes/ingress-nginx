@@ -3,7 +3,7 @@
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
 ### 4.0.20
-"[8420] (https://github.com/kubernetes/ingress-nginx/pull/8420) Add support for OpenShift's SCC"
+"[8420](https://github.com/kubernetes/ingress-nginx/pull/8420) Add support for OpenShift's SCC"
 
 ### 4.0.18
 "[8291](https://github.com/kubernetes/ingress-nginx/pull/8291) remove git tag env from cloud build"
