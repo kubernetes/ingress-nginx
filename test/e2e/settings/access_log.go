@@ -64,7 +64,7 @@ var _ = framework.DescribeSetting("access-log", func() {
 	ginkgo.Context("stream-access-log-path", func() {
 
 		ginkgo.It("use the specified configuration", func() {
-			f.UpdateNginxConfigMapData("stream-access-log-path", "/tmp/stream-access.log")
+			f.UpdateNginxConfigMapData("stream-access-log-path", "/tmp/nginx/stream-access.log")
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
 					return strings.Contains(cfg, "access_log /tmp/nginx/stream-access.log log_stream") &&

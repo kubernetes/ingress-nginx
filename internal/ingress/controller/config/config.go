@@ -958,8 +958,6 @@ type TemplateConfig struct {
 	EnableMetrics            bool
 	MaxmindEditionFiles      *[]string
 	MonitorMaxBatchSize      int
-	IsChroot                 bool
-	InternalSyslogAddress    string
 	PID                      string
 	StatusPath               string
 	StatusPort               int

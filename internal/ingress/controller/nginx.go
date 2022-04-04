@@ -574,6 +574,15 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 
 	cfg.DefaultSSLCertificate = n.getDefaultSSLCertificate()
 
+	if n.cfg.IsChroot {
+		if cfg.AccessLogPath == "/var/log/nginx/access.log" {
+			cfg.AccessLogPath = fmt.Sprintf("syslog:server=%s", n.cfg.InternalLoggerAddress)
+		}
+		if cfg.ErrorLogPath == "/var/log/nginx/error.log" {
+			cfg.ErrorLogPath = fmt.Sprintf("syslog:server=%s", n.cfg.InternalLoggerAddress)
+		}
+	}
+
 	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:          setHeaders,
 		AddHeaders:               addHeaders,
@@ -595,8 +604,6 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		MaxmindEditionFiles:      n.cfg.MaxmindEditionFiles,
 		HealthzURI:               nginx.HealthPath,
 		MonitorMaxBatchSize:      n.cfg.MonitorMaxBatchSize,
-		IsChroot:                 n.cfg.IsChroot,
-		InternalSyslogAddress:    n.cfg.InternalLoggerAddress,
 		PID:                      nginx.PID,
 		StatusPath:               nginx.StatusPath,
 		StatusPort:               nginx.StatusPort,
