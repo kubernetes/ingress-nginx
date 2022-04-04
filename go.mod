@@ -16,7 +16,7 @@ require (
 	github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
 	github.com/ncabatoff/process-exporter v0.7.10
 	github.com/onsi/ginkgo v1.16.4
-	github.com/opencontainers/runc v1.1.0
+	github.com/opencontainers/runc v1.1.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/client_model v0.2.0
