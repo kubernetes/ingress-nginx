@@ -30,6 +30,11 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page
 	// By default this is disabled
 	CustomHTTPErrors []int `json:"custom-http-errors"`
+	
+	// for use when using CustomHTTPErrors without intecepting service errors
+	// e.g. custom 404 and 503 when service-a does not exist or is not available
+	// but service-a can return 404 and 503 error codes without intercept
+	SetProxyInterceptErrors bool `json:"set-proxy-intercept-errors"`
 
 	// toggles whether or not to remove trailing slashes during TLS redirects
 	PreserveTrailingSlash bool `json:"preserve-trailing-slash"`
