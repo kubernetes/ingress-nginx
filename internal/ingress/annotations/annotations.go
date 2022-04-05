@@ -21,6 +21,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/setproxyintercepterrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/streamsnippet"
 	"k8s.io/klog/v2"
@@ -75,49 +76,49 @@ const DeniedKeyName = "Denied"
 // Ingress defines the valid annotations present in one NGINX Ingress rule
 type Ingress struct {
 	metav1.ObjectMeta
-	BackendProtocol      	string
-	Aliases              	[]string
-	BasicDigestAuth      	auth.Config
-	Canary               	canary.Config
-	CertificateAuth      	authtls.Config
-	ClientBodyBufferSize 	string
-	ConfigurationSnippet 	string
-	Connection           	connection.Config
-	CorsConfig           	cors.Config
-	CustomHTTPErrors     	[]int
+	BackendProtocol         string
+	Aliases                 []string
+	BasicDigestAuth         auth.Config
+	Canary                  canary.Config
+	CertificateAuth         authtls.Config
+	ClientBodyBufferSize    string
+	ConfigurationSnippet    string
+	Connection              connection.Config
+	CorsConfig              cors.Config
+	CustomHTTPErrors        []int
 	SetProxyInterceptErrors bool
-	DefaultBackend       	*apiv1.Service
+	DefaultBackend          *apiv1.Service
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
-	FastCGI           		fastcgi.Config
-	Denied             		*string
-	ExternalAuth       		authreq.Config
-	EnableGlobalAuth   		bool
-	HTTP2PushPreload   		bool
-	Opentracing        		opentracing.Config
-	Proxy              		proxy.Config
-	ProxySSL           		proxyssl.Config
-	RateLimit          		ratelimit.Config
-	GlobalRateLimit    		globalratelimit.Config
-	Redirect           		redirect.Config
-	Rewrite            		rewrite.Config
-	Satisfy            		string
-	SecureUpstream     		secureupstream.Config
-	ServerSnippet      		string
-	ServiceUpstream    		bool
-	SessionAffinity    		sessionaffinity.Config
-	SSLPassthrough     		bool
-	UsePortInRedirects 		bool
-	UpstreamHashBy     		upstreamhashby.Config
-	LoadBalancing      		string
-	UpstreamVhost      		string
-	Whitelist          		ipwhitelist.SourceRange
-	XForwardedPrefix   		string
-	SSLCipher          		sslcipher.Config
-	Logs               		log.Config
-	InfluxDB           		influxdb.Config
-	ModSecurity        		modsecurity.Config
-	Mirror             		mirror.Config
-	StreamSnippet      		string
+	FastCGI            fastcgi.Config
+	Denied             *string
+	ExternalAuth       authreq.Config
+	EnableGlobalAuth   bool
+	HTTP2PushPreload   bool
+	Opentracing        opentracing.Config
+	Proxy              proxy.Config
+	ProxySSL           proxyssl.Config
+	RateLimit          ratelimit.Config
+	GlobalRateLimit    globalratelimit.Config
+	Redirect           redirect.Config
+	Rewrite            rewrite.Config
+	Satisfy            string
+	SecureUpstream     secureupstream.Config
+	ServerSnippet      string
+	ServiceUpstream    bool
+	SessionAffinity    sessionaffinity.Config
+	SSLPassthrough     bool
+	UsePortInRedirects bool
+	UpstreamHashBy     upstreamhashby.Config
+	LoadBalancing      string
+	UpstreamVhost      string
+	Whitelist          ipwhitelist.SourceRange
+	XForwardedPrefix   string
+	SSLCipher          sslcipher.Config
+	Logs               log.Config
+	InfluxDB           influxdb.Config
+	ModSecurity        modsecurity.Config
+	Mirror             mirror.Config
+	StreamSnippet      string
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -129,46 +130,47 @@ type Extractor struct {
 func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 	return Extractor{
 		map[string]parser.IngressAnnotation{
-			"Aliases":              alias.NewParser(cfg),
-			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
-			"Canary":               canary.NewParser(cfg),
-			"CertificateAuth":      authtls.NewParser(cfg),
-			"ClientBodyBufferSize": clientbodybuffersize.NewParser(cfg),
-			"ConfigurationSnippet": snippet.NewParser(cfg),
-			"Connection":           connection.NewParser(cfg),
-			"CorsConfig":           cors.NewParser(cfg),
-			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
-			"DefaultBackend":       defaultbackend.NewParser(cfg),
-			"FastCGI":              fastcgi.NewParser(cfg),
-			"ExternalAuth":         authreq.NewParser(cfg),
-			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
-			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
-			"Opentracing":          opentracing.NewParser(cfg),
-			"Proxy":                proxy.NewParser(cfg),
-			"ProxySSL":             proxyssl.NewParser(cfg),
-			"RateLimit":            ratelimit.NewParser(cfg),
-			"GlobalRateLimit":      globalratelimit.NewParser(cfg),
-			"Redirect":             redirect.NewParser(cfg),
-			"Rewrite":              rewrite.NewParser(cfg),
-			"Satisfy":              satisfy.NewParser(cfg),
-			"SecureUpstream":       secureupstream.NewParser(cfg),
-			"ServerSnippet":        serversnippet.NewParser(cfg),
-			"ServiceUpstream":      serviceupstream.NewParser(cfg),
-			"SessionAffinity":      sessionaffinity.NewParser(cfg),
-			"SSLPassthrough":       sslpassthrough.NewParser(cfg),
-			"UsePortInRedirects":   portinredirect.NewParser(cfg),
-			"UpstreamHashBy":       upstreamhashby.NewParser(cfg),
-			"LoadBalancing":        loadbalancing.NewParser(cfg),
-			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
-			"Whitelist":            ipwhitelist.NewParser(cfg),
-			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
-			"SSLCipher":            sslcipher.NewParser(cfg),
-			"Logs":                 log.NewParser(cfg),
-			"InfluxDB":             influxdb.NewParser(cfg),
-			"BackendProtocol":      backendprotocol.NewParser(cfg),
-			"ModSecurity":          modsecurity.NewParser(cfg),
-			"Mirror":               mirror.NewParser(cfg),
-			"StreamSnippet":        streamsnippet.NewParser(cfg),
+			"Aliases":                 alias.NewParser(cfg),
+			"BasicDigestAuth":         auth.NewParser(auth.AuthDirectory, cfg),
+			"Canary":                  canary.NewParser(cfg),
+			"CertificateAuth":         authtls.NewParser(cfg),
+			"ClientBodyBufferSize":    clientbodybuffersize.NewParser(cfg),
+			"ConfigurationSnippet":    snippet.NewParser(cfg),
+			"Connection":              connection.NewParser(cfg),
+			"CorsConfig":              cors.NewParser(cfg),
+			"CustomHTTPErrors":        customhttperrors.NewParser(cfg),
+			"SetProxyInterceptErrors": setproxyintercepterrors.NewParser(cfg),
+			"DefaultBackend":          defaultbackend.NewParser(cfg),
+			"FastCGI":                 fastcgi.NewParser(cfg),
+			"ExternalAuth":            authreq.NewParser(cfg),
+			"EnableGlobalAuth":        authreqglobal.NewParser(cfg),
+			"HTTP2PushPreload":        http2pushpreload.NewParser(cfg),
+			"Opentracing":             opentracing.NewParser(cfg),
+			"Proxy":                   proxy.NewParser(cfg),
+			"ProxySSL":                proxyssl.NewParser(cfg),
+			"RateLimit":               ratelimit.NewParser(cfg),
+			"GlobalRateLimit":         globalratelimit.NewParser(cfg),
+			"Redirect":                redirect.NewParser(cfg),
+			"Rewrite":                 rewrite.NewParser(cfg),
+			"Satisfy":                 satisfy.NewParser(cfg),
+			"SecureUpstream":          secureupstream.NewParser(cfg),
+			"ServerSnippet":           serversnippet.NewParser(cfg),
+			"ServiceUpstream":         serviceupstream.NewParser(cfg),
+			"SessionAffinity":         sessionaffinity.NewParser(cfg),
+			"SSLPassthrough":          sslpassthrough.NewParser(cfg),
+			"UsePortInRedirects":      portinredirect.NewParser(cfg),
+			"UpstreamHashBy":          upstreamhashby.NewParser(cfg),
+			"LoadBalancing":           loadbalancing.NewParser(cfg),
+			"UpstreamVhost":           upstreamvhost.NewParser(cfg),
+			"Whitelist":               ipwhitelist.NewParser(cfg),
+			"XForwardedPrefix":        xforwardedprefix.NewParser(cfg),
+			"SSLCipher":               sslcipher.NewParser(cfg),
+			"Logs":                    log.NewParser(cfg),
+			"InfluxDB":                influxdb.NewParser(cfg),
+			"BackendProtocol":         backendprotocol.NewParser(cfg),
+			"ModSecurity":             modsecurity.NewParser(cfg),
+			"Mirror":                  mirror.NewParser(cfg),
+			"StreamSnippet":           streamsnippet.NewParser(cfg),
 		},
 	}
 }

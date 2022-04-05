@@ -466,6 +466,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if l1.SetProxyInterceptErrors != l2.SetProxyInterceptErrors {
+		return false
+	}
+
 	return true
 }
 

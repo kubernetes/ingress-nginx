@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package serviceupstream
+package setproxyintercepterrors
 
 import (
 	"testing"
@@ -49,7 +49,7 @@ func TestParseAnnotations(t *testing.T) {
 	ing := buildIngress()
 
 	_, err := NewParser(&resolver.Mock{}).Parse(ing)
-	if err == nil {
+	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 

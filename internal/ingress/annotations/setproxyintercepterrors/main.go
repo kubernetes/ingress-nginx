@@ -30,7 +30,7 @@ type setProxyInterceptErrors struct {
 
 // NewParser creates a new setproxyintercepterrors annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return serviceUpstream{r}
+	return setProxyInterceptErrors{r}
 }
 
 func (s setProxyInterceptErrors) Parse(ing *networking.Ingress) (interface{}, error) {
@@ -39,7 +39,7 @@ func (s setProxyInterceptErrors) Parse(ing *networking.Ingress) (interface{}, er
 	val, err := parser.GetBoolAnnotation("set-proxy-intercept-errors", ing)
 	// A missing annotation is not a problem, just use the default
 	if err == errors.ErrMissingAnnotations {
-		return defBackend.ServiceUpstream, nil
+		return defBackend.SetProxyInterceptErrors, nil
 	}
 
 	return val, nil
