@@ -347,6 +347,10 @@ type Location struct {
 	// CustomHTTPErrors specifies the error codes that should be intercepted.
 	// +optional
 	CustomHTTPErrors []int `json:"custom-http-errors"`
+	// for use when using CustomHTTPErrors without intecepting service errors
+	// e.g. custom 404 and 503 when service-a does not exist or is not available
+	// but service-a can return 404 and 503 error codes without intercept
+	SetProxyInterceptErrors bool `json:"set-proxy-intercept-errors"`
 	// ModSecurity allows to enable and configure modsecurity
 	// +optional
 	ModSecurity modsecurity.Config `json:"modsecurity"`
