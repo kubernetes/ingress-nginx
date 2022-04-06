@@ -31,7 +31,8 @@ seLinuxContext:
   type: MustRunAs
 supplementalGroups:
   type: RunAsAny
-
+users:
+- system:serviceaccount:{{ .Release.Namespace }}:{{ template "ingress-nginx.serviceAccountName" . }}
 volumes:
 - configMap
 - downwardAPI

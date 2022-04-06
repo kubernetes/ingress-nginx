@@ -22,7 +22,8 @@ requiredDropCapabilities:
 - ALL
 fsGroup:
   type: MustRunAs
-
+users:
+- system:serviceaccount:{{ .Release.Namespace }}:{{ include "ingress-nginx.fullname" . }}-admission
 priority: null
 readOnlyRootFilesystem: false
 runAsUser:
