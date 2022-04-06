@@ -335,7 +335,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: controller
-          image: k8s.gcr.io/ingress-nginx/controller:v0.50.0@sha256:f46fc2d161c97a9d950635acb86fb3f8d4adcfb03ee241ea89c6cde16aa3fdf8
+          image: k8s.gcr.io/ingress-nginx/controller:v0.51.0@sha256:df2f0bcddb9295986f019231956fb0e78788032420b15ef99d48fcf9305e8a04
           imagePullPolicy: IfNotPresent
           lifecycle:
             preStop:

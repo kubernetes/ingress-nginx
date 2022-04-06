@@ -53,10 +53,11 @@ jobs:
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.1.0
+      - name: Helm Chart Releaser
+        uses: helm/chart-releaser-action@v1.4.0
         env:
-          CR_TOKEN: "${{ secrets.PERSONAL_TOKEN }}"
+          CR_SKIP_EXISTING: "false"
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_RELEASE_NAME_TEMPLATE: "helm-chart-{{ .Version }}"
         with:
           charts_dir: charts
