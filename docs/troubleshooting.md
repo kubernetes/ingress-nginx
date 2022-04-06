@@ -110,7 +110,7 @@ $ kubectl edit deploy -n <namespace-of-ingress-controller> ingress-nginx-control
 
 - `--v=2` shows details using `diff` about the changes in the configuration in nginx
 - `--v=3` shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format
-- `--v=5` configures NGINX in [debug mode](http://nginx.org/en/docs/debugging_log.html)
+- `--v=5` configures NGINX in [debug mode](https://nginx.org/en/docs/debugging_log.html)
 
 ## Authentication to the Kubernetes API Server
 
