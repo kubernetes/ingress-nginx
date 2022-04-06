@@ -17,13 +17,15 @@ status: implementable
 ## Table of Contents
 
 <!-- toc -->
-- [Summary](#summary)
-- [Motivation](#motivation)
-  - [Goals](#goals)
-  - [Non-Goals](#non-goals)
-- [Proposal](#proposal)
-- [Implementation History](#implementation-history)
-- [Drawbacks [optional]](#drawbacks-optional)
+- [Availability zone aware routing](#availability-zone-aware-routing)
+  - [Table of Contents](#table-of-contents)
+  - [Summary](#summary)
+  - [Motivation](#motivation)
+    - [Goals](#goals)
+    - [Non-Goals](#non-goals)
+  - [Proposal](#proposal)
+  - [Implementation History](#implementation-history)
+  - [Drawbacks [optional]](#drawbacks-optional)
 <!-- /toc -->
 
 ## Summary
@@ -39,7 +41,7 @@ inter-zone traffic and usually costs extra money.
 
 
 At the time of this writing, GCP charges $0.01 per GB of inter-zone egress traffic according to https://cloud.google.com/compute/network-pricing.
-According to https://datapath.io/resources/blog/what-are-aws-data-transfer-costs-and-how-to-minimize-them/ Amazon also charges the same amount of money as GCP for cross-zone, egress traffic.
+According to [https://datapath.io/resources/blog/what-are-aws-data-transfer-costs-and-how-to-minimize-them/](https://web.archive.org/web/20201008160149/https://datapath.io/resources/blog/what-are-aws-data-transfer-costs-and-how-to-minimize-them/) Amazon also charges the same amount of money as GCP for cross-zone, egress traffic.
 
 This can be a lot of money depending on once's traffic. By teaching ingress-nginx about zones we can eliminate or at least decrease this cost.
 

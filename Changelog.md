@@ -1001,7 +1001,7 @@ _Documentation:_
 _New Features:_
 
 - NGINX 1.19.2
-- New configmap option `enable-real-ip` to enable [realip_module](http://nginx.org/en/docs/http/ngx_http_realip_module.html)
+- New configmap option `enable-real-ip` to enable [realip_module](https://nginx.org/en/docs/http/ngx_http_realip_module.html)
 - Use k8s.gcr.io vanity domain
 - Go 1.15
 - client-go v0.18.6

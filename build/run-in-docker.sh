@@ -55,10 +55,18 @@ fi
 # create output directory as current user to avoid problem with docker.
 mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
+PLATFORM="${PLATFORM:-}"
+if [[ -n "$PLATFORM" ]]; then
+  PLATFORM_FLAG=--platform
+else
+  PLATFORM_FLAG=
+fi
+
 if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   /bin/bash -c "${FLAGS}"
 else
   docker run                                            \
+    ${PLATFORM_FLAG} ${PLATFORM}                        \
     --tty                                               \
     --rm                                                \
     ${DOCKER_OPTS}                                      \

@@ -146,7 +146,7 @@ This is NGINX with some Lua enhancement. We do dynamic certificate, endpoints ha
 The files are in [rootfs](https://github.com/kubernetes/ingress-nginx/tree/main/rootfs) directory and contains:
 
 * The Dockerfile
-* [Auxiliary scripts](https://github.com/kubernetes/ingress-nginx/tree/main/rootfs/ingress-controller)
+* [nginx config](https://github.com/kubernetes/ingress-nginx/tree/main/rootfs/etc/nginx)
 
 #### Ingress NGINX Lua Scripts
 

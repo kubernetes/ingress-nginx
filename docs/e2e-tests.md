@@ -132,16 +132,16 @@
 - [should set valid proxy-ssl-secret, proxy-ssl-protocols](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/proxyssl.go#L122)
 - [proxy-ssl-location-only flag should change the nginx config server part](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/proxyssl.go#L150)
 
-### [modsecurity owasp](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L27)
+### [modsecurity owasp](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L27)
 
-- [should enable modsecurity](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L34)
-- [should enable modsecurity with transaction ID and OWASP rules](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L52)
-- [should disable modsecurity](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L73)
-- [should enable modsecurity with snippet](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L90)
-- [should enable modsecurity without using 'modsecurity on;'](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L109)
-- [should disable modsecurity using 'modsecurity off;'](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L131)
-- [should enable modsecurity with snippet and block requests](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L152)
-- [should enable modsecurity globally and with modsecurity-snippet block requests](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity.go#L186)
+- [should enable modsecurity](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L34)
+- [should enable modsecurity with transaction ID and OWASP rules](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L52)
+- [should disable modsecurity](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L73)
+- [should enable modsecurity with snippet](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L90)
+- [should enable modsecurity without using 'modsecurity on;'](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L109)
+- [should disable modsecurity using 'modsecurity off;'](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L131)
+- [should enable modsecurity with snippet and block requests](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L152)
+- [should enable modsecurity globally and with modsecurity-snippet block requests](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/modsecurity/modsecurity.go#L186)
 
 ### [backend-protocol - GRPC](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/grpc.go#L38)
 
@@ -534,9 +534,9 @@
 - [should set valid proxy read timeouts using configmap values](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/proxy_read_timeout.go#L36)
 - [should not set invalid proxy read timeouts using configmap values](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/proxy_read_timeout.go#L52)
 
-### [[Security] modsecurity-snippet](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/modsecurity_snippet.go#L27)
+### [[Security] modsecurity-snippet](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/modsecurity/modsecurity_snippet.go#L27)
 
-- [should add value of modsecurity-snippet setting to nginx config](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/modsecurity_snippet.go#L30)
+- [should add value of modsecurity-snippet setting to nginx config](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/modsecurity/modsecurity_snippet.go#L30)
 
 ### [OCSP](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/ocsp/ocsp.go#L42)
 
