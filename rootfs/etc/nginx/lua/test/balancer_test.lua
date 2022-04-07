@@ -532,5 +532,92 @@ describe("Balancer", function()
       assert.not_equal(balancer.get_balancer(), nil)
     end)
 
+    it("sync backends nothing to remove from backends_with_external_name only example-com should exist", function()
+      backends = {
+        {
+          name = "example-com", service = { spec = { ["type"] = "ExternalName" } },
+          endpoints = {
+            { address = "example.com", port = "80", maxFails = 0, failTimeout = 0 }
+          }
+        },
+        {
+          name = "access-router-production-web-80", port = "80", secure = false,
+          sslPassthrough = false,
+          endpoints = {
+            { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+            { address = "10.184.97.100", port = "8080", maxFails = 0, failTimeout = 0 },
+            { address = "10.184.98.239", port = "8080", maxFails = 0, failTimeout = 0 },
+          }
+        }
+      }
+
+      mock_ngx({ var = { proxy_upstream_name = "access-router-production-web-80" }, ctx = { } }, function()
+        ngx.shared.configuration_data:set("backends", cjson.encode(backends))
+      end)
+
+      balancer.sync_backends()
+      local backends_with_external_name = balancer.get_backends_with_external_name()
+      local externals_count = 0
+      for _ in pairs(backends_with_external_name) do externals_count = externals_count + 1 end
+      local expected_external_backend_count = 1
+      assert.equal(expected_external_backend_count, externals_count)
+
+      assert.are.same(backends[1], backends_with_external_name["example-com"])
+    end)
+
+    it("sync backends no external backends exist, should not interfere with non-external backends", function()
+      backends = {
+        {
+          name = "access-router-production-web-80", port = "80", secure = false,
+          sslPassthrough = false,
+          endpoints = {
+            { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+            { address = "10.184.97.100", port = "8080", maxFails = 0, failTimeout = 0 },
+            { address = "10.184.98.239", port = "8080", maxFails = 0, failTimeout = 0 },
+          }
+        }
+      }
+
+      mock_ngx({ var = { proxy_upstream_name = "access-router-production-web-80" }, ctx = { } }, function()
+        ngx.shared.configuration_data:set("backends", cjson.encode(backends))
+      end)
+
+      balancer.sync_backends()
+      local backends_with_external_name = balancer.get_backends_with_external_name()
+      local externals_count = 0
+      for _ in pairs(backends_with_external_name) do externals_count = externals_count + 1 end
+      local expected_external_backend_count = 0
+      assert.equal(expected_external_backend_count, externals_count)
+    end)
+
+    it("sync backends ensure last external backend is used backend backends_with_external_name", function()
+      backends = {
+        {
+          name = "example-com", service = { spec = { ["type"] = "ExternalName" } },
+          endpoints = {
+            { address = "example.com", port = "80", maxFails = 0, failTimeout = 0 }
+          }
+        },
+        {
+          name = "example-com", service = { spec = { ["type"] = "ExternalName" } },
+          endpoints = {
+            { address = "example2.com", port = "80", maxFails = 0, failTimeout = 0 }
+          }
+        }
+      }
+
+      mock_ngx({ var = { proxy_upstream_name = "access-router-production-web-80" }, ctx = { } }, function()
+        ngx.shared.configuration_data:set("backends", cjson.encode(backends))
+      end)
+
+      balancer.sync_backends()
+      local backends_with_external_name = balancer.get_backends_with_external_name()
+      local externals_count = 0
+      for _ in pairs(backends_with_external_name) do externals_count = externals_count + 1 end
+      local expected_external_backend_count = 1
+      assert.equal(expected_external_backend_count, externals_count)
+      assert.are.same(backends[2], backends_with_external_name["example-com"])
+    end)
+
   end)
 end)
