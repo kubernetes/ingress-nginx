@@ -189,7 +189,7 @@ func ingresses(opts lintOptions) error {
 		return err
 	}
 
-	var iLints []lints.IngressLint = lints.GetIngressLints()
+	var iLints = lints.GetIngressLints()
 	genericLints := make([]lint, len(iLints))
 	for i := range iLints {
 		genericLints[i] = iLints[i]
@@ -216,7 +216,7 @@ func deployments(opts lintOptions) error {
 		return err
 	}
 
-	var iLints []lints.DeploymentLint = lints.GetDeploymentLints()
+	var iLints = lints.GetDeploymentLints()
 	genericLints := make([]lint, len(iLints))
 	for i := range iLints {
 		genericLints[i] = iLints[i]
