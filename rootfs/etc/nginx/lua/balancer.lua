@@ -367,12 +367,17 @@ function _M.log()
   balancer:after_balance()
 end
 
+function _M.get_backends_with_external_name()
+  return util.deepcopy(backends_with_external_name)
+end
+
 setmetatable(_M, {__index = {
   get_implementation = get_implementation,
   sync_backend = sync_backend,
   route_to_alternative_balancer = route_to_alternative_balancer,
   get_balancer = get_balancer,
   get_balancer_by_upstream_name = get_balancer_by_upstream_name,
+  sync_backends = sync_backends,
 }})
 
 return _M
