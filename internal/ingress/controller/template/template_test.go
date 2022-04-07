@@ -502,33 +502,38 @@ func TestShouldApplyGlobalAuth(t *testing.T) {
 
 func TestBuildAuthResponseHeaders(t *testing.T) {
 	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
-	expected := []string{
-		"auth_request_set $authHeader0 $upstream_http_h1;",
-		"proxy_set_header 'h1' $authHeader0;",
-		"auth_request_set $authHeader1 $upstream_http_h_with_caps_and_dashes;",
-		"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
+	tests := []struct {
+		headers  []string
+		expected []string
+		lua      bool
+	}{
+		{
+			headers: externalAuthResponseHeaders,
+			lua:     false,
+			expected: []string{
+				"auth_request_set $authHeader0 $upstream_http_h1;",
+				"proxy_set_header 'h1' $authHeader0;",
+				"auth_request_set $authHeader1 $upstream_http_h_with_caps_and_dashes;",
+				"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
+			},
+		},
+		{
+			headers: externalAuthResponseHeaders,
+			lua:     true,
+			expected: []string{
+				"set $authHeader0 '';",
+				"proxy_set_header 'h1' $authHeader0;",
+				"set $authHeader1 '';",
+				"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
+			},
+		},
 	}
 
-	headers := buildAuthResponseHeaders(proxySetHeader(nil), externalAuthResponseHeaders)
-
-	if !reflect.DeepEqual(expected, headers) {
-		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
-	}
-}
-
-func TestBuildAuthResponseHeadersUpstream(t *testing.T) {
-	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
-	expected := []string{
-		"set $authHeader0 '';",
-		"proxy_set_header 'h1' $authHeader0;",
-		"set $authHeader1 '';",
-		"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
-	}
-
-	headers := buildAuthUpstreamHeaders(proxySetHeader(nil), externalAuthResponseHeaders)
-
-	if !reflect.DeepEqual(expected, headers) {
-		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
+	for _, test := range tests {
+		got := buildAuthResponseHeaders(proxySetHeader(nil), test.headers, test.lua)
+		if !reflect.DeepEqual(test.expected, got) {
+			t.Errorf("Expected \n'%v'\nbut returned \n'%v'", test.expected, got)
+		}
 	}
 }
 
@@ -539,7 +544,7 @@ func TestBuildAuthResponseLua(t *testing.T) {
 		"ngx.var.authHeader1 = res.header['H-With-Caps-And-Dashes']",
 	}
 
-	headers := buildAuthUpstreamLuaHeaders(proxySetHeader(nil), externalAuthResponseHeaders)
+	headers := buildAuthUpstreamLuaHeaders(externalAuthResponseHeaders)
 
 	if !reflect.DeepEqual(expected, headers) {
 		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)

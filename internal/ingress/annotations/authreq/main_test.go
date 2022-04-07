@@ -280,7 +280,8 @@ func TestKeepaliveAnnotations(t *testing.T) {
 
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if err != nil {
-			t.Errorf("expected no error")
+			t.Errorf("%v: unexpected error: %v", test.title, err)
+			continue
 		}
 
 		u, ok := i.(*Config)

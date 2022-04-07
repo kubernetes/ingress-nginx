@@ -1241,7 +1241,7 @@ stream {
             {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
             set $auth_cookie '';
             add_header Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthUpstreamHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
+            {{- range $line := buildAuthResponseHeaders $externalAuth.ResponseHeaders true }}
             {{ $line }}
             {{- end }}
             # `auth_request` module does not support HTTP keepalives in upstream block:
@@ -1264,7 +1264,7 @@ stream {
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
+            {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders false }}
             {{ $line }}
             {{- end }}
             {{ end }}

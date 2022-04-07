@@ -228,7 +228,6 @@ var (
 		"buildAuthLocation":               buildAuthLocation,
 		"shouldApplyGlobalAuth":           shouldApplyGlobalAuth,
 		"buildAuthResponseHeaders":        buildAuthResponseHeaders,
-		"buildAuthUpstreamHeaders":        buildAuthUpstreamHeaders,
 		"buildAuthUpstreamLuaHeaders":     buildAuthUpstreamLuaHeaders,
 		"buildAuthProxySetHeaders":        buildAuthProxySetHeaders,
 		"buildAuthUpstreamName":           buildAuthUpstreamName,
@@ -579,7 +578,14 @@ func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool
 	return false
 }
 
-func buildAuthResponseHeaders(proxySetHeader string, headers []string) []string {
+// buildAuthResponseHeaders sets HTTP response headers when `auth-url` is used.
+// Based on `auth-keepalive` value we use auth_request_set Nginx directives, or
+// we use Lua and Nginx variables instead.
+//
+// NOTE: Unfortunately auth_request module ignores the keepalive directive (see:
+// https://trac.nginx.org/nginx/ticket/1579), that is why we mimic the same
+// functionality with access_by_lua_block.
+func buildAuthResponseHeaders(proxySetHeader string, headers []string, lua bool) []string {
 	res := []string{}
 
 	if len(headers) == 0 {
@@ -587,29 +593,19 @@ func buildAuthResponseHeaders(proxySetHeader string, headers []string) []string 
 	}
 
 	for i, h := range headers {
-		hvar := strings.ToLower(h)
-		hvar = strings.NewReplacer("-", "_").Replace(hvar)
-		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
+		if lua {
+			res = append(res, fmt.Sprintf("set $authHeader%d '';", i))
+		} else {
+			hvar := strings.ToLower(h)
+			hvar = strings.NewReplacer("-", "_").Replace(hvar)
+			res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
+		}
 		res = append(res, fmt.Sprintf("%s '%v' $authHeader%v;", proxySetHeader, h, i))
 	}
 	return res
 }
 
-func buildAuthUpstreamHeaders(proxySetHeader string, headers []string) []string {
-	res := []string{}
-
-	if len(headers) == 0 {
-		return res
-	}
-
-	for i, h := range headers {
-		res = append(res, fmt.Sprintf("set $authHeader%d '';", i))
-		res = append(res, fmt.Sprintf("%s '%s' $authHeader%d;", proxySetHeader, h, i))
-	}
-	return res
-}
-
-func buildAuthUpstreamLuaHeaders(proxySetHeader string, headers []string) []string {
+func buildAuthUpstreamLuaHeaders(headers []string) []string {
 	res := []string{}
 
 	if len(headers) == 0 {
