@@ -1241,7 +1241,7 @@ stream {
             {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
             set $auth_cookie '';
             add_header Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthResponseHeaders $externalAuth.ResponseHeaders true }}
+            {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders true }}
             {{ $line }}
             {{- end }}
             # `auth_request` module does not support HTTP keepalives in upstream block:
@@ -1250,7 +1250,7 @@ stream {
                 local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '' })
                 if res.status == ngx.HTTP_OK then
                     ngx.var.auth_cookie = res.header['Set-Cookie']
-                    {{- range $line := buildAuthUpstreamLuaHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
+                    {{- range $line := buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}
                     {{ $line }}
                     {{- end }}
                     return
