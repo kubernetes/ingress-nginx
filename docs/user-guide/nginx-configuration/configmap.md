@@ -238,7 +238,7 @@ _**default:**_ `""`
 When doing this, the default blocklist is override, which means that the Ingress admin should add all the words
 that should be blocked, here is a suggested block list.
 
-_**suggested:**_ `"load_module,lua_package,_by_lua,location,root,proxy_pass,serviceaccount,{,},',\"`
+_**suggested:**_ `"load_module,lua_package,_by_lua,location,root,proxy_pass,serviceaccount,{,},',\""`
 
 ## hide-headers
 
