@@ -965,7 +965,7 @@ Specifies the environment this trace belongs to. _**default:**_ prod
 
 ## datadog-operation-name-override
 
-Overrides the operation naem to use for any traces crated. _**default:**_ nginx.handle
+Overrides the operation name to use for any traces crated. _**default:**_ nginx.handle
 
 ## datadog-priority-sampling
 
