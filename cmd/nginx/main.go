@@ -152,6 +152,13 @@ func main() {
 	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
 
+	_, errExists := os.Stat("/chroot")
+	if errExists == nil {
+		conf.IsChroot = true
+		go logger(conf.InternalLoggerAddress)
+
+	}
+
 	go startHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
 	go ngx.Start()
 

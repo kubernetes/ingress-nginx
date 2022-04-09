@@ -18,12 +18,15 @@ package framework
 
 import (
 	"context"
+	"time"
 
 	"k8s.io/client-go/kubernetes"
 )
 
 // Logs returns the log entries of a given Pod.
 func Logs(client kubernetes.Interface, namespace, podName string) (string, error) {
+	// Logs from jails take a bigger time to get shipped due to the need of tailing them
+	Sleep(3 * time.Second)
 	logs, err := client.CoreV1().RESTClient().Get().
 		Resource("pods").
 		Namespace(namespace).

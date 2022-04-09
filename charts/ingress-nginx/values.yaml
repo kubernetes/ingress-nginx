@@ -16,6 +16,8 @@ commonLabels: {}
 controller:
   name: controller
   image:
+    ## Keep false as default for now!
+    chroot: false
     registry: k8s.gcr.io
     image: ingress-nginx/controller
     ## for backwards compatibility consider setting the full image url via the repository value below
@@ -23,6 +25,7 @@ controller:
     ## repository:
     tag: "v1.1.3"
     digest: sha256:31f47c1e202b39fadecf822a9b76370bd4baed199a005b3e7d4d1455f4fd3fe2
+    # digestChroot: "" # TODO: Fill when we have it
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101

@@ -120,6 +120,9 @@ type Configuration struct {
 
 	PostShutdownGracePeriod int
 	ShutdownGracePeriod     int
+
+	InternalLoggerAddress string
+	IsChroot              bool
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.

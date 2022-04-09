@@ -26,7 +26,7 @@ local _M = {}
 
 local function send(payload)
   local s = assert(socket())
-  assert(s:connect("unix:/tmp/prometheus-nginx.socket"))
+  assert(s:connect("unix:/tmp/nginx/prometheus-nginx.socket"))
   assert(s:send(payload))
   assert(s:close())
 end

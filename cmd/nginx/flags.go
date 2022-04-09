@@ -192,6 +192,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		statusPort = flags.Int("status-port", 10246, `Port to use for the lua HTTP endpoint configuration.`)
 		streamPort = flags.Int("stream-port", 10247, "Port to use for the lua TCP/UDP endpoint configuration.")
 
+		internalLoggerAddress = flags.String("internal-logger-address", "127.0.0.1:11514", "Address to be used when binding internal syslogger")
+
 		profilerPort = flags.Int("profiler-port", 10245, "Port to use for expose the ingress controller Go profiler when it is enabled.")
 
 		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
@@ -344,6 +346,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		ValidationWebhook:         *validationWebhook,
 		ValidationWebhookCertPath: *validationWebhookCert,
 		ValidationWebhookKeyPath:  *validationWebhookKey,
+		InternalLoggerAddress:     *internalLoggerAddress,
 	}
 
 	if *apiserverHost != "" {
