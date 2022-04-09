@@ -43,9 +43,38 @@ capabilities:
   - ALL
   add:
   - NET_BIND_SERVICE
+  {{- if .Values.controller.image.chroot }}
+  - SYS_CHROOT
+  {{- end }}
 runAsUser: {{ .Values.controller.image.runAsUser }}
 allowPrivilegeEscalation: {{ .Values.controller.image.allowPrivilegeEscalation }}
 {{- end }}
+{{- end -}}
+
+{{/*
+Get specific image
+*/}}
+{{- define "ingress-nginx.image" -}}
+{{- if .chroot -}}
+{{- printf "%s-chroot" .image -}}
+{{- else -}}
+{{- printf "%s" .image -}}
+{{- end }}
+{{- end -}}
+
+{{/*
+Get specific image digest
+*/}}
+{{- define "ingress-nginx.imageDigest" -}}
+{{- if .chroot -}}
+{{- if .digestChroot -}}
+{{- printf "@%s" .digestChroot -}}
+{{- end }}
+{{- else -}}
+{{ if .digest -}}
+{{- printf "@%s" .digest -}}
+{{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/*

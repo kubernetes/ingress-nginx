@@ -100,13 +100,14 @@ jobs:
           REGISTRY: ingress-controller
         run: |
           echo "building images..."
-          make clean-image build image
+          make clean-image build image image-chroot
           make -C test/e2e-image image
 
           echo "creating images cache..."
           docker save \
             nginx-ingress-controller:e2e \
             ingress-controller/controller:1.0.0-dev \
+            ingress-controller/controller-chroot:1.0.0-dev \
             | pigz > docker.tar.gz
 
       - name: cache
@@ -246,6 +247,65 @@ jobs:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
           SKIP_IMAGE_CREATION: true
+        run: |
+          kind get kubeconfig > $HOME/.kube/kind-config-kind
+          make kind-e2e-test
+
+  kubernetes-chroot:
+    name: Kubernetes chroot
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - build
+    if: |
+      (needs.changes.outputs.go == 'true')
+
+    strategy:
+      matrix:
+        k8s: [v1.21.10, v1.22.7, v1.23.4]
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: cache
+        uses: actions/download-artifact@v2
+        with:
+          name: docker.tar.gz
+
+      - name: Create Kubernetes ${{ matrix.k8s }} cluster
+        id: kind
+        uses: engineerd/setup-kind@v0.5.0
+        with:
+          version: v0.12.0
+          config: test/e2e/kind.yaml
+          image: kindest/node:${{ matrix.k8s }}
+
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: docker.tar.gz
+          failOnError: false
+
+      - name: Prepare cluster for testing
+        id: local-path
+        run: |
+          kubectl version
+          echo
+          echo "installing helm 3..."
+          curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+      - name: Load images from cache
+        run: |
+          echo "loading docker images..."
+          pigz -dc docker.tar.gz | docker load
+
+      - name: Run e2e tests
+        env:
+          KIND_CLUSTER_NAME: kind
+          SKIP_CLUSTER_CREATION: true
+          SKIP_IMAGE_CREATION: true
+          IS_CHROOT: true
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test

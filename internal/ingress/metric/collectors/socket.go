@@ -111,7 +111,7 @@ var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
 func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, buckets HistogramBuckets) (*SocketCollector, error) {
-	socket := "/tmp/prometheus-nginx.socket"
+	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	_ = syscall.Unlink(socket)
 
