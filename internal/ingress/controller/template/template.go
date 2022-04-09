@@ -42,6 +42,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
@@ -227,7 +228,12 @@ var (
 		"buildAuthLocation":               buildAuthLocation,
 		"shouldApplyGlobalAuth":           shouldApplyGlobalAuth,
 		"buildAuthResponseHeaders":        buildAuthResponseHeaders,
+		"buildAuthUpstreamLuaHeaders":     buildAuthUpstreamLuaHeaders,
 		"buildAuthProxySetHeaders":        buildAuthProxySetHeaders,
+		"buildAuthUpstreamName":           buildAuthUpstreamName,
+		"shouldApplyAuthUpstream":         shouldApplyAuthUpstream,
+		"extractHostPort":                 extractHostPort,
+		"changeHostPort":                  changeHostPort,
 		"buildProxyPass":                  buildProxyPass,
 		"filterRateLimits":                filterRateLimits,
 		"buildRateLimitZones":             buildRateLimitZones,
@@ -572,7 +578,14 @@ func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool
 	return false
 }
 
-func buildAuthResponseHeaders(proxySetHeader string, headers []string) []string {
+// buildAuthResponseHeaders sets HTTP response headers when `auth-url` is used.
+// Based on `auth-keepalive` value we use auth_request_set Nginx directives, or
+// we use Lua and Nginx variables instead.
+//
+// NOTE: Unfortunately auth_request module ignores the keepalive directive (see:
+// https://trac.nginx.org/nginx/ticket/1579), that is why we mimic the same
+// functionality with access_by_lua_block.
+func buildAuthResponseHeaders(proxySetHeader string, headers []string, lua bool) []string {
 	res := []string{}
 
 	if len(headers) == 0 {
@@ -580,10 +593,27 @@ func buildAuthResponseHeaders(proxySetHeader string, headers []string) []string 
 	}
 
 	for i, h := range headers {
-		hvar := strings.ToLower(h)
-		hvar = strings.NewReplacer("-", "_").Replace(hvar)
-		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
+		if lua {
+			res = append(res, fmt.Sprintf("set $authHeader%d '';", i))
+		} else {
+			hvar := strings.ToLower(h)
+			hvar = strings.NewReplacer("-", "_").Replace(hvar)
+			res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
+		}
 		res = append(res, fmt.Sprintf("%s '%v' $authHeader%v;", proxySetHeader, h, i))
+	}
+	return res
+}
+
+func buildAuthUpstreamLuaHeaders(headers []string) []string {
+	res := []string{}
+
+	if len(headers) == 0 {
+		return res
+	}
+
+	for i, h := range headers {
+		res = append(res, fmt.Sprintf("ngx.var.authHeader%d = res.header['%s']", i, h))
 	}
 	return res
 }
@@ -600,6 +630,76 @@ func buildAuthProxySetHeaders(headers map[string]string) []string {
 	}
 	sort.Strings(res)
 	return res
+}
+
+func buildAuthUpstreamName(input interface{}, host string) string {
+	authPath := buildAuthLocation(input, "")
+	if authPath == "" || host == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("%s-%s", host, authPath[2:])
+}
+
+// shouldApplyAuthUpstream returns true only in case when ExternalAuth.URL and
+// ExternalAuth.KeepaliveConnections are all set
+func shouldApplyAuthUpstream(l interface{}, c interface{}) bool {
+	location, ok := l.(*ingress.Location)
+	if !ok {
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", l)
+		return false
+	}
+
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	if location.ExternalAuth.URL == "" || location.ExternalAuth.KeepaliveConnections == 0 {
+		return false
+	}
+
+	// Unfortunately, `auth_request` module ignores keepalive in upstream block: https://trac.nginx.org/nginx/ticket/1579
+	// The workaround is to use `ngx.location.capture` Lua subrequests but it is not supported with HTTP/2
+	if cfg.UseHTTP2 {
+		klog.Warning("Upstream keepalive is not supported with HTTP/2")
+		return false
+	}
+
+	return true
+}
+
+// extractHostPort will extract the host:port part from the URL specified by url
+func extractHostPort(url string) string {
+	if url == "" {
+		return ""
+	}
+
+	authURL, err := parser.StringToURL(url)
+	if err != nil {
+		klog.Errorf("expected a valid URL but %s was returned", url)
+		return ""
+	}
+
+	return authURL.Host
+}
+
+// changeHostPort will change the host:port part of the url to value
+func changeHostPort(url string, value string) string {
+	if url == "" {
+		return ""
+	}
+
+	authURL, err := parser.StringToURL(url)
+	if err != nil {
+		klog.Errorf("expected a valid URL but %s was returned", url)
+		return ""
+	}
+
+	authURL.Host = value
+
+	return authURL.String()
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
