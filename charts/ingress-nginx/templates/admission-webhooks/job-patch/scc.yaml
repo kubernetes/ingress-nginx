@@ -24,7 +24,7 @@ fsGroup:
   type: MustRunAs
 users:
 - system:serviceaccount:{{ .Release.Namespace }}:{{ include "ingress-nginx.fullname" . }}-admission
-priority: null
+priority: 10
 readOnlyRootFilesystem: false
 runAsUser:
   type: MustRunAsNonRoot
