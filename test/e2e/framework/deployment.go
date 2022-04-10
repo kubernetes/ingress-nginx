@@ -227,7 +227,7 @@ func (f *Framework) NewGRPCBinDeployment() {
 		PeriodSeconds:       1,
 		SuccessThreshold:    1,
 		TimeoutSeconds:      1,
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
 				Port: intstr.FromInt(9000),
 			},
@@ -318,7 +318,7 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 		SuccessThreshold:    1,
 		TimeoutSeconds:      2,
 		FailureThreshold:    6,
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Port: intstr.FromString("http"),
 				Path: "/",
