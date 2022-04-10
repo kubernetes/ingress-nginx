@@ -75,6 +75,12 @@ func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
+	if pr != "" {
+		if err := isValidURL(pr); err != nil {
+			return nil, err
+		}
+	}
+
 	prc, err := parser.GetIntAnnotation("permanent-redirect-code", ing)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
