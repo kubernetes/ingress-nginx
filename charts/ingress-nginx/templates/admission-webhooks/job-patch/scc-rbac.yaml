@@ -14,7 +14,6 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 rules:
-{{- if .Values.securityContextConstraints.enabled }}
   - apiGroups: ['security.openshift.io']
     resources: ['securitycontextconstraints']
     verbs:     ['use']
@@ -22,9 +21,8 @@ rules:
     {{- with .Values.controller.admissionWebhooks.existingScc }}
     - {{ . }}
     {{- else }}
-    - {{ include "ingress-nginx.fullname" . }}-admission-scc
+    - {{ include "ingress-nginx.fullname" . }}-admission
     {{- end }}
-{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
