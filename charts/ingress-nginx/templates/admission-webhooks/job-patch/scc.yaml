@@ -20,7 +20,7 @@ allowedCapabilities:
 requiredDropCapabilities:
 - ALL
 fsGroup:
-  type: MustRunAs
+  type: RunAsAny
 users:
 - system:serviceaccount:{{ .Release.Namespace }}:{{ include "ingress-nginx.fullname" . }}-admission
 priority: 5
