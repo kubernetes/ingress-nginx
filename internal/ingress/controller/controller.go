@@ -125,6 +125,8 @@ type Configuration struct {
 	InternalLoggerAddress string
 	IsChroot              bool
 	DeepInspector         bool
+
+	DynamicConfigurationRetries int
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -194,19 +196,24 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	retry := wait.Backoff{
-		Steps:    15,
-		Duration: 1 * time.Second,
-		Factor:   0.8,
+		Steps:    1 + n.cfg.DynamicConfigurationRetries,
+		Duration: time.Second,
+		Factor:   1.3,
 		Jitter:   0.1,
 	}
 
+	retriesRemaining := retry.Steps
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
 		err := n.configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
 		}
-
+		retriesRemaining--
+		if retriesRemaining > 0 {
+			klog.Warningf("Dynamic reconfiguration failed (retrying; %d retries left): %v", retriesRemaining, err)
+			return false, nil
+		}
 		klog.Warningf("Dynamic reconfiguration failed: %v", err)
 		return false, err
 	})
