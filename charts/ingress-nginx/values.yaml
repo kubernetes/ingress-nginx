@@ -921,6 +921,10 @@ tcp: {}
 udp: {}
 #  53: "kube-system/kube-dns:53"
 
+# -- Prefix for TCP and UDP ports names in ingress controller service
+## Some cloud providers, like Yandex Cloud may have a requirements for a port name regex to support cloud load balancer integration
+portNamePrefix: ""
+
 # -- (string) A base64-encoded Diffie-Hellman parameter.
 # This can be generated with: `openssl dhparam 4096 2> /dev/null | base64`
 ## Ref: https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/ssl-dh-param
