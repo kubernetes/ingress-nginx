@@ -349,7 +349,7 @@ CORS can be controlled with the following annotations:
 
     This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -.
 
-    - Default: `DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization`
+    - Default: `DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization`
     - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
 
 * `nginx.ingress.kubernetes.io/cors-expose-headers`: Controls which headers are exposed to response.
