@@ -41,6 +41,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
+	"k8s.io/ingress-nginx/internal/ingress/inspector"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
@@ -123,6 +124,7 @@ type Configuration struct {
 
 	InternalLoggerAddress string
 	IsChroot              bool
+	DeepInspector         bool
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -237,7 +239,11 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if !ing.DeletionTimestamp.IsZero() {
 		return nil
 	}
-
+	if n.cfg.DeepInspector {
+		if err := inspector.DeepInspect(ing); err != nil {
+			return fmt.Errorf("invalid object: %w", err)
+		}
+	}
 	// Do not attempt to validate an ingress that's not meant to be controlled by the current instance of the controller.
 	if ingressClass, err := n.store.GetIngressClass(ing, n.cfg.IngressClassConfiguration); ingressClass == "" {
 		klog.Warningf("ignoring ingress %v in %v based on annotation %v: %v", ing.Name, ing.ObjectMeta.Namespace, ingressClass, err)
