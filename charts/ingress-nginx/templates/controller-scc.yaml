@@ -23,7 +23,7 @@ requiredDropCapabilities:
 fsGroup:
   type: MustRunAs
 
-priority: 10
+priority: null
 readOnlyRootFilesystem: false
 runAsUser:
   type: MustRunAsNonRoot
