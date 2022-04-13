@@ -591,7 +591,12 @@ http {
             end
 
             {{ if $cfg.UseForwardedHeaders }}
-            local redirectScheme = ngx.var.http_x_forwarded_proto
+            local redirectScheme
+            if not ngx.var.http_x_forwarded_proto then
+                redirectScheme = ngx.var.scheme
+            else
+                redirectScheme = ngx.var.http_x_forwarded_proto
+            end
             {{ else }}
             local redirectScheme = ngx.var.scheme
             {{ end }}
