@@ -75,10 +75,10 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 		})
 
 		ginkgo.It("should set keepalive time to upstream server", func() {
-			f.UpdateNginxConfigMapData("upstream-keepalive-time", "1h")
+			f.UpdateNginxConfigMapData("upstream-keepalive-time", "75s")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_time\s*1h;`, server)
+				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_time\s*75s;`, server)
 				return match
 			})
 		})
