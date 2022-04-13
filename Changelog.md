@@ -1,5 +1,34 @@
 # Changelog
 
+### 1.2.0-beta.0
+
+**Image:**
+- k8s.gcr.io/ingress-nginx/controller:v1.2.0-beta.0@sha256:92115f5062568ebbcd450cd2cf9bffdef8df9fc61e7d5868ba8a7c9d773e0961
+- k8s.gcr.io/ingress-nginx/controller-chroot:v1.2.0-beta.0@sha256:0082f0f547b147a30ad85a5d6d2ceb3edbf0848b2008ed754365b6678bdea9a5
+
+This release introduces Jail/chroot nginx process inside controller container for the first time
+
+_Changes:_
+
+- [8417](https://github.com/kubernetes/ingress-nginx/pull/8417) force helm release to artifact hub
+- [8421](https://github.com/kubernetes/ingress-nginx/pull/8421) fix change log changes list
+- [8405](https://github.com/kubernetes/ingress-nginx/pull/8405) kubectl-plugin code overview info
+- [8399](https://github.com/kubernetes/ingress-nginx/pull/8399) Darwin arm64
+- [8443](https://github.com/kubernetes/ingress-nginx/pull/8443) Add dependency review enforcement
+- [8426](https://github.com/kubernetes/ingress-nginx/pull/8426) Bump github.com/prometheus/common from 0.32.1 to 0.33.0
+- [8444](https://github.com/kubernetes/ingress-nginx/pull/8444) replace deprecated topology key in example with current one
+- [8447](https://github.com/kubernetes/ingress-nginx/pull/8447) typo fixing
+- [8446](https://github.com/kubernetes/ingress-nginx/pull/8446) Fix suggested annotation-value-word-blocklist
+- [8219](https://github.com/kubernetes/ingress-nginx/pull/8219) Add keepalive support for auth requests
+- [8337](https://github.com/kubernetes/ingress-nginx/pull/8337) Jail/chroot nginx process inside controller container
+- [8454](https://github.com/kubernetes/ingress-nginx/pull/8454) Update index.md
+- [8455](https://github.com/kubernetes/ingress-nginx/pull/8455) Update dependencies
+- [8456](https://github.com/kubernetes/ingress-nginx/pull/8456) Implement object deep inspector
+- [8325](https://github.com/kubernetes/ingress-nginx/pull/8325) Fix for buggy ingress sync with retries
+- [8322](https://github.com/kubernetes/ingress-nginx/pull/8322) Improve req handling dashboard
+- [8464](https://github.com/kubernetes/ingress-nginx/pull/8464) Prepare v1.2.0-beta.0 release
+
+
 ### 1.1.3
 
 **Image:**
