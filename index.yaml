@@ -2,6 +2,38 @@ apiVersion: v1
 entries:
   ingress-nginx:
   - annotations:
+      artifacthub.io/changes: "- \"#8426\tBump github.com/prometheus/common from 0.32.1
+        to 0.33.0\"\n- \"#8444\treplace deprecated topology key in example with current
+        one\"\n- \"#8446\tFix suggested annotation-value-word-blocklist\"\n- \"#8219
+        \   Add keepalive support for auth requests\"\n- \"#8337\tJail/chroot nginx
+        process inside controller container\"\n- \"#8455\tUpdate dependencies\"\n-
+        \"#8456\tImplement object deep inspector\"\n- \"#8325\tFix for buggy ingress
+        sync with retries\"\n- \"#8322\tImprove req handling dashboard\"\n"
+      artifacthub.io/prerelease: "true"
+    apiVersion: v2
+    appVersion: 1.2.0-beta.0
+    created: "2022-04-14T03:05:39.406556863Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: 3e8e6d2203f5e8583efd0f1deec94a58e209c1976315440d886a0ea68ac2c108
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.19.0-0'
+    maintainers:
+    - name: rikatz
+    - name: strongjz
+    - name: tao12345666333
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.1.0-beta.0/ingress-nginx-4.1.0-beta.0.tgz
+    version: 4.1.0-beta.0
+  - annotations:
       artifacthub.io/changes: |
         - "#8307 Nginx v1.19.10"
         - "#8386 Alpine 3.14.4"
@@ -2218,4 +2250,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2022-04-06T22:21:32.016197578Z"
+generated: "2022-04-14T03:05:39.407559577Z"
