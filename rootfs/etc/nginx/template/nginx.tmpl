@@ -156,7 +156,7 @@ http {
     {{ else }}
     modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
     {{ end }}
-    
+
     {{ if $all.Cfg.EnableOWASPCoreRules }}
     modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
     {{ end }}
@@ -508,7 +508,7 @@ http {
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
-
+        keepalive_time {{ $cfg.UpstreamKeepaliveTime }};
         keepalive_timeout  {{ $cfg.UpstreamKeepaliveTimeout }}s;
         keepalive_requests {{ $cfg.UpstreamKeepaliveRequests }};
         {{ end }}
