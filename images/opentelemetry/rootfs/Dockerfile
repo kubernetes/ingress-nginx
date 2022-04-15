@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.14.4 as builder
+FROM alpine:3.14.6 as builder
 
 COPY . /
 
@@ -22,7 +22,7 @@ RUN apk update \
 	&& apk add -U bash \
 	&& /build.sh
 
-FROM busybox:latest 
+FROM alpine:3.14.6 
 
 COPY --from=builder init_module.sh /usr/local/bin/init_module.sh
 COPY --from=builder /etc/nginx/modules /etc/nginx/modules
