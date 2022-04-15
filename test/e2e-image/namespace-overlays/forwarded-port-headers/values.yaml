@@ -6,6 +6,7 @@ controller:
     chroot: true
     tag: 1.0.0-dev
     digest:
+    digestChroot:
   containerPort:
     http: "1080"
     https: "1443"

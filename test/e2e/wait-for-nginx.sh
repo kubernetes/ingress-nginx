@@ -62,6 +62,7 @@ controller:
     chroot: true
     tag: 1.0.0-dev
     digest:
+    digestChroot:
   scope:
     enabled: true
   config:
