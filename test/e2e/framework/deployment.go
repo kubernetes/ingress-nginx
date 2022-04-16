@@ -38,7 +38,7 @@ const SlowEchoService = "slow-echo"
 const HTTPBinService = "httpbin"
 
 // NginxBaseImage use for testing
-const NginxBaseImage = "k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180"
+const NginxBaseImage = "k8s.gcr.io/ingress-nginx/nginx:81c2afd975a6f9a9847184472286044d7d5296f6@sha256:a71ac64dd8cfd68341ba47dbdc4d8c2cb91325fce669875193ea0319118201b5"
 
 type deploymentOptions struct {
 	namespace string
