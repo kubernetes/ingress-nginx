@@ -43,7 +43,6 @@ done
 mkdir -p  /chroot/lib /chroot/proc /chroot/usr /chroot/bin /chroot/dev /chroot/run 
 cp /etc/passwd /etc/group /chroot/etc/
 cp -a /usr/* /chroot/usr/
-mv /var/log/nginx /chroot/var/log/
 cp -a /etc/nginx/* /chroot/etc/nginx/
 cp /lib/ld-musl-* /lib/libcrypto* /lib/libssl* /lib/libz* /chroot/lib/
 mknod -m 0666 /chroot/dev/null c 1 3
