@@ -23,9 +23,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.2.0-beta.1"
-    digest: sha256:7059739637c30865f74cae403fffa55c2cb6d9779cd15654480dd0e4f850d536
-    digestChroot: sha256:5344d8367295be743703f19eea137e7a3253efc2d0ec8aee131b85d3258f9780
+    tag: "v1.2.0"
+    digest: sha256:d8196e3bc1e72547c5dec66d6556c0ff92a23f6d0919b206be170bc90d5f9185
+    digestChroot: sha256:fb17f1700b77d4fcc52ca6f83ffc2821861ae887dbb87149cf5cbc52bea425e5
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -578,8 +578,8 @@ controller:
 
   extraModules: []
   ## Modules, which are mounted into the core nginx image
-  # - name: opentelemetry:v20220331-controller-v1.1.2-36-g7517b7ecf@sha256:e3f635474b5da24ccd0ea6b078fb190dae68b8b4a44b52bea19ec2561f0102ec
-  #   image: k8s.gcr.io/ingress-nginx/opentelemetry:
+  # - name: opentelemetry
+  #   image: k8s.gcr.io/ingress-nginx/opentelemetry:v20220415-controller-v1.2.0-beta.0-2-g81c2afd97@sha256:ce61e2cf0b347dffebb2dcbf57c33891d2217c1bad9c0959c878e5be671ef941
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
@@ -908,13 +908,13 @@ serviceAccount:
 imagePullSecrets: []
 # - name: secretName
 
-# -- TCP service key:value pairs
+# -- TCP service key-value pairs
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md
 ##
 tcp: {}
 #  8080: "default/example-tcp-svc:9000"
 
-# -- UDP service key:value pairs
+# -- UDP service key-value pairs
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md
 ##
 udp: {}
