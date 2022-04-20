@@ -146,7 +146,7 @@ jobs:
 
       - name: Run helm-docs
         run: |
-          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.6.0
+          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.8.1
           ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
           DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
           if [ ! -z "$DIFF" ]; then
