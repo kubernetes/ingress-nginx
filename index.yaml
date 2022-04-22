@@ -2,6 +2,45 @@ apiVersion: v1
 entries:
   ingress-nginx:
   - annotations:
+      artifacthub.io/changes: |
+        - "[8481](https://github.com/kubernetes/ingress-nginx/pull/8481) Fix log creation in chroot script"
+        - "[8479](https://github.com/kubernetes/ingress-nginx/pull/8479) changed nginx base img tag to img built with alpine3.14.6"
+        - "[8478](https://github.com/kubernetes/ingress-nginx/pull/8478) update base images and protobuf gomod"
+        - "[8468](https://github.com/kubernetes/ingress-nginx/pull/8468) Fallback to ngx.var.scheme for redirectScheme with use-forward-headers when X-Forwarded-Proto is empty"
+        - "[8456](https://github.com/kubernetes/ingress-nginx/pull/8456) Implement object deep inspector"
+        - "[8455](https://github.com/kubernetes/ingress-nginx/pull/8455) Update dependencies"
+        - "[8454](https://github.com/kubernetes/ingress-nginx/pull/8454) Update index.md"
+        - "[8447](https://github.com/kubernetes/ingress-nginx/pull/8447) typo fixing"
+        - "[8446](https://github.com/kubernetes/ingress-nginx/pull/8446) Fix suggested annotation-value-word-blocklist"
+        - "[8444](https://github.com/kubernetes/ingress-nginx/pull/8444) replace deprecated topology key in example with current one"
+        - "[8443](https://github.com/kubernetes/ingress-nginx/pull/8443) Add dependency review enforcement"
+        - "[8434](https://github.com/kubernetes/ingress-nginx/pull/8434) added new auth-tls-match-cn annotation"
+        - "[8426](https://github.com/kubernetes/ingress-nginx/pull/8426) Bump github.com/prometheus/common from 0.32.1 to 0.33.0"
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.2.0
+    created: "2022-04-22T02:37:06.011796158Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: e859c28918f07cd78fcde2420652c0708209996aa7c1a9be08b428f425f12e03
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.19.0-0'
+    maintainers:
+    - name: rikatz
+    - name: strongjz
+    - name: tao12345666333
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    type: application
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.1.0/ingress-nginx-4.1.0.tgz
+    version: 4.1.0
+  - annotations:
       artifacthub.io/changes: "- \"Image and libraries updated\"\n- \"#8319  Upstream
         keepalive time\"\n- \"#8434  added new auth-tls-match-cn annotation\"\n- \"#8481
         \ Fix log creation in chroot script\"\n- \"#8426\tBump github.com/prometheus/common
@@ -2284,4 +2323,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2022-04-17T20:21:20.341464987Z"
+generated: "2022-04-22T02:37:06.012723658Z"
