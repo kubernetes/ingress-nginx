@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.1.0-beta.1](https://img.shields.io/badge/Version-4.1.0--beta.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0-beta.1](https://img.shields.io/badge/AppVersion-1.2.0--beta.1-informational?style=flat-square)
+![Version: 4.1.0](https://img.shields.io/badge/Version-4.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -307,13 +307,13 @@ Kubernetes: `>=1.19.0-0`
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
 | controller.image.chroot | bool | `false` |  |
-| controller.image.digest | string | `"sha256:7059739637c30865f74cae403fffa55c2cb6d9779cd15654480dd0e4f850d536"` |  |
-| controller.image.digestChroot | string | `"sha256:5344d8367295be743703f19eea137e7a3253efc2d0ec8aee131b85d3258f9780"` |  |
+| controller.image.digest | string | `"sha256:d8196e3bc1e72547c5dec66d6556c0ff92a23f6d0919b206be170bc90d5f9185"` |  |
+| controller.image.digestChroot | string | `"sha256:fb17f1700b77d4fcc52ca6f83ffc2821861ae887dbb87149cf5cbc52bea425e5"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"k8s.gcr.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.2.0-beta.1"` |  |
+| controller.image.tag | string | `"v1.2.0"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
@@ -411,7 +411,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.service.targetPorts.http | string | `"http"` |  |
 | controller.service.targetPorts.https | string | `"https"` |  |
 | controller.service.type | string | `"LoadBalancer"` |  |
-| controller.shareProcessNamespace | bool | `false` |  This can be used for example to signal log rotation using `kill -USR1` from a sidecar. |
+| controller.shareProcessNamespace | bool | `false` |  |
 | controller.sysctls | object | `{}` | See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls |
 | controller.tcp.annotations | object | `{}` | Annotations to be added to the tcp config configmap |
 | controller.tcp.configMapNamespace | string | `""` | Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE) |
@@ -484,6 +484,6 @@ Kubernetes: `>=1.19.0-0`
 | serviceAccount.automountServiceAccountToken | bool | `true` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
-| tcp | object | `{}` | TCP service key:value pairs |
-| udp | object | `{}` | UDP service key:value pairs |
+| tcp | object | `{}` | TCP service key-value pairs |
+| udp | object | `{}` | UDP service key-value pairs |
 

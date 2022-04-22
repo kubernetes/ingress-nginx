@@ -173,10 +173,10 @@ Promoting the images basically means that images, that were pushed to staging co
           - Run the below command and save the output to a txt file
 
             ```
-            gh pr list -s merged -L 38 -B main | cut -f1,2 > ~/tmp/prlist.txt
+            gh pr list -s merged -L 38 -B main | cut -f1,2 | tee ~/Downloads/prlist.txt
             ```
             - The -L 38 was used for 2 reasons.
-              - Default number of results is 30 and there were more than 30 PRs merged while releasing v1.1.1.
+              - Default number of results is 30 and there were more than 30 PRs merged while releasing v1.1.1. If you see the current/soon-to-be-old changelog, you can look at the most recent PR number that has been accounted for already, and start from after that last accounted for PR.
               -  The other reason to use -L 38 was to ommit the 39th, the 40th and the 41st line in the resulting list. These were non-relevant PRs.
             - If you save the output of above command to a file called prlist.txt. It looks somewhat like this ;
 
@@ -190,8 +190,8 @@ Promoting the images basically means that images, that were pushed to staging co
               8115    chart/ghaction: set the correct permission to have access to push a release 
               ....
               ```
-              You can delete the lines, that refer to PRs of the release process itself. We only need to list the feature/bugfix PRs.
-          - Now you use some easy automation in bash/python/other, to get the PR-List that can be used in the changelog. For example, its possible to use a bash scripty way, seen below, to convert those plaintext PR numbers into clickable links. 
+              You can delete the lines, that refer to PRs of the release process itself. We only need to list the feature/bugfix PRs. You can also delete the lines that are housekeeping or not really worth mentioning in the changelog.
+          -  you use some easy automation in bash/python/other, to get the PR-List that can be used in the changelog. For example, its possible to use a bash scripty way, seen below, to convert those plaintext PR numbers into clickable links. 
 
             ```
             #!/usr/bin/bash
@@ -205,10 +205,24 @@ Promoting the images basically means that images, that were pushed to staging co
             done <$file
 
             ```
+          - There was a parsing issue and path issue on MacOS, so above scrpt had to be modified and MacOS monterey compatible script is below ;
+
+            ```
+            #!/bin/bash
+
+            file="$1"
+
+            while read -r line; do
+              pr_num=`echo "$line" | cut -f1`
+              pr_title=`echo "$line" | cut -f2`
+              echo \""[$pr_num](https://github.com/kubernetes/ingress-nginx/pull/$pr_num) $pr_title"\"
+            done <$file
+
+            ```
           - If you saved the bash script content above, in a file like `$HOME/bin/prlist_to_changelog.sh`, then you could execute a command like this to get your prlist in a text file called changelog_content.txt;`
 
           ```
-          prlist_to_changelog.sh prlist.txt > /tmp/changelog_content.txt`
+          prlist_to_changelog.sh ~/Downloads/prlist.txt | tee ~/Downloads//changelog_content.txt`
           ```
 
 ### d. Edit the values.yaml and run helm-docs
