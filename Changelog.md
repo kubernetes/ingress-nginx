@@ -1,5 +1,40 @@
 # Changelog
 
+### 1.2.0
+
+Image: 
+- k8s.gcr.io/ingress-nginx/controller:v1.2.0@sha256:d8196e3bc1e72547c5dec66d6556c0ff92a23f6d0919b206be170bc90d5f9185
+- k8s.gcr.io/ingress-nginx/controller-chroot:v1.2.0@sha256:fb17f1700b77d4fcc52ca6f83ffc2821861ae887dbb87149cf5cbc52bea425e5
+
+This minor version release, introduces 2 breaking changes. For the first time, an option to jail/chroot the nginx process, inside the controller container, is being introduced.. This provides an additional layer of security, for sensitive information like K8S serviceaccounts. This release also brings a special new feature of deep inspection into objects. The inspection is a walk through of all the spec, checking for possible attempts to escape configs. Currently such an inspection only occurs for `networking.Ingress`.  Additionally there are fixes for the recently announced CVEs on busybox & ssl_client. And there is a fix to a recently introduced redirection related bug, that was setting the protocol on URLs to "nil".
+
+_Changes:_
+
+- [8481](https://github.com/kubernetes/ingress-nginx/pull/8481) Fix log creation in chroot script
+- [8479](https://github.com/kubernetes/ingress-nginx/pull/8479) changed nginx base img tag to img built with alpine3.14.6
+- [8478](https://github.com/kubernetes/ingress-nginx/pull/8478) update base images and protobuf gomod
+- [8468](https://github.com/kubernetes/ingress-nginx/pull/8468) Fallback to ngx.var.scheme for redirectScheme with use-forward-headers when X-Forwarded-Proto is empty
+- [8456](https://github.com/kubernetes/ingress-nginx/pull/8456) Implement object deep inspector
+- [8455](https://github.com/kubernetes/ingress-nginx/pull/8455) Update dependencies
+- [8454](https://github.com/kubernetes/ingress-nginx/pull/8454) Update index.md
+- [8447](https://github.com/kubernetes/ingress-nginx/pull/8447) typo fixing
+- [8446](https://github.com/kubernetes/ingress-nginx/pull/8446) Fix suggested annotation-value-word-blocklist
+- [8444](https://github.com/kubernetes/ingress-nginx/pull/8444) replace deprecated topology key in example with current one
+- [8443](https://github.com/kubernetes/ingress-nginx/pull/8443) Add dependency review enforcement
+- [8434](https://github.com/kubernetes/ingress-nginx/pull/8434) added new auth-tls-match-cn annotation
+- [8426](https://github.com/kubernetes/ingress-nginx/pull/8426) Bump github.com/prometheus/common from 0.32.1 to 0.33.0
+- [8417](https://github.com/kubernetes/ingress-nginx/pull/8417) force helm release to artifact hub
+- [8405](https://github.com/kubernetes/ingress-nginx/pull/8405) kubectl-plugin code overview info
+- [8399](https://github.com/kubernetes/ingress-nginx/pull/8399) Darwin arm64
+- [8443](https://github.com/kubernetes/ingress-nginx/pull/8443) Add dependency review enforcement
+- [8444](https://github.com/kubernetes/ingress-nginx/pull/8444) replace deprecated topology key in example with current one
+- [8446](https://github.com/kubernetes/ingress-nginx/pull/8446) Fix suggested annotation-value-word-blocklist
+- [8219](https://github.com/kubernetes/ingress-nginx/pull/8219) Add keepalive support for auth requests
+- [8455](https://github.com/kubernetes/ingress-nginx/pull/8455) Update dependencies
+- [8456](https://github.com/kubernetes/ingress-nginx/pull/8456) Implement object deep inspector
+- [8325](https://github.com/kubernetes/ingress-nginx/pull/8325) Fix for buggy ingress sync with retries
+- [8322](https://github.com/kubernetes/ingress-nginx/pull/8322) Improve req handling dashboard
+
 ### 1.2.0-beta.0
 
 **Image:**
