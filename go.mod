@@ -27,7 +27,7 @@ require (
 	github.com/zakjan/cert-chain-resolver v0.0.0-20211122211144-c6b0b792af9a
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
-	google.golang.org/grpc v1.44.0
+	google.golang.org/grpc v1.46.0
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 	k8s.io/api v0.23.5
