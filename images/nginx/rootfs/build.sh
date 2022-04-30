@@ -127,6 +127,12 @@ export LUA_RESTY_IPMATCHER_VERSION=211e0d2eb8bbb558b79368f89948a0bafdc23654
 # Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
 export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
 
+# Check for recent changes: https://github.com/maxmind/geoip-api-c/compare/v1.6.12...main
+export GEOIP_VERSION=v1.6.12
+
+# Check for recent changes: https://github.com/maxmind/libmaxminddb/compare/1.6.0...main
+export LIBMAXMINDDB_VERSION=1.6.0
+
 export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
@@ -152,44 +158,40 @@ get_src()
   rm -rf "$f"
 }
 
+yum -y update
+yum -y upgrade
+
 # install required packages to build
-apk add \
-  bash \
-  gcc \
-  clang \
-  libc-dev \
-  make \
+yum -y install \
   automake \
-  openssl-dev \
-  pcre-dev \
-  zlib-dev \
-  linux-headers \
-  libxslt-dev \
-  gd-dev \
-  geoip-dev \
-  perl-dev \
-  libedit-dev \
-  mercurial \
-  alpine-sdk \
-  findutils \
-  curl ca-certificates \
-  patch \
-  libaio-dev \
-  openssl \
-  cmake \
-  util-linux \
-  lmdb-tools \
-  wget \
-  curl-dev \
-  libprotobuf \
-  git g++ pkgconf flex bison doxygen yajl-dev lmdb-dev libtool autoconf libxml2 libxml2-dev \
-  python3 \
-  libmaxminddb-dev \
   bc \
-  unzip \
+  clang \
+  cmake3 \
+  curl ca-certificates \
   dos2unix \
-  yaml-cpp \
-  coreutils
+  findutils \
+  gcc \
+  gcc-c++ \
+  gd-devel \
+  git pkgconfig libtool autoconf libxml2-devel \
+  glibc-devel \
+  gzip \
+  kernel-headers \
+  libcurl-devel \
+  libedit-devel \
+  libxslt-devel \
+  libyaml-devel \
+  make \
+  openssl-devel \
+  patch \
+  pcre-devel \
+  perl-devel \
+  python3 \
+  libstdc++-static \
+  unzip \
+  util-linux \
+  wget \
+  zlib-devel
 
 mkdir -p /etc/nginx
 
@@ -485,6 +487,30 @@ cd ssdeep/
 make
 make install
 
+# Build geoip library
+cd "$BUILD_PATH"
+git clone --depth=1 -b $GEOIP_VERSION https://github.com/maxmind/geoip-api-c
+cd geoip-api-c
+
+./bootstrap
+./configure
+
+make
+make install
+
+# Build maxmindb library
+cd "$BUILD_PATH"
+git clone --depth=1 -b $LIBMAXMINDDB_VERSION https://github.com/maxmind/libmaxminddb
+cd libmaxminddb/
+git submodule init
+git submodule update
+
+./bootstrap
+./configure
+
+make
+make install
+
 # build modsecurity library
 cd "$BUILD_PATH"
 git clone --depth=1 -b $MODSECURITY_LIB_VERSION https://github.com/SpiderLabs/ModSecurity
@@ -492,13 +518,12 @@ cd ModSecurity/
 git submodule init
 git submodule update
 
+# https://github.com/SpiderLabs/ModSecurity/issues/1909
+curl -O https://patch-diff.githubusercontent.com/raw/SpiderLabs/ModSecurity/pull/2718.diff
+patch -p1 < 2718.diff
 sh build.sh
 
-# https://github.com/SpiderLabs/ModSecurity/issues/1909#issuecomment-465926762
-sed -i '115i LUA_CFLAGS="${LUA_CFLAGS} -DWITH_LUA_JIT_2_1"' build/lua.m4
-sed -i '117i AC_SUBST(LUA_CFLAGS)' build/lua.m4
-
-./configure \
+PKG_CONFIG_PATH=/usr/local/lib/pkgconfig ./configure \
   --disable-doxygen-doc \
   --disable-doxygen-html \
   --disable-examples
@@ -737,7 +762,8 @@ writeDirs=( \
   /var/log/nginx \
 );
 
-adduser -S -D -H -u 101 -h /usr/local/nginx -s /sbin/nologin -G www-data -g www-data www-data
+groupadd -rg 101 www-data
+adduser -u 101 -M -d /usr/local/nginx -s /sbin/nologin -G www-data -g www-data www-data
 
 for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};
