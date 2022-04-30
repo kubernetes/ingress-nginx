@@ -213,20 +213,6 @@ type Configuration struct {
 	// Log levels above are listed in the order of increasing severity
 	ErrorLogLevel string `json:"error-log-level,omitempty"`
 
-	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
-	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
-	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
-
-	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
-	// HTTP2MaxHeaderSize Limits the maximum size of the entire request header list after HPACK decompression
-	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
-
-	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests
-	// HTTP2MaxRequests Sets the maximum number of requests (including push requests) that can be served
-	// through one HTTP/2 connection, after which the next client request will lead to connection closing
-	// and the need of establishing a new connection.
-	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
-
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
 	// Sets the maximum number of concurrent HTTP/2 streams in a connection.
 	HTTP2MaxConcurrentStreams int `json:"http2-max-concurrent-streams,omitempty"`
@@ -812,9 +798,6 @@ func NewDefault() Configuration {
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
-		HTTP2MaxFieldSize:                "4k",
-		HTTP2MaxHeaderSize:               "16k",
-		HTTP2MaxRequests:                 1000,
 		HTTP2MaxConcurrentStreams:        128,
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,

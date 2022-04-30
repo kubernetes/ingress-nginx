@@ -53,9 +53,6 @@ The following table shows a configuration option's name, type, and the default v
 |[ignore-invalid-headers](#ignore-invalid-headers)|bool|true|
 |[retry-non-idempotent](#retry-non-idempotent)|bool|"false"|
 |[error-log-level](#error-log-level)|string|"notice"|
-|[http2-max-field-size](#http2-max-field-size)|string|"4k"|
-|[http2-max-header-size](#http2-max-header-size)|string|"16k"|
-|[http2-max-requests](#http2-max-requests)|int|1000|
 |[http2-max-concurrent-streams](#http2-max-concurrent-streams)|int|128|
 |[hsts](#hsts)|bool|"true"|
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"|
