@@ -251,7 +251,8 @@ func New(
 	updateCh *channels.RingChannel,
 	disableCatchAll bool,
 	deepInspector bool,
-	icConfig *ingressclass.IngressClassConfiguration) Storer {
+	icConfig *ingressclass.IngressClassConfiguration,
+	disableSyncEvents bool) Storer {
 
 	store := &k8sStore{
 		informers:             &Informer{},
@@ -267,9 +268,11 @@ func New(
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
-	eventBroadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{
-		Interface: client.CoreV1().Events(namespace),
-	})
+	if !disableSyncEvents {
+		eventBroadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{
+			Interface: client.CoreV1().Events(namespace),
+		})
+	}
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{
 		Component: "nginx-ingress-controller",
 	})

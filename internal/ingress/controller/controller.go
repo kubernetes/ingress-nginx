@@ -129,6 +129,8 @@ type Configuration struct {
 	DeepInspector         bool
 
 	DynamicConfigurationRetries int
+
+	DisableSyncEvents bool
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
