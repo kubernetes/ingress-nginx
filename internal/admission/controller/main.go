@@ -33,6 +33,7 @@ import (
 // contains invalid instructions
 type Checker interface {
 	CheckIngress(ing *networking.Ingress) error
+	CheckWarning(ing *networking.Ingress) ([]string, error)
 }
 
 // IngressAdmission implements the AdmissionController interface
@@ -95,6 +96,22 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 
 		review.Response = status
 		return review, nil
+	}
+
+	warning, err := ia.Checker.CheckWarning(&ingress)
+	if err != nil {
+		klog.ErrorS(err, "failed to get ingress warnings")
+		status.Allowed = false
+		status.Result = &metav1.Status{
+			Status: metav1.StatusFailure, Code: http.StatusBadRequest, Reason: metav1.StatusReasonBadRequest,
+			Message: err.Error(),
+		}
+
+		review.Response = status
+		return review, nil
+	}
+	if len(warning) > 0 {
+		status.Warnings = warning
 	}
 
 	klog.InfoS("successfully validated configuration, accepting", "ingress", fmt.Sprintf("%v/%v", review.Request.Namespace, review.Request.Name))
