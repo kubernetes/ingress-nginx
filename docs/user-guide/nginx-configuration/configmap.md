@@ -371,6 +371,9 @@ _References:_
 
 ## http2-max-field-size
 
+!!! warning
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [large-client-header-buffers](#large-client-header-buffers) instead.
+
 Limits the maximum size of an HPACK-compressed request header field.
 
 _References:_
@@ -378,12 +381,18 @@ _References:_
 
 ## http2-max-header-size
 
+!!! warning
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [large-client-header-buffers](#large-client-header-buffers) instead.
+
 Limits the maximum size of the entire request header list after HPACK decompression.
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size](https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size)
 
 ## http2-max-requests
+
+!!! warning
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [upstream-keepalive-requests](#upstream-keepalive-requests) instead.
 
 Sets the maximum number of requests (including push requests) that can be served through one HTTP/2 connection, after which the next client request will lead to connection closing and the need of establishing a new connection.
 
