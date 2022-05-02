@@ -168,7 +168,8 @@ local function sync_backends()
       backends_with_external_name[backend_with_external_name.name] = backend_with_external_name
     else
       sync_backend(new_backend)
-      -- If backends_with_external_name contains this backend, remove it, otherwise cached backend will be used.
+      -- If backends_with_external_name contains this backend, remove it.
+      -- Otherwise cached backend will be used.
       if backends_with_external_name[new_backend.name] then
         backends_with_external_name[new_backend.name] = nil
       end

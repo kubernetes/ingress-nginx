@@ -1,6 +1,6 @@
-FROM k8s.gcr.io/ingress-nginx/e2e-test-runner:v20220331-controller-v1.1.2-31-gf1cb2b73c@sha256:baa326f5c726d65be828852943a259c1f0572883590b9081b7e8fa982d64d96e AS BASE
+FROM k8s.gcr.io/ingress-nginx/e2e-test-runner:v20220416-controller-v1.2.0-beta.0-4-g2e1a4790b@sha256:4468eb8cc9aa0ec3971ddf3811efe363e6f8e9082e95b567a5c27d91f89fb1e3   AS BASE
 
-FROM alpine:3.14.4
+FROM alpine:3.14.6
 
 RUN apk add -U --no-cache \
   ca-certificates \

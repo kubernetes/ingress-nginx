@@ -23,6 +23,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+mkdir -p /tmp/nginx
 if [ -z "${PKG}" ]; then
   echo "PKG must be set"
   exit 1

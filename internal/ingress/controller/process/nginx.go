@@ -20,7 +20,7 @@ import (
 	"os/exec"
 	"syscall"
 
-	"k8s.io/klog/v2"
+	klog "k8s.io/klog/v2"
 )
 
 // IsRespawnIfRequired checks if error type is exec.ExitError or not

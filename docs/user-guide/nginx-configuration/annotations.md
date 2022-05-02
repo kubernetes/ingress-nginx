@@ -28,9 +28,13 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/auth-tls-match-cn](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-keepalive](#external-authentication)|number|
+|[nginx.ingress.kubernetes.io/auth-keepalive-requests](#external-authentication)|number|
+|[nginx.ingress.kubernetes.io/auth-keepalive-timeout](#external-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
@@ -261,6 +265,7 @@ You can further customize client certificate authentication and behavior with th
     * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the upstream service.
 * `nginx.ingress.kubernetes.io/auth-tls-error-page`: The URL/Page that user should be redirected in case of a Certificate Authentication Error
 * `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`: Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
+* `nginx.ingress.kubernetes.io/auth-tls-match-cn`: Adds a sanity check for the CN of the client certificate that is sent over using a string / regex starting with "CN=", example: `"CN=myvalidclient"`. If the certificate CN sent during mTLS does not match your string / regex it will fail with status code 403. Another way of using this is by adding multiple options in your regex, example: `"CN=(option1|option2|myvalidclient)"`. In this case, as long as one of the options in the brackets matches the certificate CN then you will receive a 200 status code. 
 
 The following headers are sent to the upstream service according to the `auth-tls-*` annotations:
 
@@ -453,6 +458,19 @@ nginx.ingress.kubernetes.io/auth-url: "URL to the authentication service"
 
 Additionally it is possible to set:
 
+* `nginx.ingress.kubernetes.io/auth-keepalive`:
+  `<Connections>` to specify the maximum number of keepalive connections to `auth-url`. Only takes effect
+   when no variables are used in the host part of the URL. Defaults to `0` (keepalive disabled).
+
+> Note: does not work with HTTP/2 listener because of a limitation in Lua [subrequests](https://github.com/openresty/lua-nginx-module#spdy-mode-not-fully-supported).
+> [UseHTTP2](./configmap.md#use-http2) configuration should be disabled!
+
+* `nginx.ingress.kubernetes.io/auth-keepalive-requests`:
+  `<Requests>` to specify the maximum number of requests that can be served through one keepalive connection.
+  Defaults to `1000` and only applied if `auth-keepalive` is set to higher than `0`.
+* `nginx.ingress.kubernetes.io/auth-keepalive-timeout`:
+  `<Timeout>` to specify a duration in seconds which an idle keepalive connection to an upstream server will stay open.
+  Defaults to `60` and only applied if `auth-keepalive` is set to higher than `0`.
 * `nginx.ingress.kubernetes.io/auth-method`:
   `<Method>` to specify the HTTP method to use.
 * `nginx.ingress.kubernetes.io/auth-signin`:

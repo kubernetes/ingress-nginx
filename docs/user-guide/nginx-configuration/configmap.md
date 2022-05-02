@@ -111,6 +111,7 @@ The following table shows a configuration option's name, type, and the default v
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128|
 |[variables-hash-max-size](#variables-hash-max-size)|int|2048|
 |[upstream-keepalive-connections](#upstream-keepalive-connections)|int|320|
+|[upstream-keepalive-time](#upstream-keepalive-time)|string|"1h"|
 |[upstream-keepalive-timeout](#upstream-keepalive-timeout)|int|60|
 |[upstream-keepalive-requests](#upstream-keepalive-requests)|int|10000|
 |[limit-conn-zone-variable](#limit-conn-zone-variable)|string|"$binary_remote_addr"|
@@ -223,13 +224,13 @@ Enables the return of the header Server from the backend instead of the generic 
 
 Enables Ingress to parse and add *-snippet annotations/directives created by the user. _**default:**_ `true`
 
-Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this 
+Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this
 may allow a user to add restricted configurations to the final nginx.conf file
 
 ## annotation-value-word-blocklist
 
-Contains a comma-separated value of chars/words that are well known of being used to abuse Ingress configuration 
-and must be blocked. Related to [CVE-2021-25742](https://github.com/kubernetes/ingress-nginx/issues/7837) 
+Contains a comma-separated value of chars/words that are well known of being used to abuse Ingress configuration
+and must be blocked. Related to [CVE-2021-25742](https://github.com/kubernetes/ingress-nginx/issues/7837)
 
 When an annotation is detected with a value that matches one of the blocked bad words, the whole Ingress won't be configured.
 
@@ -238,7 +239,7 @@ _**default:**_ `""`
 When doing this, the default blocklist is override, which means that the Ingress admin should add all the words
 that should be blocked, here is a suggested block list.
 
-_**suggested:**_ `"load_module,lua_package,_by_lua,location,root,proxy_pass,serviceaccount,{,},',\"`
+_**suggested:**_ `"load_module,lua_package,_by_lua,location,root,proxy_pass,serviceaccount,{,},',\""`
 
 ## hide-headers
 
@@ -769,6 +770,14 @@ _References:_
 [https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive)
 
 
+## upstream-keepalive-time
+
+Sets the maximum time during which requests can be processed through one keepalive connection.
+ _**default:**_ "1h"
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time)
+
 ## upstream-keepalive-timeout
 
 Sets a timeout during which an idle keepalive connection to an upstream server will stay open.
@@ -965,7 +974,7 @@ Specifies the environment this trace belongs to. _**default:**_ prod
 
 ## datadog-operation-name-override
 
-Overrides the operation naem to use for any traces crated. _**default:**_ nginx.handle
+Overrides the operation name to use for any traces crated. _**default:**_ nginx.handle
 
 ## datadog-priority-sampling
 
@@ -1258,7 +1267,7 @@ Configure `memcached` client for [Global Rate Limiting](https://github.com/kuber
 * `global-rate-limit-memcached-host`: IP/FQDN of memcached server to use. Required to enable Global Rate Limiting.
 * `global-rate-limit-memcached-port`: port of memcached server to use. Defaults default memcached port of `11211`.
 * `global-rate-limit-memcached-connect-timeout`: configure timeout for connect, send and receive operations. Unit is millisecond. Defaults to 50ms.
-* `global-rate-limit-memcached-max-idle-timeout`: configure timeout for cleaning idle connections. Unit is millisecond. Defaults to 50ms. 
+* `global-rate-limit-memcached-max-idle-timeout`: configure timeout for cleaning idle connections. Unit is millisecond. Defaults to 50ms.
 * `global-rate-limit-memcached-pool-size`: configure number of max connections to keep alive. Make sure your `memcached` server can handle
 `global-rate-limit-memcached-pool-size * worker-processes * <number of ingress-nginx replicas>` simultaneous connections.
 

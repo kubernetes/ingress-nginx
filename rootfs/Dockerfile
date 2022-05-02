@@ -54,6 +54,7 @@ RUN bash -xeu -c ' \
     /etc/ingress-controller/auth \
     /var/log \
     /var/log/nginx \
+    /tmp/nginx \
   ); \
   for dir in "${writeDirs[@]}"; do \
     mkdir -p ${dir}; \
@@ -67,7 +68,8 @@ RUN apk add --no-cache libcap \
   && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
   && setcap    cap_net_bind_service=+ep /usr/bin/dumb-init \
   && setcap -v cap_net_bind_service=+ep /usr/bin/dumb-init \
-  && apk del libcap
+  && apk del libcap \
+  && ln -sf /usr/local/nginx/sbin/nginx /usr/bin/nginx
 
 USER www-data
 

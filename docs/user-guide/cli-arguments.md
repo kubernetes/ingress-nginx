@@ -12,6 +12,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--apiserver-host`                 | Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted. |
 | `--certificate-authority`          | Path to a cert file for the certificate authority. This certificate is used only when the flag --apiserver-host is specified. |
 | `--configmap`                      | Name of the ConfigMap containing custom global configurations for the controller. |
+| `--deep-inspect`                   | Enables ingress object security deep inspector. (default true) |
 | `--default-backend-service`        | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
 | `--default-server-port`            | Port to use for exposing the default server (catch-all). (default 8181) |
 | `--default-ssl-certificate`        | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |

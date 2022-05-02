@@ -41,6 +41,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
+	"k8s.io/ingress-nginx/internal/ingress/inspector"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
@@ -120,6 +121,12 @@ type Configuration struct {
 
 	PostShutdownGracePeriod int
 	ShutdownGracePeriod     int
+
+	InternalLoggerAddress string
+	IsChroot              bool
+	DeepInspector         bool
+
+	DynamicConfigurationRetries int
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -189,19 +196,24 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	retry := wait.Backoff{
-		Steps:    15,
-		Duration: 1 * time.Second,
-		Factor:   0.8,
+		Steps:    1 + n.cfg.DynamicConfigurationRetries,
+		Duration: time.Second,
+		Factor:   1.3,
 		Jitter:   0.1,
 	}
 
+	retriesRemaining := retry.Steps
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
 		err := n.configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
 		}
-
+		retriesRemaining--
+		if retriesRemaining > 0 {
+			klog.Warningf("Dynamic reconfiguration failed (retrying; %d retries left): %v", retriesRemaining, err)
+			return false, nil
+		}
 		klog.Warningf("Dynamic reconfiguration failed: %v", err)
 		return false, err
 	})
@@ -234,7 +246,11 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if !ing.DeletionTimestamp.IsZero() {
 		return nil
 	}
-
+	if n.cfg.DeepInspector {
+		if err := inspector.DeepInspect(ing); err != nil {
+			return fmt.Errorf("invalid object: %w", err)
+		}
+	}
 	// Do not attempt to validate an ingress that's not meant to be controlled by the current instance of the controller.
 	if ingressClass, err := n.store.GetIngressClass(ing, n.cfg.IngressClassConfiguration); ingressClass == "" {
 		klog.Warningf("ignoring ingress %v in %v based on annotation %v: %v", ing.Name, ing.ObjectMeta.Namespace, ingressClass, err)

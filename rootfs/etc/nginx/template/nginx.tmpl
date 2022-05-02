@@ -156,7 +156,7 @@ http {
     {{ else }}
     modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
     {{ end }}
-    
+
     {{ if $all.Cfg.EnableOWASPCoreRules }}
     modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
     {{ end }}
@@ -285,10 +285,10 @@ http {
     keepalive_timeout  {{ $cfg.KeepAlive }}s;
     keepalive_requests {{ $cfg.KeepAliveRequests }};
 
-    client_body_temp_path           /tmp/client-body;
-    fastcgi_temp_path               /tmp/fastcgi-temp;
-    proxy_temp_path                 /tmp/proxy-temp;
-    ajp_temp_path                   /tmp/ajp-temp;
+    client_body_temp_path           /tmp/nginx/client-body;
+    fastcgi_temp_path               /tmp/nginx/fastcgi-temp;
+    proxy_temp_path                 /tmp/nginx/proxy-temp;
+    ajp_temp_path                   /tmp/nginx/ajp-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
@@ -508,7 +508,7 @@ http {
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
-
+        keepalive_time {{ $cfg.UpstreamKeepaliveTime }};
         keepalive_timeout  {{ $cfg.UpstreamKeepaliveTimeout }}s;
         keepalive_requests {{ $cfg.UpstreamKeepaliveRequests }};
         {{ end }}
@@ -536,7 +536,7 @@ http {
     {{ end }}
 
     # Cache for internal auth checks
-    proxy_cache_path /tmp/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off;
+    proxy_cache_path /tmp/nginx/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off;
 
     # Global filters
     {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
@@ -591,7 +591,12 @@ http {
             end
 
             {{ if $cfg.UseForwardedHeaders }}
-            local redirectScheme = ngx.var.http_x_forwarded_proto
+            local redirectScheme
+            if not ngx.var.http_x_forwarded_proto then
+                redirectScheme = ngx.var.scheme
+            else
+                redirectScheme = ngx.var.http_x_forwarded_proto
+            end
             {{ else }}
             local redirectScheme = ngx.var.scheme
             {{ end }}
@@ -610,7 +615,25 @@ http {
     {{ end }}
 
     {{ range $server := $servers }}
+    {{ range $location := $server.Locations }}
+    {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+    {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
+    {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
+    ## start auth upstream {{ $server.Hostname }}{{ $location.Path }}
+    upstream {{ buildAuthUpstreamName $location $server.Hostname }} {
+        {{- $externalAuth := $location.ExternalAuth }}
+        server {{ extractHostPort $externalAuth.URL }};
 
+        keepalive {{ $externalAuth.KeepaliveConnections }};
+        keepalive_requests {{ $externalAuth.KeepaliveRequests }};
+        keepalive_timeout {{ $externalAuth.KeepaliveTimeout }}s;
+    }
+    ## end auth upstream {{ $server.Hostname }}{{ $location.Path }}
+    {{ end }}
+    {{ end }}
+    {{ end }}
+
+    {{ range $server := $servers }}
     ## start server {{ $server.Hostname }}
     server {
         server_name {{ buildServerName $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
@@ -755,8 +778,8 @@ stream {
     access_log {{ or $cfg.StreamAccessLogPath $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
     {{ end }}
 
+   
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
-
     {{ if $cfg.EnableRealIp }}
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
     set_real_ip_from    {{ $trusted_ip }};
@@ -923,6 +946,14 @@ stream {
 
         set $proxy_upstream_name "-";
 
+        {{ if not ( empty $server.CertificateAuth.MatchCN ) }}
+        {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}  
+        if ( $ssl_client_s_dn !~ {{ $server.CertificateAuth.MatchCN }} ) {
+            return 403 "client certificate unauthorized";
+        }
+        {{ end }}
+        {{ end }}
+
         {{ if eq $server.Hostname "_" }}
         ssl_reject_handshake {{ if $all.Cfg.SSLRejectHandshake }}on{{ else }}off{{ end }};
         {{ end }}
@@ -995,6 +1026,7 @@ stream {
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
         {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+        {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
 
         {{ $externalAuth := $location.ExternalAuth }}
         {{ if eq $applyGlobalAuth true }}
@@ -1074,7 +1106,6 @@ stream {
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
             proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
-            proxy_http_version                      {{ $location.Proxy.ProxyHTTPVersion }};
 
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
@@ -1103,7 +1134,19 @@ stream {
             {{ $externalAuth.AuthSnippet }}
             {{ end }}
 
+            {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
+            {{ $authUpstreamName := buildAuthUpstreamName $location $server.Hostname }}
+            # The target is an upstream with HTTP keepalive, that is why the
+            # Connection header is cleared and the HTTP version is set to 1.1 as
+            # the Nginx documentation suggests:
+            # http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            set $target {{ changeHostPort $externalAuth.URL $authUpstreamName }};
+            {{ else }}
+            proxy_http_version {{ $location.Proxy.ProxyHTTPVersion }};
             set $target {{ $externalAuth.URL }};
+            {{ end }}
             proxy_pass $target;
         }
         {{ end }}
@@ -1208,12 +1251,36 @@ stream {
             {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}
             {{ if $authPath }}
             # this location requires authentication
+            {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
+            set $auth_cookie '';
+            add_header Set-Cookie $auth_cookie;
+            {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders true }}
+            {{ $line }}
+            {{- end }}
+            # `auth_request` module does not support HTTP keepalives in upstream block:
+            # https://trac.nginx.org/nginx/ticket/1579
+            access_by_lua_block {
+                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '' })
+                if res.status == ngx.HTTP_OK then
+                    ngx.var.auth_cookie = res.header['Set-Cookie']
+                    {{- range $line := buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}
+                    {{ $line }}
+                    {{- end }}
+                    return
+                end
+                if res.status == ngx.HTTP_FORBIDDEN then
+                    ngx.exit(res.status)
+                end
+                ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+            }
+            {{ else }}
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders }}
+            {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders false }}
             {{ $line }}
             {{- end }}
+            {{ end }}
             {{ end }}
 
             {{ if $externalAuth.SigninURL }}

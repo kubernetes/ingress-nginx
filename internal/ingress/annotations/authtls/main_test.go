@@ -128,11 +128,15 @@ func TestAnnotations(t *testing.T) {
 	if u.PassCertToUpstream != false {
 		t.Errorf("expected %v but got %v", false, u.PassCertToUpstream)
 	}
+	if u.MatchCN != "" {
+		t.Errorf("expected empty string, but got %v", u.MatchCN)
+	}
 
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "2"
 	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
+	data[parser.GetAnnotationWithPrefix("auth-tls-match-cn")] = "CN=hello-app"
 
 	ing.SetAnnotations(data)
 
@@ -160,6 +164,9 @@ func TestAnnotations(t *testing.T) {
 	}
 	if u.PassCertToUpstream != true {
 		t.Errorf("expected %v but got %v", true, u.PassCertToUpstream)
+	}
+	if u.MatchCN != "CN=hello-app" {
+		t.Errorf("expected %v but got %v", "CN=hello-app", u.MatchCN)
 	}
 }
 
@@ -195,6 +202,7 @@ func TestInvalidAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "w00t"
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "abcd"
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "nahh"
+	data[parser.GetAnnotationWithPrefix("auth-tls-match-cn")] = "<script>nope</script>"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(fakeSecret).Parse(ing)
@@ -214,6 +222,9 @@ func TestInvalidAnnotations(t *testing.T) {
 	}
 	if u.PassCertToUpstream != false {
 		t.Errorf("expected %v but got %v", false, u.PassCertToUpstream)
+	}
+	if u.MatchCN != "" {
+		t.Errorf("expected empty string but got %v", u.MatchCN)
 	}
 
 }

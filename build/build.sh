@@ -69,3 +69,4 @@ go build \
     -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
     -X ${PKG}/version.REPO=${REPO_INFO}" \
   -o "${TARGETS_DIR}/wait-shutdown" "${PKG}/cmd/waitshutdown"
+

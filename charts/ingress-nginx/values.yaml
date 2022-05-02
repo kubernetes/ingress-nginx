@@ -16,13 +16,16 @@ commonLabels: {}
 controller:
   name: controller
   image:
+    ## Keep false as default for now!
+    chroot: false
     registry: k8s.gcr.io
     image: ingress-nginx/controller
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.1.3"
-    digest: sha256:31f47c1e202b39fadecf822a9b76370bd4baed199a005b3e7d4d1455f4fd3fe2
+    tag: "v1.2.0"
+    digest: sha256:d8196e3bc1e72547c5dec66d6556c0ff92a23f6d0919b206be170bc90d5f9185
+    digestChroot: sha256:fb17f1700b77d4fcc52ca6f83ffc2821861ae887dbb87149cf5cbc52bea425e5
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -272,7 +275,7 @@ controller:
   ##
   topologySpreadConstraints: []
     # - maxSkew: 1
-    #   topologyKey: failure-domain.beta.kubernetes.io/zone
+    #   topologyKey: topology.kubernetes.io/zone
     #   whenUnsatisfiable: DoNotSchedule
     #   labelSelector:
     #     matchLabels:
@@ -457,7 +460,8 @@ controller:
     ##
     externalIPs: []
 
-    # loadBalancerIP: ""
+    # -- Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+    loadBalancerIP: ""
     loadBalancerSourceRanges: []
 
     enableHttp: true
@@ -575,8 +579,8 @@ controller:
 
   extraModules: []
   ## Modules, which are mounted into the core nginx image
-  # - name: opentelemetry:v20220331-controller-v1.1.2-36-g7517b7ecf@sha256:e3f635474b5da24ccd0ea6b078fb190dae68b8b4a44b52bea19ec2561f0102ec
-  #   image: k8s.gcr.io/ingress-nginx/opentelemetry:
+  # - name: opentelemetry
+  #   image: k8s.gcr.io/ingress-nginx/opentelemetry:v20220415-controller-v1.2.0-beta.0-2-g81c2afd97@sha256:ce61e2cf0b347dffebb2dcbf57c33891d2217c1bad9c0959c878e5be671ef941
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
@@ -905,13 +909,13 @@ serviceAccount:
 imagePullSecrets: []
 # - name: secretName
 
-# -- TCP service key:value pairs
+# -- TCP service key-value pairs
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md
 ##
 tcp: {}
 #  8080: "default/example-tcp-svc:9000"
 
-# -- UDP service key:value pairs
+# -- UDP service key-value pairs
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md
 ##
 udp: {}

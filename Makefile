@@ -55,7 +55,7 @@ endif
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180
+BASE_IMAGE ?= k8s.gcr.io/ingress-nginx/nginx:81c2afd975a6f9a9847184472286044d7d5296f6@sha256:a71ac64dd8cfd68341ba47dbdc4d8c2cb91325fce669875193ea0319118201b5
 
 GOARCH=$(ARCH)
 
@@ -75,10 +75,29 @@ image: clean-image ## Build image for a particular arch.
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
 
+.PHONY: image-chroot
+image-chroot: clean-chroot-image ## Build image for a particular arch.
+	echo "Building docker image ($(ARCH))..."
+	@docker build \
+		--no-cache \
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
+		--build-arg VERSION="$(TAG)" \
+		--build-arg TARGETARCH="$(ARCH)" \
+		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+		--build-arg BUILD_ID="$(BUILD_ID)" \
+		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile.chroot
+
 .PHONY: clean-image
 clean-image: ## Removes local image
 	echo "removing old image $(REGISTRY)/controller:$(TAG)"
 	@docker rmi -f $(REGISTRY)/controller:$(TAG) || true
+
+
+.PHONY: clean-chroot-image
+clean-chroot-image: ## Removes local image
+	echo "removing old image $(REGISTRY)/controller-chroot:$(TAG)"
+	@docker rmi -f $(REGISTRY)/controller-chroot:$(TAG) || true
+
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
@@ -221,3 +240,14 @@ release: ensure-buildx clean
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
+	
+	@docker buildx build \
+		--no-cache \
+		--push \
+		--progress plain \
+		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
+		--build-arg VERSION="$(TAG)" \
+		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+		--build-arg BUILD_ID="$(BUILD_ID)" \
+		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile.chroot

@@ -131,6 +131,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		config.Client,
 		n.updateCh,
 		config.DisableCatchAll,
+		config.DeepInspector,
 		config.IngressClassConfiguration)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
@@ -575,6 +576,15 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 
 	cfg.DefaultSSLCertificate = n.getDefaultSSLCertificate()
 
+	if n.cfg.IsChroot {
+		if cfg.AccessLogPath == "/var/log/nginx/access.log" {
+			cfg.AccessLogPath = fmt.Sprintf("syslog:server=%s", n.cfg.InternalLoggerAddress)
+		}
+		if cfg.ErrorLogPath == "/var/log/nginx/error.log" {
+			cfg.ErrorLogPath = fmt.Sprintf("syslog:server=%s", n.cfg.InternalLoggerAddress)
+		}
+	}
+
 	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:          setHeaders,
 		AddHeaders:               addHeaders,
@@ -614,7 +624,8 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
-	tmpfile, err := os.CreateTemp("", tempNginxPattern)
+	tmpDir := os.TempDir() + "/nginx"
+	tmpfile, err := os.CreateTemp(tmpDir, tempNginxPattern)
 	if err != nil {
 		return err
 	}

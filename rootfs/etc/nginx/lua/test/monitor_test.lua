@@ -148,7 +148,7 @@ describe("Monitor", function()
         },
       })
 
-      assert.stub(tcp_mock.connect).was_called_with(tcp_mock, "unix:/tmp/prometheus-nginx.socket")
+      assert.stub(tcp_mock.connect).was_called_with(tcp_mock, "unix:/tmp/nginx/prometheus-nginx.socket")
       assert.stub(tcp_mock.send).was_called_with(tcp_mock, expected_payload)
       assert.stub(tcp_mock.close).was_called_with(tcp_mock)
     end)

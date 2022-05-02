@@ -62,10 +62,7 @@ else
   PLATFORM_FLAG=
 fi
 
-if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
-  /bin/bash -c "${FLAGS}"
-else
-  docker run                                            \
+docker run                                            \
     ${PLATFORM_FLAG} ${PLATFORM}                        \
     --tty                                               \
     --rm                                                \
@@ -81,4 +78,3 @@ else
     -w "/go/src/${PKG}"                                 \
     -u $(id -u ${USER}):$(id -g ${USER})                \
     ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
-fi

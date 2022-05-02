@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.0.19](https://img.shields.io/badge/Version-4.0.19-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
+![Version: 4.1.0](https://img.shields.io/badge/Version-4.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -306,12 +306,14 @@ Kubernetes: `>=1.19.0-0`
 | controller.hostPort.ports.https | int | `443` | 'hostPort' https port |
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
-| controller.image.digest | string | `"sha256:31f47c1e202b39fadecf822a9b76370bd4baed199a005b3e7d4d1455f4fd3fe2"` |  |
+| controller.image.chroot | bool | `false` |  |
+| controller.image.digest | string | `"sha256:d8196e3bc1e72547c5dec66d6556c0ff92a23f6d0919b206be170bc90d5f9185"` |  |
+| controller.image.digestChroot | string | `"sha256:fb17f1700b77d4fcc52ca6f83ffc2821861ae887dbb87149cf5cbc52bea425e5"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"k8s.gcr.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.1.3"` |  |
+| controller.image.tag | string | `"v1.2.0"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
@@ -399,6 +401,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.service.ipFamilies | list | `["IPv4"]` | List of IP families (e.g. IPv4, IPv6) assigned to the service. This field is usually assigned automatically based on cluster configuration and the ipFamilyPolicy field. |
 | controller.service.ipFamilyPolicy | string | `"SingleStack"` | Represents the dual-stack-ness requested or required by this Service. Possible values are SingleStack, PreferDualStack or RequireDualStack. The ipFamilies and clusterIPs fields depend on the value of this field. |
 | controller.service.labels | object | `{}` |  |
+| controller.service.loadBalancerIP | string | `""` | Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer |
 | controller.service.loadBalancerSourceRanges | list | `[]` |  |
 | controller.service.nodePorts.http | string | `""` |  |
 | controller.service.nodePorts.https | string | `""` |  |
@@ -409,7 +412,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.service.targetPorts.http | string | `"http"` |  |
 | controller.service.targetPorts.https | string | `"https"` |  |
 | controller.service.type | string | `"LoadBalancer"` |  |
-| controller.shareProcessNamespace | bool | `false` |  This can be used for example to signal log rotation using `kill -USR1` from a sidecar. |
+| controller.shareProcessNamespace | bool | `false` |  |
 | controller.sysctls | object | `{}` | See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls |
 | controller.tcp.annotations | object | `{}` | Annotations to be added to the tcp config configmap |
 | controller.tcp.configMapNamespace | string | `""` | Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE) |
@@ -482,6 +485,6 @@ Kubernetes: `>=1.19.0-0`
 | serviceAccount.automountServiceAccountToken | bool | `true` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
-| tcp | object | `{}` | TCP service key:value pairs |
-| udp | object | `{}` | UDP service key:value pairs |
+| tcp | object | `{}` | TCP service key-value pairs |
+| udp | object | `{}` | UDP service key-value pairs |
 
