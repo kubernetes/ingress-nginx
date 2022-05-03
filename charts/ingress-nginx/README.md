@@ -90,6 +90,10 @@ The Nginx ingress controller can export Prometheus metrics, by setting `controll
 You can add Prometheus annotations to the metrics service using `controller.metrics.service.annotations`.
 Alternatively, if you use the Prometheus Operator, you can enable ServiceMonitor creation using `controller.metrics.serviceMonitor.enabled`. And set `controller.metrics.serviceMonitor.additionalLabels.release="prometheus"`. "release=prometheus" should match the label configured in the prometheus servicemonitor ( see `kubectl get servicemonitor prometheus-kube-prom-prometheus -oyaml -n prometheus`)
 
+#### PodMonitor instead of ServiceMonitor
+
+If you use the Prometheus Operator, you can enable PodMonitor instead of ServiceMonitor. To enable PodMonitor, you have to set `controller.metrics.podMonitor.enabled` and you could disable `controller.metrics.service.enabled`.
+
 ### ingress-nginx nginx\_status page/stats server
 
 Previous versions of this chart had a `controller.stats.*` configuration block, which is now obsolete due to the following changes in nginx ingress controller:
@@ -344,11 +348,20 @@ Kubernetes: `>=1.19.0-0`
 | controller.livenessProbe.timeoutSeconds | int | `1` |  |
 | controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. |
 | controller.metrics.enabled | bool | `false` |  |
+| controller.metrics.podMonitor.additionalLabels | object | `{}` |  |
+| controller.metrics.podMonitor.enabled | bool | `false` |  |
+| controller.metrics.podMonitor.metricRelabelings | list | `[]` |  |
+| controller.metrics.podMonitor.namespace | string | `""` |  |
+| controller.metrics.podMonitor.namespaceSelector | object | `{}` |  |
+| controller.metrics.podMonitor.relabelings | list | `[]` |  |
+| controller.metrics.podMonitor.scrapeInterval | string | `"30s"` |  |
+| controller.metrics.podMonitor.targetLabels | list | `[]` |  |
 | controller.metrics.port | int | `10254` |  |
 | controller.metrics.prometheusRule.additionalLabels | object | `{}` |  |
 | controller.metrics.prometheusRule.enabled | bool | `false` |  |
 | controller.metrics.prometheusRule.rules | list | `[]` |  |
 | controller.metrics.service.annotations | object | `{}` |  |
+| controller.metrics.service.enabled | bool | `true` |  |
 | controller.metrics.service.externalIPs | list | `[]` | List of IP addresses at which the stats-exporter service is available |
 | controller.metrics.service.loadBalancerSourceRanges | list | `[]` |  |
 | controller.metrics.service.servicePort | int | `10254` |  |
