@@ -75,6 +75,12 @@ Patches [OpenSSL CVE-2022-0778](https://github.com/kubernetes/ingress-nginx/issu
 
 Patches [Libxml2 CVE-2022-23308](https://github.com/kubernetes/ingress-nginx/issues/8321)
 
+_Breaking Changes:_
+
+- https://github.com/nginx/nginx/commit/d18e066d650bff39f1705d3038804873584007af Deprecated http2_recv_timeout in favor of client_header_timeout (client-header-timeout)
+- https://github.com/nginx/nginx/commit/51fea093e4374dbd857dc437ff9588060ef56471 Deprecated http2_max_field_size (http2-max-field-size) and http2_max_header_size (http2-max-header-size) in favor of large_client_header_buffers (large-client-header-buffers)
+- https://github.com/nginx/nginx/commit/49ab3312448495f0ee8e00143a29624dde46ef5c Deprecated http2_idle_timeout and http2_max_requests (http2-max-requests) in favor of keepalive_timeout (upstream-keepalive-timeout?) and keepalive_requests (upstream-keepalive-requests?) respectively
+
 _Changes:_
 
 - [8415](https://github.com/kubernetes/ingress-nginx/pull/8415) base img update for e2e-test-runner & opentelemetry
