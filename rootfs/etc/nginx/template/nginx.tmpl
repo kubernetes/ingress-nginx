@@ -656,7 +656,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics $cfg.EnableModsecurity) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -872,10 +872,16 @@ stream {
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
         {{ $enableMetrics := .EnableMetrics }}
+        {{ $modsecurityEnabled := .ModsecurityEnabled }}
         {{ $upstreamName := .UpstreamName }}
         {{ range $errCode := .ErrorCodes }}
         location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
+
+            # Ensure that modsecurity will not run on custom error pages or they might be blocked
+            {{ if $modsecurityEnabled }}
+            modsecurity off;
+            {{ end }}
 
             proxy_intercept_errors off;
 
@@ -1015,7 +1021,7 @@ stream {
         {{ end }}
 
         {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics $all.Cfg.EnableModsecurity) }}
         {{ end }}
 
         {{ buildMirrorLocations $server.Locations }}
@@ -1046,6 +1052,11 @@ stream {
             {{ if (or $all.Cfg.EnableOpentracing $location.Opentracing.Enabled) }}
             opentracing on;
             opentracing_propagate_context;
+            {{ end }}
+
+            # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity off;
             {{ end }}
 
             {{ if $externalAuth.AuthCacheKey }}
@@ -1157,6 +1168,11 @@ stream {
             internal;
 
             add_header Set-Cookie $auth_cookie;
+
+            # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity off;
+            {{ end }}
 
             return 302 {{ buildAuthSignURL $externalAuth.SigninURL $externalAuth.SigninURLRedirectParam }};
         }
