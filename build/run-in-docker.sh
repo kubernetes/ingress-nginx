@@ -55,15 +55,10 @@ fi
 # create output directory as current user to avoid problem with docker.
 mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
-PLATFORM="${PLATFORM:-}"
-if [[ -n "$PLATFORM" ]]; then
-  PLATFORM_FLAG=--platform
+if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
+  /bin/bash -c "${FLAGS}"
 else
-  PLATFORM_FLAG=
-fi
-
-docker run                                            \
-    ${PLATFORM_FLAG} ${PLATFORM}                        \
+  docker run                                            \
     --tty                                               \
     --rm                                                \
     ${DOCKER_OPTS}                                      \
@@ -78,3 +73,4 @@ docker run                                            \
     -w "/go/src/${PKG}"                                 \
     -u $(id -u ${USER}):$(id -g ${USER})                \
     ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
+fi
