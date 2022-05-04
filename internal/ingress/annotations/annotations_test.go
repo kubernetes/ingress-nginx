@@ -39,7 +39,7 @@ var (
 	annotationCorsExposeHeaders      = parser.GetAnnotationWithPrefix("cors-expose-headers")
 	annotationCorsAllowCredentials   = parser.GetAnnotationWithPrefix("cors-allow-credentials")
 	defaultCorsMethods               = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
-	defaultCorsHeaders               = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+	defaultCorsHeaders               = "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
 	annotationAffinityCookieName     = parser.GetAnnotationWithPrefix("session-cookie-name")
 	annotationUpstreamHashBy         = parser.GetAnnotationWithPrefix("upstream-hash-by")
 	annotationCustomHTTPErrors       = parser.GetAnnotationWithPrefix("custom-http-errors")
