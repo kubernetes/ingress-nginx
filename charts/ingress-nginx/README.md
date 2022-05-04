@@ -243,7 +243,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.enabled | bool | `true` |  |
-| controller.admissionWebhooks.extraArgs | object | `{}` | Additional command line arguments to pass to patch job resources |
+| controller.admissionWebhooks.extraEnvs | list | `[]` | Additional environment variables to set |
 | controller.admissionWebhooks.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | controller.admissionWebhooks.failurePolicy | string | `"Fail"` |  |
 | controller.admissionWebhooks.key | string | `"/usr/local/certificates/key"` |  |
