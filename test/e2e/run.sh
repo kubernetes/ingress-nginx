@@ -78,7 +78,10 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
 
   echo "[dev-env] building image"
   make -C ${DIR}/../../ clean-image build image image-chroot
+  echo "[dev-env] .. done building controller images"
+  echo "[dev-env] now building e2e-image.."
   make -C ${DIR}/../e2e-image image
+  echo "[dev-env] ..done building e2e-image"
 fi
 
 # Preload images used in e2e tests
