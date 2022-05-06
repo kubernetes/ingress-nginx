@@ -226,6 +226,7 @@ If you start Ingress-Nginx B with the command line argument `--watch-ingress-wit
   --set controller.ingressClassResource.name=nginx-two \
   --set controller.ingressClassResource.controllerValue="example.com/ingress-nginx-2" \
   --set controller.ingressClassResource.enabled=true \
+  --set controller.ingressClass=nginx-two \
   --set controller.ingressClassByName=true
   ```
 - If you need to install yet another instance, then repeat the procedure to create a new namespace, change the values such as names & namespaces (for example from "-2" to "-3"), or anything else that meets your needs.
