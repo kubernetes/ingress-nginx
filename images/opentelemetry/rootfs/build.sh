@@ -92,6 +92,7 @@ cmake -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       -DWITH_OTLP=ON \
       -DWITH_OTLP_HTTP=OFF \
+      -DBUILD_SHARED_LIBS=ON
       ..
 make
 make install
