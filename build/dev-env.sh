@@ -51,7 +51,7 @@ if [[ ${HELM_VERSION} < "v3.0.0" ]]; then
   exit 1
 fi
 
-KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
+KUBE_CLIENT_VERSION=$(kubectl version --client --short 2>/dev/null | grep Client | awk '{print $3}' | cut -d. -f2) || true
 if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
   echo "Please update kubectl to 1.15 or higher"
   exit 1
