@@ -131,6 +131,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-target](#mirror)|string|
+|[nginx.ingress.kubernetes.io/mirror-host](#mirror)|string|
 
 ### Canary
 
@@ -939,6 +940,13 @@ By default the request-body is sent to the mirror backend, but can be turned off
 
 ```yaml
 nginx.ingress.kubernetes.io/mirror-request-body: "off"
+```
+
+Also by default header Host for mirrored requests will be set the same as a host part of uri in the "mirror-target" annotation. You can override it by "mirror-host" annotation:
+
+```yaml
+nginx.ingress.kubernetes.io/mirror-target: https://1.2.3.4/$request_uri
+nginx.ingress.kubernetes.io/mirror-host: "test.env.com"
 ```
 
 **Note:** The mirror directive will be applied to all paths within the ingress resource.

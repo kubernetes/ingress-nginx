@@ -1667,10 +1667,11 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
+proxy_set_header Host %v;
 proxy_pass %v;
 }
 
-`, loc.Mirror.Source, loc.Mirror.Target))
+`, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))
 	}
 
 	return buffer.String()
