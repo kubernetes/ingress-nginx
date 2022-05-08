@@ -18,9 +18,9 @@ package mirror
 
 import (
 	"fmt"
+	"strings"
 
 	networking "k8s.io/api/networking/v1"
-
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -30,6 +30,7 @@ type Config struct {
 	Source      string `json:"source"`
 	RequestBody string `json:"requestBody"`
 	Target      string `json:"target"`
+	Host        string `json:"host"`
 }
 
 // Equal tests for equality between two Configuration types
@@ -51,6 +52,10 @@ func (m1 *Config) Equal(m2 *Config) bool {
 	}
 
 	if m1.Target != m2.Target {
+		return false
+	}
+
+	if m1.Host != m2.Host {
 		return false
 	}
 
@@ -83,6 +88,19 @@ func (a mirror) Parse(ing *networking.Ingress) (interface{}, error) {
 	if err != nil {
 		config.Target = ""
 		config.Source = ""
+	}
+
+	config.Host, err = parser.GetStringAnnotation("mirror-host", ing)
+	if err != nil {
+		if config.Target != "" {
+			url, err := parser.StringToURL(config.Target)
+			if err != nil {
+				config.Host = ""
+			} else {
+				hostname := strings.Split(url.Hostname(), "$")
+				config.Host = hostname[0]
+			}
+		}
 	}
 
 	return config, nil
