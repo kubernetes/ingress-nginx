@@ -70,6 +70,7 @@ echo "PLATFORM_FLAG=$PLATFORM_FLAG"
 
 if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   echo "..reached DIND check TRUE block, inside run-in-docker.sh. Checking environ"
+  go get github.com/onsi/ginkgo/ginkgo@v1.16.4
   /bin/bash -c "${FLAGS}"
 else
   echo "..reached DIND check ELSE block, inside run-in-docker.sh. Checking environ"
