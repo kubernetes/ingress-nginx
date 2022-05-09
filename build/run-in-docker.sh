@@ -62,9 +62,17 @@ else
   PLATFORM_FLAG=
 fi
 
+env && hostname && uname -a
+echo "DIND_ENABLED=$DOCKER_IN_DOCKER_ENABLED"
+echo "FLAGS=$FLAGS"
+echo "PLATFORM=$PLATFORM"
+echo "PLATFORM_FLAG=$PLATFORM_FLAG"
+
 if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
+  echo "..reached DIND check TRUE block, inside run-in-docker.sh. Checking environ"
   /bin/bash -c "${FLAGS}"
 else
+  echo "..reached DIND check ELSE block, inside run-in-docker.sh. Checking environ"
   docker run                                            \
     ${PLATFORM_FLAG} ${PLATFORM}                        \
     --tty                                               \
