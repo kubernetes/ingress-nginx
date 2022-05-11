@@ -62,25 +62,18 @@ else
   PLATFORM_FLAG=
 fi
 
-echo "..printing env & other vars to stdout"
-echo "HOSTNAME=`hostname`"
-uname -a
-env
+env && hostname && uname -a
 echo "DIND_ENABLED=$DOCKER_IN_DOCKER_ENABLED"
-echo "done..printing env & other vars to stdout"
+echo "FLAGS=$FLAGS"
+echo "PLATFORM=$PLATFORM"
+echo "PLATFORM_FLAG=$PLATFORM_FLAG"
 
 if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
-  echo "..reached DIND check TRUE block, inside run-in-docker.sh"
-  echo "FLAGS=$FLAGS"
-  go env
-  set -x
-  go install -mod=mod github.com/onsi/ginkgo/ginkgo@v1.16.4 
-  find / -type f -name ginkgo 2>/dev/null
-  which ginkgo
+  echo "..reached DIND check TRUE block, inside run-in-docker.sh. Checking environ"
+  go get github.com/onsi/ginkgo/ginkgo@v1.16.4
   /bin/bash -c "${FLAGS}"
-  set +x
 else
-  echo "..reached DIND check ELSE block, inside run-in-docker.sh"
+  echo "..reached DIND check ELSE block, inside run-in-docker.sh. Checking environ"
   docker run                                            \
     ${PLATFORM_FLAG} ${PLATFORM}                        \
     --tty                                               \
