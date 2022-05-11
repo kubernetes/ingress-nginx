@@ -1,6 +1,6 @@
 module k8s.io/ingress-nginx
 
-go 1.17
+go 1.18
 
 require (
 	github.com/armon/go-proxyproto v0.0.0-20210323213023-7e956b284f0a
