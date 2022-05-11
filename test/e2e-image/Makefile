@@ -4,6 +4,8 @@ DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 image:
 	echo "..entered Makefile in /test/e2e-image"
 	echo "..calling Make target <<e2e-test-binary>> in /Makefile from inside /test/e2e-image/Makefile"
+	echo "..printing hostname"
+	hostname && uname -a && pwd && ls -l
 	make -C $(DIR)/../../ e2e-test-binary
 	echo "..done building e2e-test-binary from /test/e2e-image/Makefile"
 

@@ -60,6 +60,10 @@ if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
 
   export K8S_VERSION=${K8S_VERSION:-v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c}
 
+  echo "..printing hostname"
+  touch foobar-debug
+  hostname && uname -a && pwd && ls -l 
+
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
     --name ${KIND_CLUSTER_NAME} \
@@ -77,9 +81,13 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   fi
 
   echo "[dev-env] building image"
+  echo "..printing hostname"
+  hostname && uname -a && pwd && ls -l 
   make -C ${DIR}/../../ clean-image build image image-chroot
   echo "[dev-env] .. done building controller images"
   echo "[dev-env] now building e2e-image.."
+  echo "..printing hostname"
+  hostname && uname -a && pwd && ls -l 
   make -C ${DIR}/../e2e-image image
   echo "[dev-env] ..done building e2e-image"
 fi
