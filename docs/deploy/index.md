@@ -28,7 +28,7 @@ On most Kubernetes clusters, the ingress controller will work without requiring 
   - ... [Bare-metal](#bare-metal-clusters)
 - [Miscellaneous](#miscellaneous)
 
-## TODO : We have subdirectories for kubernetes versions now because of a PR https://github.com/kubernetes/ingress-nginx/pull/8162 . You can see this here https://github.com/kubernetes/ingress-nginx/tree/main/deploy/static/provider/cloud . We need to add documentation here that is clear and unambiguous in guiding users to pick the deployment manifest under a subdirectory, based on the K8S version being used. But until the explicit clear docs land here, users are recommended to feel free to use those subdirectories and get the manifest(s) related to their K8S version.
+<!-- TODO: We have subdirectories for kubernetes versions now because of a PR https://github.com/kubernetes/ingress-nginx/pull/8162 . You can see this here https://github.com/kubernetes/ingress-nginx/tree/main/deploy/static/provider/cloud . We need to add documentation here that is clear and unambiguous in guiding users to pick the deployment manifest under a subdirectory, based on the K8S version being used. But until the explicit clear docs land here, users are recommended to feel free to use those subdirectories and get the manifest(s) related to their K8S version. -->
 
 ## Quick start
 
