@@ -36,7 +36,7 @@ const (
 
 var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
-	commonNameRegex       = regexp.MustCompile(`CN=`)
+	matchCNSanitizer      = regexp.MustCompile(`^[a-zA-Z0-9\.\-\(\)\|]+$`)
 )
 
 // Config contains the AuthSSLCert used for mutual authentication
@@ -48,6 +48,7 @@ type Config struct {
 	ErrorPage          string `json:"errorPage"`
 	PassCertToUpstream bool   `json:"passCertToUpstream"`
 	MatchCN            string `json:"matchCN"`
+	ExactMatchCN       bool   `json:"exactMatchCN"`
 	AuthTLSError       string
 }
 
@@ -131,8 +132,13 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	config.MatchCN, err = parser.GetStringAnnotation("auth-tls-match-cn", ing)
-	if err != nil || !commonNameRegex.MatchString(config.MatchCN) {
+	if err != nil || !matchCNSanitizer.MatchString(config.MatchCN) {
 		config.MatchCN = ""
+	}
+
+	config.ExactMatchCN, err = parser.GetBoolAnnotation("auth-tls-exact-match-cn", ing)
+	if err != nil {
+		config.ExactMatchCN = false
 	}
 
 	return config, nil
