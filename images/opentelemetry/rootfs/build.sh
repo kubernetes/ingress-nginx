@@ -131,7 +131,7 @@ install_nginx()
   mkdir -p /etc/nginx
   cd "$BUILD_PATH"
 
-  get_src 360cdcbd1a235ec62119cc53956b2d31b6ff5f41d44415be53acc544709d58b8 \
+  get_src 0528e793a97f942868616449d49326160f9cb67b2253fb2c4864603ac6ab09a9 \
           "https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/$OPENTELEMETRY_CONTRIB_COMMIT.tar.gz"
 
   cd ${BUILD_PATH}/opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}/instrumentation/nginx
