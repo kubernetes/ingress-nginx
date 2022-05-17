@@ -1,5 +1,6 @@
 local ngx_re_split = require("ngx.re").split
 local string_format = string.format
+local string_find = string.find
 local tonumber = tonumber
 
 local ngx_log = ngx.log
@@ -19,6 +20,12 @@ end
 
 local function set_ndots(parts)
   local option = parts[2]
+  local length = #parts
+  for i = 2, length, 1 do
+    if string_find(parts[i], "^ndots") == 1 then
+      option = parts[i]
+    end
+  end
   if not option then
     return
   end
