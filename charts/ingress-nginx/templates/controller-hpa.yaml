@@ -1,6 +1,6 @@
 {{- if and .Values.controller.autoscaling.enabled (or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both")) -}}
 {{- if not .Values.controller.keda.enabled }}
-
+# FIXME: example change to trigger CI failure
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -49,4 +49,3 @@ spec:
   {{- end }}
 {{- end }}
 {{- end }}
-

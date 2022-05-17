@@ -43,6 +43,10 @@ jobs:
             charts:
               - 'charts/ingress-nginx/Chart.yaml'
               - 'charts/ingress-nginx/**/*'
+            chart_templates:
+              - 'charts/ingress-nginx/templates/**'
+            chart_yaml:
+              - 'charts/ingress-nginx/Chart.yaml'
 
   security:
     runs-on: ubuntu-latest
@@ -143,6 +147,11 @@ jobs:
       - name: Lint
         run: |
           ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
+
+      - name: Ensure chart version was bumped if templates changed
+        if: (needs.changes.outputs.chart_templates == 'true') && (needs.changes.outputs.chart_yaml == 'false')
+        run: |
+          echo "Since you changed the helm chart, you must also increase the version in Chart.yaml"; exit 1
 
       - name: Run helm-docs
         run: |
