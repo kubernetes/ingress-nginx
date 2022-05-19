@@ -115,7 +115,7 @@ get_src()
 
   echo "Downloading $url"
 
-  curl -sSL "$url" -o "$f"
+  curl -sSL --fail-with-body "$url" -o "$f"
   echo "$hash  $f" | sha256sum -c - || exit 10
   tar xzf "$f"
   rm -rf "$f"
@@ -131,9 +131,14 @@ install_nginx()
   mkdir -p /etc/nginx
   cd "$BUILD_PATH"
 
-  get_src 0528e793a97f942868616449d49326160f9cb67b2253fb2c4864603ac6ab09a9 \
-          "https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/$OPENTELEMETRY_CONTRIB_COMMIT.tar.gz"
+  # TODO fix curl
+  # get_src 0528e793a97f942868616449d49326160f9cb67b2253fb2c4864603ac6ab09a9 \
+  #         "https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/$OPENTELEMETRY_CONTRIB_COMMIT.tar.gz"
 
+  git clone https://github.com/open-telemetry/opentelemetry-cpp-contrib.git \
+    opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
+  cd ${BUILD_PATH}/opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
+  git reset --hard ${OPENTELEMETRY_CONTRIB_COMMIT}
   cd ${BUILD_PATH}/opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}/instrumentation/nginx
   mkdir -p build
   cd build
