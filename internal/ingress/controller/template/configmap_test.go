@@ -229,6 +229,34 @@ func TestGlobalExternalAuthSigninParsing(t *testing.T) {
 	}
 }
 
+func TestGlobalExternalAlwaysSetCookie(t *testing.T) {
+	testCases := map[string]struct {
+		alwaysSetCookie string
+		result          bool
+	}{
+		"true": {
+			alwaysSetCookie: "true",
+			result:          true,
+		},
+		"false": {
+			alwaysSetCookie: "false",
+		},
+		"set empty": {
+			alwaysSetCookie: "",
+		},
+		"error": {
+			alwaysSetCookie: "error string",
+		},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-always-set-cookie": tc.alwaysSetCookie})
+		if cfg.GlobalExternalAuth.AlwaysSetCookie != tc.result {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.result, cfg.GlobalExternalAuth.AlwaysSetCookie)
+		}
+	}
+}
+
 func TestGlobalExternalAuthSigninRedirectParamParsing(t *testing.T) {
 	testCases := map[string]struct {
 		param  string
