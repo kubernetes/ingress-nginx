@@ -48,6 +48,7 @@ type Config struct {
 	KeepaliveRequests      int               `json:"keepaliveRequests"`
 	KeepaliveTimeout       int               `json:"keepaliveTimeout"`
 	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
+	AlwaysSetCookie        bool              `json:"alwaysSetCookie,omitempty"`
 }
 
 // DefaultCacheDuration is the fallback value if no cache duration is provided
@@ -109,6 +110,10 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	}
 
 	if e1.KeepaliveTimeout != e2.KeepaliveTimeout {
+		return false
+	}
+
+	if e1.AlwaysSetCookie != e2.AlwaysSetCookie {
 		return false
 	}
 
@@ -297,6 +302,8 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	requestRedirect, _ := parser.GetStringAnnotation("auth-request-redirect", ing)
 
+	alwaysSetCookie, _ := parser.GetBoolAnnotation("auth-always-set-cookie", ing)
+
 	return &Config{
 		URL:                    urlString,
 		Host:                   authURL.Hostname(),
@@ -312,6 +319,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		KeepaliveRequests:      keepaliveRequests,
 		KeepaliveTimeout:       keepaliveTimeout,
 		ProxySetHeaders:        proxySetHeaders,
+		AlwaysSetCookie:        alwaysSetCookie,
 	}, nil
 }
 

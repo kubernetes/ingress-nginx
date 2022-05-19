@@ -71,6 +71,13 @@ func buildIngress() *networking.Ingress {
 	}
 }
 
+func boolToString(v bool) string {
+	if v {
+		return "true"
+	}
+	return "false"
+}
+
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 
@@ -86,19 +93,20 @@ func TestAnnotations(t *testing.T) {
 		requestRedirect        string
 		authSnippet            string
 		authCacheKey           string
+		authAlwaysSetCookie    bool
 		expErr                 bool
 	}{
-		{"empty", "", "", "", "", "", "", "", true},
-		{"no scheme", "bar", "bar", "", "", "", "", "", true},
-		{"invalid host", "http://", "http://", "", "", "", "", "", true},
-		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", "", "", true},
-		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "POST", "", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "", "", "", false},
-		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "http://foo.com/redirect-me", "", "", false},
-		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "proxy_set_header My-Custom-Header 42;", "", false},
-		{"auth cache ", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "", "$foo$bar", false},
-		{"redirect param", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "origUrl", "", "", "", "", false},
+		{"empty", "", "", "", "", "", "", "", false, true},
+		{"no scheme", "bar", "bar", "", "", "", "", "", false, true},
+		{"invalid host", "http://", "http://", "", "", "", "", "", false, true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", "", "", false, true},
+		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", "", "", false, false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "POST", "", "", "", false, false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "", "", "", false, false},
+		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "http://foo.com/redirect-me", "", "", false, false},
+		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "proxy_set_header My-Custom-Header 42;", "", false, false},
+		{"auth cache ", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "", "$foo$bar", false, false},
+		{"redirect param", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "origUrl", "", "", "", "", true, false},
 	}
 
 	for _, test := range tests {
@@ -109,6 +117,7 @@ func TestAnnotations(t *testing.T) {
 		data[parser.GetAnnotationWithPrefix("auth-request-redirect")] = test.requestRedirect
 		data[parser.GetAnnotationWithPrefix("auth-snippet")] = test.authSnippet
 		data[parser.GetAnnotationWithPrefix("auth-cache-key")] = test.authCacheKey
+		data[parser.GetAnnotationWithPrefix("auth-always-set-cookie")] = boolToString(test.authAlwaysSetCookie)
 
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
@@ -145,6 +154,10 @@ func TestAnnotations(t *testing.T) {
 		}
 		if u.AuthCacheKey != test.authCacheKey {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.authCacheKey, u.AuthCacheKey)
+		}
+
+		if u.AlwaysSetCookie != test.authAlwaysSetCookie {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.authAlwaysSetCookie, u.AlwaysSetCookie)
 		}
 	}
 }
