@@ -34,6 +34,7 @@ spec:
     - name: metrics
       port: {{ .Values.controller.metrics.service.servicePort }}
       protocol: TCP
+      appProtocol: http
       targetPort: metrics
     {{- $setNodePorts := (or (eq .Values.controller.metrics.service.type "NodePort") (eq .Values.controller.metrics.service.type "LoadBalancer")) }}
     {{- if (and $setNodePorts (not (empty .Values.controller.metrics.service.nodePort))) }}
