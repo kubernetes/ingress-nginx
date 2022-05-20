@@ -162,6 +162,9 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_max_temp_file_size
 	ProxyMaxTempFileSize string `json:"proxy-max-temp-file-size"`
 
+	// Adds an X-Forwarded-Host header to the request, defaults to true
+	ProxyAddXForwardedHost bool `json:"proxy-add-x-forwarded-host"`
+
 	// By default, the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
 	// It disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 	ServiceUpstream bool `json:"service-upstream"`

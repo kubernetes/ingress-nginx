@@ -894,6 +894,7 @@ func NewDefault() Configuration {
 			ProxyHTTPVersion:         "1.1",
 			ProxyMaxTempFileSize:     "1024m",
 			ServiceUpstream:          false,
+			ProxyAddXForwardedHost:   true,
 		},
 		UpstreamKeepaliveConnections:           320,
 		UpstreamKeepaliveTime:                  "1h",

@@ -96,6 +96,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
 	def.ProxyAddOriginalURIHeader = false
+	def.ProxyAddXForwardedHost = true
 	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.DisableIpv6DNS = true
 	def.DefaultType = "text/plain"

@@ -154,6 +154,31 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 			})
 	})
 
+	ginkgo.It("should default to sending x-forwarded-host header", func() {
+		annotations := make(map[string]string)
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "X-Forwarded-Host")
+			})
+	})
+
+	ginkgo.It("should turn off x-forwarded-host", func() {
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-add-x-forwarded-host"] = "false"
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return !strings.Contains(server, "X-Forwarded-Host")
+			})
+	})
+
 	ginkgo.It("should turn on proxy-buffering", func() {
 		proxyBuffering := "on"
 		proxyBuffersNumber := "8"

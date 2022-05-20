@@ -90,6 +90,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyBuffering:           "off",
 		ProxyHTTPVersion:         "1.1",
 		ProxyMaxTempFileSize:     "1024m",
+		ProxyAddXForwardedHost:   true,
 	}
 }
 
@@ -110,6 +111,7 @@ func TestProxy(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-buffering")] = "on"
 	data[parser.GetAnnotationWithPrefix("proxy-http-version")] = "1.0"
 	data[parser.GetAnnotationWithPrefix("proxy-max-temp-file-size")] = "128k"
+	data[parser.GetAnnotationWithPrefix("proxy-add-x-forwarded-host")] = "true"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -158,6 +160,9 @@ func TestProxy(t *testing.T) {
 	}
 	if p.ProxyMaxTempFileSize != "128k" {
 		t.Errorf("expected 128k as proxy-max-temp-file-size but returned %v", p.ProxyMaxTempFileSize)
+	}
+	if !p.ProxyAddXForwardedHost {
+		t.Errorf("expected true for proxy-add-x-forwarded-host but returned false")
 	}
 }
 
@@ -210,5 +215,8 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 	if p.ProxyMaxTempFileSize != "1024m" {
 		t.Errorf("expected 1024m as proxy-max-temp-file-size but returned %v", p.ProxyMaxTempFileSize)
+	}
+	if !p.ProxyAddXForwardedHost {
+		t.Errorf("expected true for proxy-add-x-forwarded-host but returned false")
 	}
 }
