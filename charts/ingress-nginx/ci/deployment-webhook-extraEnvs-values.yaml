@@ -5,10 +5,7 @@ controller:
     enabled: true
     extraEnvs:
       - name: FOO
-        valueFrom:
-          secretKeyRef:
-            key: FOO
-            name: secret-resource
+        value: foo
       - name: TEST
         value: test
     patch:
