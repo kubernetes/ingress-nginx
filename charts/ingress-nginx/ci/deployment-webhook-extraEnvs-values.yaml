@@ -1,0 +1,15 @@
+controller:
+  service:
+    type: ClusterIP
+  admissionWebhooks:
+    enabled: true
+    extraEnvs:
+      - name: FOO
+        valueFrom:
+          secretKeyRef:
+            key: FOO
+            name: secret-resource
+      - name: TEST
+        value: test
+    patch:
+      enabled: true
