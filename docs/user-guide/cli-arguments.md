@@ -47,6 +47,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--publish-service`                | Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies. |
 | `--publish-status-address`         | Customized address (or addresses, separated by comma) to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
 | `--report-node-internal-ip-address`| Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter. |
+| `--report-status-classes`          | If true, report status classes in metrics (2xx, 3xx, 4xx and 5xx) instead of full status codes. (default false) |
 | `--skip_headers`                   | If true, avoid header prefixes in the log messages |
 | `--skip_log_headers`               | If true, avoid headers when opening log files |
 | `--ssl-passthrough-proxy-port`     | Port to use internally for SSL Passthrough. (default 442) |
