@@ -128,7 +128,7 @@ spec:
               protocol: TCP
           {{- end }}
           {{- range $key, $value := .Values.tcp }}
-            - name: {{ $key }}-tcp
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-tcp
               containerPort: {{ $key }}
               protocol: TCP
               {{- if $.Values.controller.hostPort.enabled }}
@@ -136,7 +136,7 @@ spec:
               {{- end }}
           {{- end }}
           {{- range $key, $value := .Values.udp }}
-            - name: {{ $key }}-udp
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-udp
               containerPort: {{ $key }}
               protocol: UDP
               {{- if $.Values.controller.hostPort.enabled }}

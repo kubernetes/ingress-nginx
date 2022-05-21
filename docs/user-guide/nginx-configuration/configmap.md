@@ -371,6 +371,9 @@ _References:_
 
 ## http2-max-field-size
 
+!!! warning
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [large-client-header-buffers](#large-client-header-buffers) instead.
+
 Limits the maximum size of an HPACK-compressed request header field.
 
 _References:_
@@ -378,12 +381,18 @@ _References:_
 
 ## http2-max-header-size
 
+!!! warning
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [large-client-header-buffers](#large-client-header-buffers) instead.
+
 Limits the maximum size of the entire request header list after HPACK decompression.
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size](https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size)
 
 ## http2-max-requests
+
+!!! warning
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [upstream-keepalive-requests](#upstream-keepalive-requests) instead.
 
 Sets the maximum number of requests (including push requests) that can be served through one HTTP/2 connection, after which the next client request will lead to connection closing and the need of establishing a new connection.
 
@@ -1216,6 +1225,11 @@ Enables caching for global auth requests. Specify a lookup key for auth response
 ## global-auth-cache-duration
 
 Set a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
+
+## global-auth-always-set-cookie
+
+Always set a cookie returned by auth request. By default, the cookie will be set only if an upstream reports with the code 200, 201, 204, 206, 301, 302, 303, 304, 307, or 308.
+_**default:**_ false
 
 ## no-auth-locations
 

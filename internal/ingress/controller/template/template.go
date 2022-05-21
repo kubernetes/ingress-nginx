@@ -1277,15 +1277,17 @@ func proxySetHeader(loc interface{}) string {
 
 // buildCustomErrorDeps is a utility function returning a struct wrapper with
 // the data required to build the 'CUSTOM_ERRORS' template
-func buildCustomErrorDeps(upstreamName string, errorCodes []int, enableMetrics bool) interface{} {
+func buildCustomErrorDeps(upstreamName string, errorCodes []int, enableMetrics bool, modsecurityEnabled bool) interface{} {
 	return struct {
-		UpstreamName  string
-		ErrorCodes    []int
-		EnableMetrics bool
+		UpstreamName       string
+		ErrorCodes         []int
+		EnableMetrics      bool
+		ModsecurityEnabled bool
 	}{
-		UpstreamName:  upstreamName,
-		ErrorCodes:    errorCodes,
-		EnableMetrics: enableMetrics,
+		UpstreamName:       upstreamName,
+		ErrorCodes:         errorCodes,
+		EnableMetrics:      enableMetrics,
+		ModsecurityEnabled: modsecurityEnabled,
 	}
 }
 
@@ -1665,10 +1667,11 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
+proxy_set_header Host %v;
 proxy_pass %v;
 }
 
-`, loc.Mirror.Source, loc.Mirror.Target))
+`, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))
 	}
 
 	return buffer.String()

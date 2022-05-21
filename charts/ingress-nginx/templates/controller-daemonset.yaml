@@ -82,14 +82,7 @@ spec:
         {{- end }}
           args:
             {{- include "ingress-nginx.params" . | nindent 12 }}
-          securityContext:
-            capabilities:
-                drop:
-                - ALL
-                add:
-                - NET_BIND_SERVICE
-            runAsUser: {{ .Values.controller.image.runAsUser }}
-            allowPrivilegeEscalation: {{ .Values.controller.image.allowPrivilegeEscalation }}
+          securityContext: {{ include "controller.containerSecurityContext" . | nindent 12 }}
           env:
             - name: POD_NAME
               valueFrom:
@@ -131,7 +124,7 @@ spec:
               protocol: TCP
           {{- end }}
           {{- range $key, $value := .Values.tcp }}
-            - name: {{ $key }}-tcp
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-tcp
               containerPort: {{ $key }}
               protocol: TCP
               {{- if $.Values.controller.hostPort.enabled }}
@@ -139,7 +132,7 @@ spec:
               {{- end }}
           {{- end }}
           {{- range $key, $value := .Values.udp }}
-            - name: {{ $key }}-udp
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-udp
               containerPort: {{ $key }}
               protocol: UDP
               {{- if $.Values.controller.hostPort.enabled }}
