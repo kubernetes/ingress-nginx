@@ -2,7 +2,10 @@
 DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 image:
+	echo "..entered Makefile in /test/e2e-image"
+	echo "..calling Make target <<e2e-test-binary>> in /Makefile from inside /test/e2e-image/Makefile"
 	make -C $(DIR)/../../ e2e-test-binary
+	echo "..done building e2e-test-binary from /test/e2e-image/Makefile"
 
 	cp $(DIR)/../e2e/e2e.test .
 	cp $(DIR)/../e2e/wait-for-nginx.sh .

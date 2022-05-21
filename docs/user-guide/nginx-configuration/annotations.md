@@ -131,6 +131,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
 |[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-target](#mirror)|string|
+|[nginx.ingress.kubernetes.io/mirror-host](#mirror)|string|
 
 ### Canary
 
@@ -351,7 +352,7 @@ CORS can be controlled with the following annotations:
 
     This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -.
 
-    - Default: `DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization`
+    - Default: `DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization`
     - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
 
 * `nginx.ingress.kubernetes.io/cors-expose-headers`: Controls which headers are exposed to response.
@@ -487,6 +488,8 @@ Additionally it is possible to set:
   `<Cache_Key>` this enables caching for auth requests. specify a lookup key for auth responses. e.g. `$remote_user$http_authorization`. Each server and location has it's own keyspace. Hence a cached response is only valid on a per-server and per-location basis.
 * `nginx.ingress.kubernetes.io/auth-cache-duration`:
   `<Cache_duration>` to specify a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
+* `nginx.ingress.kubernetes.io/auth-always-set-cookie`:
+  `<Boolean_Flag>` to set a cookie returned by auth request. By default, the cookie will be set only if an upstream reports with the code 200, 201, 204, 206, 301, 302, 303, 304, 307, or 308.
 * `nginx.ingress.kubernetes.io/auth-snippet`:
   `<Auth_Snippet>` to specify a custom snippet to use with external authentication, e.g.
 
@@ -939,6 +942,13 @@ By default the request-body is sent to the mirror backend, but can be turned off
 
 ```yaml
 nginx.ingress.kubernetes.io/mirror-request-body: "off"
+```
+
+Also by default header Host for mirrored requests will be set the same as a host part of uri in the "mirror-target" annotation. You can override it by "mirror-host" annotation:
+
+```yaml
+nginx.ingress.kubernetes.io/mirror-target: https://1.2.3.4/$request_uri
+nginx.ingress.kubernetes.io/mirror-host: "test.env.com"
 ```
 
 **Note:** The mirror directive will be applied to all paths within the ingress resource.

@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.1.0](https://img.shields.io/badge/Version-4.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
+![Version: 4.1.1](https://img.shields.io/badge/Version-4.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -479,6 +479,7 @@ Kubernetes: `>=1.19.0-0`
 | dhParam | string | `nil` | A base64-encoded Diffie-Hellman parameter. This can be generated with: `openssl dhparam 4096 2> /dev/null | base64` |
 | imagePullSecrets | list | `[]` | Optional array of imagePullSecrets containing private registry credentials |
 | podSecurityPolicy.enabled | bool | `false` |  |
+| portNamePrefix | string | `""` | Prefix for TCP and UDP ports names in ingress controller service |
 | rbac.create | bool | `true` |  |
 | rbac.scope | bool | `false` |  |
 | revisionHistoryLimit | int | `10` | Rollback limit |
