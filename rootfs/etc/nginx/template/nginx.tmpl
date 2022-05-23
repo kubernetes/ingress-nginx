@@ -778,7 +778,7 @@ stream {
     access_log {{ or $cfg.StreamAccessLogPath $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
     {{ end }}
 
-   
+
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
     {{ if $cfg.EnableRealIp }}
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
@@ -1292,7 +1292,11 @@ stream {
             {{ else }}
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
+            {{ if $externalAuth.AlwaysSetCookie }}
+            add_header          Set-Cookie $auth_cookie always;
+            {{ else }}
             add_header          Set-Cookie $auth_cookie;
+            {{ end }}
             {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders false }}
             {{ $line }}
             {{- end }}

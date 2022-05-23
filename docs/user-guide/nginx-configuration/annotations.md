@@ -488,6 +488,8 @@ Additionally it is possible to set:
   `<Cache_Key>` this enables caching for auth requests. specify a lookup key for auth responses. e.g. `$remote_user$http_authorization`. Each server and location has it's own keyspace. Hence a cached response is only valid on a per-server and per-location basis.
 * `nginx.ingress.kubernetes.io/auth-cache-duration`:
   `<Cache_duration>` to specify a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
+* `nginx.ingress.kubernetes.io/auth-always-set-cookie`:
+  `<Boolean_Flag>` to set a cookie returned by auth request. By default, the cookie will be set only if an upstream reports with the code 200, 201, 204, 206, 301, 302, 303, 304, 307, or 308.
 * `nginx.ingress.kubernetes.io/auth-snippet`:
   `<Auth_Snippet>` to specify a custom snippet to use with external authentication, e.g.
 
