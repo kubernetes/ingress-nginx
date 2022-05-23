@@ -68,8 +68,11 @@ RUN apk add --no-cache libcap \
   && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
   && setcap    cap_net_bind_service=+ep /usr/bin/dumb-init \
   && setcap -v cap_net_bind_service=+ep /usr/bin/dumb-init \
-  && apk del libcap \
-  && ln -sf /usr/local/nginx/sbin/nginx /usr/bin/nginx
+  && apk del libcap
+
+# enable sidecar libraries
+# TODO: enable also for other ARCH then x86_64?
+RUN echo "/lib:/usr/lib:/modules_mount/usr/lib" > /etc/ld-musl-x86_64.path
 
 USER www-data
 
