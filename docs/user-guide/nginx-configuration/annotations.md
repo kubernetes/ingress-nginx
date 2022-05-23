@@ -806,6 +806,22 @@ sometimes need to be overridden to enable it or disable it for a specific ingres
 nginx.ingress.kubernetes.io/opentracing-trust-incoming-span: "true"
 ```
 
+### Enable Opentelemetry
+
+Opentelemetry can be enabled or disabled globally through the ConfigMap
+
+```yaml
+nginx.ingress.kubernetes.io/enable-opentelemetry: "true"
+```
+
+### Opentelemetry config
+
+Opentelemetry config
+
+```yaml
+nginx.ingress.kubernetes.io/opentelemetry-config: "/conf/otel-nginx.toml"
+```
+
 ### X-Forwarded-Prefix Header
 To add the non-standard `X-Forwarded-Prefix` header to the upstream request with a string value, the following annotation can be used:
 

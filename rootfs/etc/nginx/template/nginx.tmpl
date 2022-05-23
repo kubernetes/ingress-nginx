@@ -37,10 +37,9 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 {{ end }}
 
-{{/* TODO: load module when required */}}
-{{/* if (shouldLoadOpentelemetryModule $cfg $servers) */}}
+{{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
 load_module /modules_mount/etc/nginx/modules/otel_ngx_module.so;
-{{/* end */}}
+{{ end }}
 
 daemon off;
 
@@ -66,13 +65,9 @@ events {
 }
 
 http {
-    {{/* TODO: load config when required */}}
-    {{/* if (shouldLoadOpentelemetryModule $cfg $servers) */}}
-    {{/* TODO: config setting for configmap */}}
-    {{/* opentelemetry_config $cfg.OpentelemetryConfigmapName */}}
-    opentelemetry_config /conf/otel-nginx.toml;
-    {{/* end */}}
-
+    {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
+    opentelemetry_config {{ $cfg.OpentelemetryConfig }};
+    {{ end }}
 
     lua_package_path "/etc/nginx/lua/?.lua;;";
 
@@ -669,7 +664,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics $cfg.EnableModsecurity) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -791,7 +786,7 @@ stream {
     access_log {{ or $cfg.StreamAccessLogPath $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
     {{ end }}
 
-   
+
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
     {{ if $cfg.EnableRealIp }}
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
@@ -885,10 +880,16 @@ stream {
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
         {{ $enableMetrics := .EnableMetrics }}
+        {{ $modsecurityEnabled := .ModsecurityEnabled }}
         {{ $upstreamName := .UpstreamName }}
         {{ range $errCode := .ErrorCodes }}
         location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
+
+            # Ensure that modsecurity will not run on custom error pages or they might be blocked
+            {{ if $modsecurityEnabled }}
+            modsecurity off;
+            {{ end }}
 
             proxy_intercept_errors off;
 
@@ -1028,7 +1029,7 @@ stream {
         {{ end }}
 
         {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics $all.Cfg.EnableModsecurity) }}
         {{ end }}
 
         {{ buildMirrorLocations $server.Locations }}
@@ -1059,6 +1060,11 @@ stream {
             {{ if (or $all.Cfg.EnableOpentracing $location.Opentracing.Enabled) }}
             opentracing on;
             opentracing_propagate_context;
+            {{ end }}
+
+            # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity off;
             {{ end }}
 
             {{ if $externalAuth.AuthCacheKey }}
@@ -1170,6 +1176,11 @@ stream {
             internal;
 
             add_header Set-Cookie $auth_cookie;
+
+            # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity off;
+            {{ end }}
 
             return 302 {{ buildAuthSignURL $externalAuth.SigninURL $externalAuth.SigninURLRedirectParam }};
         }
@@ -1289,7 +1300,11 @@ stream {
             {{ else }}
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
+            {{ if $externalAuth.AlwaysSetCookie }}
+            add_header          Set-Cookie $auth_cookie always;
+            {{ else }}
             add_header          Set-Cookie $auth_cookie;
+            {{ end }}
             {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders false }}
             {{ $line }}
             {{- end }}

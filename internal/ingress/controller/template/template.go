@@ -275,6 +275,7 @@ var (
 		"buildHTTPSListener":                 buildHTTPSListener,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
+		"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
@@ -1603,6 +1604,41 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 	}
 
 	return false
+}
+
+// shouldLoadOpentelemetryModule determines whether or not the Opentelemetry module needs to be loaded.
+// First, it checks if `enable-opentelemetry` is set in the ConfigMap. If it is not, it iterates over all locations to
+// check if Opentracing is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentelemetry`.
+func shouldLoadOpentelemetryModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	// servers, ok := s.([]*ingress.Server)
+	// if !ok {
+	// 	klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+	// 	return false
+	// }
+	
+	if cfg.EnableOpentelemetry {
+		return true
+	}
+
+	return false
+
+	// // TODO
+	// for _, server := range servers {
+	// 	for _, location := range server.Locations {
+	// 		if location.Opentracing.Enabled {
+	// 			return true
+	// 		}
+	// 	}
+	// }
+
+	// return false
+	
 }
 
 func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Location) string {
