@@ -42,4 +42,4 @@ RUN bash /opt/third_party/build.sh -n
 FROM alpine:3.14.6
 COPY --from=base /opt/third_party/init_module.sh /usr/local/bin/init_module.sh
 COPY --from=nginx /etc/nginx/modules /etc/nginx/modules
-COPY --from=nginx /opt/third_party/install/lib /etc/nginx/modules
+COPY --from=nginx /opt/third_party/install/lib /usr/lib
