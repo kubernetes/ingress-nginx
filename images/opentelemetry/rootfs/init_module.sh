@@ -21,5 +21,5 @@ set -o pipefail
 for path in /etc/nginx/modules /usr/lib; 
 do 
     mkdir -p  /modules_mount${path}
-    cp -R $path /modules_mount${path}; 
+    cp -R $path/* /modules_mount${path}/; 
 done

@@ -69,6 +69,11 @@ RUN apk update \
   chown -R www-data.www-data ${dir}; \
   done'
 
+# enable sidecar libraries
+# TODO: enable also for other ARCH then x86_64?
+RUN echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/usr/lib" > /etc/ld-musl-x86_64.path
+
+
 EXPOSE 80 443
 
 ENTRYPOINT ["nginx", "-g", "daemon off;"]

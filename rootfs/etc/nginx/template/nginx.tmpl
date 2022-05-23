@@ -37,9 +37,10 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 {{ end }}
 
-# {{ if (shouldLoadOpentracingModule $cfg $servers) }}
-load_module /moudles_mount/etc/nginx/modules/otel_ngx_module.so;
-# {{ end }}
+{{/* TODO: load module when required */}}
+{{/* if (shouldLoadOpentelemetryModule $cfg $servers) */}}
+load_module /modules_mount/etc/nginx/modules/otel_ngx_module.so;
+{{/* end */}}
 
 daemon off;
 
@@ -65,11 +66,13 @@ events {
 }
 
 http {
-    # {{ if (shouldLoadOpentracingModule $cfg $servers) }}
-    # # TODO: enable by config
-    # opentelemetry_config $cfg.OpentelemetryConfigmapName
+    {{/* TODO: load config when required */}}
+    {{/* if (shouldLoadOpentelemetryModule $cfg $servers) */}}
+    {{/* TODO: config setting for configmap */}}
+    {{/* opentelemetry_config $cfg.OpentelemetryConfigmapName */}}
     opentelemetry_config /conf/otel-nginx.toml;
-    # {{ end }}
+    {{/* end */}}
+
 
     lua_package_path "/etc/nginx/lua/?.lua;;";
 
