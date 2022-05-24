@@ -45,10 +45,3 @@ cp /etc/passwd /etc/group /chroot/etc/
 cp -a /usr/* /chroot/usr/
 cp -a /etc/nginx/* /chroot/etc/nginx/
 cp /lib/ld-musl-* /lib/libcrypto* /lib/libssl* /lib/libz* /chroot/lib/
-mknod -m 0666 /chroot/dev/null c 1 3
-mknod -m 0666 /chroot/dev/random c 1 8
-mknod -m 0666 /chroot/dev/urandom c 1 9
-mknod -m 0666 /chroot/dev/full c 1 7
-mknod -m 0666 /chroot/dev/ptmx c 5 2
-mknod -m 0666 /chroot/dev/zero c 1 5
-mknod -m 0666 /chroot/dev/tty c 5 0
