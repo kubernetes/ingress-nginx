@@ -76,4 +76,4 @@ RUN echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/usr/lib" > /etc/ld-musl-x8
 
 EXPOSE 80 443
 
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]
