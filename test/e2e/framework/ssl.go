@@ -170,9 +170,8 @@ func generateRSACert(host string, isCA bool, keyOut, certOut io.Writer) error {
 			CommonName:   "default",
 			Organization: []string{"Acme Co"},
 		},
-		SignatureAlgorithm: x509.ECDSAWithSHA1,
-		NotBefore:          notBefore,
-		NotAfter:           notAfter,
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
 
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
