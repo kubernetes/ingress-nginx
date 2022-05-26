@@ -150,6 +150,8 @@ http {
 	f.NGINXWithConfigDeployment(SlowEchoService, cfg)
 }
 
+// NGINXDeployment creates a new simple NGINX Deployment using NGINX base image
+// and passing the desired configuration
 func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) {
 	cfgMap := map[string]string{
 		"nginx.conf": cfg,
