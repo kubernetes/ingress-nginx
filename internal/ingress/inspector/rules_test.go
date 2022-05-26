@@ -36,6 +36,11 @@ func TestCheckRegex(t *testing.T) {
 			value:   "   alias    blabla/lala ;",
 		},
 		{
+			name:    "must refuse invalid alias with line break",
+			wantErr: true,
+			value:   "alias #\n/lalala/1/;",
+		},
+		{
 			name:    "must refuse invalid attempt to call /etc",
 			wantErr: true,
 			value:   "location /etc/nginx/lalala",
