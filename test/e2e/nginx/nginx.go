@@ -91,9 +91,6 @@ var (
 	
 			listen 80;
 	
-			location / {
-				alias /www/html;
-			}
 		}
 	}
 	`
