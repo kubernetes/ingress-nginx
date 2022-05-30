@@ -26,7 +26,7 @@ import (
 )
 
 func main() {
-	err := exec.Command("bash", "-c", "pkill -SIGTERM -f nginx-ingress-controller").Run()
+	err := exec.Command("bash", "-c", "pkill -SIGQUIT -f nginx-ingress-controller").Run()
 	if err != nil {
 		klog.ErrorS(err, "terminating ingress controller")
 		os.Exit(1)
