@@ -1,5 +1,26 @@
 # Changelog
 
+### 1.2.1
+
+Image:
+- k8s.gcr.io/ingress-nginx/controller:v1.2.1@sha256:5516d103a9c2ecc4f026efbd4b40662ce22dc1f824fb129ed121460aaa5c47f8
+- k8s.gcr.io/ingress-nginx/controller-chroot:v1.2.1@sha256:d301551cf62bc3fb75c69fa56f7aa1d9e87b5079333adaf38afe84d9b7439355
+
+This release removes the root and alias directives in NGINX, this can avoid some potential security attacks.
+
+_Changes:_
+
+- [8459](https://github.com/kubernetes/ingress-nginx/pull/8459) Update default allowed CORS headers
+- [8202](https://github.com/kubernetes/ingress-nginx/pull/8202) disable modsecurity on error page
+- [8178](https://github.com/kubernetes/ingress-nginx/pull/8178) Add header Host into mirror annotations
+- [8458](https://github.com/kubernetes/ingress-nginx/pull/8458) Add portNamePreffix Helm chart parameter
+- [8587](https://github.com/kubernetes/ingress-nginx/pull/8587) Add CAP_SYS_CHROOT to DS/PSP when needed
+- [8213](https://github.com/kubernetes/ingress-nginx/pull/8213) feat: always set auth cookie
+- [8548](https://github.com/kubernetes/ingress-nginx/pull/8548) Implement reporting status classes in metrics
+- [8612](https://github.com/kubernetes/ingress-nginx/pull/8612) move so files under /etc/nginx/modules
+- [8624](https://github.com/kubernetes/ingress-nginx/pull/8624) Add patch to remove root and alias directives
+- [8623](https://github.com/kubernetes/ingress-nginx/pull/8623) Improve path rule
+
 ### 1.2.0
 
 Image: 

@@ -2,8 +2,8 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 4.1.2
-appVersion: 1.2.0
+version: 4.1.3
+appVersion: 1.2.1
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -26,6 +26,11 @@ annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - "[8587](https://github.com/kubernetes/ingress-nginx/pull/8587) Add CAP_SYS_CHROOT to DS/PSP when needed"
-    - "[8458](https://github.com/kubernetes/ingress-nginx/pull/8458) Add portNamePreffix Helm chart parameter"
-    - "[8522](https://github.com/kubernetes/ingress-nginx/pull/8522) Add documentation for controller.service.loadBalancerIP in Helm chart"
+    - "[8459](https://github.com/kubernetes/ingress-nginx/pull/8459) Update default allowed CORS headers"
+    - "[8202](https://github.com/kubernetes/ingress-nginx/pull/8202) disable modsecurity on error page"
+    - "[8178](https://github.com/kubernetes/ingress-nginx/pull/8178) Add header Host into mirror annotations"
+    - "[8213](https://github.com/kubernetes/ingress-nginx/pull/8213) feat: always set auth cookie"
+    - "[8548](https://github.com/kubernetes/ingress-nginx/pull/8548) Implement reporting status classes in metrics"
+    - "[8612](https://github.com/kubernetes/ingress-nginx/pull/8612) move so files under /etc/nginx/modules"
+    - "[8624](https://github.com/kubernetes/ingress-nginx/pull/8624) Add patch to remove root and alias directives"
+    - "[8623](https://github.com/kubernetes/ingress-nginx/pull/8623) Improve path rule"
