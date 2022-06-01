@@ -171,7 +171,7 @@ jobs:
         id: kind
         uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
         with:
-          version: v0.11.1
+          version: v0.14.0
           image: kindest/node:v1.21.1
 
       - uses: geekyeggo/delete-artifact@a6ab43859c960a8b74cbc6291f362c7fb51829ba # v1
@@ -204,7 +204,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.19.11, v1.20.7, v1.21.2, v1.22.0, v1.23.0]
+        k8s: [v1.19.11, v1.20.7, v1.21.2, v1.22.9, v1.23.6, v1.24.0]
 
     steps:
 
@@ -262,7 +262,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.21.10, v1.22.7, v1.23.4]
+        k8s: [v1.21.10, v1.22.9, v1.23.6, v1.24.0]
 
     steps:
 
