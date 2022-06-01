@@ -33,7 +33,7 @@ spec:
 {{- else }}
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "ingress-nginx.namespace" . }}
 {{- end }}
 {{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
   targetLabels:

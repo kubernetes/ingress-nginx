@@ -19,5 +19,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ include "ingress-nginx.fullname" . }}-admission
-    namespace: {{ .Release.Namespace | quote }}
+    namespace: {{ (include "ingress-nginx.namespace" .) | quote }}
 {{- end }}
