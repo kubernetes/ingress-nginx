@@ -9,7 +9,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 data:
 {{- if .Values.controller.proxySetHeaders }}
 {{ toYaml .Values.controller.proxySetHeaders | indent 2 }}

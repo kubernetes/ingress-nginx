@@ -682,7 +682,7 @@ controller:
       ## jobLabel: "app.kubernetes.io/name"
       namespace: ""
       namespaceSelector: {}
-      ## Default: scrape .Release.Namespace only
+      ## Default: scrape .Release.Namespace or namespaceOverride only
       ## To scrape all, use the following:
       ## namespaceSelector:
       ##   any: true
