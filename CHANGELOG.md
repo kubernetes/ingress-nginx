@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.2.0-0.4.0 (upcoming)
+## 1.2.0-0.5.0 (upcoming)
+
+* Upcoming changelog
+
+## 1.2.0-0.4.0 (2022-05-11)
 
 * Build the stratio ingress-nginx-controller with the community controller:1.2.0 as a base
 

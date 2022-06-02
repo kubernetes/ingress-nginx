@@ -1,3 +1,6 @@
+---
+# Plese notice that this branch is aligned with upstream's controller version 1.2.1
+
 # Ingress NGINX Controller
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5691/badge)](https://bestpractices.coreinfrastructure.org/projects/5691)
