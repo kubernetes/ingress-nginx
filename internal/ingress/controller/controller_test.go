@@ -103,7 +103,7 @@ func (fakeIngressStore) ListLocalSSLCerts() []*ingress.SSLCert {
 	return nil
 }
 
-func (fakeIngressStore) GetAuthCertificate(string) (*resolver.AuthSSLCert, error) {
+func (fakeIngressStore) GetAuthCertificate(string, bool) (*resolver.AuthSSLCert, error) {
 	return nil, fmt.Errorf("test error")
 }
 
@@ -2392,6 +2392,7 @@ func newNGINXController(t *testing.T) *NGINXController {
 		fmt.Sprintf("%v/tcp", ns),
 		fmt.Sprintf("%v/udp", ns),
 		"",
+		"",
 		10*time.Minute,
 		clientSet,
 		channels.NewRingChannel(10),
@@ -2456,6 +2457,7 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		fmt.Sprintf("%v/config", ns),
 		fmt.Sprintf("%v/tcp", ns),
 		fmt.Sprintf("%v/udp", ns),
+		"",
 		"",
 		10*time.Minute,
 		clientSet,

@@ -34,6 +34,8 @@ import (
 // Config returns external authentication configuration for an Ingress rule
 type Config struct {
 	URL string `json:"url"`
+	// Scheme contains the scheme defined in the URL (http/https)
+	Scheme string `json:"scheme"`
 	// Host contains the hostname defined in the URL
 	Host                   string            `json:"host"`
 	SigninURL              string            `json:"signinUrl"`
@@ -306,6 +308,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	return &Config{
 		URL:                    urlString,
+		Scheme:                 authURL.Scheme,
 		Host:                   authURL.Hostname(),
 		SigninURL:              signIn,
 		SigninURLRedirectParam: signInRedirectParam,

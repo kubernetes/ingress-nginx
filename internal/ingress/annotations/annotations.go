@@ -29,6 +29,8 @@ import (
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	vaultcertificate "k8s.io/ingress-nginx/internal/ingress/annotations/vaultcertificate"
+
 	"k8s.io/ingress-nginx/internal/ingress/annotations/alias"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -117,6 +119,7 @@ type Ingress struct {
 	ModSecurity        modsecurity.Config
 	Mirror             mirror.Config
 	StreamSnippet      string
+	VaultPathTLS       string
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -168,6 +171,8 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"ModSecurity":          modsecurity.NewParser(cfg),
 			"Mirror":               mirror.NewParser(cfg),
 			"StreamSnippet":        streamsnippet.NewParser(cfg),
+			"VaultPathTLS":         vaultcertificate.NewParser(cfg),
+
 		},
 	}
 }

@@ -119,6 +119,13 @@ http {
         end
         -- load all plugins that'll be used here
         plugins.init({ {{ range  $idx, $plugin := $cfg.Plugins }}{{ if $idx }},{{ end }}{{ $plugin | quote }}{{ end }} })
+
+        ok, res = pcall(require, "stratio_auth")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          stratio_auth = res
+        end
     }
 
     init_worker_by_lua_block {
@@ -1064,6 +1071,9 @@ stream {
             set $cache_key '';
 
             rewrite_by_lua_block {
+                if ngx.var.ssl_client_s_dn then
+                    ngx.exit(ngx.HTTP_OK)
+                end
                 ngx.var.cache_key = ngx.encode_base64(ngx.sha1_bin(ngx.var.tmp_cache_key))
             }
 
@@ -1074,6 +1084,12 @@ stream {
             {{- end }}
 
             proxy_cache_key "$cache_key";
+            {{ else }}
+            rewrite_by_lua_block {
+                if ngx.var.ssl_client_s_dn then
+                    ngx.exit(ngx.HTTP_OK)
+                end
+             }
             {{ end }}
 
             # ngx_auth_request module overrides variables in the parent request,
@@ -1297,6 +1313,26 @@ stream {
             {{ else }}
             add_header          Set-Cookie $auth_cookie;
             {{ end }}
+
+            # Stratio cookie handling
+
+            access_by_lua_block {
+
+                -- TODO: Dynamic userinfo path? (currently "/oauth2/userinfo")
+                local userinfo_path = "{{ $externalAuth.Scheme }}://{{ $externalAuth.Host }}/oauth2/userinfo"
+                {{ $signing_key := getSigningKey }}
+                {{ if $signing_key }}
+
+                    local signing_key = "{{ getSigningKey }}"
+                    local verification_key = "{{ getVerificationKey }}"
+
+                    stratio_auth.create_cookie(userinfo_path, "_oauth2_proxy", "stratio-cookie", signing_key, verification_key);
+                {{ else }}
+                    ngx.log(ngx.STDERR, 'Unexpected error obtaining the stratio key. No cookie will be generated')
+                    return 500
+                {{ end }}
+            }
+
             {{- range $line := buildAuthResponseHeaders $proxySetHeader $externalAuth.ResponseHeaders false }}
             {{ $line }}
             {{- end }}

@@ -27,6 +27,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#client-certificate-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-vault](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-tls-match-cn](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
@@ -87,6 +88,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-ssl-ciphers](#backend-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/proxy-ssl-name](#backend-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/proxy-ssl-protocols](#backend-certificate-authentication)|string|
+|[nginx.ingress.stratio.com/ssl-proxy-vault](#ssl-proxy-vault)|string|
 |[nginx.ingress.kubernetes.io/proxy-ssl-verify](#backend-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/proxy-ssl-verify-depth](#backend-certificate-authentication)|number|
 |[nginx.ingress.kubernetes.io/proxy-ssl-server-name](#backend-certificate-authentication)|string|
@@ -103,6 +105,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none](#cookie-affinity)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/tls-cert-vault](#tls-cert-vault)|string|
 |[nginx.ingress.kubernetes.io/stream-snippet](#stream-snippet)|string|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
 |[nginx.ingress.kubernetes.io/x-forwarded-prefix](#x-forwarded-prefix-header)|string|
@@ -258,6 +261,13 @@ To enable, add the annotation `nginx.ingress.kubernetes.io/auth-tls-secret: name
 
 You can further customize client certificate authentication and behavior with these annotations:
 
+* `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`:
+  The name of the Secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
+  This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.
+* `nginx.ingress.kubernetes.io/auth-tls-vault: vaultPath`:
+  Defines the path in vault for the he full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress. The path must be in the form /<path>/<to>/<secret>/<CN>
+  The certificate must be stored in vault under a key with the naming: `<CN>_ca`.
+  A full secret containing a key and cert can also be provided. 
 * `nginx.ingress.kubernetes.io/auth-tls-verify-depth`: The validation depth between the provided client certificate and the Certification Authority chain. (default: 1)
 * `nginx.ingress.kubernetes.io/auth-tls-verify-client`: Enables verification of client certificates. Possible values are:
     * `on`: Request a client certificate that must be signed by a certificate that is included in the secret key `ca.crt` of the secret specified by `nginx.ingress.kubernetes.io/auth-tls-secret: namespace/secretName`. Failed certificate verification will result in a status code 400 (Bad Request) (default)
@@ -292,6 +302,10 @@ It is possible to authenticate to a proxied HTTPS backend with certificate using
 * `nginx.ingress.kubernetes.io/proxy-ssl-secret: secretName`:
   Specifies a Secret with the certificate `tls.crt`, key `tls.key` in PEM format used for authentication to a proxied HTTPS server. It should also contain trusted CA certificates `ca.crt` in PEM format used to verify the certificate of the proxied HTTPS server.
   This annotation expects the Secret name in the form "namespace/secretName".
+* `nginx.ingress.kubernetes.io/proxy-ssl-vault: vaultPath`: 
+  Defines the path in vault for the proxy-ssl-secret certificate. The path must be in the form /<path>/<to>/<secret>/<CN>
+  The secret stored in Stratio Vault contains the certificate `tls.crt`, key `tls.key` in PEM format used for authentication to a proxied HTTPS server. It should also contain trusted CA certificates `ca.crt` in PEM format used to verify the certificate of the proxied HTTPS server.
+  When this annotations is provided the `proxy-ssl-secret` one is ignored
 * `nginx.ingress.kubernetes.io/proxy-ssl-verify`:
   Enables or disables verification of the proxied HTTPS server certificate. (default: off)
 * `nginx.ingress.kubernetes.io/proxy-ssl-verify-depth`:
@@ -957,6 +971,19 @@ The request sent to the mirror is linked to the original request. If you have a 
 
 For more information on the mirror module see [ngx_http_mirror_module](https://nginx.org/en/docs/http/ngx_http_mirror_module.html)
 
+### TLS Certificate stored in vault
+
+ Stratio custom nginx-ingress-controller supports fetching certificates to be used in TLS communications with the annotation: `nginx.ingress.kubernetes.io/tls-cert-vault`
+SecretName field from the TLS area will be ignored if this annotation is provided, instead the certificate stored in the vault path will be used.
+The path must be in the form `/<path>/<to>/<secret>/<CN>`
+
+### Auth-TLS Certificate stored in vault
+
+
+Stratio custom nginx-ingress-controller supports fetching certificates to be used in TLS communications with the annotation: `nginx.ingress.kubernetes.io/a-passthrough`
+SecretName field from the TLS area will be ignored if this annotation is provided, instead the certificate stored in the vault path will be used.
+The path must be in the form `/<path>/<to>/<secret>/<CN>`
+auth-tls-vaul
 
 ### Stream snippet
 

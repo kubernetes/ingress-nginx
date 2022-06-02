@@ -77,7 +77,8 @@ type Configuration struct {
 	// +optional
 	UDPConfigMapName string
 
-	DefaultSSLCertificate string
+	DefaultSSLCertificate      string
+	DefaultVaultSSLCertificate string
 
 	// +optional
 	PublishService       string
@@ -648,7 +649,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				klog.V(3).Infof("Server %q is already configured for mutual authentication (Ingress %q)",
 					server.Hostname, ingKey)
 			}
-
+			klog.V(3).Info("Starting the ProxySSL backend configuration block")
 			if !n.store.GetBackendConfiguration().ProxySSLLocationOnly {
 				if server.ProxySSL.CAFileName == "" {
 					server.ProxySSL = anns.ProxySSL
@@ -1120,8 +1121,19 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 }
 
 func (n *NGINXController) getDefaultSSLCertificate() *ingress.SSLCert {
-	// read custom default SSL certificate, fall back to generated default certificate
+	// read custom default Vault default SSL certificate, fall back  default SSL certificate or at last fall back to generated default certificate
+	if n.cfg.DefaultVaultSSLCertificate != "" {
+		klog.InfoS("Using Vault certificate as default", "path", n.cfg.DefaultVaultSSLCertificate)
+		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultVaultSSLCertificate)
+		if err == nil {
+			return certificate
+		}
+
+		klog.Warningf("Error loading custom Vault default certificate, falling back to generated default:\n%v", err)
+	}
+
 	if n.cfg.DefaultSSLCertificate != "" {
+		klog.InfoS("Using k8s secret certificate as default", "path", n.cfg.DefaultSSLCertificate)
 		certificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
 		if err == nil {
 			return certificate
@@ -1320,15 +1332,22 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				klog.V(3).Infof("Ingress %q does not contains a TLS section.", ingKey)
 				continue
 			}
-
+			//The certificate is retrieved for storing it in the ingress storage and being able to use it later
 			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
-			if tlsSecretName == "" {
+
+			klog.V(3).Info("Reading TLS certificates in secretName or in tls-cert-vaul annotation")
+			// If no certificate stored in Vault is defined in annotations and no secretname stored in k8s, we use default
+			if (anns.VaultPathTLS == "") && (tlsSecretName == "") {
 				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate", host)
 				servers[host].SSLCert = n.getDefaultSSLCertificate()
 				continue
 			}
-
+			//We override the certificate that will be taken from the ingress storage
 			secrKey := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
+			if anns.VaultPathTLS != "" {
+				secrKey = anns.VaultPathTLS
+			}
+
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
 				klog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)

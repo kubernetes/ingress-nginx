@@ -19,9 +19,11 @@ package template
 import (
 	"bytes"
 	"crypto/sha1" // #nosec
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"math/rand" // #nosec
@@ -36,6 +38,9 @@ import (
 	text_template "text/template"
 	"time"
 
+	"io/ioutil"
+
+	"github.com/pkg/errors"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
@@ -281,6 +286,8 @@ var (
 		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
 		"buildServerName":                    buildServerName,
 		"buildCorsOriginRegex":               buildCorsOriginRegex,
+		"getSigningKey":                      getSigningKey,
+		"getVerificationKey":                 getVerificationKey,
 	}
 )
 
@@ -538,6 +545,58 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	}
 
 	return path
+}
+
+// getSigningKey retrieves the signing key from a path
+// (usually mounted in the deployment using a Secret)
+func getSigningKey() string {
+	var path = "/usr/local/stratio/signing_key"
+
+	key, err := os.ReadFile(path)
+	// TODO check if ioutil and os read diferently
+	keyioutil, _ := ioutil.ReadFile(path)
+	klog.V(3).Infof("Different or equal values", "oskey", key, "ioutilkey", keyioutil)
+
+	if err != nil {
+		errors.Wrapf(err, "unexpected error getting the stratio key from %v", path)
+		return ""
+	}
+
+	return strings.Replace(string(key), "\n", "\\n", -1)
+}
+
+// getVerificationKey retrieves the verification key from a path
+// (usually mounted in the deployment using a Secret)
+func getVerificationKey() string {
+	var path = "/usr/local/stratio/verification_key"
+
+	key, err := os.ReadFile(path)
+	if err != nil {
+		errors.Wrapf(err, "unexpected error getting the stratio key from %v", path)
+		return ""
+	}
+
+	block, _ := pem.Decode(key)
+	pkcs1Key, err := x509.ParsePKCS1PublicKey(block.Bytes)
+	if err != nil {
+		errors.Wrapf(err, "error parsing the public key")
+		return ""
+	}
+
+	pkcs8Key, err := x509.MarshalPKIXPublicKey(pkcs1Key)
+	if err != nil {
+		errors.Wrapf(err, "error converting the public key to PKCS#8")
+		return ""
+	}
+
+	pkcs8KeyDecoded := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "PUBLIC KEY",
+			Bytes: pkcs8Key,
+		},
+	)
+
+	return strings.Replace(string(pkcs8KeyDecoded), "\n", "\\n", -1)
 }
 
 func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {

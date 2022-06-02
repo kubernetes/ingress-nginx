@@ -63,7 +63,7 @@ func (m mockCfg) GetService(name string) (*apiv1.Service, error) {
 	return m.MockServices[name], nil
 }
 
-func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
+func (m mockCfg) GetAuthCertificate(name string, authInVault bool) (*resolver.AuthSSLCert, error) {
 	if secret, _ := m.GetSecret(name); secret != nil {
 		return &resolver.AuthSSLCert{
 			Secret:     name,

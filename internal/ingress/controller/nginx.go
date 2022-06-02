@@ -127,6 +127,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		config.TCPConfigMapName,
 		config.UDPConfigMapName,
 		config.DefaultSSLCertificate,
+		config.DefaultVaultSSLCertificate,
 		config.ResyncPeriod,
 		config.Client,
 		n.updateCh,
@@ -854,6 +855,7 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 	if backendsChanged {
 		err := configureBackends(pcfg.Backends)
 		if err != nil {
+			klog.V(3).Info("Error in the backends change check")
 			return err
 		}
 	}
@@ -862,6 +864,8 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 	if streamConfigurationChanged {
 		err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
 		if err != nil {
+			klog.V(3).Info("Error in the streamconfiguration change check")
+
 			return err
 		}
 	}
@@ -870,6 +874,8 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 	if serversChanged {
 		err := configureCertificates(pcfg.Servers)
 		if err != nil {
+			klog.V(3).Info("Error in the configureCertificates change check")
+
 			return err
 		}
 	}

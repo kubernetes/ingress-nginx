@@ -113,6 +113,10 @@ namespaces are watched if this parameter is left empty.`)
 			`Secret containing a SSL certificate to be used by the default HTTPS server (catch-all).
 Takes the form "namespace/name".`)
 
+		defVaultSSlCertificate = flags.String("default-ssl-certificate-vault", "",
+			`Secret stored in Vault containing a SSL certificate to be used by the default HTTPS server (catch-all).
+	Takes the form /<path>/<to>/<secret>/<CN>" `)
+
 		defHealthzURL = flags.String("health-check-path", "/healthz",
 			`URL path of the health check endpoint.
 Configured inside the NGINX status server. All requests received on the port
@@ -329,6 +333,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		UDPConfigMapName:            *udpConfigMapName,
 		DisableFullValidationTest:   *disableFullValidationTest,
 		DefaultSSLCertificate:       *defSSLCertificate,
+		DefaultVaultSSLCertificate:  *defVaultSSlCertificate,
 		DeepInspector:               *deepInspector,
 		PublishService:              *publishSvc,
 		PublishStatusAddress:        *publishStatusAddress,

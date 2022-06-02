@@ -27,6 +27,7 @@ import (
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -118,19 +119,33 @@ func sortProtocols(protocols string) string {
 // rule used to use a Certificate as authentication method
 func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
+	var secretInVault bool = true
+	var proxysslsecret string
 	config := &Config{}
 
-	proxysslsecret, err := parser.GetStringAnnotation("proxy-ssl-secret", ing)
-	if err != nil {
+	proxysslsecret, err = parser.GetStringAnnotation("proxy-ssl-vault", ing)
+	if err != nil && err.Error() != "ingress rule without annotations" {
+		klog.V(3).InfoS("There was an error in retrieving annotation proxy-ssl-vault", "error", err)
 		return &Config{}, err
 	}
 
-	_, _, err = k8s.ParseNameNS(proxysslsecret)
-	if err != nil {
-		return &Config{}, ing_errors.NewLocationDenied(err.Error())
-	}
+	// If there is no vault secret use standard k8s secret
+	if proxysslsecret == "" {
+		klog.V(3).Infof("There was no proxy-ssl-vault secret when retrieving")
+		proxysslsecret, err = parser.GetStringAnnotation("proxy-ssl-secret", ing)
+		klog.V(3).Infof("Secret is parsed from k8s", "proxysslsecret", proxysslsecret)
+		if err != nil {
+			klog.V(3).InfoS("There was an error in retrieving annotation proxy-ssl-secret", "error", err)
+			return &Config{}, err
+		}
+		secretInVault = false
+		_, _, err = k8s.ParseNameNS(proxysslsecret)
+		if err != nil {
+			return &Config{}, ing_errors.NewLocationDenied(err.Error())
 
-	proxyCert, err := p.r.GetAuthCertificate(proxysslsecret)
+		}
+	}
+	proxyCert, err := p.r.GetAuthCertificate(proxysslsecret, secretInVault)
 	if err != nil {
 		e := fmt.Errorf("error obtaining certificate: %w", err)
 		return &Config{}, ing_errors.LocationDenied{Reason: e}

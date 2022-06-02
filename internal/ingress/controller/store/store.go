@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -35,7 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -92,7 +92,7 @@ type Storer interface {
 	// GetAuthCertificate resolves a given secret name into an SSL certificate.
 	// The secret must contain 3 keys named:
 	//   ca.crt: contains the certificate chain used for authentication
-	GetAuthCertificate(string) (*resolver.AuthSSLCert, error)
+	GetAuthCertificate(string, bool) (*resolver.AuthSSLCert, error)
 
 	// GetDefaultBackend returns the default backend configuration
 	GetDefaultBackend() defaults.Backend
@@ -236,7 +236,8 @@ type k8sStore struct {
 	// backendConfigMu protects against simultaneous read/write of backendConfig
 	backendConfigMu *sync.RWMutex
 
-	defaultSSLCertificate string
+	defaultSSLCertificate      string
+	defaultVaultSSLCertificate string
 }
 
 // New creates a new object store to be used in the ingress controller
@@ -244,6 +245,7 @@ func New(
 	namespace string,
 	namespaceSelector labels.Selector,
 	configmap, tcp, udp, defaultSSLCertificate string,
+	defaultVaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	updateCh *channels.RingChannel,
@@ -252,15 +254,16 @@ func New(
 	icConfig *ingressclass.IngressClassConfiguration) Storer {
 
 	store := &k8sStore{
-		informers:             &Informer{},
-		listers:               &Lister{},
-		sslStore:              NewSSLCertTracker(),
-		updateCh:              updateCh,
-		backendConfig:         ngx_config.NewDefault(),
-		syncSecretMu:          &sync.Mutex{},
-		backendConfigMu:       &sync.RWMutex{},
-		secretIngressMap:      NewObjectRefMap(),
-		defaultSSLCertificate: defaultSSLCertificate,
+		informers:                  &Informer{},
+		listers:                    &Lister{},
+		sslStore:                   NewSSLCertTracker(),
+		updateCh:                   updateCh,
+		backendConfig:              ngx_config.NewDefault(),
+		syncSecretMu:               &sync.Mutex{},
+		backendConfigMu:            &sync.RWMutex{},
+		secretIngressMap:           NewObjectRefMap(),
+		defaultSSLCertificate:      defaultSSLCertificate,
+		defaultVaultSSLCertificate: defaultVaultSSLCertificate,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -414,6 +417,10 @@ func New(
 
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
+			klog.V(3).InfoS("Going to check if we have to store de default vault ssl certificate")
+			if store.defaultVaultSSLCertificate != "" {
+				store.syncSecret(store.defaultVaultSSLCertificate, true)
+			}
 			ing, _ := toIngress(obj)
 
 			if !watchedNamespace(ing.Namespace) {
@@ -576,7 +583,7 @@ func New(
 			key := k8s.MetaNamespaceKey(sec)
 
 			if store.defaultSSLCertificate == key {
-				store.syncSecret(store.defaultSSLCertificate)
+				store.syncSecret(store.defaultSSLCertificate, false)
 			}
 
 			// find references in ingresses and update local ssl certs
@@ -589,6 +596,9 @@ func New(
 						continue
 					}
 					store.syncIngress(ing)
+					// TODO not sure update needed
+					// TODO try without store.updateSecretIngressMap(ing)
+					store.updateSecretIngressMap(ing)
 					store.syncSecrets(ing)
 				}
 				updateCh.In() <- Event{
@@ -607,7 +617,7 @@ func New(
 				}
 
 				if store.defaultSSLCertificate == key {
-					store.syncSecret(store.defaultSSLCertificate)
+					store.syncSecret(store.defaultSSLCertificate, false)
 				}
 
 				// find references in ingresses and update local ssl certs
@@ -900,10 +910,14 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 	secretAnnotations := []string{
 		"auth-secret",
 		"auth-tls-secret",
+		"auth-tls-vault",
 		"proxy-ssl-secret",
+		"proxy-ssl-vault",
 		"secure-verify-ca-secret",
+		"tls-cert-vault",
 	}
 	for _, ann := range secretAnnotations {
+		klog.V(3).InfoS("Checking annotation for updating Secrets Ingress Map", "annotation", ann)
 		secrKey, err := objectRefAnnotationNsKey(ann, ing)
 		if err != nil && !errors.IsMissingAnnotations(err) {
 			klog.Errorf("error reading secret reference in annotation %q: %s", ann, err)
@@ -921,9 +935,22 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 // objectRefAnnotationNsKey returns an object reference formatted as a
 // 'namespace/name' key from the given annotation name.
 func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, error) {
+	// We exclude the vault annotations, as they are formatted differently
+	vaultAnnotations := []string{
+		"auth-tls-vault",
+		"proxy-ssl-vault",
+		"tls-cert-vault",
+	}
+
+	klog.V(3).InfoS("Getting the annotation", "annotation", ann)
 	annValue, err := parser.GetStringAnnotation(ann, ing)
 	if err != nil {
 		return "", err
+	}
+	for _, vaultAnnotation := range vaultAnnotations {
+		if ann == vaultAnnotation {
+			return annValue, nil
+		}
 	}
 
 	secrNs, secrName, err := cache.SplitMetaNamespaceKey(annValue)
@@ -940,9 +967,21 @@ func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, er
 // syncSecrets synchronizes data from all Secrets referenced by the given
 // Ingress with the local store and file system.
 func (s *k8sStore) syncSecrets(ing *networkingv1.Ingress) {
-	key := k8s.MetaNamespaceKey(ing)
+	// We get the key from annotation if present or from normal secretname path
+	var key string
+	var usingVault bool
+	validVaultUrl := regexp.MustCompile(`^/(?:[\w-]+)[\w\*\.\/\-\_]+$`)
+	key = k8s.MetaNamespaceKey(ing)
 	for _, secrKey := range s.secretIngressMap.ReferencedBy(key) {
-		s.syncSecret(secrKey)
+		if validVaultUrl.MatchString(secrKey) {
+			klog.V(3).Infof("Secret key seems a vault url, We are using vault secret stored in  vault to sync the secrets in the ingressmap storage", "key", secrKey)
+			usingVault = true
+		} else {
+			klog.V(3).Infof("Using k8s secret defined as %v, syncing the secret stored in the ingressmap", "key", secrKey)
+		}
+
+		s.syncSecret(secrKey, usingVault)
+
 	}
 }
 
@@ -1049,9 +1088,9 @@ func (s *k8sStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
 }
 
 // GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
-func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
+func (s *k8sStore) GetAuthCertificate(name string, authInVault bool) (*resolver.AuthSSLCert, error) {
 	if _, err := s.GetLocalSSLCert(name); err != nil {
-		s.syncSecret(name)
+		s.syncSecret(name, authInVault)
 	}
 
 	cert, err := s.GetLocalSSLCert(name)
@@ -1102,6 +1141,17 @@ func (s *k8sStore) GetDefaultBackend() defaults.Backend {
 	return s.GetBackendConfiguration().Backend
 }
 
+func (s *k8sStore) GetVaultAnnotation(ing *networkingv1.Ingress) (bool, string) {
+	klog.Info("Getting annotation tls-cert-vaul status by checking the annotation field")
+	vaultCertificatePath := annotations.NewAnnotationExtractor(s).Extract(ing).VaultPathTLS
+	if vaultCertificatePath != "" {
+		return true, vaultCertificatePath
+
+	} else {
+		return false, vaultCertificatePath
+	}
+}
+
 func (s *k8sStore) GetBackendConfiguration() ngx_config.Configuration {
 	s.backendConfigMu.RLock()
 	defer s.backendConfigMu.RUnlock()
@@ -1136,7 +1186,7 @@ func (s *k8sStore) Run(stopCh chan struct{}) {
 var runtimeScheme = k8sruntime.NewScheme()
 
 func init() {
-	utilruntime.Must(networkingv1.AddToScheme(runtimeScheme))
+	runtime.Must(networkingv1.AddToScheme(runtimeScheme))
 }
 
 func toIngress(obj interface{}) (*networkingv1.Ingress, bool) {

@@ -37,7 +37,7 @@ type Resolver interface {
 
 	//   ca.crt: contains the certificate chain used for authentication
 	//   ca.crl: contains the revocation list used for authentication
-	GetAuthCertificate(string) (*AuthSSLCert, error)
+	GetAuthCertificate(string, bool) (*AuthSSLCert, error)
 
 	// GetService searches for services containing the namespace and name using a the character /
 	GetService(string) (*apiv1.Service, error)

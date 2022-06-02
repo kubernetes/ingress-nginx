@@ -91,19 +91,29 @@ type authTLS struct {
 // rule used to use a Certificate as authentication method
 func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
+	var secretInVault bool = true
 	config := &Config{}
 
-	tlsauthsecret, err := parser.GetStringAnnotation("auth-tls-secret", ing)
+	tlsauthsecret, err := parser.GetStringAnnotation("auth-tls-vault", ing)
 	if err != nil {
 		return &Config{}, err
 	}
 
-	_, _, err = k8s.ParseNameNS(tlsauthsecret)
-	if err != nil {
-		return &Config{}, ing_errors.NewLocationDenied(err.Error())
+	// If  there is no secret in vault check for K8s secret
+	if tlsauthsecret == "" {
+		tlsauthsecret, err := parser.GetStringAnnotation("auth-tls-secret", ing)
+		if err != nil {
+			return &Config{}, err
+		}
+		secretInVault = false
+
+		_, _, err = k8s.ParseNameNS(tlsauthsecret)
+		if err != nil {
+			return &Config{}, ing_errors.NewLocationDenied(err.Error())
+		}
 	}
 
-	authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
+	authCert, err := a.r.GetAuthCertificate(tlsauthsecret, secretInVault)
 	if err != nil {
 		e := fmt.Errorf("error obtaining certificate: %w", err)
 		return &Config{}, ing_errors.LocationDenied{Reason: e}

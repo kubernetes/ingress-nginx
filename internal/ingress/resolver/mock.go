@@ -42,7 +42,7 @@ func (m Mock) GetSecret(string) (*apiv1.Secret, error) {
 // GetAuthCertificate resolves a given secret name into an SSL certificate.
 // The secret must contain 3 keys named:
 //   ca.crt: contains the certificate chain used for authentication
-func (m Mock) GetAuthCertificate(string) (*AuthSSLCert, error) {
+func (m Mock) GetAuthCertificate(string, bool) (*AuthSSLCert, error) {
 	return nil, nil
 }
 

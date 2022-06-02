@@ -76,7 +76,7 @@ type mockSecret struct {
 }
 
 // GetAuthCertificate from mockSecret mocks the GetAuthCertificate for authTLS
-func (m mockSecret) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
+func (m mockSecret) GetAuthCertificate(name string, authInVault bool) (*resolver.AuthSSLCert, error) {
 	if name != "default/demo-secret" {
 		return nil, errors.Errorf("there is no secret with name %v", name)
 	}
@@ -94,6 +94,10 @@ func TestAnnotations(t *testing.T) {
 	data := map[string]string{}
 
 	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "default/demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "1"
+	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
+	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
 
 	ing.SetAnnotations(data)
 
@@ -108,7 +112,7 @@ func TestAnnotations(t *testing.T) {
 		t.Errorf("expected *Config but got %v", u)
 	}
 
-	secret, err := fakeSecret.GetAuthCertificate("default/demo-secret")
+	secret, err := fakeSecret.GetAuthCertificate("default/demo-secret", false)
 	if err != nil {
 		t.Errorf("unexpected error getting secret %v", err)
 	}
