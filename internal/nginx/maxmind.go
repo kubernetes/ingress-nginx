@@ -21,6 +21,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -46,6 +47,9 @@ var MaxmindEditionFiles []string
 // MaxmindMirror maxmind database mirror url (http://geoip.local)
 var MaxmindMirror = ""
 
+// MaxmindDBExtention maxmind database extention (tar.gz, mmdb)
+var MaxmindDBExtention = "tar.gz"
+
 // MaxmindRetriesCount number of attempts to download the GeoIP DB
 var MaxmindRetriesCount = 1
 
@@ -59,7 +63,7 @@ const (
 	geoIPPath   = "/etc/nginx/geoip"
 	dbExtension = ".mmdb"
 
-	maxmindURL = "https://download.maxmind.com/app/geoip_download?license_key=%v&edition_id=%v&suffix=tar.gz"
+	maxmindURL = "https://download.maxmind.com/app/geoip_download?license_key=%v&edition_id=%v&suffix=%s"
 )
 
 // GeoLite2DBExists checks if the required databases for
@@ -131,20 +135,21 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 	return lastErr
 }
 
-func createURL(mirror, licenseKey, dbName string) string {
+func createURL(mirror, licenseKey, dbName, extension string) string {
 	if len(mirror) > 0 {
-		return fmt.Sprintf("%s/%s.tar.gz", mirror, dbName)
+		return fmt.Sprintf("%s/%s.%s", mirror, dbName, extension)
 	}
-	return fmt.Sprintf(maxmindURL, licenseKey, dbName)
+	return fmt.Sprintf(maxmindURL, licenseKey, dbName, extension)
 }
 
 func downloadDatabase(dbName string) error {
-	url := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
+	mmdbFile := dbName + dbExtension
+
+	url := createURL(MaxmindMirror, MaxmindLicenseKey, dbName, MaxmindDBExtention)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
-
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -156,48 +161,58 @@ func downloadDatabase(dbName string) error {
 		return fmt.Errorf("HTTP status %v", resp.Status)
 	}
 
-	archive, err := gzip.NewReader(resp.Body)
-	if err != nil {
-		return err
-	}
-	defer archive.Close()
-
-	mmdbFile := dbName + dbExtension
-
-	tarReader := tar.NewReader(archive)
-	for true {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		}
-
+	switch MaxmindDBExtention {
+	case "tar.gz":
+		archive, err := gzip.NewReader(resp.Body)
 		if err != nil {
 			return err
 		}
+		defer archive.Close()
 
-		switch header.Typeflag {
-		case tar.TypeReg:
-			if !strings.HasSuffix(header.Name, mmdbFile) {
-				continue
+		tarReader := tar.NewReader(archive)
+		for true {
+			header, err := tarReader.Next()
+			if err == io.EOF {
+				break
 			}
 
-			outFile, err := os.Create(path.Join(geoIPPath, mmdbFile))
 			if err != nil {
 				return err
 			}
 
-			defer outFile.Close()
+			switch header.Typeflag {
+			case tar.TypeReg:
+				if !strings.HasSuffix(header.Name, mmdbFile) {
+					continue
+				}
 
-			if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
-				return err
+				outFile, err := os.Create(path.Join(geoIPPath, mmdbFile))
+				if err != nil {
+					return err
+				}
+
+				defer outFile.Close()
+
+				if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
+					return err
+				}
+
+				return nil
 			}
-
-			return nil
+		}
+	default:
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(path.Join(geoIPPath, mmdbFile), body, 0644)
+		if err != nil {
+			return fmt.Errorf("the URL %v does not contains the database %v",
+				fmt.Sprintf(maxmindURL, "XXXXXXX", dbName, MaxmindDBExtention), mmdbFile)
 		}
 	}
 
-	return fmt.Errorf("the URL %v does not contains the database %v",
-		fmt.Sprintf(maxmindURL, "XXXXXXX", dbName), mmdbFile)
+	return nil
 }
 
 // ValidateGeoLite2DBEditions check provided Maxmind database editions names

@@ -27,6 +27,7 @@ func resetForTesting() {
 	MaxmindEditionIDs = ""
 	MaxmindEditionFiles = []string{}
 	MaxmindMirror = ""
+	MaxmindDBExtention = "tar.gz"
 }
 
 func TestGeoLite2DBExists(t *testing.T) {
@@ -71,5 +72,24 @@ func TestGeoLite2DBExists(t *testing.T) {
 				t.Errorf("config.MaxmindEditionFiles = %v, want %v", *config, tt.wantFiles)
 			}
 		})
+	}
+}
+
+func TestMaxmindURLValidation(t *testing.T) {
+	maxmindLicenseKey := ""
+	maxmindMirror := ""
+
+	validTar := "https://download.maxmind.com/app/geoip_download?license_key=&edition_id=GeoIP-City&suffix=tar.gz"
+	validMMDB := "https://download.maxmind.com/app/geoip_download?license_key=&edition_id=GeoIP-City&suffix=mmdb"
+
+	dbName := "GeoIP-City"
+	url := createURL(maxmindMirror, maxmindLicenseKey, dbName, "tar.gz")
+	if url != validTar {
+		t.Errorf("nginx.MaxmindDowbloadURL = %v, want %v", url, validTar)
+	}
+
+	url = createURL(maxmindMirror, maxmindLicenseKey, dbName, "mmdb")
+	if url != validMMDB {
+		t.Errorf("nginx.MaxmindDowbloadURL = %v, want %v", url, validMMDB)
 	}
 }
