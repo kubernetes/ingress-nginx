@@ -93,7 +93,7 @@ Then create an ingress resource. The following example uses an host that maps to
 
 ```console
 kubectl create ingress demo-localhost --class=nginx \
-  --rule=demo.localdev.me/*=demo:80
+  --rule="demo.localdev.me/*=demo:80"
 ```
 
 Now, forward a local port to the ingress controller:
