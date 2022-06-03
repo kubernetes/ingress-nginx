@@ -225,8 +225,8 @@ end
 
 function _M.set_cache_size(size)
   local cache, err = lrucache.new(size)
-  if err then
-    ngx.log(ngx.ERR, string.format("failed to create the certificate cache: %s", tostring(err)))
+  if not cache then
+    ngx.log(ngx.ERR, string.format("failed to create the certificate cache: %s", err))
   end
   certificate_cache = cache
 end
