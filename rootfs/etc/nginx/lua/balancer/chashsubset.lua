@@ -10,6 +10,8 @@ local tostring = tostring
 local math = math
 local table = table
 local pairs = pairs
+local ck = require("resty.cookie")
+local tonumber = tonumber
 
 local _M = { name = "chashsubset" }
 
@@ -56,11 +58,31 @@ function _M.new(self, backend)
     ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by: ", err)
   end
 
+  local complex_val_extra, err =
+    util.parse_complex_value(backend["upstreamHashByConfig"]["upstream-hash-by-subset-extra-header"])
+  if err ~= nil then
+    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-subset-extra-header: ", err)
+  end
+
+  local cookie_name = backend["upstreamHashByConfig"]["upstream-hash-by-subset-cookie-name"]
+  if cookie_name == nil then
+    cookie_name = "subsetRouteCookie"
+  end
+
+  local cookie_value, err =
+    util.parse_complex_value("$cookie_" .. cookie_name)
+  if err ~= nil then
+    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-subset-cookie-name: ", err)
+  end
+
   local o = {
     instance = resty_chash:new(subset_map),
     hash_by = complex_val,
+    hash_by_extra = complex_val_extra,
     subsets = subsets,
     current_endpoints = backend.endpoints,
+    cookie_name = cookie_name,
+    cookie_value = cookie_value,
     traffic_shaping_policy = backend.trafficShapingPolicy,
     alternative_backends = backend.alternativeBackends,
   }
@@ -75,9 +97,28 @@ end
 
 function _M.balance(self)
   local key = util.generate_var_value(self.hash_by)
+  if key == "" then
+    key = util.generate_var_value(self.hash_by_extra)
+  end
   local subset_id = self.instance:find(key)
   local endpoints = self.subsets[subset_id]
-  local endpoint = endpoints[math.random(#endpoints)]
+  local cookie_value = util.generate_var_value(self.cookie_value)
+
+  local cookie_value_num = tonumber(cookie_value)
+  if cookie_value_num ~= nil  then
+    local endpoint = endpoints[cookie_value_num]
+    return endpoint.address .. ":" .. endpoint.port
+  end
+
+
+  local randomEndpoint = math.random(#endpoints)
+  local endpoint = endpoints[randomEndpoint]
+  local cookie = ck:new()
+  local cookie_data = {
+    key = tostring(self.cookie_name),
+    value = randomEndpoint,
+  }
+  cookie:set(cookie_data)
   return endpoint.address .. ":" .. endpoint.port
 end
 

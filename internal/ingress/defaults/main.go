@@ -132,6 +132,10 @@ type Backend struct {
 	// Default 3
 	UpstreamHashBySubsetSize int `json:"upstream-hash-by-subset-size"`
 
+	// Subset hashing extended with the ability to stick requests to a pod within the subset if needed
+	UpstreamHashBySubsetCookieName  string `json:"upstream-hash-by-subset-cookie-name"`
+	UpstreamHashBySubsetExtraHeader string `json:"upstream-hash-by-subset-extra-header"`
+
 	// Let's us choose a load balancing algorithm per ingress
 	LoadBalancing string `json:"load-balance"`
 
