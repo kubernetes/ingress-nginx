@@ -1,4 +1,4 @@
-FROM k8s.gcr.io/ingress-nginx/e2e-test-runner:v20220524-g8963ed17e@sha256:4fbcbeebd4c24587699b027ad0f0aa7cd9d76b58177a3b50c228bae8141bcf95 AS BASE
+FROM registry.k8s.io/ingress-nginx/e2e-test-runner:v20220524-g8963ed17e@sha256:4fbcbeebd4c24587699b027ad0f0aa7cd9d76b58177a3b50c228bae8141bcf95 AS BASE
 
 FROM alpine:3.14.6
 
