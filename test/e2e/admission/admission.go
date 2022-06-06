@@ -89,6 +89,32 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with the same host and path should return an error")
 	})
 
+	ginkgo.It("should not allow overlaps aliases of host and paths", func() {
+		host := "admission-test"
+		aliasHost := "admission-alias-test"
+
+		firstIngress := framework.NewSingleIngress("first-ingress", "/", host, f.Namespace, framework.EchoService, 80, map[string]string{
+			"nginx.ingress.kubernetes.io/server-alias": aliasHost,
+		})
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+			})
+
+		secondIngress := framework.NewSingleIngress("second-ingress", "/", aliasHost, f.Namespace, framework.EchoService, 80, nil)
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with the same alias host and path should return an error")
+
+		thirdIngress := framework.NewSingleIngress("third-ingress", "/", host+"-other", f.Namespace, framework.EchoService, 80, map[string]string{
+			"nginx.ingress.kubernetes.io/server-alias": host,
+		})
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), thirdIngress, metav1.CreateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with the same alias host and path should return an error")
+	})
+
 	ginkgo.It("should allow overlaps of host and paths with canary annotation", func() {
 		host := "admission-test"
 

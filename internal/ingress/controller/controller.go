@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/alias"
 	"sort"
 	"strconv"
 	"strings"
@@ -318,7 +319,14 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	startTest := time.Now().UnixNano() / 1000000
 	_, servers, pcfg := n.getConfiguration(ings)
 
-	err := checkOverlap(ing, allIngresses, servers)
+	// parse server-alias annotation to check overlap
+	aliases, err := alias.NewParser(n.store).Parse(ing)
+	if err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+		return err
+	}
+
+	err = checkOverlap(ing, aliases.([]string), allIngresses, servers)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
@@ -1762,7 +1770,7 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 	}
 }
 
-func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers []*ingress.Server) error {
+func checkOverlap(ing *networking.Ingress, aliases []string, ingresses []*ingress.Ingress, servers []*ingress.Server) error {
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
 			continue
@@ -1784,6 +1792,9 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 			}
 
 			existingIngresses := ingressForHostPath(rule.Host, path.Path, servers)
+			for _, al := range aliases {
+				existingIngresses = append(existingIngresses, ingressForHostPath(al, path.Path, servers)...)
+			}
 
 			// no previous ingress
 			if len(existingIngresses) == 0 {
@@ -1803,11 +1814,11 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 				isExistingCanaryEnabled, existingAnnotationErr := parser.GetBoolAnnotation("canary", existing)
 
 				if isCanaryEnabled && isExistingCanaryEnabled {
-					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
+					return fmt.Errorf(`host "%s" (or alias) and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
 				}
 
 				if annotationErr == errors.ErrMissingAnnotations && existingAnnotationErr == errors.ErrMissingAnnotations {
-					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
+					return fmt.Errorf(`host "%s" (or alias) and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
 				}
 			}
 
@@ -1824,7 +1835,17 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 
 	for _, server := range servers {
 		if hostname != server.Hostname {
-			continue
+			// check overlap aliases
+			matchAlias := false
+			for _, serverAlias := range server.Aliases {
+				if hostname == serverAlias {
+					matchAlias = true
+					break
+				}
+			}
+			if !matchAlias {
+				continue
+			}
 		}
 
 		for _, location := range server.Locations {
