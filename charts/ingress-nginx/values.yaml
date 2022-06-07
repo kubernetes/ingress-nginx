@@ -890,7 +890,6 @@ defaultBackend:
   # -- Annotations to be added to the defaultBackend Deployment
   ##
   annotations: {}
-  #  keel.sh/pollSchedule: "@every 60m"
 
 ## Enable RBAC as per https://github.com/kubernetes/ingress-nginx/blob/main/docs/deploy/rbac.md and https://github.com/kubernetes/ingress-nginx/issues/266
 rbac:
