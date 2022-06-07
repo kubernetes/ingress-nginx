@@ -10,6 +10,9 @@ metadata:
     {{- end }}
   name: {{ include "ingress-nginx.defaultBackend.fullname" . }}
   namespace: {{ .Release.Namespace }}
+  {{- if .Values.defaultBackend.annotations }}
+  annotations: {{ toYaml .Values.defaultBackend.annotations | nindent 4 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:
