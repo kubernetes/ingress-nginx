@@ -908,8 +908,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
 			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetCookieName = anns.UpstreamHashBy.UpstreamHashBySubsetCookieName
-			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetExtraHeader = anns.UpstreamHashBy.UpstreamHashBySubsetExtraHeader
-			
+
 			upstreams[defBackend].LoadBalancing = anns.LoadBalancing
 			if upstreams[defBackend].LoadBalancing == "" {
 				upstreams[defBackend].LoadBalancing = n.store.GetBackendConfiguration().LoadBalancing
@@ -982,8 +981,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
 				upstreams[name].UpstreamHashBy.UpstreamHashBySubsetCookieName = anns.UpstreamHashBy.UpstreamHashBySubsetCookieName
-				upstreams[name].UpstreamHashBy.UpstreamHashBySubsetExtraHeader = anns.UpstreamHashBy.UpstreamHashBySubsetExtraHeader
-				
+
 				upstreams[name].LoadBalancing = anns.LoadBalancing
 				if upstreams[name].LoadBalancing == "" {
 					upstreams[name].LoadBalancing = n.store.GetBackendConfiguration().LoadBalancing

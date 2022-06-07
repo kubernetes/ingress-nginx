@@ -58,15 +58,9 @@ function _M.new(self, backend)
     ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by: ", err)
   end
 
-  local complex_val_extra, err =
-    util.parse_complex_value(backend["upstreamHashByConfig"]["upstream-hash-by-subset-extra-header"])
-  if err ~= nil then
-    ngx_log(ngx_ERR, "could not parse the value of the upstream-hash-by-subset-extra-header: ", err)
-  end
-
   local cookie_name = backend["upstreamHashByConfig"]["upstream-hash-by-subset-cookie-name"]
   if cookie_name == nil then
-    cookie_name = "subsetRouteCookie"
+    cookie_name = "SubsetCookie"
   end
 
   local cookie_value, err =
@@ -78,7 +72,6 @@ function _M.new(self, backend)
   local o = {
     instance = resty_chash:new(subset_map),
     hash_by = complex_val,
-    hash_by_extra = complex_val_extra,
     subsets = subsets,
     current_endpoints = backend.endpoints,
     cookie_name = cookie_name,
@@ -97,9 +90,6 @@ end
 
 function _M.balance(self)
   local key = util.generate_var_value(self.hash_by)
-  if key == "" then
-    key = util.generate_var_value(self.hash_by_extra)
-  end
   local subset_id = self.instance:find(key)
   local endpoints = self.subsets[subset_id]
   local cookie_value = util.generate_var_value(self.cookie_value)

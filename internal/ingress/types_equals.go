@@ -212,9 +212,6 @@ func (u1 *UpstreamHashByConfig) Equal(u2 *UpstreamHashByConfig) bool {
 	if u1.UpstreamHashBySubsetCookieName != u2.UpstreamHashBySubsetCookieName {
 		return false
 	}
-	if u1.UpstreamHashBySubsetExtraHeader != u2.UpstreamHashBySubsetExtraHeader {
-		return false
-	}
 
 	return true
 }
