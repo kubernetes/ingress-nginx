@@ -412,7 +412,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.service.targetPorts.http | string | `"http"` |  |
 | controller.service.targetPorts.https | string | `"https"` |  |
 | controller.service.type | string | `"LoadBalancer"` |  |
-| controller.shareProcessNamespace | bool | `false` |  |
+| controller.shareProcessNamespace | bool | `false` |  This can be used for example to signal log rotation using `kill -USR1` from a sidecar. |
 | controller.sysctls | object | `{}` | See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls |
 | controller.tcp.annotations | object | `{}` | Annotations to be added to the tcp config configmap |
 | controller.tcp.configMapNamespace | string | `""` | Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE) |
@@ -424,6 +424,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet |
 | controller.watchIngressWithoutClass | bool | `false` | Process Ingress objects without ingressClass annotation/ingressClassName field Overrides value for --watch-ingress-without-class flag of the controller binary Defaults to false |
 | defaultBackend.affinity | object | `{}` |  |
+| defaultBackend.annotations | object | `{}` | Annotations to be added to the defaultBackend Deployment |
 | defaultBackend.autoscaling.annotations | object | `{}` |  |
 | defaultBackend.autoscaling.enabled | bool | `false` |  |
 | defaultBackend.autoscaling.maxReplicas | int | `2` |  |
