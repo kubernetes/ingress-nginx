@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	invalidAliasDirective = regexp.MustCompile(`\s*alias\s*.*;`)
-	invalidRootDirective  = regexp.MustCompile(`\s*root\s*.*;`)
+	invalidAliasDirective = regexp.MustCompile(`(?s)\s*alias\s*.*;`)
+	invalidRootDirective  = regexp.MustCompile(`(?s)\s*root\s*.*;`)
 	invalidEtcDir         = regexp.MustCompile(`/etc/(passwd|shadow|group|nginx|ingress-controller)`)
 	invalidSecretsDir     = regexp.MustCompile(`/var/run/secrets`)
 	invalidByLuaDirective = regexp.MustCompile(`.*_by_lua.*`)

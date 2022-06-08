@@ -150,8 +150,9 @@ http {
 	f.NGINXWithConfigDeployment(SlowEchoService, cfg)
 }
 
-// NGINXWithConfigDeployment creates an NGINX deployment using a configmap containing the nginx.conf configuration
-func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
+// NGINXDeployment creates a new simple NGINX Deployment using NGINX base image
+// and passing the desired configuration
+func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) {
 	cfgMap := map[string]string{
 		"nginx.conf": cfg,
 	}
@@ -213,8 +214,15 @@ func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
 
 	f.EnsureService(service)
 
-	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 1)
-	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
+	if waitendpoint {
+		err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 1)
+		assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
+	}
+}
+
+// NGINXWithConfigDeployment creates an NGINX deployment using a configmap containing the nginx.conf configuration
+func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
+	f.NGINXDeployment(name, cfg, true)
 }
 
 // NewGRPCBinDeployment creates a new deployment of the
