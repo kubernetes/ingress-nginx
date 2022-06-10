@@ -256,7 +256,7 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
     ```console
     $ docker ps | grep ingress-nginx-controller
     CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
-    d9e1d243156a        k8s.gcr.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
+    d9e1d243156a        registry.k8s.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
     ```
 
 3. Exec into the container

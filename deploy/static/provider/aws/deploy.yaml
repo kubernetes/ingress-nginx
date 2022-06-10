@@ -1,1242 +1,621 @@
-#GENERATED FOR K8S 1.20
 apiVersion: v1
-#GENERATED FOR K8S 1.20
 kind: Namespace
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: v1
-#GENERATED FOR K8S 1.20
 automountServiceAccountToken: true
-#GENERATED FOR K8S 1.20
 kind: ServiceAccount
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: v1
-#GENERATED FOR K8S 1.20
 kind: ServiceAccount
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: rbac.authorization.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: Role
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 rules:
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - namespaces
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - configmaps
-#GENERATED FOR K8S 1.20
   - pods
-#GENERATED FOR K8S 1.20
   - secrets
-#GENERATED FOR K8S 1.20
   - endpoints
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - list
-#GENERATED FOR K8S 1.20
   - watch
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - services
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - list
-#GENERATED FOR K8S 1.20
   - watch
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - networking.k8s.io
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - ingresses
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - list
-#GENERATED FOR K8S 1.20
   - watch
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - networking.k8s.io
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - ingresses/status
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - update
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - networking.k8s.io
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - ingressclasses
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - list
-#GENERATED FOR K8S 1.20
   - watch
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resourceNames:
-#GENERATED FOR K8S 1.20
   - ingress-controller-leader
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - configmaps
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - update
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - configmaps
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - create
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - events
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - create
-#GENERATED FOR K8S 1.20
   - patch
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: rbac.authorization.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: Role
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 rules:
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - secrets
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - create
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: rbac.authorization.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: ClusterRole
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
 rules:
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - configmaps
-#GENERATED FOR K8S 1.20
   - endpoints
-#GENERATED FOR K8S 1.20
   - nodes
-#GENERATED FOR K8S 1.20
   - pods
-#GENERATED FOR K8S 1.20
   - secrets
-#GENERATED FOR K8S 1.20
   - namespaces
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - list
-#GENERATED FOR K8S 1.20
   - watch
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - nodes
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - services
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - list
-#GENERATED FOR K8S 1.20
   - watch
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - networking.k8s.io
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - ingresses
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - list
-#GENERATED FOR K8S 1.20
   - watch
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - ""
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - events
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - create
-#GENERATED FOR K8S 1.20
   - patch
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - networking.k8s.io
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - ingresses/status
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - update
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - networking.k8s.io
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - ingressclasses
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - list
-#GENERATED FOR K8S 1.20
   - watch
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: rbac.authorization.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: ClusterRole
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
 rules:
-#GENERATED FOR K8S 1.20
 - apiGroups:
-#GENERATED FOR K8S 1.20
   - admissionregistration.k8s.io
-#GENERATED FOR K8S 1.20
   resources:
-#GENERATED FOR K8S 1.20
   - validatingwebhookconfigurations
-#GENERATED FOR K8S 1.20
   verbs:
-#GENERATED FOR K8S 1.20
   - get
-#GENERATED FOR K8S 1.20
   - update
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: rbac.authorization.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: RoleBinding
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 roleRef:
-#GENERATED FOR K8S 1.20
   apiGroup: rbac.authorization.k8s.io
-#GENERATED FOR K8S 1.20
   kind: Role
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
 subjects:
-#GENERATED FOR K8S 1.20
 - kind: ServiceAccount
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: rbac.authorization.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: RoleBinding
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 roleRef:
-#GENERATED FOR K8S 1.20
   apiGroup: rbac.authorization.k8s.io
-#GENERATED FOR K8S 1.20
   kind: Role
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
 subjects:
-#GENERATED FOR K8S 1.20
 - kind: ServiceAccount
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: rbac.authorization.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: ClusterRoleBinding
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
 roleRef:
-#GENERATED FOR K8S 1.20
   apiGroup: rbac.authorization.k8s.io
-#GENERATED FOR K8S 1.20
   kind: ClusterRole
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
 subjects:
-#GENERATED FOR K8S 1.20
 - kind: ServiceAccount
-#GENERATED FOR K8S 1.20
   name: ingress-nginx
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: rbac.authorization.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: ClusterRoleBinding
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
 roleRef:
-#GENERATED FOR K8S 1.20
   apiGroup: rbac.authorization.k8s.io
-#GENERATED FOR K8S 1.20
   kind: ClusterRole
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
 subjects:
-#GENERATED FOR K8S 1.20
 - kind: ServiceAccount
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: v1
-#GENERATED FOR K8S 1.20
 data:
-#GENERATED FOR K8S 1.20
   allow-snippet-annotations: "true"
-#GENERATED FOR K8S 1.20
 kind: ConfigMap
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-controller
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: v1
-#GENERATED FOR K8S 1.20
 kind: Service
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   annotations:
-#GENERATED FOR K8S 1.20
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-#GENERATED FOR K8S 1.20
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-#GENERATED FOR K8S 1.20
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-controller
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 spec:
-#GENERATED FOR K8S 1.20
   externalTrafficPolicy: Local
-#GENERATED FOR K8S 1.20
   ports:
-#GENERATED FOR K8S 1.20
   - appProtocol: http
-#GENERATED FOR K8S 1.20
     name: http
-#GENERATED FOR K8S 1.20
     port: 80
-#GENERATED FOR K8S 1.20
     protocol: TCP
-#GENERATED FOR K8S 1.20
     targetPort: http
-#GENERATED FOR K8S 1.20
   - appProtocol: https
-#GENERATED FOR K8S 1.20
     name: https
-#GENERATED FOR K8S 1.20
     port: 443
-#GENERATED FOR K8S 1.20
     protocol: TCP
-#GENERATED FOR K8S 1.20
     targetPort: https
-#GENERATED FOR K8S 1.20
   selector:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
   type: LoadBalancer
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: v1
-#GENERATED FOR K8S 1.20
 kind: Service
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-controller-admission
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 spec:
-#GENERATED FOR K8S 1.20
   ports:
-#GENERATED FOR K8S 1.20
   - appProtocol: https
-#GENERATED FOR K8S 1.20
     name: https-webhook
-#GENERATED FOR K8S 1.20
     port: 443
-#GENERATED FOR K8S 1.20
     targetPort: webhook
-#GENERATED FOR K8S 1.20
   selector:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
   type: ClusterIP
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: apps/v1
-#GENERATED FOR K8S 1.20
 kind: Deployment
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-controller
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 spec:
-#GENERATED FOR K8S 1.20
   minReadySeconds: 0
-#GENERATED FOR K8S 1.20
   revisionHistoryLimit: 10
-#GENERATED FOR K8S 1.20
   selector:
-#GENERATED FOR K8S 1.20
     matchLabels:
-#GENERATED FOR K8S 1.20
       app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
       app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
       app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
   template:
-#GENERATED FOR K8S 1.20
     metadata:
-#GENERATED FOR K8S 1.20
       labels:
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     spec:
-#GENERATED FOR K8S 1.20
       containers:
-#GENERATED FOR K8S 1.20
       - args:
-#GENERATED FOR K8S 1.20
         - /nginx-ingress-controller
-#GENERATED FOR K8S 1.20
         - --publish-service=$(POD_NAMESPACE)/ingress-nginx-controller
-#GENERATED FOR K8S 1.20
         - --election-id=ingress-controller-leader
-#GENERATED FOR K8S 1.20
         - --controller-class=k8s.io/ingress-nginx
-#GENERATED FOR K8S 1.20
         - --ingress-class=nginx
-#GENERATED FOR K8S 1.20
         - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
-#GENERATED FOR K8S 1.20
         - --validating-webhook=:8443
-#GENERATED FOR K8S 1.20
         - --validating-webhook-certificate=/usr/local/certificates/cert
-#GENERATED FOR K8S 1.20
         - --validating-webhook-key=/usr/local/certificates/key
-#GENERATED FOR K8S 1.20
         env:
-#GENERATED FOR K8S 1.20
         - name: POD_NAME
-#GENERATED FOR K8S 1.20
           valueFrom:
-#GENERATED FOR K8S 1.20
             fieldRef:
-#GENERATED FOR K8S 1.20
               fieldPath: metadata.name
-#GENERATED FOR K8S 1.20
         - name: POD_NAMESPACE
-#GENERATED FOR K8S 1.20
           valueFrom:
-#GENERATED FOR K8S 1.20
             fieldRef:
-#GENERATED FOR K8S 1.20
               fieldPath: metadata.namespace
-#GENERATED FOR K8S 1.20
         - name: LD_PRELOAD
-#GENERATED FOR K8S 1.20
           value: /usr/local/lib/libmimalloc.so
-#GENERATED FOR K8S 1.20
-        image: k8s.gcr.io/ingress-nginx/controller:v1.2.1@sha256:5516d103a9c2ecc4f026efbd4b40662ce22dc1f824fb129ed121460aaa5c47f8
-#GENERATED FOR K8S 1.20
+        image: registry.k8s.io/ingress-nginx/controller:v1.2.1@sha256:5516d103a9c2ecc4f026efbd4b40662ce22dc1f824fb129ed121460aaa5c47f8
         imagePullPolicy: IfNotPresent
-#GENERATED FOR K8S 1.20
         lifecycle:
-#GENERATED FOR K8S 1.20
           preStop:
-#GENERATED FOR K8S 1.20
             exec:
-#GENERATED FOR K8S 1.20
               command:
-#GENERATED FOR K8S 1.20
               - /wait-shutdown
-#GENERATED FOR K8S 1.20
         livenessProbe:
-#GENERATED FOR K8S 1.20
           failureThreshold: 5
-#GENERATED FOR K8S 1.20
           httpGet:
-#GENERATED FOR K8S 1.20
             path: /healthz
-#GENERATED FOR K8S 1.20
             port: 10254
-#GENERATED FOR K8S 1.20
             scheme: HTTP
-#GENERATED FOR K8S 1.20
           initialDelaySeconds: 10
-#GENERATED FOR K8S 1.20
           periodSeconds: 10
-#GENERATED FOR K8S 1.20
           successThreshold: 1
-#GENERATED FOR K8S 1.20
           timeoutSeconds: 1
-#GENERATED FOR K8S 1.20
         name: controller
-#GENERATED FOR K8S 1.20
         ports:
-#GENERATED FOR K8S 1.20
         - containerPort: 80
-#GENERATED FOR K8S 1.20
           name: http
-#GENERATED FOR K8S 1.20
           protocol: TCP
-#GENERATED FOR K8S 1.20
         - containerPort: 443
-#GENERATED FOR K8S 1.20
           name: https
-#GENERATED FOR K8S 1.20
           protocol: TCP
-#GENERATED FOR K8S 1.20
         - containerPort: 8443
-#GENERATED FOR K8S 1.20
           name: webhook
-#GENERATED FOR K8S 1.20
           protocol: TCP
-#GENERATED FOR K8S 1.20
         readinessProbe:
-#GENERATED FOR K8S 1.20
           failureThreshold: 3
-#GENERATED FOR K8S 1.20
           httpGet:
-#GENERATED FOR K8S 1.20
             path: /healthz
-#GENERATED FOR K8S 1.20
             port: 10254
-#GENERATED FOR K8S 1.20
             scheme: HTTP
-#GENERATED FOR K8S 1.20
           initialDelaySeconds: 10
-#GENERATED FOR K8S 1.20
           periodSeconds: 10
-#GENERATED FOR K8S 1.20
           successThreshold: 1
-#GENERATED FOR K8S 1.20
           timeoutSeconds: 1
-#GENERATED FOR K8S 1.20
         resources:
-#GENERATED FOR K8S 1.20
           requests:
-#GENERATED FOR K8S 1.20
             cpu: 100m
-#GENERATED FOR K8S 1.20
             memory: 90Mi
-#GENERATED FOR K8S 1.20
         securityContext:
-#GENERATED FOR K8S 1.20
           allowPrivilegeEscalation: true
-#GENERATED FOR K8S 1.20
           capabilities:
-#GENERATED FOR K8S 1.20
             add:
-#GENERATED FOR K8S 1.20
             - NET_BIND_SERVICE
-#GENERATED FOR K8S 1.20
             drop:
-#GENERATED FOR K8S 1.20
             - ALL
-#GENERATED FOR K8S 1.20
           runAsUser: 101
-#GENERATED FOR K8S 1.20
         volumeMounts:
-#GENERATED FOR K8S 1.20
         - mountPath: /usr/local/certificates/
-#GENERATED FOR K8S 1.20
           name: webhook-cert
-#GENERATED FOR K8S 1.20
           readOnly: true
-#GENERATED FOR K8S 1.20
       dnsPolicy: ClusterFirst
-#GENERATED FOR K8S 1.20
       nodeSelector:
-#GENERATED FOR K8S 1.20
         kubernetes.io/os: linux
-#GENERATED FOR K8S 1.20
       serviceAccountName: ingress-nginx
-#GENERATED FOR K8S 1.20
       terminationGracePeriodSeconds: 300
-#GENERATED FOR K8S 1.20
       volumes:
-#GENERATED FOR K8S 1.20
       - name: webhook-cert
-#GENERATED FOR K8S 1.20
         secret:
-#GENERATED FOR K8S 1.20
           secretName: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: batch/v1
-#GENERATED FOR K8S 1.20
 kind: Job
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission-create
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 spec:
-#GENERATED FOR K8S 1.20
   template:
-#GENERATED FOR K8S 1.20
     metadata:
-#GENERATED FOR K8S 1.20
       labels:
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
       name: ingress-nginx-admission-create
-#GENERATED FOR K8S 1.20
     spec:
-#GENERATED FOR K8S 1.20
       containers:
-#GENERATED FOR K8S 1.20
       - args:
-#GENERATED FOR K8S 1.20
         - create
-#GENERATED FOR K8S 1.20
         - --host=ingress-nginx-controller-admission,ingress-nginx-controller-admission.$(POD_NAMESPACE).svc
-#GENERATED FOR K8S 1.20
         - --namespace=$(POD_NAMESPACE)
-#GENERATED FOR K8S 1.20
         - --secret-name=ingress-nginx-admission
-#GENERATED FOR K8S 1.20
         env:
-#GENERATED FOR K8S 1.20
         - name: POD_NAMESPACE
-#GENERATED FOR K8S 1.20
           valueFrom:
-#GENERATED FOR K8S 1.20
             fieldRef:
-#GENERATED FOR K8S 1.20
               fieldPath: metadata.namespace
-#GENERATED FOR K8S 1.20
-        image: k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1@sha256:64d8c73dca984af206adf9d6d7e46aa550362b1d7a01f3a0a91b20cc67868660
-#GENERATED FOR K8S 1.20
+        image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.1.1@sha256:64d8c73dca984af206adf9d6d7e46aa550362b1d7a01f3a0a91b20cc67868660
         imagePullPolicy: IfNotPresent
-#GENERATED FOR K8S 1.20
         name: create
-#GENERATED FOR K8S 1.20
         securityContext:
-#GENERATED FOR K8S 1.20
           allowPrivilegeEscalation: false
-#GENERATED FOR K8S 1.20
       nodeSelector:
-#GENERATED FOR K8S 1.20
         kubernetes.io/os: linux
-#GENERATED FOR K8S 1.20
       restartPolicy: OnFailure
-#GENERATED FOR K8S 1.20
       securityContext:
-#GENERATED FOR K8S 1.20
         fsGroup: 2000
-#GENERATED FOR K8S 1.20
         runAsNonRoot: true
-#GENERATED FOR K8S 1.20
         runAsUser: 2000
-#GENERATED FOR K8S 1.20
       serviceAccountName: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: batch/v1
-#GENERATED FOR K8S 1.20
 kind: Job
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission-patch
-#GENERATED FOR K8S 1.20
   namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
 spec:
-#GENERATED FOR K8S 1.20
   template:
-#GENERATED FOR K8S 1.20
     metadata:
-#GENERATED FOR K8S 1.20
       labels:
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
         app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
       name: ingress-nginx-admission-patch
-#GENERATED FOR K8S 1.20
     spec:
-#GENERATED FOR K8S 1.20
       containers:
-#GENERATED FOR K8S 1.20
       - args:
-#GENERATED FOR K8S 1.20
         - patch
-#GENERATED FOR K8S 1.20
         - --webhook-name=ingress-nginx-admission
-#GENERATED FOR K8S 1.20
         - --namespace=$(POD_NAMESPACE)
-#GENERATED FOR K8S 1.20
         - --patch-mutating=false
-#GENERATED FOR K8S 1.20
         - --secret-name=ingress-nginx-admission
-#GENERATED FOR K8S 1.20
         - --patch-failure-policy=Fail
-#GENERATED FOR K8S 1.20
         env:
-#GENERATED FOR K8S 1.20
         - name: POD_NAMESPACE
-#GENERATED FOR K8S 1.20
           valueFrom:
-#GENERATED FOR K8S 1.20
             fieldRef:
-#GENERATED FOR K8S 1.20
               fieldPath: metadata.namespace
-#GENERATED FOR K8S 1.20
-        image: k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1@sha256:64d8c73dca984af206adf9d6d7e46aa550362b1d7a01f3a0a91b20cc67868660
-#GENERATED FOR K8S 1.20
+        image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.1.1@sha256:64d8c73dca984af206adf9d6d7e46aa550362b1d7a01f3a0a91b20cc67868660
         imagePullPolicy: IfNotPresent
-#GENERATED FOR K8S 1.20
         name: patch
-#GENERATED FOR K8S 1.20
         securityContext:
-#GENERATED FOR K8S 1.20
           allowPrivilegeEscalation: false
-#GENERATED FOR K8S 1.20
       nodeSelector:
-#GENERATED FOR K8S 1.20
         kubernetes.io/os: linux
-#GENERATED FOR K8S 1.20
       restartPolicy: OnFailure
-#GENERATED FOR K8S 1.20
       securityContext:
-#GENERATED FOR K8S 1.20
         fsGroup: 2000
-#GENERATED FOR K8S 1.20
         runAsNonRoot: true
-#GENERATED FOR K8S 1.20
         runAsUser: 2000
-#GENERATED FOR K8S 1.20
       serviceAccountName: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: networking.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: IngressClass
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: controller
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: nginx
-#GENERATED FOR K8S 1.20
 spec:
-#GENERATED FOR K8S 1.20
   controller: k8s.io/ingress-nginx
-#GENERATED FOR K8S 1.20
 ---
-#GENERATED FOR K8S 1.20
 apiVersion: admissionregistration.k8s.io/v1
-#GENERATED FOR K8S 1.20
 kind: ValidatingWebhookConfiguration
-#GENERATED FOR K8S 1.20
 metadata:
-#GENERATED FOR K8S 1.20
   labels:
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/component: admission-webhook
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/instance: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/name: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/part-of: ingress-nginx
-#GENERATED FOR K8S 1.20
     app.kubernetes.io/version: 1.2.1
-#GENERATED FOR K8S 1.20
   name: ingress-nginx-admission
-#GENERATED FOR K8S 1.20
 webhooks:
-#GENERATED FOR K8S 1.20
 - admissionReviewVersions:
-#GENERATED FOR K8S 1.20
   - v1
-#GENERATED FOR K8S 1.20
   clientConfig:
-#GENERATED FOR K8S 1.20
     service:
-#GENERATED FOR K8S 1.20
       name: ingress-nginx-controller-admission
-#GENERATED FOR K8S 1.20
       namespace: ingress-nginx
-#GENERATED FOR K8S 1.20
       path: /networking/v1/ingresses
-#GENERATED FOR K8S 1.20
   failurePolicy: Fail
-#GENERATED FOR K8S 1.20
   matchPolicy: Equivalent
-#GENERATED FOR K8S 1.20
   name: validate.nginx.ingress.kubernetes.io
-#GENERATED FOR K8S 1.20
   rules:
-#GENERATED FOR K8S 1.20
   - apiGroups:
-#GENERATED FOR K8S 1.20
     - networking.k8s.io
-#GENERATED FOR K8S 1.20
     apiVersions:
-#GENERATED FOR K8S 1.20
     - v1
-#GENERATED FOR K8S 1.20
     operations:
-#GENERATED FOR K8S 1.20
     - CREATE
-#GENERATED FOR K8S 1.20
     - UPDATE
-#GENERATED FOR K8S 1.20
     resources:
-#GENERATED FOR K8S 1.20
     - ingresses
-#GENERATED FOR K8S 1.20
   sideEffects: None
