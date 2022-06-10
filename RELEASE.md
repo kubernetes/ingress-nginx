@@ -109,11 +109,11 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - Create a branch in your fork, named as the issue number for this release
 
-- In the related branch, of your fork, edit the file /k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml.
+- In the related branch, of your fork, edit the file /registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml.
 
 - For making it easier, you can edit your branch directly in the browser. But be careful about making any mistake.
 
-- Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
+- Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
 
 - Save and commit
 
@@ -261,7 +261,7 @@ Promoting the images basically means that images, that were pushed to staging co
   - the "Description"
   - the "PRs list"
 - Look at the previous content to understand what the 3 components look like.
-- You can easily get the "Image" from a yaml manifest but be sure to look at a manifest in your git clone now and not the upstream on github. This is because, if you are following this documentation, then you generated manifests with new updated digest for the image, in step 4e above. You also most likely promoted the new image in a step above. Look at the previous release section in Changelog.md. The format looks like `k8s.gcr.io/ingress-nginx/controller:.......`. One example of a yaml file to look at is /deploy/static/provider/baremetal/deploy.yaml (in your git clone branch and not on the upstream).
+- You can easily get the "Image" from a yaml manifest but be sure to look at a manifest in your git clone now and not the upstream on github. This is because, if you are following this documentation, then you generated manifests with new updated digest for the image, in step 4e above. You also most likely promoted the new image in a step above. Look at the previous release section in Changelog.md. The format looks like `registry.k8s.io/ingress-nginx/controller:.......`. One example of a yaml file to look at is /deploy/static/provider/baremetal/deploy.yaml (in your git clone branch and not on the upstream).
 - Next, you need to have a good overview of the changes introduced in this release and based on that you write a description. Look at previous descriptions. Ask the ingress-nginx-dev channel if required.
 - And then you need to add a list of the PRs merged, since the previous release.
 - One process to generate this list of PRs is already described above in step 4c. So if you are following this document, then you have done this already and very likely have retained the file containing the list of PRs, in the format that is needed.

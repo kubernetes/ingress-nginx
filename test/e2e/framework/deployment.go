@@ -38,7 +38,7 @@ const SlowEchoService = "slow-echo"
 const HTTPBinService = "httpbin"
 
 // NginxBaseImage use for testing
-const NginxBaseImage = "k8s.gcr.io/ingress-nginx/nginx:cd6f88af3f976a180ed966dadf273473ae768dfa@sha256:18f91105e4099941d2efee71a8ec52c6ef7702d5f7e8214b7cb5f25cc10a0b41"
+const NginxBaseImage = "registry.k8s.io/ingress-nginx/nginx:cd6f88af3f976a180ed966dadf273473ae768dfa@sha256:18f91105e4099941d2efee71a8ec52c6ef7702d5f7e8214b7cb5f25cc10a0b41"
 
 type deploymentOptions struct {
 	namespace string
@@ -78,7 +78,7 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 		o(options)
 	}
 
-	deployment := newDeployment(options.name, options.namespace, "k8s.gcr.io/ingress-nginx/e2e-test-echo@sha256:131ece0637b29231470cfaa04690c2966a2e0b147d3c9df080a0857b78982410", 80, int32(options.replicas),
+	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:131ece0637b29231470cfaa04690c2966a2e0b147d3c9df080a0857b78982410", 80, int32(options.replicas),
 		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
@@ -385,7 +385,7 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
 func (f *Framework) NewHttpbinDeployment() {
-	f.NewDeployment(HTTPBinService, "k8s.gcr.io/ingress-nginx/e2e-test-httpbin@sha256:c6372ef57a775b95f18e19d4c735a9819f2e7bb4641e5e3f27287d831dfeb7e8", 80, 1)
+	f.NewDeployment(HTTPBinService, "registry.k8s.io/ingress-nginx/e2e-test-httpbin@sha256:c6372ef57a775b95f18e19d4c735a9819f2e7bb4641e5e3f27287d831dfeb7e8", 80, 1)
 }
 
 // NewDeployment creates a new deployment in a particular namespace.
