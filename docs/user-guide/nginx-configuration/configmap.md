@@ -211,6 +211,7 @@ The following table shows a configuration option's name, type, and the default v
 |[global-rate-limit-status-code](#global-rate-limit)|int|429|
 |[service-upstream](#service-upstream)|bool|"false"|
 |[ssl-reject-handshake](#ssl-reject-handshake)|bool|"false"|
+|[debug-connections](#debug-connections)|[]string|"127.0.0.1,1.1.1.1/24"|
 
 ## add-headers
 
@@ -1300,3 +1301,10 @@ _**default:**_ "false"
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_reject_handshake](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_reject_handshake)
+
+## debug-connections
+Enables debugging log for selected client connections.
+_**default:**_ ""
+
+_References:_
+[http://nginx.org/en/docs/ngx_core_module.html#debug_connection](http://nginx.org/en/docs/ngx_core_module.html#debug_connection)
