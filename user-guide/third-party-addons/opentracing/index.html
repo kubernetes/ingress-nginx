@@ -99,7 +99,7 @@ metadata:
 </code></pre></div> <p>In the Zipkin interface we can see the details: <img alt="zipkin screenshot" src=../../../images/zipkin-demo.png title="zipkin collector screenshot"></p> <h3 id=jaeger>Jaeger<a class=headerlink href=#jaeger title="Permanent link"> ¶</a></h3> <ol> <li> <p>Enable Ingress addon in Minikube: <div class=highlight><pre><span></span><code>$ minikube addons enable ingress
 </code></pre></div></p> </li> <li> <p>Add Minikube IP to /etc/hosts: <div class=highlight><pre><span></span><code>$ echo &quot;$(minikube ip) example.com&quot; | sudo tee -a /etc/hosts
 </code></pre></div></p> </li> <li> <p>Apply a basic Service and Ingress Resource: <div class=highlight><pre><span></span><code># Create Echoheaders Deployment
-$ kubectl run echoheaders --image=k8s.gcr.io/echoserver:1.4 --replicas=1 --port=8080
+$ kubectl run echoheaders --image=registry.k8s.io/echoserver:1.4 --replicas=1 --port=8080
 
 # Expose as a Cluster-IP
 $ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
