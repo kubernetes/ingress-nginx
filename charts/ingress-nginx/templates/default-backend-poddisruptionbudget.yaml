@@ -1,6 +1,6 @@
 {{- if .Values.defaultBackend.enabled -}}
 {{- if or (gt (.Values.defaultBackend.replicaCount | int) 1) (gt (.Values.defaultBackend.autoscaling.minReplicas | int) 1) }}
-apiVersion: {{ ternary "policy/v1" "policy/v1beta1" (semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version) }}
+apiVersion: {{ ternary "policy/v1" "policy/v1beta1" (semverCompare ">=1.16.0-0" .Capabilities.KubeVersion.Version) }}
 kind: PodDisruptionBudget
 metadata:
   labels:

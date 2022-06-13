@@ -1,5 +1,5 @@
 {{- if or (and .Values.controller.autoscaling.enabled (gt (.Values.controller.autoscaling.minReplicas | int) 1)) (and (not .Values.controller.autoscaling.enabled) (gt (.Values.controller.replicaCount | int) 1)) }}
-apiVersion: policy/v1beta1
+apiVersion: {{ ternary "policy/v1" "policy/v1beta1" (semverCompare ">=1.16.0-0" .Capabilities.KubeVersion.Version) }}
 kind: PodDisruptionBudget
 metadata:
   labels:
