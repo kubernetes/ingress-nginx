@@ -1,5 +1,9 @@
 {{- if or (and .Values.controller.autoscaling.enabled (gt (.Values.controller.autoscaling.minReplicas | int) 1)) (and (not .Values.controller.autoscaling.enabled) (gt (.Values.controller.replicaCount | int) 1)) }}
-apiVersion: {{ ternary "policy/v1" "policy/v1beta1" (semverCompare ">=1.19.0-0" .Capabilities.KubeVersion.Version) }}
+  {{- if semverCompare "<1.21.0-0" ( .Capabilities.KubeVersion.Version ) }}
+apiVersion: policy/v1beta1
+  {{- else }}
+apiVersion: policy/v1
+  {{- end }}
 kind: PodDisruptionBudget
 metadata:
   labels:
