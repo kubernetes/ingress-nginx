@@ -44,6 +44,7 @@ LABEL build_id="${BUILD_ID}"
 ENV LUA_PATH="/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/lib/lua/?.lua;;"
 ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/modules_mount/etc/nginx/modules/modules
 
 RUN apk update \
   && apk upgrade \
@@ -100,7 +101,14 @@ RUN  ln -sf /chroot/etc/nginx /etc/nginx \
   && touch /chroot/var/log/nginx/access.log \
   && chown www-data:www-data /chroot/var/log/nginx/access.log \
   && echo "" > /chroot/etc/resolv.conf \
-  && chown -R www-data.www-data /chroot/var/log/nginx /chroot/etc/resolv.conf
+  && chown -R www-data.www-data /chroot/var/log/nginx /chroot/etc/resolv.conf \
+  && mknod -m 0666 /chroot/dev/null c 1 3 \
+  && mknod -m 0666 /chroot/dev/random c 1 8 \
+  && mknod -m 0666 /chroot/dev/urandom c 1 9 \
+  && mknod -m 0666 /chroot/dev/full c 1 7 \
+  && mknod -m 0666 /chroot/dev/ptmx c 5 2 \
+  && mknod -m 0666 /chroot/dev/zero c 1 5 \
+  && mknod -m 0666 /chroot/dev/tty c 5 0
 
 USER www-data
 

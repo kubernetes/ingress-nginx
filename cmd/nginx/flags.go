@@ -163,6 +163,9 @@ Requires the update-status parameter.`)
 			`Enables the collection of NGINX metrics`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host`)
+		reportStatusClasses = flags.Bool("report-status-classes", false,
+			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics`)
+
 		timeBuckets         = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime")
 		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength")
 		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent")
@@ -313,6 +316,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		EnableMetrics:               *enableMetrics,
 		MetricsPerHost:              *metricsPerHost,
 		MetricsBuckets:              histogramBuckets,
+		ReportStatusClasses:         *reportStatusClasses,
 		MonitorMaxBatchSize:         *monitorMaxBatchSize,
 		DisableServiceExternalName:  *disableServiceExternalName,
 		EnableSSLPassthrough:        *enableSSLPassthrough,
