@@ -4,7 +4,7 @@
 
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
-# nameOverride:
+ nameOverride: ingress-nginx-backup
 # fullnameOverride:
 
 ## Labels to apply to all resources
@@ -108,7 +108,7 @@ controller:
     # -- Name of the ingressClass
     name: nginx
     # -- Is this ingressClass enabled or not
-    enabled: false
+    enabled: true
     # -- Is this the default ingressClass for the cluster
     default: false
     # -- Controller-value of the controller that is processing this ingressClass
@@ -440,7 +440,7 @@ controller:
     configMapKey: ""
 
   service:
-    enabled: false
+    enabled: true
 
     # -- If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were
     # using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
