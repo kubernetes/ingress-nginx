@@ -4,7 +4,7 @@
 
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
- nameOverride: ingress-nginx-backup
+# nameOverride: ingress-nginx-backup
 # fullnameOverride:
 
 ## Labels to apply to all resources
