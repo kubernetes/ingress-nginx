@@ -64,6 +64,7 @@ The following table shows a configuration option's name, type, and the default v
 |[keep-alive](#keep-alive)|int|75|
 |[keep-alive-requests](#keep-alive-requests)|int|100|
 |[large-client-header-buffers](#large-client-header-buffers)|string|"4 8k"|
+|[log-format-escape-none](#log-format-escape-none)|bool|"false"|
 |[log-format-escape-json](#log-format-escape-json)|bool|"false"|
 |[log-format-upstream](#log-format-upstream)|string|`$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`|
 |[log-format-stream](#log-format-stream)|string|`[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
@@ -467,6 +468,10 @@ Sets the maximum number and size of buffers used for reading large client reques
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers](https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers)
+
+## log-format-escape-none
+
+Sets if the escape parameter is disabled entirely for character escaping in variables ("true") or controlled by log-format-escape-json ("false") Sets the nginx [log format](https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).
 
 ## log-format-escape-json
 
