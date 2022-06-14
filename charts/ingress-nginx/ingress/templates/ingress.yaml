@@ -1,9 +1,9 @@
 {{- if .Values.enabled -}}
-{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+  {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1
+  {{- else -}}
 apiVersion: networking.k8s.io/v1beta1
-{{- else -}}
-apiVersion: extensions/v1beta1
-{{- end }}
+  {{- end }}
 kind: Ingress
 metadata:
   name: {{ include "ingress.name" . }}
@@ -46,14 +46,19 @@ spec:
       paths:
         {{- if eq .Values.type "alb" }}
         - path: /*
-          backend:
-            serviceName: ssl-redirect
-            servicePort: use-annotation
+          defaultBackend:
+            service:
+              name: ssl-redirect
+              port:
+                number: use-annotation
         - path: {{ .Values.alb.path }}
         {{- else if eq .Values.type "nginx"}}
         - path: {{ .Values.nginx.path }}
         {{- end }}
-          backend:
-            serviceName: {{ template "ingress.service.name" . }}
-            servicePort: {{ .Values.service.port }}
+        defaultBackend:
+          service:
+            name: {{ template "ingress.service.name" . }}
+            service:
+              port:
+                number: {{ .Values.service.port }}
 {{- end }}
