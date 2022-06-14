@@ -88,8 +88,22 @@ func NewDefaultFramework(baseName string) *Framework {
 	return f
 }
 
-// BeforeEach gets a client and makes a namespace.
-func (f *Framework) BeforeEach() {
+// NewSimpleFramework makes a new framework that allows the usage of a namespace
+// for arbitraty tests.
+func NewSimpleFramework(baseName string) *Framework {
+	defer ginkgo.GinkgoRecover()
+
+	f := &Framework{
+		BaseName: baseName,
+	}
+
+	ginkgo.BeforeEach(f.CreateEnvironment)
+	ginkgo.AfterEach(f.DestroyEnvironment)
+
+	return f
+}
+
+func (f *Framework) CreateEnvironment() {
 	var err error
 
 	if f.KubeClientSet == nil {
@@ -107,6 +121,21 @@ func (f *Framework) BeforeEach() {
 
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating namespace")
+}
+
+func (f *Framework) DestroyEnvironment() {
+	go func() {
+		defer ginkgo.GinkgoRecover()
+		err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
+		assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
+	}()
+}
+
+// BeforeEach gets a client and makes a namespace.
+func (f *Framework) BeforeEach() {
+	var err error
+
+	f.CreateEnvironment()
 
 	f.IngressClass, err = CreateIngressClass(f.Namespace, f.KubeClientSet)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating IngressClass")
@@ -122,13 +151,7 @@ func (f *Framework) BeforeEach() {
 
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
-	defer func(kubeClient kubernetes.Interface, ns string) {
-		go func() {
-			defer ginkgo.GinkgoRecover()
-			err := DeleteKubeNamespace(kubeClient, ns)
-			assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
-		}()
-	}(f.KubeClientSet, f.Namespace)
+	defer f.DestroyEnvironment()
 
 	defer func(kubeClient kubernetes.Interface, ingressclass string) {
 		go func() {
@@ -425,26 +448,35 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 	assert.Nil(ginkgo.GinkgoT(), err, "while waiting for ingress nginx pod to come up again")
 }
 
+// HTTPDumbTestClient returns a new httpexpect client without BaseURL.
+func (f *Framework) HTTPDumbTestClient() *httpexpect.Expect {
+	return f.newTestClient(nil, false)
+}
+
 // HTTPTestClient returns a new httpexpect client for end-to-end HTTP testing.
 func (f *Framework) HTTPTestClient() *httpexpect.Expect {
-	return f.newTestClient(nil)
+	return f.newTestClient(nil, true)
 }
 
 // HTTPTestClientWithTLSConfig returns a new httpexpect client for end-to-end
 // HTTP testing with a custom TLS configuration.
 func (f *Framework) HTTPTestClientWithTLSConfig(config *tls.Config) *httpexpect.Expect {
-	return f.newTestClient(config)
+	return f.newTestClient(config, true)
 }
 
-func (f *Framework) newTestClient(config *tls.Config) *httpexpect.Expect {
+func (f *Framework) newTestClient(config *tls.Config, setIngressURL bool) *httpexpect.Expect {
 	if config == nil {
 		config = &tls.Config{
 			InsecureSkipVerify: true,
 		}
 	}
+	var baseURL string
+	if setIngressURL {
+		baseURL = f.GetURL(HTTP)
+	}
 
 	return httpexpect.WithConfig(httpexpect.Config{
-		BaseURL: f.GetURL(HTTP),
+		BaseURL: baseURL,
 		Client: &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: config,
@@ -483,6 +515,19 @@ func (f *Framework) WaitForNginxListening(port int) {
 		return true, nil
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress controller pod listening on port 80")
+}
+
+// WaitForPod waits for a specific Pod to be ready, using a label selector
+func (f *Framework) WaitForPod(selector string, timeout time.Duration, shouldFail bool) {
+	err := waitForPodsReady(f.KubeClientSet, timeout, 1, f.Namespace, metav1.ListOptions{
+		LabelSelector: selector,
+	})
+
+	if shouldFail {
+		assert.NotNil(ginkgo.GinkgoT(), err, "waiting for pods to be ready")
+	} else {
+		assert.Nil(ginkgo.GinkgoT(), err, "waiting for pods to be ready")
+	}
 }
 
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
