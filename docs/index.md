@@ -13,7 +13,7 @@ See [Deployment](./deploy/) for a whirlwind tour that will get you started.
 
 # FAQ - Migration to apiVersion `networking.k8s.io/v1`
 
-If you are using Ingress objects in your cluster (running Kubernetes older than v1.22), and you plan to upgrade to Kubernetess v1.22, this section is relevant to you.
+If you are using Ingress objects in your cluster (running Kubernetes older than v1.22), and you plan to upgrade to Kubernetes v1.22, this section is relevant to you.
 
 - Please read this [official blog on deprecated Ingress API versions](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/) 
 
