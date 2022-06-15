@@ -136,7 +136,7 @@ jobs:
           go-version: '1.18.2'
 
       - name: cache
-        uses: actions/download-artifact@f023be2c48cc18debc3bacd34cb396e0295e2869 # v2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2
         with:
           name: docker.tar.gz
 
@@ -212,7 +212,7 @@ jobs:
         uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
       - name: cache
-        uses: actions/download-artifact@f023be2c48cc18debc3bacd34cb396e0295e2869 # v2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2
         with:
           name: docker.tar.gz
 
@@ -270,7 +270,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: cache
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
         with:
           name: docker.tar.gz
 
