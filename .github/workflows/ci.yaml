@@ -77,7 +77,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: crazy-max/ghaction-docker-buildx@e01797ad2ea9a981005ad58c99afa8d842e3d3eb # v1
+        uses: crazy-max/ghaction-docker-buildx@126d331dc69f4a1aa02452e374835e6a5d565613 # v1
         with:
           buildx-version: latest
           qemu-version: latest
