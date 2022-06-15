@@ -13,7 +13,7 @@ See [Deployment](./deploy/) for a whirlwind tour that will get you started.
 
 # FAQ - Migration to apiVersion `networking.k8s.io/v1`
 
-If you are using Ingress objects in your cluster (running Kubernetes older than v1.22), and you plan to upgrade to Kubernetess v1.22, this section is relevant to you.
+If you are using Ingress objects in your cluster (running Kubernetes older than v1.22), and you plan to upgrade to Kubernetes v1.22, this section is relevant to you.
 
 - Please read this [official blog on deprecated Ingress API versions](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/) 
 
@@ -21,8 +21,7 @@ If you are using Ingress objects in your cluster (running Kubernetes older than 
 
 ## What is an IngressClass and why is it important for users of Ingress-NGINX controller now ?
 
-IngressClass is a Kubernetes resource. See the description below.
-Its important because until now, a default install of the Ingress-NGINX controller did not require any IngressClass object. From version 1.0.0 of the Ingress-NGINX Controller, an IngressClass object is required.
+IngressClass is a Kubernetes resource. See the description below. It's important because until now, a default install of the Ingress-NGINX controller did not require any IngressClass object. From version 1.0.0 of the Ingress-NGINX Controller, an IngressClass object is required.
 
 On clusters with more than one instance of the Ingress-NGINX controller, all instances of the controllers must be aware of which Ingress objects they serve. The `ingressClassName` field of an Ingress is the way to let the controller know about that. 
 
@@ -195,14 +194,14 @@ Then, when you create an Ingress object with its `ingressClassName` set to `ingr
 Bear in mind that, if you start Ingress-Nginx B with the command line argument `--watch-ingress-without-class=true`, then it will serve:
 
 1. Ingresses without any `ingressClassName` set
-2. Ingresses where the the deprecated annotation (`kubernetes.io/ingress.class`) matches the value set in the command line argument `--ingress-class`
+2. Ingresses where the deprecated annotation (`kubernetes.io/ingress.class`) matches the value set in the command line argument `--ingress-class`
 3. Ingresses that refer to any IngressClass that has the same `spec.controller` as configured in `--controller-class`
 
 If you start Ingress-Nginx B with the command line argument `--watch-ingress-without-class=true` and you run Ingress-Nginx A with the command line argument `--watch-ingress-without-class=false` then this is a supported configuration. If you have two Ingress-NGINX controllers for the same cluster, both running with `--watch-ingress-without-class=true` then there is likely to be a conflict.
 
 ## I am seeing this error message in the logs of the Ingress-NGINX controller: "ingress class annotation is not equal to the expected by Ingress Controller". Why ?
 
-- It is highly likely that you will also see the name of the ingress resource in the same error message. This error messsage has been observed on use the deprecated annotation (`kubernetes.io/ingress.class`) in a Ingress resource manifest. It is recommended to use the `.spec.ingressClassName` field of the Ingress resource, to specify the name of the IngressClass of the Ingress you are defining.
+- It is highly likely that you will also see the name of the ingress resource in the same error message. This error message has been observed on use the deprecated annotation (`kubernetes.io/ingress.class`) in a Ingress resource manifest. It is recommended to use the `.spec.ingressClassName` field of the Ingress resource, to specify the name of the IngressClass of the Ingress you are defining.
 
 ## How to easily install multiple instances of the ingress-NGINX controller in the same cluster ?
 - Create a new namespace
