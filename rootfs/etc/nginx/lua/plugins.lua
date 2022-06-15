@@ -61,9 +61,9 @@ end
 function _M.run_before()
   local phase = ngx.get_phase() .. "_before"
 
-  for name, plugin in pairs(plugins) do
+  for _, plugin in ipairs(plugins) do
     if plugin[phase] then
-      ngx_log(INFO, string_format("running plugin \"%s\" in phase \"%s\"", name, phase))
+      ngx_log(INFO, string_format("running plugin \"%s\" in phase \"%s\"", plugin.name, phase))
 
       -- TODO: consider sandboxing this, should we?
       -- probably yes, at least prohibit plugin from accessing env vars etc
@@ -72,7 +72,7 @@ function _M.run_before()
       local ok, err = pcall(plugin[phase])
       if not ok then
         ngx_log(ERR, string_format("error while running plugin \"%s\" in phase \"%s\": %s",
-            name, phase, err))
+            plugin.name, phase, err))
       end
     end
   end
