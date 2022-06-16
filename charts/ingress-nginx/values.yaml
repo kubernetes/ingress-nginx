@@ -13,6 +13,11 @@ commonLabels: {}
 # scmhash: abc123
 # myLabel: aakkmd
 
+# Passing cluster name parameter to ingress sub-chart
+ingress:
+  environment:
+    name: ${env.name}
+
 controller:
   name: controller
   image:
