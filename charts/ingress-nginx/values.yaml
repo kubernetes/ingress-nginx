@@ -527,7 +527,7 @@ controller:
       udp: {}
 
     external:
-      enabled: false
+      enabled: true
 
     internal:
       # -- Enables an additional internal load balancer (besides the external one).
