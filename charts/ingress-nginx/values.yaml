@@ -4,7 +4,7 @@
 
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
-nameOverride: ingress-nginx-backup
+#nameOverride:
 # fullnameOverride:
 
 ## Labels to apply to all resources
@@ -43,7 +43,20 @@ controller:
     https: 443
 
   # -- Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
-  config: {}
+  config:
+    proxy-buffer-size: "128k"
+    proxy-buffers: "4 256k"
+    proxy-busy-buffers-size: "256k"
+    client-header-buffer-size: "64k"
+    http2-max-field-size: "16k"
+    http2-max-header-size: "128k"
+    large-client-header-buffers: "8 64k"
+    log-format-upstream: >-
+      $remote_addr - $remote_user [$time_local] "$request" $status
+      $body_bytes_sent "$http_referer" "$http_user_agent" $request_length
+      $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name]
+      $upstream_addr $upstream_response_length $upstream_response_time
+      $upstream_status $req_id "$cookie_indigoCId" "$cookie_indigoUId"
 
   # -- Annotations to be added to the controller config configuration configmap.
   configAnnotations: {}
@@ -440,7 +453,7 @@ controller:
     configMapKey: ""
 
   service:
-    enabled: false
+    enabled: true
 
     # -- If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were
     # using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
@@ -514,7 +527,7 @@ controller:
       udp: {}
 
     external:
-      enabled: true
+      enabled: false
 
     internal:
       # -- Enables an additional internal load balancer (besides the external one).
@@ -630,13 +643,13 @@ controller:
     patch:
       enabled: true
       image:
-        registry: registry.k8s.io
-        image: ingress-nginx/kube-webhook-certgen
+        registry: docker.io
+        image: jettech/kube-webhook-certgen
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v1.1.1
-        digest: sha256:64d8c73dca984af206adf9d6d7e46aa550362b1d7a01f3a0a91b20cc67868660
+        tag: v1.5.2
+        digest: sha256:aef46427991165d16db3b9323472855425e7d3d737d539ee19d43305925b5827
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
@@ -653,7 +666,7 @@ controller:
   metrics:
     port: 10254
     # if this port is changed, change healthz-port: in extraArgs: accordingly
-    enabled: false
+    enabled: true
 
     service:
       annotations: {}
