@@ -1,0 +1,64 @@
+{{- if .Values.controller.ingress.enabled -}}
+  {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1
+  {{- else -}}
+apiVersion: networking.k8s.io/v1beta1
+  {{- end }}
+kind: Ingress
+metadata:
+  name: {{ include "ingress.name" . }}
+  {{- if .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+  {{- end}}
+  labels:
+  {{- with .Values.controller.ingress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{ include "ingress.labels" . | indent 4 }}
+  annotations:
+  {{- if eq .Values.controller.ingress.type "alb" }}
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: {{ .Values.controller.ingress.alb.scheme }}
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/target-type: {{ .Values.controller.ingress.alb.targetType }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300,access_logs.s3.enabled=true,access_logs.s3.bucket={{ .Values.controller.ingress.environment.name }}-alb-access-logs
+    alb.ingress.kubernetes.io/tags: fwm-managed=true, fwm-policy=full
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.controller.ingress.alb.connectTimeout | quote }}
+    nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.controller.ingress.alb.requestTimeout | quote }}
+    nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.controller.ingress.alb.requestTimeout | quote }}
+    alb.ingress.kubernetes.io/ssl-policy:  {{ .Values.controller.ingress.alb.sslPolicy }}
+  {{- if .Values.controller.ingress.alb.certificateArn }}
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.controller.ingress.alb.certificateArn }}
+  {{- end }}
+  {{- if .Values.controller.ingress.fullName }}
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.controller.ingress.fullName | quote}}
+  {{- end }}
+  {{- if .Values.controller.ingress.alb.healthcheckPath }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.controller.ingress.alb.healthcheckPath }}
+  {{- end }}
+  {{- else if eq .Values.controller.ingress.type "nginx"}}
+    kubernetes.io/ingress.class: "nginx"
+  {{- end }}
+spec:
+  rules:
+  - http:
+      paths:
+        {{- if eq .Values.controller.ingress.type "alb" }}
+        - path: /*
+          defaultBackend:
+            service:
+              name: ssl-redirect
+              port:
+                number: use-annotation
+        - path: {{ .Values.controller.ingress.alb.path }}
+        {{- else if eq .Values.controller.ingress.type "nginx"}}
+        - path: {{ .Values.controller.ingress.nginx.path }}
+        {{- end }}
+        defaultBackend:
+          service:
+            name: {{ template "ingress.service.name" . }}
+            service:
+              port:
+                number: {{ .Values.service.port }}
+{{- end }}
