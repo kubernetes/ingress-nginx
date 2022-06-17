@@ -126,7 +126,7 @@ controller:
     # -- Name of the ingressClass
     name: nginx
     # -- Is this ingressClass enabled or not
-    enabled: true
+    enabled: false
     # -- Is this the default ingressClass for the cluster
     default: false
     # -- Controller-value of the controller that is processing this ingressClass
@@ -141,41 +141,6 @@ controller:
   # Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation
   ingressClass: nginx
 
-  ingress:
-    enabled: true
-    # By default, the ingress name takes the Release name
-    # but this can be either overridden
-    nameOverride:
-    # Or a suffix can be added
-    nameSuffix:
-    # This is either 'alb' or 'nginx'
-    type: alb
-    # The fqdn associated to this ingress
-    fullName: service.example.com
-    service:
-      # Whether known, the backend service name can be passed using
-      nameOverride:
-      # or, by default, it'll take the Release name as a reference
-      # although a suffix can be added to the service name
-      nameSuffix: -backup
-      port:
-    alb:
-      # This sets the ALB to be either 'internal' or 'internet-facing'
-      scheme: internet-facing
-      # Specifies how to route traffic to pods
-      # It can be either 'instance' or 'ip'
-      targetType: ip
-      connectTimeout: 5000
-      requestTimeout: 300
-      # Specifies to attach an AWS TLS certificate to the ALB
-      # certificateArn: "arn:aws:acm:us-west-2:xxx:certificate/xxx"
-      certificateArn:
-      healthcheckPath:
-      path: /*
-      sslPolicy: ELBSecurityPolicy-TLS-1-2-Ext-2018-06
-    nginx:
-      path: /
-    labels: {}
   # -- Labels to add to the pod container metadata
   podLabels: {}
   #  key: value
@@ -394,10 +359,13 @@ controller:
 
   # -- Annotations to be added to controller pods
   ##
-  podAnnotations: {}
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
 
   replicaCount: 1
 
+  minAvailable: 1
 
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
   ## ref: https://github.com/kubernetes/ingress-nginx/issues/4735#issuecomment-551204903
@@ -485,7 +453,7 @@ controller:
   # -- Enable mimalloc as a drop-in replacement for malloc.
   ## ref: https://github.com/microsoft/mimalloc
   ##
-  enableMimalloc: true
+  enableMimalloc: false
 
   ## Override NGINX template
   customTemplate:
