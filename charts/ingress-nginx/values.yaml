@@ -459,7 +459,7 @@ controller:
     configMapKey: ""
 
   service:
-    enabled: false
+    enabled: true
 
     # -- If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were
     # using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
