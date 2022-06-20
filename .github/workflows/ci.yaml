@@ -71,13 +71,13 @@ jobs:
 
       - name: Set up Go 1.18
         id: go
-        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v2
         with:
           go-version: '1.18.2'
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: crazy-max/ghaction-docker-buildx@e01797ad2ea9a981005ad58c99afa8d842e3d3eb # v1
+        uses: crazy-max/ghaction-docker-buildx@126d331dc69f4a1aa02452e374835e6a5d565613 # v1
         with:
           buildx-version: latest
           qemu-version: latest
@@ -111,7 +111,7 @@ jobs:
             | pigz > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v2
         with:
           name: docker.tar.gz
           path: docker.tar.gz
@@ -131,12 +131,12 @@ jobs:
         uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
       - name: Setup Go
-        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v2
         with:
           go-version: '1.18.2'
 
       - name: cache
-        uses: actions/download-artifact@f023be2c48cc18debc3bacd34cb396e0295e2869 # v2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2
         with:
           name: docker.tar.gz
 
@@ -169,10 +169,10 @@ jobs:
 
       - name: Create Kubernetes cluster
         id: kind
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
+        uses: engineerd/setup-kind@v0.5.0
         with:
-          version: v0.11.1
-          image: kindest/node:v1.21.1
+          version: v0.14.0
+          image: kindest/node:v1.21.12
 
       - uses: geekyeggo/delete-artifact@a6ab43859c960a8b74cbc6291f362c7fb51829ba # v1
         with:
@@ -204,7 +204,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.19.11, v1.20.7, v1.21.2, v1.22.0, v1.23.0]
+        k8s: [v1.19.11, v1.20.7, v1.21.2, v1.22.9, v1.23.6]
 
     steps:
 
@@ -212,15 +212,15 @@ jobs:
         uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
 
       - name: cache
-        uses: actions/download-artifact@f023be2c48cc18debc3bacd34cb396e0295e2869 # v2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2
         with:
           name: docker.tar.gz
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
+        uses: engineerd/setup-kind@v0.5.0
         with:
-          version: v0.11.1
+          version: v0.14.0
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
@@ -262,7 +262,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.21.10, v1.22.7, v1.23.4]
+        k8s: [v1.21.10, v1.22.9, v1.23.6]
 
     steps:
 
@@ -270,7 +270,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: cache
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
         with:
           name: docker.tar.gz
 
@@ -278,7 +278,7 @@ jobs:
         id: kind
         uses: engineerd/setup-kind@v0.5.0
         with:
-          version: v0.12.0
+          version: v0.14.0
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
@@ -398,15 +398,15 @@ jobs:
       - name: Create Kubernetes cluster
         id: kind
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
+        uses: engineerd/setup-kind@v0.5.0
         with:
-          version: v0.11.1
-          image: kindest/node:v1.21.1
+          version: v0.14.0
+          image: kindest/node:v1.21.12
 
       - name: Set up Go 1.18
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v2
         with:
           go-version: '1.18.2'
 

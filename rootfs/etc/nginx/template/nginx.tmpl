@@ -62,6 +62,9 @@ events {
     multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
     worker_connections  {{ $cfg.MaxWorkerConnections }};
     use                 epoll;
+    {{ range $index , $v := $cfg.DebugConnections }}
+    debug_connection    {{ $v }};
+    {{ end }}
 }
 
 http {

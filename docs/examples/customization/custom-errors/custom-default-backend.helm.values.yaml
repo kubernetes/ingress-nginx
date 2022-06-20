@@ -3,7 +3,7 @@ controller:
 defaultBackend:
   enabled: true
   image:
-    registry: k8s.gcr.io
+    registry: registry.k8s.io
     image: ingress-nginx/nginx-errors
     tag: "0.48.1"
   extraVolumes:

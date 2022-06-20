@@ -110,9 +110,11 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 	if n.cfg.ValidationWebhook != "" {
 		n.validationWebhookServer = &http.Server{
-			Addr:      config.ValidationWebhook,
-			Handler:   adm_controller.NewAdmissionControllerServer(&adm_controller.IngressAdmission{Checker: n}),
-			TLSConfig: ssl.NewTLSListener(n.cfg.ValidationWebhookCertPath, n.cfg.ValidationWebhookKeyPath).TLSConfig(),
+			Addr: config.ValidationWebhook,
+			//G112 (CWE-400): Potential Slowloris Attack
+			ReadHeaderTimeout: 10 * time.Second,
+			Handler:           adm_controller.NewAdmissionControllerServer(&adm_controller.IngressAdmission{Checker: n}),
+			TLSConfig:         ssl.NewTLSListener(n.cfg.ValidationWebhookCertPath, n.cfg.ValidationWebhookKeyPath).TLSConfig(),
 			// disable http/2
 			// https://github.com/kubernetes/kubernetes/issues/80313
 			// https://github.com/kubernetes/ingress-nginx/issues/6323#issuecomment-737239159
