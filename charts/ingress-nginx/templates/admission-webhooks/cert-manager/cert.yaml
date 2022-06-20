@@ -1,0 +1,15 @@
+{{- if .Values.controller.admissionWebhooks.certManager.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ingress-nginx.fullname" . }}-admission
+  namespace: {{ .Release.Namespace }}
+spec:
+  dnsNames:
+  - {{ include "ingress-nginx.controller.fullname" . }}-admission.{{ .Release.Namespace }}.svc
+  - {{ include "ingress-nginx.controller.fullname" . }}-admission.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: {{ template "ingress-nginx.fullname" . }}-self-signed-issuer
+  secretName: {{ include "ingress-nginx.fullname" . }}-admission
+{{- end -}}

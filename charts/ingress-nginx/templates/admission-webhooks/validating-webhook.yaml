@@ -4,8 +4,14 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  {{- if .Values.controller.admissionWebhooks.annotations }}
-  annotations: {{ toYaml .Values.controller.admissionWebhooks.annotations | nindent 4 }}
+  {{- if or .Values.controller.admissionWebhooks.annotations .Values.controller.admissionWebhooks.certManager.enabled }}
+  annotations:
+    {{- if .Values.controller.admissionWebhooks.certManager.enabled }}
+    cert-manager.io/inject-ca-from: {{ printf "%s/%s-admission" .Release.Namespace (include "ingress-nginx.fullname" .) | quote }}
+    {{- end }}
+    {{- if .Values.controller.admissionWebhooks.annotations }}
+    {{- toYaml .Values.controller.admissionWebhooks.annotations | nindent 4 }}
+    {{- end }}
   {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}

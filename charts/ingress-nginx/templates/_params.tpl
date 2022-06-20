@@ -33,8 +33,13 @@
 {{- end }}
 {{- if .Values.controller.admissionWebhooks.enabled }}
 - --validating-webhook=:{{ .Values.controller.admissionWebhooks.port }}
+{{- if .Values.controller.admissionWebhooks.certManager.enabled }}
+- --validating-webhook-certificate={{ .Values.controller.admissionWebhooks.certificate_dir }}tls.crt
+- --validating-webhook-key={{ .Values.controller.admissionWebhooks.certificate_dir }}tls.key
+{{- else }}
 - --validating-webhook-certificate={{ .Values.controller.admissionWebhooks.certificate }}
 - --validating-webhook-key={{ .Values.controller.admissionWebhooks.key }}
+{{- end }}
 {{- end }}
 {{- if .Values.controller.maxmindLicenseKey }}
 - --maxmind-license-key={{ .Values.controller.maxmindLicenseKey }}

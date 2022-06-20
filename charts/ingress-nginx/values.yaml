@@ -463,6 +463,8 @@ controller:
     # -- Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
     loadBalancerIP: ""
     loadBalancerSourceRanges: []
+    # -- Used by cloud providers to select a load balancer implementation other than the cloud provider default. https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+    loadBalancerClass: ""
 
     enableHttp: true
     enableHttps: true
@@ -606,7 +608,11 @@ controller:
     failurePolicy: Fail
     # timeoutSeconds: 10
     port: 8443
+    # -- Certificate directory path mounted in pod
+    certificate_dir: "/usr/local/certificates/"
+    # -- Certificate path in pod with createSecretJob
     certificate: "/usr/local/certificates/cert"
+    # -- Certificate key path in pod with createSecretJob
     key: "/usr/local/certificates/key"
     namespaceSelector: {}
     objectSelector: {}
@@ -615,6 +621,10 @@ controller:
 
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
+
+    certManager:
+      # -- Use certmanager to generate webhook certs
+      enabled: false
 
     service:
       annotations: {}

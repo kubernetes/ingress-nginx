@@ -156,7 +156,7 @@ spec:
           {{- end }}
           {{- if .Values.controller.admissionWebhooks.enabled }}
             - name: webhook-cert
-              mountPath: /usr/local/certificates/
+              mountPath: {{ .Values.controller.admissionWebhooks.certificate_dir }}
               readOnly: true
           {{- end }}
           {{- if .Values.controller.extraVolumeMounts }}

@@ -1,4 +1,4 @@
-{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled .Values.podSecurityPolicy.enabled (empty .Values.controller.admissionWebhooks.existingPsp) -}}
+{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled .Values.podSecurityPolicy.enabled (empty .Values.controller.admissionWebhooks.existingPsp) (not .Values.controller.admissionWebhooks.certManager.enabled) -}}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:

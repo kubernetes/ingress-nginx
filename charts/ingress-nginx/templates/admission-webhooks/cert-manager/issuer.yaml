@@ -1,0 +1,9 @@
+{{- if .Values.controller.admissionWebhooks.certManager.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ template "ingress-nginx.fullname" . }}-self-signed-issuer
+  namespace: {{ .Release.Namespace }}
+spec:
+  selfSigned: {}
+{{- end -}}
