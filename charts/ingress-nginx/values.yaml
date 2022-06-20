@@ -126,7 +126,7 @@ controller:
     # -- Name of the ingressClass
     name: nginx
     # -- Is this ingressClass enabled or not
-    enabled: true
+    enabled: false
     # -- Is this the default ingressClass for the cluster
     default: false
     # -- Controller-value of the controller that is processing this ingressClass
@@ -359,7 +359,9 @@ controller:
 
   # -- Annotations to be added to controller pods
   ##
-  podAnnotations: {}
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
 
   replicaCount: 1
 
@@ -451,7 +453,7 @@ controller:
   # -- Enable mimalloc as a drop-in replacement for malloc.
   ## ref: https://github.com/microsoft/mimalloc
   ##
-  enableMimalloc: true
+  enableMimalloc: false
 
   ## Override NGINX template
   customTemplate:
@@ -533,7 +535,7 @@ controller:
       udp: {}
 
     external:
-      enabled: true
+      enabled: false
 
     internal:
       # -- Enables an additional internal load balancer (besides the external one).
