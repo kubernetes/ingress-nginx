@@ -46,11 +46,16 @@ spec:
       paths:
         {{- if eq .Values.type "alb" }}
         - path: /*
-          defaultBackend:
-            serviceName: ssl-redirect
-            servicePort: use-annotation
+          backend:
+            service:
+              name: ssl-redirect
+              port: use-annotation
         - path: {{ .Values.alb.path }}
         {{- else if eq .Values.type "nginx"}}
         - path: {{ .Values.nginx.path }}
         {{- end }}
+          backend:
+            service:
+              name: {{ template "ingress.service.name" . }}
+              port: {{ .Values.service.port }}
 {{- end }}
