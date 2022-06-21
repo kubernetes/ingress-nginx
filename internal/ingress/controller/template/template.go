@@ -275,6 +275,7 @@ var (
 		"buildHTTPSListener":                 buildHTTPSListener,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
+		"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
@@ -1603,6 +1604,23 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 	}
 
 	return false
+}
+
+// shouldLoadOpentelemetryModule determines whether or not the Opentelemetry module needs to be loaded.
+// It checks if `enable-opentelemetry` is set in the ConfigMap.
+func shouldLoadOpentelemetryModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+	
+	if cfg.EnableOpentelemetry {
+		return true
+	}
+
+	return false
+	
 }
 
 func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Location) string {

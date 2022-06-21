@@ -130,6 +130,8 @@ The following table shows a configuration option's name, type, and the default v
 |[enable-opentracing](#enable-opentracing)|bool|"false"|
 |[opentracing-operation-name](#opentracing-operation-name)|string|""|
 |[opentracing-location-operation-name](#opentracing-location-operation-name)|string|""|
+|[enable-opentelemetry](#enable-opentelemetry)|bool|"false"|
+|[opentelemetry-config](#opentelemetry-config)|string|`Mandatory`|
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
 |[zipkin-collector-port](#zipkin-collector-port)|int|9411|
 |[zipkin-service-name](#zipkin-service-name)|string|"nginx"|
@@ -895,6 +897,14 @@ For example, set to "HTTP $request_method $uri".
 Specifies a custom name for the location span. _**default:**_ is empty
 
 For example, set to "HTTP $request_method $uri".
+
+## enable-opentelemetry
+
+Enables the nginx Opentelemetry extension. _**default:**_ is disabled
+
+## opentelemetry-config
+
+Opentelemetry exporters, processors, etc config. Mandatory
 
 ## zipkin-collector-host
 

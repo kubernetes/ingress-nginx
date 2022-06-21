@@ -37,6 +37,10 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 {{ end }}
 
+{{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
+load_module /modules_mount/etc/nginx/modules/otel_ngx_module.so;
+{{ end }}
+
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -64,6 +68,10 @@ events {
 }
 
 http {
+    {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
+    opentelemetry_config {{ $cfg.OpentelemetryConfig }};
+    {{ end }}
+
     lua_package_path "/etc/nginx/lua/?.lua;;";
 
     {{ buildLuaSharedDictionaries $cfg $servers }}

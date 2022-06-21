@@ -31,8 +31,6 @@ LABEL org.opencontainers.image.revision="${COMMIT_SHA}"
 
 LABEL build_id="${BUILD_ID}"
 
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/modules_mount/etc/nginx/modules/modules
-
 WORKDIR  /etc/nginx
 
 RUN apk update \
