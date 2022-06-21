@@ -14,6 +14,7 @@ else
 fi
 
 export GOPATH="${BASEDIR}/dist"
+export HOME="${BASEDIR}/go"
 
 cd "$GODIR_ROOT/nginx"
 echo "Building ingress-nginx nginx-ingress-controller..."

@@ -3,13 +3,13 @@
 
 hose {
     EMAIL = 'eos@stratio.com'
-    BUILDTOOL_IMAGE = 'stratio/ingress-nginx-builder:0.2.0'
+    BUILDTOOL_IMAGE = 'golang:1.17'
     BUILDTOOL = 'make'
     DEVTIMEOUT = 30
-    DEPLOYONPRS = true
-    ANCHORE_TEST = true
     VERSIONING_TYPE = 'stratioVersion-3-3'
     UPSTREAM_VERSION = '1.2.1'
+    ANCHORE_TEST = true
+    DEPLOYONPRS = true
 
     DEV = { config ->
         doPackage(config)
