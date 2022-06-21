@@ -101,6 +101,12 @@ The e2e tests code is in [test](https://github.com/kubernetes/ingress-nginx/tree
 
 Describe here `kubectl plugin`, `dbg`, `waitshutdown` and cover the hack scripts.
 
+### kubectl plugin
+
+It containes kubectl plugin for inspecting your ingress-nginx deployments.
+This part of code can be found in [cmd/plugin](https://github.com/kubernetes/ingress-nginx/tree/main/cmd/plugin) directory
+Detail functions flow and available flow can be found in [kubectl-plugin](https://github.com/kubernetes/ingress-nginx/blob/main/docs/kubectl-plugin.md)
+
 ## Deploy files
 
 This directory contains the `yaml` deploy files used as examples or references in the docs to deploy Ingress NGINX and other components.
@@ -140,7 +146,7 @@ This is NGINX with some Lua enhancement. We do dynamic certificate, endpoints ha
 The files are in [rootfs](https://github.com/kubernetes/ingress-nginx/tree/main/rootfs) directory and contains:
 
 * The Dockerfile
-* [Auxiliary scripts](https://github.com/kubernetes/ingress-nginx/tree/main/rootfs/ingress-controller)
+* [nginx config](https://github.com/kubernetes/ingress-nginx/tree/main/rootfs/etc/nginx)
 
 #### Ingress NGINX Lua Scripts
 

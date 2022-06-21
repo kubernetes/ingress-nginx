@@ -37,7 +37,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=${E2E_IMAGE:-k8s.gcr.io/ingress-nginx/e2e-test-runner:v20220331-controller-v1.1.2-31-gf1cb2b73c@sha256:baa326f5c726d65be828852943a259c1f0572883590b9081b7e8fa982d64d96e}
+E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20220524-g8963ed17e@sha256:4fbcbeebd4c24587699b027ad0f0aa7cd9d76b58177a3b50c228bae8141bcf95}
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 DOCKER_IN_DOCKER_ENABLED=${DOCKER_IN_DOCKER_ENABLED:-}
@@ -55,10 +55,34 @@ fi
 # create output directory as current user to avoid problem with docker.
 mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
-if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
-  /bin/bash -c "${FLAGS}"
+PLATFORM="${PLATFORM:-}"
+if [[ -n "$PLATFORM" ]]; then
+  PLATFORM_FLAG=--platform
 else
+  PLATFORM_FLAG=
+fi
+
+echo "..printing env & other vars to stdout"
+echo "HOSTNAME=`hostname`"
+uname -a
+env
+echo "DIND_ENABLED=$DOCKER_IN_DOCKER_ENABLED"
+echo "done..printing env & other vars to stdout"
+
+if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
+  echo "..reached DIND check TRUE block, inside run-in-docker.sh"
+  echo "FLAGS=$FLAGS"
+  go env
+  set -x
+  go install -mod=mod github.com/onsi/ginkgo/ginkgo@v1.16.4 
+  find / -type f -name ginkgo 2>/dev/null
+  which ginkgo
+  /bin/bash -c "${FLAGS}"
+  set +x
+else
+  echo "..reached DIND check ELSE block, inside run-in-docker.sh"
   docker run                                            \
+    ${PLATFORM_FLAG} ${PLATFORM}                        \
     --tty                                               \
     --rm                                                \
     ${DOCKER_OPTS}                                      \

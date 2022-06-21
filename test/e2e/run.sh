@@ -58,7 +58,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6}
+  export K8S_VERSION=${K8S_VERSION:-v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -77,8 +77,11 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   fi
 
   echo "[dev-env] building image"
-  make -C ${DIR}/../../ clean-image build image
+  make -C ${DIR}/../../ clean-image build image image-chroot
+  echo "[dev-env] .. done building controller images"
+  echo "[dev-env] now building e2e-image.."
   make -C ${DIR}/../e2e-image image
+  echo "[dev-env] ..done building e2e-image"
 fi
 
 # Preload images used in e2e tests
@@ -87,6 +90,11 @@ KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk 
 echo "[dev-env] copying docker images to cluster..."
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} nginx-ingress-controller:e2e
+
+if [ "${IS_CHROOT:-false}" = "true" ]; then
+   docker tag ${REGISTRY}/controller-chroot:${TAG} ${REGISTRY}/controller:${TAG}
+fi
+
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
 
 echo "[dev-env] running e2e tests..."

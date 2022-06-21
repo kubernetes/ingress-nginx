@@ -86,7 +86,7 @@ This example demonstrates how to route traffic to a gRPC service through the Ing
 
 ### Step 3: Create the Kubernetes `Ingress` resource for the gRPC app
 
-- Use the following example manifest of a ingress resource to create a ingress for your grpc app. If required, edit it to match your app's details like name, namespace, service, secret etc. Make sure you have the required SSL-Certificate, existing in your Kubernetes cluster in the same namespace where the gRPC app is. The certificate must be available as a kubernetes secret resource, of type "kubernete.io/tls" https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets. This is because we are terminating TLS on the ingress.
+- Use the following example manifest of a ingress resource to create a ingress for your grpc app. If required, edit it to match your app's details like name, namespace, service, secret etc. Make sure you have the required SSL-Certificate, existing in your Kubernetes cluster in the same namespace where the gRPC app is. The certificate must be available as a kubernetes secret resource, of type "kubernetes.io/tls" https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets. This is because we are terminating TLS on the ingress.
 
   ```
   cat <<EOF | kubectl apply -f -

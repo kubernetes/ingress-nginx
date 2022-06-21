@@ -124,6 +124,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)
@@ -204,6 +205,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)
@@ -307,6 +309,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)
@@ -422,6 +425,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			ingressClassconfig)
 
 		storer.Run(stopCh)
@@ -551,6 +555,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			ingressClassconfig)
 
 		storer.Run(stopCh)
@@ -650,6 +655,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)
@@ -743,6 +749,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)
@@ -828,6 +835,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)
@@ -923,6 +931,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)
@@ -1046,6 +1055,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)
@@ -1166,6 +1176,7 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
+			true,
 			DefaultClassConfig)
 
 		storer.Run(stopCh)

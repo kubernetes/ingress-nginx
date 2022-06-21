@@ -65,7 +65,7 @@ The parameter --controller-class has precedence over this.`)
 
 		ingressClassController = flags.String("controller-class", ingressclass.DefaultControllerName,
 			`Ingress Class Controller value this Ingress satisfies.
-The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.19.0 or higher. The .spec.controller value of the IngressClass 
+The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.19.0 or higher. The .spec.controller value of the IngressClass
 referenced in an Ingress Object should be the same value specified here to make this object be watched.`)
 
 		watchWithoutClass = flags.Bool("watch-ingress-without-class", false,
@@ -163,6 +163,9 @@ Requires the update-status parameter.`)
 			`Enables the collection of NGINX metrics`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host`)
+		reportStatusClasses = flags.Bool("report-status-classes", false,
+			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics`)
+
 		timeBuckets         = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime")
 		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength")
 		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent")
@@ -192,6 +195,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		statusPort = flags.Int("status-port", 10246, `Port to use for the lua HTTP endpoint configuration.`)
 		streamPort = flags.Int("stream-port", 10247, "Port to use for the lua TCP/UDP endpoint configuration.")
 
+		internalLoggerAddress = flags.String("internal-logger-address", "127.0.0.1:11514", "Address to be used when binding internal syslogger")
+
 		profilerPort = flags.Int("profiler-port", 10245, "Port to use for expose the ingress controller Go profiler when it is enabled.")
 
 		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
@@ -199,6 +204,10 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		shutdownGracePeriod = flags.Int("shutdown-grace-period", 0, "Seconds to wait after receiving the shutdown signal, before stopping the nginx process.")
 
 		postShutdownGracePeriod = flags.Int("post-shutdown-grace-period", 10, "Seconds to wait after the nginx process has stopped before controller exits.")
+
+		deepInspector = flags.Bool("deep-inspect", true, "Enables ingress object security deep inspector")
+
+		dynamicConfigurationRetries = flags.Int("dynamic-configuration-retries", 15, "Number of times to retry failed dynamic configuration before failing to sync an ingress.")
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases`)
@@ -299,34 +308,37 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
 
 	config := &controller.Configuration{
-		APIServerHost:              *apiserverHost,
-		KubeConfigFile:             *kubeConfigFile,
-		UpdateStatus:               *updateStatus,
-		ElectionID:                 *electionID,
-		EnableProfiling:            *profiling,
-		EnableMetrics:              *enableMetrics,
-		MetricsPerHost:             *metricsPerHost,
-		MetricsBuckets:             histogramBuckets,
-		MonitorMaxBatchSize:        *monitorMaxBatchSize,
-		DisableServiceExternalName: *disableServiceExternalName,
-		EnableSSLPassthrough:       *enableSSLPassthrough,
-		ResyncPeriod:               *resyncPeriod,
-		DefaultService:             *defaultSvc,
-		Namespace:                  *watchNamespace,
-		WatchNamespaceSelector:     namespaceSelector,
-		ConfigMapName:              *configMap,
-		TCPConfigMapName:           *tcpConfigMapName,
-		UDPConfigMapName:           *udpConfigMapName,
-		DisableFullValidationTest:  *disableFullValidationTest,
-		DefaultSSLCertificate:      *defSSLCertificate,
-		PublishService:             *publishSvc,
-		PublishStatusAddress:       *publishStatusAddress,
-		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
-		ShutdownGracePeriod:        *shutdownGracePeriod,
-		PostShutdownGracePeriod:    *postShutdownGracePeriod,
-		UseNodeInternalIP:          *useNodeInternalIP,
-		SyncRateLimit:              *syncRateLimit,
-		HealthCheckHost:            *healthzHost,
+		APIServerHost:               *apiserverHost,
+		KubeConfigFile:              *kubeConfigFile,
+		UpdateStatus:                *updateStatus,
+		ElectionID:                  *electionID,
+		EnableProfiling:             *profiling,
+		EnableMetrics:               *enableMetrics,
+		MetricsPerHost:              *metricsPerHost,
+		MetricsBuckets:              histogramBuckets,
+		ReportStatusClasses:         *reportStatusClasses,
+		MonitorMaxBatchSize:         *monitorMaxBatchSize,
+		DisableServiceExternalName:  *disableServiceExternalName,
+		EnableSSLPassthrough:        *enableSSLPassthrough,
+		ResyncPeriod:                *resyncPeriod,
+		DefaultService:              *defaultSvc,
+		Namespace:                   *watchNamespace,
+		WatchNamespaceSelector:      namespaceSelector,
+		ConfigMapName:               *configMap,
+		TCPConfigMapName:            *tcpConfigMapName,
+		UDPConfigMapName:            *udpConfigMapName,
+		DisableFullValidationTest:   *disableFullValidationTest,
+		DefaultSSLCertificate:       *defSSLCertificate,
+		DeepInspector:               *deepInspector,
+		PublishService:              *publishSvc,
+		PublishStatusAddress:        *publishStatusAddress,
+		UpdateStatusOnShutdown:      *updateStatusOnShutdown,
+		ShutdownGracePeriod:         *shutdownGracePeriod,
+		PostShutdownGracePeriod:     *postShutdownGracePeriod,
+		UseNodeInternalIP:           *useNodeInternalIP,
+		SyncRateLimit:               *syncRateLimit,
+		HealthCheckHost:             *healthzHost,
+		DynamicConfigurationRetries: *dynamicConfigurationRetries,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
@@ -344,6 +356,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		ValidationWebhook:         *validationWebhook,
 		ValidationWebhookCertPath: *validationWebhookCert,
 		ValidationWebhookKeyPath:  *validationWebhookKey,
+		InternalLoggerAddress:     *internalLoggerAddress,
 	}
 
 	if *apiserverHost != "" {

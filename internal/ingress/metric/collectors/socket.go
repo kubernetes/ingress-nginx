@@ -85,7 +85,8 @@ type SocketCollector struct {
 
 	hosts sets.String
 
-	metricsPerHost bool
+	metricsPerHost      bool
+	reportStatusClasses bool
 
 	buckets HistogramBuckets
 }
@@ -110,8 +111,8 @@ var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, buckets HistogramBuckets) (*SocketCollector, error) {
-	socket := "/tmp/prometheus-nginx.socket"
+func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets) (*SocketCollector, error) {
+	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	_ = syscall.Unlink(socket)
 
@@ -139,7 +140,8 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, bucke
 	sc := &SocketCollector{
 		listener: listener,
 
-		metricsPerHost: metricsPerHost,
+		metricsPerHost:      metricsPerHost,
+		reportStatusClasses: reportStatusClasses,
 
 		responseTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
@@ -247,6 +249,10 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		if sc.metricsPerHost && !sc.hosts.Has(stats.Host) {
 			klog.V(3).InfoS("Skipping metric for host not being served", "host", stats.Host)
 			continue
+		}
+
+		if sc.reportStatusClasses && len(stats.Status) > 0 {
+			stats.Status = fmt.Sprintf("%cxx", stats.Status[0])
 		}
 
 		// Note these must match the order in requestTags at the top

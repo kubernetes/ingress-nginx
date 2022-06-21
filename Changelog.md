@@ -1,5 +1,90 @@
 # Changelog
 
+### 1.2.1
+
+Image:
+- k8s.gcr.io/ingress-nginx/controller:v1.2.1@sha256:5516d103a9c2ecc4f026efbd4b40662ce22dc1f824fb129ed121460aaa5c47f8
+- k8s.gcr.io/ingress-nginx/controller-chroot:v1.2.1@sha256:d301551cf62bc3fb75c69fa56f7aa1d9e87b5079333adaf38afe84d9b7439355
+
+This release removes the root and alias directives in NGINX, this can avoid some potential security attacks.
+
+_Changes:_
+
+- [8459](https://github.com/kubernetes/ingress-nginx/pull/8459) Update default allowed CORS headers
+- [8202](https://github.com/kubernetes/ingress-nginx/pull/8202) disable modsecurity on error page
+- [8178](https://github.com/kubernetes/ingress-nginx/pull/8178) Add header Host into mirror annotations
+- [8458](https://github.com/kubernetes/ingress-nginx/pull/8458) Add portNamePreffix Helm chart parameter
+- [8587](https://github.com/kubernetes/ingress-nginx/pull/8587) Add CAP_SYS_CHROOT to DS/PSP when needed
+- [8213](https://github.com/kubernetes/ingress-nginx/pull/8213) feat: always set auth cookie
+- [8548](https://github.com/kubernetes/ingress-nginx/pull/8548) Implement reporting status classes in metrics
+- [8612](https://github.com/kubernetes/ingress-nginx/pull/8612) move so files under /etc/nginx/modules
+- [8624](https://github.com/kubernetes/ingress-nginx/pull/8624) Add patch to remove root and alias directives
+- [8623](https://github.com/kubernetes/ingress-nginx/pull/8623) Improve path rule
+
+### 1.2.0
+
+Image: 
+- k8s.gcr.io/ingress-nginx/controller:v1.2.0@sha256:d8196e3bc1e72547c5dec66d6556c0ff92a23f6d0919b206be170bc90d5f9185
+- k8s.gcr.io/ingress-nginx/controller-chroot:v1.2.0@sha256:fb17f1700b77d4fcc52ca6f83ffc2821861ae887dbb87149cf5cbc52bea425e5
+
+This minor version release, introduces 2 breaking changes. For the first time, an option to jail/chroot the nginx process, inside the controller container, is being introduced.. This provides an additional layer of security, for sensitive information like K8S serviceaccounts. This release also brings a special new feature of deep inspection into objects. The inspection is a walk through of all the spec, checking for possible attempts to escape configs. Currently such an inspection only occurs for `networking.Ingress`.  Additionally there are fixes for the recently announced CVEs on busybox & ssl_client. And there is a fix to a recently introduced redirection related bug, that was setting the protocol on URLs to "nil".
+
+_Changes:_
+
+- [8481](https://github.com/kubernetes/ingress-nginx/pull/8481) Fix log creation in chroot script
+- [8479](https://github.com/kubernetes/ingress-nginx/pull/8479) changed nginx base img tag to img built with alpine3.14.6
+- [8478](https://github.com/kubernetes/ingress-nginx/pull/8478) update base images and protobuf gomod
+- [8468](https://github.com/kubernetes/ingress-nginx/pull/8468) Fallback to ngx.var.scheme for redirectScheme with use-forward-headers when X-Forwarded-Proto is empty
+- [8456](https://github.com/kubernetes/ingress-nginx/pull/8456) Implement object deep inspector
+- [8455](https://github.com/kubernetes/ingress-nginx/pull/8455) Update dependencies
+- [8454](https://github.com/kubernetes/ingress-nginx/pull/8454) Update index.md
+- [8447](https://github.com/kubernetes/ingress-nginx/pull/8447) typo fixing
+- [8446](https://github.com/kubernetes/ingress-nginx/pull/8446) Fix suggested annotation-value-word-blocklist
+- [8444](https://github.com/kubernetes/ingress-nginx/pull/8444) replace deprecated topology key in example with current one
+- [8443](https://github.com/kubernetes/ingress-nginx/pull/8443) Add dependency review enforcement
+- [8434](https://github.com/kubernetes/ingress-nginx/pull/8434) added new auth-tls-match-cn annotation
+- [8426](https://github.com/kubernetes/ingress-nginx/pull/8426) Bump github.com/prometheus/common from 0.32.1 to 0.33.0
+- [8417](https://github.com/kubernetes/ingress-nginx/pull/8417) force helm release to artifact hub
+- [8405](https://github.com/kubernetes/ingress-nginx/pull/8405) kubectl-plugin code overview info
+- [8399](https://github.com/kubernetes/ingress-nginx/pull/8399) Darwin arm64
+- [8443](https://github.com/kubernetes/ingress-nginx/pull/8443) Add dependency review enforcement
+- [8444](https://github.com/kubernetes/ingress-nginx/pull/8444) replace deprecated topology key in example with current one
+- [8446](https://github.com/kubernetes/ingress-nginx/pull/8446) Fix suggested annotation-value-word-blocklist
+- [8219](https://github.com/kubernetes/ingress-nginx/pull/8219) Add keepalive support for auth requests
+- [8455](https://github.com/kubernetes/ingress-nginx/pull/8455) Update dependencies
+- [8456](https://github.com/kubernetes/ingress-nginx/pull/8456) Implement object deep inspector
+- [8325](https://github.com/kubernetes/ingress-nginx/pull/8325) Fix for buggy ingress sync with retries
+- [8322](https://github.com/kubernetes/ingress-nginx/pull/8322) Improve req handling dashboard
+
+### 1.2.0-beta.0
+
+**Image:**
+- k8s.gcr.io/ingress-nginx/controller:v1.2.0-beta.0@sha256:92115f5062568ebbcd450cd2cf9bffdef8df9fc61e7d5868ba8a7c9d773e0961
+- k8s.gcr.io/ingress-nginx/controller-chroot:v1.2.0-beta.0@sha256:0082f0f547b147a30ad85a5d6d2ceb3edbf0848b2008ed754365b6678bdea9a5
+
+This release introduces Jail/chroot nginx process inside controller container for the first time
+
+_Changes:_
+
+- [8417](https://github.com/kubernetes/ingress-nginx/pull/8417) force helm release to artifact hub
+- [8421](https://github.com/kubernetes/ingress-nginx/pull/8421) fix change log changes list
+- [8405](https://github.com/kubernetes/ingress-nginx/pull/8405) kubectl-plugin code overview info
+- [8399](https://github.com/kubernetes/ingress-nginx/pull/8399) Darwin arm64
+- [8443](https://github.com/kubernetes/ingress-nginx/pull/8443) Add dependency review enforcement
+- [8426](https://github.com/kubernetes/ingress-nginx/pull/8426) Bump github.com/prometheus/common from 0.32.1 to 0.33.0
+- [8444](https://github.com/kubernetes/ingress-nginx/pull/8444) replace deprecated topology key in example with current one
+- [8447](https://github.com/kubernetes/ingress-nginx/pull/8447) typo fixing
+- [8446](https://github.com/kubernetes/ingress-nginx/pull/8446) Fix suggested annotation-value-word-blocklist
+- [8219](https://github.com/kubernetes/ingress-nginx/pull/8219) Add keepalive support for auth requests
+- [8337](https://github.com/kubernetes/ingress-nginx/pull/8337) Jail/chroot nginx process inside controller container
+- [8454](https://github.com/kubernetes/ingress-nginx/pull/8454) Update index.md
+- [8455](https://github.com/kubernetes/ingress-nginx/pull/8455) Update dependencies
+- [8456](https://github.com/kubernetes/ingress-nginx/pull/8456) Implement object deep inspector
+- [8325](https://github.com/kubernetes/ingress-nginx/pull/8325) Fix for buggy ingress sync with retries
+- [8322](https://github.com/kubernetes/ingress-nginx/pull/8322) Improve req handling dashboard
+- [8464](https://github.com/kubernetes/ingress-nginx/pull/8464) Prepare v1.2.0-beta.0 release
+
+
 ### 1.1.3
 
 **Image:**
@@ -11,32 +96,38 @@ Patches [OpenSSL CVE-2022-0778](https://github.com/kubernetes/ingress-nginx/issu
 
 Patches [Libxml2 CVE-2022-23308](https://github.com/kubernetes/ingress-nginx/issues/8321)
 
+_Breaking Changes:_
+
+- https://github.com/nginx/nginx/commit/d18e066d650bff39f1705d3038804873584007af Deprecated http2_recv_timeout in favor of client_header_timeout (client-header-timeout)
+- https://github.com/nginx/nginx/commit/51fea093e4374dbd857dc437ff9588060ef56471 Deprecated http2_max_field_size (http2-max-field-size) and http2_max_header_size (http2-max-header-size) in favor of large_client_header_buffers (large-client-header-buffers)
+- https://github.com/nginx/nginx/commit/49ab3312448495f0ee8e00143a29624dde46ef5c Deprecated http2_idle_timeout and http2_max_requests (http2-max-requests) in favor of keepalive_timeout (upstream-keepalive-timeout?) and keepalive_requests (upstream-keepalive-requests?) respectively
+
 _Changes:_
 
-[8415](https://github.com/kubernetes/ingress-nginx/pull/8415) base img update for e2e-test-runner & opentelemetry
-[8403](https://github.com/kubernetes/ingress-nginx/pull/8403) Add execute permissions to nginx image entrypoint.sh
-[8392](https://github.com/kubernetes/ingress-nginx/pull/8392) fix document for monitoring
-[8386](https://github.com/kubernetes/ingress-nginx/pull/8386) downgrade to 3.14.4 and fix tag
-[8379](https://github.com/kubernetes/ingress-nginx/pull/8379) bump luarocks to 3.8.0
-[8368](https://github.com/kubernetes/ingress-nginx/pull/8368) Updated semver in install docs URLs
-[8360](https://github.com/kubernetes/ingress-nginx/pull/8360) Bump github.com/stretchr/testify from 1.7.0 to 1.7.1
-[8334](https://github.com/kubernetes/ingress-nginx/pull/8334) Pinned GitHub workflows by SHA
-[8324](https://github.com/kubernetes/ingress-nginx/pull/8324) Added missing "repo" option on "helm upgrade" command
-[8315](https://github.com/kubernetes/ingress-nginx/pull/8315) Fix 50% split between canary and mainline tests
-[8311](https://github.com/kubernetes/ingress-nginx/pull/8311) leaving it the git tag
-[8307](https://github.com/kubernetes/ingress-nginx/pull/8307) Nginx v1.19.10
-[8302](https://github.com/kubernetes/ingress-nginx/pull/8302) docs: fix changelog formatting for 1.1.2
-[8300](https://github.com/kubernetes/ingress-nginx/pull/8300) Names cannot contain _ (underscore)! So I changed it to -.
-[8288](https://github.com/kubernetes/ingress-nginx/pull/8288) [docs] Missing annotations
-[8287](https://github.com/kubernetes/ingress-nginx/pull/8287) Add the shareProcessNamespace as a configurable setting in the helm chart
-[8286](https://github.com/kubernetes/ingress-nginx/pull/8286) Fix OpenTelemetry sidecar image build
-[8281](https://github.com/kubernetes/ingress-nginx/pull/8281) force prow job by changing something in images/ot dir
-[8273](https://github.com/kubernetes/ingress-nginx/pull/8273) Issue#8241
-[8267](https://github.com/kubernetes/ingress-nginx/pull/8267) Add fsGroup value to admission-webhooks/job-patch charts
-[8262](https://github.com/kubernetes/ingress-nginx/pull/8262) Updated confusing error
-[8258](https://github.com/kubernetes/ingress-nginx/pull/8258) remove 0.46.0 from supported versions table
-[8256](https://github.com/kubernetes/ingress-nginx/pull/8256) fix: deny locations with invalid auth-url annotation
-[8253](https://github.com/kubernetes/ingress-nginx/pull/8253) Add a certificate info metric
+- [8415](https://github.com/kubernetes/ingress-nginx/pull/8415) base img update for e2e-test-runner & opentelemetry
+- [8403](https://github.com/kubernetes/ingress-nginx/pull/8403) Add execute permissions to nginx image entrypoint.sh
+- [8392](https://github.com/kubernetes/ingress-nginx/pull/8392) fix document for monitoring
+- [8386](https://github.com/kubernetes/ingress-nginx/pull/8386) downgrade to 3.14.4 and fix tag
+- [8379](https://github.com/kubernetes/ingress-nginx/pull/8379) bump luarocks to 3.8.0
+- [8368](https://github.com/kubernetes/ingress-nginx/pull/8368) Updated semver in install docs URLs
+- [8360](https://github.com/kubernetes/ingress-nginx/pull/8360) Bump github.com/stretchr/testify from 1.7.0 to 1.7.1
+- [8334](https://github.com/kubernetes/ingress-nginx/pull/8334) Pinned GitHub workflows by SHA
+- [8324](https://github.com/kubernetes/ingress-nginx/pull/8324) Added missing "repo" option on "helm upgrade" command
+- [8315](https://github.com/kubernetes/ingress-nginx/pull/8315) Fix 50% split between canary and mainline tests
+- [8311](https://github.com/kubernetes/ingress-nginx/pull/8311) leaving it the git tag
+- [8307](https://github.com/kubernetes/ingress-nginx/pull/8307) Nginx v1.19.10
+- [8302](https://github.com/kubernetes/ingress-nginx/pull/8302) docs: fix changelog formatting for 1.1.2
+- [8300](https://github.com/kubernetes/ingress-nginx/pull/8300) Names cannot contain _ (underscore)! So I changed it to -.
+- [8288](https://github.com/kubernetes/ingress-nginx/pull/8288) [docs] Missing annotations 
+- [8287](https://github.com/kubernetes/ingress-nginx/pull/8287) Add the shareProcessNamespace as a configurable setting in the helm chart
+- [8286](https://github.com/kubernetes/ingress-nginx/pull/8286) Fix OpenTelemetry sidecar image build
+- [8281](https://github.com/kubernetes/ingress-nginx/pull/8281) force prow job by changing something in images/ot dir
+- [8273](https://github.com/kubernetes/ingress-nginx/pull/8273) Issue#8241
+- [8267](https://github.com/kubernetes/ingress-nginx/pull/8267) Add fsGroup value to admission-webhooks/job-patch charts
+- [8262](https://github.com/kubernetes/ingress-nginx/pull/8262) Updated confusing error
+- [8258](https://github.com/kubernetes/ingress-nginx/pull/8258) remove 0.46.0 from supported versions table
+- [8256](https://github.com/kubernetes/ingress-nginx/pull/8256) fix: deny locations with invalid auth-url annotation
+- [8253](https://github.com/kubernetes/ingress-nginx/pull/8253) Add a certificate info metric
 
 ### 1.1.2
 
@@ -1001,7 +1092,7 @@ _Documentation:_
 _New Features:_
 
 - NGINX 1.19.2
-- New configmap option `enable-real-ip` to enable [realip_module](http://nginx.org/en/docs/http/ngx_http_realip_module.html)
+- New configmap option `enable-real-ip` to enable [realip_module](https://nginx.org/en/docs/http/ngx_http_realip_module.html)
 - Use k8s.gcr.io vanity domain
 - Go 1.15
 - client-go v0.18.6
