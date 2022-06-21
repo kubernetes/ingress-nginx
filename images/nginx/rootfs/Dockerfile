@@ -70,7 +70,7 @@ RUN apk update \
   done'
 
 # enable sidecar / init cotnainer library path
-RUN echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/usr/lib" > /etc/ld-musl-x86_64.path
+RUN echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/otel/lib" > /etc/ld-musl-x86_64.path
 
 
 EXPOSE 80 443
