@@ -48,8 +48,8 @@ spec:
         - path: /*
           backend:
             service:
-              name: ssl-redirect
-              port: use-annotation
+              name: {{ template "ingress.service.name" . }}
+              port: {{ .Values.service.port }}
         - path: {{ .Values.alb.path }}
         {{- else if eq .Values.type "nginx"}}
         - path: {{ .Values.nginx.path }}
