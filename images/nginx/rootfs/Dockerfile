@@ -31,10 +31,8 @@ ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
-COPY --from=builder entrypoint.sh /usr/local/entrypoint.sh
 
-RUN chmod +x /usr/local/entrypoint.sh \
-  && apk update \
+RUN apk update \
   && apk upgrade \
   && apk add -U --no-cache \
   bash \
@@ -71,8 +69,10 @@ RUN chmod +x /usr/local/entrypoint.sh \
   chown -R www-data.www-data ${dir}; \
   done'
 
-EXPOSE 80 443
+# enable sidecar / init cotnainer library path
+RUN echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/usr/lib" > /etc/ld-musl-x86_64.path
 
-ENTRYPOINT ["/usr/local/entrypoint.sh"]
+
+EXPOSE 80 443
 
 CMD ["nginx", "-g", "daemon off;"]
