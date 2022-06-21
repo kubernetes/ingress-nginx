@@ -42,20 +42,18 @@ metadata:
   {{- end }}
 spec:
   rules:
-  - http:
-      paths:
-        {{- if eq .Values.type "alb" }}
-        - path: /*
+    - http:
+        paths:
+          {{- if eq .Values.type "alb" }}
+          - path: /*
+            backend:
+              serviceName: ssl-redirect
+              servicePort: use-annotation
+          - path: {{ .Values.alb.path }}
+          {{- else if eq .Values.type "nginx"}}
+          - path: {{ .Values.nginx.path }}
+          {{- end }}
           backend:
-            service:
-              name: {{ template "ingress.service.name" . }}
-              port: {{ .Values.service.port }}
-        - path: {{ .Values.alb.path }}
-        {{- else if eq .Values.type "nginx"}}
-        - path: {{ .Values.nginx.path }}
-        {{- end }}
-          backend:
-            service:
-              name: {{ template "ingress.service.name" . }}
-              port: {{ .Values.service.port }}
-{{- end }}
+            serviceName: {{ template "ingress.service.name" . }}
+            servicePort: {{ .Values.service.port }}
+  {{- end }}
