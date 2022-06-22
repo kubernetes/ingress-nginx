@@ -62,8 +62,10 @@ const (
 	globalAuthSnippet             = "global-auth-snippet"
 	globalAuthCacheKey            = "global-auth-cache-key"
 	globalAuthCacheDuration       = "global-auth-cache-duration"
+	globalAuthAlwaysSetCookie     = "global-auth-always-set-cookie"
 	luaSharedDictsKey             = "lua-shared-dicts"
 	plugins                       = "plugins"
+	debugConnections              = "debug-connections"
 )
 
 var (
@@ -110,6 +112,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	blockRefererList := make([]string, 0)
 	responseHeaders := make([]string, 0)
 	luaSharedDicts := make(map[string]int)
+	debugConnectionsList := make([]string, 0)
 
 	//parse lua shared dict values
 	if val, ok := conf[luaSharedDictsKey]; ok {
@@ -315,6 +318,16 @@ func ReadConfig(src map[string]string) config.Configuration {
 		to.GlobalExternalAuth.AuthCacheDuration = cacheDurations
 	}
 
+	if val, ok := conf[globalAuthAlwaysSetCookie]; ok {
+		delete(conf, globalAuthAlwaysSetCookie)
+
+		alwaysSetCookie, err := strconv.ParseBool(val)
+		if err != nil {
+			klog.Warningf("Global auth location denied - %s", fmt.Errorf("cannot convert %s to bool: %v", globalAuthAlwaysSetCookie, err))
+		}
+		to.GlobalExternalAuth.AlwaysSetCookie = alwaysSetCookie
+	}
+
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value
 	if val, ok := conf[proxyHeaderTimeout]; ok {
 		delete(conf, proxyHeaderTimeout)
@@ -360,6 +373,24 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[plugins]; ok {
 		to.Plugins = splitAndTrimSpace(val, ",")
 		delete(conf, plugins)
+	}
+
+	if val, ok := conf[debugConnections]; ok {
+		delete(conf, debugConnections)
+		for _, i := range splitAndTrimSpace(val, ",") {
+			validIp := net.ParseIP(i)
+			if validIp != nil {
+				debugConnectionsList = append(debugConnectionsList, i)
+			} else {
+				_, _, err := net.ParseCIDR(i)
+				if err == nil {
+					debugConnectionsList = append(debugConnectionsList, i)
+				} else {
+					klog.Warningf("%v is not a valid IP or CIDR address", i)
+				}
+			}
+		}
+		to.DebugConnections = debugConnectionsList
 	}
 
 	to.CustomHTTPErrors = filterErrors(errors)

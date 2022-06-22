@@ -28,6 +28,8 @@ On most Kubernetes clusters, the ingress controller will work without requiring 
   - ... [Bare-metal](#bare-metal-clusters)
 - [Miscellaneous](#miscellaneous)
 
+<!-- TODO: We have subdirectories for kubernetes versions now because of a PR https://github.com/kubernetes/ingress-nginx/pull/8162 . You can see this here https://github.com/kubernetes/ingress-nginx/tree/main/deploy/static/provider/cloud . We need to add documentation here that is clear and unambiguous in guiding users to pick the deployment manifest under a subdirectory, based on the K8S version being used. But until the explicit clear docs land here, users are recommended to feel free to use those subdirectories and get the manifest(s) related to their K8S version. -->
+
 ## Quick start
 
 **If you have Helm,** you can deploy the ingress controller with the following command:
@@ -49,7 +51,7 @@ It will install the controller in the `ingress-nginx` namespace, creating that n
 **If you don't have Helm** or if you prefer to use a YAML manifest, you can run the following command instead:
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 !!! info
@@ -91,7 +93,7 @@ Then create an ingress resource. The following example uses an host that maps to
 
 ```console
 kubectl create ingress demo-localhost --class=nginx \
-  --rule=demo.localdev.me/*=demo:80
+  --rule="demo.localdev.me/*=demo:80"
 ```
 
 Now, forward a local port to the ingress controller:
@@ -184,17 +186,17 @@ In AWS we use a Network load balancer (NLB) to expose the NGINX Ingress controll
 ##### Network Load Balancer (NLB)
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/aws/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/aws/deploy.yaml
 ```
 
 ##### TLS termination in AWS Load Balancer (NLB)
 
 By default, TLS is terminated in the ingress controller. But it is also possible to terminate TLS in the Load Balancer. This section explains how to do that on AWS using an NLB.
 
-1. Download the [deploy.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml) template
+1. Download the [deploy.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml) template
 
   ```console
-  wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml
+  wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml
   ```
 
 2. Edit the file and change the VPC CIDR in use for the Kubernetes cluster:
@@ -216,7 +218,7 @@ By default, TLS is terminated in the ingress controller. But it is also possible
 
 Idle timeout value for TCP flows is 350 seconds and [cannot be modified](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout).
 
-For this reason, you need to ensure the [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) value is configured less than 350 seconds to work as expected.
+For this reason, you need to ensure the [keepalive_timeout](https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) value is configured less than 350 seconds to work as expected.
 
 By default NGINX `keepalive_timeout` is set to `75s`.
 
@@ -236,7 +238,7 @@ Then, the ingress controller can be installed like this:
 
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 !!! warning
@@ -250,7 +252,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 #### Azure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 More information with regards to Azure annotations for ingress controller can be found in the [official AKS documentation](https://docs.microsoft.com/en-us/azure/aks/ingress-internal-ip#create-an-ingress-controller).
@@ -258,13 +260,13 @@ More information with regards to Azure annotations for ingress controller can be
 #### Digital Ocean
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/do/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/do/deploy.yaml
 ```
 
 #### Scaleway
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/scw/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/scw/deploy.yaml
 ```
 
 #### Exoscale
@@ -278,7 +280,7 @@ The full list of annotations supported by Exoscale is available in the Exoscale 
 #### Oracle Cloud Infrastructure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 A [complete list of available annotations for Oracle Cloud Infrastructure](https://github.com/oracle/oci-cloud-controller-manager/blob/master/docs/load-balancer-annotations.md) can be found in the [OCI Cloud Controller Manager](https://github.com/oracle/oci-cloud-controller-manager) documentation.
@@ -290,7 +292,7 @@ This section is applicable to Kubernetes clusters deployed on bare metal servers
 For quick testing, you can use a [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport). This should work on almost every cluster, but it will typically use a port in the range 30000-32767.
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/baremetal/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/baremetal/deploy.yaml
 ```
 
 For more information about bare metal deployments (and how to use port 80 instead of a random port in the 30000-32767 range), see [bare-metal considerations](./baremetal.md).
@@ -323,7 +325,7 @@ See also [“How to easily install multiple instances of the Ingress NGINX contr
 !!! attention
     The first time the ingress controller starts, two [Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) create the SSL Certificate used by the admission webhook.
 
-THis can cause an initial delay of up to two minutes until it is possible to create and validate Ingress definitions.
+This can cause an initial delay of up to two minutes until it is possible to create and validate Ingress definitions.
 
 You can wait until it is ready to run the next command:
 

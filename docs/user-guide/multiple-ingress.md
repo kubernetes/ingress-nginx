@@ -11,7 +11,7 @@ If all ingress controllers respect IngressClasses (e.g. multiple instances of in
 First, ensure the `--controller-class=` and `--ingress-class` are set to something different on each ingress controller:
 
 ```yaml
-# ingress-nginx Deployment/Statfulset
+# ingress-nginx Deployment/Statefulset
 spec:
   template:
      spec:

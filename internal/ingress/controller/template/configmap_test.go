@@ -75,6 +75,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"proxy-add-original-uri-header": "false",
 		"disable-ipv6-dns":              "true",
 		"default-type":                  "text/plain",
+		"debug-connections":             "127.0.0.1,1.1.1.1/24,::1",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -99,6 +100,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.LuaSharedDicts = defaultLuaSharedDicts
 	def.DisableIpv6DNS = true
 	def.DefaultType = "text/plain"
+	def.DebugConnections = []string{"127.0.0.1", "1.1.1.1/24", "::1"}
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",
@@ -225,6 +227,34 @@ func TestGlobalExternalAuthSigninParsing(t *testing.T) {
 		cfg := ReadConfig(map[string]string{"global-auth-signin": tc.signin})
 		if cfg.GlobalExternalAuth.SigninURL != tc.expect {
 			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.SigninURL)
+		}
+	}
+}
+
+func TestGlobalExternalAlwaysSetCookie(t *testing.T) {
+	testCases := map[string]struct {
+		alwaysSetCookie string
+		result          bool
+	}{
+		"true": {
+			alwaysSetCookie: "true",
+			result:          true,
+		},
+		"false": {
+			alwaysSetCookie: "false",
+		},
+		"set empty": {
+			alwaysSetCookie: "",
+		},
+		"error": {
+			alwaysSetCookie: "error string",
+		},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-always-set-cookie": tc.alwaysSetCookie})
+		if cfg.GlobalExternalAuth.AlwaysSetCookie != tc.result {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.result, cfg.GlobalExternalAuth.AlwaysSetCookie)
 		}
 	}
 }

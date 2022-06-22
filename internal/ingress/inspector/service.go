@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2022 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package inspector
 
 import (
-	"fmt"
-	"net/http"
+	corev1 "k8s.io/api/core/v1"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "UserID: %s, UserRole: %s", r.Header.Get("UserID"), r.Header.Get("UserRole"))
-}
-
-// Sample  "echo" service displaying UserID and UserRole HTTP request headers
-func main() {
-	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8080", nil)
+// InspectService will be used to inspect service objects for possible invalid configurations
+func InspectService(svc *corev1.Service) error {
+	return nil
 }

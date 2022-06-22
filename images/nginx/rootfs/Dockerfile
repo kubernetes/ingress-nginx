@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine:3.15.0 as builder
+FROM alpine:3.14.6 as builder
 
 COPY . /
 
@@ -21,7 +21,7 @@ RUN apk update \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.15.0
+FROM alpine:3.14.6
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
@@ -33,41 +33,42 @@ COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
 COPY --from=builder entrypoint.sh /usr/local/entrypoint.sh
 
-RUN apk update \
+RUN chmod +x /usr/local/entrypoint.sh \
+  && apk update \
   && apk upgrade \
   && apk add -U --no-cache \
-    bash \
-    openssl \
-    pcre \
-    zlib \
-    geoip \
-    curl \
-    ca-certificates \
-    patch \
-    yajl \
-    lmdb \
-    libxml2 \
-    libmaxminddb \
-    yaml-cpp \
-    dumb-init \
-    nano \
-    tzdata \
+  bash \
+  openssl \
+  pcre \
+  zlib \
+  geoip \
+  curl \
+  ca-certificates \
+  patch \
+  yajl \
+  lmdb \
+  libxml2 \
+  libmaxminddb \
+  yaml-cpp \
+  dumb-init \
+  nano \
+  tzdata \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
-    -s /sbin/nologin -G www-data -g www-data www-data \
+  -s /sbin/nologin -G www-data -g www-data www-data \
   && bash -eu -c ' \
   writeDirs=( \
-    /var/log/nginx \
-    /var/lib/nginx/body \
-    /var/lib/nginx/fastcgi \
-    /var/lib/nginx/proxy \
-    /var/lib/nginx/scgi \
-    /var/lib/nginx/uwsgi \
-    /var/log/audit \
+  /var/log/nginx \
+  /var/lib/nginx/body \
+  /var/lib/nginx/fastcgi \
+  /var/lib/nginx/proxy \
+  /var/lib/nginx/scgi \
+  /var/lib/nginx/uwsgi \
+  /var/log/audit \
   ); \
   for dir in "${writeDirs[@]}"; do \
-    mkdir -p ${dir}; \
-    chown -R www-data.www-data ${dir}; \
+  mkdir -p ${dir}; \
+  chown -R www-data.www-data ${dir}; \
   done'
 
 EXPOSE 80 443

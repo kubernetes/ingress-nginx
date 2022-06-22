@@ -133,7 +133,7 @@ func main() {
 
 	mc := metric.NewDummyCollector()
 	if conf.EnableMetrics {
-		mc, err = metric.NewCollector(conf.MetricsPerHost, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets)
+		mc, err = metric.NewCollector(conf.MetricsPerHost, conf.ReportStatusClasses, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets)
 		if err != nil {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}
@@ -151,6 +151,13 @@ func main() {
 	mux := http.NewServeMux()
 	registerHealthz(nginx.HealthPath, ngx, mux)
 	registerMetrics(reg, mux)
+
+	_, errExists := os.Stat("/chroot")
+	if errExists == nil {
+		conf.IsChroot = true
+		go logger(conf.InternalLoggerAddress)
+
+	}
 
 	go startHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
 	go ngx.Start()
@@ -320,8 +327,10 @@ func registerProfiler() {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf("127.0.0.1:%v", nginx.ProfilerPort),
-		Handler: mux,
+		Addr: fmt.Sprintf("127.0.0.1:%v", nginx.ProfilerPort),
+		//G112 (CWE-400): Potential Slowloris Attack
+		ReadHeaderTimeout: 10 * time.Second,
+		Handler:           mux,
 	}
 	klog.Fatal(server.ListenAndServe())
 }
