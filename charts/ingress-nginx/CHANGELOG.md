@@ -2,6 +2,10 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.1.5
+
+- "[8545](https://github.com/kubernetes/ingress-nginx/pull/8545) support extraEnvs for job resources in helm chart"
+
 ### 4.1.2
 
 - "[8587](https://github.com/kubernetes/ingress-nginx/pull/8587) Add CAP_SYS_CHROOT to DS/PSP when needed"
