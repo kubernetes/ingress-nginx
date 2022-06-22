@@ -45,6 +45,10 @@ ENV LUA_PATH="/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1
 ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
+# enable sidecar / init cotnainer library path
+# extra modules should use /modules_mount/<module_name>/lib, which should be added here
+RUN echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/otel/lib" > /etc/ld-musl-x86_64.path
+
 RUN apk update \
   && apk upgrade \
   && apk add -U --no-cache \

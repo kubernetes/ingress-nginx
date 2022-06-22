@@ -31,6 +31,10 @@ LABEL org.opencontainers.image.revision="${COMMIT_SHA}"
 
 LABEL build_id="${BUILD_ID}"
 
+# enable sidecar / init cotnainer library path
+# extra modules should use /modules_mount/<module_name>/lib, which should be added here
+RUN echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/otel/lib" > /etc/ld-musl-x86_64.path
+
 WORKDIR  /etc/nginx
 
 RUN apk update \
