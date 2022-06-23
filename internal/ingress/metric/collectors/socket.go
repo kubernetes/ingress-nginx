@@ -64,12 +64,11 @@ type HistogramBuckets struct {
 type SocketCollector struct {
 	prometheus.Collector
 
-	upstreamLatency    *prometheus.SummaryVec // TODO: DEPRECATED, remove
-	upstreamHeaderTime *prometheus.SummaryVec // TODO: DEPRECATED, remove
-	connectTime        *prometheus.HistogramVec
-	headerTime         *prometheus.HistogramVec
-	requestTime        *prometheus.HistogramVec
-	responseTime       *prometheus.HistogramVec
+	upstreamLatency *prometheus.SummaryVec // TODO: DEPRECATED, remove
+	connectTime     *prometheus.HistogramVec
+	headerTime      *prometheus.HistogramVec
+	requestTime     *prometheus.HistogramVec
+	responseTime    *prometheus.HistogramVec
 
 	requestLength  *prometheus.HistogramVec
 	responseLength *prometheus.HistogramVec
@@ -222,17 +221,6 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			requestTags,
 		),
 
-		upstreamHeaderTime: prometheus.NewSummaryVec(
-			prometheus.SummaryOpts{
-				Name:        "ingress_upstream_header_seconds",
-				Help:        "DEPRECATED The time spent on receiving first header from the upstream server",
-				Namespace:   PrometheusNamespace,
-				ConstLabels: constLabels,
-				Objectives:  defObjectives,
-			},
-			[]string{"ingress", "namespace", "service", "canary"},
-		),
-
 		upstreamLatency: prometheus.NewSummaryVec(
 			prometheus.SummaryOpts{
 				Name:        "ingress_upstream_latency_seconds",
@@ -258,7 +246,6 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 
 		prometheus.BuildFQName(PrometheusNamespace, "", "bytes_sent"): sc.bytesSent,
 
-		prometheus.BuildFQName(PrometheusNamespace, "", "ingress_upstream_header_seconds"):  sc.upstreamHeaderTime,
 		prometheus.BuildFQName(PrometheusNamespace, "", "ingress_upstream_latency_seconds"): sc.upstreamLatency,
 	}
 
@@ -347,13 +334,6 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 				klog.ErrorS(err, "Error fetching header time metric")
 			} else {
 				headerTimeMetric.Observe(stats.HeaderTime)
-			}
-
-			upstreamHeaderTimeMetric, err := sc.upstreamHeaderTime.GetMetricWith(latencyLabels)
-			if err != nil {
-				klog.ErrorS(err, "Error fetching upstream header time metric")
-			} else {
-				upstreamHeaderTimeMetric.Observe(stats.HeaderTime)
 			}
 		}
 
@@ -502,7 +482,6 @@ func (sc SocketCollector) Describe(ch chan<- *prometheus.Desc) {
 	sc.requests.Describe(ch)
 
 	sc.upstreamLatency.Describe(ch)
-	sc.upstreamHeaderTime.Describe(ch)
 
 	sc.bytesSent.Describe(ch)
 }
@@ -520,7 +499,6 @@ func (sc SocketCollector) Collect(ch chan<- prometheus.Metric) {
 	sc.requests.Collect(ch)
 
 	sc.upstreamLatency.Collect(ch)
-	sc.upstreamHeaderTime.Collect(ch)
 
 	sc.bytesSent.Collect(ch)
 }
