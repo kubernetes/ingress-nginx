@@ -148,7 +148,7 @@ jobs:
 
       - name: Run helm-docs
         run: |
-          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.8.1
+          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@e91c4c3337d3bf3fdad8de1763999a5c3325567f 
           ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
           DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
           if [ ! -z "$DIFF" ]; then
@@ -232,12 +232,10 @@ jobs:
           failOnError: false
 
       - name: Prepare cluster for testing
+        uses: azure/setup-helm@217bf70cbd2e930ba2e81ba7e1de2f7faecc42ba #v2.1
+        with:
+          version: 'v3.8.0'
         id: local-path
-        run: |
-          kubectl version
-          echo
-          echo "installing helm 3..."
-          curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
       - name: Load images from cache
         run: |
@@ -290,12 +288,10 @@ jobs:
           failOnError: false
 
       - name: Prepare cluster for testing
+        uses: azure/setup-helm@217bf70cbd2e930ba2e81ba7e1de2f7faecc42ba #v2.1
+        with:
+          version: 'v3.8.0'
         id: local-path
-        run: |
-          kubectl version
-          echo
-          echo "installing helm 3..."
-          curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
       - name: Load images from cache
         run: |

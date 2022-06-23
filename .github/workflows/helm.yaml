@@ -6,6 +6,9 @@ on:
       - main
       - legacy
 
+permissions:
+  contents: read
+
 jobs:
 
   changes:
