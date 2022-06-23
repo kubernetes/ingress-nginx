@@ -31,10 +31,8 @@ ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
-COPY --from=builder entrypoint.sh /usr/local/entrypoint.sh
 
-RUN chmod +x /usr/local/entrypoint.sh \
-  && apk update \
+RUN apk update \
   && apk upgrade \
   && apk add -U --no-cache \
   bash \
@@ -72,7 +70,5 @@ RUN chmod +x /usr/local/entrypoint.sh \
   done'
 
 EXPOSE 80 443
-
-ENTRYPOINT ["/usr/local/entrypoint.sh"]
 
 CMD ["nginx", "-g", "daemon off;"]
