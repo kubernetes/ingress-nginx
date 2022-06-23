@@ -175,7 +175,7 @@ func TestCollector(t *testing.T) {
 			}]`},
 			metrics: []string{"nginx_ingress_controller_requests"},
 			wantBefore: `
-				# HELP nginx_ingress_controller_requests The total number of client requests.
+				# HELP nginx_ingress_controller_requests The total number of client requests
 				# TYPE nginx_ingress_controller_requests counter
 				nginx_ingress_controller_requests{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="200"} 1
 			`,
@@ -308,7 +308,7 @@ func TestCollector(t *testing.T) {
 				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml-qa",method="GET",namespace="test-app-qa",path="/admin",service="test-app-qa",status="200",le="10"} 0
 				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml-qa",method="GET",namespace="test-app-qa",path="/admin",service="test-app-qa",status="200",le="+Inf"} 2
 				nginx_ingress_controller_response_duration_seconds_sum{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml-qa",method="GET",namespace="test-app-qa",path="/admin",service="test-app-qa",status="200"} 400
-				nginx_ingress_controller_response_duration_seconds_count{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml-qa",method="GET",namespace="test-app-qa",path="/admin",service="test-app-qa",status="200"} 2			
+				nginx_ingress_controller_response_duration_seconds_count{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml-qa",method="GET",namespace="test-app-qa",path="/admin",service="test-app-qa",status="200"} 2
 			`,
 		},
 
