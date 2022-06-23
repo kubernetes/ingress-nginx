@@ -9,6 +9,9 @@ on:
       tags:
         description: 'K6 Load Test'  
 
+permissions:
+  contents: read
+
 jobs:
   k6_test_run:
     runs-on: ubuntu-latest

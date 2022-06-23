@@ -26,9 +26,9 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
-      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2
+      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2.10.2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -49,7 +49,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
       - name: Run Gosec Security Scanner
         uses: securego/gosec@b99b5f7838e43a4104354ad92a6a1774302ee1f9 # master
@@ -67,20 +67,22 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
       - name: Set up Go 1.18
         id: go
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v2
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
         with:
           go-version: '1.18.2'
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@8b122486cedac8393e77aa9734c3528886e4a1a8 #v2.0.0
+
       - name: Set up Docker Buildx
         id: buildx
-        uses: crazy-max/ghaction-docker-buildx@126d331dc69f4a1aa02452e374835e6a5d565613 # v1
+        uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # v2.0.0
         with:
-          buildx-version: latest
-          qemu-version: latest
+          version: latest
 
       - name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
@@ -111,7 +113,7 @@ jobs:
             | pigz > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v2
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
         with:
           name: docker.tar.gz
           path: docker.tar.gz
@@ -128,15 +130,15 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
       - name: Setup Go
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v2
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
         with:
           go-version: '1.18.2'
 
       - name: cache
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3
         with:
           name: docker.tar.gz
 
@@ -146,7 +148,7 @@ jobs:
 
       - name: Run helm-docs
         run: |
-          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.8.1
+          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@e91c4c3337d3bf3fdad8de1763999a5c3325567f  # v1.8.1
           ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
           DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
           if [ ! -z "$DIFF" ]; then
@@ -169,7 +171,7 @@ jobs:
 
       - name: Create Kubernetes cluster
         id: kind
-        uses: engineerd/setup-kind@v0.5.0
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
           version: v0.14.0
           image: kindest/node:v1.21.12
@@ -209,7 +211,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
       - name: cache
         uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v2
@@ -218,7 +220,7 @@ jobs:
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@v0.5.0
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
           version: v0.14.0
           config: test/e2e/kind.yaml
@@ -230,12 +232,10 @@ jobs:
           failOnError: false
 
       - name: Prepare cluster for testing
+        uses: azure/setup-helm@217bf70cbd2e930ba2e81ba7e1de2f7faecc42ba #v2.1
+        with:
+          version: 'v3.8.0'
         id: local-path
-        run: |
-          kubectl version
-          echo
-          echo "installing helm 3..."
-          curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
       - name: Load images from cache
         run: |
@@ -267,7 +267,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
       - name: cache
         uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
@@ -276,24 +276,22 @@ jobs:
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@v0.5.0
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
           version: v0.14.0
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@a6ab43859c960a8b74cbc6291f362c7fb51829ba
         with:
           name: docker.tar.gz
           failOnError: false
 
       - name: Prepare cluster for testing
+        uses: azure/setup-helm@217bf70cbd2e930ba2e81ba7e1de2f7faecc42ba #v2.1
+        with:
+          version: 'v3.8.0'
         id: local-path
-        run: |
-          kubectl version
-          echo
-          echo "installing helm 3..."
-          curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
       - name: Load images from cache
         run: |
@@ -319,9 +317,9 @@ jobs:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
-      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2
+      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2.10.2
         id: filter-images
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -385,9 +383,9 @@ jobs:
       PLATFORMS: linux/amd64
     steps:
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
-      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2
+      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2.10.2
         id: filter-images
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -398,7 +396,7 @@ jobs:
       - name: Create Kubernetes cluster
         id: kind
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: engineerd/setup-kind@v0.5.0
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
           version: v0.14.0
           image: kindest/node:v1.21.12
@@ -406,7 +404,7 @@ jobs:
       - name: Set up Go 1.18
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v2
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
         with:
           go-version: '1.18.2'
 
