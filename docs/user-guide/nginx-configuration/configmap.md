@@ -904,7 +904,8 @@ Enables the nginx Opentelemetry extension. _**default:**_ is disabled
 
 ## opentelemetry-config
 
-Opentelemetry exporters, processors, etc config. Mandatory
+Opentelemetry exporters, processors, etc config. Mandatory, if enable-opentelemetry is enabled
+For more details see docs/user-guide/third-party-addons/opentelemetry.md 
 
 ## zipkin-collector-host
 

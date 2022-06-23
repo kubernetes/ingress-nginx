@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-for path in /etc/nginx/modules /usr/lib; 
+for path in /etc/nginx/modules /otel/lib; 
 do 
     mkdir -p  /modules_mount${path}
     cp -R $path/* /modules_mount${path}/; 
