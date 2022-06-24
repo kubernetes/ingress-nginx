@@ -45,9 +45,6 @@ ENV LUA_PATH="/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1
 ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
-# enable sidecar / init cotnainer library path
-# extra modules should use /modules_mount/<module_name>/lib, which should be added here
-RUN echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/otel/lib" > /etc/ld-musl-x86_64.path
 
 RUN apk update \
   && apk upgrade \
@@ -84,7 +81,11 @@ RUN bash -xeu -c ' \
   for dir in "${writeDirs[@]}"; do \
     mkdir -p ${dir}; \
     chown -R www-data.www-data ${dir}; \
-  done'
+  done' \
+  # LD_LIBRARY_PATH does not work so below is needed for  opentelemetry/other modules
+  # Put libs of newer modules under `/modules_mount/<other>/lib` and add that path below
+  # Could get complicated arch specific paths become a need
+  && echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/otel/lib" > /etc/ld-musl-x86_64.path
 
 RUN apk add --no-cache libcap \
   && setcap    cap_sys_chroot,cap_net_bind_service=+ep /nginx-ingress-controller \
