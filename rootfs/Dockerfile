@@ -31,8 +31,6 @@ LABEL org.opencontainers.image.revision="${COMMIT_SHA}"
 
 LABEL build_id="${BUILD_ID}"
 
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/modules_mount/etc/nginx/modules/modules
-
 WORKDIR  /etc/nginx
 
 RUN apk update \
@@ -61,7 +59,12 @@ RUN bash -xeu -c ' \
   for dir in "${writeDirs[@]}"; do \
     mkdir -p ${dir}; \
     chown -R www-data.www-data ${dir}; \
-  done'
+  done' \
+  # LD_LIBRARY_PATH does not work so below is needed for  opentelemetry/other modules
+  # Put libs of newer modules under `/modules_mount/<other>/lib` and add that path below
+  # Could get complicated arch specific paths become a need
+  && echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/otel/lib" > /etc/ld-musl-x86_64.path
+  
 
 RUN apk add --no-cache libcap \
   && setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
