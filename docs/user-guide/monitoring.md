@@ -18,7 +18,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   2. controller.podAnnotations."prometheus.io/scrape"="true"
   3. controller.podAnnotations."prometheus.io/port"="10254"
 
-  - The easiest way to configure the controller for metrics is via helm upgrade. Assuming you have installed the ingress-nginx controller as a helm release named ingress-nginx, then you can simply type the command show below :
+  - The easiest way to configure the controller for metrics is via helm upgrade. Assuming you have installed the ingress-nginx controller as a helm release named ingress-nginx, then you can simply type the command shown below :
   ```
   helm upgrade ingress-nginx ingress-nginx \
   --repo https://kubernetes.github.io/ingress-nginx \
