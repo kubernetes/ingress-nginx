@@ -78,7 +78,7 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 		o(options)
 	}
 
-	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:131ece0637b29231470cfaa04690c2966a2e0b147d3c9df080a0857b78982410", 80, int32(options.replicas),
+	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:05948cf43aa41050943b2c887adcc2f7630893b391c1201e99a6c12ed06ba51b", 80, int32(options.replicas),
 		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
