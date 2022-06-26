@@ -21,6 +21,7 @@ FROM ${BASE_IMAGE} as chroot
 COPY chroot.sh /chroot.sh
 RUN apk update \
   && apk upgrade \
+  && chmod +x /chroot.sh \
   && /chroot.sh
 
 FROM alpine:3.14.6

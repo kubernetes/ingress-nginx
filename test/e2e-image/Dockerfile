@@ -18,4 +18,6 @@ COPY --from=BASE /usr/bin/cfssljson /usr/local/bin/
 
 COPY . /
 
+RUN chmod +x /e2e.sh
+
 CMD [ "/e2e.sh" ]
