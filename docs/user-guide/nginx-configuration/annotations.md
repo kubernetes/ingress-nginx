@@ -95,6 +95,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/satisfy](#satisfy)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
+|[nginx.ingress.kubernetes.io/server-no-root-location](#server-no-root-location)|string|
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
@@ -428,6 +429,25 @@ metadata:
 
 !!! attention
     This annotation can be used only once per host.
+
+### Server no root location
+
+Using the annotation `nginx.ingress.kubernetes.io/server-no-root-location` it is possible to add custom root location configuration in the server configuration block.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/server-no-root-location: true
+    nginx.ingress.kubernetes.io/server-snippet: |
+        location / {
+      	  return 200;
+        }
+```
+
+!!! attention
+This annotation can be used only once per host.
 
 ### Client Body Buffer Size
 

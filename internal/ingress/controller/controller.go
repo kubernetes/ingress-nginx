@@ -581,6 +581,11 @@ func dropSnippetDirectives(anns *annotations.Ingress, ingKey string) {
 			anns.ServerSnippet = ""
 		}
 
+		if anns.ServerNoRootLocation != false {
+			klog.V(3).Infof("Ingress %q tried to use server-no-root-location and the annotation is disabled by the admin. Removing the annotation", ingKey)
+			anns.ServerNoRootLocation = false
+		}
+
 		if anns.ModSecurity.Snippet != "" {
 			klog.V(3).Infof("Ingress %q tried to use modsecurity-snippet and the annotation is disabled by the admin. Removing the annotation", ingKey)
 			anns.ModSecurity.Snippet = ""
@@ -1241,24 +1246,26 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				continue
 			}
 
-			loc := &ingress.Location{
-				Path:         rootLocation,
-				PathType:     &pathTypePrefix,
-				IsDefBackend: true,
-				Backend:      un,
-				Ingress:      ing,
-				Service:      &apiv1.Service{},
-			}
-			locationApplyAnnotations(loc, anns)
-
 			servers[host] = &ingress.Server{
-				Hostname: host,
-				Locations: []*ingress.Location{
-					loc,
-				},
+				Hostname:               host,
 				SSLPassthrough:         anns.SSLPassthrough,
 				SSLCiphers:             anns.SSLCipher.SSLCiphers,
 				SSLPreferServerCiphers: anns.SSLCipher.SSLPreferServerCiphers,
+			}
+
+			if !anns.ServerNoRootLocation {
+				loc := &ingress.Location{
+					Path:         rootLocation,
+					PathType:     &pathTypePrefix,
+					IsDefBackend: true,
+					Backend:      un,
+					Ingress:      ing,
+					Service:      &apiv1.Service{},
+				}
+				locationApplyAnnotations(loc, anns)
+				servers[host].Locations = []*ingress.Location{loc}
+			} else {
+				servers[host].Locations = []*ingress.Location{}
 			}
 		}
 	}

@@ -21,6 +21,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/servernorootlocation"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/streamsnippet"
 	"k8s.io/klog/v2"
@@ -87,36 +88,37 @@ type Ingress struct {
 	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
-	FastCGI            fastcgi.Config
-	Denied             *string
-	ExternalAuth       authreq.Config
-	EnableGlobalAuth   bool
-	HTTP2PushPreload   bool
-	Opentracing        opentracing.Config
-	Proxy              proxy.Config
-	ProxySSL           proxyssl.Config
-	RateLimit          ratelimit.Config
-	GlobalRateLimit    globalratelimit.Config
-	Redirect           redirect.Config
-	Rewrite            rewrite.Config
-	Satisfy            string
-	SecureUpstream     secureupstream.Config
-	ServerSnippet      string
-	ServiceUpstream    bool
-	SessionAffinity    sessionaffinity.Config
-	SSLPassthrough     bool
-	UsePortInRedirects bool
-	UpstreamHashBy     upstreamhashby.Config
-	LoadBalancing      string
-	UpstreamVhost      string
-	Whitelist          ipwhitelist.SourceRange
-	XForwardedPrefix   string
-	SSLCipher          sslcipher.Config
-	Logs               log.Config
-	InfluxDB           influxdb.Config
-	ModSecurity        modsecurity.Config
-	Mirror             mirror.Config
-	StreamSnippet      string
+	FastCGI              fastcgi.Config
+	Denied               *string
+	ExternalAuth         authreq.Config
+	EnableGlobalAuth     bool
+	HTTP2PushPreload     bool
+	Opentracing          opentracing.Config
+	Proxy                proxy.Config
+	ProxySSL             proxyssl.Config
+	RateLimit            ratelimit.Config
+	GlobalRateLimit      globalratelimit.Config
+	Redirect             redirect.Config
+	Rewrite              rewrite.Config
+	Satisfy              string
+	SecureUpstream       secureupstream.Config
+	ServerSnippet        string
+	ServerNoRootLocation bool
+	ServiceUpstream      bool
+	SessionAffinity      sessionaffinity.Config
+	SSLPassthrough       bool
+	UsePortInRedirects   bool
+	UpstreamHashBy       upstreamhashby.Config
+	LoadBalancing        string
+	UpstreamVhost        string
+	Whitelist            ipwhitelist.SourceRange
+	XForwardedPrefix     string
+	SSLCipher            sslcipher.Config
+	Logs                 log.Config
+	InfluxDB             influxdb.Config
+	ModSecurity          modsecurity.Config
+	Mirror               mirror.Config
+	StreamSnippet        string
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -152,6 +154,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Satisfy":              satisfy.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"ServerSnippet":        serversnippet.NewParser(cfg),
+			"ServerNoRootLocation": servernorootlocation.NewParser(cfg),
 			"ServiceUpstream":      serviceupstream.NewParser(cfg),
 			"SessionAffinity":      sessionaffinity.NewParser(cfg),
 			"SSLPassthrough":       sslpassthrough.NewParser(cfg),
