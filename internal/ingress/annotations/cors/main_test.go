@@ -172,3 +172,32 @@ func TestIngressCorsConfigInvalid(t *testing.T) {
 		t.Errorf("expected %v but returned %v", defaultCorsMaxAge, nginxCors.CorsMaxAge)
 	}
 }
+
+func TestIngressCorsWildcardPort(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+
+	// Valid
+	data[parser.GetAnnotationWithPrefix("enable-cors")] = "true"
+	data[parser.GetAnnotationWithPrefix("cors-allow-origin")] = "https://origin123.test.com:*"
+	ing.SetAnnotations(data)
+
+	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("error parsing annotations: %v", err)
+	}
+
+	nginxCors, ok := corst.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type but returned %t", corst)
+	}
+
+	if !nginxCors.CorsEnabled {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("enable-cors")], nginxCors.CorsEnabled)
+	}
+
+	if nginxCors.CorsAllowOrigin[0] != "https://origin123.test.com:*" {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-origin")], nginxCors.CorsAllowOrigin)
+	}
+}

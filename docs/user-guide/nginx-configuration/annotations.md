@@ -369,8 +369,9 @@ CORS can be controlled with the following annotations:
     - Default: `*`
     - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443, http://origin-site.com, https://example.org:1199"`
 
-    It also supports single level wildcard subdomains and follows this format: `http(s)://*.foo.bar`, `http(s)://*.bar.foo:8080` or `http(s)://*.abc.bar.foo:9000`
-    - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.origin-site.com:4443, http://*.origin-site.com, https://example.org:1199"`
+    It also supports single level wildcard subdomains and follows this format: `http(s)://*.foo.bar`, `http(s)://*.bar.foo:8080` or `http(s)://*.abc.bar.foo:9000`.
+    Wildcard port also works: `http(s)://localhost:*`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.origin-site.com:4443, http://*.origin-site.com, https://example.org:*"`
 
 * `nginx.ingress.kubernetes.io/cors-allow-credentials`: Controls if credentials can be passed during CORS operations.
 
