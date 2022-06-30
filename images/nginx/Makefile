@@ -33,7 +33,7 @@ export DOCKER_CLI_EXPERIMENTAL=enabled
 PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
 OUTPUT=
 PROGRESS=plain
-build: ensure-buildx
+build: docker buildx
 	docker buildx build \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
