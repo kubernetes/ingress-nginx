@@ -86,7 +86,6 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 	docker build \
 		--no-cache \
 		--pull \
-		--load \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg TARGET_ARCH="$(ARCH)" \

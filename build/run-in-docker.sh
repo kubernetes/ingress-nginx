@@ -65,12 +65,16 @@ fi
 echo "..printing env & other vars to stdout"
 echo "HOSTNAME=`hostname`"
 uname -a
-env
+
+if [ -n "$DEBUG" ]; then
+  env
+fi
+
 echo "DIND_ENABLED=$DOCKER_IN_DOCKER_ENABLED"
 echo "done..printing env & other vars to stdout"
 
 if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
-  echo "..reached DIND check TRUE block, inside run-in-docker.sh"
+  echo "Reached DIND check TRUE block, inside run-in-docker.sh"
   echo "FLAGS=$FLAGS"
   go env
   set -x
@@ -80,7 +84,7 @@ if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   /bin/bash -c "${FLAGS}"
   set +x
 else
-  echo "..reached DIND check ELSE block, inside run-in-docker.sh"
+  echo "Reached DIND check ELSE block, inside run-in-docker.sh"
   docker run                                            \
     ${PLATFORM_FLAG} ${PLATFORM}                        \
     --tty                                               \
