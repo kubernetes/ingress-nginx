@@ -228,10 +228,6 @@ EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
 
-echo:
-
-	echo "Building and pushing ingress-nginx image...$(subst $(SPACE),$(COMMA),$(BUILD_PLATFORMS))"
-
 .PHONY: release # Build a multi-arch docker image
 release: ensure-buildx clean
 	echo "Building binaries..."
