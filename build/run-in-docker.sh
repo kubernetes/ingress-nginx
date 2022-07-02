@@ -65,10 +65,7 @@ fi
 echo "..printing env & other vars to stdout"
 echo "HOSTNAME=`hostname`"
 uname -a
-
-if [ -n "$DEBUG" ]; then
-  env
-fi
+env
 
 echo "DIND_ENABLED=$DOCKER_IN_DOCKER_ENABLED"
 echo "done..printing env & other vars to stdout"
