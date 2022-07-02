@@ -64,9 +64,9 @@ COPY --from=chroot /chroot /chroot
 
 COPY --chown=www-data:www-data etc /chroot/etc
 
-COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
-COPY --chown=www-data:www-data bin/${TARGETARCH}/nginx-ingress-controller /
-COPY --chown=www-data:www-data bin/${TARGETARCH}/wait-shutdown /
+COPY --chown=www-data:www-data bin/${TARGET_ARCH}/dbg /
+COPY --chown=www-data:www-data bin/${TARGET_ARCH}/nginx-ingress-controller /
+COPY --chown=www-data:www-data bin/${TARGET_ARCH}/wait-shutdown /
 COPY --chown=www-data:www-data nginx-chroot-wrapper.sh /usr/bin/nginx
 
 WORKDIR /chroot/etc/nginx
