@@ -65,12 +65,13 @@ help:  ## Display this help
 .PHONY: image
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	@docker build \
+	docker buildx build \
 		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
+		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		--build-arg TARGETARCH="$(ARCH)" \
+		--build-arg TARGET_ARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
@@ -82,11 +83,12 @@ gosec:
 .PHONY: image-chroot
 image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	@docker build \
+	docker buildx build \
 		--no-cache \
+		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		--build-arg TARGETARCH="$(ARCH)" \
+		--build-arg TARGET_ARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile.chroot
@@ -111,7 +113,6 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
-		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
 		build/build.sh
 
 .PHONY: build-plugin
@@ -122,7 +123,6 @@ build-plugin:  ## Build ingress-nginx krew plugin.
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
-		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
 		build/build-plugin.sh
 
 .PHONY: clean
@@ -142,7 +142,6 @@ test:  ## Run go unit tests.
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
-		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
 		build/test.sh
 
 .PHONY: lua-test

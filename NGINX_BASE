@@ -1,1 +1,1 @@
-k8s.gcr.io/ingress-nginx/nginx:9960efe1e9a9c6e944967b52e1a8a7b7b659874d@sha256:99f079bc9e418b450e0902ea78e86c70315dad3a420871d29e812c55cc0beea1
+registry.k8s.io/ingress-nginx/nginx:0ff500c23f34e939305de709cb6d47da34b66611@sha256:15f91034a03550dfab6ec50a7be4abbb683d087e234ad7fef5adedef54e46a5a

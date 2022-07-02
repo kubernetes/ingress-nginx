@@ -18,6 +18,8 @@ package framework
 
 import (
 	"context"
+	"errors"
+	"os"
 	"time"
 
 	"github.com/onsi/ginkgo"
@@ -37,13 +39,11 @@ const SlowEchoService = "slow-echo"
 // HTTPBinService name of the deployment for the httpbin app
 const HTTPBinService = "httpbin"
 
-// NginxBaseImage use for testing
-const NginxBaseImage = "registry.k8s.io/ingress-nginx/nginx:0ff500c23f34e939305de709cb6d47da34b66611@sha256:15f91034a03550dfab6ec50a7be4abbb683d087e234ad7fef5adedef54e46a5a"
-
 type deploymentOptions struct {
 	namespace string
 	name      string
 	replicas  int
+	image     string
 }
 
 // WithDeploymentNamespace allows configuring the deployment's namespace
@@ -67,7 +67,7 @@ func WithDeploymentReplicas(r int) func(*deploymentOptions) {
 	}
 }
 
-// NewEchoDeployment creates a new single replica deployment of the echoserver image in a particular namespace
+// NewEchoDeployment creates a new single replica deployment of the echo server image in a particular namespace
 func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 	options := &deploymentOptions{
 		namespace: f.Namespace,
@@ -150,6 +150,16 @@ http {
 	f.NGINXWithConfigDeployment(SlowEchoService, cfg)
 }
 
+func (f *Framework) GetNginxBaseImage() string {
+	nginxBaseImage := os.Getenv("NGINX_BASE_IMAGE")
+
+	if nginxBaseImage == "" {
+		assert.Nil(ginkgo.GinkgoT(), errors.New("NGINX_BASE_IMAGE not defined"), "NGINX_BASE_IMAGE not defined")
+	}
+
+	return nginxBaseImage
+}
+
 // NGINXDeployment creates a new simple NGINX Deployment using NGINX base image
 // and passing the desired configuration
 func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) {
@@ -166,7 +176,7 @@ func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) 
 	}, metav1.CreateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
 
-	deployment := newDeployment(name, f.Namespace, NginxBaseImage, 80, 1,
+	deployment := newDeployment(name, f.Namespace, f.GetNginxBaseImage(), 80, 1,
 		nil,
 		[]corev1.VolumeMount{
 			{
