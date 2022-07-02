@@ -21,8 +21,6 @@ if [ -n "$DEBUG" ]; then
 	GO_BUILD_CMD="go build -v"
 fi
 
-
-
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -35,7 +33,6 @@ mandatory=(
   REPO_INFO
   TAG
 )
-
 
 for var in "${mandatory[@]}"; do
   if [[ -z "${!var:-}" ]]; then

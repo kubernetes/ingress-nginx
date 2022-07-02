@@ -65,7 +65,7 @@ help:  ## Display this help
 .PHONY: image
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	docker buildx build \
+	docker build \
 		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
 		--pull \
@@ -84,7 +84,7 @@ gosec:
 .PHONY: image-chroot
 image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	docker buildx build \
+	docker build \
 		--no-cache \
 		--pull \
 		--load \
@@ -224,35 +224,40 @@ show-version:
 	echo -n $(TAG)
 
 PLATFORMS ?= amd64 arm arm64 s390x
-
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
 
+echo:
+
+	echo "Building and pushing ingress-nginx image...$(subst $(SPACE),$(COMMA),$(BUILD_PLATFORMS))"
+
 .PHONY: release # Build a multi-arch docker image
-release: ensure-buildx #clean
+release: ensure-buildx clean
 	echo "Building binaries..."
 	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
 
-	echo "Building and pushing ingress-nginx image..."
+	echo "Building and pushing ingress-nginx image...$(subst $(SPACE),$(COMMA),$(PLATFORMS))"
+
+
 	docker buildx build \
 		--no-cache \
 		--push \
 		--pull \
 		--progress plain \
-		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--platform linux/amd64,linux/arm,linux/arm64,linux/s390x \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
-	
+
 	docker buildx build \
 		--no-cache \
 		--push \
 		--pull \
 		--progress plain \
-		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--platform linux/amd64,linux/arm,linux/arm64,linux/s390x \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
