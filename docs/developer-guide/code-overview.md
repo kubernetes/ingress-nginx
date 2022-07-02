@@ -12,8 +12,9 @@ This part of the code is responsible for the main logic of Ingress NGINX. It con
 ### Core Sync Logics:
 
 Ingress-nginx has an internal model of the ingresses, secrets and endpoints in a given cluster. It maintains two copies of that:
-1. currently running configuration model
-1. the one generated in response to some changes in the cluster
+
+1. One copy is the currently running configuration model
+2. Second copy is the one generated in response to some changes in the cluster
 
 The sync logic diffs the two models and if there's a change it tries to converge the running configuration to the new one. 
 
