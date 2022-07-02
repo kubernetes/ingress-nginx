@@ -230,12 +230,12 @@ SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
 
 .PHONY: release # Build a multi-arch docker image
-release: ensure-buildx clean
+release: ensure-buildx #clean
 	echo "Building binaries..."
 	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
 
 	echo "Building and pushing ingress-nginx image..."
-	@docker buildx build \
+	docker buildx build \
 		--no-cache \
 		--push \
 		--pull \
@@ -247,7 +247,7 @@ release: ensure-buildx clean
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
 	
-	@docker buildx build \
+	docker buildx build \
 		--no-cache \
 		--push \
 		--pull \
