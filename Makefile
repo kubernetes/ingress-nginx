@@ -91,7 +91,7 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 		--build-arg TARGET_ARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
-		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile.chroot
+		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile-chroot
 
 .PHONY: clean-image
 clean-image: ## Removes local image
@@ -256,4 +256,4 @@ release: ensure-buildx clean
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
-		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile.chroot
+		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile-chroot
