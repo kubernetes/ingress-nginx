@@ -69,6 +69,7 @@ image: clean-image ## Build image for a particular arch.
 		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
 		--pull \
+		--load \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg TARGET_ARCH="$(ARCH)" \
@@ -86,6 +87,7 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 	docker buildx build \
 		--no-cache \
 		--pull \
+		--load \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg TARGET_ARCH="$(ARCH)" \
@@ -236,6 +238,7 @@ release: ensure-buildx clean
 	@docker buildx build \
 		--no-cache \
 		--push \
+		--pull \
 		--progress plain \
 		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
@@ -247,6 +250,7 @@ release: ensure-buildx clean
 	@docker buildx build \
 		--no-cache \
 		--push \
+		--pull \
 		--progress plain \
 		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
