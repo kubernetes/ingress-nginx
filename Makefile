@@ -67,6 +67,7 @@ image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
 	docker build \
 		${PLATFORM_FLAG} ${PLATFORM} \
+		--load \
 		--no-cache \
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
@@ -85,6 +86,7 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
 	docker build \
 		--no-cache \
+		--load \
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \

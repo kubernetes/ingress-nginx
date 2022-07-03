@@ -57,7 +57,7 @@ mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
 PLATFORM="${PLATFORM:-}"
 if [[ -n "$PLATFORM" ]]; then
-  PLATFORM_FLAG=--platform
+  PLATFORM_FLAG="--platform"
 else
   PLATFORM_FLAG=
 fi
@@ -96,6 +96,5 @@ else
     -v "/var/run/docker.sock:/var/run/docker.sock"      \
     -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
     -w "/go/src/${PKG}"                                 \
-    -u $(id -u ${USER}):$(id -g ${USER})                \
     ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
 fi
