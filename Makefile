@@ -125,6 +125,7 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 		TAG=$(TAG) \
 		build/build.sh
 
+
 .PHONY: build-plugin
 build-plugin:  ## Build ingress-nginx krew plugin.
 	@build/run-in-docker.sh \
@@ -136,14 +137,20 @@ build-plugin:  ## Build ingress-nginx krew plugin.
 		TAG=$(TAG) \
 		build/build-plugin.sh
 
+
 .PHONY: clean
 clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
+
 
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.
 	@build/run-in-docker.sh \
 		hack/verify-all.sh
+
+###############################
+# Tests for ingress-nginx
+###############################
 
 .PHONY: test
 test:  ## Run go unit tests.
@@ -154,18 +161,26 @@ test:  ## Run go unit tests.
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
-		build/test.sh
+		test/test.sh
 
 .PHONY: lua-test
 lua-test: ## Run lua unit tests.
 	@build/run-in-docker.sh \
 		BUSTED_ARGS=$(BUSTED_ARGS) \
 		MAC_TEST=$(MAC_TEST) \
-		build/test-lua.sh
+		test/test-lua.sh
 
 .PHONY: e2e-test
 e2e-test:  ## Run e2e tests (expects access to a working Kubernetes cluster).
 	@build/run-e2e-suite.sh
+
+.PHONY: kind-e2e-test
+kind-e2e-test:  ## Run e2e tests using kind.
+	@test/e2e/run.sh
+
+.PHONY: kind-e2e-chart-tests
+kind-e2e-chart-tests: ## Run helm chart e2e tests
+	@test/e2e/run-chart-test.sh
 
 .PHONY: e2e-test-binary
 e2e-test-binary:  ## Build binary for e2e tests.
@@ -199,6 +214,8 @@ dev-env:  ## Starts a local Kubernetes cluster using kind, building and deployin
 dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 	@kind delete cluster --name ingress-nginx-dev
 
+
+
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:8000
 	@docker build ${PLATFORM_FLAG} ${PLATFORM} -t ingress-nginx-docs .github/actions/mkdocs
@@ -216,14 +233,6 @@ misspell:  ## Check for spelling errors.
 		-error \
 		cmd/* internal/* deploy/* docs/* design/* test/* README.md
 
-.PHONY: kind-e2e-test
-kind-e2e-test:  ## Run e2e tests using kind.
-	@test/e2e/run.sh
-
-.PHONY: kind-e2e-chart-tests
-kind-e2e-chart-tests: ## Run helm chart e2e tests
-	@test/e2e/run-chart-test.sh
-
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
 	@build/run-ingress-controller.sh
@@ -237,24 +246,21 @@ show-version:
 	echo -n $(TAG)
 
 PLATFORMS ?= amd64 arm arm64 s390x
-EMPTY :=
-SPACE := $(EMPTY) $(EMPTY)
-COMMA := ,
+BUILDX_PLATFORMS ?= linux/amd64,linux/arm,linux/arm64,linux/s390x
 
 .PHONY: release # Build a multi-arch docker image
 release: ensure-buildx clean
 	echo "Building binaries..."
 	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
 
-	echo "Building and pushing ingress-nginx image...$(subst $(SPACE),$(COMMA),$(PLATFORMS))"
-
+	echo "Building and pushing ingress-nginx image...$(BUILDX_PLATFORMS)"
 
 	docker buildx build \
 		--no-cache \
 		--push \
 		--pull \
 		--progress plain \
-		--platform linux/amd64,linux/arm,linux/arm64,linux/s390x \
+		--platform $(BUILDX_PLATFORMS) \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
@@ -266,7 +272,7 @@ release: ensure-buildx clean
 		--push \
 		--pull \
 		--progress plain \
-		--platform linux/amd64,linux/arm,linux/arm64,linux/s390x \
+		--platform $(BUILDX_PLATFORMS)  \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
