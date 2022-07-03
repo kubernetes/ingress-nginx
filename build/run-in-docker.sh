@@ -63,7 +63,7 @@ else
   PLATFORM_FLAG=
 fi
 
-USER="{$USER:-nobody}"
+USER=${USER:-nobody}
 
 if [[ ${MAC_TEST} == "Darwin" ]]; then
 	MAC_DOCKER_FLAGS=""
