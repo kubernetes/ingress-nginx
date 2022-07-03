@@ -50,7 +50,8 @@ export TAG=1.0.0-dev
 export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
-NGINX_BASE_IMAGE=$(cat $DIR/../../NGINX_BASE)
+BASEDIR=$(dirname "$0")
+NGINX_BASE_IMAGE=$(cat $BASEDIR/../../NGINX_BASE)
 
 echo "Running e2e with nginx base image ${NGINX_BASE_IMAGE}"
 

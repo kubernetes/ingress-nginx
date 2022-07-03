@@ -53,6 +53,13 @@ ifneq ($(PLATFORM),)
 	PLATFORM_FLAG="--platform"
 endif
 
+MAC_TEST = $(shell uname -s)
+ifeq ($(MAC_TEST), Darwin)
+	MAC_DOCKER_FLAGS="--load"
+else
+	MAC_DOCKER_FLAGS=
+endif
+
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
 BASE_IMAGE ?= $(shell cat NGINX_BASE)
@@ -65,10 +72,10 @@ help:  ## Display this help
 .PHONY: image
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	docker build \
+	docker build  \
 		${PLATFORM_FLAG} ${PLATFORM} \
-		--load \
 		--no-cache \
+		$(MAC_DOCKER_FLAGS) \
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
@@ -86,7 +93,7 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
 	docker build \
 		--no-cache \
-		--load \
+		$(MAC_DOCKER_FLAGS) \
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
@@ -109,7 +116,8 @@ clean-chroot-image: ## Removes local image
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
-	@build/run-in-docker.sh \
+	build/run-in-docker.sh \
+		MAC_TEST=$(MAC_TEST) \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
@@ -121,6 +129,7 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 build-plugin:  ## Build ingress-nginx krew plugin.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
+		MAC_TEST=$(MAC_TEST) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
@@ -140,6 +149,7 @@ static-check: ## Run verification script for boilerplate, codegen, gofmt, golint
 test:  ## Run go unit tests.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
+		MAC_TEST=$(MAC_TEST) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
@@ -150,6 +160,7 @@ test:  ## Run go unit tests.
 lua-test: ## Run lua unit tests.
 	@build/run-in-docker.sh \
 		BUSTED_ARGS=$(BUSTED_ARGS) \
+		MAC_TEST=$(MAC_TEST) \
 		build/test-lua.sh
 
 .PHONY: e2e-test
@@ -159,11 +170,13 @@ e2e-test:  ## Run e2e tests (expects access to a working Kubernetes cluster).
 .PHONY: e2e-test-binary
 e2e-test-binary:  ## Build binary for e2e tests.
 	@build/run-in-docker.sh \
+		MAC_TEST=$(MAC_TEST) \
 		ginkgo build ./test/e2e
 
 .PHONY: print-e2e-suite
 print-e2e-suite: e2e-test-binary ## Prints information about the suite of e2e tests.
 	@build/run-in-docker.sh \
+		MAC_TEST=$(MAC_TEST) \
 		hack/print-e2e-suite.sh
 
 .PHONY: vet

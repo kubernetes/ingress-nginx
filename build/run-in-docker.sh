@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -n "$DEBUG" ]; then
+DEBUG=${DEBUG:-"false"}
+if [ "$DEBUG" == "true" ]; then
   set -x
 fi
 
@@ -57,21 +58,26 @@ mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
 PLATFORM="${PLATFORM:-}"
 if [[ -n "$PLATFORM" ]]; then
-  PLATFORM_FLAG="--platform"
+  PLATFORM_FLAG=--platform
 else
   PLATFORM_FLAG=
+fi
+
+if [[ ${MAC_TEST} == "Darwin" ]]; then
+	MAC_DOCKER_FLAGS=""
+else
+	MAC_DOCKER_FLAGS="-u $(id -u ${USER}):$(id -g ${USER})" #idk why mac/git fails on the gobuild if these are presented to dockerrun.sh script
 fi
 
 echo "..printing env & other vars to stdout"
 echo "HOSTNAME=`hostname`"
 uname -a
 env
-
 echo "DIND_ENABLED=$DOCKER_IN_DOCKER_ENABLED"
 echo "done..printing env & other vars to stdout"
 
 if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
-  echo "Reached DIND check TRUE block, inside run-in-docker.sh"
+  echo "..reached DIND check TRUE block, inside run-in-docker.sh"
   echo "FLAGS=$FLAGS"
   go env
   set -x
@@ -87,8 +93,9 @@ else
     --tty                                               \
     --rm                                                \
     ${DOCKER_OPTS}                                      \
+    -e DEBUG=${DEBUG}                                   \
     -e GOCACHE="/go/src/${PKG}/.cache"                  \
-    -e GOMODCACHE="/go/src/${PKG}/.modcache"                  \
+    -e GOMODCACHE="/go/src/${PKG}/.modcache"            \
     -e DOCKER_IN_DOCKER_ENABLED="true"                  \
     -v "${HOME}/.kube:${HOME}/.kube"                    \
     -v "${KUBE_ROOT}:/go/src/${PKG}"                    \
@@ -96,5 +103,6 @@ else
     -v "/var/run/docker.sock:/var/run/docker.sock"      \
     -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
     -w "/go/src/${PKG}"                                 \
+    ${MAC_DOCKER_FLAGS}                                 \
     ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
 fi

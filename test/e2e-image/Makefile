@@ -16,7 +16,6 @@ image:
 	cp -R $(DIR)/../../test/e2e/settings/ocsp/* .
 
 	docker build \
-		--load \
 		--build-arg E2E_BASE_IMAGE=$(E2E_BASE_IMAGE) \
 		--tag nginx-ingress-controller:e2e .
 
