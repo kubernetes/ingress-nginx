@@ -53,8 +53,8 @@ ifneq ($(PLATFORM),)
 	PLATFORM_FLAG="--platform"
 endif
 
-MAC_TEST = $(shell uname -s)
-ifeq ($(MAC_TEST), Darwin)
+MAC_OS = $(shell uname -s)
+ifeq ($(MAC_OS), Darwin)
 	MAC_DOCKER_FLAGS="--load"
 else
 	MAC_DOCKER_FLAGS=
@@ -72,7 +72,7 @@ help:  ## Display this help
 .PHONY: image
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	docker build  \
+	docker build \
 		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
 		$(MAC_DOCKER_FLAGS) \
@@ -117,7 +117,7 @@ clean-chroot-image: ## Removes local image
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
 	build/run-in-docker.sh \
-		MAC_TEST=$(MAC_TEST) \
+		MAC_OS=$(MAC_OS) \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
@@ -130,7 +130,7 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 build-plugin:  ## Build ingress-nginx krew plugin.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
-		MAC_TEST=$(MAC_TEST) \
+		MAC_OS=$(MAC_OS) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
@@ -156,7 +156,7 @@ static-check: ## Run verification script for boilerplate, codegen, gofmt, golint
 test:  ## Run go unit tests.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
-		MAC_TEST=$(MAC_TEST) \
+		MAC_OS=$(MAC_OS) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
@@ -167,7 +167,7 @@ test:  ## Run go unit tests.
 lua-test: ## Run lua unit tests.
 	@build/run-in-docker.sh \
 		BUSTED_ARGS=$(BUSTED_ARGS) \
-		MAC_TEST=$(MAC_TEST) \
+		MAC_OS=$(MAC_OS) \
 		test/test-lua.sh
 
 .PHONY: e2e-test
@@ -185,13 +185,13 @@ kind-e2e-chart-tests: ## Run helm chart e2e tests
 .PHONY: e2e-test-binary
 e2e-test-binary:  ## Build binary for e2e tests.
 	@build/run-in-docker.sh \
-		MAC_TEST=$(MAC_TEST) \
+		MAC_OS=$(MAC_OS) \
 		ginkgo build ./test/e2e
 
 .PHONY: print-e2e-suite
 print-e2e-suite: e2e-test-binary ## Prints information about the suite of e2e tests.
 	@build/run-in-docker.sh \
-		MAC_TEST=$(MAC_TEST) \
+		MAC_OS=$(MAC_OS) \
 		hack/print-e2e-suite.sh
 
 .PHONY: vet

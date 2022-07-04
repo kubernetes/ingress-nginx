@@ -65,7 +65,7 @@ fi
 
 USER=${USER:-nobody}
 
-if [[ ${MAC_TEST} == "Darwin" ]]; then
+if [[ ${MAC_OS} == "Darwin" ]]; then
 	MAC_DOCKER_FLAGS=""
 else
 	MAC_DOCKER_FLAGS="-u $(id -u ${USER}):$(id -g ${USER})" #idk why mac/git fails on the gobuild if these are presented to dockerrun.sh script

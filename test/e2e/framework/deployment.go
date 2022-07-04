@@ -154,7 +154,7 @@ func (f *Framework) GetNginxBaseImage() string {
 	nginxBaseImage := os.Getenv("NGINX_BASE_IMAGE")
 
 	if nginxBaseImage == "" {
-		assert.Nil(ginkgo.GinkgoT(), errors.New("NGINX_BASE_IMAGE not defined"), "NGINX_BASE_IMAGE not defined")
+		assert.NotEmpty(ginkgo.GinkgoT(), errors.New("NGINX_BASE_IMAGE not defined"), "NGINX_BASE_IMAGE not defined")
 	}
 
 	return nginxBaseImage
