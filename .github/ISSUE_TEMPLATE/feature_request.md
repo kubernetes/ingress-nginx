@@ -8,14 +8,14 @@ assignees: ''
 ---
 
 <!--
+With the situation in place today, we think (and decided) that it's time to temporarily pause accepting new features and focus on fixing and stabilizing Ingress NGINX. We understand that some people may need to merge a trivial new feature. Still, we are asking the community to understand that maintaining the project at this pace is becoming hard for the project maintainers. We understand that you waited too long with your PR in the queue, and we are sorry! But it's hard for us as well to keep the project stable.
 
-Welcome to ingress-nginx!  For a smooth feature request process, try to
-answer the following questions. Don't worry if they're not all applicable; just
-try to include what you can :-)
+More details are available here https://youtu.be/UBt4N82ymOE and here   https://kubernetes.slack.com/archives/CANQGM8BA/p1656020331133589. 
+The announcement in the dev mailing list is here https://groups.google.com/a/kubernetes.io/g/dev/c/rxtrKvT_Q8E
 
-If you need to include code snippets or logs, please put them in fenced code
-blocks.  If they're super-long, please use the details tag like
-<details><summary>super-long log</summary> lots of stuff </details>
+Thank you,
+Ingress-Nginx maintainer
+
 
 -->
 
