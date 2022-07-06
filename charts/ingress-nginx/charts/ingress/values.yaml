@@ -25,7 +25,7 @@ service:
 
   # or, by default, it'll take the Release name as a reference
   # although a suffix can be added to the service name
-  nameSuffix: -backup
+  nameSuffix:
 
   port:
 
