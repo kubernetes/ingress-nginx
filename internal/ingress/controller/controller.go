@@ -1413,6 +1413,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.Redirect = anns.Redirect
 	loc.Rewrite = anns.Rewrite
 	loc.UpstreamVhost = anns.UpstreamVhost
+	loc.Denylist = anns.Denylist
 	loc.Whitelist = anns.Whitelist
 	loc.Denied = anns.Denied
 	loc.XForwardedPrefix = anns.XForwardedPrefix

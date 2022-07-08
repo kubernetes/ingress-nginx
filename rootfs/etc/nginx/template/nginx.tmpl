@@ -1261,6 +1261,10 @@ stream {
             {{ buildModSecurityForLocation $all.Cfg $location }}
 
             {{ if isLocationAllowed $location }}
+            {{ if gt (len $location.Denylist.CIDR) 0 }}
+            {{ range $ip := $location.Denylist.CIDR }}
+            deny {{ $ip }};{{ end }}
+            {{ end }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
             {{ range $ip := $location.Whitelist.CIDR }}
             allow {{ $ip }};{{ end }}

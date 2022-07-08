@@ -175,6 +175,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-request-buffering](#proxy-request-buffering)|string|"on"|
 |[ssl-redirect](#ssl-redirect)|bool|"true"|
 |[force-ssl-redirect](#force-ssl-redirect)|bool|"false"|
+|[denylist-source-range](#denylist-source-range)|[]string|[]string{}|
 |[whitelist-source-range](#whitelist-source-range)|[]string|[]string{}|
 |[skip-access-log-urls](#skip-access-log-urls)|[]string|[]string{}|
 |[limit-rate](#limit-rate)|int|0|
@@ -1090,6 +1091,11 @@ _**default:**_ "true"
 ## force-ssl-redirect
 Sets the global value of redirects (308) to HTTPS if the server has a default TLS certificate (defined in extra-args).
 _**default:**_ "false"
+
+## denylist-source-range
+
+Sets the default denylisted IPs for each `server` block. This can be overwritten by an annotation on an Ingress rule.
+See [ngx_http_access_module](https://nginx.org/en/docs/http/ngx_http_access_module.html).
 
 ## whitelist-source-range
 
