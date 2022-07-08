@@ -25,7 +25,7 @@ RUN apk update \
 
 FROM alpine:3.16.0
 
-ARG TARGETARCH
+ARG TARGET_ARCH
 ARG VERSION
 ARG COMMIT_SHA
 ARG BUILD_ID=UNSET
@@ -64,9 +64,9 @@ COPY --from=chroot /chroot /chroot
 
 COPY --chown=www-data:www-data etc /chroot/etc
 
-COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
-COPY --chown=www-data:www-data bin/${TARGETARCH}/nginx-ingress-controller /
-COPY --chown=www-data:www-data bin/${TARGETARCH}/wait-shutdown /
+COPY --chown=www-data:www-data bin/${TARGET_ARCH}/dbg /
+COPY --chown=www-data:www-data bin/${TARGET_ARCH}/nginx-ingress-controller /
+COPY --chown=www-data:www-data bin/${TARGET_ARCH}/wait-shutdown /
 COPY --chown=www-data:www-data nginx-chroot-wrapper.sh /usr/bin/nginx
 
 WORKDIR /chroot/etc/nginx
