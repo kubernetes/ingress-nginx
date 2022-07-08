@@ -53,9 +53,16 @@ ifneq ($(PLATFORM),)
 	PLATFORM_FLAG="--platform"
 endif
 
+MAC_OS = $(shell uname -s)
+ifeq ($(MAC_OS), Darwin)
+	MAC_DOCKER_FLAGS="--load"
+else
+	MAC_DOCKER_FLAGS=
+endif
+
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-BASE_IMAGE ?= registry.k8s.io/ingress-nginx/nginx:0ff500c23f34e939305de709cb6d47da34b66611@sha256:15f91034a03550dfab6ec50a7be4abbb683d087e234ad7fef5adedef54e46a5a
+BASE_IMAGE ?= $(shell cat NGINX_BASE)
 
 GOARCH=$(ARCH)
 
@@ -65,12 +72,14 @@ help:  ## Display this help
 .PHONY: image
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	@docker build \
+	docker build \
 		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
+		$(MAC_DOCKER_FLAGS) \
+		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		--build-arg TARGETARCH="$(ARCH)" \
+		--build-arg TARGET_ARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
@@ -82,14 +91,16 @@ gosec:
 .PHONY: image-chroot
 image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
-	@docker build \
+	docker build \
 		--no-cache \
+		$(MAC_DOCKER_FLAGS) \
+		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		--build-arg TARGETARCH="$(ARCH)" \
+		--build-arg TARGET_ARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
-		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile.chroot
+		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile-chroot
 
 .PHONY: clean-image
 clean-image: ## Removes local image
@@ -105,64 +116,82 @@ clean-chroot-image: ## Removes local image
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
-	@build/run-in-docker.sh \
+	build/run-in-docker.sh \
+		MAC_OS=$(MAC_OS) \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
-		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
 		build/build.sh
+
 
 .PHONY: build-plugin
 build-plugin:  ## Build ingress-nginx krew plugin.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
+		MAC_OS=$(MAC_OS) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
-		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
 		build/build-plugin.sh
+
 
 .PHONY: clean
 clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
+
 
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.
 	@build/run-in-docker.sh \
 		hack/verify-all.sh
 
+###############################
+# Tests for ingress-nginx
+###############################
+
 .PHONY: test
 test:  ## Run go unit tests.
 	@build/run-in-docker.sh \
 		PKG=$(PKG) \
+		MAC_OS=$(MAC_OS) \
 		ARCH=$(ARCH) \
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
-		GOBUILD_FLAGS=$(GOBUILD_FLAGS) \
-		build/test.sh
+		test/test.sh
 
 .PHONY: lua-test
 lua-test: ## Run lua unit tests.
 	@build/run-in-docker.sh \
 		BUSTED_ARGS=$(BUSTED_ARGS) \
-		build/test-lua.sh
+		MAC_OS=$(MAC_OS) \
+		test/test-lua.sh
 
 .PHONY: e2e-test
 e2e-test:  ## Run e2e tests (expects access to a working Kubernetes cluster).
 	@build/run-e2e-suite.sh
 
+.PHONY: kind-e2e-test
+kind-e2e-test:  ## Run e2e tests using kind.
+	@test/e2e/run.sh
+
+.PHONY: kind-e2e-chart-tests
+kind-e2e-chart-tests: ## Run helm chart e2e tests
+	@test/e2e/run-chart-test.sh
+
 .PHONY: e2e-test-binary
 e2e-test-binary:  ## Build binary for e2e tests.
 	@build/run-in-docker.sh \
+		MAC_OS=$(MAC_OS) \
 		ginkgo build ./test/e2e
 
 .PHONY: print-e2e-suite
 print-e2e-suite: e2e-test-binary ## Prints information about the suite of e2e tests.
 	@build/run-in-docker.sh \
+		MAC_OS=$(MAC_OS) \
 		hack/print-e2e-suite.sh
 
 .PHONY: vet
@@ -185,6 +214,8 @@ dev-env:  ## Starts a local Kubernetes cluster using kind, building and deployin
 dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 	@kind delete cluster --name ingress-nginx-dev
 
+
+
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:8000
 	@docker build ${PLATFORM_FLAG} ${PLATFORM} -t ingress-nginx-docs .github/actions/mkdocs
@@ -202,14 +233,6 @@ misspell:  ## Check for spelling errors.
 		-error \
 		cmd/* internal/* deploy/* docs/* design/* test/* README.md
 
-.PHONY: kind-e2e-test
-kind-e2e-test:  ## Run e2e tests using kind.
-	@test/e2e/run.sh
-
-.PHONY: kind-e2e-chart-tests
-kind-e2e-chart-tests: ## Run helm chart e2e tests
-	@test/e2e/run-chart-test.sh
-
 .PHONY: run-ingress-controller
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
 	@build/run-ingress-controller.sh
@@ -223,35 +246,35 @@ show-version:
 	echo -n $(TAG)
 
 PLATFORMS ?= amd64 arm arm64 s390x
-
-EMPTY :=
-SPACE := $(EMPTY) $(EMPTY)
-COMMA := ,
+BUILDX_PLATFORMS ?= linux/amd64,linux/arm,linux/arm64,linux/s390x
 
 .PHONY: release # Build a multi-arch docker image
 release: ensure-buildx clean
 	echo "Building binaries..."
 	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
 
-	echo "Building and pushing ingress-nginx image..."
-	@docker buildx build \
+	echo "Building and pushing ingress-nginx image...$(BUILDX_PLATFORMS)"
+
+	docker buildx build \
 		--no-cache \
 		--push \
+		--pull \
 		--progress plain \
-		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--platform $(BUILDX_PLATFORMS) \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
-	
-	@docker buildx build \
+
+	docker buildx build \
 		--no-cache \
 		--push \
+		--pull \
 		--progress plain \
-		--platform $(subst $(SPACE),$(COMMA),$(PLATFORMS)) \
+		--platform $(BUILDX_PLATFORMS)  \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
-		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile.chroot
+		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile-chroot

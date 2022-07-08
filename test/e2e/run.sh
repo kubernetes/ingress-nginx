@@ -51,6 +51,12 @@ export TAG=1.0.0-dev
 export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
+NGINX_BASE_IMAGE=$(cat $DIR/../../NGINX_BASE)
+
+echo "Running e2e with nginx base image ${NGINX_BASE_IMAGE}"
+
+export NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE
+
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"

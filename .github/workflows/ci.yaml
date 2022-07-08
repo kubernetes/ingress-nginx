@@ -44,6 +44,7 @@ jobs:
               - 'charts/ingress-nginx/Chart.yaml'
               - 'charts/ingress-nginx/**/*'
 
+
   security:
     runs-on: ubuntu-latest
     steps:
@@ -195,6 +196,7 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-chart-tests
 
+
   kubernetes:
     name: Kubernetes
     runs-on: ubuntu-latest
@@ -250,6 +252,7 @@ jobs:
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
+
 
   kubernetes-chroot:
     name: Kubernetes chroot
@@ -307,6 +310,7 @@ jobs:
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
+
 
   test-image-build:
     permissions:
@@ -373,6 +377,7 @@ jobs:
         if: ${{ steps.filter-images.outputs.ext-auth-example-authsvc == 'true' }}
         run: |
           cd images/ext-auth-example-authsvc && make build
+
 
   test-image:
     permissions:
