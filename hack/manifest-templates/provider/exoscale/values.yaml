@@ -5,7 +5,6 @@ controller:
     type: LoadBalancer
     externalTrafficPolicy: Local
     annotations:
-      service.beta.kubernetes.io/exoscale-loadbalancer-name: "nginx-ingress-controller"
       service.beta.kubernetes.io/exoscale-loadbalancer-description: "NGINX Ingress Controller load balancer"
       service.beta.kubernetes.io/exoscale-loadbalancer-service-strategy: "source-hash"
       service.beta.kubernetes.io/exoscale-loadbalancer-service-healthcheck-mode: "http"
