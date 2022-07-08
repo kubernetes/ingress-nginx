@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.14.6 as base
+FROM alpine:3.16.0 as base
 
 RUN mkdir -p /opt/third_party/install
 COPY . /opt/third_party/
@@ -39,7 +39,7 @@ COPY --from=grpc /opt/third_party/install/ /usr
 COPY --from=otel-cpp /opt/third_party/install/ /usr
 RUN bash /opt/third_party/build.sh -n
 
-FROM alpine:3.14.6
+FROM alpine:3.16.0
 COPY --from=base /opt/third_party/init_module.sh /usr/local/bin/init_module.sh
 COPY --from=nginx /etc/nginx/modules /etc/nginx/modules
 COPY --from=nginx /opt/third_party/install/lib /etc/nginx/modules
