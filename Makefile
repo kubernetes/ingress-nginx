@@ -146,6 +146,7 @@ clean: ## Remove .gocache directory.
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.
 	@build/run-in-docker.sh \
+	    MAC_OS=$(MAC_OS) \
 		hack/verify-all.sh
 
 ###############################
