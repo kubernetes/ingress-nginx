@@ -65,6 +65,7 @@ fi
 
 USER=${USER:-nobody}
 
+MAC_OS="${MAC_OS:-}"
 if [[ ${MAC_OS} == "Darwin" ]]; then
 	MAC_DOCKER_FLAGS=""
 else
