@@ -3,6 +3,7 @@
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
 ### 4.2.0
+
 - Support for Kubernetes v1.19.0 was removed
 - "[8810](https://github.com/kubernetes/ingress-nginx/pull/8810) Prepare for v1.3.0"
 - "[8808](https://github.com/kubernetes/ingress-nginx/pull/8808) revert arch var name"
