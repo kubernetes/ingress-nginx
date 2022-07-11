@@ -65,12 +65,14 @@ fi
 
 USER=${USER:-nobody}
 
+MAC_OS="`uname -s`"
 MAC_OS="${MAC_OS:-}"
 if [[ ${MAC_OS} == "Darwin" ]]; then
 	MAC_DOCKER_FLAGS=""
 else
 	MAC_DOCKER_FLAGS="-u $(id -u ${USER}):$(id -g ${USER})" #idk why mac/git fails on the gobuild if these are presented to dockerrun.sh script
 fi
+echo "MAC_OS = ${MAC_OS}, MAC_OS_FLAGS = ${MAC_DOCKER_FLAGS}"
 
 echo "..printing env & other vars to stdout"
 echo "HOSTNAME=`hostname`"
