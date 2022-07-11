@@ -1,5 +1,6 @@
 controller:
-  custom-http-errors: "404,503"
+  config:
+    custom-http-errors: "404,503"
 defaultBackend:
   enabled: true
   image:
