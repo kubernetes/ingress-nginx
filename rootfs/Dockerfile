@@ -16,7 +16,7 @@ ARG BASE_IMAGE
 
 FROM ${BASE_IMAGE}
 
-ARG TARGET_ARCH
+ARG TARGETARCH
 ARG VERSION
 ARG COMMIT_SHA
 ARG BUILD_ID=UNSET
@@ -41,9 +41,9 @@ RUN apk update \
 
 COPY --chown=www-data:www-data etc /etc
 
-COPY --chown=www-data:www-data bin/${TARGET_ARCH}/dbg /
-COPY --chown=www-data:www-data bin/${TARGET_ARCH}/nginx-ingress-controller /
-COPY --chown=www-data:www-data bin/${TARGET_ARCH}/wait-shutdown /
+COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
+COPY --chown=www-data:www-data bin/${TARGETARCH}/nginx-ingress-controller /
+COPY --chown=www-data:www-data bin/${TARGETARCH}/wait-shutdown /
 
 # Fix permission during the build to avoid issues at runtime
 # with volumes (custom templates)
