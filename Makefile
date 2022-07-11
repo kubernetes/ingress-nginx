@@ -79,7 +79,7 @@ image: clean-image ## Build image for a particular arch.
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		--build-arg TARGET_ARCH="$(ARCH)" \
+		--build-arg TARGETARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
@@ -97,7 +97,7 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		--build-arg TARGET_ARCH="$(ARCH)" \
+		--build-arg TARGETARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile-chroot
