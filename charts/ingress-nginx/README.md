@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.1.4](https://img.shields.io/badge/Version-4.1.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.1](https://img.shields.io/badge/AppVersion-1.2.1-informational?style=flat-square)
+![Version: 4.2.0](https://img.shields.io/badge/Version-4.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.0](https://img.shields.io/badge/AppVersion-1.3.0-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -231,7 +231,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 
 ## Requirements
 
-Kubernetes: `>=1.19.0-0`
+Kubernetes: `>=1.20.0-0`
 
 ## Values
 
@@ -245,7 +245,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.admissionWebhooks.enabled | bool | `true` |  |
 | controller.admissionWebhooks.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | controller.admissionWebhooks.extraEnvs | list | `[]` | Additional environment variables to set |
-| controller.admissionWebhooks.failurePolicy | string | `"Fail"` |  |
+| controller.admissionWebhooks.failurePolicy | string | `"Fail"` | Admission Webhook failure policy to use |
 | controller.admissionWebhooks.key | string | `"/usr/local/certificates/key"` |  |
 | controller.admissionWebhooks.labels | object | `{}` | Labels to be added to admission webhooks |
 | controller.admissionWebhooks.namespaceSelector | object | `{}` |  |
@@ -308,13 +308,13 @@ Kubernetes: `>=1.19.0-0`
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
 | controller.image.chroot | bool | `false` |  |
-| controller.image.digest | string | `"sha256:5516d103a9c2ecc4f026efbd4b40662ce22dc1f824fb129ed121460aaa5c47f8"` |  |
-| controller.image.digestChroot | string | `"sha256:d301551cf62bc3fb75c69fa56f7aa1d9e87b5079333adaf38afe84d9b7439355"` |  |
+| controller.image.digest | string | `"sha256:d1707ca76d3b044ab8a28277a2466a02100ee9f58a86af1535a3edf9323ea1b5"` |  |
+| controller.image.digestChroot | string | `"sha256:0fcb91216a22aae43b374fc2e6a03b8afe9e8c78cbf07a09d75636dc4ea3c191"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.2.1"` |  |
+| controller.image.tag | string | `"v1.3.0"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
@@ -413,7 +413,7 @@ Kubernetes: `>=1.19.0-0`
 | controller.service.targetPorts.http | string | `"http"` |  |
 | controller.service.targetPorts.https | string | `"https"` |  |
 | controller.service.type | string | `"LoadBalancer"` |  |
-| controller.shareProcessNamespace | bool | `false` |  |
+| controller.shareProcessNamespace | bool | `false` |  This can be used for example to signal log rotation using `kill -USR1` from a sidecar. |
 | controller.sysctls | object | `{}` | See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls |
 | controller.tcp.annotations | object | `{}` | Annotations to be added to the tcp config configmap |
 | controller.tcp.configMapNamespace | string | `""` | Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE) |
