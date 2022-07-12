@@ -9,6 +9,7 @@ Image:
 _IMPORTANT CHANGES:_ 
 * This release removes support for Kubernetes v1.19.0
 * This release adds support for Kubernetes v1.24.0
+* Starting with this release, we will need permissions on the `coordination.k8s.io/leases` resource for leaderelection lock
 
 _KNOWN ISSUES:_
 * This release reports a false positive on go-restful library that will be fixed with Kubernetes v1.25 release - Issue #8745
