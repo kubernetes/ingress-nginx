@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180
+          image: registry.k8s.io/ingress-nginx/nginx:0ff500c23f34e939305de709cb6d47da34b66611@sha256:15f91034a03550dfab6ec50a7be4abbb683d087e234ad7fef5adedef54e46a5a
           ports:
             - containerPort: 80
             - containerPort: 443

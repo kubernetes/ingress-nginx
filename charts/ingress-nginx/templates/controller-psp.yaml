@@ -12,6 +12,9 @@ metadata:
 spec:
   allowedCapabilities:
     - NET_BIND_SERVICE
+  {{- if .Values.controller.image.chroot }}
+    - SYS_CHROOT
+  {{- end }}
 {{- if .Values.controller.sysctls }}
   allowedUnsafeSysctls:
   {{- range $sysctl, $value := .Values.controller.sysctls }}

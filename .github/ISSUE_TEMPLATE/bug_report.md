@@ -10,7 +10,8 @@ assignees: ''
 <!--
 
 Welcome to ingress-nginx!  For a smooth issue process, try to answer the following questions.
-Don't worry if they're not all applicable; just try to include what you can :-)
+Don't worry if they're not all applicable; just try to include what you can :-).
+More info helps better understanding of the issue (needless to say).
 
 If you need to include code snippets or logs, please put them in fenced code
 blocks.  If they're super-long, please use the details tag like
@@ -26,6 +27,15 @@ Please complete the next sections or the issue will be closed.
 This questions are the first thing we need to know to understand the context.
 
 -->
+
+**What happened**:
+
+<!-- (please include exact error messages if you can) -->
+
+**What you expected to happen**:
+
+<!-- What do you think went wrong? -->
+
 
 **NGINX Ingress controller version** (exec into the pod and run nginx-ingress-controller --version.):
 <!--
@@ -71,15 +81,8 @@ kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --vers
     - `kubectl describe ...` of any custom configmap(s) created and in use
     - Any other related information that may help
 
-**What happened**:
 
-<!-- (please include exact error messages if you can) -->
-
-**What you expected to happen**:
-
-<!-- What do you think went wrong? -->
-
-**How to reproduce it**:
+**How to reproduce this issue**:
 <!---
 
 As minimally and precisely as possible. Keep in mind we do not have access to your cluster or application.
