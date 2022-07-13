@@ -33,7 +33,7 @@ MetalLB can be deployed either with a simple Kubernetes manifest or with Helm. T
 was deployed following the [Installation][metallb-install] instructions.
 
 MetalLB requires a pool of IP addresses in order to be able to take ownership of the `ingress-nginx` Service. This pool
-can be defined in a ConfigMap named `config` located in the same namespace as the MetalLB controller. This pool of IPs **must** be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.
+can be defined through `IPAddressPool` objects in the same namespace as the MetalLB controller. This pool of IPs **must** be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.
 
 !!! example
     Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
@@ -47,22 +47,29 @@ can be defined in a ConfigMap named `config` located in the same namespace as th
     host-3   Ready    node     203.0.113.3
     ```
 
-    After creating the following ConfigMap, MetalLB takes ownership of one of the IP addresses in the pool and updates
+    After creating the following objects, MetalLB takes ownership of one of the IP addresses in the pool and updates
     the *loadBalancer* IP field of the `ingress-nginx` Service accordingly.
 
     ```yaml
-    apiVersion: v1
-    kind: ConfigMap
+    ---
+    apiVersion: metallb.io/v1beta1
+    kind: IPAddressPool
     metadata:
+      name: default
       namespace: metallb-system
-      name: config
-    data:
-      config: |
-        address-pools:
-        - name: default
-          protocol: layer2
-          addresses:
-          - 203.0.113.10-203.0.113.15
+    spec:
+      addresses:
+      - 203.0.113.10-203.0.113.15
+      autoAssign: true
+    ---
+    apiVersion: metallb.io/v1beta1
+    kind: L2Advertisement
+    metadata:
+      name: default
+      namespace: metallb-system
+    spec:
+      ipAddressPools:
+      - default
     ```
 
     ```console
