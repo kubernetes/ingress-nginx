@@ -26,7 +26,7 @@ local _M = {}
 
 local function send(payload)
   local s = assert(socket())
-  assert(s:connect("unix:/tmp/prometheus-nginx.socket"))
+  assert(s:connect("unix:/tmp/nginx/prometheus-nginx.socket"))
   assert(s:send(payload))
   assert(s:close())
 end
@@ -47,6 +47,7 @@ local function metrics()
     responseLength = tonumber(ngx.var.bytes_sent) or -1,
 
     upstreamLatency = tonumber(ngx.var.upstream_connect_time) or -1,
+    upstreamHeaderTime = tonumber(ngx.var.upstream_header_time) or -1,
     upstreamResponseTime = tonumber(ngx.var.upstream_response_time) or -1,
     upstreamResponseLength = tonumber(ngx.var.upstream_response_length) or -1,
     --upstreamStatus = ngx.var.upstream_status or "-",

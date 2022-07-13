@@ -26,6 +26,7 @@ IMAGE = $(REGISTRY)/e2e-test-echo
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
+BASE_IMAGE = $(shell cat $(DIR)/../../NGINX_BASE)
 # build with buildx
 PLATFORMS?=linux/amd64
 OUTPUT=
@@ -36,7 +37,7 @@ build: ensure-buildx
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
-		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:5402d35663917ccbbf77ff48a22b8c6f77097f48@sha256:ec8a104df307f5c6d68157b7ac8e5e1e2c2f0ea07ddf25bb1c6c43c67e351180 \
+		--build-arg BASE_IMAGE=${BASE_IMAGE} \
 		--build-arg LUAROCKS_VERSION=3.8.0 \
 		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
 		-t $(IMAGE):$(TAG) rootfs

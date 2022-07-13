@@ -1,4 +1,4 @@
-{{- if and .Values.controller.metrics.enabled .Values.controller.metrics.prometheusRule.enabled -}}
+{{- if and ( .Values.controller.metrics.enabled ) ( .Values.controller.metrics.prometheusRule.enabled ) ( .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" ) -}}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

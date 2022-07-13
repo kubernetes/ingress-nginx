@@ -31,6 +31,7 @@ import (
 
 type upstream struct {
 	Latency        float64 `json:"upstreamLatency"`
+	HeaderTime     float64 `json:"upstreamHeaderTime"`
 	ResponseLength float64 `json:"upstreamResponseLength"`
 	ResponseTime   float64 `json:"upstreamResponseTime"`
 	//Status         string  `json:"upstreamStatus"`
@@ -73,7 +74,8 @@ type SocketCollector struct {
 	responseTime   *prometheus.HistogramVec
 	responseLength *prometheus.HistogramVec
 
-	upstreamLatency *prometheus.SummaryVec
+	upstreamHeaderTime *prometheus.SummaryVec
+	upstreamLatency    *prometheus.SummaryVec
 
 	bytesSent *prometheus.HistogramVec
 
@@ -85,7 +87,8 @@ type SocketCollector struct {
 
 	hosts sets.String
 
-	metricsPerHost bool
+	metricsPerHost      bool
+	reportStatusClasses bool
 
 	buckets HistogramBuckets
 }
@@ -110,8 +113,8 @@ var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, buckets HistogramBuckets) (*SocketCollector, error) {
-	socket := "/tmp/prometheus-nginx.socket"
+func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets) (*SocketCollector, error) {
+	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	_ = syscall.Unlink(socket)
 
@@ -139,7 +142,8 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, bucke
 	sc := &SocketCollector{
 		listener: listener,
 
-		metricsPerHost: metricsPerHost,
+		metricsPerHost:      metricsPerHost,
+		reportStatusClasses: reportStatusClasses,
 
 		responseTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
@@ -204,6 +208,17 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, bucke
 			requestTags,
 		),
 
+		upstreamHeaderTime: prometheus.NewSummaryVec(
+			prometheus.SummaryOpts{
+				Name:        "ingress_upstream_header_seconds",
+				Help:        "The time spent on receiving first header from the upstream server",
+				Namespace:   PrometheusNamespace,
+				ConstLabels: constLabels,
+				Objectives:  defObjectives,
+			},
+			[]string{"ingress", "namespace", "service", "canary"},
+		),
+
 		upstreamLatency: prometheus.NewSummaryVec(
 			prometheus.SummaryOpts{
 				Name:        "ingress_upstream_latency_seconds",
@@ -226,6 +241,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, bucke
 
 		prometheus.BuildFQName(PrometheusNamespace, "", "bytes_sent"): sc.bytesSent,
 
+		prometheus.BuildFQName(PrometheusNamespace, "", "ingress_upstream_header_seconds"):  sc.upstreamHeaderTime,
 		prometheus.BuildFQName(PrometheusNamespace, "", "ingress_upstream_latency_seconds"): sc.upstreamLatency,
 	}
 
@@ -247,6 +263,10 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		if sc.metricsPerHost && !sc.hosts.Has(stats.Host) {
 			klog.V(3).InfoS("Skipping metric for host not being served", "host", stats.Host)
 			continue
+		}
+
+		if sc.reportStatusClasses && len(stats.Status) > 0 {
+			stats.Status = fmt.Sprintf("%cxx", stats.Status[0])
 		}
 
 		// Note these must match the order in requestTags at the top
@@ -294,6 +314,15 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 				klog.ErrorS(err, "Error fetching latency metric")
 			} else {
 				latencyMetric.Observe(stats.Latency)
+			}
+		}
+
+		if stats.HeaderTime != -1 {
+			headerTimeMetric, err := sc.upstreamHeaderTime.GetMetricWith(latencyLabels)
+			if err != nil {
+				klog.ErrorS(err, "Error fetching header time metric")
+			} else {
+				headerTimeMetric.Observe(stats.HeaderTime)
 			}
 		}
 
@@ -437,6 +466,7 @@ func (sc SocketCollector) Describe(ch chan<- *prometheus.Desc) {
 	sc.requests.Describe(ch)
 
 	sc.upstreamLatency.Describe(ch)
+	sc.upstreamHeaderTime.Describe(ch)
 
 	sc.responseTime.Describe(ch)
 	sc.responseLength.Describe(ch)
@@ -452,6 +482,7 @@ func (sc SocketCollector) Collect(ch chan<- prometheus.Metric) {
 	sc.requests.Collect(ch)
 
 	sc.upstreamLatency.Collect(ch)
+	sc.upstreamHeaderTime.Collect(ch)
 
 	sc.responseTime.Collect(ch)
 	sc.responseLength.Collect(ch)

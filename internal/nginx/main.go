@@ -28,7 +28,7 @@ import (
 	"time"
 
 	ps "github.com/mitchellh/go-ps"
-	"k8s.io/klog/v2"
+	klog "k8s.io/klog/v2"
 )
 
 // TODO: Check https://github.com/kubernetes/kubernetes/blob/master/pkg/master/ports/ports.go for ports already being used
@@ -40,7 +40,7 @@ var ProfilerPort = 10245
 var TemplatePath = "/etc/nginx/template/nginx.tmpl"
 
 // PID defines the location of the pid file used by NGINX
-var PID = "/tmp/nginx.pid"
+var PID = "/tmp/nginx/nginx.pid"
 
 // StatusPort port used by NGINX for the status server
 var StatusPort = 10246

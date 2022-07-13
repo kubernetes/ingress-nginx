@@ -51,6 +51,9 @@ trap cleanup EXIT
 E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-}
 FOCUS=${FOCUS:-.*}
 
+BASEDIR=$(dirname "$0")
+NGINX_BASE_IMAGE=$(cat $BASEDIR/../NGINX_BASE)
+
 export E2E_CHECK_LEAKS
 export FOCUS
 
@@ -62,11 +65,16 @@ kubectl create clusterrolebinding permissive-binding \
   --user=kubelet \
   --serviceaccount=default:ingress-nginx-e2e || true
 
-echo -e "${BGREEN}Waiting service account...${NC}"; \
-until kubectl get secret | grep -q -e ^ingress-nginx-e2e-token; do \
-  echo -e "waiting for api token"; \
-  sleep 3; \
-done
+
+VER=$(kubectl version  --client=false -o json |jq '.serverVersion.minor |tonumber')
+if [ $VER -lt 24 ]; then
+  echo -e "${BGREEN}Waiting service account...${NC}"; \
+  until kubectl get secret | grep -q -e ^ingress-nginx-e2e-token; do \
+    echo -e "waiting for api token"; \
+    sleep 3; \
+  done
+fi
+
 
 echo -e "Starting the e2e test pod"
 
@@ -76,6 +84,7 @@ kubectl run --rm \
   --env="E2E_NODES=${E2E_NODES}" \
   --env="FOCUS=${FOCUS}" \
   --env="E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS}" \
+  --env="NGINX_BASE_IMAGE=${NGINX_BASE_IMAGE}" \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
   e2e --image=nginx-ingress-controller:e2e
 

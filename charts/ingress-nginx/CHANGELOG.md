@@ -2,39 +2,104 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.2.0
+
+- Support for Kubernetes v1.19.0 was removed
+- "[8810](https://github.com/kubernetes/ingress-nginx/pull/8810) Prepare for v1.3.0"
+- "[8808](https://github.com/kubernetes/ingress-nginx/pull/8808) revert arch var name"
+- "[8805](https://github.com/kubernetes/ingress-nginx/pull/8805) Bump k8s.io/klog/v2 from 2.60.1 to 2.70.1"
+- "[8803](https://github.com/kubernetes/ingress-nginx/pull/8803) Update to nginx base with alpine v3.16"
+- "[8802](https://github.com/kubernetes/ingress-nginx/pull/8802) chore: start v1.3.0 release process"
+- "[8798](https://github.com/kubernetes/ingress-nginx/pull/8798) Add v1.24.0 to test matrix"
+- "[8796](https://github.com/kubernetes/ingress-nginx/pull/8796) fix: add MAC_OS variable for static-check"
+- "[8793](https://github.com/kubernetes/ingress-nginx/pull/8793) changed to alpine-v3.16"
+- "[8781](https://github.com/kubernetes/ingress-nginx/pull/8781) Bump github.com/stretchr/testify from 1.7.5 to 1.8.0"
+- "[8778](https://github.com/kubernetes/ingress-nginx/pull/8778) chore: remove stable.txt from release process"
+- "[8775](https://github.com/kubernetes/ingress-nginx/pull/8775) Remove stable"
+- "[8773](https://github.com/kubernetes/ingress-nginx/pull/8773) Bump github/codeql-action from 2.1.14 to 2.1.15"
+- "[8772](https://github.com/kubernetes/ingress-nginx/pull/8772) Bump ossf/scorecard-action from 1.1.1 to 1.1.2"
+- "[8771](https://github.com/kubernetes/ingress-nginx/pull/8771) fix bullet md format"
+- "[8770](https://github.com/kubernetes/ingress-nginx/pull/8770) Add condition for monitoring.coreos.com/v1 API"
+- "[8769](https://github.com/kubernetes/ingress-nginx/pull/8769) Fix typos and add links to developer guide"
+- "[8767](https://github.com/kubernetes/ingress-nginx/pull/8767) change v1.2.0 to v1.2.1 in deploy doc URLs"
+- "[8765](https://github.com/kubernetes/ingress-nginx/pull/8765) Bump github/codeql-action from 1.0.26 to 2.1.14"
+- "[8752](https://github.com/kubernetes/ingress-nginx/pull/8752) Bump github.com/spf13/cobra from 1.4.0 to 1.5.0"
+- "[8751](https://github.com/kubernetes/ingress-nginx/pull/8751) Bump github.com/stretchr/testify from 1.7.2 to 1.7.5"
+- "[8750](https://github.com/kubernetes/ingress-nginx/pull/8750) added announcement"
+- "[8740](https://github.com/kubernetes/ingress-nginx/pull/8740) change sha e2etestrunner and echoserver"
+- "[8738](https://github.com/kubernetes/ingress-nginx/pull/8738) Update docs to make it easier for noobs to follow step by step"
+- "[8737](https://github.com/kubernetes/ingress-nginx/pull/8737) updated baseimage sha"
+- "[8736](https://github.com/kubernetes/ingress-nginx/pull/8736) set ld-musl-path"
+- "[8733](https://github.com/kubernetes/ingress-nginx/pull/8733) feat: migrate leaderelection lock to leases"
+- "[8726](https://github.com/kubernetes/ingress-nginx/pull/8726) prometheus metric: upstream_latency_seconds"
+- "[8720](https://github.com/kubernetes/ingress-nginx/pull/8720) Ci pin deps"
+- "[8719](https://github.com/kubernetes/ingress-nginx/pull/8719) Working OpenTelemetry sidecar (base nginx image)"
+- "[8714](https://github.com/kubernetes/ingress-nginx/pull/8714) Create Openssf scorecard"
+- "[8708](https://github.com/kubernetes/ingress-nginx/pull/8708) Bump github.com/prometheus/common from 0.34.0 to 0.35.0"
+- "[8703](https://github.com/kubernetes/ingress-nginx/pull/8703) Bump actions/dependency-review-action from 1 to 2"
+- "[8701](https://github.com/kubernetes/ingress-nginx/pull/8701) Fix several typos"
+- "[8699](https://github.com/kubernetes/ingress-nginx/pull/8699) fix the gosec test and a make target for it"
+- "[8698](https://github.com/kubernetes/ingress-nginx/pull/8698) Bump actions/upload-artifact from 2.3.1 to 3.1.0"
+- "[8697](https://github.com/kubernetes/ingress-nginx/pull/8697) Bump actions/setup-go from 2.2.0 to 3.2.0"
+- "[8695](https://github.com/kubernetes/ingress-nginx/pull/8695) Bump actions/download-artifact from 2 to 3"
+- "[8694](https://github.com/kubernetes/ingress-nginx/pull/8694) Bump crazy-max/ghaction-docker-buildx from 1.6.2 to 3.3.1"
+
+### 4.1.2
+
+- "[8587](https://github.com/kubernetes/ingress-nginx/pull/8587) Add CAP_SYS_CHROOT to DS/PSP when needed"
+- "[8458](https://github.com/kubernetes/ingress-nginx/pull/8458) Add portNamePreffix Helm chart parameter"
+- "[8522](https://github.com/kubernetes/ingress-nginx/pull/8522) Add documentation for controller.service.loadBalancerIP in Helm chart"
+
+### 4.1.0
+
+- "[8481](https://github.com/kubernetes/ingress-nginx/pull/8481) Fix log creation in chroot script"
+- "[8479](https://github.com/kubernetes/ingress-nginx/pull/8479) changed nginx base img tag to img built with alpine3.14.6"
+- "[8478](https://github.com/kubernetes/ingress-nginx/pull/8478) update base images and protobuf gomod"
+- "[8468](https://github.com/kubernetes/ingress-nginx/pull/8468) Fallback to ngx.var.scheme for redirectScheme with use-forward-headers when X-Forwarded-Proto is empty"
+- "[8456](https://github.com/kubernetes/ingress-nginx/pull/8456) Implement object deep inspector"
+- "[8455](https://github.com/kubernetes/ingress-nginx/pull/8455) Update dependencies"
+- "[8454](https://github.com/kubernetes/ingress-nginx/pull/8454) Update index.md"
+- "[8447](https://github.com/kubernetes/ingress-nginx/pull/8447) typo fixing"
+- "[8446](https://github.com/kubernetes/ingress-nginx/pull/8446) Fix suggested annotation-value-word-blocklist"
+- "[8444](https://github.com/kubernetes/ingress-nginx/pull/8444) replace deprecated topology key in example with current one"
+- "[8443](https://github.com/kubernetes/ingress-nginx/pull/8443) Add dependency review enforcement"
+- "[8434](https://github.com/kubernetes/ingress-nginx/pull/8434) added new auth-tls-match-cn annotation"
+- "[8426](https://github.com/kubernetes/ingress-nginx/pull/8426) Bump github.com/prometheus/common from 0.32.1 to 0.33.0"
+
 ### 4.0.18
-"[8291](https://github.com/kubernetes/ingress-nginx/pull/8291) remove git tag env from cloud build"
-"[8286](https://github.com/kubernetes/ingress-nginx/pull/8286) Fix OpenTelemetry sidecar image build"
-"[8277](https://github.com/kubernetes/ingress-nginx/pull/8277) Add OpenSSF Best practices badge"
-"[8273](https://github.com/kubernetes/ingress-nginx/pull/8273) Issue#8241"
-"[8267](https://github.com/kubernetes/ingress-nginx/pull/8267) Add fsGroup value to admission-webhooks/job-patch charts"
-"[8262](https://github.com/kubernetes/ingress-nginx/pull/8262) Updated confusing error"
-"[8256](https://github.com/kubernetes/ingress-nginx/pull/8256) fix: deny locations with invalid auth-url annotation"
-"[8253](https://github.com/kubernetes/ingress-nginx/pull/8253) Add a certificate info metric"
-"[8236](https://github.com/kubernetes/ingress-nginx/pull/8236) webhook: remove useless code."
-"[8227](https://github.com/kubernetes/ingress-nginx/pull/8227) Update libraries in webhook image"
-"[8225](https://github.com/kubernetes/ingress-nginx/pull/8225) fix inconsistent-label-cardinality for prometheus metrics: nginx_ingress_controller_requests"
-"[8221](https://github.com/kubernetes/ingress-nginx/pull/8221) Do not validate ingresses with unknown ingress class in admission webhook endpoint"
-"[8210](https://github.com/kubernetes/ingress-nginx/pull/8210) Bump github.com/prometheus/client_golang from 1.11.0 to 1.12.1"
-"[8209](https://github.com/kubernetes/ingress-nginx/pull/8209) Bump google.golang.org/grpc from 1.43.0 to 1.44.0"
-"[8204](https://github.com/kubernetes/ingress-nginx/pull/8204) Add Artifact Hub lint"
-"[8203](https://github.com/kubernetes/ingress-nginx/pull/8203) Fix Indentation of example and link to cert-manager tutorial"
-"[8201](https://github.com/kubernetes/ingress-nginx/pull/8201) feat(metrics): add path and method labels to requests countera"
-"[8199](https://github.com/kubernetes/ingress-nginx/pull/8199) use functional options to reduce number of methods creating an EchoDeployment"
-"[8196](https://github.com/kubernetes/ingress-nginx/pull/8196) docs: fix inconsistent controller annotation"
-"[8191](https://github.com/kubernetes/ingress-nginx/pull/8191) Using Go install for misspell"
-"[8186](https://github.com/kubernetes/ingress-nginx/pull/8186) prometheus+grafana using servicemonitor"
-"[8185](https://github.com/kubernetes/ingress-nginx/pull/8185) Append elements on match, instead of removing for cors-annotations"
-"[8179](https://github.com/kubernetes/ingress-nginx/pull/8179) Bump github.com/opencontainers/runc from 1.0.3 to 1.1.0"
-"[8173](https://github.com/kubernetes/ingress-nginx/pull/8173) Adding annotations to the controller service account"
-"[8163](https://github.com/kubernetes/ingress-nginx/pull/8163) Update the $req_id placeholder description"
-"[8162](https://github.com/kubernetes/ingress-nginx/pull/8162) Versioned static manifests"
-"[8159](https://github.com/kubernetes/ingress-nginx/pull/8159) Adding some geoip variables and default values"
-"[8155](https://github.com/kubernetes/ingress-nginx/pull/8155) #7271 feat: avoid-pdb-creation-when-default-backend-disabled-and-replicas-gt-1"
-"[8151](https://github.com/kubernetes/ingress-nginx/pull/8151) Automatically generate helm docs"
-"[8143](https://github.com/kubernetes/ingress-nginx/pull/8143) Allow to configure delay before controller exits"
-"[8136](https://github.com/kubernetes/ingress-nginx/pull/8136) add ingressClass option to helm chart - back compatibility with ingress.class annotations"
-"[8126](https://github.com/kubernetes/ingress-nginx/pull/8126) Example for JWT"
+
+- "[8291](https://github.com/kubernetes/ingress-nginx/pull/8291) remove git tag env from cloud build"
+- "[8286](https://github.com/kubernetes/ingress-nginx/pull/8286) Fix OpenTelemetry sidecar image build"
+- "[8277](https://github.com/kubernetes/ingress-nginx/pull/8277) Add OpenSSF Best practices badge"
+- "[8273](https://github.com/kubernetes/ingress-nginx/pull/8273) Issue#8241"
+- "[8267](https://github.com/kubernetes/ingress-nginx/pull/8267) Add fsGroup value to admission-webhooks/job-patch charts"
+- "[8262](https://github.com/kubernetes/ingress-nginx/pull/8262) Updated confusing error"
+- "[8256](https://github.com/kubernetes/ingress-nginx/pull/8256) fix: deny locations with invalid auth-url annotation"
+- "[8253](https://github.com/kubernetes/ingress-nginx/pull/8253) Add a certificate info metric"
+- "[8236](https://github.com/kubernetes/ingress-nginx/pull/8236) webhook: remove useless code."
+- "[8227](https://github.com/kubernetes/ingress-nginx/pull/8227) Update libraries in webhook image"
+- "[8225](https://github.com/kubernetes/ingress-nginx/pull/8225) fix inconsistent-label-cardinality for prometheus metrics: nginx_ingress_controller_requests"
+- "[8221](https://github.com/kubernetes/ingress-nginx/pull/8221) Do not validate ingresses with unknown ingress class in admission webhook endpoint"
+- "[8210](https://github.com/kubernetes/ingress-nginx/pull/8210) Bump github.com/prometheus/client_golang from 1.11.0 to 1.12.1"
+- "[8209](https://github.com/kubernetes/ingress-nginx/pull/8209) Bump google.golang.org/grpc from 1.43.0 to 1.44.0"
+- "[8204](https://github.com/kubernetes/ingress-nginx/pull/8204) Add Artifact Hub lint"
+- "[8203](https://github.com/kubernetes/ingress-nginx/pull/8203) Fix Indentation of example and link to cert-manager tutorial"
+- "[8201](https://github.com/kubernetes/ingress-nginx/pull/8201) feat(metrics): add path and method labels to requests countera"
+- "[8199](https://github.com/kubernetes/ingress-nginx/pull/8199) use functional options to reduce number of methods creating an EchoDeployment"
+- "[8196](https://github.com/kubernetes/ingress-nginx/pull/8196) docs: fix inconsistent controller annotation"
+- "[8191](https://github.com/kubernetes/ingress-nginx/pull/8191) Using Go install for misspell"
+- "[8186](https://github.com/kubernetes/ingress-nginx/pull/8186) prometheus+grafana using servicemonitor"
+- "[8185](https://github.com/kubernetes/ingress-nginx/pull/8185) Append elements on match, instead of removing for cors-annotations"
+- "[8179](https://github.com/kubernetes/ingress-nginx/pull/8179) Bump github.com/opencontainers/runc from 1.0.3 to 1.1.0"
+- "[8173](https://github.com/kubernetes/ingress-nginx/pull/8173) Adding annotations to the controller service account"
+- "[8163](https://github.com/kubernetes/ingress-nginx/pull/8163) Update the $req_id placeholder description"
+- "[8162](https://github.com/kubernetes/ingress-nginx/pull/8162) Versioned static manifests"
+- "[8159](https://github.com/kubernetes/ingress-nginx/pull/8159) Adding some geoip variables and default values"
+- "[8155](https://github.com/kubernetes/ingress-nginx/pull/8155) #7271 feat: avoid-pdb-creation-when-default-backend-disabled-and-replicas-gt-1"
+- "[8151](https://github.com/kubernetes/ingress-nginx/pull/8151) Automatically generate helm docs"
+- "[8143](https://github.com/kubernetes/ingress-nginx/pull/8143) Allow to configure delay before controller exits"
+- "[8136](https://github.com/kubernetes/ingress-nginx/pull/8136) add ingressClass option to helm chart - back compatibility with ingress.class annotations"
+- "[8126](https://github.com/kubernetes/ingress-nginx/pull/8126) Example for JWT"
 
 
 ### 4.0.15
@@ -119,11 +184,11 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 - [7707] https://github.com/kubernetes/ingress-nginx/pull/7707 Release v1.0.2 of ingress-nginx
 
-### 4.0.2 
+### 4.0.2
 
 - [7681] https://github.com/kubernetes/ingress-nginx/pull/7681 Release v1.0.1 of ingress-nginx
 
-### 4.0.1 
+### 4.0.1
 
 - [7535] https://github.com/kubernetes/ingress-nginx/pull/7535 Release v1.0.0 ingress-nginx
 

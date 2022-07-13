@@ -109,11 +109,11 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - Create a branch in your fork, named as the issue number for this release
 
-- In the related branch, of your fork, edit the file /k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml.
+- In the related branch, of your fork, edit the file /registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml.
 
 - For making it easier, you can edit your branch directly in the browser. But be careful about making any mistake.
 
-- Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
+- Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
 
 - Save and commit
 
@@ -173,10 +173,10 @@ Promoting the images basically means that images, that were pushed to staging co
           - Run the below command and save the output to a txt file
 
             ```
-            gh pr list -s merged -L 38 -B main | cut -f1,2 > ~/tmp/prlist.txt
+            gh pr list -s merged -L 38 -B main | cut -f1,2 | tee ~/Downloads/prlist.txt
             ```
             - The -L 38 was used for 2 reasons.
-              - Default number of results is 30 and there were more than 30 PRs merged while releasing v1.1.1.
+              - Default number of results is 30 and there were more than 30 PRs merged while releasing v1.1.1. If you see the current/soon-to-be-old changelog, you can look at the most recent PR number that has been accounted for already, and start from after that last accounted for PR.
               -  The other reason to use -L 38 was to ommit the 39th, the 40th and the 41st line in the resulting list. These were non-relevant PRs.
             - If you save the output of above command to a file called prlist.txt. It looks somewhat like this ;
 
@@ -190,8 +190,8 @@ Promoting the images basically means that images, that were pushed to staging co
               8115    chart/ghaction: set the correct permission to have access to push a release 
               ....
               ```
-              You can delete the lines, that refer to PRs of the release process itself. We only need to list the feature/bugfix PRs.
-          - Now you use some easy automation in bash/python/other, to get the PR-List that can be used in the changelog. For example, its possible to use a bash scripty way, seen below, to convert those plaintext PR numbers into clickable links. 
+              You can delete the lines, that refer to PRs of the release process itself. We only need to list the feature/bugfix PRs. You can also delete the lines that are housekeeping or not really worth mentioning in the changelog.
+          -  you use some easy automation in bash/python/other, to get the PR-List that can be used in the changelog. For example, its possible to use a bash scripty way, seen below, to convert those plaintext PR numbers into clickable links. 
 
             ```
             #!/usr/bin/bash
@@ -205,10 +205,24 @@ Promoting the images basically means that images, that were pushed to staging co
             done <$file
 
             ```
+          - There was a parsing issue and path issue on MacOS, so above scrpt had to be modified and MacOS monterey compatible script is below ;
+
+            ```
+            #!/bin/bash
+
+            file="$1"
+
+            while read -r line; do
+              pr_num=`echo "$line" | cut -f1`
+              pr_title=`echo "$line" | cut -f2`
+              echo \""[$pr_num](https://github.com/kubernetes/ingress-nginx/pull/$pr_num) $pr_title"\"
+            done <$file
+
+            ```
           - If you saved the bash script content above, in a file like `$HOME/bin/prlist_to_changelog.sh`, then you could execute a command like this to get your prlist in a text file called changelog_content.txt;`
 
           ```
-          prlist_to_changelog.sh prlist.txt > /tmp/changelog_content.txt`
+          prlist_to_changelog.sh ~/Downloads/prlist.txt | tee ~/Downloads//changelog_content.txt`
           ```
 
 ### d. Edit the values.yaml and run helm-docs
@@ -247,7 +261,7 @@ Promoting the images basically means that images, that were pushed to staging co
   - the "Description"
   - the "PRs list"
 - Look at the previous content to understand what the 3 components look like.
-- You can easily get the "Image" from a yaml manifest but be sure to look at a manifest in your git clone now and not the upstream on github. This is because, if you are following this documentation, then you generated manifests with new updated digest for the image, in step 4e above. You also most likely promoted the new image in a step above. Look at the previous release section in Changelog.md. The format looks like `k8s.gcr.io/ingress-nginx/controller:.......`. One example of a yaml file to look at is /deploy/static/provider/baremetal/deploy.yaml (in your git clone branch and not on the upstream).
+- You can easily get the "Image" from a yaml manifest but be sure to look at a manifest in your git clone now and not the upstream on github. This is because, if you are following this documentation, then you generated manifests with new updated digest for the image, in step 4e above. You also most likely promoted the new image in a step above. Look at the previous release section in Changelog.md. The format looks like `registry.k8s.io/ingress-nginx/controller:.......`. One example of a yaml file to look at is /deploy/static/provider/baremetal/deploy.yaml (in your git clone branch and not on the upstream).
 - Next, you need to have a good overview of the changes introduced in this release and based on that you write a description. Look at previous descriptions. Ask the ingress-nginx-dev channel if required.
 - And then you need to add a list of the PRs merged, since the previous release.
 - One process to generate this list of PRs is already described above in step 4c. So if you are following this document, then you have done this already and very likely have retained the file containing the list of PRs, in the format that is needed.
@@ -256,13 +270,10 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - Update the version in [docs/deploy/index.md](docs/deploy/index.md)
 - Update Supported versions in the Support Versions table in the README.md
+- Execute the script to update e2e docs [hack/generate-e2e-suite-doc.sh](https://github.com/kubernetes/ingress-nginx/blob/main/hack/generate-e2e-suite-doc.sh)
 
-### h. Edit stable.txt
+### h. Update README.md
 
-- Edit the [stable.txt](stable.txt) file(if applicable), in the root of the repo, to reflect the release to be created
-- Criteria is a release that has been GA for a while but reported issues are not bugs but mostly /kind support or feature
-
-### i. Update README.md
 - Update the table in README.md in the root of the projet to reflect the support matrix. Add the new release version and details in there.
 
 ## 5. RELEASE new version

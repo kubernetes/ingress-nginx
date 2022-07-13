@@ -17,7 +17,7 @@ ARG GOLANG_VERSION
 ARG ETCD_VERSION
 
 FROM golang:${GOLANG_VERSION}-alpine as GO
-FROM k8s.gcr.io/etcd:${ETCD_VERSION} as etcd
+FROM registry.k8s.io/etcd:${ETCD_VERSION} as etcd
 
 FROM ${BASE_IMAGE}
 
@@ -49,7 +49,7 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
-RUN go get github.com/onsi/ginkgo/ginkgo golang.org/x/lint/golint
+RUN go install github.com/onsi/ginkgo/ginkgo@v1.16.5  && go install golang.org/x/lint/golint@latest
 
 ARG RESTY_CLI_VERSION
 ARG RESTY_CLI_SHA

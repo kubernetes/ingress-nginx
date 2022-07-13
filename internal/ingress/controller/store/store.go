@@ -42,6 +42,7 @@ import (
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/ingress-nginx/internal/ingress/inspector"
 	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/file"
@@ -247,6 +248,7 @@ func New(
 	client clientset.Interface,
 	updateCh *channels.RingChannel,
 	disableCatchAll bool,
+	deepInspector bool,
 	icConfig *ingressclass.IngressClassConfiguration) Storer {
 
 	store := &k8sStore{
@@ -426,6 +428,12 @@ func New(
 
 			klog.InfoS("Found valid IngressClass", "ingress", klog.KObj(ing), "ingressclass", ic)
 
+			if deepInspector {
+				if err := inspector.DeepInspect(ing); err != nil {
+					klog.ErrorS(err, "received invalid ingress", "ingress", klog.KObj(ing))
+					return
+				}
+			}
 			if hasCatchAllIngressRule(ing.Spec) && disableCatchAll {
 				klog.InfoS("Ignoring add for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(ing))
 				return
@@ -480,6 +488,13 @@ func New(
 			} else {
 				klog.V(3).InfoS("No changes on ingress. Skipping update", "ingress", klog.KObj(curIng))
 				return
+			}
+
+			if deepInspector {
+				if err := inspector.DeepInspect(curIng); err != nil {
+					klog.ErrorS(err, "received invalid ingress", "ingress", klog.KObj(curIng))
+					return
+				}
 			}
 
 			store.syncIngress(curIng)

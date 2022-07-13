@@ -93,12 +93,24 @@ func setupLeaderElection(config *leaderElectionConfig) {
 		Host:      hostname,
 	})
 
-	lock := resourcelock.ConfigMapLock{
-		ConfigMapMeta: metav1.ObjectMeta{Namespace: k8s.IngressPodDetails.Namespace, Name: config.ElectionID},
-		Client:        config.Client.CoreV1(),
-		LockConfig: resourcelock.ResourceLockConfig{
-			Identity:      k8s.IngressPodDetails.Name,
-			EventRecorder: recorder,
+	objectMeta := metav1.ObjectMeta{Namespace: k8s.IngressPodDetails.Namespace, Name: config.ElectionID}
+	resourceLockConfig := resourcelock.ResourceLockConfig{
+		Identity:      k8s.IngressPodDetails.Name,
+		EventRecorder: recorder,
+	}
+
+	// TODO: If we upgrade client-go to v0.24 then we can only use LeaseLock.
+	// MultiLock is used for lock's migration
+	lock := resourcelock.MultiLock{
+		Primary: &resourcelock.ConfigMapLock{
+			ConfigMapMeta: objectMeta,
+			Client:        config.Client.CoreV1(),
+			LockConfig:    resourceLockConfig,
+		},
+		Secondary: &resourcelock.LeaseLock{
+			LeaseMeta:  objectMeta,
+			Client:     config.Client.CoordinationV1(),
+			LockConfig: resourceLockConfig,
 		},
 	}
 
