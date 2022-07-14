@@ -470,6 +470,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if !l1.CustomResponseHeaders.Equal(&l2.CustomResponseHeaders) {
+		return false
+	}
+
 	return true
 }
 

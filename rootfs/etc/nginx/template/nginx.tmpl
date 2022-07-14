@@ -1513,6 +1513,15 @@ stream {
             fastcgi_param {{ $k }} {{ $v | quote }};
             {{ end }}
 
+            {{ if $location.CustomResponseHeaders }}
+            # Custom Response Headers
+            {{ if not $all.Cfg.DisableCustomResponseHeaders }}
+            {{ range $k, $v := $location.CustomResponseHeaders.ResponseHeaders }}
+            more_set_headers {{ printf "%s: %s" $k $v | escapeLiteralDollar | quote }};
+            {{ end }}
+            {{ end }}
+            {{ end }}
+
             {{ if not (empty $location.Redirect.URL) }}
             return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
             {{ end }}

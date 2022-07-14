@@ -43,6 +43,7 @@ var (
 	annotationAffinityCookieName     = parser.GetAnnotationWithPrefix("session-cookie-name")
 	annotationUpstreamHashBy         = parser.GetAnnotationWithPrefix("upstream-hash-by")
 	annotationCustomHTTPErrors       = parser.GetAnnotationWithPrefix("custom-http-errors")
+	annotationCustomResponseHeaders  = parser.GetAnnotationWithPrefix("custom-response-headers")
 )
 
 type mockCfg struct {
@@ -312,6 +313,47 @@ func TestCustomHTTPErrors(t *testing.T) {
 		for i := range r {
 			if r[i] != foo.er[i] {
 				t.Errorf("Returned %v but expected %v", r, foo.er)
+			}
+		}
+	}
+}
+
+func TestCustomResponseHeaders(t *testing.T) {
+	ec := NewAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		headers     map[string]string
+	}{
+		{map[string]string{annotationCustomResponseHeaders: "Content-Type: application/json"}, map[string]string{"Content-Type": "application/json"}},
+		{map[string]string{annotationCustomResponseHeaders: `Content-Type: application/json
+		Accept: application/json
+		`}, map[string]string{"Content-Type": "application/json", "Accept": "application/json"}},
+		{map[string]string{annotationCustomResponseHeaders: `Content-Type application/json
+		Accept: application/json
+		`}, map[string]string{}},
+		{nil, map[string]string{}},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		rann, err := ec.Extract(ing)
+		if err != nil {
+			t.Errorf("error should be null: %v", err)
+		}
+		r := rann.CustomResponseHeaders.ResponseHeaders
+		// Check that expected headers were created
+		for i := range foo.headers {
+			if r[i] != foo.headers[i] {
+				t.Errorf("Returned %v but expected %v", r, foo.headers)
+			}
+		}
+
+		// Check that no unexpected headers were created
+		for i := range r {
+			if r[i] != foo.headers[i] {
+				t.Errorf("Returned %v but expected %v", r, foo.headers)
 			}
 		}
 	}

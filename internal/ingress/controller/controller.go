@@ -1527,6 +1527,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.BackendProtocol = anns.BackendProtocol
 	loc.FastCGI = anns.FastCGI
 	loc.CustomHTTPErrors = anns.CustomHTTPErrors
+	loc.CustomResponseHeaders = anns.CustomResponseHeaders
 	loc.ModSecurity = anns.ModSecurity
 	loc.Satisfy = anns.Satisfy
 	loc.Mirror = anns.Mirror

@@ -50,6 +50,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
+|[nginx.ingress.kubernetes.io/custom-response-headers](#custom-response-headers)|string|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
@@ -328,6 +329,15 @@ Example usage:
 ```
 nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
 ```
+
+### Custom Response Headers
+This annotation is of the form `nginx.ingress.kubernetes.io/custom-response-headers: "<header>"` to specify a custom response header. To specify multiple headers, you can use newline to seperate multiple response headers:
+```yaml
+nginx.ingress.kubernetes.io/custom-response-headers: |
+  Content-Type: application/json
+  Cache-Control: no-cache
+```
+This annotation uses `more_set_headers` nginx directive.
 
 ### Default Backend
 

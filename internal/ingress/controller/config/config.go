@@ -207,6 +207,9 @@ type Configuration struct {
 	// DisableIpv6 disable listening on ipv6 address
 	DisableIpv6 bool `json:"disable-ipv6,omitempty"`
 
+	// DisableCustomResponseHeaders disable custom response headers annotation
+	DisableCustomResponseHeaders bool `json:"disable-custom-response-headers,omitempty"`
+
 	// EnableUnderscoresInHeaders enables underscores in header names
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#underscores_in_headers
 	// By default this is disabled
@@ -969,6 +972,7 @@ func NewDefault() Configuration {
 			SSLRedirect:              true,
 			CustomHTTPErrors:         []int{},
 			DenylistSourceRange:      []string{},
+			CustomResponseHeaders:    map[string]string{},
 			WhitelistSourceRange:     []string{},
 			SkipAccessLogURLs:        []string{},
 			LimitRate:                0,

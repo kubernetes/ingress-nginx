@@ -31,6 +31,11 @@ type Backend struct {
 	// By default this is disabled
 	CustomHTTPErrors []int `json:"custom-http-errors"`
 
+	// Defines custom response HTTP headers which should be passed to more_set_headers directive
+	// https://github.com/openresty/headers-more-nginx-module#more_set_headers
+	// By default this is empty
+	CustomResponseHeaders map[string]string `json:"custom-response-headers"`
+
 	// toggles whether or not to remove trailing slashes during TLS redirects
 	PreserveTrailingSlash bool `json:"preserve-trailing-slash"`
 
