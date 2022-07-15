@@ -1207,17 +1207,15 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				// use backend specified in Ingress as the default backend for all its rules
 				un = backendUpstream.Name
 
-				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
-				defLoc.Backend = backendUpstream.Name
-				defLoc.Service = backendUpstream.Service
-				defLoc.Ingress = ing
-
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
 					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q", ingKey, defServerName)
 
 					defLoc.IsDefBackend = false
-
+					// special "catch all" case, Ingress with a backend but no rule
+					defLoc.Backend = backendUpstream.Name
+					defLoc.Service = backendUpstream.Service
+					defLoc.Ingress = ing
 					// TODO: Redirect and rewrite can affect the catch all behavior, skip for now
 					originalRedirect := defLoc.Redirect
 					originalRewrite := defLoc.Rewrite
