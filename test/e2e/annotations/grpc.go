@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	pb "github.com/moul/pb/grpcbin/go-grpc"
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

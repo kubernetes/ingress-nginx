@@ -19,10 +19,11 @@ package annotations
 import (
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
+
+	"net/http"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
-	"net/http"
 )
 
 var _ = framework.DescribeAnnotation("disable-access-log disable-http-access-log disable-stream-access-log", func() {
