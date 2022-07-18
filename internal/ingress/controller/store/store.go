@@ -43,9 +43,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/ingress-nginx/internal/ingress/inspector"
-	"k8s.io/klog/v2"
 
-	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/internal/nginx"
+	"k8s.io/ingress-nginx/pkg/util/file"
+	klog "k8s.io/klog/v2"
+
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -56,7 +58,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
-	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 // IngressFilterFunc decides if an Ingress should be omitted or not
