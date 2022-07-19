@@ -443,6 +443,8 @@ github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 h1:n6/
 github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00/go.mod h1:Pm3mSP3c5uWn86xMLZ5Sa7JB9GsEZySvHYXCTK4E9q4=
 github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52 h1:8zDEa5yAIWYBHSDpPbSgGIBL/SvPSE9/FlB3aQ54d/A=
 github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52/go.mod h1:jE2HT8eoucYyUPBFJMreiVlC3KPHkDMtN8wn+ef7Y64=
+github.com/moul/pb v0.0.0-20220425114252-bca18df4138c h1:1STmblv9zmHLDpru4dbnf1PNL6wrrZNf7yBH+SfQU+s=
+github.com/moul/pb v0.0.0-20220425114252-bca18df4138c/go.mod h1:jE2HT8eoucYyUPBFJMreiVlC3KPHkDMtN8wn+ef7Y64=
 github.com/mrunalp/fileutils v0.5.0/go.mod h1:M1WthSahJixYnrXQl/DFQuteStB1weuxD2QJNHXfbSQ=
 github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
