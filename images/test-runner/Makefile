@@ -23,7 +23,7 @@ REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-runner
 
-NGINX_BASE_IMAGE ?= $(shell cat $DIR/../../NGINX_BASE)
+NGINX_BASE_IMAGE ?= $(shell cat $(DIR)/../../NGINX_BASE)
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
