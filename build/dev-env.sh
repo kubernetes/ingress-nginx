@@ -36,7 +36,7 @@ if ! command -v kind &> /dev/null; then
 fi
 
 if ! command -v kubectl &> /dev/null; then
-  echo "Please install kubectl 1.15 or higher"
+  echo "Please install kubectl 1.24.0 or higher"
   exit 1
 fi
 
@@ -46,14 +46,14 @@ if ! command -v helm &> /dev/null; then
 fi
 
 HELM_VERSION=$(helm version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+') || true
-if [[ ${HELM_VERSION} < "v3.0.0" ]]; then
-  echo "Please upgrade helm to v3.0.0 or higher"
+if [[ ${HELM_VERSION} < "v3.9.0" ]]; then
+  echo "Please upgrade helm to v3.9.0 or higher"
   exit 1
 fi
 
 KUBE_CLIENT_VERSION=$(kubectl version --client --short 2>/dev/null | grep Client | awk '{print $3}' | cut -d. -f2) || true
-if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
-  echo "Please update kubectl to 1.15 or higher"
+if [[ ${KUBE_CLIENT_VERSION} -lt 24 ]]; then
+  echo "Please update kubectl to 1.24.2 or higher"
   exit 1
 fi
 
@@ -61,7 +61,7 @@ echo "[dev-env] building image"
 make build image
 docker tag "${REGISTRY}/controller:${TAG}" "${DEV_IMAGE}"
 
-export K8S_VERSION=${K8S_VERSION:-v1.21.12@sha256:f316b33dd88f8196379f38feb80545ef3ed44d9197dca1bfd48bcb1583210207}
+export K8S_VERSION=${K8S_VERSION:-v1.24.2@sha256:1f0cee2282f43150b52dc7933183ed96abdcfc8d293f30ec07082495874876f1}
 
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
