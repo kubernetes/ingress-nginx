@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package watch
+package file
 
 import (
 	"os"
@@ -22,8 +22,6 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-
-	"k8s.io/ingress-nginx/pkg/util/file"
 )
 
 func prepareTimeout() chan bool {
@@ -61,7 +59,7 @@ func TestFileWatcher(t *testing.T) {
 		t.Fatalf("expected no events before writing a file")
 	case <-timeoutChan:
 	}
-	os.WriteFile(f.Name(), []byte{}, file.ReadWriteByUser)
+	os.WriteFile(f.Name(), []byte{}, ReadWriteByUser)
 	select {
 	case <-events:
 	case <-timeoutChan:
