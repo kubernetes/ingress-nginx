@@ -58,7 +58,6 @@ import (
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/internal/task"
-	"k8s.io/ingress-nginx/internal/watch"
 
 	"k8s.io/ingress-nginx/pkg/util/file"
 	klog "k8s.io/klog/v2"
@@ -172,7 +171,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 	n.t = ngxTpl
 
-	_, err = watch.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
+	_, err = file.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
 	if err != nil {
 		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
 	}
@@ -196,7 +195,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	for _, f := range filesToWatch {
-		_, err = watch.NewFileWatcher(f, func() {
+		_, err = file.NewFileWatcher(f, func() {
 			klog.InfoS("File changed detected. Reloading NGINX", "path", f)
 			n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
 		})
