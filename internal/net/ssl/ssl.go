@@ -39,11 +39,14 @@ import (
 
 	"github.com/zakjan/cert-chain-resolver/certUtil"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/ingress-nginx/internal/file"
+
 	"k8s.io/ingress-nginx/internal/ingress"
+
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/watch"
-	"k8s.io/klog/v2"
+
+	"k8s.io/ingress-nginx/pkg/util/file"
+	klog "k8s.io/klog/v2"
 )
 
 // FakeSSLCertificateUID defines the default UID to use for the fake SSL

@@ -26,7 +26,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
-	"k8s.io/ingress-nginx/internal/runtime"
+	"k8s.io/ingress-nginx/pkg/util/runtime"
 )
 
 var (

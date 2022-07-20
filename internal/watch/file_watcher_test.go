@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/pkg/util/file"
 )
 
 func prepareTimeout() chan bool {
