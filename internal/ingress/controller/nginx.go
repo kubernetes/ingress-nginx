@@ -44,6 +44,7 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
+	"k8s.io/ingress-nginx/pkg/tcpproxy"
 
 	adm_controller "k8s.io/ingress-nginx/internal/admission/controller"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -101,7 +102,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 		runningConfig: new(ingress.Configuration),
 
-		Proxy: &TCPProxy{},
+		Proxy: &tcpproxy.TCPProxy{},
 
 		metricCollector: mc,
 
@@ -241,7 +242,7 @@ type NGINXController struct {
 
 	isShuttingDown bool
 
-	Proxy *TCPProxy
+	Proxy *tcpproxy.TCPProxy
 
 	store store.Storer
 
@@ -439,7 +440,7 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
 
 	if n.cfg.EnableSSLPassthrough {
-		servers := []*TCPServer{}
+		servers := []*tcpproxy.TCPServer{}
 		for _, pb := range ingressCfg.PassthroughBackends {
 			svc := pb.Service
 			if svc == nil {
@@ -464,7 +465,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 			}
 
 			// TODO: Allow PassthroughBackends to specify they support proxy-protocol
-			servers = append(servers, &TCPServer{
+			servers = append(servers, &tcpproxy.TCPServer{
 				Hostname:      pb.Hostname,
 				IP:            svc.Spec.ClusterIP,
 				Port:          port,
@@ -751,8 +752,8 @@ func (n *NGINXController) setupSSLProxy() {
 	proxyPort := n.cfg.ListenPorts.SSLProxy
 
 	klog.InfoS("Starting TLS proxy for SSL Passthrough")
-	n.Proxy = &TCPProxy{
-		Default: &TCPServer{
+	n.Proxy = &tcpproxy.TCPProxy{
+		Default: &tcpproxy.TCPServer{
 			Hostname:      "localhost",
 			IP:            "127.0.0.1",
 			Port:          proxyPort,
