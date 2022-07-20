@@ -17,7 +17,7 @@ limitations under the License.
 package ingress
 
 import (
-	"k8s.io/ingress-nginx/internal/sets"
+	"k8s.io/ingress-nginx/pkg/util/sets"
 )
 
 // Equal tests for equality between two Configuration types
