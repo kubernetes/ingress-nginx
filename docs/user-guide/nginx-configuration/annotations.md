@@ -37,6 +37,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-keepalive-timeout](#external-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-signin-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
@@ -502,6 +503,25 @@ nginx.ingress.kubernetes.io/auth-snippet: |
 
 !!! example
     Please check the [external-auth](../../examples/auth/external-auth/README.md) example.
+* `nginx.ingress.kubernetes.io/auth-signin-snippet`:
+  `<Auth_Signin_Snippet>` to specify a custom snippet to use with external authentication in gerenal and with OAUTH in particular to apply additional configuration when `nginx.ingress.kubernetes.io/auth-signin` is executed, e.g.
+
+```yaml
+nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+nginx.ingress.kubernetes.io/auth-signin-snippet: |
+    set $do401 "";
+    if ($http_accept ~= "text/html" ) {
+        set $do401 "${do401}1";
+    }
+    if ($request_method = GET) {
+        set $do401 "${do401}1";
+    }
+    if ($do401 == "11") {
+        return 401; 
+    }
+```
+> Note: `nginx.ingress.kubernetes.io/auth-signin-snippet` is an optional annotation. However, it may only be used in conjunction with `nginx.ingress.kubernetes.io/auth-signin` and will be ignored if `nginx.ingress.kubernetes.io/auth-signin` is not set
 
 #### Global External Authentication
 

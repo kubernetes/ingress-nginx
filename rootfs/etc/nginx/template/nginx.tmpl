@@ -1178,6 +1178,11 @@ stream {
             modsecurity off;
             {{ end }}
 
+            {{ if not (empty $externalAuth.AuthSigninSnippet) }}
+            # auth-signin-snippet from annotation
+            {{ $externalAuth.AuthSigninSnippet }}
+            {{ end }}
+
             return 302 {{ buildAuthSignURL $externalAuth.SigninURL $externalAuth.SigninURLRedirectParam }};
         }
         {{ end }}

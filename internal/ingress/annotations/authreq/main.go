@@ -42,6 +42,7 @@ type Config struct {
 	ResponseHeaders        []string          `json:"responseHeaders,omitempty"`
 	RequestRedirect        string            `json:"requestRedirect"`
 	AuthSnippet            string            `json:"authSnippet"`
+	AuthSigninSnippet      string            `json:"authSigninSnippet"`
 	AuthCacheKey           string            `json:"authCacheKey"`
 	AuthCacheDuration      []string          `json:"authCacheDuration"`
 	KeepaliveConnections   int               `json:"keepaliveConnections"`
@@ -205,6 +206,11 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		klog.V(3).InfoS("auth-signin annotation is undefined and will not be set")
 	}
 
+	signInSnippet, err := parser.GetStringAnnotation("auth-signin-snippet", ing)
+	if err != nil {
+		klog.V(3).InfoS("auth-signin-snippet annotation is undefined and will not be set")
+	}
+
 	signInRedirectParam, err := parser.GetStringAnnotation("auth-signin-redirect-param", ing)
 	if err != nil {
 		klog.V(3).Infof("auth-signin-redirect-param annotation is undefined and will not be set")
@@ -313,6 +319,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		ResponseHeaders:        responseHeaders,
 		RequestRedirect:        requestRedirect,
 		AuthSnippet:            authSnippet,
+		AuthSigninSnippet:      signInSnippet,
 		AuthCacheKey:           authCacheKey,
 		AuthCacheDuration:      authCacheDuration,
 		KeepaliveConnections:   keepaliveConnections,
