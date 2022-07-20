@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package flags
 
 import (
 	"flag"
@@ -37,7 +37,11 @@ import (
 	klog "k8s.io/klog/v2"
 )
 
-func parseFlags() (bool, *controller.Configuration, error) {
+// TODO: We should split the flags functions between common for all programs
+// and specific for each component (like webhook, controller and configurer)
+// ParseFlags generates a configuration for Ingress Controller based on the flags
+// provided by users
+func ParseFlags() (bool, *controller.Configuration, error) {
 	var (
 		flags = pflag.NewFlagSet("", pflag.ExitOnError)
 
@@ -378,4 +382,13 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	}
 
 	return false, config, err
+}
+
+// ResetForTesting clears all flag state and sets the usage function as directed.
+// After calling resetForTesting, parse errors in flag handling will not
+// exit the program.
+// Extracted from https://github.com/golang/go/blob/master/src/flag/export_test.go
+func ResetForTesting(usage func()) {
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	flag.Usage = usage
 }

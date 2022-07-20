@@ -14,32 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package flags
 
 import (
-	"flag"
 	"os"
 	"testing"
 )
 
-// resetForTesting clears all flag state and sets the usage function as directed.
-// After calling resetForTesting, parse errors in flag handling will not
-// exit the program.
-// Extracted from https://github.com/golang/go/blob/master/src/flag/export_test.go
-func resetForTesting(usage func()) {
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
-	flag.Usage = usage
-}
-
 func TestNoMandatoryFlag(t *testing.T) {
-	_, _, err := parseFlags()
+	_, _, err := ParseFlags()
 	if err != nil {
 		t.Fatalf("Expected no error but got: %s", err)
 	}
 }
 
 func TestDefaults(t *testing.T) {
-	resetForTesting(func() { t.Fatal("Parsing failed") })
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
@@ -49,7 +39,7 @@ func TestDefaults(t *testing.T) {
 		"--https-port", "0",
 	}
 
-	showVersion, conf, err := parseFlags()
+	showVersion, conf, err := ParseFlags()
 	if err != nil {
 		t.Fatalf("Unexpected error parsing default flags: %v", err)
 	}
@@ -68,52 +58,52 @@ func TestSetupSSLProxy(t *testing.T) {
 }
 
 func TestFlagConflict(t *testing.T) {
-	resetForTesting(func() { t.Fatal("Parsing failed") })
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--publish-status-address", "1.1.1.1"}
 
-	_, _, err := parseFlags()
+	_, _, err := ParseFlags()
 	if err == nil {
 		t.Fatalf("Expected an error parsing flags but none returned")
 	}
 }
 
 func TestMaxmindEdition(t *testing.T) {
-	resetForTesting(func() { t.Fatal("Parsing failed") })
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City, TestCheck"}
 
-	_, _, err := parseFlags()
+	_, _, err := ParseFlags()
 	if err == nil {
 		t.Fatalf("Expected an error parsing flags but none returned")
 	}
 }
 
 func TestMaxmindMirror(t *testing.T) {
-	resetForTesting(func() { t.Fatal("Parsing failed") })
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--maxmind-mirror", "http://geoip.local", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City, TestCheck"}
 
-	_, _, err := parseFlags()
+	_, _, err := ParseFlags()
 	if err == nil {
 		t.Fatalf("Expected an error parsing flags but none returned")
 	}
 }
 
 func TestMaxmindRetryDownload(t *testing.T) {
-	resetForTesting(func() { t.Fatal("Parsing failed") })
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--maxmind-mirror", "http://127.0.0.1", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City", "--maxmind-retries-timeout", "1s", "--maxmind-retries-count", "3"}
 
-	_, _, err := parseFlags()
+	_, _, err := ParseFlags()
 	if err == nil {
 		t.Fatalf("Expected an error parsing flags but none returned")
 	}
