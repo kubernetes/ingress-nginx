@@ -33,7 +33,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
-	"k8s.io/ingress-nginx/pkg/ingress_flags"
+	ingressflags "k8s.io/ingress-nginx/pkg/flags"
 	"k8s.io/ingress-nginx/pkg/util/process"
 )
 
@@ -85,7 +85,7 @@ func TestHandleSigterm(t *testing.T) {
 		t.Fatalf("error creating pod %v: %v", pod, err)
 	}
 
-	ingress_flags.ResetForTesting(func() { t.Fatal("bad parse") })
+	ingressflags.ResetForTesting(func() { t.Fatal("bad parse") })
 
 	os.Setenv("POD_NAME", podName)
 	os.Setenv("POD_NAMESPACE", namespace)
@@ -99,7 +99,7 @@ func TestHandleSigterm(t *testing.T) {
 	}()
 
 	os.Args = []string{"cmd", "--default-backend-service", "ingress-nginx/default-backend-http", "--http-port", "0", "--https-port", "0"}
-	_, conf, err := ingress_flags.ParseFlags()
+	_, conf, err := ingressflags.ParseFlags()
 	if err != nil {
 		t.Errorf("Unexpected error creating NGINX controller: %v", err)
 	}

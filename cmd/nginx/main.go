@@ -45,7 +45,8 @@ import (
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	"k8s.io/ingress-nginx/version"
-	"k8s.io/ingress-nginx/pkg/ingress_flags"
+
+	ingressflags "k8s.io/ingress-nginx/pkg/flags"
 	"k8s.io/ingress-nginx/pkg/metrics"
 	"k8s.io/ingress-nginx/pkg/util/process"
 )
@@ -57,7 +58,7 @@ func main() {
 
 	fmt.Println(version.String())
 
-	showVersion, conf, err := ingress_flags.ParseFlags()
+	showVersion, conf, err := ingressflags.ParseFlags()
 	if showVersion {
 		os.Exit(0)
 	}
