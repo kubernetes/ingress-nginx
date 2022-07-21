@@ -17,23 +17,29 @@ limitations under the License.
 package dataplane
 
 import (
+	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
-	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
+	ing_net "k8s.io/ingress-nginx/internal/net"
+	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/nginx"
+	"k8s.io/ingress-nginx/pkg/tcpproxy"
+	"k8s.io/ingress-nginx/pkg/util/file"
 	"k8s.io/klog/v2"
 )
 
 // NGINXConfigurer describes a NGINX Ingress configurer responsible to manage the NGINX process
 type NGINXConfigurer struct {
+	//
 	cfg *Configuration
 
 	// stopLock is used to enforce that only a single call to Stop send at
@@ -57,14 +63,100 @@ type NGINXConfigurer struct {
 
 	isShuttingDown bool
 
-	Proxy *TCPProxy
-
-	store store.Storer
+	Proxy *tcpproxy.TCPProxy
 
 	metricCollector    metric.Collector
 	admissionCollector metric.Collector
 
 	command NginxExecTester
+}
+
+// NewNGINXConfigurer creates a new NGINX Ingress controller.
+func NewNGINXConfigurer(config *Configuration, mc metric.Collector) *NGINXConfigurer {
+
+	h, err := dns.GetSystemNameServers()
+	if err != nil {
+		klog.Warningf("Error reading system nameservers: %v", err)
+	}
+
+	n := &NGINXConfigurer{
+		isIPV6Enabled: ing_net.IsIPv6Enabled(),
+
+		resolver: h,
+		cfg:      config,
+
+		stopCh: make(chan struct{}),
+
+		ngxErrCh: make(chan error),
+
+		stopLock: &sync.Mutex{},
+
+		// TODO: move this struct to the API
+		runningConfig: new(ingress.Configuration),
+
+		Proxy: &tcpproxy.TCPProxy{},
+
+		metricCollector: mc,
+
+		command: NewNginxCommand(),
+	}
+
+	onTemplateChange := func() {
+		template, err := ngx_template.NewTemplate(nginx.TemplatePath)
+		if err != nil {
+			// this error is different from the rest because it must be clear why nginx is not working
+			klog.ErrorS(err, "Error loading new template")
+			return
+		}
+
+		n.t = template
+		// TODO: Set a function to trigger reload as a new event
+		// n.syncQueue.EnqueueTask(task.GetDummyObject("template-change"))
+		klog.InfoS("New NGINX configuration template loaded")
+	}
+
+	ngxTpl, err := ngx_template.NewTemplate(nginx.TemplatePath)
+	if err != nil {
+		klog.Fatalf("Invalid NGINX configuration template: %v", err)
+	}
+
+	n.t = ngxTpl
+
+	_, err = file.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
+	if err != nil {
+		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
+	}
+
+	filesToWatch := []string{}
+	err = filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		filesToWatch = append(filesToWatch, path)
+		return nil
+	})
+
+	if err != nil {
+		klog.Fatalf("Error creating file watchers: %v", err)
+	}
+
+	for _, f := range filesToWatch {
+		_, err = file.NewFileWatcher(f, func() {
+			klog.InfoS("File changed detected. Reloading NGINX", "path", f)
+			// TODO: Set a function to trigger reload as a new event
+			//n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
+		})
+		if err != nil {
+			klog.Fatalf("Error creating file watcher for %v: %v", f, err)
+		}
+	}
+
+	return n
 }
 
 // Start starts a new NGINX master process running in the foreground.

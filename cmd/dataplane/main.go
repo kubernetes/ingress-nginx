@@ -25,10 +25,10 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"k8s.io/ingress-nginx/pkg/dataplane"
 
 	"k8s.io/klog/v2"
 
-	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/nginx"
 	ingressflags "k8s.io/ingress-nginx/pkg/flags"
@@ -69,24 +69,22 @@ func main() {
 
 	mc := metric.NewDummyCollector()
 	if conf.EnableMetrics {
-		// TODO: Ingress class is not a part of dataplane anymore
+		// TODO: Ingress class is not a part of dataplane anymore but we can get this info as an "ingress group"
 		mc, err = metric.NewCollector(conf.MetricsPerHost, conf.ReportStatusClasses, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets)
 		if err != nil {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}
 	}
-	// Pass the ValidationWebhook status to determine if we need to start the collector
-	// for the admissionWebhook
-	// TODO: Dataplane does not contain validation webhook so the MetricCollector should not receive
-	// this as an argument
-	mc.Start(conf.ValidationWebhook)
+
+	// TODO: The metric collector should not use a string as an argument to determine admission Statusx
+	mc.Start("")
 
 	if conf.EnableProfiling {
 		// TODO: Turn Profiler address configurable via flags
 		go metrics.RegisterProfiler("127.0.0.1", nginx.ProfilerPort)
 	}
 
-	ngx := controller.NewNGINXController(conf, mc)
+	ngx := dataplane.NewNGINXConfigurer(conf, mc)
 
 	mux := http.NewServeMux()
 	metrics.RegisterHealthz(nginx.HealthPath, mux)
