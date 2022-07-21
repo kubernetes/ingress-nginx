@@ -26,7 +26,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/net"
-	"k8s.io/ingress-nginx/internal/sets"
+	"k8s.io/ingress-nginx/pkg/util/sets"
 )
 
 const (

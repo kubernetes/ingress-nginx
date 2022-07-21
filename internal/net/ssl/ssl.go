@@ -43,9 +43,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
-	"k8s.io/ingress-nginx/internal/watch"
-
 	"k8s.io/ingress-nginx/pkg/util/file"
+
 	klog "k8s.io/klog/v2"
 )
 
@@ -509,8 +508,8 @@ func NewTLSListener(certificate, key string) *TLSListener {
 
 	l.load()
 
-	_, _ = watch.NewFileWatcher(certificate, l.load)
-	_, _ = watch.NewFileWatcher(key, l.load)
+	_, _ = file.NewFileWatcher(certificate, l.load)
+	_, _ = file.NewFileWatcher(key, l.load)
 
 	return &l
 }
