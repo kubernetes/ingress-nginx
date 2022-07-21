@@ -18,7 +18,7 @@ package store
 
 import (
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 // IngressWithAnnotationsLister makes a Store that lists Ingress rules with annotations already parsed

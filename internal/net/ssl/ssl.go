@@ -40,7 +40,7 @@ import (
 	"github.com/zakjan/cert-chain-resolver/certUtil"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/pkg/util/file"

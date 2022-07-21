@@ -25,8 +25,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 // Collector defines the interface for a metric collector

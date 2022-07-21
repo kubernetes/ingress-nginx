@@ -42,13 +42,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 )
 
-var (
-	// DefaultSSLDirectory defines the location where the SSL certificates will be generated
-	// This directory contains all the SSL certificates that are specified in Ingress rules.
-	// The name of each file is <namespace>-<secret name>.pem. The content is the concatenated
-	// certificate and key.
-	DefaultSSLDirectory = "/ingress-controller/ssl"
-)
+// TODO: The API shouldn't be importing structs from annotation code. Instead we probably want a conversion from internal
+// to API object, or see how much effort is to move the structs of annotations to become an "API'ish" as well
 
 // Configuration holds the definition of all the parts required to describe all
 // ingresses reachable by the ingress controller (using a filter by namespace)
