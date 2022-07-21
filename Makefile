@@ -54,8 +54,9 @@ ifneq ($(PLATFORM),)
 endif
 
 MAC_OS = $(shell uname -s)
+
 ifeq ($(MAC_OS), Darwin)
-	MAC_DOCKER_FLAGS="--load"
+	MAC_DOCKER_FLAGS=
 else
 	MAC_DOCKER_FLAGS=
 endif
