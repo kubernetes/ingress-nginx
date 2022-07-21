@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/internal/sets"
+	"k8s.io/ingress-nginx/pkg/util/sets"
 )
 
 // Config returns external authentication configuration for an Ingress rule
