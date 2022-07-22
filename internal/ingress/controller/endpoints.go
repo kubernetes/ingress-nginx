@@ -29,8 +29,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 // getEndpoints returns a list of Endpoint structs for a given service/target port combination.

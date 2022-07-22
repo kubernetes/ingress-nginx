@@ -24,7 +24,7 @@ import (
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 
 	klog "k8s.io/klog/v2"
 

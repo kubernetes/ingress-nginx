@@ -24,8 +24,8 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/ingress-nginx/pkg/util/runtime"
 )
 

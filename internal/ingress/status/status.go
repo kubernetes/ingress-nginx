@@ -34,9 +34,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 // UpdateInterval defines the time interval, in seconds, in
