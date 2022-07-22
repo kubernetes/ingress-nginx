@@ -228,3 +228,13 @@ If you start Ingress-Nginx B with the command line argument `--watch-ingress-wit
   --set controller.ingressClassByName=true
   ```
 - If you need to install yet another instance, then repeat the procedure to create a new namespace, change the values such as names & namespaces (for example from "-2" to "-3"), or anything else that meets your needs.
+- If you need to install all instances in the same namespace, then you need to specify a different **election id**, like this:
+  ```
+  helm install ingress-nginx-2 ingress-nginx/ingress-nginx  \
+  --namespace kube-system \
+  --set controller.electionID=nginx-two-leader \
+  --set controller.ingressClassResource.name=nginx-two \
+  --set controller.ingressClassResource.controllerValue="example.com/ingress-nginx-2" \
+  --set controller.ingressClassResource.enabled=true \
+  --set controller.ingressClassByName=true
+  ```
