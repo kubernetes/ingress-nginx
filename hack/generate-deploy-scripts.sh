@@ -55,11 +55,11 @@ do
       --namespace ingress-nginx \
       --kube-version ${K8S_VERSION} \
       > $MANIFEST
-    sed -i '' '/app.kubernetes.io\/managed-by: Helm/d' $MANIFEST
-    sed -i '' '/helm.sh/d' $MANIFEST
+    sed -i.bak '/app.kubernetes.io\/managed-by: Helm/d' $MANIFEST
+    sed -i.bak '/helm.sh/d' $MANIFEST
 
     kustomize --load-restrictor=LoadRestrictionsNone build . > ${OUTPUT_DIR}/deploy.yaml
-    rm $MANIFEST
+    rm $MANIFEST $MANIFEST.bak
     cd ~-
     # automatically generate the (unsupported) kustomization.yaml for each target
     sed "s_{TARGET}_${TARGET}_" $TEMPLATE_DIR/static-kustomization-template.yaml > ${OUTPUT_DIR}/kustomization.yaml
@@ -68,7 +68,7 @@ do
     if [[ ${K8S_VERSION} = ${K8S_DEFAULT_VERSION} ]]
     then
       cp ${OUTPUT_DIR}/*.yaml ${OUTPUT_DIR}/../
-      sed -i "s/^/#GENERATED FOR K8S ${K8S_VERSION}\n/" ${OUTPUT_DIR}/../deploy.yaml
+      sed -i.bak "s/^/#GENERATED FOR K8S ${K8S_VERSION}\n/" ${OUTPUT_DIR}/../deploy.yaml && rm ${OUTPUT_DIR}/../deploy.yaml.bak
     fi
   done
 done
