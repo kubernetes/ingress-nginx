@@ -26,7 +26,7 @@ set -o pipefail
 # with enough docs updates, this could be removed
 # see     # DEFAULT VERSION HANDLING
 K8S_DEFAULT_VERSION=1.20
-K8S_TARGET_VERSIONS=("1.19" "1.20" "1.21" "1.22" "1.23")
+K8S_TARGET_VERSIONS=("1.20" "1.21" "1.22" "1.23" "1.24")
 
 DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 

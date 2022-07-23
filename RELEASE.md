@@ -272,12 +272,8 @@ Promoting the images basically means that images, that were pushed to staging co
 - Update Supported versions in the Support Versions table in the README.md
 - Execute the script to update e2e docs [hack/generate-e2e-suite-doc.sh](https://github.com/kubernetes/ingress-nginx/blob/main/hack/generate-e2e-suite-doc.sh)
 
-### h. Edit stable.txt
+### h. Update README.md
 
-- Edit the [stable.txt](stable.txt) file(if applicable), in the root of the repo, to reflect the release to be created
-- Criteria is a release that has been GA for a while but reported issues are not bugs but mostly /kind support or feature
-
-### i. Update README.md
 - Update the table in README.md in the root of the projet to reflect the support matrix. Add the new release version and details in there.
 
 ## 5. RELEASE new version

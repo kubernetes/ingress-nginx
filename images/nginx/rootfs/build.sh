@@ -127,6 +127,9 @@ export LUA_RESTY_IPMATCHER_VERSION=211e0d2eb8bbb558b79368f89948a0bafdc23654
 # Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
 export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
 
+# Check for recent changes:  https://github.com/microsoft/mimalloc/compare/v1.7.6...master
+export MIMALOC_VERSION=1.7.6
+
 export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
@@ -319,6 +322,9 @@ get_src b8dbd502751140993a852381bcd8e98a402454596bd91838c1e51268d42db261 \
 
 get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
         "https://github.com/ElvinEfendi/lua-resty-global-throttle/archive/v$LUA_RESTY_GLOBAL_THROTTLE_VERSION.tar.gz"
+
+get_src d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da \
+        "https://github.com/microsoft/mimalloc/archive/refs/tags/v${MIMALOC_VERSION}.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
@@ -713,11 +719,7 @@ INST_LUADIR=/usr/local/lib/lua make install
 cd "$BUILD_PATH/lua-resty-global-throttle-$LUA_RESTY_GLOBAL_THROTTLE_VERSION"
 make install
 
-# mimalloc
-cd "$BUILD_PATH"
-git clone --depth=1 -b v1.6.7 https://github.com/microsoft/mimalloc
-cd mimalloc
-
+cd "$BUILD_PATH/mimalloc-$MIMALOC_VERSION"
 mkdir -p out/release
 cd out/release
 

@@ -23,9 +23,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.2.1"
-    digest: sha256:5516d103a9c2ecc4f026efbd4b40662ce22dc1f824fb129ed121460aaa5c47f8
-    digestChroot: sha256:d301551cf62bc3fb75c69fa56f7aa1d9e87b5079333adaf38afe84d9b7439355
+    tag: "v1.3.0"
+    digest: sha256:d1707ca76d3b044ab8a28277a2466a02100ee9f58a86af1535a3edf9323ea1b5
+    digestChroot: sha256:0fcb91216a22aae43b374fc2e6a03b8afe9e8c78cbf07a09d75636dc4ea3c191
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -597,6 +597,15 @@ controller:
     ## These annotations will be added to the ValidatingWebhookConfiguration and
     ## the Jobs Spec of the admission webhooks.
     enabled: true
+    # -- Additional environment variables to set
+    extraEnvs: []
+    # extraEnvs:
+    #   - name: FOO
+    #     valueFrom:
+    #       secretKeyRef:
+    #         key: FOO
+    #         name: secret-resource
+    # -- Admission Webhook failure policy to use
     failurePolicy: Fail
     # timeoutSeconds: 10
     port: 8443

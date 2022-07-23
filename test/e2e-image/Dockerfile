@@ -1,6 +1,7 @@
-FROM registry.k8s.io/ingress-nginx/e2e-test-runner:v20220524-g8963ed17e@sha256:4fbcbeebd4c24587699b027ad0f0aa7cd9d76b58177a3b50c228bae8141bcf95 AS BASE
+ARG E2E_BASE_IMAGE
+FROM ${E2E_BASE_IMAGE} AS BASE
 
-FROM alpine:3.14.6
+FROM alpine:3.16.0
 
 RUN apk add -U --no-cache \
   ca-certificates \
