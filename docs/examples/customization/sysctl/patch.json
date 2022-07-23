@@ -4,7 +4,7 @@
 			"spec": {
 				"initContainers": [{
 					"name": "sysctl",
-					"image": "alpine:3.16.0",
+					"image": "alpine:3.16.1",
 					"securityContext": {
 						"privileged": true
 					},
