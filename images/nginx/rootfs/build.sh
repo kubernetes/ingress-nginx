@@ -53,8 +53,8 @@ export JAEGER_VERSION=0.7.0
 # Check for recent changes: https://github.com/msgpack/msgpack-c/compare/cpp-3.3.0...master
 export MSGPACK_VERSION=3.3.0
 
-# Check for recent changes: https://github.com/DataDog/dd-opentracing-cpp/compare/v1.3.0...master
-export DATADOG_CPP_VERSION=af53c523787cca108ae9f458ea5c962e48187a36
+# Check for recent changes: https://github.com/DataDog/dd-opentracing-cpp/compare/v1.3.2...master
+export DATADOG_CPP_VERSION=1.3.2
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.2...master
 export MODSECURITY_VERSION=1.0.2
@@ -264,8 +264,8 @@ get_src 1ee6dad809a5bb22efb45e6dac767f7ce544ad652d353a93d7f26b605f69fe3f \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 fi
 
-get_src f29393f2cd9288105a0029a6a324fe1f7558a9e7e852d59a6355f7581bb90e30 \
-        "https://github.com/DataDog/dd-opentracing-cpp/archive/$DATADOG_CPP_VERSION.tar.gz"
+get_src 586f92166018cc27080d34e17c59d68219b85af745edf3cc9fe41403fc9b4ac6 \
+        "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
 get_src 1af5a5632dc8b00ae103d51b7bf225de3a7f0df82f5c6a401996c080106e600e \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
