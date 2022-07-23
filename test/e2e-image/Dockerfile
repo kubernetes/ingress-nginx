@@ -1,7 +1,7 @@
 ARG E2E_BASE_IMAGE
 FROM ${E2E_BASE_IMAGE} AS BASE
 
-FROM alpine:3.16.0
+FROM alpine:3.16.1
 
 RUN apk add -U --no-cache \
   ca-certificates \
