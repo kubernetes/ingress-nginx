@@ -23,7 +23,7 @@ REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-runner
 
-NGINX_BASE_IMAGE ?= $(shell cat $(DIR)/../../NGINX_BASE || cat "/home/prow/go/src/github.com/kubernetes/ingress-nginx/NGINX_BASE")
+NGINX_BASE_IMAGE ?= $(shell cat $(DIR)/../../NGINX_BASE)
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -34,8 +34,6 @@ OUTPUT=
 PROGRESS=plain
 
 build: ensure-buildx
-	echo $(NGINX_BASE_IMAGE)
-	pwd
 	docker buildx build \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
