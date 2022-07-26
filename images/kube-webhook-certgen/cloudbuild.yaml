@@ -31,7 +31,7 @@ steps:
     - -c
     - |
       gcloud auth configure-docker \
-      && make push
+      && cd images/kube-webhook-certgen && make push
 substitutions:
   _GIT_TAG: "12345"
   _PULL_BASE_REF: "main"
