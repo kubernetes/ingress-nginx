@@ -17,11 +17,10 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
-
-	"net/http"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
