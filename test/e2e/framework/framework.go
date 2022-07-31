@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/gavv/httpexpect/v2"
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -161,7 +161,7 @@ func (f *Framework) AfterEach() {
 		}()
 	}(f.KubeClientSet, f.IngressClass)
 
-	if !ginkgo.CurrentGinkgoTestDescription().Failed {
+	if !ginkgo.CurrentSpecReport().Failed() {
 		return
 	}
 
@@ -210,8 +210,8 @@ func DescribeSetting(text string, body func()) bool {
 }
 
 // MemoryLeakIt is wrapper function for ginkgo It.  Adds "[MemoryLeak]" tag and makes static analysis easier.
-func MemoryLeakIt(text string, body interface{}, timeout ...float64) bool {
-	return ginkgo.It(text+" [MemoryLeak]", body, timeout...)
+func MemoryLeakIt(text string, body interface{}) bool {
+	return ginkgo.It(text+" [MemoryLeak]", body)
 }
 
 // GetNginxIP returns the number of TCP port where NGINX is running
