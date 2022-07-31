@@ -154,12 +154,14 @@ func (f *Framework) AfterEach() {
 	defer f.DestroyEnvironment()
 
 	defer func(kubeClient kubernetes.Interface, ingressclass string) {
-		defer ginkgo.GinkgoRecover()
-		err := deleteIngressClass(kubeClient, ingressclass)
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
+		go func() {
+			defer ginkgo.GinkgoRecover()
+			err := deleteIngressClass(kubeClient, ingressclass)
+			assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
+		}()
 	}(f.KubeClientSet, f.IngressClass)
 
-	if ginkgo.CurrentSpecReport().Failure.IsZero() {
+	if !ginkgo.CurrentSpecReport().Failed() {
 		return
 	}
 
