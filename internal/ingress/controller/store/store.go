@@ -79,9 +79,6 @@ type Storer interface {
 	// GetService returns the Service matching key.
 	GetService(key string) (*corev1.Service, error)
 
-	// GetServiceEndpoints returns the Endpoints of a Service matching key.
-	GetServiceEndpoints(key string) (*corev1.Endpoints, error)
-
 	// GetServiceEndpointsSlices returns the EndpointSlices of a Service matching key.
 	GetServiceEndpointsSlices(key string) ([]*discoveryv1.EndpointSlice, error)
 
@@ -133,7 +130,6 @@ type Event struct {
 type Informer struct {
 	Ingress       cache.SharedIndexInformer
 	IngressClass  cache.SharedIndexInformer
-	Endpoint      cache.SharedIndexInformer
 	EndpointSlice cache.SharedIndexInformer
 	Service       cache.SharedIndexInformer
 	Secret        cache.SharedIndexInformer
@@ -146,7 +142,6 @@ type Lister struct {
 	Ingress               IngressLister
 	IngressClass          IngressClassLister
 	Service               ServiceLister
-	Endpoint              EndpointLister
 	EndpointSlice         EndpointSliceLister
 	Secret                SecretLister
 	ConfigMap             ConfigMapLister
@@ -165,7 +160,6 @@ func (e NotExistsError) Error() string {
 // Run initiates the synchronization of the informers against the API server.
 func (i *Informer) Run(stopCh chan struct{}) {
 	go i.Secret.Run(stopCh)
-	go i.Endpoint.Run(stopCh)
 	go i.EndpointSlice.Run(stopCh)
 	if i.IngressClass != nil {
 		go i.IngressClass.Run(stopCh)
@@ -176,7 +170,6 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	// wait for all involved caches to be synced before processing items
 	// from the queue
 	if !cache.WaitForCacheSync(stopCh,
-		i.Endpoint.HasSynced,
 		i.Service.HasSynced,
 		i.Secret.HasSynced,
 		i.ConfigMap.HasSynced,
@@ -336,9 +329,6 @@ func New(
 		store.informers.IngressClass = infFactory.Networking().V1().IngressClasses().Informer()
 		store.listers.IngressClass.Store = cache.NewStore(cache.MetaNamespaceKeyFunc)
 	}
-
-	store.informers.Endpoint = infFactory.Core().V1().Endpoints().Informer()
-	store.listers.Endpoint.Store = store.informers.Endpoint.GetStore()
 
 	store.informers.EndpointSlice = infFactory.Discovery().V1().EndpointSlices().Informer()
 	store.listers.EndpointSlice.Store = store.informers.EndpointSlice.GetStore()
@@ -683,31 +673,6 @@ func New(
 		},
 	}
 
-	epEventHandler := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			updateCh.In() <- Event{
-				Type: CreateEvent,
-				Obj:  obj,
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			updateCh.In() <- Event{
-				Type: DeleteEvent,
-				Obj:  obj,
-			}
-		},
-		UpdateFunc: func(old, cur interface{}) {
-			oep := old.(*corev1.Endpoints)
-			cep := cur.(*corev1.Endpoints)
-			if !reflect.DeepEqual(cep.Subsets, oep.Subsets) {
-				updateCh.In() <- Event{
-					Type: UpdateEvent,
-					Obj:  cur,
-				}
-			}
-		},
-	}
-
 	epsEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			updateCh.In() <- Event{
@@ -831,7 +796,6 @@ func New(
 	if !icConfig.IgnoreIngressClass {
 		store.informers.IngressClass.AddEventHandler(ingressClassEventHandler)
 	}
-	store.informers.Endpoint.AddEventHandler(epEventHandler)
 	store.informers.EndpointSlice.AddEventHandler(epsEventHandler)
 	store.informers.Secret.AddEventHandler(secrEventHandler)
 	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
@@ -1078,11 +1042,6 @@ func (s *k8sStore) GetLocalSSLCert(key string) (*ingress.SSLCert, error) {
 // GetConfigMap returns the ConfigMap matching key.
 func (s *k8sStore) GetConfigMap(key string) (*corev1.ConfigMap, error) {
 	return s.listers.ConfigMap.ByKey(key)
-}
-
-// GetServiceEndpoints returns the Endpoints of a Service matching key.
-func (s *k8sStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
-	return s.listers.Endpoint.ByKey(key)
 }
 
 func (s *k8sStore) GetServiceEndpointsSlices(key string) ([]*discoveryv1.EndpointSlice, error) {

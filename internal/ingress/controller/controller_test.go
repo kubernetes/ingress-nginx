@@ -86,10 +86,6 @@ func (fakeIngressStore) GetService(key string) (*corev1.Service, error) {
 	return nil, fmt.Errorf("test error")
 }
 
-func (fakeIngressStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
-	return nil, fmt.Errorf("test error")
-}
-
 func (fakeIngressStore) GetServiceEndpointsSlices(key string) ([]*discoveryv1.EndpointSlice, error) {
 	return nil, fmt.Errorf("test error")
 }
