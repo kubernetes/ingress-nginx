@@ -24,12 +24,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// EndpointLister makes a Store that lists Endpoints.
+// EndpointSliceLister makes a Store that lists Endpoints.
 type EndpointSliceLister struct {
 	cache.Store
 }
 
-// ByKey returns the EndpointsSlices of the Service matching key in the local Endpoint Store.
+// MatchByKey returns the EndpointsSlices of the Service matching key in the local Endpoint Store.
 func (s *EndpointSliceLister) MatchByKey(key string) ([]*discoveryv1.EndpointSlice, error) {
 	var eps []*discoveryv1.EndpointSlice
 	// filter endpointSlices owned by svc
