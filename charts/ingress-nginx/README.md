@@ -241,6 +241,18 @@ Kubernetes: `>=1.20.0-0`
 | controller.addHeaders | object | `{}` | Will add custom headers before sending response traffic to the client according to: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers |
 | controller.admissionWebhooks.annotations | object | `{}` |  |
 | controller.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
+| controller.admissionWebhooks.create.enabled | bool | `true` |  |
+| controller.admissionWebhooks.create.fsGroup | int | `2000` |  |
+| controller.admissionWebhooks.create.image.digest | string | `"sha256:64d8c73dca984af206adf9d6d7e46aa550362b1d7a01f3a0a91b20cc67868660"` |  |
+| controller.admissionWebhooks.create.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |
+| controller.admissionWebhooks.create.image.pullPolicy | string | `"IfNotPresent"` |  |
+| controller.admissionWebhooks.create.image.registry | string | `"registry.k8s.io"` |  |
+| controller.admissionWebhooks.create.image.tag | string | `"v1.1.1"` |  |
+| controller.admissionWebhooks.create.nodeSelector | object | `{}` | Provide a priority class name to the webhook creating job |
+| controller.admissionWebhooks.create.podAnnotations | object | `{}` |  |
+| controller.admissionWebhooks.create.priorityClassName | string | `""` |  |
+| controller.admissionWebhooks.create.runAsUser | int | `2000` |  |
+| controller.admissionWebhooks.create.tolerations | list | `[]` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.enabled | bool | `true` |  |
 | controller.admissionWebhooks.existingPsp | string | `""` | Use an existing PSP instead of creating one |
@@ -258,7 +270,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.admissionWebhooks.patch.image.registry | string | `"registry.k8s.io"` |  |
 | controller.admissionWebhooks.patch.image.tag | string | `"v1.1.1"` |  |
 | controller.admissionWebhooks.patch.labels | object | `{}` | Labels to be added to patch job resources |
-| controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
+| controller.admissionWebhooks.patch.nodeSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
 | controller.admissionWebhooks.patch.priorityClassName | string | `""` | Provide a priority class name to the webhook patching job |
 | controller.admissionWebhooks.patch.runAsUser | int | `2000` |  |
