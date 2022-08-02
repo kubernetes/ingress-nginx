@@ -34,10 +34,13 @@ func (s *EndpointSliceLister) MatchByKey(key string) ([]*discoveryv1.EndpointSli
 	var eps []*discoveryv1.EndpointSlice
 	// filter endpointSlices owned by svc
 	for _, listKey := range s.ListKeys() {
-		if strings.HasPrefix(listKey, key) {
-			epss, exists, err := s.GetByKey(listKey)
-			if exists && err == nil {
-				svcName := epss.(*discoveryv1.EndpointSlice).ObjectMeta.GetLabels()[discoveryv1.LabelServiceName]
+		if !strings.HasPrefix(listKey, key) {
+			continue
+		}
+		epss, exists, err := s.GetByKey(listKey)
+		if exists && err == nil {
+			// check for svc owner label
+			if svcName, ok := epss.(*discoveryv1.EndpointSlice).ObjectMeta.GetLabels()[discoveryv1.LabelServiceName]; ok {
 				namespace := epss.(*discoveryv1.EndpointSlice).ObjectMeta.GetNamespace()
 				if key == fmt.Sprintf("%s/%s", namespace, svcName) {
 					eps = append(eps, epss.(*discoveryv1.EndpointSlice))
