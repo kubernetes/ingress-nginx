@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -349,6 +349,68 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
+
+	ginkgo.It("Test annotation send-client-ca", func() {
+                host := "authtls.foo.com"
+                nameSpace := f.Namespace
+
+                clientConfig, err := framework.CreateIngressMASecret(
+                        f.KubeClientSet,
+                        host,
+                        host,
+                        nameSpace)
+                assert.Nil(ginkgo.GinkgoT(), err)
+
+                annotations := map[string]string{
+                        "nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
+                        "nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
+                        "nginx.ingress.kubernetes.io/send-client-ca": "false",
+                }
+
+                ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+
+                assertSslClientCertificateConfig(f, host, "on", "1")
+
+                f.HTTPTestClientWithTLSConfig(clientConfig).
+                        GET("/").
+                        WithURL(f.GetURL(framework.HTTPS)).
+                        WithHeader("Host", host).
+                        Expect().
+                        Status(http.StatusOK)
+
+                f.HTTPTestClient().
+                        GET("/").
+                        WithURL(f.GetURL(framework.HTTPS)).
+                        WithHeader("Host", host).
+                        Expect().
+                        Status(http.StatusBadRequest)
+
+                annotations = map[string]string{
+                        "nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
+                        "nginx.ingress.kubernetes.io/auth-tls-verify-client": "optional_no_ca",
+			"nginx.ingress.kubernetes.io/send-client-ca": "false",
+                }
+
+                ing.SetAnnotations(annotations)
+                f.UpdateIngress(ing)
+
+                assertSslClientCertificateConfigWithoutCa(f, host, "optional_no_ca", "1")
+
+                f.HTTPTestClientWithTLSConfig(clientConfig).
+                        GET("/").
+                        WithURL(f.GetURL(framework.HTTPS)).
+                        WithHeader("Host", host).
+                        Expect().
+                        Status(http.StatusOK)
+
+                f.HTTPTestClient().
+                        GET("/").
+                        WithURL(f.GetURL(framework.HTTPS)).
+                        WithHeader("Host", host).
+                        Expect().
+                        Status(http.StatusOK)
+
+        })
 })
 
 func assertSslClientCertificateConfig(f *framework.Framework, host string, verifyClient string, verifyDepth string) {
@@ -359,6 +421,19 @@ func assertSslClientCertificateConfig(f *framework.Framework, host string, verif
 	f.WaitForNginxServer(host,
 		func(server string) bool {
 			return strings.Contains(server, sslClientCertDirective) &&
+				strings.Contains(server, sslVerify) &&
+				strings.Contains(server, sslVerifyDepth)
+		})
+}
+
+func assertSslClientCertificateConfigWithoutCa(f *framework.Framework, host string, verifyClient string, verifyDepth string) {
+	sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, host)
+	sslVerify := fmt.Sprintf("ssl_verify_client %s;", verifyClient)
+	sslVerifyDepth := fmt.Sprintf("ssl_verify_depth %s;", verifyDepth)
+
+	f.WaitForNginxServer(host,
+		func(server string) bool {
+			return  !strings.Contains(server, sslClientCertDirective) &&
 				strings.Contains(server, sslVerify) &&
 				strings.Contains(server, sslVerifyDepth)
 		})

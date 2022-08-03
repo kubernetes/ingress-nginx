@@ -32,11 +32,13 @@ import (
 const (
 	defaultAuthTLSDepth     = 1
 	defaultAuthVerifyClient = "on"
+	defaultSendClientCa     = "true"
 )
 
 var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 	commonNameRegex       = regexp.MustCompile(`CN=`)
+	sendClientCa              = regexp.MustCompile(`true|false`)
 )
 
 // Config contains the AuthSSLCert used for mutual authentication
@@ -48,6 +50,7 @@ type Config struct {
 	ErrorPage          string `json:"errorPage"`
 	PassCertToUpstream bool   `json:"passCertToUpstream"`
 	MatchCN            string `json:"matchCN"`
+	SendClientCa       string `json:"SendClientCa"`
 	AuthTLSError       string
 }
 
@@ -74,6 +77,10 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 	if assl1.PassCertToUpstream != assl2.PassCertToUpstream {
 		return false
 	}
+	if assl1.SendClientCa != assl2.SendClientCa {
+		return false
+	}
+
 
 	return true
 }
@@ -114,6 +121,12 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	if err != nil || !authVerifyClientRegex.MatchString(config.VerifyClient) {
 		config.VerifyClient = defaultAuthVerifyClient
 	}
+
+
+	config.SendClientCa, err = parser.GetStringAnnotation("send-client-ca", ing)
+	if err != nil || !sendClientCa.MatchString(config.SendClientCa) || config.VerifyClient != "optional_no_ca" {
+		config.SendClientCa = defaultSendClientCa
+	}	
 
 	config.ValidationDepth, err = parser.GetIntAnnotation("auth-tls-verify-depth", ing)
 	if err != nil || config.ValidationDepth == 0 {
