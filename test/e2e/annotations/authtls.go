@@ -351,66 +351,66 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 	})
 
 	ginkgo.It("Test annotation send-client-ca", func() {
-                host := "authtls.foo.com"
-                nameSpace := f.Namespace
+		host := "authtls.foo.com"
+		nameSpace := f.Namespace
 
-                clientConfig, err := framework.CreateIngressMASecret(
-                        f.KubeClientSet,
-                        host,
-                        host,
-                        nameSpace)
-                assert.Nil(ginkgo.GinkgoT(), err)
+		clientConfig, err := framework.CreateIngressMASecret(
+			f.KubeClientSet,
+			host,
+			host,
+			nameSpace)
+		assert.Nil(ginkgo.GinkgoT(), err)
 
-                annotations := map[string]string{
-                        "nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
-                        "nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
-                        "nginx.ingress.kubernetes.io/send-client-ca": "false",
-                }
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
+			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
+			"nginx.ingress.kubernetes.io/send-client-ca":         "false",
+		}
 
-                ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
 
-                assertSslClientCertificateConfig(f, host, "on", "1")
+		assertSslClientCertificateConfig(f, host, "on", "1")
 
-                f.HTTPTestClientWithTLSConfig(clientConfig).
-                        GET("/").
-                        WithURL(f.GetURL(framework.HTTPS)).
-                        WithHeader("Host", host).
-                        Expect().
-                        Status(http.StatusOK)
+		f.HTTPTestClientWithTLSConfig(clientConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 
-                f.HTTPTestClient().
-                        GET("/").
-                        WithURL(f.GetURL(framework.HTTPS)).
-                        WithHeader("Host", host).
-                        Expect().
-                        Status(http.StatusBadRequest)
+		f.HTTPTestClient().
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusBadRequest)
 
-                annotations = map[string]string{
-                        "nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
-                        "nginx.ingress.kubernetes.io/auth-tls-verify-client": "optional_no_ca",
-			"nginx.ingress.kubernetes.io/send-client-ca": "false",
-                }
+		annotations = map[string]string{
+			"nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
+			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "optional_no_ca",
+			"nginx.ingress.kubernetes.io/send-client-ca":         "false",
+		}
 
-                ing.SetAnnotations(annotations)
-                f.UpdateIngress(ing)
+		ing.SetAnnotations(annotations)
+		f.UpdateIngress(ing)
 
-                assertSslClientCertificateConfigWithoutCa(f, host, "optional_no_ca", "1")
+		assertSslClientCertificateConfigWithoutCa(f, host, "optional_no_ca", "1")
 
-                f.HTTPTestClientWithTLSConfig(clientConfig).
-                        GET("/").
-                        WithURL(f.GetURL(framework.HTTPS)).
-                        WithHeader("Host", host).
-                        Expect().
-                        Status(http.StatusOK)
+		f.HTTPTestClientWithTLSConfig(clientConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 
-                f.HTTPTestClient().
-                        GET("/").
-                        WithURL(f.GetURL(framework.HTTPS)).
-                        WithHeader("Host", host).
-                        Expect().
-                        Status(http.StatusOK)
+		f.HTTPTestClient().
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 
-        })
+	})
 })
 
 func assertSslClientCertificateConfig(f *framework.Framework, host string, verifyClient string, verifyDepth string) {
@@ -433,7 +433,7 @@ func assertSslClientCertificateConfigWithoutCa(f *framework.Framework, host stri
 
 	f.WaitForNginxServer(host,
 		func(server string) bool {
-			return  !strings.Contains(server, sslClientCertDirective) &&
+			return !strings.Contains(server, sslClientCertDirective) &&
 				strings.Contains(server, sslVerify) &&
 				strings.Contains(server, sslVerifyDepth)
 		})

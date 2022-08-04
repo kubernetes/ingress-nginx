@@ -38,7 +38,7 @@ const (
 var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 	commonNameRegex       = regexp.MustCompile(`CN=`)
-	sendClientCa              = regexp.MustCompile(`true|false`)
+	sendClientCa          = regexp.MustCompile(`true|false`)
 )
 
 // Config contains the AuthSSLCert used for mutual authentication
@@ -81,7 +81,6 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 		return false
 	}
 
-
 	return true
 }
 
@@ -122,11 +121,10 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.VerifyClient = defaultAuthVerifyClient
 	}
 
-
 	config.SendClientCa, err = parser.GetStringAnnotation("send-client-ca", ing)
 	if err != nil || !sendClientCa.MatchString(config.SendClientCa) || config.VerifyClient != "optional_no_ca" {
 		config.SendClientCa = defaultSendClientCa
-	}	
+	}
 
 	config.ValidationDepth, err = parser.GetIntAnnotation("auth-tls-verify-depth", ing)
 	if err != nil || config.ValidationDepth == 0 {
