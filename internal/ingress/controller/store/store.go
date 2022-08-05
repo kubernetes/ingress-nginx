@@ -582,6 +582,11 @@ func New(
 			sec := obj.(*corev1.Secret)
 			key := k8s.MetaNamespaceKey(sec)
 
+			// If the default SSL certificate is stored in vault, synch it
+			if store.defaultVaultSSLCertificate != "" {
+				store.syncSecret(store.defaultVaultSSLCertificate, true)
+			}
+
 			if store.defaultSSLCertificate == key {
 				store.syncSecret(store.defaultSSLCertificate, false)
 			}
@@ -616,7 +621,14 @@ func New(
 					return
 				}
 
+  			   // If the default SSL certificate is stored in vault, synch it
+				if store.defaultVaultSSLCertificate != "" {
+					store.syncSecret(store.defaultVaultSSLCertificate, true)
+				}
+
+
 				if store.defaultSSLCertificate == key {
+					klog.Infof("Second place of check of default %v, equal to key %v", store.defaultSSLCertificate, key)
 					store.syncSecret(store.defaultSSLCertificate, false)
 				}
 
@@ -914,7 +926,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 		"proxy-ssl-secret",
 		"proxy-ssl-vault",
 		"secure-verify-ca-secret",
-		"tls-cert-vault",
+		"default-ssl-certificate-vault",
 	}
 	for _, ann := range secretAnnotations {
 		klog.V(3).InfoS("Checking annotation for updating Secrets Ingress Map", "annotation", ann)
@@ -939,7 +951,7 @@ func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, er
 	vaultAnnotations := []string{
 		"auth-tls-vault",
 		"proxy-ssl-vault",
-		"tls-cert-vault",
+		"default-ssl-certificate-vault",
 	}
 
 	klog.V(3).InfoS("Getting the annotation", "annotation", ann)
@@ -1142,7 +1154,7 @@ func (s *k8sStore) GetDefaultBackend() defaults.Backend {
 }
 
 func (s *k8sStore) GetVaultAnnotation(ing *networkingv1.Ingress) (bool, string) {
-	klog.Info("Getting annotation tls-cert-vaul status by checking the annotation field")
+	klog.Info("Getting annotation default-ssl-certificate-vault status by checking the annotation field")
 	vaultCertificatePath := annotations.NewAnnotationExtractor(s).Extract(ing).VaultPathTLS
 	if vaultCertificatePath != "" {
 		return true, vaultCertificatePath

@@ -105,7 +105,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none](#cookie-affinity)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/tls-cert-vault](#tls-cert-vault)|string|
+|[nginx.ingress.kubernetes.io/default-ssl-certificate-vault](#default-ssl-certificate-vault)|string|
 |[nginx.ingress.kubernetes.io/stream-snippet](#stream-snippet)|string|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
 |[nginx.ingress.kubernetes.io/x-forwarded-prefix](#x-forwarded-prefix-header)|string|
@@ -973,7 +973,7 @@ For more information on the mirror module see [ngx_http_mirror_module](https://n
 
 ### TLS Certificate stored in vault
 
- Stratio custom nginx-ingress-controller supports fetching certificates to be used in TLS communications with the annotation: `nginx.ingress.kubernetes.io/tls-cert-vault`
+ Stratio custom nginx-ingress-controller supports fetching certificates to be used in TLS communications with the annotation: `nginx.ingress.kubernetes.io/default-ssl-certificate-vault`
 SecretName field from the TLS area will be ignored if this annotation is provided, instead the certificate stored in the vault path will be used.
 The path must be in the form `/<path>/<to>/<secret>/<CN>`
 

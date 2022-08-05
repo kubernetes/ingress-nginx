@@ -48,7 +48,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	// Test no annotations set
 	i, err := NewParser(&resolver.Mock{}).Parse(ing)
 	if err != nil {
-		t.Errorf("unexpected error parsing ingress with tls-cert-vault")
+		t.Errorf("unexpected error parsing ingress with default-ssl-certificate-vault")
 	}
 	_, ok := i.(string)
 	if !ok {
@@ -61,7 +61,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	// Test with empty annotations
 	i, err = NewParser(&resolver.Mock{}).Parse(ing)
 	if err != nil {
-		t.Errorf("unexpected error parsing ingress with tls-cert-vault")
+		t.Errorf("unexpected error parsing ingress with default-ssl-certificate-vault")
 	}
 	_, ok = i.(string)
 	if !ok {
@@ -69,7 +69,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	}
 
 	// Test invalid annotation set
-	data[parser.GetAnnotationWithPrefix("tls-cert-vault")] = "INVALID&data"
+	data[parser.GetAnnotationWithPrefix("default-ssl-certificate-vault")] = "INVALID&data"
 	ing.SetAnnotations(data)
 
 	_, err = NewParser(&resolver.Mock{}).Parse(ing)
@@ -83,12 +83,12 @@ func TestParseAnnotations(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("tls-cert-vault")] = "userland/certificates/mycertificado"
+	data[parser.GetAnnotationWithPrefix("default-ssl-certificate-vault")] = "userland/certificates/mycertificado"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(&resolver.Mock{}).Parse(ing)
 	if err != nil {
-		t.Errorf("unexpected error parsing ingress with tls-cert-vault")
+		t.Errorf("unexpected error parsing ingress with default-ssl-certificate-vault")
 	}
 	_, ok := i.(string)
 	if !ok {

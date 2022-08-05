@@ -42,15 +42,15 @@ func (a backendCertVaultPath) Parse(ing *networking.Ingress) (interface{}, error
 		return EmptyVaultPath, nil
 	}
 
-	VaultCertificate, err := parser.GetStringAnnotation("tls-cert-vault", ing)
+	VaultCertificate, err := parser.GetStringAnnotation("default-ssl-certificate-vault", ing)
 	if err != nil {
 		return EmptyVaultPath, nil
 	}
 
 	VaultCertificate = strings.TrimSpace(VaultCertificate)
 	if !validVaultUrl.MatchString(VaultCertificate) {
-		klog.Errorf("URL %v is not a valid value for the tls-cert-vault annotation. Regex rule is: %v", VaultCertificate, validVaultUrl)
-		err := errors.New("not a valid value for the tls-cert-vault annotation")
+		klog.Errorf("URL %v is not a valid value for the default-ssl-certificate-vault annotation. Regex rule is: %v", VaultCertificate, validVaultUrl)
+		err := errors.New("not a valid value for the default-ssl-certificate-vault annotation")
 		return EmptyVaultPath, err
 	}
 
