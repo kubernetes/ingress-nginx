@@ -22,11 +22,7 @@ fi
 set -o nounset
 set -o pipefail
 
-# for backwards compatibility, the default version of 1.20 is copied to the root of the variant
-# with enough docs updates, this could be removed
-# see     # DEFAULT VERSION HANDLING
-K8S_DEFAULT_VERSION=1.20
-K8S_TARGET_VERSIONS=("1.20" "1.21" "1.22" "1.23" "1.24")
+K8S_VERSION="1.22"
 
 DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 
@@ -35,40 +31,29 @@ rm -rf ${DIR}/deploy/static/provider/*
 
 TEMPLATE_DIR="${DIR}/hack/manifest-templates"
 
-# each helm values file `values.yaml` under `hack/manifest-templates/provider` will be generated as provider/<provider>[/variant][/kube-version]/deploy.yaml
+# each helm values file `values.yaml` under `hack/manifest-templates/provider` will be generated as provider/<provider>[/variant]/deploy.yaml
 # TARGET is provider/<provider>[/variant]
 TARGETS=$(dirname $(cd $DIR/hack/manifest-templates/ && find . -type f -name "values.yaml" ) | cut -d'/' -f2-)
-for K8S_VERSION in "${K8S_TARGET_VERSIONS[@]}"
+for TARGET in ${TARGETS}
 do
-  for TARGET in ${TARGETS}
-  do
-    echo "Running ${K8S_VERSION} for target ${TARGET}"
-    TARGET_DIR="${TEMPLATE_DIR}/${TARGET}"
-    MANIFEST="${TEMPLATE_DIR}/common/manifest.yaml" # intermediate manifest
-    OUTPUT_DIR="${DIR}/deploy/static/${TARGET}/${K8S_VERSION}"
-    echo $OUTPUT_DIR
+  TARGET_DIR="${TEMPLATE_DIR}/${TARGET}"
+  MANIFEST="${TEMPLATE_DIR}/common/manifest.yaml" # intermediate manifest
+  OUTPUT_DIR="${DIR}/deploy/static/${TARGET}"
+  echo $OUTPUT_DIR
 
-    mkdir -p ${OUTPUT_DIR}
-    cd ${TARGET_DIR}
-    helm template ingress-nginx ${DIR}/charts/ingress-nginx \
-      --values values.yaml \
-      --namespace ingress-nginx \
-      --kube-version ${K8S_VERSION} \
-      > $MANIFEST
-    sed -i.bak '/app.kubernetes.io\/managed-by: Helm/d' $MANIFEST
-    sed -i.bak '/helm.sh/d' $MANIFEST
+  mkdir -p ${OUTPUT_DIR}
+  cd ${TARGET_DIR}
+  helm template ingress-nginx ${DIR}/charts/ingress-nginx \
+    --values values.yaml \
+    --namespace ingress-nginx \
+    --kube-version ${K8S_VERSION} \
+    > $MANIFEST
+  sed -i.bak '/app.kubernetes.io\/managed-by: Helm/d' $MANIFEST
+  sed -i.bak '/helm.sh/d' $MANIFEST
 
-    kustomize --load-restrictor=LoadRestrictionsNone build . > ${OUTPUT_DIR}/deploy.yaml
-    rm $MANIFEST $MANIFEST.bak
-    cd ~-
-    # automatically generate the (unsupported) kustomization.yaml for each target
-    sed "s_{TARGET}_${TARGET}_" $TEMPLATE_DIR/static-kustomization-template.yaml > ${OUTPUT_DIR}/kustomization.yaml
-
-    # DEFAULT VERSION HANDLING
-    if [[ ${K8S_VERSION} = ${K8S_DEFAULT_VERSION} ]]
-    then
-      cp ${OUTPUT_DIR}/*.yaml ${OUTPUT_DIR}/../
-      sed -i.bak "s/^/#GENERATED FOR K8S ${K8S_VERSION}\n/" ${OUTPUT_DIR}/../deploy.yaml && rm ${OUTPUT_DIR}/../deploy.yaml.bak
-    fi
-  done
+  kustomize --load-restrictor=LoadRestrictionsNone build . > ${OUTPUT_DIR}/deploy.yaml
+  rm $MANIFEST $MANIFEST.bak
+  cd ~-
+  # automatically generate the (unsupported) kustomization.yaml for each target
+  sed "s_{TARGET}_${TARGET}_" $TEMPLATE_DIR/static-kustomization-template.yaml > ${OUTPUT_DIR}/kustomization.yaml
 done
