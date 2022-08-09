@@ -1,0 +1,19 @@
+{{- if .Values.controller.admissionWebhooks.enabled }}
+{{- if .Values.controller.admissionWebhooks.networkPolicyEnabled }}
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ingress-nginx.fullname" . }}-webhooks-allow
+  namespace: {{ .Release.Namespace }}
+spec:
+  ingress:
+  - {}
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "ingress-nginx.name" . }}
+  policyTypes:
+    - Ingress
+
+{{- end }}
+{{- end }}
