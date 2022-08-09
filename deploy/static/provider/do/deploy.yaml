@@ -347,6 +347,9 @@ metadata:
   namespace: ingress-nginx
 spec:
   externalTrafficPolicy: Local
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
   ports:
   - appProtocol: http
     name: http
