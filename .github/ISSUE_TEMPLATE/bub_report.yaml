@@ -1,0 +1,66 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Welcome to ingress-nginx!  Help us, help you, try to answer the following questions..
+        More info helps better understanding of the issue.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What happened?
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+  - type: textarea
+    id: what-went-wrong
+    attributes:
+      label: What do you think went wrong?
+      description: What do you think went wrong
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+  - type: textarea
+    id: ingress-version
+    attributes:
+      label:  What version of Ingress-NGINX controller are you running?
+      description: |
+        Provide the output of the below commands
+        POD_NAMESPACE=ingress-nginx
+        POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}')
+        kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
+    validations:
+          required: true
+  - type: textarea
+    attributes:
+      label: How to reproduce this issue?
+      description: |
+        As minimally and precisely as possible. Keep in mind we do not have access to your cluster or application.
+        Help up us (if possible) reproducing the issue using minikube or kind.
+  - type: textarea
+    id: k8s-version
+    attributes:
+      label: Kubernetes Version
+      description: What version of Kubernetes are you running?
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment details
+      description: |
+        - **Cloud provider or hardware configuration**:
+        - **OS** (e.g. from /etc/os-release):
+        - **Kernel** (e.g. `uname -a`):
+  - type: textarea
+    attributes:
+      label: Anything else we need to know?
+      description: |
+        Anything else we need to know that can help us determine the issue. 
