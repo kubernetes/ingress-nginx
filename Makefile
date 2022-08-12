@@ -127,18 +127,6 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 		build/build.sh
 
 
-.PHONY: build-plugin
-build-plugin:  ## Build ingress-nginx krew plugin.
-	@build/run-in-docker.sh \
-		PKG=$(PKG) \
-		MAC_OS=$(MAC_OS) \
-		ARCH=$(ARCH) \
-		COMMIT_SHA=$(COMMIT_SHA) \
-		REPO_INFO=$(REPO_INFO) \
-		TAG=$(TAG) \
-		build/build-plugin.sh
-
-
 .PHONY: clean
 clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
