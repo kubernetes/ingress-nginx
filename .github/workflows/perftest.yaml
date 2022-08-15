@@ -40,7 +40,7 @@ jobs:
 
       - name: Deploy workload
         run: |
-          kubectl create deploy k6 --image kennethreitz/httpbin --port 80 && \
+          kubectl create deploy k6 --image ghcr.io/sharat87/httpbun --port 80 && \
             kubectl expose deploy k6 --port 80 && \
             kubectl create ing k6 --class nginx \
             --rule test.ingress-nginx-controller.ga/*=k6:80
