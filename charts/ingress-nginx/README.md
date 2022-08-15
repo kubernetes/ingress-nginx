@@ -261,6 +261,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
 | controller.admissionWebhooks.patch.priorityClassName | string | `""` | Provide a priority class name to the webhook patching job |
 | controller.admissionWebhooks.patch.securityContext.fsGroup | int | `2000` |  |
+| controller.admissionWebhooks.patch.securityContext.runAsNonRoot | bool | `true` |  |
 | controller.admissionWebhooks.patch.securityContext.runAsUser | int | `2000` |  |
 | controller.admissionWebhooks.patch.tolerations | list | `[]` |  |
 | controller.admissionWebhooks.patchWebhookJob.resources | object | `{}` |  |
