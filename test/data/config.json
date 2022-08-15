@@ -56339,7 +56339,7 @@
 				"secured": false
 			},
 			"externalAuth": {
-				"url": "https://httpbin.org/basic-auth/user/passwd",
+				"url": "https://httpbun.org/basic-auth/user/passwd",
 				"method": "",
 				"sendBody": false
 			},
