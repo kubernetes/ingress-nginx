@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/hashstructure"
+	"google.golang.org/grpc"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -129,6 +130,9 @@ type Configuration struct {
 	DeepInspector         bool
 
 	DynamicConfigurationRetries int
+
+	// TODO: Fix to add authentication
+	GRPCOpts []grpc.ServerOption
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -224,9 +228,29 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return err
 	}
 
+	// TODO: This should be a single operation later. This will notify the backend
+	// with the full configuration
+	cfg := n.store.GetBackendConfiguration()
+	tmplConfig, err := n.renderTemplate(cfg, *pcfg)
+	if err != nil {
+		klog.Errorf("Unexpected failure rendering  NGINX conf for gRPC:\n%v", err)
+		return err
+	}
+
+	utilingress.ClearTemplateContent(&tmplConfig)
+	n.templateConfig = &tmplConfig
+	n.GRPCSubscribers.Lock.Lock()
+	for k, ch := range n.GRPCSubscribers.Clients {
+		klog.Warningf("Notifying client %s of full configuration", k)
+		ch <- FullConfiguration
+	}
+	n.GRPCSubscribers.Lock.Unlock()
+	// END OF THIS TODO
+
 	ri := utilingress.GetRemovedIngresses(n.runningConfig, pcfg)
 	re := utilingress.GetRemovedHosts(n.runningConfig, pcfg)
 	rc := utilingress.GetRemovedCertificateSerialNumbers(n.runningConfig, pcfg)
+
 	n.metricCollector.RemoveMetrics(ri, re, rc)
 
 	n.runningConfig = pcfg
