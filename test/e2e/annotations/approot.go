@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )

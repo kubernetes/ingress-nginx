@@ -28,7 +28,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ocsp"
 	appsv1 "k8s.io/api/apps/v1"
@@ -292,7 +292,7 @@ func ocspserveDeployment(namespace string) (*appsv1.Deployment, *corev1.Service)
 						Containers: []corev1.Container{
 							{
 								Name:  name,
-								Image: "registry.k8s.io/ingress-nginx/e2e-test-cfssl@sha256:be2f69024f7b7053f35b86677de16bdaa5d3ff0f81b17581ef0b0c6804188b03",
+								Image: "registry.k8s.io/ingress-nginx/e2e-test-cfssl@sha256:c1b273763048944dd7d22d37adfc65be4fa6a5f6068204292573c6cdc5ea3457",
 								Command: []string{
 									"/bin/bash",
 									"-c",

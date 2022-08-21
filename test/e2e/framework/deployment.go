@@ -22,7 +22,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -78,7 +78,7 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 		o(options)
 	}
 
-	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:05948cf43aa41050943b2c887adcc2f7630893b391c1201e99a6c12ed06ba51b", 80, int32(options.replicas),
+	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:f45fb156e1488ae29aa5e98d2faf8731c79bc5a19c2f39a3c4069566ba629a78", 80, int32(options.replicas),
 		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
