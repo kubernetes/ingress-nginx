@@ -38,7 +38,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/klog/v2"
 )
 
@@ -59,8 +58,6 @@ var (
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
 type Framework struct {
 	BaseName string
-
-	IsIngressV1Ready bool
 
 	// A Kubernetes and Service Catalog client
 	KubeClientSet          kubernetes.Interface
@@ -116,7 +113,6 @@ func (f *Framework) CreateEnvironment() {
 		f.KubeClientSet, err = kubernetes.NewForConfig(f.KubeConfig)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating a kubernetes client")
 
-		f.IsIngressV1Ready = k8s.NetworkingIngressAvailable(f.KubeClientSet)
 	}
 
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
