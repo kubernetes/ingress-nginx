@@ -184,6 +184,8 @@ Requires the update-status parameter.`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
 		healthzHost   = flags.String("healthz-host", "", "Address to bind the healthz endpoint.")
 
+		grpcport = flags.Int("grpc-port", -1, "Port to use for the gRPC server in control plane. Disabled by default")
+
 		disableCatchAll = flags.Bool("disable-catch-all", false,
 			`Disable support for catch-all Ingresses.`)
 
@@ -352,6 +354,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			HTTP:     *httpPort,
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
+			GRPCPort: *grpcport,
 		},
 		IngressClassConfiguration: &ingressclass.IngressClassConfiguration{
 			Controller:         *ingressClassController,

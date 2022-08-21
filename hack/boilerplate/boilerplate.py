@@ -205,6 +205,8 @@ def main():
     filenames = get_files(refs.keys())
 
     for filename in filenames:
+        if filename.endswith(".pb.go"):
+            continue
         if not file_passes(filename, refs, regexs):
             print(filename, file=sys.stdout)
 

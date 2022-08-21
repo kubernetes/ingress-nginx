@@ -1,0 +1,69 @@
+// Copyright 2022 The Kubernetes Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package ingressv1;
+
+option go_package = "k8s.io/ingress-nginx/pkg/apis/ingress";
+
+// BackendName is the backend requesting the operation. All requests should contain 
+// the backend name to be validated by control plane
+message BackendName {
+    // name of the backend that posted the message
+    string name = 1;
+    // namespace of the backend that posted the message
+    string namespace = 2;
+  }
+
+// Ingress Configuration Service.
+service Configuration {
+  // WatchConfigurations watches for full configurations
+  // TODO: We can turn this into a bi-directional stream so backends provides events in realtime instead of
+  // creating a new service just to post events (we should check what suits best for performance)
+  rpc WatchConfigurations (BackendName) returns (stream Configurations) {}
+  // GetConfigurations will be used for initial sync and periodic syncs
+  rpc GetConfigurations(BackendName) returns (Configurations) {}
+
+}
+
+// Configurations contains the configuration sent to backend
+message Configurations {
+    // FullConfiguration messages contains the whole NGINX configuration and it is up
+    // to the backend to decide if this needs a reload or it is dynamic
+    message FullConfiguration {
+      // TODO: turn this into "any" or generate proper protobuf tags
+      bytes configuration = 1;
+    }
+  
+    oneof op{
+      FullConfiguration fullconfig_op=2;
+    }
+  }
+
+// EventService is responsible for receiving events from Backends and turning into k8s events
+service EventService {
+  rpc PublishEvent(stream EventMessage) returns (Empty) {}
+}
+
+// EventMessage contains the message to be turned into a Kubernetes event
+message EventMessage {
+  BackendName backend = 1;
+  string eventtype = 2;
+  string reason = 3;
+  string message = 4;
+}
+
+message Empty {}
+

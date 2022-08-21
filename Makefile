@@ -116,6 +116,17 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 		TAG=$(TAG) \
 		build/build.sh
 
+.PHONY: protobuf
+protobuf: ## Build ingress protobuf files
+	ifeq (, $(shell which protoc))
+		$(error "No protoc was found. Please check https://grpc.io/docs/protoc-installation/")
+	endif
+	ifeq (, $(shell which protoc-gen-go))
+		$(error "No protoc-gen-go was found. Please check https://grpc.io/docs/languages/go/quickstart/")
+	endif
+	protoc --go_out=. --go_opt=paths=source_relative \
+    	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    	pkg/apis/ingress/ingress.proto
 
 .PHONY: clean
 clean: ## Remove .gocache directory.

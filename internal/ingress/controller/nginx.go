@@ -37,6 +37,7 @@ import (
 
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
+	"google.golang.org/grpc"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -46,6 +47,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/tcpproxy"
 
 	adm_controller "k8s.io/ingress-nginx/internal/admission/controller"
+	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -69,6 +71,12 @@ const (
 	tempNginxPattern = "nginx-cfg"
 	emptyUID         = "-1"
 )
+
+// Subscribers represents a list of clients that subscribed to gRPC updates
+type Subscribers struct {
+	Lock    sync.RWMutex
+	Clients map[string]chan int
+}
 
 // NewNGINXController creates a new NGINX Ingress controller.
 func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXController {
@@ -101,9 +109,15 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 		stopLock: &sync.Mutex{},
 
-		runningConfig: new(ingress.Configuration),
+		runningConfig:  new(ingress.Configuration),
+		templateConfig: new(ngx_config.TemplateConfig),
 
 		Proxy: &tcpproxy.TCPProxy{},
+
+		GRPCSubscribers: Subscribers{
+			Lock:    sync.RWMutex{},
+			Clients: make(map[string]chan int),
+		},
 
 		metricCollector: mc,
 
@@ -173,6 +187,9 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 	n.t = ngxTpl
 
+	if config.ListenPorts.GRPCPort != -1 {
+		n.gRPCServer = grpc.NewServer(config.GRPCOpts...)
+	}
 	_, err = file.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
 	if err != nil {
 		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
@@ -229,6 +246,9 @@ type NGINXController struct {
 	stopCh   chan struct{}
 	updateCh *channels.RingChannel
 
+	// Subscribers are the subscribers of gRPC Endpoint
+	GRPCSubscribers Subscribers
+
 	// ngxErrCh is used to detect errors with the NGINX processes
 	ngxErrCh chan error
 
@@ -251,6 +271,9 @@ type NGINXController struct {
 	admissionCollector metric.Collector
 
 	validationWebhookServer *http.Server
+
+	gRPCServer     *grpc.Server
+	templateConfig *config.TemplateConfig
 
 	command NginxExecTester
 }
@@ -324,6 +347,22 @@ func (n *NGINXController) Start() {
 			"certPath", n.cfg.ValidationWebhookCertPath, "keyPath", n.cfg.ValidationWebhookKeyPath)
 		go func() {
 			klog.ErrorS(n.validationWebhookServer.ListenAndServeTLS("", ""), "Error listening for TLS connections")
+		}()
+	}
+
+	if n.gRPCServer != nil {
+		klog.InfoS("Starting grpc server", "port", n.cfg.ListenPorts.GRPCPort)
+		ingress.RegisterEventServiceServer(n.gRPCServer, &EventServer{Recorder: n.recorder})
+		ingress.RegisterConfigurationServer(n.gRPCServer, &ConfigurationServer{
+			n: n,
+		})
+
+		lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", n.cfg.ListenPorts.GRPCPort))
+		if err != nil {
+			klog.Fatalf("failed to listen: %v", err)
+		}
+		go func() {
+			klog.ErrorS(n.gRPCServer.Serve(lis), "failed to start gRPC Server")
 		}()
 	}
 
@@ -429,7 +468,7 @@ func (n *NGINXController) start(cmd *exec.Cmd) {
 }
 
 // DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
-func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
+func (n *NGINXController) DefaultEndpoint() ingress.Endpoint {
 	return ingress.Endpoint{
 		Address: "127.0.0.1",
 		Port:    fmt.Sprintf("%v", n.cfg.ListenPorts.Default),
@@ -437,8 +476,8 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 	}
 }
 
-// generateTemplate returns the nginx configuration file content
-func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
+// renderTemplate renders a new template. It can be used by template generation or gRPC Server
+func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) (config.TemplateConfig, error) {
 
 	if n.cfg.EnableSSLPassthrough {
 		servers := []*tcpproxy.TCPServer{}
@@ -555,29 +594,6 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		}
 	}
 
-	sslDHParam := ""
-	if cfg.SSLDHParam != "" {
-		secretName := cfg.SSLDHParam
-
-		secret, err := n.store.GetSecret(secretName)
-		if err != nil {
-			klog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
-		} else {
-			nsSecName := strings.Replace(secretName, "/", "-", -1)
-			dh, ok := secret.Data["dhparam.pem"]
-			if ok {
-				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
-				if err != nil {
-					klog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
-				} else {
-					sslDHParam = pemFileName
-				}
-			}
-		}
-	}
-
-	cfg.SSLDHParam = sslDHParam
-
 	cfg.DefaultSSLCertificate = n.getDefaultSSLCertificate()
 
 	if n.cfg.IsChroot {
@@ -617,6 +633,42 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 	}
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
+	return tc, nil
+
+}
+
+// generateTemplate returns the nginx configuration file content
+func (n *NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
+
+	// TODO: BEFORE MERGE! This shouln't be here!
+	// This function should only get/generate the struct, but AddOrUpdateDHParam also writes a file.
+	sslDHParam := ""
+	if cfg.SSLDHParam != "" {
+		secretName := cfg.SSLDHParam
+
+		secret, err := n.store.GetSecret(secretName)
+		if err != nil {
+			klog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
+		} else {
+			nsSecName := strings.Replace(secretName, "/", "-", -1)
+			dh, ok := secret.Data["dhparam.pem"]
+			if ok {
+				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
+				if err != nil {
+					klog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
+				} else {
+					sslDHParam = pemFileName
+				}
+			}
+		}
+	}
+
+	cfg.SSLDHParam = sslDHParam
+
+	tc, err := n.renderTemplate(cfg, ingressCfg)
+	if err != nil {
+		return nil, fmt.Errorf("error rendering template: %s", err)
+	}
 
 	return n.t.Write(tc)
 }

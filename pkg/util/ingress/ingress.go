@@ -24,6 +24,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
@@ -125,6 +126,37 @@ func GetRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 	}
 
 	return oldIngresses.Difference(newIngresses).List()
+}
+
+// ClearTemplateConfig will clean all the useless fields from Config
+func ClearTemplateContent(template *config.TemplateConfig) {
+	for i := range template.Backends {
+		template.Backends[i].Service = nil
+		for e := range template.Backends[i].Endpoints {
+			template.Backends[i].Endpoints[e].Target = nil
+		}
+	}
+
+	for s := range template.Servers {
+		for l := range template.Servers[s].Locations {
+			template.Servers[s].Locations[l].Ingress = nil
+		}
+	}
+
+	for t := range template.TCPBackends {
+		template.TCPBackends[t].Service = nil
+		for e := range template.TCPBackends[t].Endpoints {
+			template.TCPBackends[t].Endpoints[e].Target = nil
+		}
+	}
+
+	for u := range template.UDPBackends {
+		template.UDPBackends[u].Service = nil
+		for e := range template.UDPBackends[u].Endpoints {
+			template.UDPBackends[u].Endpoints[e].Target = nil
+		}
+	}
+
 }
 
 // IsDynamicConfigurationEnough returns whether a Configuration can be

@@ -988,6 +988,7 @@ type ListenPorts struct {
 	Health   int
 	Default  int
 	SSLProxy int
+	GRPCPort int
 }
 
 // GlobalExternalAuth describe external authentication configuration for the
