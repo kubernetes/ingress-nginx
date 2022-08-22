@@ -265,7 +265,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	}
 
 	if n.cfg.DisableCatchAll && ing.Spec.DefaultBackend != nil {
-		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.backend' or set DisableCatchAll flag to false.")
+		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.defaultBackend' or set DisableCatchAll flag to false.")
 	}
 	startRender := time.Now().UnixNano() / 1000000
 	cfg := n.store.GetBackendConfiguration()
