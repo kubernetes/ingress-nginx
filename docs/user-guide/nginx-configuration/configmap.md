@@ -431,7 +431,7 @@ Enables or disables the preload attribute in the HSTS feature (when it is enable
 
 ## keep-alive
 
-Sets the time during which a keep-alive client connection will stay open on the server side. The zero value disables keep-alive client connections.
+Sets the time, in seconds, during which a keep-alive client connection will stay open on the server side. The zero value disables keep-alive client connections.
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout](https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout)
