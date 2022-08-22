@@ -25,10 +25,10 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"k8s.io/ingress-nginx/pkg/dataplane"
 
 	"k8s.io/klog/v2"
 
-	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/nginx"
 	ingressflags "k8s.io/ingress-nginx/pkg/flags"
@@ -45,6 +45,8 @@ func main() {
 
 	fmt.Println(version.String())
 	var err error
+
+	// TODO: Fix the flags for dataplane
 	showVersion, conf, err := ingressflags.ParseFlags()
 	if showVersion {
 		os.Exit(0)
@@ -75,17 +77,16 @@ func main() {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}
 	}
-	// Pass the ValidationWebhook status to determine if we need to start the collector
-	// for the admissionWebhook
-	// TODO: Dataplane does not contain validation webhook so the MetricCollector should not receive
-	// this as an argument
-	mc.Start(conf.ValidationWebhook)
+
+	// TODO: Dataplane does not contain validation webhook so the MetricCollector should not receive this as an argument
+	mc.Start("")
 
 	if conf.EnableProfiling {
 		go metrics.RegisterProfiler(nginx.ProfilerAddress, nginx.ProfilerPort)
 	}
 
-	ngx := controller.NewNGINXController(conf, mc)
+	// TODO: Fix, parse the right flags
+	ngx := dataplane.NewNGINXConfigurer(nil, mc)
 
 	mux := http.NewServeMux()
 	metrics.RegisterHealthz(nginx.HealthPath, mux)

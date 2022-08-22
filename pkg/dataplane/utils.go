@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors.
+Copyright 2022 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,63 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package dataplane
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
 
-	api "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
-// newUpstream creates an upstream without servers.
-func newUpstream(name string) *ingress.Backend {
-	return &ingress.Backend{
-		Name:      name,
-		Endpoints: []ingress.Endpoint{},
-		Service:   &api.Service{},
-		SessionAffinity: ingress.SessionAffinityConfig{
-			CookieSessionAffinity: ingress.CookieSessionAffinity{
-				Locations: make(map[string][]string),
-			},
-		},
-	}
-}
-
-// upstreamName returns a formatted upstream name based on namespace, service, and port
-func upstreamName(namespace string, service *networking.IngressServiceBackend) string {
-	if service != nil {
-		if service.Port.Number > 0 {
-			return fmt.Sprintf("%s-%s-%d", namespace, service.Name, service.Port.Number)
-		}
-		if service.Port.Name != "" {
-			return fmt.Sprintf("%s-%s-%s", namespace, service.Name, service.Port.Name)
-		}
-	}
-	return fmt.Sprintf("%s-INVALID", namespace)
-}
-
-// upstreamServiceNameAndPort verifies if service is not nil, and then return the
-// correct serviceName and Port
-func upstreamServiceNameAndPort(service *networking.IngressServiceBackend) (string, intstr.IntOrString) {
-	if service != nil {
-		if service.Port.Number > 0 {
-			return service.Name, intstr.FromInt(int(service.Port.Number))
-		}
-		if service.Port.Name != "" {
-			return service.Name, intstr.FromString(service.Port.Name)
-		}
-	}
-	return "", intstr.IntOrString{}
-}
-
 const (
-	defBinary = "/usr/bin/nginx"
-	cfgPath   = "/etc/nginx/nginx.conf"
+	defBinary        = "/usr/bin/nginx"
+	cfgPath          = "/etc/nginx/nginx.conf"
+	tempNginxPattern = "nginx-cfg"
 )
 
 // NginxExecTester defines the interface to execute
@@ -112,4 +71,44 @@ func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
 // Test checks if config file is a syntax valid nginx configuration
 func (nc NginxCommand) Test(cfg string) ([]byte, error) {
 	return exec.Command(nc.Binary, "-c", cfg, "-t").CombinedOutput()
+}
+
+func cleanTempNginxCfg() error {
+	var files []string
+
+	err := filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && os.TempDir() != path {
+			return filepath.SkipDir
+		}
+
+		dur, _ := time.ParseDuration("-5m")
+		fiveMinutesAgo := time.Now().Add(dur)
+		if strings.HasPrefix(info.Name(), tempNginxPattern) && info.ModTime().Before(fiveMinutesAgo) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		err := os.Remove(file)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func newEventMessage(eventtype, reason, message string) ingress.EventMessage {
+	return ingress.EventMessage{
+		Eventtype: eventtype,
+		Reason:    reason,
+		Message:   message,
+	}
 }

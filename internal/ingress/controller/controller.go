@@ -210,7 +210,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	retriesRemaining := retry.Steps
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := n.configureDynamically(pcfg)
+		err := utilingress.ConfigureDynamically(pcfg, n.runningConfig)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
@@ -238,6 +238,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	utilingress.ClearTemplateContent(&tmplConfig)
+	tmplConfig.GeneratedTime = time.Now().UnixNano()
 	n.templateConfig = &tmplConfig
 	n.GRPCSubscribers.Lock.Lock()
 	for k, ch := range n.GRPCSubscribers.Clients {

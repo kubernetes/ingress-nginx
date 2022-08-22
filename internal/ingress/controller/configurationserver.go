@@ -79,10 +79,14 @@ func (s *ConfigurationServer) WatchConfigurations(backend *ingress.BackendName, 
 		s.n.GRPCSubscribers.Lock.Unlock()
 	}()
 
+	// We send the configuration first time so the dataplane can start its sync
+	if err := s.sendFullConfiguration(stream); err != nil {
+		klog.ErrorS(err, "failed sending initial configuration to client")
+		return err
+	}
 	for {
 		syncType := <-s.n.GRPCSubscribers.Clients[backendName]
 		var err error
-		var payload []byte
 		if err = stream.Context().Err(); err != nil {
 			return fmt.Errorf("context error: %s", err)
 		}
@@ -90,13 +94,7 @@ func (s *ConfigurationServer) WatchConfigurations(backend *ingress.BackendName, 
 		// This is a Switch as we want to predict other configuration types in the future
 		switch syncType {
 		case FullConfiguration:
-			payload, err = json.Marshal(s.n.templateConfig)
-			if err != nil {
-				klog.ErrorS(err, "error marshalling config json")
-				return fmt.Errorf("failed marshalling config json: %w", err)
-			}
-			op := &ingress.Configurations_FullconfigOp{FullconfigOp: &ingress.Configurations_FullConfiguration{Configuration: payload}}
-			err = stream.Send(&ingress.Configurations{Op: op})
+			err = s.sendFullConfiguration(stream)
 
 		default:
 			klog.ErrorS(fmt.Errorf("invalid operation"), "error getting dynamic configuration")
@@ -107,6 +105,16 @@ func (s *ConfigurationServer) WatchConfigurations(backend *ingress.BackendName, 
 			continue
 		}
 	}
+}
+
+func (s *ConfigurationServer) sendFullConfiguration(stream ingress.Configuration_WatchConfigurationsServer) error {
+	payload, err := json.Marshal(s.n.templateConfig)
+	if err != nil {
+		klog.ErrorS(err, "error marshalling config json")
+		return fmt.Errorf("failed marshalling config json: %w", err)
+	}
+	op := &ingress.Configurations_FullconfigOp{FullconfigOp: &ingress.Configurations_FullConfiguration{Configuration: payload}}
+	return stream.Send(&ingress.Configurations{Op: op})
 }
 
 func (s *ConfigurationServer) checkNilConfiguration() error {

@@ -978,6 +978,7 @@ type TemplateConfig struct {
 	StatusPort               int
 	StreamPort               int
 	StreamSnippets           []string
+	GeneratedTime            int64
 }
 
 // ListenPorts describe the ports required to run the

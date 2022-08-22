@@ -18,12 +18,16 @@ package controller
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
+	"time"
 
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apiserver/pkg/server/healthz"
 
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -143,4 +147,26 @@ func callHealthz(expErr bool, healthzPath string, mux *http.ServeMux) error {
 	}
 
 	return nil
+}
+
+func tryListen(network, address string) (l net.Listener, err error) {
+	condFunc := func() (bool, error) {
+		l, err = net.Listen(network, address)
+		if err == nil {
+			return true, nil
+		}
+		if strings.Contains(err.Error(), "bind: address already in use") {
+			return false, nil
+		}
+		return false, err
+	}
+
+	backoff := wait.Backoff{
+		Duration: 500 * time.Millisecond,
+		Factor:   2,
+		Steps:    6,
+		Cap:      128 * time.Second,
+	}
+	err = wait.ExponentialBackoff(backoff, condFunc)
+	return
 }

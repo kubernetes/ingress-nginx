@@ -47,8 +47,8 @@ func (s *EventServer) PublishEvent(stream ingress.EventService_PublishEventServe
 			klog.Warning("Received invalid nil event, skipping")
 			continue
 		}
-		if event.Eventtype != apiv1.EventTypeNormal && event.Eventtype != apiv1.EventTypeWarning {
-			klog.Warning("Received invalid event type from %s/%s: %s, skipping", event.Backend.Namespace, event.Backend.Name, event.Eventtype)
+		if event.Eventtype != apiv1.EventTypeNormal && event.Eventtype != apiv1.EventTypeWarning && event.Eventtype != "Error" {
+			klog.Warningf("Received invalid event type from %s/%s: %s, skipping", event.Backend.Namespace, event.Backend.Name, event.Eventtype)
 			continue
 		}
 

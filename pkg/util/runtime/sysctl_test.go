@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors.
+Copyright 2022 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package runtime
 
 import (
 	"testing"
 )
 
 func TestRlimitMaxNumFiles(t *testing.T) {
-	i := rlimitMaxNumFiles()
+	i := RlimitMaxNumFiles()
 	if i < 1 {
 		t.Errorf("returned %v but expected > 0", i)
 	}
 }
 
 func TestSysctlSomaxconn(t *testing.T) {
-	i := sysctlSomaxconn()
+	i := SysctlSomaxconn()
 	if i < 511 {
 		t.Errorf("returned %v but expected >= 511", i)
 	}
