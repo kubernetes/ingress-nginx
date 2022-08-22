@@ -36,6 +36,7 @@ granted to the ClusterRole named `ingress-nginx`
 * `services`, `ingresses`: get, list, watch
 * `events`: create, patch
 * `ingresses/status`: update
+* `ingressclasses`: get, list, watch
 
 ### Namespace Permissions
 
