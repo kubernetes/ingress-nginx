@@ -177,7 +177,7 @@ jobs:
           version: v0.14.0
           image: kindest/node:v1.21.12
 
-      - uses: geekyeggo/delete-artifact@a6ab43859c960a8b74cbc6291f362c7fb51829ba # v1
+      - uses: geekyeggo/delete-artifact@b73cb986740e466292a536d0e32e2666c56fdeb3 # v1
         with:
           name: docker.tar.gz
           failOnError: false
@@ -228,7 +228,7 @@ jobs:
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
-      - uses: geekyeggo/delete-artifact@a6ab43859c960a8b74cbc6291f362c7fb51829ba # v1
+      - uses: geekyeggo/delete-artifact@b73cb986740e466292a536d0e32e2666c56fdeb3 # v1
         with:
           name: docker.tar.gz
           failOnError: false
@@ -285,7 +285,7 @@ jobs:
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
-      - uses: geekyeggo/delete-artifact@a6ab43859c960a8b74cbc6291f362c7fb51829ba
+      - uses: geekyeggo/delete-artifact@b73cb986740e466292a536d0e32e2666c56fdeb3
         with:
           name: docker.tar.gz
           failOnError: false
