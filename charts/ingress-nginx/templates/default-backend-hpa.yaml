@@ -1,5 +1,9 @@
 {{- if and .Values.defaultBackend.enabled .Values.defaultBackend.autoscaling.enabled }}
-apiVersion: autoscaling/v2beta1
+{{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
+apiVersion: autoscaling/v2
+{{- else }}
+apiVersion: autoscaling/v2beta2
+{{- end }}
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
@@ -19,15 +23,19 @@ spec:
   maxReplicas: {{ .Values.defaultBackend.autoscaling.maxReplicas }}
   metrics:
 {{- with .Values.defaultBackend.autoscaling.targetCPUUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: {{ . }}
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
 {{- end }}
 {{- with .Values.defaultBackend.autoscaling.targetMemoryUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: memory
-        targetAverageUtilization: {{ . }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
 {{- end }}
 {{- end }}
