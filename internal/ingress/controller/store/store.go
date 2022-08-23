@@ -417,10 +417,6 @@ func New(
 
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			klog.V(3).InfoS("Going to check if we have to store de default vault ssl certificate")
-			if store.defaultVaultSSLCertificate != "" {
-				store.syncSecret(store.defaultVaultSSLCertificate, true)
-			}
 			ing, _ := toIngress(obj)
 
 			if !watchedNamespace(ing.Namespace) {
