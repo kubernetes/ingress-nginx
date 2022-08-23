@@ -33,7 +33,6 @@ import (
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/nginx"
-	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/ingress-nginx/pkg/dataplane/grpcclient"
 	"k8s.io/ingress-nginx/pkg/tcpproxy"
 	"k8s.io/ingress-nginx/pkg/util/file"
@@ -52,15 +51,14 @@ func NewNGINXConfigurer(ingressconfig *Configuration, mc metric.Collector) *NGIN
 	errCh := make(chan error)
 	// TODO: Get this from configuration @Volatus is checking this
 	grpcconf := grpcclient.Config{
-		Address: "127.0.0.1:10000",
-		Backendname: &ingress.BackendName{
-			Name:      "test",
-			Namespace: "testns",
-		},
+		Address:   ingressconfig.GRPCAddress,
 		Keepalive: false,
 		ErrorCh:   errCh,
 	}
 	grpccl, err := grpcclient.NewGRPCClient(grpcconf)
+	if err != nil {
+		klog.Fatalf("error creating GRPC Client: %s", err)
+	}
 
 	n := &NGINXConfigurer{
 		isIPV6Enabled: ing_net.IsIPv6Enabled(),
@@ -82,6 +80,8 @@ func NewNGINXConfigurer(ingressconfig *Configuration, mc metric.Collector) *NGIN
 		command:    NewNginxCommand(),
 	}
 
+	// TODO: This seems wrong, it is configured in ConfigMap and should be sent as part of the
+	// struct just to be calculated during the template generation
 	if ingressconfig.MaxWorkerOpenFiles == 0 {
 		// the limit of open files is per worker process
 		// and we leave some room to avoid consuming all the FDs available

@@ -35,7 +35,18 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/nginx"
+	"k8s.io/ingress-nginx/pkg/dataplane"
 	klog "k8s.io/klog/v2"
+)
+
+var (
+	flags = pflag.NewFlagSet("", pflag.ExitOnError)
+
+	showVersion = flags.Bool("version", false,
+		`Show release information about the NGINX Ingress controller and exit.`)
+
+	healthzPort = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
+	healthzHost = flags.String("healthz-host", "", "Address to bind the healthz endpoint.")
 )
 
 // TODO: We should split the flags functions between common for all programs
@@ -43,9 +54,8 @@ import (
 // ParseFlags generates a configuration for Ingress Controller based on the flags
 // provided by users
 func ParseFlags() (bool, *controller.Configuration, error) {
-	var (
-		flags = pflag.NewFlagSet("", pflag.ExitOnError)
 
+	var (
 		apiserverHost = flags.String("apiserver-host", "",
 			`Address of the Kubernetes API server.
 Takes the form "protocol://address:port". If not specified, it is assumed the
@@ -140,9 +150,6 @@ Requires the update-status parameter.`)
 			`Set the load-balancer status of Ingress objects to internal Node addresses instead of external.
 Requires the update-status parameter.`)
 
-		showVersion = flags.Bool("version", false,
-			`Show release information about the NGINX Ingress controller and exit.`)
-
 		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false,
 			`Enable SSL Passthrough.`)
 
@@ -181,8 +188,6 @@ Requires the update-status parameter.`)
 
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
-		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
-		healthzHost   = flags.String("healthz-host", "", "Address to bind the healthz endpoint.")
 
 		grpcport = flags.Int("grpc-port", -1, "Port to use for the gRPC server in control plane. Disabled by default")
 
@@ -387,6 +392,33 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		config.MaxmindEditionFiles = &nginx.MaxmindEditionFiles
 	}
 
+	return false, config, err
+}
+
+func ParseDataplaneFlags() (bool, *dataplane.Configuration, error) {
+
+	var (
+		grpcAddress = flags.String("grpc-host", "ingress-nginx:10000", "Address to connect to gRPC Control plane")
+	)
+
+	flags.Parse(os.Args)
+
+	// Workaround for this issue:
+	// https://github.com/kubernetes/kubernetes/issues/17162
+	flag.CommandLine.Parse([]string{})
+
+	pflag.VisitAll(func(flag *pflag.Flag) {
+		klog.V(2).InfoS("FLAG", flag.Name, flag.Value)
+	})
+
+	if *showVersion {
+		return true, nil, nil
+	}
+
+	var err error
+	config := &dataplane.Configuration{
+		GRPCAddress: *grpcAddress,
+	}
 	return false, config, err
 }
 

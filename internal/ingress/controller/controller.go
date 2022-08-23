@@ -168,14 +168,14 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	n.metricCollector.SetHosts(hosts)
 
+	hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
+		TagName: "json",
+	})
+
+	pcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
+
 	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
-
-		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
-			TagName: "json",
-		})
-
-		pcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
 
 		err := n.OnUpdate(*pcfg)
 		if err != nil {

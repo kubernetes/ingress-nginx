@@ -252,6 +252,9 @@ type NGINXController struct {
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
+	// templateConfig contains the running template
+	templateConfig *ngx_config.TemplateConfig
+
 	t ngx_template.Writer
 
 	resolver []net.IP
@@ -269,8 +272,7 @@ type NGINXController struct {
 
 	validationWebhookServer *http.Server
 
-	gRPCServer     *grpc.Server
-	templateConfig *config.TemplateConfig
+	gRPCServer *grpc.Server
 
 	command NginxExecTester
 }
@@ -591,8 +593,6 @@ func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCf
 		}
 	}
 
-	cfg.DefaultSSLCertificate = n.getDefaultSSLCertificate()
-
 	if n.cfg.IsChroot {
 		if cfg.AccessLogPath == "/var/log/nginx/access.log" {
 			cfg.AccessLogPath = fmt.Sprintf("syslog:server=%s", n.cfg.InternalLoggerAddress)
@@ -603,6 +603,8 @@ func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCf
 	}
 
 	tc := ngx_config.TemplateConfig{
+		Checksum:                 ingressCfg.ConfigurationChecksum,
+		DefaultSSLCertificate:    n.getDefaultSSLCertificate(),
 		ProxySetHeaders:          setHeaders,
 		AddHeaders:               addHeaders,
 		BacklogSize:              ingressruntime.SysctlSomaxconn(), // TODO: must be calculated in dataplane. Keeping for compatibility right now
@@ -629,7 +631,6 @@ func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCf
 		StreamSnippets:           append(ingressCfg.StreamSnippets, cfg.StreamSnippet),
 	}
 
-	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
 	return tc, nil
 
 }

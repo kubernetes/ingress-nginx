@@ -725,7 +725,7 @@ func TestTemplateWithData(t *testing.T) {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
 
-	dat.Cfg.DefaultSSLCertificate = &ingress.SSLCert{}
+	dat.DefaultSSLCertificate = &ingress.SSLCert{}
 
 	rt, err := ngxTpl.Write(dat)
 	if err != nil {

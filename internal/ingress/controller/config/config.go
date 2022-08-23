@@ -734,10 +734,6 @@ type Configuration struct {
 	// Lua shared dict configuration data / certificate data
 	LuaSharedDicts map[string]int `json:"lua-shared-dicts"`
 
-	// DefaultSSLCertificate holds the default SSL certificate to use in the configuration
-	// It can be the fake certificate or the one behind the flag --default-ssl-certificate
-	DefaultSSLCertificate *ingress.SSLCert `json:"-"`
-
 	// ProxySSLLocationOnly controls whether the proxy-ssl parameters defined in the
 	// proxy-ssl-* annotations are applied on on location level only in the nginx.conf file
 	// Default is that those are applied on server level, too
@@ -953,6 +949,8 @@ func NewDefault() Configuration {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
+	Checksum                 string // As we cannot marshall this but it breaks a lot of stuff, just duplicating the field in Template generation
+	DefaultSSLCertificate    *ingress.SSLCert
 	ProxySetHeaders          map[string]string
 	AddHeaders               map[string]string
 	BacklogSize              int

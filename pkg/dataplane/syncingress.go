@@ -24,6 +24,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -50,15 +51,21 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 	n.metricCollector.SetSSLExpireTime(cfg.Servers)
 	n.metricCollector.SetSSLInfo(cfg.Servers)
 
+	klog.Warningf("I'm here so let's do it. Old: %v New %v", n.templateConfig.GeneratedTime, cfg.GeneratedTime)
+
 	// TODO: Add the backend checksum
-	if n.templateConfig.GeneratedTime == cfg.GeneratedTime {
+	if n.templateConfig.GeneratedTime >= cfg.GeneratedTime {
 		klog.V(3).Infof("No configuration change detected, skipping backend reload")
 		return
 	}
+
 	// TODO: Get metrics from the right place
 	// n.metricCollector.SetHosts(hosts)
 	newcfg := configFromTemplate(cfg)
 	oldcfg := configFromTemplate(n.templateConfig)
+
+	klog.Warningf("newCfg from template: %s\n\n\n", spew.Sdump(newcfg))
+	klog.Warningf("oldCfg from template: %s", spew.Sdump(oldcfg))
 
 	if !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
 		klog.InfoS("Configuration changes detected, backend reload required")
@@ -139,6 +146,7 @@ func configFromTemplate(tmpl *config.TemplateConfig) *ingress.Configuration {
 	if tmpl == nil {
 		return &ingress.Configuration{}
 	}
+
 	return &ingress.Configuration{
 		Backends:     tmpl.Backends,
 		Servers:      tmpl.Servers,
@@ -201,10 +209,10 @@ func (n *NGINXConfigurer) updateConfiguration(cfg *config.TemplateConfig) error 
 		return err
 	}
 
-	o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
+	/*o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
-	}
+	}*/
 
 	return nil
 }

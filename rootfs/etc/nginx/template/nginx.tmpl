@@ -7,7 +7,7 @@
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
 
-# Configuration checksum: {{ $all.Cfg.Checksum }}
+# Configuration checksum: {{ $all.Checksum }}
 
 # setup custom paths that do not require root access
 pid {{ .PID }};
@@ -466,9 +466,9 @@ http {
 
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
 
-    # PEM sha: {{ $cfg.DefaultSSLCertificate.PemSHA }}
-    ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
-    ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
+    # PEM sha: {{ $all.DefaultSSLCertificate.PemSHA }}
+    ssl_certificate     {{ $all.DefaultSSLCertificate.PemFileName }};
+    ssl_certificate_key {{ $all.DefaultSSLCertificate.PemFileName }};
 
     {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
     proxy_intercept_errors on;

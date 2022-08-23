@@ -46,8 +46,7 @@ func main() {
 	fmt.Println(version.String())
 	var err error
 
-	// TODO: Fix the flags for dataplane
-	showVersion, conf, err := ingressflags.ParseFlags()
+	showVersion, conf, err := ingressflags.ParseDataplaneFlags()
 	if showVersion {
 		os.Exit(0)
 	}
@@ -72,7 +71,8 @@ func main() {
 	mc := metric.NewDummyCollector()
 	if conf.EnableMetrics {
 		// TODO: Ingress class is not a part of dataplane anymore
-		mc, err = metric.NewCollector(conf.MetricsPerHost, conf.ReportStatusClasses, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets)
+		//mc, err = metric.NewCollector(conf.MetricsPerHost, conf.ReportStatusClasses, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets)
+		mc, err = metric.NewCollector(conf.MetricsPerHost, false, reg, "", *conf.MetricsBuckets)
 		if err != nil {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}
@@ -86,13 +86,16 @@ func main() {
 	}
 
 	// TODO: Fix, parse the right flags
-	ngx := dataplane.NewNGINXConfigurer(nil, mc)
+	ngx := dataplane.NewNGINXConfigurer(conf, mc)
 
 	mux := http.NewServeMux()
 	metrics.RegisterHealthz(nginx.HealthPath, mux)
 	metrics.RegisterMetrics(reg, mux)
 
-	go metrics.StartHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
+	// TODO: Fix
+	//go metrics.StartHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
+	go metrics.StartHTTPServer(conf.HealthCheckHost, 12345, mux)
+
 	go ngx.Start()
 
 	process.HandleSigterm(ngx, conf.PostShutdownGracePeriod, func(code int) {

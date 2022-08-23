@@ -70,6 +70,7 @@ type Configuration struct {
 	// ConfigurationChecksum contains the particular checksum of a Configuration object
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 
+	// DefaultSSLCertificate contains the whole Default SSL Certificate to be used
 	DefaultSSLCertificate *SSLCert `json:"-"`
 
 	StreamSnippets []string

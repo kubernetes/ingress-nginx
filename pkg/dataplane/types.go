@@ -62,6 +62,8 @@ type Configuration struct {
 	DeepInspector bool
 
 	DynamicConfigurationRetries int
+
+	GRPCAddress string
 }
 
 // NGINXConfigurer describes a NGINX Ingress controller.
