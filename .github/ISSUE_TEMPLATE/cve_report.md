@@ -3,9 +3,12 @@ name: CVE Finding Report
 about: CVE reporting for ingress-nginx
 title: ''
 labels: kind/bug
-assignees: ''
+assignees: 'strongjz, rikatz'
 
 ---
+
+<!-- if you found something that impacts directly ingress-nginx and 
+is not a public CVE yet, please reach out security@kubernetes.io" -->
 
 <!-- What scanner and version reported the CVE? -->
 
