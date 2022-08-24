@@ -3,8 +3,9 @@ name: CVE Finding Report
 about: CVE reporting for ingress-nginx
 title: ''
 labels: kind/bug
-assignees: 'strongjz, rikatz'
-
+assignees:
+    - strongjz
+    - rikatz
 ---
 
 <!-- if you found something that impacts directly ingress-nginx and 
