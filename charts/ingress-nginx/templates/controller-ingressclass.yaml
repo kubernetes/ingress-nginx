@@ -18,6 +18,6 @@ metadata:
     ingressclass.kubernetes.io/is-default-class: "true"
 {{- end }}
 spec:
-  controller: k8s.io/ingress-nginx
+  controller: {{ .Values.controller.ingressClassResource.controllerValue }}
   {{ template "ingressClass.parameters" . }}
 {{- end }}
