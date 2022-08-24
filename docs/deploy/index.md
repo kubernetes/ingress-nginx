@@ -299,6 +299,8 @@ More information with regard to Azure annotations for ingress controller can be 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.3.0/deploy/static/provider/do/deploy.yaml
 ```
+- By default the service object of the ingress-nginx-controller for Digital-Ocean, only configures one annotation. Its this one `service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"`. While this makes the service functional, it was reported that the Digital-Ocean LoadBalancer graphs shows `no data`, unless a few other annotations are also configured. Some of these other annotations require values that can not be generic and hence not forced in a out-of-the-box installation. These annotations and a discussion on them is well documented in [this issue](https://github.com/kubernetes/ingress-nginx/issues/8965). Please refer to the issue to add annotations, with values specific to user, to get graphs of the DO-LB populated with data.
+
 
 #### Scaleway
 
