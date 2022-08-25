@@ -15,8 +15,6 @@ The announcement in the dev mailing list is here https://groups.google.com/a/kub
 
 Thank you,
 Ingress-Nginx maintainer
-
-
 -->
 
 <!-- What do you want to happen? -->
