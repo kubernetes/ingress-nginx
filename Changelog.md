@@ -1533,7 +1533,7 @@ _Changes:_
 - [X] [#5281](https://github.com/kubernetes/ingress-nginx/pull/5281) Remove unnecessary logs
 - [X] [#5283](https://github.com/kubernetes/ingress-nginx/pull/5283) Add retries for dns in tcp e2e test
 - [X] [#5284](https://github.com/kubernetes/ingress-nginx/pull/5284) Wait for update in tcp e2e test
-- [X] [#5288](https://github.com/kubernetes/ingress-nginx/pull/5288) Update client-go methods to support context and and new options
+- [X] [#5288](https://github.com/kubernetes/ingress-nginx/pull/5288) Update client-go methods to support context and new options
 - [X] [#5289](https://github.com/kubernetes/ingress-nginx/pull/5289) Update go and e2e image
 - [X] [#5290](https://github.com/kubernetes/ingress-nginx/pull/5290) Add DS_PROMETHEUS datasource for templating
 - [X] [#5296](https://github.com/kubernetes/ingress-nginx/pull/5296) Added proxy-ssl-location-only test.

@@ -73,7 +73,7 @@ Labels are helpful for issues or pull requests to indicate in which lifecycle st
   * [`kind/bug`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Akind%2Fbug+is%3Aissue): Indicates that the issue is assumed to be a bug. Add with `/kind bug`. Remove with `/remove-kind bug`.
   * [`kind/feature`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Akind%2Ffeature+is%3Aissue+): Indicates that the issue is a feature request. Add with `/kind feature`. Remove with `/remove-kind feature`.
   * [`kind/documentation`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Akind%2Fdocumentation+is%3Aissue+): Indicates that the issue is documentation related. Add with `/kind documentation`. Remove with `/remove-kind documentation`.
-  * [`kind/support`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Akind%2Fsupport+is%3Aissue+): Indicates the the issue is a support request. Add with `/kind support`. Remove with `/remove-kind support`.
+  * [`kind/support`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Akind%2Fsupport+is%3Aissue+): Indicates that the issue is a support request. Add with `/kind support`. Remove with `/remove-kind support`.
 * Area: 
   * [`area/helm`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Aarea%2Fhelm+is%3Aissue+): Indicates that the issue is related to helm charts. Add with `/area helm`.
   * [`area/lua`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+label%3Aarea%2Flua+is%3Aissue+): Indicates that the issue is related to lua. Add with `/area lua`.
