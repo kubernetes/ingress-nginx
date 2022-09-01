@@ -578,8 +578,8 @@ func New(
 			sec := obj.(*corev1.Secret)
 			key := k8s.MetaNamespaceKey(sec)
 
-			// If the default SSL certificate is stored in vault, synch it
-			if store.defaultVaultSSLCertificate != "" {
+			// If the default SSL certificate is stored in vault and not in disk, synch it
+			if !store.DefaultVaultSSLCertificateInDisk(store.defaultVaultSSLCertificate) {
 				store.syncSecret(store.defaultVaultSSLCertificate, true)
 			}
 
@@ -617,10 +617,10 @@ func New(
 					return
 				}
 
-  			   // If the default SSL certificate is stored in vault, synch it
-				if store.defaultVaultSSLCertificate != "" {
-					store.syncSecret(store.defaultVaultSSLCertificate, true)
-				}
+			// If the default SSL certificate is stored in vault and not in disk, synch it
+			if !store.DefaultVaultSSLCertificateInDisk(store.defaultVaultSSLCertificate) {
+				store.syncSecret(store.defaultVaultSSLCertificate, true)
+			}
 
 
 				if store.defaultSSLCertificate == key {
@@ -1204,4 +1204,16 @@ func toIngress(obj interface{}) (*networkingv1.Ingress, bool) {
 	}
 
 	return nil, false
+}
+
+func (s *k8sStore) DefaultVaultSSLCertificateInDisk(defaulVaultSSLCertificate string) bool {
+	if defaulVaultSSLCertificate != "" {
+	    klog.V(3).InfoS("Checking if" , defaulVaultSSLCertificate, " is present on disk" )
+		_, err := s.GetLocalSSLCert(defaulVaultSSLCertificate)
+		klog.V(3).InfoS("The vault certificate of path " , defaulVaultSSLCertificate, " is present on disk and valid, no need to redownload it" )
+		if err == nil {
+			return true
+		}
+	}
+	return false
 }
