@@ -9,6 +9,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write # for goreleaser/goreleaser-action
+
 jobs:
   release-plugin:
     runs-on: ubuntu-latest
