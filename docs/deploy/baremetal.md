@@ -30,7 +30,8 @@ the traffic for the `ingress-nginx` Service IP. See [Traffic policies][metallb-t
     yourself by reading the official documentation thoroughly.
 
 MetalLB can be deployed either with a simple Kubernetes manifest or with Helm. The rest of this example assumes MetalLB
-was deployed following the [Installation][metallb-install] instructions.
+was deployed following the [Installation][metallb-install] instructions, and that the NGINX Ingress controller was installed 
+using the steps described in the [quickstart section of the installation guide][install-quickstart].
 
 MetalLB requires a pool of IP addresses in order to be able to take ownership of the `ingress-nginx` Service. This pool
 can be defined through `IPAddressPool` objects in the same namespace as the MetalLB controller. This pool of IPs **must** be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.
@@ -257,6 +258,7 @@ for generating redirect URLs that take into account the URL used by external cli
     ```
 
 [install-baremetal]: ./index.md#bare-metal
+[install-quickstart]: ./index.md#quick-start
 [nodeport-def]: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
 [nodeport-nat]: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-type-nodeport
 [pod-assign]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
