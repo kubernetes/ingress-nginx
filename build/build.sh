@@ -49,7 +49,8 @@ echo "Building targets for ${ARCH}, generated targets in ${TARGETS_DIR} director
 
 echo "Building ${PKG}/cmd/nginx"
 
-git config --add safe.directory /go/src/k8s.io/ingress-nginx
+git config --global --add safe.directory /go/src/k8s.io/ingress-nginx
+
 ${GO_BUILD_CMD} \
   -trimpath -ldflags="-buildid= -w -s \
     -X ${PKG}/version.RELEASE=${TAG} \
@@ -74,4 +75,3 @@ ${GO_BUILD_CMD} \
     -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
     -X ${PKG}/version.REPO=${REPO_INFO}" \
   -o "${TARGETS_DIR}/wait-shutdown" "${PKG}/cmd/waitshutdown"
-
