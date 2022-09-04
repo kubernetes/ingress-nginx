@@ -174,8 +174,8 @@ jobs:
         id: kind
         uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
-          version: v0.14.0
-          image: kindest/node:v1.21.12
+          version: v0.15.0
+          image: kindest/node:v1.25.0
 
       - uses: geekyeggo/delete-artifact@b73cb986740e466292a536d0e32e2666c56fdeb3 # v1
         with:
@@ -208,7 +208,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.21.2, v1.22.9, v1.23.6, v1.24.0]
+        k8s: [v1.23.10, v1.24.4, v1.25.0]
 
     steps:
 
@@ -224,7 +224,7 @@ jobs:
         id: kind
         uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
-          version: v0.14.0
+          version: v0.15.0
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
@@ -265,7 +265,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.21.10, v1.22.9, v1.23.6, v1.24.0]
+        k8s: [v1.24.4, v1.25.0]
 
     steps:
 
@@ -281,7 +281,7 @@ jobs:
         id: kind
         uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
-          version: v0.14.0
+          version: v0.15.0
           config: test/e2e/kind.yaml
           image: kindest/node:${{ matrix.k8s }}
 
@@ -403,8 +403,8 @@ jobs:
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
-          version: v0.14.0
-          image: kindest/node:v1.21.12
+          version: v0.15.0
+          image: kindest/node:v1.25.0
 
       - name: Set up Go 1.19.0
         id: go
