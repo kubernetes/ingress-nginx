@@ -31,7 +31,6 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/nginx"
-	ingressflags "k8s.io/ingress-nginx/pkg/flags"
 	"k8s.io/ingress-nginx/pkg/metrics"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	"k8s.io/ingress-nginx/pkg/util/process"
@@ -46,7 +45,7 @@ func main() {
 	fmt.Println(version.String())
 	var err error
 
-	showVersion, conf, err := ingressflags.ParseDataplaneFlags()
+	showVersion, conf, err := ParseDataplaneFlags()
 	if showVersion {
 		os.Exit(0)
 	}
