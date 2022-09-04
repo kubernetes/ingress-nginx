@@ -57,7 +57,8 @@ var (
 )
 
 const (
-	fakeCertificateName = "default-fake-certificate"
+	// FakeCertificateName is a constant containing the name of a fake certificate secret and file
+	FakeCertificateName = "default-fake-certificate"
 )
 
 // getPemFileName returns absolute file path and file name of pem cert related to given fullSecretName
@@ -385,7 +386,7 @@ func GetFakeSSLCert() *ingress.SSLCert {
 		klog.Fatalf("unexpected error creating fake SSL Cert: %v", err)
 	}
 
-	path, err := StoreSSLCertOnDisk(fakeCertificateName, sslCert)
+	path, err := StoreSSLCertOnDisk(FakeCertificateName, sslCert)
 	if err != nil {
 		klog.Fatalf("unexpected error storing fake SSL Cert: %v", err)
 	}

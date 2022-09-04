@@ -22,6 +22,7 @@ import (
 )
 
 func TestNoMandatoryFlag(t *testing.T) {
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
 	_, _, err := ParseFlags()
 	if err != nil {
 		t.Fatalf("Expected no error but got: %s", err)

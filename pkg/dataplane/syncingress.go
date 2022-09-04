@@ -24,11 +24,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
@@ -51,7 +51,7 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 	n.metricCollector.SetSSLExpireTime(cfg.Servers)
 	n.metricCollector.SetSSLInfo(cfg.Servers)
 
-	klog.Warningf("I'm here so let's do it. Old: %v New %v", n.templateConfig.GeneratedTime, cfg.GeneratedTime)
+	klog.V(3).Infof("New reconfiguration requested. Old config timestamp: %v New config timestamp: %v", n.templateConfig.GeneratedTime, cfg.GeneratedTime)
 
 	// TODO: Add the backend checksum
 	if n.templateConfig.GeneratedTime >= cfg.GeneratedTime {
@@ -64,8 +64,19 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 	newcfg := configFromTemplate(cfg)
 	oldcfg := configFromTemplate(n.templateConfig)
 
-	klog.Warningf("newCfg from template: %s\n\n\n", spew.Sdump(newcfg))
-	klog.Warningf("oldCfg from template: %s", spew.Sdump(oldcfg))
+	if cfg.DefaultSSLCertificate != nil {
+		if (n.templateConfig.DefaultSSLCertificate == nil) || (n.templateConfig.DefaultSSLCertificate.PemSHA != cfg.DefaultSSLCertificate.PemSHA) {
+			name := cfg.DefaultSSLCertificate.Name
+			if name == "" {
+				name = ssl.FakeCertificateName
+			}
+			if _, err := ssl.StoreSSLCertOnDisk(name, cfg.DefaultSSLCertificate); err != nil {
+				klog.ErrorS(err, "failed to create default certificate file")
+				return
+			}
+
+		}
+	}
 
 	if !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
 		klog.InfoS("Configuration changes detected, backend reload required")
@@ -209,10 +220,10 @@ func (n *NGINXConfigurer) updateConfiguration(cfg *config.TemplateConfig) error 
 		return err
 	}
 
-	/*o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
+	o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
-	}*/
+	}
 
 	return nil
 }
