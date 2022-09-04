@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.16.1
+FROM golang:1.18-alpine as build
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-RUN apk update \
-  && apk add --no-cache \
-    python3 python3-dev \
-    musl-dev gcc g++ make \
-    libffi libffi-dev libstdc++ \
-    py3-gevent py3-gunicorn py3-wheel \
-    py3-pip \
- && pip3 install httpbin \
- && apk del python3-dev musl-dev gcc g++ make libffi-dev
+WORKDIR /app
+RUN apk add git
+RUN git clone  https://github.com/sharat87/httpbun && \
+    cd httpbun && \
+    go build main.go
 
+FROM alpine:latest
+COPY --from=build /app/httpbun/main .
+
+ENV HTTPBUN_BIND=0.0.0.0:80
 EXPOSE 80
-
-CMD ["gunicorn", "-b", "0.0.0.0:80", "httpbin:app", "-k", "gevent"]
+ENTRYPOINT ["/main"]
