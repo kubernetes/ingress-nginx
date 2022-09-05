@@ -45,6 +45,7 @@ import (
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 	"k8s.io/klog/v2"
 )
 
@@ -163,7 +164,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	n.metricCollector.SetHosts(hosts)
 
-	if !n.IsDynamicConfigurationEnough(pcfg) {
+	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
 		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
@@ -223,9 +224,9 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return err
 	}
 
-	ri := getRemovedIngresses(n.runningConfig, pcfg)
-	re := getRemovedHosts(n.runningConfig, pcfg)
-	rc := getRemovedCertificateSerialNumbers(n.runningConfig, pcfg)
+	ri := utilingress.GetRemovedIngresses(n.runningConfig, pcfg)
+	re := utilingress.GetRemovedHosts(n.runningConfig, pcfg)
+	rc := utilingress.GetRemovedCertificateSerialNumbers(n.runningConfig, pcfg)
 	n.metricCollector.RemoveMetrics(ri, re, rc)
 
 	n.runningConfig = pcfg
@@ -264,7 +265,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	}
 
 	if n.cfg.DisableCatchAll && ing.Spec.DefaultBackend != nil {
-		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.backend' or set DisableCatchAll flag to false.")
+		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.defaultBackend' or set DisableCatchAll flag to false.")
 	}
 	startRender := time.Now().UnixNano() / 1000000
 	cfg := n.store.GetBackendConfiguration()
@@ -1207,17 +1208,15 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				// use backend specified in Ingress as the default backend for all its rules
 				un = backendUpstream.Name
 
-				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
-				defLoc.Backend = backendUpstream.Name
-				defLoc.Service = backendUpstream.Service
-				defLoc.Ingress = ing
-
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
 					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q", ingKey, defServerName)
 
 					defLoc.IsDefBackend = false
-
+					// special "catch all" case, Ingress with a backend but no rule
+					defLoc.Backend = backendUpstream.Name
+					defLoc.Service = backendUpstream.Service
+					defLoc.Ingress = ing
 					// TODO: Redirect and rewrite can affect the catch all behavior, skip for now
 					originalRedirect := defLoc.Redirect
 					originalRewrite := defLoc.Rewrite
@@ -1621,91 +1620,6 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 	}
 
 	return ""
-}
-
-// getRemovedHosts returns a list of the hostnames
-// that are not associated anymore to the NGINX configuration.
-func getRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
-	old := sets.NewString()
-	new := sets.NewString()
-
-	for _, s := range rucfg.Servers {
-		if !old.Has(s.Hostname) {
-			old.Insert(s.Hostname)
-		}
-	}
-
-	for _, s := range newcfg.Servers {
-		if !new.Has(s.Hostname) {
-			new.Insert(s.Hostname)
-		}
-	}
-
-	return old.Difference(new).List()
-}
-
-func getRemovedCertificateSerialNumbers(rucfg, newcfg *ingress.Configuration) []string {
-	oldCertificates := sets.NewString()
-	newCertificates := sets.NewString()
-
-	for _, server := range rucfg.Servers {
-		if server.SSLCert == nil {
-			continue
-		}
-		identifier := server.SSLCert.Identifier()
-		if identifier != "" {
-			if !oldCertificates.Has(identifier) {
-				oldCertificates.Insert(identifier)
-			}
-		}
-	}
-
-	for _, server := range newcfg.Servers {
-		if server.SSLCert == nil {
-			continue
-		}
-		identifier := server.SSLCert.Identifier()
-		if identifier != "" {
-			if !newCertificates.Has(identifier) {
-				newCertificates.Insert(identifier)
-			}
-		}
-	}
-
-	return oldCertificates.Difference(newCertificates).List()
-}
-
-func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
-	oldIngresses := sets.NewString()
-	newIngresses := sets.NewString()
-
-	for _, server := range rucfg.Servers {
-		for _, location := range server.Locations {
-			if location.Ingress == nil {
-				continue
-			}
-
-			ingKey := k8s.MetaNamespaceKey(location.Ingress)
-			if !oldIngresses.Has(ingKey) {
-				oldIngresses.Insert(ingKey)
-			}
-		}
-	}
-
-	for _, server := range newcfg.Servers {
-		for _, location := range server.Locations {
-			if location.Ingress == nil {
-				continue
-			}
-
-			ingKey := k8s.MetaNamespaceKey(location.Ingress)
-			if !newIngresses.Has(ingKey) {
-				newIngresses.Insert(ingKey)
-			}
-		}
-	}
-
-	return oldIngresses.Difference(newIngresses).List()
 }
 
 // checks conditions for whether or not an upstream should be created for a custom default backend

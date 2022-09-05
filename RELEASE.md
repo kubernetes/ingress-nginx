@@ -173,7 +173,7 @@ Promoting the images basically means that images, that were pushed to staging co
           - Run the below command and save the output to a txt file
 
             ```
-            gh pr list -s merged -L 38 -B main | cut -f1,2 | tee ~/Downloads/prlist.txt
+            gh pr list -R kubernetes/ingress-nginx -s merged -L 38 -B main | cut -f1,2 | tee ~/Downloads/prlist.txt
             ```
             - The -L 38 was used for 2 reasons.
               - Default number of results is 30 and there were more than 30 PRs merged while releasing v1.1.1. If you see the current/soon-to-be-old changelog, you can look at the most recent PR number that has been accounted for already, and start from after that last accounted for PR.
@@ -222,7 +222,7 @@ Promoting the images basically means that images, that were pushed to staging co
           - If you saved the bash script content above, in a file like `$HOME/bin/prlist_to_changelog.sh`, then you could execute a command like this to get your prlist in a text file called changelog_content.txt;`
 
           ```
-          prlist_to_changelog.sh ~/Downloads/prlist.txt | tee ~/Downloads//changelog_content.txt`
+          prlist_to_changelog.sh ~/Downloads/prlist.txt | tee ~/Downloads//changelog_content.txt
           ```
 
 ### d. Edit the values.yaml and run helm-docs

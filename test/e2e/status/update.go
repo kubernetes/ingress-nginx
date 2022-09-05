@@ -92,10 +92,10 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error cleaning Ingress status")
 		framework.Sleep(10 * time.Second)
 
-		err = f.KubeClientSet.CoreV1().
-			ConfigMaps(f.Namespace).
+		err = f.KubeClientSet.CoordinationV1().
+			Leases(f.Namespace).
 			Delete(context.TODO(), "ingress-controller-leader", metav1.DeleteOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting leader election configmap")
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting leader election lease")
 
 		_, cmd, err = f.KubectlProxy(port)
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error starting kubectl proxy")

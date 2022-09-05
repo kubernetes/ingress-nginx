@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.18-alpine as build
+
+FROM golang:1.18-alpine
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8

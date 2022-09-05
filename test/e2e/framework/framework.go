@@ -22,7 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gavv/httpexpect/v2"
+	"k8s.io/ingress-nginx/test/e2e/framework/httpexpect"
+
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -38,7 +39,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/klog/v2"
 )
 
@@ -59,8 +59,6 @@ var (
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
 type Framework struct {
 	BaseName string
-
-	IsIngressV1Ready bool
 
 	// A Kubernetes and Service Catalog client
 	KubeClientSet          kubernetes.Interface
@@ -116,7 +114,6 @@ func (f *Framework) CreateEnvironment() {
 		f.KubeClientSet, err = kubernetes.NewForConfig(f.KubeConfig)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating a kubernetes client")
 
-		f.IsIngressV1Ready = k8s.NetworkingIngressAvailable(f.KubeClientSet)
 	}
 
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
@@ -449,22 +446,22 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 }
 
 // HTTPDumbTestClient returns a new httpexpect client without BaseURL.
-func (f *Framework) HTTPDumbTestClient() *httpexpect.Expect {
-	return f.newTestClient(nil, false)
+func (f *Framework) HTTPDumbTestClient() *httpexpect.HTTPRequest {
+	return f.newHTTPTestClient(nil, false)
 }
 
-// HTTPTestClient returns a new httpexpect client for end-to-end HTTP testing.
-func (f *Framework) HTTPTestClient() *httpexpect.Expect {
-	return f.newTestClient(nil, true)
+// HTTPTestClient returns a new HTTPRequest client for end-to-end HTTP testing.
+func (f *Framework) HTTPTestClient() *httpexpect.HTTPRequest {
+	return f.newHTTPTestClient(nil, true)
 }
 
 // HTTPTestClientWithTLSConfig returns a new httpexpect client for end-to-end
 // HTTP testing with a custom TLS configuration.
-func (f *Framework) HTTPTestClientWithTLSConfig(config *tls.Config) *httpexpect.Expect {
-	return f.newTestClient(config, true)
+func (f *Framework) HTTPTestClientWithTLSConfig(config *tls.Config) *httpexpect.HTTPRequest {
+	return f.newHTTPTestClient(config, true)
 }
 
-func (f *Framework) newTestClient(config *tls.Config, setIngressURL bool) *httpexpect.Expect {
+func (f *Framework) newHTTPTestClient(config *tls.Config, setIngressURL bool) *httpexpect.HTTPRequest {
 	if config == nil {
 		config = &tls.Config{
 			InsecureSkipVerify: true,
@@ -475,24 +472,14 @@ func (f *Framework) newTestClient(config *tls.Config, setIngressURL bool) *httpe
 		baseURL = f.GetURL(HTTP)
 	}
 
-	return httpexpect.WithConfig(httpexpect.Config{
-		BaseURL: baseURL,
-		Client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: config,
-			},
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
+	return httpexpect.NewRequest(baseURL, &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: config,
 		},
-		Reporter: httpexpect.NewAssertReporter(
-			httpexpect.NewAssertReporter(ginkgo.GinkgoT()),
-		),
-		Printers: []httpexpect.Printer{
-			// TODO: enable conditionally?
-			// httpexpect.NewDebugPrinter(ginkgo.GinkgoT(), false),
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
 		},
-	})
+	}, httpexpect.NewAssertReporter())
 }
 
 // WaitForNginxListening waits until NGINX starts accepting connections on a port

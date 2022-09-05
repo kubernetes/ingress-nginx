@@ -39,7 +39,6 @@ import (
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -61,6 +60,8 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 
 	"k8s.io/ingress-nginx/pkg/util/file"
+	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
+
 	klog "k8s.io/klog/v2"
 )
 
@@ -601,10 +602,9 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		IsIPV6Enabled:            n.isIPV6Enabled && !cfg.DisableIpv6,
 		NginxStatusIpv4Whitelist: cfg.NginxStatusIpv4Whitelist,
 		NginxStatusIpv6Whitelist: cfg.NginxStatusIpv6Whitelist,
-		RedirectServers:          buildRedirects(ingressCfg.Servers),
+		RedirectServers:          utilingress.BuildRedirects(ingressCfg.Servers),
 		IsSSLPassthroughEnabled:  n.cfg.EnableSSLPassthrough,
 		ListenPorts:              n.cfg.ListenPorts,
-		PublishService:           n.GetPublishService(),
 		EnableMetrics:            n.cfg.EnableMetrics,
 		MaxmindEditionFiles:      n.cfg.MaxmindEditionFiles,
 		HealthzURI:               nginx.HealthPath,
@@ -832,24 +832,6 @@ func clearL4serviceEndpoints(config *ingress.Configuration) {
 	config.UDPEndpoints = clearedUDPL4Services
 }
 
-// IsDynamicConfigurationEnough returns whether a Configuration can be
-// dynamically applied, without reloading the backend.
-func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configuration) bool {
-	copyOfRunningConfig := *n.runningConfig
-	copyOfPcfg := *pcfg
-
-	copyOfRunningConfig.Backends = []*ingress.Backend{}
-	copyOfPcfg.Backends = []*ingress.Backend{}
-
-	clearL4serviceEndpoints(&copyOfRunningConfig)
-	clearL4serviceEndpoints(&copyOfPcfg)
-
-	clearCertificates(&copyOfRunningConfig)
-	clearCertificates(&copyOfPcfg)
-
-	return copyOfRunningConfig.Equal(&copyOfPcfg)
-}
-
 // configureDynamically encodes new Backends in JSON format and POSTs the
 // payload to an internal HTTP endpoint handled by Lua.
 func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) error {
@@ -1019,7 +1001,7 @@ func configureCertificates(rawServers []*ingress.Server) error {
 		}
 	}
 
-	redirects := buildRedirects(rawServers)
+	redirects := utilingress.BuildRedirects(rawServers)
 	for _, redirect := range redirects {
 		configure(redirect.From, redirect.SSLCert)
 	}
@@ -1138,66 +1120,4 @@ func cleanTempNginxCfg() error {
 	}
 
 	return nil
-}
-
-type redirect struct {
-	From    string
-	To      string
-	SSLCert *ingress.SSLCert
-}
-
-func buildRedirects(servers []*ingress.Server) []*redirect {
-	names := sets.String{}
-	redirectServers := make([]*redirect, 0)
-
-	for _, srv := range servers {
-		if !srv.RedirectFromToWWW {
-			continue
-		}
-
-		to := srv.Hostname
-
-		var from string
-		if strings.HasPrefix(to, "www.") {
-			from = strings.TrimPrefix(to, "www.")
-		} else {
-			from = fmt.Sprintf("www.%v", to)
-		}
-
-		if names.Has(to) {
-			continue
-		}
-
-		klog.V(3).InfoS("Creating redirect", "from", from, "to", to)
-		found := false
-		for _, esrv := range servers {
-			if esrv.Hostname == from {
-				found = true
-				break
-			}
-		}
-
-		if found {
-			klog.Warningf("Already exists an Ingress with %q hostname. Skipping creation of redirection from %q to %q.", from, from, to)
-			continue
-		}
-
-		r := &redirect{
-			From: from,
-			To:   to,
-		}
-
-		if srv.SSLCert != nil {
-			if ssl.IsValidHostname(from, srv.SSLCert.CN) {
-				r.SSLCert = srv.SSLCert
-			} else {
-				klog.Warningf("the server %v has SSL configured but the SSL certificate does not contains a CN for %v. Redirects will not work for HTTPS to HTTPS", from, to)
-			}
-		}
-
-		redirectServers = append(redirectServers, r)
-		names.Insert(to)
-	}
-
-	return redirectServers
 }

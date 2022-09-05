@@ -615,6 +615,7 @@ controller:
 
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
+    networkPolicyEnabled: false
 
     service:
       annotations: {}
@@ -657,8 +658,11 @@ controller:
       tolerations: []
       # -- Labels to be added to patch job resources
       labels: {}
-      runAsUser: 2000
-      fsGroup: 2000
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 2000
+        fsGroup: 2000
+
 
   metrics:
     port: 10254

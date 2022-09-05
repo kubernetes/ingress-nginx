@@ -9,6 +9,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write # for goreleaser/goreleaser-action
+
 jobs:
   release-plugin:
     runs-on: ubuntu-latest
@@ -19,12 +22,12 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
+        uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # v3.2.0
         with:
-          go-version: 1.18
+          go-version: 1.19.0
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@68acf3b1adf004ac9c2f0a4259e85c5f66e99bef # v3.0.0
+        uses: goreleaser/goreleaser-action@ff11ca24a9b39f2d36796d1fbd7a4e39c182630a # v3.0.0
         with:
           version: latest
           args: release --rm-dist
