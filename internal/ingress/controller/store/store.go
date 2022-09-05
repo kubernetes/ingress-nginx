@@ -580,6 +580,7 @@ func New(
 
 			// If the default SSL certificate is stored in vault and not in disk, synch it
 			if !store.DefaultVaultSSLCertificateInDisk(store.defaultVaultSSLCertificate) {
+				klog.V(3).InfoS("AddFunc-The vault certificate is not in disk", store.defaultSSLCertificate)
 				store.syncSecret(store.defaultVaultSSLCertificate, true)
 			}
 
@@ -617,11 +618,12 @@ func New(
 					return
 				}
 
-			// If the default SSL certificate is stored in vault and not in disk, synch it
-			if !store.DefaultVaultSSLCertificateInDisk(store.defaultVaultSSLCertificate) {
-				store.syncSecret(store.defaultVaultSSLCertificate, true)
-			}
+				// If the default SSL certificate is stored in vault and not in disk, synch it
+				if !store.DefaultVaultSSLCertificateInDisk(store.defaultVaultSSLCertificate) {
 
+					klog.V(3).InfoS("UpdateFunc-The vault certificate is not in disk", store.defaultSSLCertificate)
+					store.syncSecret(store.defaultVaultSSLCertificate, true)
+				}
 
 				if store.defaultSSLCertificate == key {
 					klog.Infof("Second place of check of default %v, equal to key %v", store.defaultSSLCertificate, key)
@@ -1208,12 +1210,12 @@ func toIngress(obj interface{}) (*networkingv1.Ingress, bool) {
 
 func (s *k8sStore) DefaultVaultSSLCertificateInDisk(defaulVaultSSLCertificate string) bool {
 	if defaulVaultSSLCertificate != "" {
-	    klog.V(3).InfoS("Checking if" , defaulVaultSSLCertificate, " is present on disk" )
+		klog.V(3).InfoS("Checking if", defaulVaultSSLCertificate, " is present on disk")
 		_, err := s.GetLocalSSLCert(defaulVaultSSLCertificate)
-		klog.V(3).InfoS("The vault certificate of path " , defaulVaultSSLCertificate, " is present on disk and valid, no need to redownload it" )
-		if err == nil {
-			return true
+		klog.V(3).InfoS("The vault certificate of path ", defaulVaultSSLCertificate, " is present on disk and valid, no need to redownload it")
+		if err != nil {
+			return false
 		}
 	}
-	return false
+	return true
 }
