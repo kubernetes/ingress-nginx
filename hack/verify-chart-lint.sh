@@ -19,5 +19,6 @@ set -o nounset
 set -o pipefail
 
 KUBE_ROOT="$( cd "$(dirname "$0")../" >/dev/null 2>&1 ; pwd -P )"
-
-ct lint --charts ${KUBE_ROOT}/charts/ingress-nginx --validate-maintainers=false
+# TODO: This is a temporary workaround while we don't update Helm Chart test
+curl https://raw.githubusercontent.com/helm/chart-testing/v3.7.0/etc/chart_schema.yaml -o /tmp/chart_schema.yaml
+ct lint --charts ${KUBE_ROOT}/charts/ingress-nginx --validate-maintainers=false --chart-yaml-schema=/tmp/chart_schema.yaml
