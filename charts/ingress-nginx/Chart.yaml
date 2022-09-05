@@ -12,6 +12,7 @@ keywords:
   - nginx
 sources:
   - https://github.com/kubernetes/ingress-nginx
+type: application
 maintainers:
   - name: rikatz
   - name: strongjz

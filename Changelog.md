@@ -6,7 +6,7 @@ Please fill out our 2022 Ingress-Nginx User Survey and let us know what you want
 
 https://www.surveymonkey.com/r/ingressngx2022
 
-Also, *important note*, with the Release 1.25 we are dropping support for the legacy branches, 
+Also, *important note*, with the Release of Kubernetes v1.25 we are dropping support for the legacy branches, 
 please upgrade to a v1.0.0 and above branch
 
 ## Image:
