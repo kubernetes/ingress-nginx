@@ -228,8 +228,6 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return err
 	}
 
-	// TODO: This should be a single operation later. This will notify the backend
-	// with the full configuration
 	cfg := n.store.GetBackendConfiguration()
 	tmplConfig, err := n.renderTemplate(cfg, *pcfg)
 	if err != nil {
@@ -246,7 +244,6 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		ch <- FullConfiguration
 	}
 	n.GRPCSubscribers.Lock.Unlock()
-	// END OF THIS TODO
 
 	ri := utilingress.GetRemovedIngresses(n.runningConfig, pcfg)
 	re := utilingress.GetRemovedHosts(n.runningConfig, pcfg)

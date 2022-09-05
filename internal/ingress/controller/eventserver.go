@@ -31,8 +31,6 @@ type EventServer struct {
 	ingress.UnimplementedEventServiceServer
 	Recorder record.EventRecorder
 	n        *NGINXController
-
-	// TODO: Add the Kubernetes Client to verify if it came from a valid backend
 }
 
 // PublishEvent is a service that allows dataplane to send events to Control Plane
@@ -58,8 +56,6 @@ func (s *EventServer) PublishEvent(stream ingress.EventService_PublishEventServe
 			continue
 		}
 
-		// TODO: We can check if the Pod really exists, using https://github.com/kubernetes/ingress-nginx/blob/a581a7bebc1f4ff028f1e57dca0ce95abef78c62/internal/k8s/main.go#L91. We just need to receive the clientSet as well as part of the struct :)
-		// This needs some security assessment, like an unauthenticated access to this endpoint may leak pods informations, so we should be really careful if we want to protect against pod spoofing vs pod information leaking (validate with CJ Cullen)
 		obj := &apiv1.Pod{ObjectMeta: metav1.ObjectMeta{
 			Name:      event.Backend.Name,
 			Namespace: event.Backend.Namespace,
