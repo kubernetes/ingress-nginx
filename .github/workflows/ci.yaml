@@ -175,7 +175,7 @@ jobs:
         uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
           version: v0.15.0
-          image: kindest/node:v1.25.0
+          image: kindest/node:v1.24.4
 
       - uses: geekyeggo/delete-artifact@b73cb986740e466292a536d0e32e2666c56fdeb3 # v1
         with:
