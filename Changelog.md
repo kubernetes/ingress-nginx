@@ -6,6 +6,9 @@ Please fill out our 2022 Ingress-Nginx User Survey and let us know what you want
 
 https://www.surveymonkey.com/r/ingressngx2022
 
+In v1.3.1 leader elections will be done entirely using the Lease API and no longer using configmaps. 
+v1.3.0 is a safe transition version, using v1.3.0 can automatically complete the merging of election locks, and then you can safely upgrade to v1.3.1.
+
 Also, *important note*, with the Release of Kubernetes v1.25 we are dropping support for the legacy branches, 
 please upgrade to a v1.0.0 and above branch
 
