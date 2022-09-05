@@ -30,8 +30,6 @@ message BackendName {
 // Ingress Configuration Service.
 service Configuration {
   // WatchConfigurations watches for full configurations
-  // TODO: We can turn this into a bi-directional stream so backends provides events in realtime instead of
-  // creating a new service just to post events (we should check what suits best for performance)
   rpc WatchConfigurations (BackendName) returns (stream Configurations) {}
   // GetConfigurations will be used for initial sync and periodic syncs
   rpc GetConfigurations(BackendName) returns (Configurations) {}

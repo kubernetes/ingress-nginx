@@ -631,8 +631,36 @@ func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCf
 		StreamSnippets:           append(ingressCfg.StreamSnippets, cfg.StreamSnippet),
 	}
 
+	dhfile, dhcontent := n.getDHParam(cfg)
+	if dhfile != "" && dhcontent != nil {
+		tc.DHParamFile = dhfile
+		tc.DHParamContent = dhcontent
+	}
+
 	return tc, nil
 
+}
+
+func (n *NGINXController) getDHParam(cfg ngx_config.Configuration) (string, []byte) {
+	secretName := cfg.SSLDHParam
+	nsSecName := strings.Replace(secretName, "/", "-", -1)
+
+	var dh []byte
+	var ok bool
+	secret, err := n.store.GetSecret(secretName)
+	if err != nil {
+		klog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
+		return "", nil
+	} else {
+		dh, ok = secret.Data["dhparam.pem"]
+		if !ok {
+			klog.Warning("error geting the value")
+			return "", nil
+
+		}
+	}
+	pemName := fmt.Sprintf("%s/%v.pem", file.DefaultSSLDirectory, nsSecName)
+	return pemName, dh
 }
 
 // generateTemplate returns the nginx configuration file content
@@ -640,28 +668,20 @@ func (n *NGINXController) generateTemplate(cfg ngx_config.Configuration, ingress
 
 	// TODO: BEFORE MERGE! This shouln't be here!
 	// This function should only get/generate the struct, but AddOrUpdateDHParam also writes a file.
-	sslDHParam := ""
+	sslDHParamFile := ""
 	if cfg.SSLDHParam != "" {
-		secretName := cfg.SSLDHParam
+		sslDHParamFile, dh := n.getDHParam(cfg)
+		if sslDHParamFile != "" && dh != nil {
+			cfg.SSLDHParam = sslDHParamFile
+		}
 
-		secret, err := n.store.GetSecret(secretName)
+		err := ssl.AddOrUpdateDHParam(sslDHParamFile, dh)
 		if err != nil {
-			klog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
-		} else {
-			nsSecName := strings.Replace(secretName, "/", "-", -1)
-			dh, ok := secret.Data["dhparam.pem"]
-			if ok {
-				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
-				if err != nil {
-					klog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
-				} else {
-					sslDHParam = pemFileName
-				}
-			}
+			klog.Warningf("Error adding or updating dhparam file %v: %v", sslDHParamFile, err)
 		}
 	}
 
-	cfg.SSLDHParam = sslDHParam
+	cfg.SSLDHParam = sslDHParamFile
 
 	tc, err := n.renderTemplate(cfg, ingressCfg)
 	if err != nil {
@@ -673,7 +693,7 @@ func (n *NGINXController) generateTemplate(cfg ngx_config.Configuration, ingress
 
 // testTemplate checks if the NGINX configuration inside the byte array is valid
 // running the command "nginx -t" using a temporal file.
-func (n NGINXController) testTemplate(cfg []byte) error {
+func (n *NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}

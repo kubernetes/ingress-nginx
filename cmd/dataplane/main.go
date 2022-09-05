@@ -77,23 +77,19 @@ func main() {
 		}
 	}
 
-	// TODO: Dataplane does not contain validation webhook so the MetricCollector should not receive this as an argument
 	mc.Start("")
 
 	if conf.EnableProfiling {
 		go metrics.RegisterProfiler(nginx.ProfilerAddress, nginx.ProfilerPort)
 	}
 
-	// TODO: Fix, parse the right flags
 	ngx := dataplane.NewNGINXConfigurer(conf, mc)
 
 	mux := http.NewServeMux()
 	metrics.RegisterHealthz(nginx.HealthPath, mux)
 	metrics.RegisterMetrics(reg, mux)
 
-	// TODO: Fix
-	//go metrics.StartHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
-	go metrics.StartHTTPServer(conf.HealthCheckHost, 12345, mux)
+	go metrics.StartHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
 
 	go ngx.Start()
 

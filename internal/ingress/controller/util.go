@@ -17,12 +17,14 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
@@ -112,4 +114,16 @@ func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
 // Test checks if config file is a syntax valid nginx configuration
 func (nc NginxCommand) Test(cfg string) ([]byte, error) {
 	return exec.Command(nc.Binary, "-c", cfg, "-t").CombinedOutput()
+}
+
+func (n *NGINXController) isValidBackend(backend, namespace string) bool {
+	if namespace != n.cfg.Namespace {
+		return false
+	}
+
+	if _, err := n.cfg.Client.CoreV1().Pods(namespace).Get(context.TODO(),
+		backend, v1.GetOptions{}); err != nil {
+		return false
+	}
+	return true
 }

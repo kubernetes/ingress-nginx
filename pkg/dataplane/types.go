@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngxtemplate "k8s.io/ingress-nginx/internal/ingress/controller/template"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
@@ -64,6 +65,8 @@ type Configuration struct {
 	DynamicConfigurationRetries int
 
 	GRPCAddress string
+
+	ListenPorts *ngx_config.ListenPorts
 }
 
 // NGINXConfigurer describes a NGINX Ingress controller.

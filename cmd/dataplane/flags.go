@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/spf13/pflag"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/pkg/dataplane"
 	"k8s.io/klog/v2"
 )
@@ -34,6 +35,13 @@ func ParseDataplaneFlags() (bool, *dataplane.Configuration, error) {
 
 		showVersion = flags.Bool("version", false,
 			`Show release information about the NGINX Ingress controller and exit.`)
+
+		// Ports:
+		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
+		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
+		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
+		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
+		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
 
 		/*healthzPort = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
 		healthzHost = flags.String("healthz-host", "", "Address to bind the healthz endpoint.")*/
@@ -56,6 +64,13 @@ func ParseDataplaneFlags() (bool, *dataplane.Configuration, error) {
 	var err error
 	config := &dataplane.Configuration{
 		GRPCAddress: *grpcAddress,
+		ListenPorts: &ngx_config.ListenPorts{
+			Default:  *defServerPort,
+			Health:   *healthzPort,
+			HTTP:     *httpPort,
+			HTTPS:    *httpsPort,
+			SSLProxy: *sslProxyPort,
+		},
 	}
 	return false, config, err
 }

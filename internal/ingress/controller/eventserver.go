@@ -30,6 +30,8 @@ import (
 type EventServer struct {
 	ingress.UnimplementedEventServiceServer
 	Recorder record.EventRecorder
+	n        *NGINXController
+
 	// TODO: Add the Kubernetes Client to verify if it came from a valid backend
 }
 
@@ -45,6 +47,10 @@ func (s *EventServer) PublishEvent(stream ingress.EventService_PublishEventServe
 		}
 		if event == nil || event.Backend == nil {
 			klog.Warning("Received invalid nil event, skipping")
+			continue
+		}
+		if !s.n.isValidBackend(event.Backend.Name, event.Backend.Namespace) {
+			klog.Warningf("Received event from invalid backend: %s/%s, refusing", event.Backend.Namespace, event.Backend.Name)
 			continue
 		}
 		if event.Eventtype != apiv1.EventTypeNormal && event.Eventtype != apiv1.EventTypeWarning && event.Eventtype != "Error" {

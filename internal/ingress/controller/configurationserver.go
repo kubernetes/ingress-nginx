@@ -49,6 +49,11 @@ func (s *ConfigurationServer) GetConfigurations(ctx context.Context, backend *in
 		return nil, err
 	}
 
+	if !s.n.isValidBackend(backend.Name, backend.Namespace) {
+		klog.Warningf("Received request from invalid backend: %s/%s, refusing", backend.Namespace, backend.Name)
+		return nil, fmt.Errorf("received request from invalid backend: %s/%s, refusing", backend.Namespace, backend.Name)
+	}
+
 	payload, err := json.Marshal(s.n.templateConfig)
 	if err != nil {
 		klog.ErrorS(err, "error marshalling config json")
@@ -65,9 +70,14 @@ func (s *ConfigurationServer) WatchConfigurations(backend *ingress.BackendName, 
 	if err := s.checkNilConfiguration(); err != nil {
 		return err
 	}
+
+	if !s.n.isValidBackend(backend.Name, backend.Namespace) {
+		klog.Warningf("Received request from invalid backend: %s/%s, refusing", backend.Namespace, backend.Name)
+		return fmt.Errorf("received request from invalid backend: %s/%s, refusing", backend.Namespace, backend.Name)
+	}
+
 	backendName := fmt.Sprintf("%s/%s", backend.Namespace, backend.Name)
 
-	// TODO: Validate backend name to avoid colisions in map
 	s.n.GRPCSubscribers.Lock.Lock()
 	s.n.GRPCSubscribers.Clients[backendName] = make(chan int)
 	s.n.GRPCSubscribers.Lock.Unlock()

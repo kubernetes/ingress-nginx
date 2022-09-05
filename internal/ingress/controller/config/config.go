@@ -977,6 +977,8 @@ type TemplateConfig struct {
 	StreamPort               int
 	StreamSnippets           []string
 	GeneratedTime            int64
+	DHParamFile              string
+	DHParamContent           []byte
 }
 
 // ListenPorts describe the ports required to run the

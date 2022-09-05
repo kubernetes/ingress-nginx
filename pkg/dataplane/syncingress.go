@@ -32,6 +32,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
+	ingressruntime "k8s.io/ingress-nginx/pkg/util/runtime"
 	"k8s.io/klog/v2"
 )
 
@@ -53,7 +54,6 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 
 	klog.V(3).Infof("New reconfiguration requested. Old config timestamp: %v New config timestamp: %v", n.templateConfig.GeneratedTime, cfg.GeneratedTime)
 
-	// TODO: Add the backend checksum
 	if n.templateConfig.GeneratedTime >= cfg.GeneratedTime {
 		klog.V(3).Infof("No configuration change detected, skipping backend reload")
 		return
@@ -74,7 +74,13 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 				klog.ErrorS(err, "failed to create default certificate file")
 				return
 			}
+		}
+	}
 
+	if cfg.DHParamFile != "" && cfg.DHParamContent != nil {
+		if err := ssl.AddOrUpdateDHParam(cfg.DHParamFile, cfg.DHParamContent); err != nil {
+			klog.ErrorS(err, "failed to write dh param file")
+			return
 		}
 	}
 
@@ -87,7 +93,6 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 
 		newcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
 
-		// TODO: Write DHParam
 		err := n.updateConfiguration(cfg)
 		if err != nil {
 			n.metricCollector.IncReloadErrorCount()
@@ -167,13 +172,13 @@ func configFromTemplate(tmpl *config.TemplateConfig) *ingress.Configuration {
 }
 
 func (n *NGINXConfigurer) updateConfiguration(cfg *config.TemplateConfig) error {
-	/* TODO: Fix opentracing template
-	err = createOpentracingCfg(cfg)
+	err := createOpentracingCfg(cfg.Cfg)
 	if err != nil {
 		return err
 	}
-	*/
 
+	cfg.Cfg.SSLDHParam = cfg.DHParamFile
+	cfg.BacklogSize = ingressruntime.SysctlSomaxconn()
 	content, err := n.t.Write(*cfg)
 	if err != nil {
 		return err

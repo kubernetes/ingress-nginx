@@ -331,49 +331,48 @@ func parseSANExtension(value []byte) (dnsNames, emailAddresses []string, ipAddre
 }
 
 // AddOrUpdateDHParam creates a dh parameters file with the specified name
-func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
-	pemFileName, pemName := getPemFileName(name)
+func AddOrUpdateDHParam(pemFileName string, dh []byte) error {
 
-	tempPemFile, err := os.CreateTemp(file.DefaultSSLDirectory, pemName)
+	tempPemFile, err := os.CreateTemp(file.DefaultSSLDirectory, "dh")
 
-	klog.V(3).InfoS("Creating temporal file for DH", "path", tempPemFile.Name(), "name", pemName)
+	klog.V(3).InfoS("Creating temporal file for DH", "path", tempPemFile.Name())
 	if err != nil {
-		return "", fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
+		return fmt.Errorf("could not create temp pem file %v: %v", tempPemFile.Name(), err)
 	}
 
 	_, err = tempPemFile.Write(dh)
 	if err != nil {
-		return "", fmt.Errorf("could not write to pem file %v: %v", tempPemFile.Name(), err)
+		return fmt.Errorf("could not write to pem file %v: %v", tempPemFile.Name(), err)
 	}
 
 	err = tempPemFile.Close()
 	if err != nil {
-		return "", fmt.Errorf("could not close temp pem file %v: %v", tempPemFile.Name(), err)
+		return fmt.Errorf("could not close temp pem file %v: %v", tempPemFile.Name(), err)
 	}
 
 	defer os.Remove(tempPemFile.Name())
 
 	pemCerts, err := os.ReadFile(tempPemFile.Name())
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	pemBlock, _ := pem.Decode(pemCerts)
 	if pemBlock == nil {
-		return "", fmt.Errorf("no valid PEM formatted block found")
+		return fmt.Errorf("no valid PEM formatted block found")
 	}
 
 	// If the file does not start with 'BEGIN DH PARAMETERS' it's invalid and must not be used.
 	if pemBlock.Type != "DH PARAMETERS" {
-		return "", fmt.Errorf("certificate %v contains invalid data", name)
+		return fmt.Errorf("certificate %v contains invalid data", pemFileName)
 	}
 
 	err = os.Rename(tempPemFile.Name(), pemFileName)
 	if err != nil {
-		return "", fmt.Errorf("could not move temp pem file %v to destination %v: %v", tempPemFile.Name(), pemFileName, err)
+		return fmt.Errorf("could not move temp pem file %v to destination %v: %v", tempPemFile.Name(), pemFileName, err)
 	}
 
-	return pemFileName, nil
+	return nil
 }
 
 // GetFakeSSLCert creates a Self Signed Certificate
