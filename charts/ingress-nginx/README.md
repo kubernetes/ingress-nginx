@@ -491,4 +491,3 @@ Kubernetes: `>=1.20.0-0`
 | serviceAccount.name | string | `""` |  |
 | tcp | object | `{}` | TCP service key-value pairs |
 | udp | object | `{}` | UDP service key-value pairs |
-
