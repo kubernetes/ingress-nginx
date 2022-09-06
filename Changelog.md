@@ -10,7 +10,8 @@ In v1.3.1 leader elections will be done entirely using the Lease API and no long
 v1.3.0 is a safe transition version, using v1.3.0 can automatically complete the merging of election locks, and then you can safely upgrade to v1.3.1.
 
 Also, *important note*, with the Release of Kubernetes v1.25 we are dropping support for the legacy branches, 
-please upgrade to a v1.0.0 and above branch
+Also, *important note*, with the release of Kubernetes v1.25, we are dropping support for the legacy edition, 
+that means all version <1.0.0 of the ingress-nginx-controller.
 
 ## Image:
 - registry.k8s.io/ingress-nginx/controller:v1.3.1@sha256:54f7fe2c6c5a9db9a0ebf1131797109bb7a4d91f56b9b362bde2abd237dd1974
