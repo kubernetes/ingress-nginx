@@ -20,6 +20,7 @@ ingress controller for your particular environment or cloud provider.
 
 - [Environment-specific instructions](#environment-specific-instructions)
   - ... [Docker Desktop](#docker-desktop)
+  - ... [Rancher Desktop](#rancher-desktop)
   - ... [minikube](#minikube)
   - ... [MicroK8s](#microk8s)
   - ... [AWS](#aws)
@@ -185,6 +186,14 @@ On most systems, if you don't have any other service of type `LoadBalancer` boun
 will be assigned the `EXTERNAL-IP` of `localhost`, which means that it will be reachable on localhost:80. If that 
 doesn't work, you might have to fall back to the `kubectl port-forward` method described in the 
 [local testing section](#local-testing).
+
+#### Rancher Desktop
+
+Rancher Desktop provides Kubernetes and Container Management on the desktop. Kubernetes is enabled by default in Rancher Desktop. 
+
+Rancher Desktop uses K3s under the hood, which in turn uses Traefik as the default ingress controller for the Kubernetes cluster. To use NGINX ingress controller in place of the default Traefik, disable Traefik from Preference > Kubernetes menu.
+
+Once traefik is disabled, the NGINX ingress controller can be installed on Rancher Desktop using the default [quick start](#quick-start) instructions. Follow the instructions described in the [local testing section](#local-testing) to try a sample.
 
 ### Cloud deployments
 
