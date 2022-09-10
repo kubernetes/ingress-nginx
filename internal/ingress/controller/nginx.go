@@ -323,7 +323,10 @@ func (n *NGINXController) Start() {
 	}
 
 	klog.InfoS("Starting NGINX process")
-	n.start(cmd)
+
+	if n.gRPCServer == nil {
+		n.start(cmd)
+	}
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
@@ -651,14 +654,15 @@ func (n *NGINXController) getDHParam(cfg ngx_config.Configuration) (string, []by
 	if err != nil {
 		klog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
 		return "", nil
-	} else {
-		dh, ok = secret.Data["dhparam.pem"]
-		if !ok {
-			klog.Warning("error geting the value")
-			return "", nil
-
-		}
 	}
+
+	dh, ok = secret.Data["dhparam.pem"]
+	if !ok {
+		klog.Warning("error geting the value")
+		return "", nil
+
+	}
+
 	pemName := fmt.Sprintf("%s/%v.pem", file.DefaultSSLDirectory, nsSecName)
 	return pemName, dh
 }
@@ -783,9 +787,11 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v\n%v", err, string(o))
+	if n.gRPCServer == nil {
+		o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("%v\n%v", err, string(o))
+		}
 	}
 
 	return nil

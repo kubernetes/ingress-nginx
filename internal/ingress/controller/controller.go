@@ -208,24 +208,26 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		Jitter:   0.1,
 	}
 
-	retriesRemaining := retry.Steps
-	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := utilingress.ConfigureDynamically(pcfg, n.runningConfig)
-		if err == nil {
-			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
-			return true, nil
+	if n.gRPCServer == nil {
+		retriesRemaining := retry.Steps
+		err := wait.ExponentialBackoff(retry, func() (bool, error) {
+			err := utilingress.ConfigureDynamically(pcfg, n.runningConfig)
+			if err == nil {
+				klog.V(2).Infof("Dynamic reconfiguration succeeded.")
+				return true, nil
+			}
+			retriesRemaining--
+			if retriesRemaining > 0 {
+				klog.Warningf("Dynamic reconfiguration failed (retrying; %d retries left): %v", retriesRemaining, err)
+				return false, nil
+			}
+			klog.Warningf("Dynamic reconfiguration failed: %v", err)
+			return false, err
+		})
+		if err != nil {
+			klog.Errorf("Unexpected failure reconfiguring NGINX:\n%v", err)
+			return err
 		}
-		retriesRemaining--
-		if retriesRemaining > 0 {
-			klog.Warningf("Dynamic reconfiguration failed (retrying; %d retries left): %v", retriesRemaining, err)
-			return false, nil
-		}
-		klog.Warningf("Dynamic reconfiguration failed: %v", err)
-		return false, err
-	})
-	if err != nil {
-		klog.Errorf("Unexpected failure reconfiguring NGINX:\n%v", err)
-		return err
 	}
 
 	cfg := n.store.GetBackendConfiguration()
