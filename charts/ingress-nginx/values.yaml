@@ -580,7 +580,7 @@ controller:
   extraModules: []
   ## Modules, which are mounted into the core nginx image
   # - name: opentelemetry
-  #   image: gcr.io/k8s-staging-ingress-nginx/opentelemetry:v20220906-controller-v1.3.1-3-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
+  #   image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
