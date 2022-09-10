@@ -309,22 +309,20 @@ func (n *NGINXController) Start() {
 		},
 	})
 
-	cmd := n.command.ExecCommand()
-
-	// put NGINX in another process group to prevent it
-	// to receive signals meant for the controller
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-		Pgid:    0,
-	}
-
 	if n.cfg.EnableSSLPassthrough {
 		n.setupSSLProxy()
 	}
 
-	klog.InfoS("Starting NGINX process")
-
 	if n.gRPCServer == nil {
+		klog.InfoS("Starting NGINX process")
+		cmd := n.command.ExecCommand()
+
+		// put NGINX in another process group to prevent it
+		// to receive signals meant for the controller
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Setpgid: true,
+			Pgid:    0,
+		}
 		n.start(cmd)
 	}
 
@@ -432,23 +430,25 @@ func (n *NGINXController) Stop() error {
 		}
 	}
 
-	// send stop signal to NGINX
-	klog.InfoS("Stopping NGINX process")
-	cmd := n.command.ExecCommand("-s", "quit")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
+	if n.gRPCServer == nil {
+		// send stop signal to NGINX
+		klog.InfoS("Stopping NGINX process")
+		cmd := n.command.ExecCommand("-s", "quit")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			return err
+		}
 
-	// wait for the NGINX process to terminate
-	timer := time.NewTicker(time.Second * 1)
-	for range timer.C {
-		if !nginx.IsRunning() {
-			klog.InfoS("NGINX process has stopped")
-			timer.Stop()
-			break
+		// wait for the NGINX process to terminate
+		timer := time.NewTicker(time.Second * 1)
+		for range timer.C {
+			if !nginx.IsRunning() {
+				klog.InfoS("NGINX process has stopped")
+				timer.Stop()
+				break
+			}
 		}
 	}
 
@@ -634,10 +634,12 @@ func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCf
 		StreamSnippets:           append(ingressCfg.StreamSnippets, cfg.StreamSnippet),
 	}
 
-	dhfile, dhcontent := n.getDHParam(cfg)
-	if dhfile != "" && dhcontent != nil {
-		tc.DHParamFile = dhfile
-		tc.DHParamContent = dhcontent
+	if cfg.SSLDHParam != "" {
+		dhfile, dhcontent := n.getDHParam(cfg)
+		if dhfile != "" && dhcontent != nil {
+			tc.DHParamFile = dhfile
+			tc.DHParamContent = dhcontent
+		}
 	}
 
 	return tc, nil

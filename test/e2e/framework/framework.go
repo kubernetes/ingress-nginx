@@ -54,6 +54,8 @@ const (
 var (
 	// KubectlPath defines the full path of the kubectl binary
 	KubectlPath = "/usr/local/bin/kubectl"
+	// Dataplane is a global feature flag (argh) to enable the different flow to test cpdp
+	Dataplane = false
 )
 
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
@@ -141,7 +143,10 @@ func (f *Framework) BeforeEach() {
 	err = f.updateIngressNGINXPod()
 	assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller pod information")
 
-	f.WaitForNginxListening(80)
+	if f.BaseName != "grpc-port" {
+		f.WaitForNginxListening(80)
+	}
+
 }
 
 // AfterEach deletes the namespace, after reading its events.

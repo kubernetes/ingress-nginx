@@ -62,6 +62,10 @@ GOARCH=$(ARCH)
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+.PHONY: gosec
+gosec:
+	docker run --rm -it -w /source/ -v "$(pwd)"/:/source securego/gosec:2.11.0 -exclude=G109,G601,G104,G204,G304,G306,G307 -tests=false -exclude-dir=test -exclude-dir=images/  -exclude-dir=docs/ /source/...
+
 .PHONY: image
 image: clean-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
@@ -91,10 +95,6 @@ dataplane-image: clean-dataplane-image ## Build image for a particular arch.
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/dataplane:$(TAG) rootfs -f rootfs/Dockerfile.dataplane
 
-.PHONY: gosec
-gosec:
-	docker run --rm -it -w /source/ -v "$(pwd)"/:/source securego/gosec:2.11.0 -exclude=G109,G601,G104,G204,G304,G306,G307 -tests=false -exclude-dir=test -exclude-dir=images/  -exclude-dir=docs/ /source/...
-
 .PHONY: image-chroot
 image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
@@ -117,8 +117,6 @@ clean-image: ## Removes local image
 clean-dataplane-image: ## Removes local image
 	echo "removing old image $(REGISTRY)/dataplane:$(TAG)"
 	@docker rmi -f $(REGISTRY)/dataplane:$(TAG) || true
-
-
 
 .PHONY: clean-chroot-image
 clean-chroot-image: ## Removes local image

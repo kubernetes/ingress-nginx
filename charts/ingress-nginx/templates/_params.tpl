@@ -3,6 +3,9 @@
 {{- if .Values.defaultBackend.enabled }}
 - --default-backend-service=$(POD_NAMESPACE)/{{ include "ingress-nginx.defaultBackend.fullname" . }}
 {{- end }}
+{{ if .Values.controller.grpcPort }}
+- --grpc-port={{.Values.controller.grpcPort}}
+{{- end }}
 {{- if and .Values.controller.publishService.enabled .Values.controller.service.enabled }}
 {{- if .Values.controller.service.external.enabled }}
 - --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}

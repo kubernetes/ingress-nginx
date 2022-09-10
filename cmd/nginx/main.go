@@ -132,7 +132,8 @@ func main() {
 	}))
 
 	mc := metric.NewDummyCollector()
-	if conf.EnableMetrics {
+	// TODO: Fix the metrics to remove the status collector from controlplane and move to dataplane
+	if conf.EnableMetrics && conf.ListenPorts.GRPCPort == -1 {
 		mc, err = metric.NewCollector(conf.MetricsPerHost, conf.ReportStatusClasses, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets)
 		if err != nil {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)

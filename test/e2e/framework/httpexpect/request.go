@@ -123,6 +123,20 @@ func (h *HTTPRequest) Expect() *HTTPResponse {
 	return h.HTTPResponse
 }
 
+// ExpectFail executes the request and returns an HTTP response.
+func (h *HTTPRequest) ExpectFail() *HTTPResponse {
+	if h.query != nil {
+		h.Request.URL.RawQuery = h.query.Encode()
+	}
+
+	_, err := h.client.Do(h.Request)
+	if err == nil {
+		h.chain.fail("expecting an error in request but nothing happened")
+	}
+
+	return nil
+}
+
 // WithURL sets the request URL appending paths when already exist.
 func (h *HTTPRequest) WithURL(urlStr string) *HTTPRequest {
 	if h.chain.failed() {

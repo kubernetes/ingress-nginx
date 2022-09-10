@@ -62,6 +62,11 @@ func RunE2ETests(t *testing.T) {
 		framework.Logf("Using kubectl path '%s'", framework.KubectlPath)
 	}
 
+	if os.Getenv("TEST_DATAPLANE") == "true" {
+		framework.Dataplane = true
+		framework.Logf("Testing with controlplane/dataplane enabled")
+	}
+
 	framework.Logf("Starting e2e run %q on Ginkgo node %d", framework.RunID, ginkgo.GinkgoParallelProcess())
 	ginkgo.RunSpecs(t, "nginx-ingress-controller e2e suite")
 }

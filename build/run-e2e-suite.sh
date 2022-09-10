@@ -51,11 +51,14 @@ trap cleanup EXIT
 E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-}
 FOCUS=${FOCUS:-.*}
 
+IS_DATAPLANE=${IS_DATAPLANE:-false}
+
 BASEDIR=$(dirname "$0")
 NGINX_BASE_IMAGE=$(cat $BASEDIR/../NGINX_BASE)
 
 export E2E_CHECK_LEAKS
 export FOCUS
+export IS_DATAPLANE
 
 echo -e "${BGREEN}Granting permissions to ingress-nginx e2e service account...${NC}"
 kubectl create serviceaccount ingress-nginx-e2e || true
@@ -83,6 +86,7 @@ kubectl run --rm \
   --restart=Never \
   --env="E2E_NODES=${E2E_NODES}" \
   --env="FOCUS=${FOCUS}" \
+  --env="TEST_DATAPLANE=${IS_DATAPLANE}" \
   --env="E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS}" \
   --env="NGINX_BASE_IMAGE=${NGINX_BASE_IMAGE}" \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \

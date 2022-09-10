@@ -15,6 +15,8 @@ commonLabels: {}
 
 controller:
     name: controller
+    # -- Enables grpc-port and alpha feature "controlplane" if greater than 0
+    grpcPort: -1
     image:
         ## Keep false as default for now!
         chroot: false

@@ -83,7 +83,7 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   fi
 
   echo "[dev-env] building image"
-  make -C ${DIR}/../../ clean-image build image image-chroot
+  make -C ${DIR}/../../ clean-image build image dataplane-image image-chroot
   echo "[dev-env] .. done building controller images"
   echo "[dev-env] now building e2e-image.."
   make -C ${DIR}/../e2e-image image
@@ -102,6 +102,10 @@ if [ "${IS_CHROOT:-false}" = "true" ]; then
 fi
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
+
+if [ "${IS_DATAPLANE:-false}" = "true" ]; then
+   kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/dataplane:${TAG}
+fi
 
 echo "[dev-env] running e2e tests..."
 make -C ${DIR}/../../ e2e-test

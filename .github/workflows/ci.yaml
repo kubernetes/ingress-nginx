@@ -177,7 +177,7 @@ jobs:
           REGISTRY: ingress-controller
         run: |
           echo "building images..."
-          make clean-image build image image-chroot
+          make clean-image build image dataplane-image image-chroot
           make -C test/e2e-image image
 
           echo "creating images cache..."
@@ -185,6 +185,7 @@ jobs:
             nginx-ingress-controller:e2e \
             ingress-controller/controller:1.0.0-dev \
             ingress-controller/controller-chroot:1.0.0-dev \
+            ingress-controller/dataplane:1.0.0-dev \
             | pigz > docker.tar.gz
 
       - name: cache
@@ -380,6 +381,65 @@ jobs:
         with:
           name: e2e-test-reports-chroot-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
+
+  kubernetes-with-dataplane:
+    name: Kubernetes with dataplane
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - build
+    if: |
+      (needs.changes.outputs.go == 'true')
+
+    strategy:
+      matrix:
+        k8s: [v1.25.0]
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+
+      - name: cache
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741
+        with:
+          name: docker.tar.gz
+
+      - name: Create Kubernetes ${{ matrix.k8s }} cluster
+        id: kind
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
+        with:
+          version: v0.15.0
+          config: test/e2e/kind.yaml
+          image: kindest/node:${{ matrix.k8s }}
+
+      - uses: geekyeggo/delete-artifact@b73cb986740e466292a536d0e32e2666c56fdeb3
+        with:
+          name: docker.tar.gz
+          failOnError: false
+
+      - name: Prepare cluster for testing
+        uses: azure/setup-helm@b5b231a831f96336bbfeccc1329990f0005c5bb1 #v2.1
+        with:
+          version: 'v3.8.0'
+        id: local-path
+
+      - name: Load images from cache
+        run: |
+          echo "loading docker images..."
+          pigz -dc docker.tar.gz | docker load
+
+      - name: Run e2e tests
+        env:
+          KIND_CLUSTER_NAME: kind
+          SKIP_CLUSTER_CREATION: true
+          SKIP_IMAGE_CREATION: true
+          IS_DATAPLANE: true
+          FOCUS: 'grpc-port'
+        run: |
+          kind get kubeconfig > $HOME/.kube/kind-config-kind
+          make kind-e2e-test
+
 
 
   test-image-build:
