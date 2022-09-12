@@ -1362,6 +1362,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		}
 	}
 
+	defaultSSLCert := n.getDefaultSSLCertificate()
+
 	// configure default location, alias, and SSL
 	for _, ing := range data {
 		ingKey := k8s.MetaNamespaceKey(ing)
@@ -1410,8 +1412,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				servers[host].SSLPreferServerCiphers = anns.SSLCipher.SSLPreferServerCiphers
 			}
 
-			// only add a certificate if the server does not have one previously configured
-			if servers[host].SSLCert != nil {
+			// only add a certificate if the server does not have one non-default SSL cert previously configured
+			if servers[host].SSLCert != nil && servers[host].SSLCert != defaultSSLCert {
 				continue
 			}
 
@@ -1423,7 +1425,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
 			if tlsSecretName == "" {
 				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate", host)
-				servers[host].SSLCert = n.getDefaultSSLCertificate()
+				servers[host].SSLCert = defaultSSLCert
 				continue
 			}
 
@@ -1431,14 +1433,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
 				klog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
-				servers[host].SSLCert = n.getDefaultSSLCertificate()
+				servers[host].SSLCert = defaultSSLCert
 				continue
 			}
 
 			if cert.Certificate == nil {
 				klog.Warningf("SSL certificate %q does not contain a valid SSL certificate for server %q", secrKey, host)
 				klog.Warningf("Using default certificate")
-				servers[host].SSLCert = n.getDefaultSSLCertificate()
+				servers[host].SSLCert = defaultSSLCert
 				continue
 			}
 
@@ -1452,7 +1454,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				if err != nil {
 					klog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v", secrKey, host, err)
 					klog.Warningf("Using default certificate")
-					servers[host].SSLCert = n.getDefaultSSLCertificate()
+					servers[host].SSLCert = defaultSSLCert
 					continue
 				}
 			}
