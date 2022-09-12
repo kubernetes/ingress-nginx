@@ -118,7 +118,7 @@ spec:
               {{- end }}
           {{- end }}
           {{- if .Values.controller.metrics.enabled }}
-            - name: metrics
+            - name: {{ .Values.controller.metrics.portName }}
               containerPort: {{ .Values.controller.metrics.port }}
               protocol: TCP
           {{- end }}
