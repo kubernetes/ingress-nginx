@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.19.0-alpine as builder
+FROM golang:1.19.1-alpine as builder
 RUN apk add git
 
 WORKDIR /go/src/k8s.io/ingress-nginx/images/custom-error-pages
