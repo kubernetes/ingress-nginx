@@ -141,6 +141,11 @@ func (f *Framework) BeforeEach() {
 	assert.Nil(ginkgo.GinkgoT(), err, "deploying the ingress controller")
 
 	err = f.updateIngressNGINXPod()
+	if err != nil {
+		content, _ := f.NamespaceContent()
+		ginkgo.By("Dumping NGINX configuration after failure")
+		Logf("%v", content)
+	}
 	assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller pod information")
 
 	f.WaitForNginxListening(80)

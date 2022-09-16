@@ -87,6 +87,11 @@ var RunID = uuid.NewUUID()
 
 func createNamespace(baseName string, labels map[string]string, c kubernetes.Interface) (string, error) {
 	ts := time.Now().UnixNano()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	labels["pod-security.kubernetes.io/enforce"] = "baseline"
+	labels["pod-security.kubernetes.io/enforce-version"] = "v1.23"
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("e2e-tests-%v-%v-", baseName, ts),
@@ -189,7 +194,7 @@ func CreateIngressClass(namespace string, c kubernetes.Interface) (string, error
 	return ic.Name, nil
 }
 
-//deleteIngressClass deletes an IngressClass and its related ClusterRole* objects
+// deleteIngressClass deletes an IngressClass and its related ClusterRole* objects
 func deleteIngressClass(c kubernetes.Interface, ingressclass string) error {
 	var err error
 	grace := int64(0)
@@ -215,7 +220,7 @@ func deleteIngressClass(c kubernetes.Interface, ingressclass string) error {
 	return nil
 }
 
-//GetIngressClassName returns the default IngressClassName given a namespace
+// GetIngressClassName returns the default IngressClassName given a namespace
 func GetIngressClassName(namespace string) *string {
 	icname := fmt.Sprintf("ic-%s", namespace)
 	return &icname

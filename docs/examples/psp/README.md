@@ -1,5 +1,8 @@
 # Pod Security Policy (PSP)
 
+!!! warning
+    PodSecurityPolicy is deprecated and removed in Kubernetes v1.25. Please use PSA instead
+
 In most clusters today, by default, all resources (e.g. `Deployments` and `ReplicatSets`)
 have permissions to create pods.
 Kubernetes however provides a more fine-grained authorization policy called

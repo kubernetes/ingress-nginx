@@ -908,6 +908,7 @@ rbac:
 ## If true, create & use Pod Security Policy resources
 ## https://kubernetes.io/docs/concepts/policy/pod-security-policy/
 podSecurityPolicy:
+  # -- Enables PSP. This value is deprecated and setting to true is a noop
   enabled: false
 
 serviceAccount:
