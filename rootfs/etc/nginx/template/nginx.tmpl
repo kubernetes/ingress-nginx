@@ -37,6 +37,10 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 {{ end }}
 
+{{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
+load_module /modules_mount/etc/nginx/modules/otel/otel_ngx_module.so;
+{{ end }}
+
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -64,6 +68,10 @@ events {
 }
 
 http {
+    {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
+    opentelemetry_config {{ $cfg.OpentelemetryConfig }};
+    {{ end }}
+
     lua_package_path "/etc/nginx/lua/?.lua;;";
 
     {{ buildLuaSharedDictionaries $cfg $servers }}
@@ -322,6 +330,7 @@ http {
     limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
     {{ buildOpentracing $cfg $servers }}
+    {{ buildOpentelemetry $cfg $servers }}
 
     include /etc/nginx/mime.types;
     default_type {{ $cfg.DefaultType }};
@@ -692,6 +701,9 @@ http {
         opentracing off;
         {{ end }}
 
+        {{ if $cfg.EnableOpentelemetry }}
+        opentelemetry off;
+        {{ end }}
         location {{ $healthzURI }} {
             return 200;
         }
@@ -1058,6 +1070,10 @@ stream {
             opentracing_propagate_context;
             {{ end }}
 
+            {{ if (or $all.Cfg.EnableOpentelemetry $location.Opentelemetry.Enabled) }}
+            opentelemetry on;
+            opentelemetry_propagate;
+            {{ end }}
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
             {{ if $all.Cfg.EnableModsecurity }}
             modsecurity off;
@@ -1193,6 +1209,7 @@ stream {
             set $global_rate_limit_exceeding n;
 
             {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $all.Cfg.OpentracingTrustIncomingSpan $location }}
+            {{ buildOpentelemetryForLocation $all.Cfg.EnableOpentelemetry $all.Cfg.OpentelemetryTrustIncomingSpan $location }}
 
             {{ if $location.Mirror.Source }}
             mirror {{ $location.Mirror.Source }};
@@ -1505,6 +1522,10 @@ stream {
             opentracing off;
             {{ end }}
 
+            {{ if $all.Cfg.EnableOpentelemetry }}
+            opentelemetry off;
+            {{ end }}
+
             access_log off;
             return 200;
         }
@@ -1514,6 +1535,10 @@ stream {
         location /nginx_status {
             {{ if $all.Cfg.EnableOpentracing }}
             opentracing off;
+            {{ end }}
+
+            {{ if $all.Cfg.EnableOpentelemetry }}
+            opentelemetry off;
             {{ end }}
 
             {{ range $v := $all.NginxStatusIpv4Whitelist }}

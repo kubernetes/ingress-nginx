@@ -20,6 +20,7 @@ import (
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/opentelemetry"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/streamsnippet"
@@ -93,6 +94,7 @@ type Ingress struct {
 	EnableGlobalAuth   bool
 	HTTP2PushPreload   bool
 	Opentracing        opentracing.Config
+	Opentelemetry      opentelemetry.Config
 	Proxy              proxy.Config
 	ProxySSL           proxyssl.Config
 	RateLimit          ratelimit.Config
@@ -143,6 +145,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
 			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
 			"Opentracing":          opentracing.NewParser(cfg),
+			"Opentelemetry":        opentelemetry.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"ProxySSL":             proxyssl.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),

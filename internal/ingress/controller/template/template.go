@@ -75,8 +75,8 @@ type Template struct {
 	bp *BufferPool
 }
 
-//NewTemplate returns a new Template instance or an
-//error if the specified template file contains errors
+// NewTemplate returns a new Template instance or an
+// error if the specified template file contains errors
 func NewTemplate(file string) (*Template, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
@@ -265,6 +265,7 @@ var (
 		"buildAuthSignURL":                   buildAuthSignURL,
 		"buildAuthSignURLLocation":           buildAuthSignURLLocation,
 		"buildOpentracing":                   buildOpentracing,
+		"buildOpentelemetry":                 buildOpentelemetry,
 		"proxySetHeader":                     proxySetHeader,
 		"buildInfluxDB":                      buildInfluxDB,
 		"enforceRegexModifier":               enforceRegexModifier,
@@ -274,7 +275,9 @@ var (
 		"buildHTTPListener":                  buildHTTPListener,
 		"buildHTTPSListener":                 buildHTTPSListener,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
+		"buildOpentelemetryForLocation":      buildOpentelemetryForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
+		"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
@@ -287,9 +290,10 @@ var (
 // escapeLiteralDollar will replace the $ character with ${literal_dollar}
 // which is made to work via the following configuration in the http section of
 // the template:
-// geo $literal_dollar {
-//     default "$";
-// }
+//
+//	geo $literal_dollar {
+//	    default "$";
+//	}
 func escapeLiteralDollar(input interface{}) string {
 	inputStr, ok := input.(string)
 	if !ok {
@@ -1238,6 +1242,36 @@ func buildOpentracing(c interface{}, s interface{}) string {
 	return buf.String()
 }
 
+func buildOpentelemetry(c interface{}, s interface{}) string {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return ""
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return ""
+	}
+
+	if !shouldLoadOpentelemetryModule(cfg, servers) {
+		return ""
+	}
+
+	buf := bytes.NewBufferString("")
+
+	buf.WriteString("\r\n")
+
+	if cfg.OpentelemetryOperationName != "" {
+		buf.WriteString(fmt.Sprintf("opentelemetry_operation_name \"%s\";\n", cfg.OpentelemetryOperationName))
+	}
+	if cfg.OpentelemetryLocationOperationName != "" {
+		buf.WriteString(fmt.Sprintf("opentelemetry_location_operation_name \"%s\";\n", cfg.OpentelemetryLocationOperationName))
+	}
+	return buf.String()
+}
+
 // buildInfluxDB produces the single line configuration
 // needed by the InfluxDB module to send request's metrics
 // for the current resource
@@ -1357,6 +1391,13 @@ func opentracingPropagateContext(location *ingress.Location) string {
 	}
 
 	return "opentracing_propagate_context;"
+}
+
+func opentelemetryPropagateContext(location *ingress.Location) string {
+	if location == nil {
+		return ""
+	}
+	return "opentelemetry_propagate;"
 }
 
 // shouldLoadModSecurityModule determines whether or not the ModSecurity module needs to be loaded.
@@ -1574,6 +1615,34 @@ func buildOpentracingForLocation(isOTEnabled bool, isOTTrustSet bool, location *
 	return opc
 }
 
+func buildOpentelemetryForLocation(isOTEnabled bool, isOTTrustSet bool, location *ingress.Location) string {
+	isOTEnabledInLoc := location.Opentelemetry.Enabled
+	isOTSetInLoc := location.Opentelemetry.Set
+
+	if isOTEnabled {
+		if isOTSetInLoc && !isOTEnabledInLoc {
+			return "opentelemetry off;"
+		}
+	} else if !isOTSetInLoc || !isOTEnabledInLoc {
+		return ""
+	}
+
+	opc := opentelemetryPropagateContext(location)
+	if opc != "" {
+		opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
+	}
+
+	if location.Opentelemetry.OperationName != "" {
+		opc = opc + "\nopentelemetry_operation_name " + location.Opentelemetry.OperationName + ";"
+	}
+
+	if (!isOTTrustSet && !location.Opentelemetry.TrustSet) ||
+		(location.Opentelemetry.TrustSet && !location.Opentelemetry.TrustEnabled) {
+		opc = opc + "\nopentelemetry_trust_incoming_spans off;"
+	}
+	return opc
+}
+
 // shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.
 // First, it checks if `enable-opentracing` is set in the ConfigMap. If it is not, it iterates over all locations to
 // check if Opentracing is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentracing`.
@@ -1602,6 +1671,35 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 		}
 	}
 
+	return false
+}
+
+// shouldLoadOpentelemetryModule determines whether or not the Opentelemetry module needs to be loaded.
+// It checks if `enable-opentelemetry` is set in the ConfigMap.
+func shouldLoadOpentelemetryModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	if cfg.EnableOpentelemetry {
+		return true
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.Opentelemetry.Enabled {
+				return true
+			}
+		}
+	}
 	return false
 }
 

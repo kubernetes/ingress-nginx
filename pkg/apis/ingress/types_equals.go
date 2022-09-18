@@ -192,7 +192,7 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	return true
 }
 
-//Equal checks the equality between UpstreamByConfig types
+// Equal checks the equality between UpstreamByConfig types
 func (u1 *UpstreamHashByConfig) Equal(u2 *UpstreamHashByConfig) bool {
 	if u1 == u2 {
 		return true
@@ -459,6 +459,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	}
 
 	if !l1.Opentracing.Equal(&l2.Opentracing) {
+		return false
+	}
+
+	if !l1.Opentelemetry.Equal(&l2.Opentelemetry) {
 		return false
 	}
 
