@@ -355,7 +355,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.metrics.podMonitoring.additionalLabels | object | `{}` |   |
 | controller.metrics.podMonitoring.namespace | string | `""` |  |
 | controller.metrics.podMonitoring.scrapeInterval | string | `"60s"` |  |
-| controller.metrics.podMonitoring. | bool | `false` |  |
+| controller.metrics.podMonitoring.portName | string | `"http-metrics"` |  |
 | controller.metrics.port | int | `10254` |  |
 | controller.metrics.prometheusRule.additionalLabels | object | `{}` |  |
 | controller.metrics.prometheusRule.enabled | bool | `false` |  |
