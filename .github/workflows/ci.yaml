@@ -128,6 +128,10 @@ jobs:
     if: |
       (needs.changes.outputs.charts == 'true')
 
+    strategy:
+      matrix:
+        k8s: [v1.23.10, v1.24.4, v1.25.0]
+
     steps:
 
       - name: Checkout
@@ -170,12 +174,12 @@ jobs:
           sudo mkdir -p $HOME/.kube
           sudo chmod -R 777 $HOME/.kube
 
-      - name: Create Kubernetes cluster
+      - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
         uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
         with:
           version: v0.15.0
-          image: kindest/node:v1.25.0
+          image: kindest/node:${{ matrix.k8s }}
 
       - uses: geekyeggo/delete-artifact@b73cb986740e466292a536d0e32e2666c56fdeb3 # v1
         with:
