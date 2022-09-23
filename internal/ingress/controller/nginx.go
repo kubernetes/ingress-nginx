@@ -672,6 +672,11 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
+	err = createOpentelemetryCfg(cfg)
+	if err != nil {
+		return err
+	}
+
 	err = n.testTemplate(content)
 	if err != nil {
 		return err
@@ -1055,6 +1060,29 @@ const datadogTmpl = `{
   "dd.priority.sampling": {{ .DatadogPrioritySampling }}
 }`
 
+const otelTmpl = `
+exporter = "otlp"
+processor = "batch"
+
+[exporters.otlp]
+# Alternatively the OTEL_EXPORTER_OTLP_ENDPOINT environment variable can also be used.
+host = "{{ .OtlpCollectorHost }}"
+port = {{ .OtlpCollectorPort }}
+
+[processors.batch]
+max_queue_size = {{ .OtelMaxQueueSize }}
+schedule_delay_millis = {{ .OtelScheduleDelayMillis }}
+max_export_batch_size = {{ .OtelMaxExportBatchSize }}
+
+[service]
+name = "{{ .OtelServiceName }}" # Opentelemetry resource name
+
+[sampler]
+name = "{{ .OtelSampler }}" # Also: AlwaysOff, TraceIdRatioBased
+ratio = {{ .OtelSamplerRatio }}
+parent_based = {{ .OtelSamplerParantBased }}
+`
+
 func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	var tmpl *template.Template
 	var err error
@@ -1088,6 +1116,21 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	expanded := os.ExpandEnv(tmplBuf.String())
 
 	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
+}
+
+func createOpentelemetryCfg(cfg ngx_config.Configuration) error {
+
+	tmpl, err := template.New("otel").Parse(otelTmpl)
+	if err != nil {
+		return err
+	}
+	tmplBuf := bytes.NewBuffer(make([]byte, 0))
+	err = tmpl.Execute(tmplBuf, cfg)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile("/etc/nginx/opentelemtry.toml", tmplBuf.Bytes(), file.ReadWriteByUser)
 }
 
 func cleanTempNginxCfg() error {

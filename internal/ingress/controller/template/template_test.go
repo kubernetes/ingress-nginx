@@ -1764,13 +1764,11 @@ func TestBuildOpenTelemetry(t *testing.T) {
 	}
 
 	cfgOpenTelemetry := config.Configuration{
-		EnableOpentelemetry:                true,
-		OpentelemetryOperationName:         "my-operation-name",
-		OpentelemetryLocationOperationName: "my-location-operation-name",
+		EnableOpentelemetry:        true,
+		OpentelemetryOperationName: "my-operation-name",
 	}
 	expected = "\r\n"
 	expected += "opentelemetry_operation_name \"my-operation-name\";\n"
-	expected += "opentelemetry_location_operation_name \"my-location-operation-name\";\n"
 	actual = buildOpentelemetry(cfgOpenTelemetry, []*ingress.Server{})
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -1962,7 +1960,8 @@ func TestOpentelemetryForLocation(t *testing.T) {
 	falseVal := false
 
 	loadOT := `opentelemetry on;
-opentelemetry_propagate;`
+opentelemetry_propagate;
+opentelemetry_trust_incoming_spans on;`
 	loadOTUntrustedSpan := `opentelemetry on;
 opentelemetry_propagate;
 opentelemetry_trust_incoming_spans off;`

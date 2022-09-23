@@ -569,13 +569,42 @@ type Configuration struct {
 	// OpentelemetryOperationName specifies a custom name for the server span
 	OpentelemetryOperationName string `json:"opentelemetry-operation-name"`
 
-	// OpentelemetryOperationName specifies a custom name for the location span
-	OpentelemetryLocationOperationName string `json:"opentelemetry-location-operation-name"`
-
 	// OpentelemetryTrustIncomingSpan sets whether or not to trust incoming trace spans
 	// If false, incoming span headers will be rejected
 	// Default: true
 	OpentelemetryTrustIncomingSpan bool `json:"opentelemetry-trust-incoming-span"`
+
+	// OtlpCollectorHost specifies the host to use when uploading traces
+	OtlpCollectorHost string `json:"otlp-collector-host"`
+
+	// OtlpCollectorPort specifies the host to use when uploading traces
+	// Default: 4317
+	OtlpCollectorPort string `json:"otlp-collector-port"`
+
+	//OtelServiceName specifies the service name to use for any traces created
+	// Default: nginx
+	OtelServiceName string `json:"otel-service-name"`
+
+	//OtelSampler specifies the service name to use for any traces created
+	// Default: AlwaysOff
+	OtelSampler string `json:"otel-sampler"`
+
+	//OtelSamplerRatio specifies the service name to use for any traces created
+	// Default: 0.01
+	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
+
+	//OtelSamplerParantBased specifies the service name to use for any traces created
+	// Default: false
+	OtelSamplerParantBased bool `json:"otel-sampler-parent-based"`
+
+	// MaxQueueSize specifies the host to use when uploading traces
+	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
+
+	// ScheduleDelayMillis specifies the host to use when uploading traces
+	OtelScheduleDelayMillis int32 `json:"otel-schedule-delay-millis"`
+
+	// MaxExportBatchSize specifies the host to use when uploading traces
+	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
 
 	// ZipkinCollectorHost specifies the host to use when uploading traces
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
@@ -927,6 +956,11 @@ func NewDefault() Configuration {
 		BindAddressIpv6:                        defBindAddress,
 		OpentracingTrustIncomingSpan:           true,
 		OpentelemetryTrustIncomingSpan:         true,
+		OtlpCollectorPort:                      "4317",
+		OtelServiceName:                        "nginx",
+		OtelSampler:                            "AlwaysOff",
+		OtelSamplerRatio:                       0.01,
+		OtelSamplerParantBased:                 false,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,

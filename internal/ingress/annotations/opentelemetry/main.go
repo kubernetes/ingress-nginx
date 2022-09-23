@@ -15,7 +15,6 @@ package opentelemetry
 
 import (
 	networking "k8s.io/api/networking/v1"
-	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -54,20 +53,33 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations to look for opentelemetry configurations
 func (c opentelemetry) Parse(ing *networking.Ingress) (interface{}, error) {
+	cfg := Config{}
 	enabled, err := parser.GetBoolAnnotation("enable-opentelemetry", ing)
 	if err != nil {
-		return &Config{}, nil
+		return &cfg, nil
 	}
+	cfg.Set = true
+	cfg.Enabled = enabled
 	if !enabled {
-		return &Config{Set: true, Enabled: false}, nil
+		return &cfg, nil
 	}
 
 	trustEnabled, err := parser.GetBoolAnnotation("opentelemetry-trust-incoming-span", ing)
 	if err != nil {
-		klog.Errorf("OpenTelementry config file (opentelemetry_config) must be set - %v.", err)
-		return &Config{Set: true, Enabled: enabled}, nil
+		operationName, err := parser.GetStringAnnotation("opentelemetry-operation-name", ing)
+		if err != nil {
+			return &cfg, nil
+		}
+		cfg.OperationName = operationName
+		return &cfg, nil
 	}
-	operationName, err := parser.GetStringAnnotation("opentelemetry-operation-name", ing)
 
-	return &Config{Set: true, Enabled: enabled, TrustEnabled: trustEnabled, TrustSet: true, OperationName: operationName}, nil
+	cfg.TrustSet = true
+	cfg.TrustEnabled = trustEnabled
+	operationName, err := parser.GetStringAnnotation("opentelemetry-operation-name", ing)
+	if err != nil {
+		return &cfg, nil
+	}
+	cfg.OperationName = operationName
+	return &cfg, nil
 }

@@ -1266,9 +1266,6 @@ func buildOpentelemetry(c interface{}, s interface{}) string {
 	if cfg.OpentelemetryOperationName != "" {
 		buf.WriteString(fmt.Sprintf("opentelemetry_operation_name \"%s\";\n", cfg.OpentelemetryOperationName))
 	}
-	if cfg.OpentelemetryLocationOperationName != "" {
-		buf.WriteString(fmt.Sprintf("opentelemetry_location_operation_name \"%s\";\n", cfg.OpentelemetryLocationOperationName))
-	}
 	return buf.String()
 }
 
@@ -1639,6 +1636,8 @@ func buildOpentelemetryForLocation(isOTEnabled bool, isOTTrustSet bool, location
 	if (!isOTTrustSet && !location.Opentelemetry.TrustSet) ||
 		(location.Opentelemetry.TrustSet && !location.Opentelemetry.TrustEnabled) {
 		opc = opc + "\nopentelemetry_trust_incoming_spans off;"
+	} else {
+		opc = opc + "\nopentelemetry_trust_incoming_spans on;"
 	}
 	return opc
 }
