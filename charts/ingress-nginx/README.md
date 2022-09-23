@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.2.5](https://img.shields.io/badge/Version-4.2.5-informational?style=flat-square) ![AppVersion: 1.3.1](https://img.shields.io/badge/AppVersion-1.3.1-informational?style=flat-square)
+![Version: 4.2.6](https://img.shields.io/badge/Version-4.2.6-informational?style=flat-square) ![AppVersion: 1.3.1](https://img.shields.io/badge/AppVersion-1.3.1-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -89,6 +89,10 @@ The Nginx ingress controller can export Prometheus metrics, by setting `controll
 
 You can add Prometheus annotations to the metrics service using `controller.metrics.service.annotations`.
 Alternatively, if you use the Prometheus Operator, you can enable ServiceMonitor creation using `controller.metrics.serviceMonitor.enabled`. And set `controller.metrics.serviceMonitor.additionalLabels.release="prometheus"`. "release=prometheus" should match the label configured in the prometheus servicemonitor ( see `kubectl get servicemonitor prometheus-kube-prom-prometheus -oyaml -n prometheus`)
+
+#### PodMonitoring
+
+If you use the Google Managed Prometheus Operator, you can enable PodMonitoring. To enable PodMonitoring, you have to set `controller.metrics.podMonitoring.enabled`.
 
 ### ingress-nginx nginx\_status page/stats server
 
@@ -347,6 +351,11 @@ Kubernetes: `>=1.20.0-0`
 | controller.livenessProbe.timeoutSeconds | int | `1` |  |
 | controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. # https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases |
 | controller.metrics.enabled | bool | `false` |  |
+| controller.metrics.podMonitoring.enabled | bool | `false` |  |
+| controller.metrics.podMonitoring.additionalLabels | object | `{}` |   |
+| controller.metrics.podMonitoring.namespace | string | `""` |  |
+| controller.metrics.podMonitoring.scrapeInterval | string | `"60s"` |  |
+| controller.metrics.podMonitoring. | bool | `false` |  |
 | controller.metrics.port | int | `10254` |  |
 | controller.metrics.prometheusRule.additionalLabels | object | `{}` |  |
 | controller.metrics.prometheusRule.enabled | bool | `false` |  |
