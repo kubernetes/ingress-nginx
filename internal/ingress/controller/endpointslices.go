@@ -28,14 +28,15 @@ import (
 	"k8s.io/klog/v2"
 
 	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 // getEndpoints returns a list of Endpoint structs for a given service/target port combination.
-func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Protocol,
-	getServiceEndpoints func(string) (*corev1.Endpoints, error)) []ingress.Endpoint {
+func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto corev1.Protocol,
+	getServiceEndpointsSlices func(string) ([]*discoveryv1.EndpointSlice, error)) []ingress.Endpoint {
 
 	upsServers := []ingress.Endpoint{}
 
@@ -74,54 +75,63 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 		})
 	}
 
-	klog.V(3).Infof("Getting Endpoints for Service %q and port %v", svcKey, port.String())
-	ep, err := getServiceEndpoints(svcKey)
+	klog.V(3).Infof("Getting Endpoints from endpointSlices for Service %q and port %v", svcKey, port.String())
+	epss, err := getServiceEndpointsSlices(svcKey)
 	if err != nil {
 		klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 		return upsServers
 	}
-
-	for _, ss := range ep.Subsets {
-		matchedPortNameFound := false
-		for i, epPort := range ss.Ports {
-
-			if !reflect.DeepEqual(epPort.Protocol, proto) {
-				continue
-			}
-
-			var targetPort int32
-
-			if port.Name == "" {
-				// port.Name is optional if there is only one port
-				targetPort = epPort.Port
-				matchedPortNameFound = true
-			} else if port.Name == epPort.Name {
-				targetPort = epPort.Port
-				matchedPortNameFound = true
-			}
-
-			if i == len(ss.Ports)-1 && !matchedPortNameFound && port.TargetPort.Type == intstr.Int {
-				// use service target port if it's a number and no port name matched
-				// https://github.com/kubernetes/ingress-nginx/issues/7390
-				targetPort = port.TargetPort.IntVal
-			}
-
-			if targetPort <= 0 {
-				continue
-			}
-
-			for _, epAddress := range ss.Addresses {
-				ep := net.JoinHostPort(epAddress.IP, strconv.Itoa(int(targetPort)))
-				if _, exists := processedUpstreamServers[ep]; exists {
+	// loop over all endpointSlices generated for service
+	for _, eps := range epss {
+		var ports []int32
+		if len(eps.Ports) == 0 {
+			// When ports is empty, it indicates that there are no defined ports, using svc targePort <- this could be wrong
+			klog.V(3).Infof("No ports found on endpointSlice, using service TargetPort %v for Service %q", port.String(), svcKey)
+			ports = append(ports, port.TargetPort.IntVal)
+		} else {
+			for _, epPort := range eps.Ports {
+				if !reflect.DeepEqual(*epPort.Protocol, proto) {
 					continue
 				}
-				ups := ingress.Endpoint{
-					Address: epAddress.IP,
-					Port:    fmt.Sprintf("%v", targetPort),
-					Target:  epAddress.TargetRef,
+				var targetPort int32 = 0
+				if port.Name == "" {
+					// port.Name is optional if there is only one port
+					targetPort = *epPort.Port
+				} else if port.Name == *epPort.Name {
+					targetPort = *epPort.Port
 				}
-				upsServers = append(upsServers, ups)
-				processedUpstreamServers[ep] = struct{}{}
+				if targetPort == 0 && port.TargetPort.Type == intstr.Int {
+					// use service target port if it's a number and no port name matched
+					// https://github.com/kubernetes/ingress-nginx/issues/7390
+					targetPort = port.TargetPort.IntVal
+				}
+				if targetPort == 0 {
+					continue
+				}
+				ports = append(ports, targetPort)
+			}
+		}
+		for _, ep := range eps.Endpoints {
+			if !(*ep.Conditions.Ready) {
+				continue
+			}
+
+			// ep.Hints
+
+			for _, epPort := range ports {
+				for _, epAddress := range ep.Addresses {
+					hostPort := net.JoinHostPort(epAddress, strconv.Itoa(int(epPort)))
+					if _, exists := processedUpstreamServers[hostPort]; exists {
+						continue
+					}
+					ups := ingress.Endpoint{
+						Address: epAddress,
+						Port:    fmt.Sprintf("%v", epPort),
+						Target:  ep.TargetRef,
+					}
+					upsServers = append(upsServers, ups)
+					processedUpstreamServers[hostPort] = struct{}{}
+				}
 			}
 		}
 	}
