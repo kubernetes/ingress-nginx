@@ -564,6 +564,7 @@ type Configuration struct {
 	EnableOpentelemetry bool `json:"enable-opentelemetry"`
 
 	// OpentelemetryConfig sets the opentelemetry config file
+	// Default: /etc/nginx/opentelemtry.toml
 	OpentelemetryConfig string `json:"opentelemetry-config"`
 
 	// OpentelemetryOperationName specifies a custom name for the server span
@@ -956,6 +957,7 @@ func NewDefault() Configuration {
 		BindAddressIpv6:                        defBindAddress,
 		OpentracingTrustIncomingSpan:           true,
 		OpentelemetryTrustIncomingSpan:         true,
+		OpentelemetryConfig:                    "/etc/nginx/opentelemtry.toml",
 		OtlpCollectorPort:                      "4317",
 		OtelServiceName:                        "nginx",
 		OtelSampler:                            "AlwaysOff",
