@@ -100,6 +100,10 @@ controller:
       hostPath:
         path: /tmp/coredump
 
+  extraModules:
+    - name: opentelemetry
+      image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
+
 rbac:
   create: true
   scope: true
