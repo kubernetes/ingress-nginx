@@ -84,7 +84,7 @@ RUN bash -xeu -c ' \
   # LD_LIBRARY_PATH does not work so below is needed for  opentelemetry/other modules
   # Put libs of newer modules under `/modules_mount/<other>/lib` and add that path below
   # Could get complicated arch specific paths become a need
-  && echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/otel/lib" > /etc/ld-musl-x86_64.path
+  && echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/etc/nginx/modules/otel" > /chroot/etc/ld-musl-x86_64.path
 
 RUN apk add --no-cache libcap \
   && setcap    cap_sys_chroot,cap_net_bind_service=+ep /nginx-ingress-controller \
@@ -112,6 +112,10 @@ RUN  ln -sf /chroot/etc/nginx /etc/nginx \
   && mknod -m 0666 /chroot/dev/ptmx c 5 2 \
   && mknod -m 0666 /chroot/dev/zero c 1 5 \
   && mknod -m 0666 /chroot/dev/tty c 5 0
+
+RUN mkdir -p /chroot/modules_mount \
+  && mkdir -p modules_mount \
+  && ln -s /modules_mount /chroot/modules_mount
 
 USER www-data
 
