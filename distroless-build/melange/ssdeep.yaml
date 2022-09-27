@@ -1,0 +1,57 @@
+package:
+  name: ssdeep
+  version: 2.14.1
+  epoch: 0
+  description: "Fuzzy hashing API and fuzzy hashing tool"
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      license: GPL-2.0 license
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - ssl_client
+      - ca-certificates-bundle
+      - cmake
+      - autoconf
+      - automake
+      - pkgconf
+      - make
+      - automake
+      - libtool
+  accounts:
+    groups:
+      - groupname: www-data
+        gid: 10000
+    users:
+      - username: www-data
+        uid: 10000
+
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://github.com/ssdeep-project/ssdeep/archive/refs/tags/release-2.14.1.tar.gz
+      expected-sha256: d96f667a8427ad96da197884574c7ca8c7518a37d9ac8593b6ea77e7945720a4
+      strip-components: 1
+  - name: 'Configure SSDEEP'
+    with:
+      YAML_CPP_VERSION: {{ .YAML_CPP_VERSION }}
+    runs: |
+      echo "::::::::::::::::::::::::::::::::::::::"
+      echo ":::: ssdeep ::::"
+      echo "::::::::::::::::::::::::::::::::::::::"
+      ./bootstrap
+      ./configure
+  - uses: autoconf/make
+  - uses: autoconf/make-install

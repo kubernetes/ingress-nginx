@@ -1,0 +1,176 @@
+contents:
+  repositories:
+    - https://dl-cdn.alpinelinux.org/alpine/edge/main
+    - '@local /work/packages'
+  packages:
+    - alpine-baselayout-data
+    - geoip-dev
+    - nginx@local
+    - opentracing@local
+    - msgpack-cpp@local
+    - datadog-cpp@local
+    - yaml-cpp@local
+    - zipkin-cpp@local
+    - modsecurity@local
+    - luaresty-balancer@local
+    - luacjson@local
+    - luajit@local
+    - lua-resty-cache@local
+    - lua-resty-cookie@local
+    - lua-resty-dns@local
+    - lua-resty-core@local
+    - lua-resty-global-throttle@local
+    - lua-resty-ipmatcher@local
+    - lua-resty-lock@local
+    - lua-resty-redis@local
+    - lua-resty-string@local
+    - lua-resty-upload@local
+accounts:
+  groups:
+    - groupname: www-data
+      gid: 10000
+  users:
+    - username: www-data
+      uid: 10000
+  run-as: 10000
+
+environments:
+  PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/luajit/bin"
+  LUA_PATH: "/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/lib/lua/?.lua;;"
+  LUA_CPATH: "/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
+  LUA_INCLUDE_DIR: "/usr/local/include/luajit-2.1"
+  LUAJIT_LIB: "/usr/local/lib"
+paths:
+  - path: /usr/local/
+    type: directory
+    permissions: 0o755
+    uid: 10000
+    gid: 10000
+    recursive: true
+  - path: /usr/include/lua5.1
+    type: directory
+    permissions: 0o755
+    uid: 10000
+    gid: 10000
+    recursive: true
+  - path: /usr/local/bin/lua
+    type: hardlink
+    source: /usr/local/bin/luajit
+    permissions: 0o755
+  - path: /sbin/nginx
+    type: hardlink
+    source: /usr/local/nginx/sbin/nginx
+    permissions: 0o755
+  - path: /var/lib/
+    type: directory
+    permissions: 0o755
+    uid: 10000
+    gid: 10000
+    recursive: true
+  - path: /var/log/nginx/
+    type: directory
+    uid: 10000
+    gid: 10000
+    permissions: 0o755
+    recursive: true
+  - path: /var/lib/nginx/
+    type: directory
+    uid: 10000
+    gid: 10000
+    permissions: 0o755
+    recursive: true
+  - path: /var/lib/nginx/body
+    type: directory
+    uid: 10000
+    gid: 10000
+    permissions: 0o755
+    recursive: true
+  - path: /usr/local/nginx
+    type: directory
+    uid: 10000
+    gid: 10000
+    permissions: 0o755
+    recursive: true
+  - path: /run/nginx
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /run/nginx.pid
+    uid: 10000
+    gid: 10000
+    type: empty-file
+    permissions: 0o755
+    recursive: true
+  - path: /etc/nginx/modules
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /etc/nginx
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /usr/local/nginx
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /opt/modsecurity/var/log
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /opt/modsecurity/var/upload
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /opt/modsecurity/var/audit
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /var/log
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /etc/ingress-controller
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /tmp/nginx
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /var/log/nginx/
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+  - path: /var/log/audit
+    uid: 10000
+    gid: 10000
+    type: directory
+    permissions: 0o755
+    recursive: true
+
+archs:
+  - amd64
+  - aarch64
+  - armv7

@@ -1,0 +1,62 @@
+package:
+  name: datadog-cpp
+  version: {{ .DATADOG_CPP_VERSION }}
+  epoch: 0
+  description: "Datadog OpenTracing C++ Client"
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      license: Apache-2.0 license
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+      - '@local /work/packages'
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - ssl_client
+      - ca-certificates-bundle
+      - cmake
+      - curl
+      - curl-dev
+      - opentracing@local
+      - msgpack-cpp@local
+
+  accounts:
+    groups:
+      - groupname: www-data
+        gid: 10000
+    users:
+      - username: www-data
+        uid: 10000
+
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://github.com/DataDog/dd-opentracing-cpp/archive/v{{ .DATADOG_CPP_VERSION }}.tar.gz
+      expected-sha256: {{ .DATADOG_CPP_VERSION_SHA }}
+      strip-components: 1
+  - name: 'Configure DATADOG_CPP'
+    with:
+      DATADOG_CPP_VERSION: {{ .DATADOG_CPP_VERSION }}
+    runs: |
+      
+      # build datadog lib
+      echo "::::::::::::::::::::::::::::::::::::::"
+      echo ":::: dd-opentracing-cpp-{{ .DATADOG_CPP_VERSION }} ::::"
+      echo "::::::::::::::::::::::::::::::::::::::"
+      
+      cmake -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_TESTING=OFF \
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true .
+
+  - uses: autoconf/make
+  - uses: autoconf/make-install

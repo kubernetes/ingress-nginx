@@ -1,0 +1,41 @@
+package:
+  name: lua-resty-global-throttle
+  version: {{ .LUA_RESTY_GLOBAL_THROTTLE_VERSION }}
+  epoch: 0
+  description: "lua-resty-dns - Lua DNS resolver for the ngx_lua based on the cosocket API"
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      license: BSD license
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - ssl_client
+      - ca-certificates-bundle
+
+  accounts:
+    groups:
+      - groupname: www-data
+        gid: 10000
+    users:
+      - username: www-data
+        uid: 10000
+
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://github.com/ElvinEfendi/lua-resty-global-throttle/archive/v{{ .LUA_RESTY_GLOBAL_THROTTLE_VERSION }}.tar.gz
+      expected-sha256: {{ .LUA_RESTY_GLOBAL_THROTTLE_VERSION_SHA }}
+      strip-components: 1
+  - uses: autoconf/make-install

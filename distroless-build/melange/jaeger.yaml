@@ -1,0 +1,94 @@
+package:
+  name: jaeger-cpp
+  version: {{ .JAEGER_VERSION }}
+  epoch: 0
+  description: "Jaeger SDK with OpenTracing API for C++ binding."
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      license: MIT license
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+      - '@local /work/packages'
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - ssl_client
+      - ca-certificates-bundle
+      - cmake
+      - yaml-cpp@local
+
+  accounts:
+    groups:
+      - groupname: www-data
+        gid: 10000
+    users:
+      - username: www-data
+        uid: 10000
+
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://github.com/jaegertracing/jaeger-client-cpp/archive/v{{ .JAEGER_VERSION }}.tar.gz
+      expected-sha256: {{ .JAEGER_VERSION_SHA }}
+      strip-components: 1
+  - name: 'Configure '
+    with:
+      JAEGER_VERSION: {{ .JAEGER_VERSION }}
+    runs: |
+      
+      set -o errexit
+      set -o nounset
+      set -o pipefail
+      
+      echo "Arch: $(uname -m)"
+      
+      
+      ARCH=$(uname -m)
+      CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
+      
+      mkdir -p ${{targets.destdir}}/etc/nginx
+      echo "::::::::::::::::::::::::::::::::::::::"
+      echo ":::: jaeger-client-cpp-{{ .JAEGER_VERSION }} ::::"
+      echo "::::::::::::::::::::::::::::::::::::::"
+      
+      # build jaeger lib
+      sed -i 's/-Werror/-Wno-psabi/' CMakeLists.txt
+      # use the above built yaml-cpp instead until a new version of jaeger-client-cpp fixes the yaml-cpp issue
+      # tl;dr new hunter is needed for new yaml-cpp, but new hunter has a conflict with old Thrift and new Boost
+      sed -i 's/hunter_add_package(yaml-cpp)/#hunter_add_package(yaml-cpp)/' CMakeLists.txt
+      sed -i 's/yaml-cpp::yaml-cpp/yaml-cpp/' CMakeLists.txt
+      
+      cat <<EOF > export.map
+      {
+        global:
+          OpenTracingMakeTracerFactory;
+          local: *;
+      };
+      EOF
+      
+      cmake -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=${{targets.destdir}} \
+      -DBUILD_TESTING=OFF \
+      -DJAEGERTRACING_BUILD_EXAMPLES=OFF \
+      -DJAEGERTRACING_BUILD_CROSSDOCK=OFF \
+      -DJAEGERTRACING_COVERAGE=OFF \
+      -DJAEGERTRACING_PLUGIN=ON \
+      -DHUNTER_CONFIGURATION_TYPES=Release \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DJAEGERTRACING_WITH_YAML_CPP=ON \
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true .
+
+  - uses: autoconf/make
+  - uses: autoconf/make-install
+  - run: |
+      mv libjaegertracing_plugin.so ${{targets.destdir}}/usr/local/lib/libjaegertracing_plugin.so

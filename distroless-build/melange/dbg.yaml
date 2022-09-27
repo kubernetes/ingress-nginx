@@ -1,0 +1,58 @@
+package:
+  name: dbg
+  version: {{ .INGRESS_NGINX_VERSION }}
+  epoch: 0
+  description: "dbg is a tool for quickly inspecting the state of the nginx instance"
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      attestation: TODO
+      license: Apache-2.0
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+    packages:
+      - alpine-baselayout-data
+      - ca-certificates-bundle
+      - tree
+      - go
+      - bash
+      - curl
+      - ca-certificates-bundle
+      - git
+      - openssh-client
+      - make
+      - gcc
+      - busybox
+      - build-base
+pipeline:
+  - uses: git-checkout
+    with:
+      repository: https://github.com/kubernetes/ingress-nginx
+      tag: ${{package.version}}
+  - name: Build ingress-nginx controller from source
+    with:
+      PKG: {{ .PKG }}
+      TAG: {{ .TAG }}
+      COMMIT_SHA: {{ .COMMIT_SHA }}
+      REPO_INFO: {{ .REPO_INFO }}
+    runs: |
+      set -o errexit
+      set -o nounset
+      set -o pipefail
+      
+      mkdir -p ${{targets.destdir}}
+
+      go build -v \
+      -trimpath -ldflags="-buildid= -w -s \
+        -X {{ .PKG }}/version.RELEASE={{ .TAG }} \
+        -X {{ .PKG }}/version.COMMIT={{ .COMMIT_SHA }} \
+        -X {{ .PKG }}/version.REPO={{ .REPO_INFO }}" \
+      -o "${{targets.destdir}}/dbg" {{ .PKG }}/cmd/dbg

@@ -1,0 +1,56 @@
+package:
+  name: lua-resty-core
+  version: {{ .LUA_RESTY_CORE }}
+  epoch: 0
+  description: "lua-resty-core - New FFI-based Lua API for ngx_http_lua_module and/or ngx_stream_lua_module"
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      license: BSD license
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+      - '@local /work/packages'
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - ssl_client
+      - ca-certificates-bundle
+      - luajit@local
+
+  accounts:
+    groups:
+      - groupname: www-data
+        gid: 10000
+    users:
+      - username: www-data
+        uid: 10000
+
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://github.com/openresty/lua-resty-core/archive/v{{ .LUA_RESTY_CORE }}.tar.gz
+      expected-sha256: {{ .LUA_RESTY_CORE_SHA }}
+      strip-components: 1
+  - name: "Configure"
+    runs: |
+      export LUAJIT_LIB=/usr/local/lib
+      export LUA_LIB_DIR="$LUAJIT_LIB/lua"
+      export LUAJIT_INC=/usr/local/include/luajit-2.1
+      
+      ln -s /usr/local/bin/luajit /usr/local/bin/lua
+      ln -s "$LUAJIT_INC" /usr/local/include/lua
+      
+      export LUA_INCLUDE_DIR=/usr/local/include/luajit-2.1
+      ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
+      ls -lah /usr/local/lib
+      make
+      make DESTDIR="${{targets.destdir}}" install

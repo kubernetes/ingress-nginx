@@ -1,0 +1,57 @@
+package:
+  name: yaml-cpp
+  version: {{ .YAML_CPP_VERSION }}
+  epoch: 0
+  description: "yaml-cpp is a YAML parser and emitter in C++ matching the YAML 1.2 spec."
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      license: MIT
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+      -
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - ssl_client
+      - ca-certificates-bundle
+      - cmake
+
+  accounts:
+    groups:
+      - groupname: www-data
+        gid: 10000
+    users:
+      - username: www-data
+        uid: 10000
+
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://github.com/jbeder/yaml-cpp/archive/{{ .YAML_CPP_VERSION }}.tar.gz
+      expected-sha256: {{ .YAML_CPP_VERSION_SHA }}
+      strip-components: 1
+  - name: 'Configure YAML_CPP'
+    with:
+      YAML_CPP_VERSION: {{ .YAML_CPP_VERSION }}
+    runs: |
+      echo "::::::::::::::::::::::::::::::::::::::"
+      echo ":::: yaml-cpp-{{ .YAML_CPP_VERSION }} ::::"
+      echo "::::::::::::::::::::::::::::::::::::::"
+      
+      cmake -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
+      -DYAML_BUILD_SHARED_LIBS=ON \
+      -DYAML_CPP_BUILD_TESTS=OFF \
+      -DYAML_CPP_BUILD_TOOLS=OFF .
+  - uses: autoconf/make
+  - uses: autoconf/make-install

@@ -1,0 +1,43 @@
+package:
+  name: lua-resty-cookie
+  version: {{ .LUA_RESTY_COOKIE_VERSION }}
+  epoch: 0
+  description: "lua-resty-lrucache - Lua-land LRU cache based on the LuaJIT FFI."
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      license: BSD license
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+      - '@local /work/packages'
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - ssl_client
+      - ca-certificates-bundle
+
+  accounts:
+    groups:
+      - groupname: www-data
+        gid: 10000
+    users:
+      - username: www-data
+        uid: 10000
+
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://github.com/cloudflare/lua-resty-cookie/archive/{{ .LUA_RESTY_COOKIE_VERSION }}.tar.gz
+      expected-sha256: {{ .LUA_RESTY_COOKIE_VERSION_SHA }}
+      strip-components: 1
+  - uses: autoconf/make
+  - uses: autoconf/make-install
