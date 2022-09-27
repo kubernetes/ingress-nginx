@@ -60,10 +60,10 @@ export DATADOG_CPP_VERSION=1.3.2
 export MODSECURITY_VERSION=1.0.2
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.5...v3/master
-export MODSECURITY_LIB_VERSION=v3.0.5
+export MODSECURITY_LIB_VERSION=v3.0.8
 
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
-export OWASP_MODSECURITY_CRS_VERSION=v3.3.2
+export OWASP_MODSECURITY_CRS_VERSION=v3.3.4
 
 # Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.20...master
 export LUA_NGX_VERSION=b721656a9127255003b696b42ccc871c7ec18d59
@@ -548,6 +548,7 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-912-DOS-PROTECTION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-913-SCANNER-DETECTION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-921-PROTOCOL-ATTACK.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-922-MULTIPART-ATTACK.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-930-APPLICATION-ATTACK-LFI.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
