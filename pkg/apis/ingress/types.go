@@ -160,6 +160,7 @@ type CookieSessionAffinity struct {
 	Locations               map[string][]string `json:"locations,omitempty"`
 	Secure                  bool                `json:"secure,omitempty"`
 	Path                    string              `json:"path,omitempty"`
+	Domain                  string              `json:"domain,omitempty"`
 	SameSite                string              `json:"samesite,omitempty"`
 	ConditionalSameSiteNone bool                `json:"conditional_samesite_none,omitempty"`
 	ChangeOnFailure         bool                `json:"change_on_failure,omitempty"`
