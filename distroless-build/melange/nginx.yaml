@@ -81,6 +81,7 @@ environment:
       - libmaxminddb-dev
       - bc
       - unzip
+      - tree
       - dos2unix
       - libcrypto1.1
       - libcrypto3
@@ -96,10 +97,10 @@ environment:
   accounts:
     groups:
       - groupname: www-data
-        gid: 10000
+        gid: 101
     users:
       - username: www-data
-        uid: 10000
+        uid: 101
 
 pipeline:
   - uses: fetch
@@ -212,6 +213,7 @@ pipeline:
       set -o nounset
       set -o pipefail
       
+      ls -lah 
       export BUILD_PATH="${PWD}"
       echo "BUILD_PATH $BUILD_PATH"
       echo "Arch: $(uname -m)"
@@ -227,7 +229,11 @@ pipeline:
       ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
 
       ARCH=$(uname -m)
-
+      tree etc/nginx/
+      mkdir -p ${{targets.destdir}}/etc/nginx/
+      cp -R etc/nginx/ ${{targets.destdir}}/etc/nginx/
+      tree ${{targets.destdir}}/etc/nginx/
+      
       # Get Brotli source and deps
       echo "::::::::::::::::::::::::::::::::::::::"
       echo ":::: ngx_brotl ::::"
@@ -300,7 +306,17 @@ pipeline:
       echo "::::::::::::::::::::::::::::::::::::::"
       echo ":::: nginx-{{ .NGINX_VERSION }} ::::"
       echo "::::::::::::::::::::::::::::::::::::::"
+      
       cd "$BUILD_PATH/nginx-{{ .NGINX_VERSION }}"
+      # apply nginx patches
+      for PATCH in `ls patches`;do
+        echo "Patch: $PATCH"
+        if [[ "$PATCH" == *.txt ]]; then
+          patch -p0 < patches/$PATCH
+        else
+          patch -p1 < patches/$PATCH
+        fi
+      done
       
       WITH_FLAGS="--with-debug \
       --with-compat \

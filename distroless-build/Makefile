@@ -29,12 +29,12 @@ ARCH := $(shell uname -m)
 MELANGE_DIR ?= melange
 APKO_DIR ?= apko
 MELANGE ?= docker run --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
-MELANGE ?= docker run -d --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
+MELANGE_DETACHED ?= docker run -d --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
 APKO ?= docker run --rm -v "${PWD}":/work distroless.dev/apko:latest
 KEY ?= melange.rsa
 REPO ?= packages
 TEMPLATE ?= melange/nginx-templates.json
-MELANGE_OPTS ?= --empty-workspace -k ${KEY}.pub --signing-key ${KEY} --arch ${ARCHS}
+MELANGE_OPTS ?= -k ${KEY}.pub --signing-key ${KEY} --arch ${ARCHS}
 KEY ?= melange.rsa
 REPO ?= $(shell pwd)/packages
 ARCHS?="amd64,arm64,arm/v6,arm/v7,s390x"
@@ -46,19 +46,24 @@ endef
 keygen: ## Generate Key pair for use with signing apks
 	docker run --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest keygen
 
+.PHONY:	melange
 melange: ## Build melange $FILE
 	${MELANGE} build ${MELANGE_DIR}/${FILE}.yaml ${MELANGE_OPTS} --template '$(shell cat ${TEMPLATE})'
+
+nginx-melange:
+	${MELANGE} build ${MELANGE_DIR}/${FILE}.yaml --source-dir ${MELANGE_DIR}/${FILE}  ${MELANGE_OPTS} --template '$(shell cat ${TEMPLATE})'
 
 apko-build: ## Build an apko pipeline with $KEY and $FILE
 	${APKO} build -k ${KEY}.pub --debug ${APKO_DIR}/${FILE}.yaml $(IMAGE):$(TAG) $(IMAGE)-$(TAG).tar
 
-apko-push: ## Push apko built conatiner $IMAGE:$TAG to $REGISTRY
+apko-push: ## Push apko built container $IMAGE:$TAG to $REGISTRY
 	${APKO} publish -k ${KEY}.pub --debug  ${APKO_DIR}/${FILE}.yaml $(IMAGE):$(TAG)
 
 load: ## Load apko built image into docker
 	docker load < $(IMAGE)-$(TAG).tar
 	docker tag $(IMAGE):$(TAG) $(REGISTRY)/$(IMAGE):$(TAG)
 	docker push $(REGISTRY)/$(IMAGE):$(TAG)
+	rm $(IMAGE)-$(TAG).tar
 
 build-all: clean-packages all-packages nginx-package ingress-packages ## Fresh build of all melange pipelines and apko files, default is all $ARCHS
 

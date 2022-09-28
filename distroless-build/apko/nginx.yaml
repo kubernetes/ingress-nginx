@@ -28,11 +28,11 @@ contents:
 accounts:
   groups:
     - groupname: www-data
-      gid: 10000
+      gid: 101
   users:
     - username: www-data
-      uid: 10000
-  run-as: 10000
+      uid: 101
+  run-as: 101
 
 environments:
   PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/luajit/bin"
@@ -44,14 +44,14 @@ paths:
   - path: /usr/local/
     type: directory
     permissions: 0o755
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     recursive: true
   - path: /usr/include/lua5.1
     type: directory
     permissions: 0o755
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     recursive: true
   - path: /usr/local/bin/lua
     type: hardlink
@@ -64,108 +64,108 @@ paths:
   - path: /var/lib/
     type: directory
     permissions: 0o755
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     recursive: true
   - path: /var/log/nginx/
     type: directory
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     permissions: 0o755
     recursive: true
   - path: /var/lib/nginx/
     type: directory
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     permissions: 0o755
     recursive: true
   - path: /var/lib/nginx/body
     type: directory
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     permissions: 0o755
     recursive: true
   - path: /usr/local/nginx
     type: directory
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     permissions: 0o755
     recursive: true
   - path: /run/nginx
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /run/nginx.pid
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: empty-file
     permissions: 0o755
     recursive: true
   - path: /etc/nginx/modules
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /etc/nginx
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /usr/local/nginx
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /opt/modsecurity/var/log
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /opt/modsecurity/var/upload
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /opt/modsecurity/var/audit
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /var/log
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /etc/ingress-controller
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /tmp/nginx
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /var/log/nginx/
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true
   - path: /var/log/audit
-    uid: 10000
-    gid: 10000
+    uid: 101
+    gid: 101
     type: directory
     permissions: 0o755
     recursive: true

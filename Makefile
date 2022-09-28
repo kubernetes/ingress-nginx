@@ -190,6 +190,10 @@ check_dead_links: ## Check if the documentation contains dead links.
 dev-env:  ## Starts a local Kubernetes cluster using kind, building and deploying the ingress controller.
 	@build/dev-env.sh
 
+.PHONY: dev-apko
+dev-apko:  ## Starts a local Kubernetes cluster using kind, building and deploying the ingress controller.
+	@build/dev-apko.sh
+
 .PHONY: dev-env-stop
 dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 	@kind delete cluster --name ingress-nginx-dev
