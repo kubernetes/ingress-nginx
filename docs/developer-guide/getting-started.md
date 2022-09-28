@@ -88,3 +88,6 @@ and then publish such version with
 ```console
 docker push $REGISTRY/controller:$TAG
 ```
+
+### New Contributor Tips
+New contributors can refer to the [new contributor tips](https://github.com/kubernetes/ingress-nginx/blob/main/NEW_CONTRIBUTOR.md) which will be updated with examples and tips.
