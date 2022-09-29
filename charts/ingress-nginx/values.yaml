@@ -13,6 +13,8 @@ commonLabels: {}
 # scmhash: abc123
 # myLabel: aakkmd
 
+useDataplaneMode: false
+
 controller:
     name: controller
     # -- Enables grpc-port and alpha feature "controlplane" if greater than 0

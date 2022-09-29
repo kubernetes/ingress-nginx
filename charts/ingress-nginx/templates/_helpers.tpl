@@ -52,6 +52,26 @@ allowPrivilegeEscalation: {{ .Values.controller.image.allowPrivilegeEscalation }
 {{- end -}}
 
 {{/*
+Container SecurityContext.
+*/}}
+{{- define "dataplane.containerSecurityContext" -}}
+{{- if .Values.dataplane.containerSecurityContext -}}
+{{- toYaml .Values.dataplane.containerSecurityContext -}}
+{{- else -}}
+capabilities:
+  drop:
+  - ALL
+  add:
+  - NET_BIND_SERVICE
+  {{- if .Values.dataplane.image.chroot }}
+  - SYS_CHROOT
+  {{- end }}
+runAsUser: {{ .Values.dataplane.image.runAsUser }}
+allowPrivilegeEscalation: {{ .Values.dataplane.image.allowPrivilegeEscalation }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Get specific image
 */}}
 {{- define "ingress-nginx.image" -}}
@@ -94,6 +114,7 @@ Users can provide an override for an explicit electionID if they want via `.Valu
 {{- $electionID := default $defElectionID .Values.controller.electionID -}}
 {{- print $electionID -}}
 {{- end -}}
+
 
 {{/*
 Construct the path for the publish-service.
@@ -181,6 +202,15 @@ Check the ingress controller version tag is at most three versions behind the la
 {{- define "isControllerTagValid" -}}
 {{- if not (semverCompare ">=0.27.0-0" .Values.controller.image.tag) -}}
 {{- fail "Controller container image tag should be 0.27.0 or higher" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Check the ingress controller version tag is at most three versions behind the last release
+*/}}
+{{- define "isdataplaneTagValid" -}}
+{{- if not (semverCompare ">=0.27.0-0" .Values.dataplane.image.tag) -}}
+{{- fail "Dataplane container image tag should be 0.27.0 or higher" -}}
 {{- end -}}
 {{- end -}}
 

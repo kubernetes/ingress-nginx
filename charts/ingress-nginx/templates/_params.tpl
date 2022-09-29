@@ -3,7 +3,7 @@
 {{- if .Values.defaultBackend.enabled }}
 - --default-backend-service=$(POD_NAMESPACE)/{{ include "ingress-nginx.defaultBackend.fullname" . }}
 {{- end }}
-{{ if .Values.controller.grpcPort }}
+{{ if .Values.useDataplaneMode }}
 - --grpc-port={{.Values.controller.grpcPort}}
 {{- end }}
 {{- if and .Values.controller.publishService.enabled .Values.controller.service.enabled }}
@@ -62,4 +62,10 @@
 - --{{ $key }}={{ $value }}
 {{- end }}
 {{- end }}
+{{- end -}}
+
+
+{{- define "ingress-nginx-dataplane.params" -}}
+- /nginx-ingress-dataplane
+- --grpc-host={{ include "ingress-nginx.controller.fullname" . }}-controlplane:{{ .Values.controller.grpcPort}}
 {{- end -}}

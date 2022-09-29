@@ -1,0 +1,215 @@
+{{- if .Values.useDataplaneMode -}}
+{{- if or (eq .Values.dataplane.kind "Deployment") (eq .Values.dataplane.kind "Both") -}}
+{{- include  "isdataplaneTagValid" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dataplane
+    {{- with .Values.dataplane.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "ingress-nginx.dataplane.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  {{- if .Values.dataplane.annotations }}
+  annotations: {{ toYaml .Values.dataplane.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: dataplane
+  {{- if not .Values.dataplane.autoscaling.enabled }}
+  replicas: {{ .Values.dataplane.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- if .Values.dataplane.updateStrategy }}
+  strategy:
+    {{ toYaml .Values.dataplane.updateStrategy | nindent 4 }}
+  {{- end }}
+  minReadySeconds: {{ .Values.dataplane.minReadySeconds }}
+  template:
+    metadata:
+    {{- if .Values.dataplane.podAnnotations }}
+      annotations:
+      {{- range $key, $value := .Values.dataplane.podAnnotations }}
+        {{ $key }}: {{ $value | quote }}
+      {{- end }}
+    {{- end }}
+      labels:
+        {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: dataplane
+        {{- with .Values.dataplane.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- if .Values.dataplane.podLabels }}
+        {{- toYaml .Values.dataplane.podLabels | nindent 8 }}
+      {{- end }}
+    spec:
+    {{- if .Values.dataplane.dnsConfig }}
+      dnsConfig: {{ toYaml .Values.dataplane.dnsConfig | nindent 8 }}
+    {{- end }}
+    {{- if .Values.dataplane.hostname }}
+      hostname: {{ toYaml .Values.dataplane.hostname | nindent 8 }}
+    {{- end }}
+      dnsPolicy: {{ .Values.dataplane.dnsPolicy }}
+    {{- if .Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
+    {{- end }}
+    {{- if .Values.dataplane.priorityClassName }}
+      priorityClassName: {{ .Values.dataplane.priorityClassName | quote }}
+    {{- end }}
+    {{- if or .Values.dataplane.podSecurityContext .Values.dataplane.sysctls }}
+      securityContext:
+    {{- end }}
+    {{- if .Values.dataplane.podSecurityContext }}
+        {{- toYaml .Values.dataplane.podSecurityContext | nindent 8 }}
+    {{- end }}
+    {{- if .Values.dataplane.sysctls }}
+        sysctls:
+    {{- range $sysctl, $value := .Values.dataplane.sysctls }}
+        - name: {{ $sysctl | quote }}
+          value: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.dataplane.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.dataplane.shareProcessNamespace }}
+    {{- end }}
+      containers:
+        - name: {{ .Values.dataplane.containerName }}
+          {{- with .Values.dataplane.image }}
+          image: "{{- if .repository -}}{{ .repository }}{{ else }}{{ .registry }}/{{ include "ingress-nginx.image" . }}{{- end -}}:{{ .tag }}{{ include "ingress-nginx.imageDigest" . }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.dataplane.image.pullPolicy }}
+        {{- if .Values.dataplane.lifecycle }}
+          lifecycle: {{ toYaml .Values.dataplane.lifecycle | nindent 12 }}
+        {{- end }}
+          args:
+            {{- include "ingress-nginx-dataplane.params" . | nindent 12 }}
+          securityContext: {{ include "dataplane.containerSecurityContext" . | nindent 12 }}
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          {{- if .Values.dataplane.enableMimalloc }}
+            - name: LD_PRELOAD
+              value: /usr/local/lib/libmimalloc.so
+          {{- end }}
+          {{- if .Values.dataplane.extraEnvs }}
+            {{- toYaml .Values.dataplane.extraEnvs | nindent 12 }}
+          {{- end }}
+          {{- if .Values.dataplane.startupProbe }}
+          startupProbe: {{ toYaml .Values.dataplane.startupProbe | nindent 12 }}
+          {{- end }}
+          livenessProbe: {{ toYaml .Values.dataplane.livenessProbe | nindent 12 }}
+          readinessProbe: {{ toYaml .Values.dataplane.readinessProbe | nindent 12 }}
+          ports:
+          {{- range $key, $value := .Values.dataplane.containerPort }}
+            - name: {{ $key }}
+              containerPort: {{ $value }}
+              protocol: TCP
+              {{- if $.Values.dataplane.hostPort.enabled }}
+              hostPort: {{ index $.Values.dataplane.hostPort.ports $key | default $value }}
+              {{- end }}
+          {{- end }}
+          {{- range $key, $value := .Values.tcp }}
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-tcp
+              containerPort: {{ $key }}
+              protocol: TCP
+              {{- if $.Values.dataplane.hostPort.enabled }}
+              hostPort: {{ $key }}
+              {{- end }}
+          {{- end }}
+          {{- range $key, $value := .Values.udp }}
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-udp
+              containerPort: {{ $key }}
+              protocol: UDP
+              {{- if $.Values.dataplane.hostPort.enabled }}
+              hostPort: {{ $key }}
+              {{- end }}
+          {{- end }}
+        {{- if (or .Values.dataplane.customTemplate.configMapName .Values.dataplane.extraVolumeMounts .Values.dataplane.admissionWebhooks.enabled .Values.dataplane.extraModules) }}
+          volumeMounts:
+          {{- if .Values.dataplane.extraModules }}
+            - name: modules
+              mountPath: /modules_mount
+          {{- end }}
+          {{- if .Values.dataplane.customTemplate.configMapName }}
+            - mountPath: /etc/nginx/template
+              name: nginx-template-volume
+              readOnly: true
+          {{- end }}
+          {{- if .Values.dataplane.extraVolumeMounts }}
+            {{- toYaml .Values.dataplane.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.dataplane.resources }}
+          resources: {{ toYaml .Values.dataplane.resources | nindent 12 }}
+        {{- end }}
+      {{- if .Values.dataplane.extraContainers }}
+        {{ toYaml .Values.dataplane.extraContainers | nindent 8 }}
+      {{- end }}
+    {{- if (or .Values.dataplane.extraInitContainers .Values.dataplane.extraModules) }}
+      initContainers:
+      {{- if .Values.dataplane.extraInitContainers }}
+        {{ toYaml .Values.dataplane.extraInitContainers | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dataplane.extraModules }}
+        {{- range .Values.dataplane.extraModules }}
+          - name: {{ .name }}
+            image: {{ .image }}
+            command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+            volumeMounts:
+              - name: modules
+                mountPath: /modules_mount
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.dataplane.hostNetwork }}
+      hostNetwork: {{ .Values.dataplane.hostNetwork }}
+    {{- end }}
+    {{- if .Values.dataplane.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.dataplane.nodeSelector | nindent 8 }}
+    {{- end }}
+    {{- if .Values.dataplane.tolerations }}
+      tolerations: {{ toYaml .Values.dataplane.tolerations | nindent 8 }}
+    {{- end }}
+    {{- if .Values.dataplane.affinity }}
+      affinity: {{ toYaml .Values.dataplane.affinity | nindent 8 }}
+    {{- end }}
+    {{- if .Values.dataplane.topologySpreadConstraints }}
+      topologySpreadConstraints: {{ toYaml .Values.dataplane.topologySpreadConstraints | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
+      terminationGracePeriodSeconds: {{ .Values.dataplane.terminationGracePeriodSeconds }}
+    {{- if (or .Values.dataplane.customTemplate.configMapName .Values.dataplane.extraVolumeMounts .Values.dataplane.admissionWebhooks.enabled .Values.dataplane.extraVolumes .Values.dataplane.extraModules) }}
+      volumes:
+      {{- if .Values.dataplane.extraModules }}
+        - name: modules
+          emptyDir: {}
+      {{- end }}
+      {{- if .Values.dataplane.customTemplate.configMapName }}
+        - name: nginx-template-volume
+          configMap:
+            name: {{ .Values.dataplane.customTemplate.configMapName }}
+            items:
+            - key: {{ .Values.dataplane.customTemplate.configMapKey }}
+              path: nginx.tmpl
+      {{- end }}
+      {{- if .Values.dataplane.admissionWebhooks.enabled }}
+        - name: webhook-cert
+          secret:
+            secretName: {{ include "ingress-nginx.fullname" . }}-admission
+      {{- end }}
+      {{- if .Values.dataplane.extraVolumes }}
+        {{ toYaml .Values.dataplane.extraVolumes | nindent 8 }}
+      {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}

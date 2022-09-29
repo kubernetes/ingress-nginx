@@ -1,0 +1,28 @@
+{{- if and .Values.controller.service.enabled .Values.useDataplaneMode}}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  {{- range $key, $value := .Values.controller.service.internal.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  {{- if .Values.controller.service.labels }}
+    {{- toYaml .Values.controller.service.labels | nindent 4 }}
+  {{- end }}
+  name: {{ include "ingress-nginx.controller.fullname" . }}-controlplane
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: "ClusterIP"
+  clusterIP: None
+  ports:
+    - name: http
+      port: {{ .Values.controller.grpcPort }}
+      protocol: TCP
+      targetPort: {{ .Values.controller.grpcPort }}
+  selector:
+    {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+{{- end }}

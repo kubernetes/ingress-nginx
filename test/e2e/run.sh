@@ -25,14 +25,18 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+export SKIP_CLUSTER_DELETION=${SKIP_CLUSTER_DELETION:-false}
+
 cleanup() {
   if [[ "${KUBETEST_IN_DOCKER:-}" == "true" ]]; then
     kind "export" logs --name ${KIND_CLUSTER_NAME} "${ARTIFACTS}/logs" || true
   fi
-
-  kind delete cluster \
-    --verbosity=${KIND_LOG_LEVEL} \
-    --name ${KIND_CLUSTER_NAME}
+  
+  if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
+    kind delete cluster \
+      --verbosity=${KIND_LOG_LEVEL} \
+      --name ${KIND_CLUSTER_NAME}
+  fi
 }
 
 trap cleanup EXIT

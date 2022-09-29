@@ -22,9 +22,16 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export NAMESPACE=$1
-export NAMESPACE_OVERLAY=$2
+export IS_DATAPLANE=$2
+export NAMESPACE_OVERLAY=$3
 
 echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
+
+EXTRA_DATAPLANE_ARG=""
+
+if [ "${IS_DATAPLANE:-false}" = "true" ]; then
+   EXTRA_DATAPLANE_ARG=" --set useDataplaneMode=true --set controller.livenessProbe=null --set controller.readinessProbe=null "
+fi 
 
 function on_exit {
     local error_code="$?"
@@ -50,60 +57,10 @@ EOF
 if [[ ! -z "$NAMESPACE_OVERLAY" && -d "$DIR/namespace-overlays/$NAMESPACE_OVERLAY" ]]; then
     echo "Namespace overlay $NAMESPACE_OVERLAY is being used for namespace $NAMESPACE"
     helm install nginx-ingress ${DIR}/charts/ingress-nginx \
-        --namespace=$NAMESPACE \
+        --namespace=$NAMESPACE ${EXTRA_DATAPLANE_ARG} \
         --values "$DIR/namespace-overlays/$NAMESPACE_OVERLAY/values.yaml"
 else
-    cat << EOF | helm install nginx-ingress ${DIR}/charts/ingress-nginx --namespace=$NAMESPACE --values -
-# TODO: remove the need to use fullnameOverride
-fullnameOverride: nginx-ingress
-controller:
-  image:
-    repository: ingress-controller/controller
-    chroot: true
-    tag: 1.0.0-dev
-    digest:
-    digestChroot:
-  scope:
-    enabled: true
-  config:
-    worker-processes: "1"
-  readinessProbe:
-    initialDelaySeconds: 3
-    periodSeconds: 1
-  livenessProbe:
-    initialDelaySeconds: 3
-    periodSeconds: 1
-  service:
-    type: NodePort
-  electionID: ingress-controller-leader
-  ingressClassResource:
-    # We will create and remove each IC/ClusterRole/ClusterRoleBinding per test so there's no conflict
-    enabled: false
-  extraArgs:
-    tcp-services-configmap: $NAMESPACE/tcp-services
-    # e2e tests do not require information about ingress status
-    update-status: "false"
-  terminationGracePeriodSeconds: 1
-  admissionWebhooks:
-    enabled: false
-
-  # ulimit -c unlimited
-  # mkdir -p /tmp/coredump
-  # chmod a+rwx /tmp/coredump
-  # echo "/tmp/coredump/core.%e.%p.%h.%t" > /proc/sys/kernel/core_pattern
-  extraVolumeMounts:
-    - name: coredump
-      mountPath: /tmp/coredump
-
-  extraVolumes:
-    - name: coredump
-      hostPath:
-        path: /tmp/coredump
-
-rbac:
-  create: true
-  scope: true
-
-EOF
-
+    helm install nginx-ingress ${DIR}/charts/ingress-nginx \
+       --namespace=$NAMESPACE -f ${DIR}/ci-values.yaml ${EXTRA_DATAPLANE_ARG} \
+       --set controller.extraArgs.tcp-services-configmap=$NAMESPACE/tcp-services
 fi
