@@ -50,6 +50,7 @@ environment:
       - libxslt-dev
       - gd-dev
       - geoip-dev
+      - libcap
       - perl-dev
       - libedit-dev
       - mercurial
@@ -466,7 +467,9 @@ pipeline:
       echo "Clean up owasp-modsecurity-crs" 
       rm -rf ${{targets.destdir}}/etc/nginx/owasp-modsecurity-crs/.git
       rm -rf ${{targets.destdir}}/etc/nginx/owasp-modsecurity-crs/util/regression-tests
-  
+      
+      setcap    cap_net_bind_service=+ep ${{targets.destdir}}/usr/local/nginx/sbin/nginx \
+      && setcap -v cap_net_bind_service=+ep ${{targets.destdir}}/usr/local/nginx/sbin/nginx \
       echo "Clean up everything else"
       cd ${BUILD_PATH}
       rm -rf *.tar.gz ${BUILD_PATH}/ngx_devel_kit-{{ .NDK_VERSION }} \

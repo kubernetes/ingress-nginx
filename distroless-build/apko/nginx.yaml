@@ -5,6 +5,7 @@ contents:
   packages:
     - alpine-baselayout-data
     - geoip-dev
+    - bash
     - nginx@local
     - opentracing@local
     - msgpack-cpp@local
@@ -54,12 +55,14 @@ paths:
     gid: 101
     recursive: true
   - path: /usr/local/bin/lua
-    type: hardlink
+    type: symlink
     source: /usr/local/bin/luajit
     permissions: 0o755
-  - path: /sbin/nginx
-    type: hardlink
-    source: /usr/local/nginx/sbin/nginx
+  - path: /usr/local/nginx/sbin/nginx
+    type: symlink
+    source: /sbin/nginx
+    uid: 101
+    gid: 101
     permissions: 0o755
   - path: /var/lib/
     type: directory

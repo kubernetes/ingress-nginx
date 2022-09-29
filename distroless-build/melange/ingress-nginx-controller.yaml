@@ -30,6 +30,7 @@ environment:
       - git
       - openssh-client
       - make
+      - libcap
 pipeline:
   - uses: git-checkout
     with:
@@ -56,3 +57,9 @@ pipeline:
       -X {{ .PKG }}/version.COMMIT={{ .COMMIT_SHA }} \
       -X {{ .PKG }}/version.REPO={{ .REPO_INFO }}" \
       -o "${{targets.destdir}}/nginx-ingress-controller" {{ .PKG }}/cmd/nginx
+      
+      
+      setcap cap_net_bind_service=+ep ${{targets.destdir}}/nginx-ingress-controller \
+      && setcap -v cap_net_bind_service=+ep ${{targets.destdir}}/nginx-ingress-controller \
+      && setcap    cap_net_bind_service=+ep ${{targets.destdir}}/usr/bin/dumb-init \
+      && setcap -v cap_net_bind_service=+ep ${{targets.destdir}}/usr/bin/dumb-init

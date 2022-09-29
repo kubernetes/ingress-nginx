@@ -44,46 +44,17 @@ accounts:
   run-as: 101
 
 environments:
-  PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/luajit/bin"
+  PATH: "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/luajit/bin"
   LUA_PATH: "/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/lib/lua/?.lua;;"
   LUA_CPATH: "/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
-  LUA_INCLUDE_DIR: "/usr/local/include/luajit-2.1"
+  :u: "/usr/local/include/luajit-2.1"
+  LUAJIT_INC: "/usr/local/include/luajit-2.1"
   LUAJIT_LIB: "/usr/local/lib"
+  LUA_LIB_DIR: "/usr/local/lib/lua"
 
 work-dir:  /etc/nginx
 
-entrypoint:
-  command: "/usr/bin/dumb-init --"
-
-cmd: /nginx-ingress-controller
-
 paths:
-  - path: /var/log/nginx/error.log
-    type: symlink
-    source: /dev/stderr
-    permissions: 0o755
-  - path: /var/log/nginx/access.log
-    type: symlink
-    source: /dev/stdout
-    permissions: 0o755
-    recursive: true
-  - path: /usr/bin/nginx
-    type: hardlink
-    source: /usr/local/nginx/sbin/nginx
-    permissions: 0o755
-    recursive: true
-  - path: /var/lib/nginx/proxy
-    type: directory
-    permissions: 0o755
-    uid: 101
-    gid: 101
-    recursive: true
-  - path:   /etc/ingress-controller/auth
-    type: directory
-    permissions: 0o755
-    uid: 101
-    gid: 101
-    recursive: true
   - path: /usr/local/
     type: directory
     permissions: 0o755
@@ -97,12 +68,34 @@ paths:
     gid: 101
     recursive: true
   - path: /usr/local/bin/lua
-    type: hardlink
+    type: symlink
     source: /usr/local/bin/luajit
     permissions: 0o755
-  - path: /sbin/nginx
-    type: hardlink
+    uid: 101
+    gid: 101
+  - path: /usr/local/include/lua
+    type: symlink
+    source: /usr/local/include/luajit-2.1
+    uid: 101
+    gid: 101
+    permissions: 0o755
+  - path: /usr/include/lua5.1
+    type: symlink
+    source: /usr/local/include/luajit-2.1
+    uid: 101
+    gid: 101
+    permissions: 0o755
+  - path: /usr/local/nginx/sbin/nginx
+    type: symlink
+    source: /sbin/nginx
+    uid: 101
+    gid: 101
+    permissions: 0o755
+  - path: /usr/bin/nginx
+    type: symlink
     source: /usr/local/nginx/sbin/nginx
+    uid: 101
+    gid: 101
     permissions: 0o755
   - path: /var/lib/
     type: directory
@@ -212,7 +205,3 @@ paths:
     type: directory
     permissions: 0o755
     recursive: true
-archs:
-  - amd64
-  - aarch64
-  - armv7
