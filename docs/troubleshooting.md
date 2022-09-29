@@ -316,3 +316,52 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
     ```console
     cat nginx_conf.txt
     ```
+    
+## Image related issues faced on Nginx 4.2.5 or other versions (Helm chart versions) 
+
+1. Incase you face below error while installing Nginx using helm chart (either by helm commands or helm_release terraform provider ) 
+```
+Warning  Failed     5m5s (x4 over 6m34s)   kubelet            Failed to pull image "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47": rpc error: code = Unknown desc = failed to pull and unpack image "registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47": failed to resolve reference "registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47": failed to do request: Head "https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47": EOF
+```
+   Then please follow the below steps.
+
+2. During troubleshooting you can also execute the below commands to test the connectivities from you local machines and repositories  details
+
+      a. curl registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47 > /dev/null
+      ```
+      (⎈ |myprompt)➜  ~ curl registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47 > /dev/null
+                          % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                                          Dload  Upload   Total   Spent    Left  Speed
+                          0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+       (⎈ |myprompt)➜  ~
+      ```
+      b. curl -I https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+      ```
+      (⎈ |myprompt)➜  ~ curl -I https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/  sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+                                          HTTP/2 200
+                                          docker-distribution-api-version: registry/2.0
+                                          content-type: application/vnd.docker.distribution.manifest.list.v2+json
+                                          docker-content-digest: sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+                                          content-length: 1384
+                                          date: Wed, 28 Sep 2022 16:46:28 GMT
+                                          server: Docker Registry
+                                          x-xss-protection: 0
+                                          x-frame-options: SAMEORIGIN
+                                          alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"
+
+        (⎈ |myprompt)➜  ~
+      ```
+   Redirection in the proxy is implemented to ensure the pulling of the images.
+
+3. This is the solution recommended to whitelist the below image repositories : 
+     ```
+     *.appspot.com    
+     *.k8s.io        
+     *.pkg.dev
+     *.gcr.io
+     
+     ```
+     More details about the above repos : 
+     a. *.k8s.io -> To ensure you can pull any images from registry.k8s.io
+     b. *.gcr.io -> GCP services are used for image hosting. This is part of the domains suggested by GCP to allow and ensure users can pull images from their container registry services.
+     c. *.appspot.com -> This a Google domain. part of the domain used for GCR.
