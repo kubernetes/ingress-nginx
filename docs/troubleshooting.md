@@ -337,7 +337,7 @@ Warning  Failed     5m5s (x4 over 6m34s)   kubelet            Failed to pull ima
       ```
       b. curl -I https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
       ```
-      (⎈ |myprompt)➜  ~ curl -I https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/  sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+      (⎈ |myprompt)➜  ~ curl -I https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
                                           HTTP/2 200
                                           docker-distribution-api-version: registry/2.0
                                           content-type: application/vnd.docker.distribution.manifest.list.v2+json
