@@ -23,6 +23,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export NAMESPACE=$1
 export NAMESPACE_OVERLAY=$2
+export IS_CHROOT=$3
 
 echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
 
@@ -53,8 +54,6 @@ OTEL_MODULE=$(cat <<EOF
 EOF
 )
 
-echo "${OTEL_MODULE}"
-
 if [[ "$NAMESPACE_OVERLAY" != "enable-opentelemetry" ]]; then
   OTEL_MODULE=""
 fi
@@ -72,7 +71,7 @@ fullnameOverride: nginx-ingress
 controller:
   image:
     repository: ingress-controller/controller
-    chroot: true
+    chroot: ${IS_CHROOT}
     tag: 1.0.0-dev
     digest:
     digestChroot:
