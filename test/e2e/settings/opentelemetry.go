@@ -68,7 +68,7 @@ var _ = framework.IngressNginxDescribe("Configure Opentelemetry", func() {
 			})
 	})
 
-	ginkgo.It("should include opentelemetry_trust_incoming_spans off directive when disabled", func() {
+	ginkgo.It("should include opentelemetry_trust_incoming_spans on directive when enabled", func() {
 		config := map[string]string{}
 		config[enableOpentelemetry] = "true"
 		config[opentelemetryConfig] = opentelemetryConfigPath

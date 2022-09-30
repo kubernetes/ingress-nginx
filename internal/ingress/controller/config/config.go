@@ -578,33 +578,33 @@ type Configuration struct {
 	// OtlpCollectorHost specifies the host to use when uploading traces
 	OtlpCollectorHost string `json:"otlp-collector-host"`
 
-	// OtlpCollectorPort specifies the host to use when uploading traces
+	// OtlpCollectorPort specifies the port to use when uploading traces
 	// Default: 4317
 	OtlpCollectorPort string `json:"otlp-collector-port"`
 
-	//OtelServiceName specifies the service name to use for any traces created
+	// OtelServiceName specifies the service name to use for any traces created
 	// Default: nginx
 	OtelServiceName string `json:"otel-service-name"`
 
-	//OtelSampler specifies the service name to use for any traces created
+	// OtelSampler specifies the sampler to use for any traces created
 	// Default: AlwaysOff
 	OtelSampler string `json:"otel-sampler"`
 
-	//OtelSamplerRatio specifies the service name to use for any traces created
+	// OtelSamplerRatio specifies the sampler ratio to use for any traces created
 	// Default: 0.01
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
-	//OtelSamplerParantBased specifies the service name to use for any traces created
+	//OtelSamplerParantBased specifies the parent based sampler to be use for any traces created
 	// Default: false
 	OtelSamplerParantBased bool `json:"otel-sampler-parent-based"`
 
-	// MaxQueueSize specifies the host to use when uploading traces
+	// MaxQueueSize specifies the max queue size for uploading traces
 	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
 
-	// ScheduleDelayMillis specifies the host to use when uploading traces
+	// ScheduleDelayMillis specifies the max delay between uploading traces
 	OtelScheduleDelayMillis int32 `json:"otel-schedule-delay-millis"`
 
-	// MaxExportBatchSize specifies the host to use when uploading traces
+	// MaxExportBatchSize specifies the max export batch size to used when uploading traces
 	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
 
 	// ZipkinCollectorHost specifies the host to use when uploading traces
