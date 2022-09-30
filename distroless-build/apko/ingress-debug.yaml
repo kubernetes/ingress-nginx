@@ -18,7 +18,7 @@ contents:
     - libcap
     - netcat-openbsd
     - geoip-dev
-    - nginx@local
+    - nginx-debug@local
     - opentracing@local
     - msgpack-cpp@local
     - datadog-cpp@local
@@ -39,12 +39,6 @@ contents:
     - lua-resty-string@local
     - lua-resty-upload@local
 accounts:
-  groups:
-    - groupname: www-data
-      gid: 101
-  users:
-    - username: www-data
-      uid: 101
   run-as: root
 
 annotations:
@@ -64,154 +58,105 @@ environment:
 
 work-dir:  /etc/nginx
 
+
 paths:
   - path:  /usr/bin/nginx
     type: hardlink
     source: /usr/local/nginx/sbin/nginx
     permissions: 0o777
-    uid: 101
-    gid: 101
   - path: /usr/local/certificates/
     type: directory
     permissions: 0o777
-    uid: 101
-    gid: 101
+    recursive: true
+  - path: /tmp/nginx
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /etc/ingress-controller
+    type: directory
+    permissions: 0o777
     recursive: true
   - path: /etc/ingress-controller/ssl
     type: directory
     permissions: 0o777
-    uid: 101
-    gid: 101
     recursive: true
   - path: /etc/ingress-controller/auth
     type: directory
     permissions: 0o777
-    uid: 101
-    gid: 101
     recursive: true
   - path: /usr/local/
     type: directory
     permissions: 0o777
-    uid: 101
-    gid: 101
     recursive: true
   - path: /usr/local/
     type: directory
     permissions: 0o777
-    uid: 101
-    gid: 101
     recursive: true
   - path: /usr/local/bin/lua
     type: hardlink
     source: /usr/local/bin/luajit
     permissions: 0o777
-    uid: 101
-    gid: 101
   - path: /var/lib/
     type: directory
     permissions: 0o777
-    uid: 101
-    gid: 101
     recursive: true
-  - path: /var/log/nginx/
+  - path: /var/log/nginx
     type: directory
-    uid: 101
-    gid: 101
     permissions: 0o777
     recursive: true
   - path: /var/lib/nginx/
     type: directory
-    uid: 101
-    gid: 101
     permissions: 0o777
     recursive: true
   - path: /var/lib/nginx/body
     type: directory
-    uid: 101
-    gid: 101
     permissions: 0o777
     recursive: true
   - path: /usr/local/nginx
     type: directory
-    uid: 101
-    gid: 101
     permissions: 0o777
     recursive: true
   - path: /run/nginx
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /run/nginx.pid
-    uid: 101
-    gid: 101
     type: empty-file
     permissions: 0o777
     recursive: true
   - path: /etc/nginx/modules
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /etc/nginx
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /usr/local/nginx
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /opt/modsecurity/var/log
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /opt/modsecurity/var/upload
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /opt/modsecurity/var/audit
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /var/log
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /etc/ingress-controller
-    uid: 101
-    gid: 101
-    type: directory
-    permissions: 0o777
-    recursive: true
-  - path: /tmp/nginx
-    uid: 101
-    gid: 101
-    type: directory
-    permissions: 0o777
-    recursive: true
-  - path: /var/log/nginx/
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true
   - path: /var/log/audit
-    uid: 101
-    gid: 101
     type: directory
     permissions: 0o777
     recursive: true

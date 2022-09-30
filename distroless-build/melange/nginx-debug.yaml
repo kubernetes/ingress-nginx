@@ -1,0 +1,478 @@
+package:
+  name: nginx-debug
+  version: {{ .NGINX_VERSION }}
+  epoch: 0
+  description: "the nginx webserver built for ingress-nginx"
+  target-architecture:
+    - all
+  copyright:
+    - paths:
+        - "*"
+      attestation: TODO
+      license: BSD-2-Clause
+  dependencies:
+    runtime:
+
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+      - https://dl-cdn.alpinelinux.org/alpine/edge/community
+      - '@local /work/packages'
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - scanelf
+      - ssl_client
+      - ca-certificates-bundle
+      - brotli-dev
+      - gd-dev
+      - geoip-dev
+      - libmaxminddb-dev
+      - libxml2-dev
+      - libxslt-dev
+      - linux-headers
+      - pcre-dev
+      - pkgconf
+      - zeromq-dev
+      - zlib-dev
+      - bash
+      - gcc
+      - clang
+      - libc-dev
+      - make
+      - automake
+      - openssl-dev
+      - pcre-dev
+      - zlib-dev
+      - linux-headers
+      - libxslt-dev
+      - gd-dev
+      - geoip-dev
+      - libcap
+      - perl-dev
+      - libedit-dev
+      - mercurial
+      - alpine-sdk
+      - findutils
+      - curl
+      - ca-certificates
+      - patch
+      - libaio-dev
+      - openssl
+      - cmake
+      - util-linux
+      - lmdb-tools
+      - wget
+      - curl-dev
+      - libprotobuf
+      - git
+      - g++
+      - flex
+      - bison
+      - doxygen
+      - yajl-dev
+      - lmdb-dev
+      - libtool
+      - autoconf
+      - libxml2
+      - libxml2-dev
+      - python3
+      - libmaxminddb-dev
+      - bc
+      - unzip
+      - tree
+      - dos2unix
+      - libcrypto1.1
+      - libcrypto3
+      - libsrt
+      - opentracing@local
+      - msgpack-cpp@local
+      - datadog-cpp@local
+      - yaml-cpp@local
+      - zipkin-cpp@local
+      - modsecurity@local
+      - luajit@local
+
+  accounts:
+    groups:
+      - groupname: www-data
+        gid: 101
+    users:
+      - username: www-data
+        uid: 101
+
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://github.com/SpiderLabs/ModSecurity-nginx/archive/v{{ .MODSECURITY_NGINX_VERSION }}.tar.gz
+      expected-sha256: {{ .MODSECURITY_NGINX_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/simpl/ngx_devel_kit/archive/v{{ .NDK_VERSION }}.tar.gz
+      expected-sha256: {{ .NDK_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/openresty/set-misc-nginx-module/archive/v{{.SETMISC_VERSION}}.tar.gz
+      expected-sha256: {{.SETMISC_VERSION_SHA}}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/openresty/headers-more-nginx-module/archive/v{{ .MORE_HEADERS_VERSION }}.tar.gz
+      expected-sha256: {{ .MORE_HEADERS_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/atomx/nginx-http-auth-digest/archive/v{{.NGINX_DIGEST_AUTH}}.tar.gz
+      expected-sha256: {{ .NGINX_DIGEST_AUTH_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/{{.NGINX_SUBSTITUTIONS}}.tar.gz
+      expected-sha256: {{ .NGINX_SUBSTITUTIONS_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/opentracing-contrib/nginx-opentracing/archive/v{{ .NGINX_OPENTRACING_VERSION }}.tar.gz
+      expected-sha256: {{ .NGINX_OPENTRACING_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/openresty/lua-nginx-module/archive/{{ .LUA_NGX_VERSION }}.tar.gz
+      expected-sha256: {{ .LUA_NGX_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/openresty/stream-lua-nginx-module/archive/{{ .LUA_STREAM_NGX_VERSION }}.tar.gz
+      expected-sha256: {{ .LUA_STREAM_NGX_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/openresty/lua-upstream-nginx-module/archive/{{ .LUA_UPSTREAM_VERSION }}.tar.gz
+      expected-sha256: {{ .LUA_UPSTREAM_VERSION_SHA }}
+      strip-components: 0
+
+  - uses: fetch
+    with:
+      uri: https://github.com/influxdata/nginx-influxdb-module/archive/{{ .NGINX_INFLUXDB_VERSION }}.tar.gz
+      expected-sha256: {{ .NGINX_INFLUXDB_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/leev/ngx_http_geoip2_module/archive/{{ .GEOIP2_VERSION }}.tar.gz
+      expected-sha256: {{ .GEOIP2_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://github.com/yaoweibin/nginx_ajp_module/archive/{{ .NGINX_AJP_VERSION }}.tar.gz
+      expected-sha256: {{ .NGINX_AJP_VERSION_SHA }}
+      strip-components: 0
+  - uses: fetch
+    with:
+      uri: https://nginx.org/download/nginx-${{package.version}}.tar.gz
+      expected-sha256: {{ .NGINX_SHA }}
+      strip-components: 0
+  - name: 'Configure nginx'
+    with:
+      NGINX_VERSION: {{ .NGINX_VERSION }}
+      NDK_VERSION: {{ .NDK_VERSION }}
+      SETMISC_VERSION: {{ .SETMISC_VERSION}}
+      MORE_HEADERS_VERSION: {{ .MORE_HEADERS_VERSION }}
+      NGINX_DIGEST_AUTH: {{ .NGINX_DIGEST_AUTH }}
+      NGINX_SUBSTITUTIONS: {{ .NGINX_SUBSTITUTIONS }}
+      NGINX_OPENTRACING_VERSION: {{ .NGINX_OPENTRACING_VERSION }}
+      DATADOG_CPP_VERSION: {{ .DATADOG_CPP_VERSION }}
+      MODSECURITY_NGINX_VERSION: {{ .MODSECURITY_NGINX_VERSION }}
+      MODSECURITY_LIB_VERSION: {{ .MODSECURITY_LIB_VERSION }}
+      OWASP_MODSECURITY_CRS_VERSION: {{ .OWASP_MODSECURITY_CRS_VERSION }}
+      LUA_NGX_VERSION: {{ .LUA_NGX_VERSION }}
+      LUA_STREAM_NGX_VERSION: {{ .LUA_STREAM_NGX_VERSION }}
+      LUA_UPSTREAM_VERSION: {{ .LUA_UPSTREAM_VERSION }}
+      LUA_CJSON_VERSION: {{ .LUA_CJSON_VERSION }}
+      NGINX_INFLUXDB_VERSION: {{ .NGINX_INFLUXDB_VERSION }}
+      GEOIP2_VERSION: {{ .GEOIP2_VERSION }}
+      NGINX_AJP_VERSION: {{ .NGINX_AJP_VERSION }}
+      LUAJIT_VERSION: {{ .LUAJIT_VERSION }}
+      LUA_RESTY_CACHE: {{ .LUA_RESTY_CACHE }}
+      LUA_RESTY_CORE: {{ .LUA_RESTY_CORE }}
+      LUA_RESTY_COOKIE_VERSION: {{ .LUA_RESTY_COOKIE_VERSION }}
+      LUA_RESTY_DNS: {{ .LUA_RESTY_DNS }}
+      LUA_RESTY_HTTP_VERSION: {{ .LUA_RESTY_HTTP_VERSION }}
+      LUA_RESTY_LOCK: {{ .LUA_RESTY_LOCK }}
+      LUA_RESTY_UPLOAD_VERSION: {{ .LUA_RESTY_UPLOAD_VERSION }}
+      LUA_RESTY_STRING_VERSION: {{ .LUA_RESTY_STRING_VERSION }}
+      LUA_RESTY_MEMCACHED_VERSION: {{ .LUA_RESTY_MEMCACHED_VERSION }}
+      LUA_RESTY_REDIS_VERSION: {{ .LUA_RESTY_REDIS_VERSION }}
+      LUA_RESTY_IPMATCHER_VERSION: {{ .LUA_RESTY_IPMATCHER_VERSION }}
+      LUA_RESTY_GLOBAL_THROTTLE_VERSION: {{ .LUA_RESTY_GLOBAL_THROTTLE_VERSION }}
+      MIMALOC_VERSION: {{ .MIMALOC_VERSION }}
+    runs: |
+      set -o errexit
+      set -o nounset
+      set -o pipefail
+      
+      ls -lah 
+      ls -lah etc/nginx
+      export BUILD_PATH="${PWD}"
+      echo "BUILD_PATH $BUILD_PATH"
+      echo "Arch: $(uname -m)"
+      # improve compilation times
+      CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
+  
+      export MAKEFLAGS=-j${CORES}
+      export CTEST_BUILD_FLAGS=${MAKEFLAGS}
+      
+      export LUAJIT_LIB=/usr/local/lib
+      export LUA_LIB_DIR="$LUAJIT_LIB/lua"
+      export LUAJIT_INC=/usr/local/include/luajit-2.1
+      export LUA_INCLUDE_DIR=/usr/local/include/luajit-2.1    
+      
+      ln -s /usr/local/bin/luajit /usr/local/bin/lua
+      ln -s "$LUAJIT_INC" /usr/local/include/lua
+      ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
+
+      ARCH=$(uname -m)
+      mkdir -p ${{targets.destdir}}/etc/nginx/
+      cp -R etc/nginx/geoip/ ${{targets.destdir}}/etc/nginx/
+      cp -R etc/nginx/lua/ ${{targets.destdir}}/etc/nginx/
+      cp -R etc/nginx/template/ ${{targets.destdir}}/etc/nginx/
+      cp -R etc/nginx/nginx.conf ${{targets.destdir}}/etc/nginx/
+      cp -R etc/nginx/opentracing.json ${{targets.destdir}}/etc/nginx/
+      tree ${{targets.destdir}}/etc/nginx/
+      
+      # Get Brotli source and deps
+      echo "::::::::::::::::::::::::::::::::::::::"
+      echo ":::: ngx_brotl ::::"
+      echo "::::::::::::::::::::::::::::::::::::::"
+      cd "$BUILD_PATH"
+      git clone --depth=1 https://github.com/google/ngx_brotli.git
+      cd ngx_brotli
+      git submodule init
+      git submodule update
+      
+      
+      git clone --depth=1 -b {{ .MODSECURITY_LIB_VERSION }} https://github.com/SpiderLabs/ModSecurity
+
+      mkdir -p ${{targets.destdir}}/etc/nginx/modsecurity
+      cp ModSecurity/modsecurity.conf-recommended ${{targets.destdir}}/etc/nginx/modsecurity/modsecurity.conf
+      cp ModSecurity/unicode.mapping ${{targets.destdir}}/etc/nginx/modsecurity/unicode.mapping
+      
+      # Replace serial logging with concurrent
+      sed -i 's|SecAuditLogType Serial|SecAuditLogType Concurrent|g' ${{targets.destdir}}/etc/nginx/modsecurity/modsecurity.conf
+      
+      # Concurrent logging implies the log is stored in several files
+      echo "SecAuditLogStorageDir /var/log/audit/" >> ${{targets.destdir}}/etc/nginx/modsecurity/modsecurity.conf
+      
+      # Download owasp modsecurity crs
+      cd ${{targets.destdir}}/etc/nginx/
+      
+      git clone -b {{ .OWASP_MODSECURITY_CRS_VERSION }} https://github.com/coreruleset/coreruleset owasp-modsecurity-crs
+      cd owasp-modsecurity-crs
+      
+      mv crs-setup.conf.example crs-setup.conf
+      mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+      mv rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+      cd ${{targets.destdir}}/etc/nginx/
+      
+      # OWASP CRS v3 rules
+      echo '
+      Include /etc/nginx/owasp-modsecurity-crs/crs-setup.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-901-INITIALIZATION.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-903.9001-DRUPAL-EXCLUSION-RULES.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-903.9002-WORDPRESS-EXCLUSION-RULES.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-910-IP-REPUTATION.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-911-METHOD-ENFORCEMENT.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-912-DOS-PROTECTION.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-913-SCANNER-DETECTION.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-921-PROTOCOL-ATTACK.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-930-APPLICATION-ATTACK-LFI.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-934-APPLICATION-ATTACK-NODEJS.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-944-APPLICATION-ATTACK-JAVA.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-949-BLOCKING-EVALUATION.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-950-DATA-LEAKAGES.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-951-DATA-LEAKAGES-SQL.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-952-DATA-LEAKAGES-JAVA.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-953-DATA-LEAKAGES-PHP.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-954-DATA-LEAKAGES-IIS.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-980-CORRELATION.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+      ' > ${{targets.destdir}}/etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
+
+    
+      echo "::::::::::::::::::::::::::::::::::::::"
+      echo ":::: nginx-{{ .NGINX_VERSION }} ::::"
+      echo "::::::::::::::::::::::::::::::::::::::"
+      
+      cd "$BUILD_PATH/nginx-{{ .NGINX_VERSION }}"
+      # apply nginx patches
+      for PATCH in `ls patches`;do
+        echo "Patch: $PATCH"
+        if [[ "$PATCH" == *.txt ]]; then
+          patch -p0 < patches/$PATCH
+        else
+          patch -p1 < patches/$PATCH
+        fi
+      done
+      
+      WITH_FLAGS="--with-debug \
+      --with-compat \
+      --with-pcre-jit \
+      --with-http_ssl_module \
+      --with-http_stub_status_module \
+      --with-http_realip_module \
+      --with-http_auth_request_module \
+      --with-http_addition_module \
+      --with-http_geoip_module \
+      --with-http_gzip_static_module \
+      --with-http_sub_module \
+      --with-http_v2_module \
+      --with-stream \
+      --with-stream_ssl_module \
+      --with-stream_realip_module \
+      --with-stream_ssl_preread_module \
+      --with-threads \
+      --with-http_secure_link_module \
+      --with-http_gunzip_module"
+      
+      WITH_FLAGS="--with-debug \
+      --with-compat \
+      --with-pcre-jit \
+      --with-http_ssl_module \
+      --with-http_stub_status_module \
+      --with-http_realip_module \
+      --with-http_auth_request_module \
+      --with-http_addition_module \
+      --with-http_geoip_module \
+      --with-http_gzip_static_module \
+      --with-http_sub_module \
+      --with-http_v2_module \
+      --with-stream \
+      --with-stream_ssl_module \
+      --with-stream_realip_module \
+      --with-stream_ssl_preread_module \
+      --with-threads \
+      --with-http_secure_link_module \
+      --with-http_gunzip_module"
+    
+      WITH_MODULES=" \
+      --add-module=${BUILD_PATH}/ngx_devel_kit-{{ .NDK_VERSION }} \
+      --add-module=${BUILD_PATH}/set-misc-nginx-module-{{ .SETMISC_VERSION }} \
+      --add-module=${BUILD_PATH}/headers-more-nginx-module-{{  .MORE_HEADERS_VERSION }} \
+      --add-module=${BUILD_PATH}/ngx_http_substitutions_filter_module-{{  .NGINX_SUBSTITUTIONS }}  \
+      --add-module=${BUILD_PATH}/lua-nginx-module-{{  .LUA_NGX_VERSION }}  \
+      --add-module=${BUILD_PATH}/stream-lua-nginx-module-{{  .LUA_STREAM_NGX_VERSION }}  \
+      --add-module=${BUILD_PATH}/lua-upstream-nginx-module-{{  .LUA_UPSTREAM_VERSION }}  \
+      --add-module=${BUILD_PATH}/nginx_ajp_module-{{ .NGINX_AJP_VERSION }}  \
+      --add-dynamic-module=${BUILD_PATH}/nginx-http-auth-digest-{{  .NGINX_DIGEST_AUTH }}  \
+      --add-dynamic-module=${BUILD_PATH}/nginx-influxdb-module-{{  .NGINX_INFLUXDB_VERSION }}  \
+      --add-dynamic-module=${BUILD_PATH}/nginx-opentracing-{{  .NGINX_OPENTRACING_VERSION }}/opentracing \
+      --add-dynamic-module=${BUILD_PATH}/ModSecurity-nginx-{{  .MODSECURITY_NGINX_VERSION }}  \
+      --add-dynamic-module=${BUILD_PATH}/ngx_http_geoip2_module-{{  .GEOIP2_VERSION }}  \
+      --add-dynamic-module=${BUILD_PATH}/ngx_brotli"
+    
+      # "Combining -flto with -g is currently experimental and expected to produce unexpected results."
+      # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
+      CC_OPT="-g -O2 -fPIE -fstack-protector-strong \
+      -Wformat \
+      -Werror=format-security \
+      -Wno-deprecated-declarations \
+      -fno-strict-aliasing \
+      -D_FORTIFY_SOURCE=2 \
+      --param=ssp-buffer-size=4 \
+      -DTCP_FASTOPEN=23 \
+      -fPIC \
+      -Wno-cast-function-type"
+    
+      LD_OPT="-fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now"
+      
+      if [[ ${ARCH} != "aarch64" ]]; then
+        WITH_FLAGS="${WITH_FLAGS} --with-file-aio"
+      fi
+      
+      if [[ ${ARCH} == "x86_64" ]]; then
+        CC_OPT="${CC_OPT} -m64 -mtune=generic"
+      fi
+      
+      echo "::::::::::::::::::::::::::::::::::::::::::::::::"
+      echo ":::: Configuring nginx-{{ .NGINX_VERSION }} ::::"
+      echo "::::::::::::::::::::::::::::::::::::::::::::::::"
+      ./configure \
+      --prefix=/usr/local/nginx \
+      --conf-path=/etc/nginx/nginx.conf \
+      --modules-path=/etc/nginx/modules \
+      --http-log-path=/var/log/nginx/access.log \
+      --error-log-path=/var/log/nginx/error.log \
+      --lock-path=/var/lock/nginx.lock \
+      --pid-path=/run/nginx.pid \
+      --http-client-body-temp-path=/var/lib/nginx/body \
+      --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
+      --http-proxy-temp-path=/var/lib/nginx/proxy \
+      --http-scgi-temp-path=/var/lib/nginx/scgi \
+      --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
+      ${WITH_FLAGS} \
+      --without-mail_pop3_module \
+      --without-mail_smtp_module \
+      --without-mail_imap_module \
+      --without-http_uwsgi_module \
+      --without-http_scgi_module \
+      --with-cc-opt="${CC_OPT}" \
+      --with-ld-opt="${LD_OPT}" \
+      ${WITH_MODULES}
+      
+      echo "::::::::::::::::::::::::::::::::::::::::::"
+      echo ":::: MAKE nginx-{{ .NGINX_VERSION }} ::::"
+      echo "::::::::::::::::::::::::::::::::::::::::::"
+      make
+      
+      echo "::::::::::::::::::::::::::::::::::::::::::::"
+      echo ":::: MODULES nginx-{{ .NGINX_VERSION }} ::::"
+      echo "::::::::::::::::::::::::::::::::::::::::::::"
+      make DESTDIR="${{targets.destdir}}" modules
+      
+      echo "::::::::::::::::::::::::::::::::::::::::::::"
+      echo ":::: INSTALL nginx-{{ .NGINX_VERSION }} ::::"
+      echo "::::::::::::::::::::::::::::::::::::::::::::"
+      make DESTDIR="${{targets.destdir}}" install
+      
+      setcap    cap_net_bind_service=+ep ${{targets.destdir}}/usr/local/nginx/sbin/nginx \
+      && setcap -v cap_net_bind_service=+ep ${{targets.destdir}}/usr/local/nginx/sbin/nginx \
+      
+      echo "::::::::::::::::::::::::::::::::::::::::::::"
+      echo ":::::::::::::::: CLEANUP :::::::::::::::::::"
+      echo "::::::::::::::::::::::::::::::::::::::::::::"
+      
+      echo "Clean up owasp-modsecurity-crs" 
+      rm -rf ${{targets.destdir}}/etc/nginx/owasp-modsecurity-crs/.git
+      rm -rf ${{targets.destdir}}/etc/nginx/owasp-modsecurity-crs/util/regression-tests
+      
+      
+      echo "Clean up everything else"
+      cd ${BUILD_PATH}
+      
+      rm -rf *.tar.gz ${BUILD_PATH}/ngx_devel_kit-{{ .NDK_VERSION }} \
+      ${BUILD_PATH}/set-misc-nginx-module-{{ .SETMISC_VERSION }} \
+      ${BUILD_PATH}/headers-more-nginx-module-{{  .MORE_HEADERS_VERSION }} \
+      ${BUILD_PATH}/ngx_http_substitutions_filter_module-{{  .NGINX_SUBSTITUTIONS }}  \
+      ${BUILD_PATH}/lua-nginx-module-{{  .LUA_NGX_VERSION }}  \
+      ${BUILD_PATH}/stream-lua-nginx-module-{{  .LUA_STREAM_NGX_VERSION }}  \
+      ${BUILD_PATH}/lua-upstream-nginx-module-{{  .LUA_UPSTREAM_VERSION }}  \
+      ${BUILD_PATH}/nginx_ajp_module-{{ .NGINX_AJP_VERSION }}  \
+      ${BUILD_PATH}/nginx-http-auth-digest-{{  .NGINX_DIGEST_AUTH }}  \
+      ${BUILD_PATH}/nginx-influxdb-module-{{  .NGINX_INFLUXDB_VERSION }}  \
+      ${BUILD_PATH}/nginx-opentracing-{{  .NGINX_OPENTRACING_VERSION }}/opentracing \
+      ${BUILD_PATH}/ModSecurity-nginx-{{  .MODSECURITY_NGINX_VERSION }}  \
+      ${BUILD_PATH}/ngx_http_geoip2_module-{{  .GEOIP2_VERSION }}  \
+      ${BUILD_PATH}/ngx_brotli
