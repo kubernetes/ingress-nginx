@@ -32,6 +32,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--ingress-class-by-name`          | Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class. (default false) |
 | `--internal-logger-address`        | Define the internal logger address to use when chroot images is used. (default 127.0.0.1:11514) |
 | `--kubeconfig`                     | Path to a kubeconfig file containing authorization and API server information. |
+| `--length-buckets`                 | Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength. (default `[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]`) |
 | `--log_backtrace_at`               | when logging hits line file:N, emit a stack trace (default :0) |
 | `--log_dir`                        | If non-empty, write log files in this directory |
 | `--log_file`                       | If non-empty, use this log file |
@@ -52,6 +53,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--skip_headers`                   | If true, avoid header prefixes in the log messages |
 | `--skip_log_headers`               | If true, avoid headers when opening log files |
 | `--ssl-passthrough-proxy-port`     | Port to use internally for SSL Passthrough. (default 442) |
+| `--size-buckets`                   | Set of buckets which will be used for prometheus histogram metrics such as BytesSent. (default `[10, 100, 1000, 10000, 100000, 1e+06, 1e+07]`) |
 | `--status-port`                    | Port to use for the lua HTTP endpoint configuration. (default 10246) |
 | `--status-update-interval`         | Time interval in seconds in which the status should check if an update is required. Default is 60 seconds (default 60) |
 | `--stderrthreshold`                | logs at or above this threshold go to stderr (default 2) |
@@ -59,6 +61,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--sync-period`                    | Period at which the controller forces the repopulation of its local object stores. Disabled by default. |
 | `--sync-rate-limit`                | Define the sync frequency upper limit (default 0.3) |
 | `--tcp-services-configmap`         | Name of the ConfigMap containing the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port number or name. TCP ports 80 and 443 are reserved by the controller for servicing HTTP traffic. |
+| `--time-buckets`                   | Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime. (default `[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]`) |
 | `--udp-services-configmap`         | Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number. |
 | `--update-status`                  | Update the load-balancer status of Ingress objects this controller satisfies. Requires setting the publish-service parameter to a valid Service reference. (default true) |
 | `--update-status-on-shutdown`      | Update the load-balancer status of Ingress objects when the controller shuts down. Requires the update-status parameter. (default true) |
