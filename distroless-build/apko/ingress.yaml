@@ -4,15 +4,10 @@ contents:
     - https://dl-cdn.alpinelinux.org/alpine/edge/community
     - '@local /work/packages'
   packages:
-    - alpine-baselayout-data
-    - alpine-base
-    - apk-tools
-    - busybox
     - dbg@local
     - waitshutdown@local
     - ingress-nginx@local
     - dumb-init
-    - bash
     - geoip-dev
     - nginx@local
     - opentracing@local
@@ -41,13 +36,19 @@ accounts:
   users:
     - username: www-data
       uid: 101
-  run-as: 101
+  run-as: root
 
-environments:
-  PATH: "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/luajit/bin"
+annotations:
+  org.opencontainers.image.title: "NGINX Ingress Controller for Kubernetes"
+  org.opencontainers.image.documentation: "https://kubernetes.github.io/ingress-nginx/"
+  org.opencontainers.image.source: "https://github.com/kubernetes/ingress-nginx"
+  org.opencontainers.image.vendor: "The Kubernetes Authors"
+  org.opencontainers.image.licenses: "Apache-2.0"
+
+environment:
+  PATH: "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/luajit/bin:/usr/local/nginx/sbin/"
   LUA_PATH: "/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/lib/lua/?.lua;;"
   LUA_CPATH: "/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
-  :u: "/usr/local/include/luajit-2.1"
   LUAJIT_INC: "/usr/local/include/luajit-2.1"
   LUAJIT_LIB: "/usr/local/lib"
   LUA_LIB_DIR: "/usr/local/lib/lua"
@@ -55,48 +56,36 @@ environments:
 work-dir:  /etc/nginx
 
 paths:
+  - path: /etc/ingress-controller/ssl
+    type: directory
+    permissions: 0o755
+    uid: 101
+    gid: 101
+    recursive: true
+  - path: /etc/ingress-controller/auth
+    type: directory
+    permissions: 0o755
+    uid: 101
+    gid: 101
+    recursive: true
   - path: /usr/local/
     type: directory
     permissions: 0o755
     uid: 101
     gid: 101
     recursive: true
-  - path: /usr/include/lua5.1
+  - path: /usr/local/
     type: directory
     permissions: 0o755
     uid: 101
     gid: 101
     recursive: true
   - path: /usr/local/bin/lua
-    type: symlink
+    type: hardlink
     source: /usr/local/bin/luajit
     permissions: 0o755
     uid: 101
     gid: 101
-  - path: /usr/local/include/lua
-    type: symlink
-    source: /usr/local/include/luajit-2.1
-    uid: 101
-    gid: 101
-    permissions: 0o755
-  - path: /usr/include/lua5.1
-    type: symlink
-    source: /usr/local/include/luajit-2.1
-    uid: 101
-    gid: 101
-    permissions: 0o755
-  - path: /usr/local/nginx/sbin/nginx
-    type: symlink
-    source: /sbin/nginx
-    uid: 101
-    gid: 101
-    permissions: 0o755
-  - path: /usr/bin/nginx
-    type: symlink
-    source: /usr/local/nginx/sbin/nginx
-    uid: 101
-    gid: 101
-    permissions: 0o755
   - path: /var/lib/
     type: directory
     permissions: 0o755
@@ -176,12 +165,6 @@ paths:
     permissions: 0o755
     recursive: true
   - path: /var/log
-    uid: 101
-    gid: 101
-    type: directory
-    permissions: 0o755
-    recursive: true
-  - path: /etc/ingress-controller
     uid: 101
     gid: 101
     type: directory

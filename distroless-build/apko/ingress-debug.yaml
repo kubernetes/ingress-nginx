@@ -1,0 +1,217 @@
+contents:
+  repositories:
+    - https://dl-cdn.alpinelinux.org/alpine/edge/main
+    - https://dl-cdn.alpinelinux.org/alpine/edge/community
+    - '@local /work/packages'
+  packages:
+    - alpine-baselayout-data
+    - alpine-base
+    - apk-tools
+    - busybox
+    - dbg@local
+    - waitshutdown@local
+    - ingress-nginx@local
+    - dumb-init
+    - sudo
+    - bash
+    - strace
+    - libcap
+    - netcat-openbsd
+    - geoip-dev
+    - nginx@local
+    - opentracing@local
+    - msgpack-cpp@local
+    - datadog-cpp@local
+    - yaml-cpp@local
+    - zipkin-cpp@local
+    - modsecurity@local
+    - luaresty-balancer@local
+    - luacjson@local
+    - luajit@local
+    - lua-resty-cache@local
+    - lua-resty-cookie@local
+    - lua-resty-dns@local
+    - lua-resty-core@local
+    - lua-resty-global-throttle@local
+    - lua-resty-ipmatcher@local
+    - lua-resty-lock@local
+    - lua-resty-redis@local
+    - lua-resty-string@local
+    - lua-resty-upload@local
+accounts:
+  groups:
+    - groupname: www-data
+      gid: 101
+  users:
+    - username: www-data
+      uid: 101
+  run-as: root
+
+annotations:
+  org.opencontainers.image.title: "NGINX Ingress Controller for Kubernetes"
+  org.opencontainers.image.documentation: "https://kubernetes.github.io/ingress-nginx/"
+  org.opencontainers.image.source: "https://github.com/kubernetes/ingress-nginx"
+  org.opencontainers.image.vendor: "The Kubernetes Authors"
+  org.opencontainers.image.licenses: "Apache-2.0"
+
+environment:
+  PATH: "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/luajit/bin:/usr/local/nginx/sbin/"
+  LUA_PATH: "/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/lib/lua/?.lua;;"
+  LUA_CPATH: "/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
+  LUAJIT_INC: "/usr/local/include/luajit-2.1"
+  LUAJIT_LIB: "/usr/local/lib"
+  LUA_LIB_DIR: "/usr/local/lib/lua"
+
+work-dir:  /etc/nginx
+
+paths:
+  - path:  /usr/bin/nginx
+    type: hardlink
+    source: /usr/local/nginx/sbin/nginx
+    permissions: 0o777
+    uid: 101
+    gid: 101
+  - path: /usr/local/certificates/
+    type: directory
+    permissions: 0o777
+    uid: 101
+    gid: 101
+    recursive: true
+  - path: /etc/ingress-controller/ssl
+    type: directory
+    permissions: 0o777
+    uid: 101
+    gid: 101
+    recursive: true
+  - path: /etc/ingress-controller/auth
+    type: directory
+    permissions: 0o777
+    uid: 101
+    gid: 101
+    recursive: true
+  - path: /usr/local/
+    type: directory
+    permissions: 0o777
+    uid: 101
+    gid: 101
+    recursive: true
+  - path: /usr/local/
+    type: directory
+    permissions: 0o777
+    uid: 101
+    gid: 101
+    recursive: true
+  - path: /usr/local/bin/lua
+    type: hardlink
+    source: /usr/local/bin/luajit
+    permissions: 0o777
+    uid: 101
+    gid: 101
+  - path: /var/lib/
+    type: directory
+    permissions: 0o777
+    uid: 101
+    gid: 101
+    recursive: true
+  - path: /var/log/nginx/
+    type: directory
+    uid: 101
+    gid: 101
+    permissions: 0o777
+    recursive: true
+  - path: /var/lib/nginx/
+    type: directory
+    uid: 101
+    gid: 101
+    permissions: 0o777
+    recursive: true
+  - path: /var/lib/nginx/body
+    type: directory
+    uid: 101
+    gid: 101
+    permissions: 0o777
+    recursive: true
+  - path: /usr/local/nginx
+    type: directory
+    uid: 101
+    gid: 101
+    permissions: 0o777
+    recursive: true
+  - path: /run/nginx
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /run/nginx.pid
+    uid: 101
+    gid: 101
+    type: empty-file
+    permissions: 0o777
+    recursive: true
+  - path: /etc/nginx/modules
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /etc/nginx
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /usr/local/nginx
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /opt/modsecurity/var/log
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /opt/modsecurity/var/upload
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /opt/modsecurity/var/audit
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /var/log
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /etc/ingress-controller
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /tmp/nginx
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /var/log/nginx/
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true
+  - path: /var/log/audit
+    uid: 101
+    gid: 101
+    type: directory
+    permissions: 0o777
+    recursive: true

@@ -106,6 +106,7 @@ controller:
     image: "${DEV_IMAGE}"
     tag: "${TAG}"
     digest: "${DIGEST}"
+    runAsUser: 0
   config:
     worker-processes: "1"
   podLabels:

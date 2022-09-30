@@ -36,7 +36,7 @@ REPO ?= packages
 TEMPLATE ?= melange/nginx-templates.json
 MELANGE_OPTS ?= -k ${KEY}.pub --signing-key ${KEY} --arch ${ARCHS}
 MELANGE_INGRESS_OPT ?= -k ${KEY}.pub --signing-key ${KEY} --arch ${ARCHS} --empty-workspace
-APKO_OPTS ?= -k ${KEY}.pub --debug --build-arch ${ARCHS} ${APKO_DIR}/${FILE}.yaml
+APKO_OPTS ?= -k ${KEY}.pub --debug --use-docker-mediatypes --sbom=false --build-arch ${ARCHS} ${APKO_DIR}/${FILE}.yaml
 KEY ?= melange.rsa
 REPO ?= $(shell pwd)/packages
 ARCHS?="amd64,arm64,arm/v6,arm/v7,s390x"
@@ -52,10 +52,10 @@ keygen: ## Generate Key pair for use with signing apks
 melange: ## Build melange $FILE
 	${MELANGE} build ${MELANGE_DIR}/${FILE}.yaml ${MELANGE_OPTS} --template '$(shell cat ${TEMPLATE})'
 
-ingress-melange:
+ingress-build:
 	${MELANGE} build ${MELANGE_DIR}/${FILE}.yaml ${MELANGE_INGRESS_OPT} --template '$(shell cat ${TEMPLATE})'
 
-nginx-melange:
+nginx-build:
 	${MELANGE} build ${MELANGE_DIR}/${FILE}.yaml --source-dir ${MELANGE_DIR}/${FILE}  ${MELANGE_OPTS} --template '$(shell cat ${TEMPLATE})'
 
 apko-build: ## Build an apko pipeline with $KEY and $FILE
