@@ -348,6 +348,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. # https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases |
 | controller.metrics.enabled | bool | `false` |  |
 | controller.metrics.port | int | `10254` |  |
+| controller.metrics.portName | string | `"metrics"` |  |
 | controller.metrics.prometheusRule.additionalLabels | object | `{}` |  |
 | controller.metrics.prometheusRule.enabled | bool | `false` |  |
 | controller.metrics.prometheusRule.rules | list | `[]` |  |
