@@ -45,9 +45,10 @@ if ! command -v helm &> /dev/null; then
   exit 1
 fi
 
-HELM_VERSION=$(helm version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+') || true
-if [[ ${HELM_VERSION} < "v3.9.0" ]]; then
-  echo "Please upgrade helm to v3.9.0 or higher"
+HELM_VERSION=$(helm version 2>&1 | cut -f1 -d"," | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
+echo $HELM_VERSION
+if [[ ${HELM_VERSION} -lt 3.10.0 ]]; then
+  echo "Please upgrade helm to v3.10.0 or higher"
   exit 1
 fi
 
