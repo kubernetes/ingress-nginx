@@ -85,6 +85,14 @@ func TestIngressAnnotationOpentelemetrySetTrue(t *testing.T) {
 	if !openTelemetry.Enabled {
 		t.Errorf("expected annotation value to be true, got false")
 	}
+
+	if !openTelemetry.Set {
+		t.Errorf("expected annotation value to be true, got false")
+	}
+
+	if openTelemetry.TrustSet {
+		t.Errorf("expected annotation value to be false, got true")
+	}
 }
 
 func TestIngressAnnotationOpentelemetrySetFalse(t *testing.T) {
@@ -103,6 +111,10 @@ func TestIngressAnnotationOpentelemetrySetFalse(t *testing.T) {
 
 	if openTelemetry.Enabled {
 		t.Errorf("expected annotation value to be false, got true")
+	}
+
+	if !openTelemetry.Set {
+		t.Errorf("expected annotation value to be true, got false")
 	}
 }
 
@@ -126,7 +138,15 @@ func TestIngressAnnotationOpentelemetryTrustSetTrue(t *testing.T) {
 		t.Errorf("expected annotation value to be true, got false")
 	}
 
+	if !openTelemetry.Set {
+		t.Errorf("expected annotation value to be true, got false")
+	}
+
 	if !openTelemetry.TrustEnabled {
+		t.Errorf("expected annotation value to be true, got false")
+	}
+
+	if !openTelemetry.TrustSet {
 		t.Errorf("expected annotation value to be true, got false")
 	}
 
