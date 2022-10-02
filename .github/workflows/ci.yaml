@@ -121,6 +121,12 @@ jobs:
           name: docker.tar.gz
           path: docker.tar.gz
 
+      - name: Upload binary
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: scannable-nginx-ingress-controller.gz
+          path: rootfs/bin/amd64/scannable-nginx-ingress-controller.gz
+
   govulncheck:
     name: govulncheck
     runs-on: ubuntu-latest
