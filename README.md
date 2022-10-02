@@ -5,11 +5,14 @@
 [![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/stargazers)
 [![GitHub stars](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/kubernetes/ingress-nginx/blob/main/CONTRIBUTING.md)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx?ref=badge_shield)
 
-Please fill out our 2022 Ingress-Nginx User Survey and let us know what you want to see in future releases.
+### Community Update
 
-https://www.surveymonkey.com/r/ingressngx2022
+We will discuss the results of our Community Survey, progress on the stabilization project, and ideas going
+forward with the project at [Kubecon NA 2022 in Detroit](https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/). Come join us and let us hear what you'd like to see in the
+future for ingress-nginx.
+
+https://kccncna2022.sched.com/event/18lgl?iframe=no
 
 ## Overview
 
@@ -35,6 +38,7 @@ For detailed changes on the `ingress-nginx` helm chart, please check the followi
 
 | Ingress-NGINX version | k8s supported version        | Alpine Version | Nginx Version |
 |-----------------------|------------------------------|----------------|---------------|
+| v1.4.0                | 1.25, 1.24, 1.23             | 3.16.2         | 1.19.10†      |
 | v1.3.1                | 1.24, 1.23, 1.22, 1.21, 1.20 | 3.16.2         | 1.19.10†      |
 | v1.3.0                | 1.24, 1.23, 1.22, 1.21, 1.20 | 3.16.0         | 1.19.10†      |
 | v1.2.1                | 1.23, 1.22, 1.21, 1.20, 1.19 | 3.14.6         | 1.19.10†      |
