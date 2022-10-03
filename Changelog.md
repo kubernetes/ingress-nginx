@@ -27,7 +27,7 @@ If you notice any issues, *please* ping [Ben Elder](https://twitter.com/BenTheEl
 [8890](https://github.com/kubernetes/ingress-nginx/pull/8890)
 * Update to Prometheus metric names, more information [available here]( https://github.com/kubernetes/ingress-nginx/pull/8728
 )
-* Deprecated Kubernetes versions 1.20-1.21, Added support for, 1.25, currently supported versions v1.23, v1.24, v1.25  
+* Deprecated Kubernetes versions 1.20-1.21, Added support for, 1.25, currently supported versions v1.22, v1.23, v1.24, v1.25  
 
 ADDED
 * `_request_duration_seconds` Histogram
