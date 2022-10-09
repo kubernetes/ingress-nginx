@@ -316,3 +316,69 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
     ```console
     cat nginx_conf.txt
     ```
+
+## Unable to listen on port (80/443)
+One possible reason for this error is lack of permission to bind to the port.  Ports 80, 443, and any other port < 1024 are Linux privileged ports which historically could only be bound by root.  The ingress-nginx-controller uses the CAP_NET_BIND_SERVICE [linux capability](https://man7.org/linux/man-pages/man7/capabilities.7.html) to allow binding these ports as a normal user (www-data / 101).  This involves two components:
+1. In the image, the /nginx-ingress-controller file has the cap_net_bind_service capability added (e.g. via [setcap](https://man7.org/linux/man-pages/man8/setcap.8.html)) 
+2. The NET_BIND_SERVICE capability is added to the container in the containerSecurityContext of the deployment.
+
+### Create a test pod
+The /nginx-ingress-controller process exits/crashes when encountering this error, making it difficult to troubleshoot what is happening inside the container.  To get around this, start an equivalent container running "sleep 3600", and exec into it for further troubleshooting.  For example:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ingress-nginx-sleep
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  containers:
+    - name: nginx
+      image: ##_CONTROLLER_IMAGE_##
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "500m"
+        limits:
+          memory: "1Gi"
+          cpu: "1"
+      command: ["sleep"]
+      args: ["3600"]
+      ports:
+      - containerPort: 80
+        name: http
+        protocol: TCP
+      - containerPort: 443
+        name: https
+        protocol: TCP
+      securityContext:
+        allowPrivilegeEscalation: true
+        capabilities:
+          add:
+          - NET_BIND_SERVICE
+          drop:
+          - ALL
+        runAsUser: 101
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: ##_NODE_NAME_##
+  tolerations:
+  - key: "node.kubernetes.io/unschedulable"
+    operator: "Exists"
+    effect: NoSchedule
+```
+* update the namespace if applicable/desired
+* replace `##_NODE_NAME_##` with the problematic node (or remove nodeSelector section if problem is not confined to one node)
+* replace `##_CONTROLLER_IMAGE_##` with the same image as in use by your ingress-nginx deployment
+* confirm the securityContext section matches what is in place for ingress-nginx-controller pods in your cluster
+
+Apply the YAML and open a shell into the pod.
+Try to manually run the controller process:
+```console
+$ /nginx-ingress-controller
+```
+Confirm the capabilities are properly surfacing into the pod:
+```console
+$ grep CapBnd /proc/1/status
+```
