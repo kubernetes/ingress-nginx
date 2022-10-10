@@ -64,7 +64,7 @@ jobs:
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
       
       - name: Helm Chart Releaser
-        uses: helm/chart-releaser-action@v1.4.0
+        uses: helm/chart-releaser-action@v1.4.1
         env:
           CR_SKIP_EXISTING: "false"
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
