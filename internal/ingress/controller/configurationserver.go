@@ -18,8 +18,9 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+
+	json "github.com/json-iterator/go"
 
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/klog/v2"

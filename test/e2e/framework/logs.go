@@ -25,13 +25,17 @@ import (
 
 // Logs returns the log entries of a given Pod.
 func Logs(client kubernetes.Interface, namespace, podName string) (string, error) {
+	container := "controller"
+	if Dataplane {
+		container = "dataplane"
+	}
 	// Logs from jails take a bigger time to get shipped due to the need of tailing them
 	Sleep(3 * time.Second)
 	logs, err := client.CoreV1().RESTClient().Get().
 		Resource("pods").
 		Namespace(namespace).
 		Name(podName).SubResource("log").
-		Param("container", "controller").
+		Param("container", container).
 		Do(context.TODO()).
 		Raw()
 	if err != nil {

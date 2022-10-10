@@ -352,7 +352,9 @@ func (n *NGINXController) Start() {
 
 	if n.gRPCServer != nil {
 		klog.InfoS("Starting grpc server", "port", n.cfg.ListenPorts.GRPCPort)
-		ingress.RegisterEventServiceServer(n.gRPCServer, &EventServer{Recorder: n.recorder})
+		ingress.RegisterEventServiceServer(n.gRPCServer, &EventServer{
+			n: n,
+		})
 		ingress.RegisterConfigurationServer(n.gRPCServer, &ConfigurationServer{
 			n: n,
 		})

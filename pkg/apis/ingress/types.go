@@ -71,7 +71,7 @@ type Configuration struct {
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 
 	// DefaultSSLCertificate contains the whole Default SSL Certificate to be used
-	DefaultSSLCertificate *SSLCert `json:"-"`
+	DefaultSSLCertificate *SSLCert `json:"defaultSSLCertificate"`
 
 	StreamSnippets []string
 }
@@ -250,7 +250,7 @@ type Location struct {
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
-	Service *apiv1.Service `json:"-"`
+	Service *apiv1.Service `json:"service"`
 	// Port describes to which port from the service
 	Port intstr.IntOrString `json:"port"`
 	// Overwrite the Host header passed into the backend. Defaults to
@@ -321,7 +321,7 @@ type Location struct {
 	ClientBodyBufferSize string `json:"clientBodyBufferSize,omitempty"`
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
-	DefaultBackend *apiv1.Service `json:"-"`
+	DefaultBackend *apiv1.Service `json:"defaultBackend"`
 	// DefaultBackendUpstreamName is the upstream-formatted string for the name of
 	// this location's custom default backend
 	DefaultBackendUpstreamName string `json:"defaultBackendUpstreamName,omitempty"`
@@ -362,7 +362,7 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *apiv1.Service     `json:"-"`
+	Service *apiv1.Service     `json:"service"`
 	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
@@ -379,7 +379,7 @@ type L4Service struct {
 	// Endpoints active endpoints of the service
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// k8s Service
-	Service *apiv1.Service `json:"-"`
+	Service *apiv1.Service `json:"service"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
@@ -400,7 +400,7 @@ type ProxyProtocol struct {
 
 // Ingress holds the definition of an Ingress plus its annotations
 type Ingress struct {
-	networking.Ingress `json:"-"`
+	networking.Ingress `json:"ingress"`
 	ParsedAnnotations  *annotations.Ingress `json:"parsedAnnotations"`
 }
 

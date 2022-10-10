@@ -65,7 +65,11 @@ func (f *Framework) ExecCommand(pod *corev1.Pod, command string) (string, error)
 		execErr bytes.Buffer
 	)
 
-	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s --container controller -- %s", KubectlPath, pod.Namespace, pod.Name, command))
+	container := "controller"
+	if Dataplane {
+		container = "dataplane"
+	}
+	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s --container %s -- %s", KubectlPath, pod.Namespace, pod.Name, container, command))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 

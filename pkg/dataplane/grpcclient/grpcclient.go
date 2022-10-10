@@ -18,12 +18,18 @@ package grpcclient
 
 import (
 	"context"
+	"encoding/json"
+	"net"
 	"os"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ingressconfig "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	"k8s.io/klog/v2"
 )
 
 /* TODO for this client:
@@ -59,6 +65,22 @@ type Client struct {
 	ctx                 context.Context
 }
 
+var (
+	retryPolicy = `{
+		"methodConfig": [{
+		  "name": [{"service": "ingressv1.Configuration"}],
+		  "name": [{"service": "ingressv1.EventService"}],
+		  "waitForReady": true,
+		  "retryPolicy": {
+			  "MaxAttempts": 4,
+			  "InitialBackoff": "1s",
+			  "MaxBackoff": "2s",
+			  "BackoffMultiplier": 1.0,
+			  "RetryableStatusCodes": [ "UNAVAILABLE" ]
+		  }
+		}]}`
+)
+
 // NewGRPCClient receives the gRPC configuration and returns the client to be used
 func NewGRPCClient(config Config) (*Client, error) {
 	var cli Client
@@ -68,8 +90,32 @@ func NewGRPCClient(config Config) (*Client, error) {
 	cli.ErrorCh = config.ErrorCh
 	cli.EventCh = make(chan ingress.EventMessage)
 	cli.ConfigCh = make(chan *ingressconfig.TemplateConfig)
+
+	// Because we may start the dataplane before the control plane, Kubernetes service may not
+	// be ready or return a DNS error when dp tries to connect to cp.
+	// Usually this is fast, but we can/should wait until the control plane is ready
+	// to move forward
+	err = wait.Poll(1*time.Second, 30*time.Second, func() (bool, error) {
+		conn, err := net.Dial("tcp", config.Address)
+		if err != nil {
+			klog.Warningf("error while trying to connect to controller, retrying: %s", err)
+			return false, nil
+		}
+
+		defer conn.Close()
+
+		return true, nil
+	})
+	if err != nil {
+		klog.Fatalf("error waiting controller to be ready: %s", err)
+	}
+
 	//TODO:  WE WONT USE INSECURE IN PRODUCTION!!!
-	cli.connection, err = grpc.Dial(config.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cli.connection, err = grpc.Dial(
+		config.Address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultServiceConfig(retryPolicy),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +137,31 @@ func NewGRPCClient(config Config) (*Client, error) {
 }
 
 func (c *Client) Start() {
+
+	for {
+		cfg, err := c.ConfigurationClient.GetConfigurations(c.ctx, c.Backendname)
+		if err != nil {
+			klog.Fatalf("failed to get initial configuration: %s", err)
+		}
+		switch op := cfg.Op.(type) {
+		case *ingress.Configurations_FullconfigOp:
+			var configBackend *config.TemplateConfig
+			if err := json.Unmarshal(op.FullconfigOp.Configuration, &configBackend); err != nil {
+				klog.Fatalf("error unmarshalling config: %s", err)
+			}
+			if len(configBackend.Servers) < 1 || len(configBackend.Backends) < 1 {
+				klog.Warning("controller not ready, retrying in 5s")
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			klog.Info("controller become ready, moving forward")
+
+		default:
+			klog.Fatalf("controller returned an invalid operation: %v", op)
+		}
+		break
+	}
+
 	go c.EventService()
 	go c.ConfigurationService()
 }

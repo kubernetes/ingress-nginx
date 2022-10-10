@@ -17,8 +17,9 @@ limitations under the License.
 package grpcclient
 
 import (
-	"encoding/json"
 	"fmt"
+
+	json "github.com/json-iterator/go"
 
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
@@ -46,6 +47,7 @@ func (c *Client) ConfigurationService() {
 				klog.Errorf("error unmarshalling config: %s", err)
 				continue
 			}
+			klog.Info("received new configuration")
 		default:
 			klog.Warningf("Operation not implemented: %+v", op)
 		}

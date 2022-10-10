@@ -41,9 +41,12 @@ RUN apk update \
 
 COPY --chown=www-data:www-data etc /etc
 
-# COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
+# TODO: Remove DBG from Dataplane, we only need it for e2e tests! We should have a 
+# better solution, like vendoring it in e2e and calling direct it.
+# Maybe we should replace this call to a port-forward + a direct call as 
+# https://github.com/kubernetes/ingress-nginx/blob/83aa9e472fa7dbca1b371db117b2a582d55ac6d3/cmd/dbg/main.go#L166
+COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
 COPY --chown=www-data:www-data bin/${TARGETARCH}/nginx-ingress-dataplane /
-#COPY --chown=www-data:www-data bin/${TARGETARCH}/wait-shutdown /
 
 # Fix permission during the build to avoid issues at runtime
 # with volumes (custom templates)

@@ -28,6 +28,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
+	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/ingress-nginx/pkg/util/file"
@@ -179,6 +180,9 @@ func (n *NGINXConfigurer) updateConfiguration(cfg *config.TemplateConfig) error 
 
 	cfg.Cfg.SSLDHParam = cfg.DHParamFile
 	cfg.BacklogSize = ingressruntime.SysctlSomaxconn()
+	cfg.Cfg.Resolver = n.resolver
+	cfg.Cfg.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
+
 	content, err := n.t.Write(*cfg)
 	if err != nil {
 		return err

@@ -163,7 +163,7 @@ func (f *Framework) AfterEach() {
 		return
 	}
 
-	cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf")
+	cmd := "cat /etc/nginx/nginx.conf"
 	o, err := f.ExecCommand(f.pod, cmd)
 	if err != nil {
 		Logf("Unexpected error obtaining nginx.conf file: %v", err)
@@ -182,14 +182,14 @@ func (f *Framework) AfterEach() {
 	ginkgo.By("Dumping NGINX logs")
 	Logf("%v", log)
 
-	o, err = f.NamespaceContent()
+	/*o, err = f.NamespaceContent()
 	if err != nil {
 		Logf("Unexpected error obtaining namespace information: %v", err)
 		return
 	}
 
-	ginkgo.By("Dumping namespace content")
-	Logf("%v", o)
+	//ginkgo.By("Dumping namespace content")
+	Logf("%v", o)*/
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.
@@ -214,10 +214,14 @@ func MemoryLeakIt(text string, body interface{}) bool {
 
 // GetNginxIP returns the number of TCP port where NGINX is running
 func (f *Framework) GetNginxIP() string {
+	svcName := "nginx-ingress-controller"
+	if Dataplane {
+		svcName = "nginx-ingress-dataplane"
+	}
 	s, err := f.KubeClientSet.
 		CoreV1().
 		Services(f.Namespace).
-		Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
+		Get(context.TODO(), svcName, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX IP address")
 	return s.Spec.ClusterIP
 }
@@ -485,10 +489,18 @@ func (f *Framework) newHTTPTestClient(config *tls.Config, setIngressURL bool) *h
 
 // WaitForNginxListening waits until NGINX starts accepting connections on a port
 func (f *Framework) WaitForNginxListening(port int) {
+
 	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
+		LabelSelector: "app.kubernetes.io/component=controller",
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress pods to be ready")
+
+	if Dataplane {
+		err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/component=dataplane",
+		})
+		assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress dataplane pods to be ready")
+	}
 
 	podIP := f.GetNginxIP()
 	err = wait.Poll(500*time.Millisecond, DefaultTimeout, func() (bool, error) {

@@ -237,7 +237,9 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return err
 	}
 
-	utilingress.ClearTemplateContent(&tmplConfig)
+	// TODO (rikatz): So, while migrating / splitting I figured out that the fields are actually used...ooops
+	//utilingress.ClearTemplateContent(&tmplConfig)
+
 	tmplConfig.GeneratedTime = time.Now().UnixNano()
 	n.templateConfig = &tmplConfig
 	n.GRPCSubscribers.Lock.Lock()

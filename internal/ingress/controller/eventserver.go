@@ -21,7 +21,6 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/klog/v2"
 )
@@ -29,8 +28,7 @@ import (
 // EventServer defines a gRPC service responsible to receive and publish events broadcast from data-plane
 type EventServer struct {
 	ingress.UnimplementedEventServiceServer
-	Recorder record.EventRecorder
-	n        *NGINXController
+	n *NGINXController
 }
 
 // PublishEvent is a service that allows dataplane to send events to Control Plane
@@ -60,6 +58,6 @@ func (s *EventServer) PublishEvent(stream ingress.EventService_PublishEventServe
 			Name:      event.Backend.Name,
 			Namespace: event.Backend.Namespace,
 		}}
-		s.Recorder.Eventf(obj, event.Eventtype, event.Reason, event.Message)
+		s.n.recorder.Eventf(obj, event.Eventtype, event.Reason, event.Message)
 	}
 }

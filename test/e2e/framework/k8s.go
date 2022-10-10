@@ -237,16 +237,21 @@ func isPodReady(p *core.Pod) bool {
 // getIngressNGINXPod returns the ingress controller running pod
 func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
 	var pod *core.Pod
+	component := "controller"
+	if Dataplane {
+		component = "dataplane"
+	}
+
 	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
 		l, err := kubeClientSet.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
-			LabelSelector: "app.kubernetes.io/name=ingress-nginx",
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/component=%s", component),
 		})
 		if err != nil {
 			return false, nil
 		}
 
 		for _, p := range l.Items {
-			if strings.HasPrefix(p.GetName(), "nginx-ingress-controller") {
+			if strings.HasPrefix(p.GetName(), fmt.Sprintf("nginx-ingress-%s", component)) {
 				isRunning, err := podRunningReady(&p)
 				if err != nil {
 					continue

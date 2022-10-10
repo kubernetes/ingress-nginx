@@ -461,6 +461,7 @@ func locationConfigForLua(l interface{}, a interface{}) string {
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
 func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 	// NGINX need IPV6 addresses to be surrounded by brackets
+	klog.Warningf("received the following buildResolver: res: %v disIPV6: %v", res, disableIpv6)
 	nss, ok := res.([]net.IP)
 	if !ok {
 		klog.Errorf("expected a '[]net.IP' type but %T was returned", res)

@@ -20,8 +20,10 @@ import (
 	"flag"
 	"os"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 	"k8s.io/ingress-nginx/pkg/dataplane"
 	"k8s.io/klog/v2"
 )
@@ -43,6 +45,18 @@ func ParseDataplaneFlags() (bool, *dataplane.Configuration, error) {
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
 
+		enableMetrics = flags.Bool("enable-metrics", true,
+			`Enables the collection of NGINX metrics`)
+		metricsPerHost = flags.Bool("metrics-per-host", true,
+			`Export metrics per-host`)
+		reportStatusClasses = flags.Bool("report-status-classes", false,
+			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics`)
+
+		timeBuckets         = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime")
+		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength")
+		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent")
+		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics")
+
 		/*healthzPort = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
 		healthzHost = flags.String("healthz-host", "", "Address to bind the healthz endpoint.")*/
 	)
@@ -61,9 +75,20 @@ func ParseDataplaneFlags() (bool, *dataplane.Configuration, error) {
 		return true, nil, nil
 	}
 
+	var histogramBuckets = &collectors.HistogramBuckets{
+		TimeBuckets:   *timeBuckets,
+		LengthBuckets: *lengthBuckets,
+		SizeBuckets:   *sizeBuckets,
+	}
+
 	var err error
 	config := &dataplane.Configuration{
-		GRPCAddress: *grpcAddress,
+		EnableMetrics:       *enableMetrics,
+		MetricsPerHost:      *metricsPerHost,
+		MetricsBuckets:      histogramBuckets,
+		ReportStatusClasses: *reportStatusClasses,
+		MonitorMaxBatchSize: *monitorMaxBatchSize,
+		GRPCAddress:         *grpcAddress,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,

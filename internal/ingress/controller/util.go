@@ -27,6 +27,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	"k8s.io/klog/v2"
 )
 
 // newUpstream creates an upstream without servers.
@@ -117,6 +118,10 @@ func (nc NginxCommand) Test(cfg string) ([]byte, error) {
 }
 
 func (n *NGINXController) isValidBackend(backend, namespace string) bool {
+	if n.cfg == nil {
+		klog.Warning("failed to validate backend, config is nil")
+		return false
+	}
 	if namespace != n.cfg.Namespace {
 		return false
 	}
