@@ -659,7 +659,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics $cfg.EnableModsecurity) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics $cfg.EnableModsecurity $cfg.EnableOpentracing) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -957,7 +957,7 @@ stream {
         set $proxy_upstream_name "-";
 
         {{ if not ( empty $server.CertificateAuth.MatchCN ) }}
-        {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}  
+        {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}
         if ( $ssl_client_s_dn !~ {{ $server.CertificateAuth.MatchCN }} ) {
             return 403 "client certificate unauthorized";
         }
@@ -1025,7 +1025,7 @@ stream {
         {{ end }}
 
         {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics $all.Cfg.EnableModsecurity) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics $all.Cfg.EnableModsecurity $all.Cfg.EnableOpentracing) }}
         {{ end }}
 
         {{ buildMirrorLocations $server.Locations }}
