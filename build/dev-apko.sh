@@ -63,7 +63,7 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   make build image
   docker tag "${REGISTRY}/controller:${TAG}" "${DEV_IMAGE}"
 fi
-export K8S_VERSION=${K8S_VERSION:-v1.24.2@sha256:1f0cee2282f43150b52dc7933183ed96abdcfc8d293f30ec07082495874876f1}
+export K8S_VERSION=${K8S_VERSION:-v1.25.2@sha256:9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace}
 
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
@@ -106,7 +106,6 @@ controller:
     image: "${DEV_IMAGE}"
     tag: "${TAG}"
     digest: "${DIGEST}"
-    runAsUser: 0
   config:
     worker-processes: "1"
   podLabels:

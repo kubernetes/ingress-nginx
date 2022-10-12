@@ -35,7 +35,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/nginx"
-	klog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 )
 
 // TODO: We should split the flags functions between common for all programs
@@ -253,6 +253,13 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	}
 
 	parser.AnnotationsPrefix = *annotationsPrefix
+
+	//Check if ingress-nginx controller has cap_net_bind_service privileges
+	klog.InfoS("Ingress-nginx http port %v, https port %v", *httpPort, *httpsPort)
+	if *httpPort == 80 || *httpsPort == 443 {
+		klog.InfoS("Checking Ingress-nginx Capabilities, http port %v, https port %v", *httpPort, *httpsPort)
+		return false, nil, ing_net.CheckCapNetBind()
+	}
 
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {

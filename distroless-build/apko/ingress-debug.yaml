@@ -39,7 +39,13 @@ contents:
     - lua-resty-string@local
     - lua-resty-upload@local
 accounts:
-  run-as: root
+  groups:
+    - groupname: www-data
+      gid: 101
+  users:
+    - username: www-data
+      uid: 101
+  run-as: www-data
 
 annotations:
   org.opencontainers.image.title: "NGINX Ingress Controller for Kubernetes"
@@ -60,7 +66,16 @@ work-dir:  /etc/nginx
 
 
 paths:
-  - path:  /usr/bin/nginx
+  - path: /tmp/nginx/client-body
+    type: empty-file
+    permissions: 0o777
+    recursive: true
+  - path: /nginx-ingress-controller
+    type: capabilities
+    capabilities:
+      - cap_net_bind_service=+ep
+    permissions: 0o777
+  - path: /usr/bin/nginx
     type: hardlink
     source: /usr/local/nginx/sbin/nginx
     permissions: 0o777

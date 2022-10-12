@@ -1,5 +1,5 @@
 {
-  "INGRESS_NGINX_VERSION": "main",
+  "INGRESS_NGINX_VERSION": "debug",
   "PKG": "k8s.io/ingress-nginx",
   "TAG": "main",
   "COMMIT_SHA": "cee95b50a",

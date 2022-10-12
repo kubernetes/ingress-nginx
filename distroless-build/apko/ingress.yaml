@@ -36,7 +36,7 @@ accounts:
   users:
     - username: www-data
       uid: 101
-  run-as: root
+  run-as: www-data
 
 annotations:
   org.opencontainers.image.title: "NGINX Ingress Controller for Kubernetes"

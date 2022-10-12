@@ -28,9 +28,9 @@ IMAGE ?= $(REGISTRY)/controller
 ARCH := $(shell uname -m)
 MELANGE_DIR ?= melange
 APKO_DIR ?= apko
-MELANGE ?= docker run --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
-MELANGE_DETACHED ?= docker run -d --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
-APKO ?= docker run --rm -v "${PWD}":/work distroless.dev/apko:latest
+MELANGE ?= docker run --rm --privileged -w /work -v "${PWD}":/work distroless.dev/melange:latest
+MELANGE_DETACHED ?= docker run -d -w /work --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
+APKO ?= docker run --rm -w /work -v "${PWD}":/work ko.local:38f15a95ae791cd5deab7d054cb3c15129cedb25a2e30d0308a5f6c63c9865e3
 KEY ?= melange.rsa
 REPO ?= packages
 TEMPLATE ?= melange/nginx-templates.json
@@ -39,7 +39,7 @@ MELANGE_INGRESS_OPT ?= -k ${KEY}.pub --signing-key ${KEY} --arch ${ARCHS} --empt
 APKO_OPTS ?= -k ${KEY}.pub --debug --use-docker-mediatypes --sbom=false --build-arch ${ARCHS} ${APKO_DIR}/${FILE}.yaml
 KEY ?= melange.rsa
 REPO ?= $(shell pwd)/packages
-ARCHS?="amd64,arm64,arm/v6,arm/v7,s390x"
+ARCHS ?="amd64,arm64,arm/v6,arm/v7,s390x"
 
 define build-package
 	docker run $(2) --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest build ${MELANGE_DIR}/$(1).yaml ${MELANGE_OPTS} --template '$(shell cat ${TEMPLATE})'
