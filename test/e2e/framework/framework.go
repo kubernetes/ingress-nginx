@@ -121,11 +121,9 @@ func (f *Framework) CreateEnvironment() {
 }
 
 func (f *Framework) DestroyEnvironment() {
-	go func() {
-		defer ginkgo.GinkgoRecover()
-		err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
-	}()
+	defer ginkgo.GinkgoRecover()
+	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
+	assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
 }
 
 // BeforeEach gets a client and makes a namespace.
@@ -151,11 +149,9 @@ func (f *Framework) AfterEach() {
 	defer f.DestroyEnvironment()
 
 	defer func(kubeClient kubernetes.Interface, ingressclass string) {
-		go func() {
-			defer ginkgo.GinkgoRecover()
-			err := deleteIngressClass(kubeClient, ingressclass)
-			assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
-		}()
+		defer ginkgo.GinkgoRecover()
+		err := deleteIngressClass(kubeClient, ingressclass)
+		assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
 	}(f.KubeClientSet, f.IngressClass)
 
 	if !ginkgo.CurrentSpecReport().Failed() {
