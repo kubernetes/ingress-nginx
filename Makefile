@@ -53,14 +53,6 @@ ifneq ($(PLATFORM),)
 	PLATFORM_FLAG="--platform"
 endif
 
-MAC_OS = $(shell uname -s)
-
-ifeq ($(MAC_OS), Darwin)
-	MAC_DOCKER_FLAGS="--load"
-else
-	MAC_DOCKER_FLAGS=
-endif
-
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
 BASE_IMAGE ?= $(shell cat NGINX_BASE)
@@ -76,7 +68,6 @@ image: clean-image ## Build image for a particular arch.
 	docker build \
 		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
-		$(MAC_DOCKER_FLAGS) \
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
@@ -94,7 +85,6 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
 	docker build \
 		--no-cache \
-		$(MAC_DOCKER_FLAGS) \
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
