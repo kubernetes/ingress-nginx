@@ -70,11 +70,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
 
-      - name: Set up Go 1.19.1
+      - name: Set up Go 1.19.2
         id: go
         uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # v3.2.0
         with:
-          go-version: '1.19.1'
+          go-version: '1.19.2'
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@8b122486cedac8393e77aa9734c3528886e4a1a8 #v2.0.0
@@ -140,7 +140,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # v3.2.0
         with:
-          go-version: '1.19.1'
+          go-version: '1.19.2'
 
       - name: cache
         uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3
@@ -411,12 +411,12 @@ jobs:
           version: v0.15.0
           image: kindest/node:v1.25.2
 
-      - name: Set up Go 1.19.1
+      - name: Set up Go 1.19.2
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # v3.2.0
         with:
-          go-version: '1.19.1'
+          go-version: '1.19.2'
 
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
