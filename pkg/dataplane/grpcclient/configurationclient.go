@@ -47,9 +47,9 @@ func (c *Client) ConfigurationService() {
 				klog.Errorf("error unmarshalling config: %s", err)
 				continue
 			}
-			klog.Info("received new configuration")
 		default:
 			klog.Warningf("Operation not implemented: %+v", op)
+			continue
 		}
 		c.ConfigCh <- configtemplate
 	}

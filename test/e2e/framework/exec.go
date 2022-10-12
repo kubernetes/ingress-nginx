@@ -94,7 +94,7 @@ func (f *Framework) NamespaceContent() (string, error) {
 		execErr bytes.Buffer
 	)
 
-	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v get pods,services,endpoints,deployments,ingress,ingressclass --namespace %s -o yaml", KubectlPath, f.Namespace))
+	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v get pods,services,endpoints,deployments,ingress,ingressclass --namespace %s", KubectlPath, f.Namespace))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 

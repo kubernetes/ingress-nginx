@@ -85,7 +85,16 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 		}
 	}
 
-	if !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
+	var configMapChange bool
+	if n.templateConfig != nil {
+		if n.templateConfig.Cfg.Checksum != cfg.Cfg.Checksum {
+			klog.V(3).Infof("Configmap has changed. Will trigger a reload. Old checksum: %s New checksum: %s",
+				n.templateConfig.Cfg.Checksum, cfg.Cfg.Checksum)
+			configMapChange = true
+		}
+	}
+
+	if configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
 		hash, _ := hashstructure.Hash(newcfg, &hashstructure.HashOptions{

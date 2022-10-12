@@ -720,7 +720,7 @@ type Configuration struct {
 	GlobalExternalAuth GlobalExternalAuth `json:"global-external-auth"`
 
 	// Checksum contains a checksum of the configmap configuration
-	Checksum string `json:"-"`
+	Checksum string `json:"checksum"`
 
 	// Block all requests from given IPs
 	BlockCIDRs []string `json:"block-cidrs"`
@@ -950,6 +950,7 @@ func NewDefault() Configuration {
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
 	Checksum                 string // As we cannot marshall this but it breaks a lot of stuff, just duplicating the field in Template generation
+	BackendChecksum          string
 	DefaultSSLCertificate    *ingress.SSLCert
 	ProxySetHeaders          map[string]string
 	AddHeaders               map[string]string
@@ -984,12 +985,12 @@ type TemplateConfig struct {
 // ListenPorts describe the ports required to run the
 // NGINX Ingress controller
 type ListenPorts struct {
-	HTTP     int
-	HTTPS    int
-	Health   int
-	Default  int
-	SSLProxy int
-	GRPCPort int
+	HTTP     int `json:"http"`
+	HTTPS    int `json:"https"`
+	Health   int `json:"health"`
+	Default  int `json:"default"`
+	SSLProxy int `json:"sslproxy"`
+	GRPCPort int `json:"grpc"`
 }
 
 // GlobalExternalAuth describe external authentication configuration for the

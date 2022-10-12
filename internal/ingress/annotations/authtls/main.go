@@ -48,7 +48,7 @@ type Config struct {
 	ErrorPage          string `json:"errorPage"`
 	PassCertToUpstream bool   `json:"passCertToUpstream"`
 	MatchCN            string `json:"matchCN"`
-	AuthTLSError       string
+	AuthTLSError       string `json:"authTLSError"`
 }
 
 // Equal tests for equality between two Config types

@@ -162,34 +162,34 @@ func (f *Framework) AfterEach() {
 	if !ginkgo.CurrentSpecReport().Failed() {
 		return
 	}
+	/*
+		cmd := "cat /etc/nginx/nginx.conf"
+		o, err := f.ExecCommand(f.pod, cmd)
+		if err != nil {
+			Logf("Unexpected error obtaining nginx.conf file: %v", err)
+			return
+		}
 
-	cmd := "cat /etc/nginx/nginx.conf"
-	o, err := f.ExecCommand(f.pod, cmd)
-	if err != nil {
-		Logf("Unexpected error obtaining nginx.conf file: %v", err)
-		return
-	}
+		ginkgo.By("Dumping NGINX configuration after failure")
+		Logf("%v", o)
 
-	ginkgo.By("Dumping NGINX configuration after failure")
-	Logf("%v", o)
+		log, err := f.NginxLogs()
+		if err != nil {
+			Logf("Unexpected error obtaining NGINX logs: %v", err)
+			return
+		}
 
-	log, err := f.NginxLogs()
-	if err != nil {
-		Logf("Unexpected error obtaining NGINX logs: %v", err)
-		return
-	}
+		ginkgo.By("Dumping NGINX logs")
+		Logf("%v", log) */
 
-	ginkgo.By("Dumping NGINX logs")
-	Logf("%v", log)
-
-	/*o, err = f.NamespaceContent()
+	o, err := f.NamespaceContent()
 	if err != nil {
 		Logf("Unexpected error obtaining namespace information: %v", err)
 		return
 	}
 
-	//ginkgo.By("Dumping namespace content")
-	Logf("%v", o)*/
+	ginkgo.By("Dumping namespace content")
+	Logf("%v", o)
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.
