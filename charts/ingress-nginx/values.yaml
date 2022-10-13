@@ -99,8 +99,8 @@ controller:
       # -- 'hostPort' https port
       https: 443
 
-  # -- Election ID to use for status update
-  electionID: ingress-controller-leader
+  # -- Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader'
+  electionID: ""
 
   ## This section refers to the creation of the IngressClass resource
   ## IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
