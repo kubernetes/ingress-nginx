@@ -68,7 +68,7 @@ rules:
     resources:
       - configmaps
     resourceNames:
-      - {{ .Values.controller.electionID }}
+      - {{ include "ingress-nginx.controller.electionID" . }}
     verbs:
       - get
       - update
@@ -83,7 +83,7 @@ rules:
     resources:
       - leases
     resourceNames:
-      - {{ .Values.controller.electionID }}
+      - {{ include "ingress-nginx.controller.electionID" . }}
     verbs:
       - get
       - update
