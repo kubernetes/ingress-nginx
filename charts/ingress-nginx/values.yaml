@@ -421,7 +421,7 @@ controller:
         ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
         ##
         externalIPs: []
-        # -- Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+        # -- Used by cloud providers to connect the resulting `external` service of type `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
         loadBalancerIP: ""
         loadBalancerSourceRanges: []
         enableHttp: true
@@ -474,7 +474,8 @@ controller:
             enabled: false
             # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service.
             annotations: {}
-            # loadBalancerIP: ""
+            # -- Used by cloud providers to connect the resulting `internal` service of type `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+            loadBalancerIP: ""
 
             # -- Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
             loadBalancerSourceRanges: []

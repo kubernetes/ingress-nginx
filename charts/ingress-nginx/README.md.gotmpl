@@ -207,7 +207,7 @@ controller:
 
 An use case for this scenario is having a split-view DNS setup where the public zone CNAME records point to the external balancer URL while the private zone CNAME records point to the internal balancer URL. This way, you only need one ingress kubernetes object.
 
-Optionally you can set `controller.service.loadBalancerIP` if you need a static IP for the resulting `LoadBalancer`.
+Optionally you can set `controller.service.loadBalancerIP` (and `controller.service.internal.loadBalancerIP` if used) if you need a static IP for the resulting `LoadBalancer`.
 
 ### Ingress Admission Webhooks
 
