@@ -84,8 +84,8 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 	// loop over all endpointSlices generated for service
 	for _, eps := range epss {
 		var ports []int32
-		if len(eps.Ports) == 0 {
-			// When ports is empty, it indicates that there are no defined ports, using svc targePort <- this could be wrong
+		if len(eps.Ports) == 0 && port.TargetPort.Type == intstr.Int {
+			// When ports is empty, it indicates that there are no defined ports, using svc targePort if it's a number
 			klog.V(3).Infof("No ports found on endpointSlice, using service TargetPort %v for Service %q", port.String(), svcKey)
 			ports = append(ports, port.TargetPort.IntVal)
 		} else {
