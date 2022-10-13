@@ -1,8 +1,8 @@
 {
   "INGRESS_NGINX_VERSION": "debug",
   "PKG": "k8s.io/ingress-nginx",
-  "TAG": "main",
-  "COMMIT_SHA": "cee95b50a",
+  "TAG": "debug",
+  "COMMIT_SHA": "136e45be6",
   "REPO_INFO": "git@github.com:kubernetes/ingress-nginx.git",
   "NGINX_VERSION": "1.19.10",
   "NGINX_SHA": "e8d0290ff561986ad7cd6c33307e12e11b137186c4403a6a5ccdb4914c082d88",

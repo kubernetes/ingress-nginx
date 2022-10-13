@@ -30,7 +30,7 @@ MELANGE_DIR ?= melange
 APKO_DIR ?= apko
 MELANGE ?= docker run --rm --privileged -w /work -v "${PWD}":/work distroless.dev/melange:latest
 MELANGE_DETACHED ?= docker run -d -w /work --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
-APKO ?= docker run --rm -w /work -v "${PWD}":/work ko.local:38f15a95ae791cd5deab7d054cb3c15129cedb25a2e30d0308a5f6c63c9865e3
+APKO ?= docker run --rm -w /work -v "${PWD}":/work ko.local:5f90a47e3144af5b529930d71eb58fc6ea0004113aa0cdb3d1da35d6065b594e
 KEY ?= melange.rsa
 REPO ?= packages
 TEMPLATE ?= melange/nginx-templates.json
@@ -76,7 +76,7 @@ nginx-test: ## Start $IMAGE:$TAG container and drop into bash shell
 	docker run --rm -it --entrypoint bash --env-file .env $(REGISTRY)/$(IMAGE):$(TAG)
 
 shell: ## Start Alpine base container, mount PWD and drop into sh
-	docker run -it --rm -v "${PWD}":/work --env-file .env --group-add www-data --entrypoint sh distroless.dev/alpine-base:latest
+	docker run -it --rm -v "${PWD}/..":/work --env-file .env --group-add www-data --entrypoint sh distroless.dev/alpine-base:latest
 
 check_clean:
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
