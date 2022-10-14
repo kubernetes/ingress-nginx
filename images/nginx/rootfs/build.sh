@@ -65,17 +65,17 @@ export MODSECURITY_LIB_VERSION=v3.0.5
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.2
 
-# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.20...master
-export LUA_NGX_VERSION=b721656a9127255003b696b42ccc871c7ec18d59
+# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.21...master
+export LUA_NGX_VERSION=v0.10.21
 
-# Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/v0.0.10...master
-export LUA_STREAM_NGX_VERSION=74f8c8bca5b95cecbf42d4e1a465bc08cd075a9b
+# Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/v0.0.11...master
+export LUA_STREAM_NGX_VERSION=v0.0.11
 
-# Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/v0.07...master
+# Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/8aa93ead98ba2060d4efd594ae33a35d153589bf...master
 export LUA_UPSTREAM_VERSION=8aa93ead98ba2060d4efd594ae33a35d153589bf
 
-# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.8...openresty:master
-export LUA_CJSON_VERSION=4b350c531de3d71008c77ae94e59275b8371b4dc
+# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.10...openresty:master
+export LUA_CJSON_VERSION=2.1.0.10
 
 export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 
@@ -85,8 +85,8 @@ export GEOIP2_VERSION=a26c6beed77e81553686852dceb6c7fdacc5970d
 # Check for recent changes: https://github.com/yaoweibin/nginx_ajp_module/compare/v0.3.0...master
 export NGINX_AJP_VERSION=a964a0bcc6a9f2bfb82a13752d7794a36319ffac
 
-# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20210510...v2.1-agentzh
-export LUAJIT_VERSION=2.1-20210510
+# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20220411...v2.1-agentzh
+export LUAJIT_VERSION=2.1-20220411
 
 # Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.04...master
 export LUA_RESTY_BALANCER=0.04
@@ -94,8 +94,8 @@ export LUA_RESTY_BALANCER=0.04
 # Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.11...master
 export LUA_RESTY_CACHE=0.11
 
-# Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.22...master
-export LUA_RESTY_CORE=0.1.22
+# Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.23...master
+export LUA_RESTY_CORE=0.1.23
 
 # Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/v0.1.0...master
 export LUA_RESTY_COOKIE_VERSION=303e32e512defced053a6484bc0745cf9dc0d39e
@@ -112,17 +112,17 @@ export LUA_RESTY_LOCK=0.08
 # Check for recent changes: https://github.com/openresty/lua-resty-upload/compare/v0.10...master
 export LUA_RESTY_UPLOAD_VERSION=0.10
 
-# Check for recent changes: https://github.com/openresty/lua-resty-string/compare/v0.14...master
-export LUA_RESTY_STRING_VERSION=9ace36f2dde09451c377c839117ade45eb02d460
+# Check for recent changes: https://github.com/openresty/lua-resty-string/compare/v0.15...master
+export LUA_RESTY_STRING_VERSION=0.15
 
 # Check for recent changes: https://github.com/openresty/lua-resty-memcached/compare/v0.16...master
 export LUA_RESTY_MEMCACHED_VERSION=0.16
 
-# Check for recent changes: https://github.com/openresty/lua-resty-redis/compare/v0.29...master
-export LUA_RESTY_REDIS_VERSION=0.29
+# Check for recent changes: https://github.com/openresty/lua-resty-redis/compare/v0.30...master
+export LUA_RESTY_REDIS_VERSION=0.30
 
-# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6...master
-export LUA_RESTY_IPMATCHER_VERSION=211e0d2eb8bbb558b79368f89948a0bafdc23654
+# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6.1...master
+export LUA_RESTY_IPMATCHER_VERSION=0.6.1
 
 # Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
 export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
@@ -245,10 +245,10 @@ get_src 7d5f3439c8df56046d0564b5857fd8a30296ab1bd6df0f048aed7afb56a0a4c2 \
 get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 else
-get_src 085a9fb2bf9c4466977595a5fe5156d76f3a2d9a2a81be3cacaff2021773393e \
+get_src 9db756000578efaecb43bea4fc6cf631aaa80988d86ffe5d3afeb9927895ffad \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
-get_src ba38c9f8e4265836ba7f2ac559ddf140693ff2f5ae33ab1e384f51f3992151ab \
+get_src 6f8fde03b0d25f009daf7d8ac554923aa28ea6e18bb0f8edb7638ee4be462f46 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/$LUA_STREAM_NGX_VERSION.tar.gz"
 
 fi
@@ -260,7 +260,7 @@ if [[ ${ARCH} == "s390x" ]]; then
 get_src 266ed1abb70a9806d97cb958537a44b67db6afb33d3b32292a2d68a2acedea75 \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 else
-get_src 1ee6dad809a5bb22efb45e6dac767f7ce544ad652d353a93d7f26b605f69fe3f \
+get_src d3f2c870f8f88477b01726b32accab30f6e5d57ae59c5ec87374ff73d0794316 \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 fi
 
@@ -279,8 +279,8 @@ get_src 94d1512bf0e5e6ffa4eca0489db1279d51f45386fffcb8a1d2d9f7fe93518465 \
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
         "https://github.com/openresty/lua-resty-upload/archive/v$LUA_RESTY_UPLOAD_VERSION.tar.gz"
 
-get_src 462c6b38792bab4ca8212bdfd3f2e38f6883bb45c8fb8a03474ea813e0fab853 \
-        "https://github.com/openresty/lua-resty-string/archive/$LUA_RESTY_STRING_VERSION.tar.gz"
+get_src e07cd95631a641acf3eeb5596052da93ed38c95edef82c153d32983c3aec2b3f \
+        "https://github.com/openresty/lua-resty-string/archive/v$LUA_RESTY_STRING_VERSION.tar.gz"
 
 get_src 16d72ed133f0c6df376a327386c3ef4e9406cf51003a700737c3805770ade7c5 \
         "https://github.com/openresty/lua-resty-balancer/archive/v$LUA_RESTY_BALANCER.tar.gz"
@@ -289,11 +289,11 @@ if [[ ${ARCH} == "s390x" ]]; then
 get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 else
-get_src 4d971f711fad48c097070457c128ca36053835d8a3ba25a937e9991547d55d4d \
+get_src f469b39ec665671f1805247a6cdb99eecb18bf1ba03cee70d1a969d9e09d79c5 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 fi
 
-get_src 8d602af2669fb386931760916a39f6c9034f2363c4965f215042c086b8215238 \
+get_src 0c551d6898f89f876e48730f9b55790d0ba07d5bc0aa6c76153277f63c19489f \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz"
 
 get_src 5ed48c36231e2622b001308622d46a0077525ac2f751e8cc0c9905914254baa4 \
@@ -314,11 +314,11 @@ get_src 9fcb6db95bc37b6fce77d3b3dc740d593f9d90dce0369b405eb04844d56ac43f \
 get_src 42893da0e3de4ec180c9bf02f82608d78787290a70c5644b538f29d243147396 \
         "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
 
-get_src 3f602af507aacd1f7aaeddfe7b77627fcde095fe9f115cb9d6ad8de2a52520e1 \
+get_src 7fa6684f0d6836b8677b9513bf53804e88bf273fbe84f0b84b2b6ce4c25ab47d \
         "https://github.com/openresty/lua-resty-redis/archive/v$LUA_RESTY_REDIS_VERSION.tar.gz"
 
-get_src b8dbd502751140993a852381bcd8e98a402454596bd91838c1e51268d42db261 \
-        "https://github.com/api7/lua-resty-ipmatcher/archive/$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
+get_src 6a6fe835ef2ddd65a305db0c38d90578ce06c225d4293b6c225988de63f2b08c \
+        "https://github.com/api7/lua-resty-ipmatcher/archive/v$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
 
 get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
         "https://github.com/ElvinEfendi/lua-resty-global-throttle/archive/v$LUA_RESTY_GLOBAL_THROTTLE_VERSION.tar.gz"
