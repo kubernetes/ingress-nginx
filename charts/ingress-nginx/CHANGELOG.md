@@ -2,6 +2,9 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.4.0
+- Update Default Backend due TLS < 1.2 Security Issue
+
 ### 4.3.0 
 - Support for Kubernetes v.1.25.0 was added and support for endpoint slices
 - Support for Kubernetes v1.20.0 was removed
