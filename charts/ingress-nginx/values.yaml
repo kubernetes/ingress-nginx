@@ -779,12 +779,11 @@ defaultBackend:
     ## repository:
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
-    #runAsUser: 65534
-    #runAsNonRoot: true
-    #readOnlyRootFilesystem: true
-    #allowPrivilegeEscalation: false
+    # runAsUser: 65534
+    # runAsNonRoot: true
+    # readOnlyRootFilesystem: true
+    # allowPrivilegeEscalation: false
 
-  
   # Default Backend Message to show
   defaultBackendMessage: "Default Backend - 404"
 
