@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.3.0](https://img.shields.io/badge/Version-4.3.0-informational?style=flat-square) ![AppVersion: 1.4.0](https://img.shields.io/badge/AppVersion-1.4.0-informational?style=flat-square)
+![Version: 4.4.0](https://img.shields.io/badge/Version-4.4.0-informational?style=flat-square) ![AppVersion: 1.5.0](https://img.shields.io/badge/AppVersion-1.5.0-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -435,20 +435,20 @@ Kubernetes: `>=1.20.0-0`
 | defaultBackend.autoscaling.targetCPUUtilizationPercentage | int | `50` |  |
 | defaultBackend.autoscaling.targetMemoryUtilizationPercentage | int | `50` |  |
 | defaultBackend.containerSecurityContext | object | `{}` | Security Context policies for controller main container. See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
-| defaultBackend.enabled | bool | `false` |  |
+| defaultBackend.defaultBackendMessage | string | `"Default Backend - 404"` |  |
+| defaultBackend.enabled | bool | `true` |  |
 | defaultBackend.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | defaultBackend.extraArgs | object | `{}` |  |
 | defaultBackend.extraEnvs | list | `[]` | Additional environment variables to set for defaultBackend pods |
-| defaultBackend.extraVolumeMounts | list | `[]` |  |
-| defaultBackend.extraVolumes | list | `[]` |  |
-| defaultBackend.image.allowPrivilegeEscalation | bool | `false` |  |
-| defaultBackend.image.image | string | `"defaultbackend-amd64"` |  |
+| defaultBackend.extraVolumeMounts[0].mountPath | string | `"/usr/share/nginx/html/index.html"` |  |
+| defaultBackend.extraVolumeMounts[0].name | string | `"config"` |  |
+| defaultBackend.extraVolumeMounts[0].readOnly | bool | `true` |  |
+| defaultBackend.extraVolumeMounts[0].subPath | string | `"index.html"` |  |
+| defaultBackend.extraVolumes[0].configMap.name | string | `"default-backend-message-configmap"` |  |
+| defaultBackend.extraVolumes[0].name | string | `"config"` |  |
 | defaultBackend.image.pullPolicy | string | `"IfNotPresent"` |  |
-| defaultBackend.image.readOnlyRootFilesystem | bool | `true` |  |
-| defaultBackend.image.registry | string | `"registry.k8s.io"` |  |
-| defaultBackend.image.runAsNonRoot | bool | `true` |  |
-| defaultBackend.image.runAsUser | int | `65534` |  |
-| defaultBackend.image.tag | string | `"1.5"` |  |
+| defaultBackend.image.repository | string | `"nginx"` |  |
+| defaultBackend.image.tag | string | `"alpine"` |  |
 | defaultBackend.labels | object | `{}` | Labels to be added to the default backend resources |
 | defaultBackend.livenessProbe.failureThreshold | int | `3` |  |
 | defaultBackend.livenessProbe.initialDelaySeconds | int | `30` |  |
@@ -461,7 +461,7 @@ Kubernetes: `>=1.20.0-0`
 | defaultBackend.podAnnotations | object | `{}` | Annotations to be added to default backend pods # |
 | defaultBackend.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | defaultBackend.podSecurityContext | object | `{}` | Security Context policies for controller pods See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
-| defaultBackend.port | int | `8080` |  |
+| defaultBackend.port | int | `80` |  |
 | defaultBackend.priorityClassName | string | `""` |  |
 | defaultBackend.readinessProbe.failureThreshold | int | `6` |  |
 | defaultBackend.readinessProbe.initialDelaySeconds | int | `0` |  |
