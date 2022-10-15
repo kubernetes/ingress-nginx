@@ -451,7 +451,11 @@ controller:
     ##
     appProtocol: true
 
-    annotations: {}
+    annotations:
+      load-balancer.hetzner.cloud/name: test-default-backend
+      load-balancer.hetzner.cloud/hostname: test-default-backend
+      load-balancer.hetzner.cloud/network-zone: eu-central
+      load-balancer.hetzner.cloud/use-private-ip: "true"
     labels: {}
     # clusterIP: ""
 
@@ -768,22 +772,19 @@ revisionHistoryLimit: 10
 ##
 defaultBackend:
   ##
-  enabled: false
+  enabled: true
 
   name: defaultbackend
   image:
-    registry: registry.k8s.io
-    image: defaultbackend-amd64
+    repository: nginx
+    tag: alpine
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "1.5"
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
-    runAsUser: 65534
-    runAsNonRoot: true
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
+  
+  defaultBackendMessage: "Default Backend - 404 LOL"
 
   # -- Use an existing PSP instead of creating one
   existingPsp: ""
@@ -797,7 +798,7 @@ defaultBackend:
   # -- Additional environment variables to set for defaultBackend pods
   extraEnvs: []
 
-  port: 8080
+  port: 80
 
   ## Readiness and liveness probes for default backend
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
@@ -814,7 +815,6 @@ defaultBackend:
     periodSeconds: 5
     successThreshold: 1
     timeoutSeconds: 5
-
   # -- Node tolerations for server scheduling to nodes with taints
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
@@ -864,12 +864,19 @@ defaultBackend:
   #   cpu: 10m
   #   memory: 20Mi
 
-  extraVolumeMounts: []
+  extraVolumeMounts:
+    - name: config
+      mountPath: "/usr/share/nginx/html/index.html"
+      subPath: index.html
+      readOnly: true
   ## Additional volumeMounts to the default backend container.
   #  - name: copy-portal-skins
   #   mountPath: /var/lib/lemonldap-ng/portal/skins
 
-  extraVolumes: []
+  extraVolumes:
+    - name: config
+      configMap:
+        name: default-backend-message-configmap
   ## Additional volumes to the default backend pod.
   #  - name: copy-portal-skins
   #    emptyDir: {}
