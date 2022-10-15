@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  index.html: |
+    <h1>{{ .Values.defaultBackend.defaultBackendMessage }}</h1>
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+  name: default-backend-message-configmap
+  namespace: {{ .Release.Namespace }}
