@@ -8,7 +8,7 @@ There are multiple ways to install the NGINX ingress controller:
 
 On most Kubernetes clusters, the ingress controller will work without requiring any extra configuration. If you want to 
 get started as fast as possible, you can check the [quick start](#quick-start) instructions. However, in many 
-environments, you can improve the performance or get better logs by enabling extra features. we recommend that you 
+environments, you can improve the performance or get better logs by enabling extra features. We recommend that you 
 check the [environment-specific instructions](#environment-specific-instructions) for details about optimizing the 
 ingress controller for your particular environment or cloud provider.
 
