@@ -451,11 +451,7 @@ controller:
     ##
     appProtocol: true
 
-    annotations:
-      load-balancer.hetzner.cloud/name: test-default-backend
-      load-balancer.hetzner.cloud/hostname: test-default-backend
-      load-balancer.hetzner.cloud/network-zone: eu-central
-      load-balancer.hetzner.cloud/use-private-ip: "true"
+    annotations: {}
     labels: {}
     # clusterIP: ""
 
@@ -783,8 +779,14 @@ defaultBackend:
     ## repository:
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
+    #runAsUser: 65534
+    #runAsNonRoot: true
+    #readOnlyRootFilesystem: true
+    #allowPrivilegeEscalation: false
+
   
-  defaultBackendMessage: "Default Backend - 404 LOL"
+  # Default Backend Message to show
+  defaultBackendMessage: "Default Backend - 404"
 
   # -- Use an existing PSP instead of creating one
   existingPsp: ""
