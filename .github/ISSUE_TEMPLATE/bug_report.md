@@ -127,7 +127,7 @@ echo "
 
 ## make a request
 
-POD_NAME=$(k get pods -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -o NAME)
+POD_NAME=$(k get pods -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx --field-selector=status.phase=Running -o NAME)
 kubectl exec -it -n ingress-nginx $POD_NAME -- curl -H 'Host: foo.bar' localhost
 
 --->
