@@ -107,6 +107,7 @@ graph TB
         tempo["Tempo"]
         grafana["Grafana"]
         backend["Jaeger"]
+        zipkin["Zipkin"]
     end
 
     subgraph ingress-nginx
@@ -124,6 +125,7 @@ graph TB
         observability
         ingress-nginx
         om --> |otlp-gRPC| otc --> |jaeger| backend
+        otc --> |zipkin| zipkin
         otc --> |otlp-gRPC| tempo --> grafana
         sa --> |otlp-gRPC| otc
         sb --> |otlp-gRPC| otc
@@ -140,6 +142,7 @@ To install the example and collectors run:
       - name: opentelemetry
         image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
     ```
+
 2. Enable OpenTelemetry and set the otlp-collector-host:
 
     ```yaml
@@ -173,6 +176,7 @@ To install the example and collectors run:
     make helm-repo
     make observability
     ```
+
 3. Build and deploy demo app:
 
     ```bash
@@ -212,15 +216,25 @@ To install the example and collectors run:
     ```
 
 6. View the Grafana UI:
+
     ```bash
     kubectl port-forward --namespace=observability service/grafana 3000:80
     ```
     In the Grafana interface we can see the details:
     ![grafana screenshot](../../images/otel-grafana-demo.png "grafana screenshot")
 
-6. View the Jaeger UI:
+7. View the Jaeger UI:
+
     ```bash
     kubectl port-forward --namespace=observability service/jaeger-all-in-one-query 16686:16686
     ```
     In the Jaeger interface we can see the details:
     ![Jaeger screenshot](../../images/otel-jaeger-demo.png "Jaeger screenshot")
+
+8. View the Zipkin UI:
+
+    ```bash
+    kubectl port-forward --namespace=observability service/zipkin 9411:9411
+    ```
+    In the Zipkin interface we can see the details:
+    ![zipkin screenshot](../../images/otel-zipkin-demo.png "zipkin screenshot")
