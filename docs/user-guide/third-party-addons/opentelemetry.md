@@ -30,8 +30,8 @@ otlp-collector-host: "otel-coll-collector.otel.svc"
 NOTE: While the option is called `otlp-collector-host`, you will need to point this to any backend that recieves otlp-grpc.
 
 Next you will need to deploy a distributed telemetry system which uses OpenTelemetry.
-[opentelemetry-collector](https://github.com/open-telemetry/opentelemetry-collector) and
-[Tempo](https://github.com/grafana/tempo)
+[opentelemetry-collector](https://github.com/open-telemetry/opentelemetry-collector), [Jaeger](https://www.jaegertracing.io/)
+[Tempo](https://github.com/grafana/tempo), and [zipkin](https://zipkin.io/)
 have been tested.
 
 Other optional configuration options:
@@ -172,9 +172,26 @@ To install the example and collectors run:
 4. Deploy otel-collector, grafana and Jaeger backend:
 
     ```bash
-    # deploy otel collector, grafan, tempo and Jaeger all-in-one:
-    make helm-repo
-    make observability
+    # add helm charts needed for grafana and OpenTelemetry collector
+    helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+    helm repo add grafana https://grafana.github.io/helm-charts
+    helm repo update
+    # deply cert-manager needed for OpenTelemetry collector operator
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+    # create observability namespace
+    kubectl apply -f https://raw.githubusercontent.com/esigo/nginx-example/main/observability/namespace.yaml
+    # install OpenTelemetry collector operator
+    helm upgrade --install otel-collector-operator -n otel --create-namespace open-telemetry/opentelemetry-operator
+    # deploy OpenTelemetry collector
+    kubectl apply -f https://raw.githubusercontent.com/esigo/nginx-example/main/observability/collector.yaml
+    # deploy Jaeger all-in-one
+    kubectl apply -f https://github.com/jaegertracing/jaeger-operator/releases/download/v1.37.0/jaeger-operator.yaml -n observability
+    kubectl apply -f https://raw.githubusercontent.com/esigo/nginx-example/main/observability/jaeger.yaml -n observability
+    # deploy zipkin
+    kubectl apply -f https://raw.githubusercontent.com/esigo/nginx-example/main/observability/zipkin.yaml -n observability
+    # deploy tempo and grafana
+	helm upgrade --install tempo grafana/tempo --create-namespace -n observability
+	helm upgrade -f https://raw.githubusercontent.com/esigo/nginx-example/main/observability/grafana/grafana-values.yaml --install grafana grafana/grafana --create-namespace -n observability
     ```
 
 3. Build and deploy demo app:
@@ -185,6 +202,7 @@ To install the example and collectors run:
 
     # deploy demo app:
     make deploy-app
+    ```
 
 5. Make a few requests to the Service:
 
