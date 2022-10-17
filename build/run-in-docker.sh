@@ -38,7 +38,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20220823-ge19026fe4@sha256:038fc60379b6ce9a0134c2ff9134edccad1f8ecbd9c6ebed9660711d05b0ed95}
+E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20221012-controller-v1.4.0-14-g93df79676@sha256:9ab6a412b0ea6ae77abc80309608976ec15141e146fa91ef4352400cb9051086}
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 DOCKER_IN_DOCKER_ENABLED=${DOCKER_IN_DOCKER_ENABLED:-}
@@ -64,15 +64,6 @@ else
 fi
 
 USER=${USER:-nobody}
-
-MAC_OS="`uname -s`"
-MAC_OS="${MAC_OS:-}"
-if [[ ${MAC_OS} == "Darwin" ]]; then
-	MAC_DOCKER_FLAGS=""
-else
-	MAC_DOCKER_FLAGS="-u $(id -u ${USER}):$(id -g ${USER})" #idk why mac/git fails on the gobuild if these are presented to dockerrun.sh script
-fi
-echo "MAC_OS = ${MAC_OS}, MAC_OS_FLAGS = ${MAC_DOCKER_FLAGS}"
 
 echo "..printing env & other vars to stdout"
 echo "HOSTNAME=`hostname`"
@@ -108,6 +99,5 @@ else
     -v "/var/run/docker.sock:/var/run/docker.sock"      \
     -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
     -w "/go/src/${PKG}"                                 \
-    ${MAC_DOCKER_FLAGS}                                 \
     ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
 fi

@@ -2,8 +2,8 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 4.2.4
-appVersion: 1.3.1
+version: 4.3.0
+appVersion: 1.4.0
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -12,7 +12,6 @@ keywords:
   - nginx
 sources:
   - https://github.com/kubernetes/ingress-nginx
-type: application
 maintainers:
   - name: rikatz
   - name: strongjz
@@ -26,5 +25,7 @@ annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - "[8896](https://github.com/kubernetes/ingress-nginx/pull/8896) updated to new images built today"
-    - "fix permissions about configmap"
+    - "[8890](https://github.com/kubernetes/ingress-nginx/pull/8890) migrate to endpointslices"
+    - "[9059](https://github.com/kubernetes/ingress-nginx/pull/9059) kubewebhookcertgen sha change after go1191"
+    - "[9046](https://github.com/kubernetes/ingress-nginx/pull/9046) Parameterize metrics port name"
+    - "[9104](https://github.com/kubernetes/ingress-nginx/pull/9104) Fix yaml formatting error with multiple annotations"

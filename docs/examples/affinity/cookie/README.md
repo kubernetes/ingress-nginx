@@ -14,6 +14,7 @@ Session affinity can be configured using the following annotations:
 |nginx.ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be created|string (defaults to `INGRESSCOOKIE`)|
 |nginx.ingress.kubernetes.io/session-cookie-secure|Set the cookie as secure regardless the protocol of the incoming request|`"true"` or `"false"`|
 |nginx.ingress.kubernetes.io/session-cookie-path|Path that will be set on the cookie (required if your [Ingress paths][ingress-paths] use regular expressions)|string (defaults to the currently [matched path][ingress-paths])|
+|nginx.ingress.kubernetes.io/session-cookie-domain|Domain that will be set on the cookie|string|
 |nginx.ingress.kubernetes.io/session-cookie-samesite|`SameSite` attribute to apply to the cookie|Browser accepted values are `None`, `Lax`, and `Strict`|
 |nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none|Will omit `SameSite=None` attribute for older browsers which reject the more-recently defined `SameSite=None` value|`"true"` or `"false"`
 |nginx.ingress.kubernetes.io/session-cookie-max-age|Time until the cookie expires, corresponds to the `Max-Age` cookie directive|number of seconds|

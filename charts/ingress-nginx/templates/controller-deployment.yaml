@@ -118,7 +118,7 @@ spec:
               {{- end }}
           {{- end }}
           {{- if .Values.controller.metrics.enabled }}
-            - name: http-metrics
+            - name: {{ .Values.controller.metrics.portName }}
               containerPort: {{ .Values.controller.metrics.port }}
               protocol: TCP
           {{- end }}
@@ -147,7 +147,11 @@ spec:
           volumeMounts:
           {{- if .Values.controller.extraModules }}
             - name: modules
+            {{ if .Values.controller.image.chroot }}
+              mountPath: /chroot/modules_mount
+            {{ else }}
               mountPath: /modules_mount
+            {{ end }}
           {{- end }}
           {{- if .Values.controller.customTemplate.configMapName }}
             - mountPath: /etc/nginx/template

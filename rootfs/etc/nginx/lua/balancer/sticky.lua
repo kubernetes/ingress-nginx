@@ -110,6 +110,10 @@ function _M.set_cookie(self, value)
     cookie_data.max_age = tonumber(self.cookie_session_affinity.maxage)
   end
 
+  if self.cookie_session_affinity.domain and self.cookie_session_affinity.domain ~= "" then
+    cookie_data.domain = self.cookie_session_affinity.domain
+  end
+
   local ok
   ok, err = cookie:set(cookie_data)
   if not ok then

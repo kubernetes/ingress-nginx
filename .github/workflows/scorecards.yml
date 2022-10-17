@@ -25,12 +25,12 @@ jobs:
     
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # v3.0.0
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.0
         with:
           persist-credentials: false
 
       - name: "Run analysis"
-        uses: ossf/scorecard-action@ce330fde6b1a5c9c75b417e7efc510b822a35564 # v1.1.1
+        uses: ossf/scorecard-action@e363bfca00e752f91de7b7d2a77340e2e523cb18 # v1.1.1
         with:
           results_file: results.sarif
           results_format: sarif
@@ -49,7 +49,7 @@ jobs:
       # Upload the results as artifacts (optional). Commenting out will disable uploads of run results in SARIF
       # format to the repository Actions tab.
       - name: "Upload artifact"
-        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # v3.0.0
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.0.0
         with:
           name: SARIF file
           path: results.sarif
@@ -57,6 +57,6 @@ jobs:
       
       # Upload the results to GitHub's code scanning dashboard.
       - name: "Upload to code-scanning"
-        uses: github/codeql-action/upload-sarif@b398f525a5587552e573b247ac661067fafa920b # v2.1.14
+        uses: github/codeql-action/upload-sarif@807578363a7869ca324a79039e6db9c843e0e100 # v2.1.14
         with:
           sarif_file: results.sarif

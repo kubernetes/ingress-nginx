@@ -23,9 +23,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.3.0"
-    digest: sha256:d1707ca76d3b044ab8a28277a2466a02100ee9f58a86af1535a3edf9323ea1b5
-    digestChroot: sha256:0fcb91216a22aae43b374fc2e6a03b8afe9e8c78cbf07a09d75636dc4ea3c191
+    tag: "v1.4.0"
+    digest: sha256:34ee929b111ffc7aa426ffd409af44da48e5a0eea1eb2207994d9e0c0882d143
+    digestChroot: sha256:b67e889f1db8692de7e41d4d9aef8de56645bf048261f31fa7f8bfc6ea2222a0
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -99,8 +99,8 @@ controller:
       # -- 'hostPort' https port
       https: 443
 
-  # -- Election ID to use for status update
-  electionID: ingress-controller-leader
+  # -- Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader'
+  electionID: ""
 
   ## This section refers to the creation of the IngressClass resource
   ## IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
@@ -580,7 +580,7 @@ controller:
   extraModules: []
   ## Modules, which are mounted into the core nginx image
   # - name: opentelemetry
-  #   image: registry.k8s.io/ingress-nginx/opentelemetry:v20220801-g00ee51f09@sha256:482562feba02ad178411efc284f8eb803a185e3ea5588b6111ccbc20b816b427
+  #   image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
@@ -650,8 +650,8 @@ controller:
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v1.3.0
-        digest: sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+        tag: v20220916-gd32f8c343
+        digest: sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
@@ -670,6 +670,7 @@ controller:
 
   metrics:
     port: 10254
+    portName: metrics
     # if this port is changed, change healthz-port: in extraArgs: accordingly
     enabled: false
 
