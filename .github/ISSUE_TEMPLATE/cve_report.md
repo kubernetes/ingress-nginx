@@ -8,7 +8,7 @@ assignees:
     - rikatz
 ---
 
-<!-- if you found something that impacts directly ingress-nginx and 
+<!-- if you found something that impacts directly ingress-nginx and
 is not a public CVE yet, please reach out security@kubernetes.io" -->
 
 <!-- What scanner and version reported the CVE? -->
