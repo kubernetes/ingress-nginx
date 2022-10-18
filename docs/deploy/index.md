@@ -30,6 +30,7 @@ ingress controller for your particular environment or cloud provider.
   - ... [Scaleway](#scaleway)
   - ... [Exoscale](#exoscale)
   - ... [Oracle Cloud Infrastructure](#oracle-cloud-infrastructure)
+  - ... [OVHcloud](#ovhcloud)
   - ... [Bare-metal](#bare-metal-clusters)
 - [Miscellaneous](#miscellaneous)
 
@@ -335,6 +336,16 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 A 
 [complete list of available annotations for Oracle Cloud Infrastructure](https://github.com/oracle/oci-cloud-controller-manager/blob/master/docs/load-balancer-annotations.md) 
 can be found in the [OCI Cloud Controller Manager](https://github.com/oracle/oci-cloud-controller-manager) documentation.
+
+### OVHcloud
+
+```console
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm -n ingress-nginx install ingress-nginx ingress-nginx/ingress-nginx --create-namespace
+```
+
+You can find the [complete tutorial](https://docs.ovh.com/gb/en/kubernetes/installing-nginx-ingress/).
 
 ### Bare metal clusters
 
