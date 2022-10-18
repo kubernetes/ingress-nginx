@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.4.0](https://img.shields.io/badge/Version-4.4.0-informational?style=flat-square) ![AppVersion: 1.5.0](https://img.shields.io/badge/AppVersion-1.5.0-informational?style=flat-square)
+![Version: 4.3.0](https://img.shields.io/badge/Version-4.3.0-informational?style=flat-square) ![AppVersion: 1.4.0](https://img.shields.io/badge/AppVersion-1.4.0-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -444,11 +444,28 @@ Kubernetes: `>=1.20.0-0`
 | defaultBackend.extraVolumeMounts[0].name | string | `"config"` |  |
 | defaultBackend.extraVolumeMounts[0].readOnly | bool | `true` |  |
 | defaultBackend.extraVolumeMounts[0].subPath | string | `"index.html"` |  |
+| defaultBackend.extraVolumeMounts[1].mountPath | string | `"/var/cache/nginx/"` |  |
+| defaultBackend.extraVolumeMounts[1].name | string | `"nginx-empty"` |  |
+| defaultBackend.extraVolumeMounts[2].mountPath | string | `"/var/run/"` |  |
+| defaultBackend.extraVolumeMounts[2].name | string | `"nginx-run"` |  |
+| defaultBackend.extraVolumeMounts[3].mountPath | string | `"/etc/nginx/conf.d/default.conf"` |  |
+| defaultBackend.extraVolumeMounts[3].name | string | `"nginx-conf"` |  |
+| defaultBackend.extraVolumeMounts[3].subPath | string | `"default.conf"` |  |
 | defaultBackend.extraVolumes[0].configMap.name | string | `"default-backend-message-configmap"` |  |
 | defaultBackend.extraVolumes[0].name | string | `"config"` |  |
+| defaultBackend.extraVolumes[1].emptyDir | object | `{}` |  |
+| defaultBackend.extraVolumes[1].name | string | `"nginx-empty"` |  |
+| defaultBackend.extraVolumes[2].emptyDir | object | `{}` |  |
+| defaultBackend.extraVolumes[2].name | string | `"nginx-run"` |  |
+| defaultBackend.extraVolumes[3].configMap.name | string | `"default-backend-nginx-conf-configmap"` |  |
+| defaultBackend.extraVolumes[3].name | string | `"nginx-conf"` |  |
+| defaultBackend.image.allowPrivilegeEscalation | bool | `false` |  |
 | defaultBackend.image.pullPolicy | string | `"IfNotPresent"` |  |
+| defaultBackend.image.readOnlyRootFilesystem | bool | `true` |  |
 | defaultBackend.image.repository | string | `"nginx"` |  |
-| defaultBackend.image.tag | string | `"alpine"` |  |
+| defaultBackend.image.runAsNonRoot | bool | `true` |  |
+| defaultBackend.image.runAsUser | int | `65534` |  |
+| defaultBackend.image.tag | string | `"1.23.1-alpine"` |  |
 | defaultBackend.labels | object | `{}` | Labels to be added to the default backend resources |
 | defaultBackend.livenessProbe.failureThreshold | int | `3` |  |
 | defaultBackend.livenessProbe.initialDelaySeconds | int | `30` |  |
@@ -461,7 +478,7 @@ Kubernetes: `>=1.20.0-0`
 | defaultBackend.podAnnotations | object | `{}` | Annotations to be added to default backend pods # |
 | defaultBackend.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | defaultBackend.podSecurityContext | object | `{}` | Security Context policies for controller pods See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
-| defaultBackend.port | int | `80` |  |
+| defaultBackend.port | int | `8080` |  |
 | defaultBackend.priorityClassName | string | `""` |  |
 | defaultBackend.readinessProbe.failureThreshold | int | `6` |  |
 | defaultBackend.readinessProbe.initialDelaySeconds | int | `0` |  |
