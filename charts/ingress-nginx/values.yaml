@@ -773,16 +773,16 @@ defaultBackend:
   name: defaultbackend
   image:
     repository: nginx
-    tag: alpine
+    tag: 1.23.1-alpine
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
     pullPolicy: IfNotPresent
     # nobody user -> uid 65534
-    # runAsUser: 65534
-    # runAsNonRoot: true
-    # readOnlyRootFilesystem: true
-    # allowPrivilegeEscalation: false
+    runAsUser: 65534
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
 
   # Default Backend Message to show
   defaultBackendMessage: "Default Backend - 404"
@@ -799,7 +799,8 @@ defaultBackend:
   # -- Additional environment variables to set for defaultBackend pods
   extraEnvs: []
 
-  port: 80
+  # Port to Open in the Default Backend Container > 1000 (NON ROOT PORT)
+  port: 8080
 
   ## Readiness and liveness probes for default backend
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
@@ -870,6 +871,15 @@ defaultBackend:
       mountPath: "/usr/share/nginx/html/index.html"
       subPath: index.html
       readOnly: true
+    - mountPath: /var/cache/nginx/
+      name: nginx-empty
+    - mountPath: /var/run/
+      name: nginx-run
+    - name: nginx-conf
+      mountPath: "/etc/nginx/conf.d/default.conf"
+      subPath: default.conf
+    
+
   ## Additional volumeMounts to the default backend container.
   #  - name: copy-portal-skins
   #   mountPath: /var/lib/lemonldap-ng/portal/skins
@@ -878,6 +888,14 @@ defaultBackend:
     - name: config
       configMap:
         name: default-backend-message-configmap
+    - name: nginx-empty
+      emptyDir: {}
+    - name: nginx-run
+      emptyDir: {}
+    - name: nginx-conf
+      configMap:
+        name: default-backend-nginx-conf-configmap
+
   ## Additional volumes to the default backend pod.
   #  - name: copy-portal-skins
   #    emptyDir: {}
