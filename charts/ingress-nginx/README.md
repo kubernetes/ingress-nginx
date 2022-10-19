@@ -436,7 +436,7 @@ Kubernetes: `>=1.20.0-0`
 | defaultBackend.autoscaling.targetMemoryUtilizationPercentage | int | `50` |  |
 | defaultBackend.containerSecurityContext | object | `{}` | Security Context policies for controller main container. See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
 | defaultBackend.defaultBackendMessage | string | `"Default Backend - 404"` |  |
-| defaultBackend.enabled | bool | `true` |  |
+| defaultBackend.enabled | bool | `false` |  |
 | defaultBackend.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | defaultBackend.extraArgs | object | `{}` |  |
 | defaultBackend.extraEnvs | list | `[]` | Additional environment variables to set for defaultBackend pods |
