@@ -768,7 +768,7 @@ revisionHistoryLimit: 10
 ##
 defaultBackend:
   ##
-  enabled: true
+  enabled: false
 
   name: defaultbackend
   image:
