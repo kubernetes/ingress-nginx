@@ -465,7 +465,7 @@ Kubernetes: `>=1.20.0-0`
 | defaultBackend.image.repository | string | `"nginx"` |  |
 | defaultBackend.image.runAsNonRoot | bool | `true` |  |
 | defaultBackend.image.runAsUser | int | `65534` |  |
-| defaultBackend.image.tag | string | `"1.23.1-alpine"` |  |
+| defaultBackend.image.tag | string | `"1.19.10-alpine"` |  |
 | defaultBackend.labels | object | `{}` | Labels to be added to the default backend resources |
 | defaultBackend.livenessProbe.failureThreshold | int | `3` |  |
 | defaultBackend.livenessProbe.initialDelaySeconds | int | `30` |  |
