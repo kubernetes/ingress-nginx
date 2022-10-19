@@ -773,7 +773,7 @@ defaultBackend:
   name: defaultbackend
   image:
     repository: nginx
-    tag: 1.23.1-alpine
+    tag: 1.19.10-alpine
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
