@@ -80,6 +80,18 @@ func (a ingAnnotations) parseInt(name string) (int, error) {
 	return 0, errors.ErrMissingAnnotations
 }
 
+func (a ingAnnotations) parseFloat32(name string) (float32, error) {
+	val, ok := a[name]
+	if ok {
+		i, err := strconv.ParseFloat(val, 32)
+		if err != nil {
+			return 0, errors.NewInvalidAnnotationContent(name, val)
+		}
+		return float32(i), nil
+	}
+	return 0, errors.ErrMissingAnnotations
+}
+
 func checkAnnotation(name string, ing *networking.Ingress) error {
 	if ing == nil || len(ing.GetAnnotations()) == 0 {
 		return errors.ErrMissingAnnotations
@@ -120,6 +132,16 @@ func GetIntAnnotation(name string, ing *networking.Ingress) (int, error) {
 		return 0, err
 	}
 	return ingAnnotations(ing.GetAnnotations()).parseInt(v)
+}
+
+// GetFloatAnnotation extracts a float32 from an Ingress annotation
+func GetFloatAnnotation(name string, ing *networking.Ingress) (float32, error) {
+	v := GetAnnotationWithPrefix(name)
+	err := checkAnnotation(v, ing)
+	if err != nil {
+		return 0, err
+	}
+	return ingAnnotations(ing.GetAnnotations()).parseFloat32(v)
 }
 
 // GetAnnotationWithPrefix returns the prefix of ingress annotations
