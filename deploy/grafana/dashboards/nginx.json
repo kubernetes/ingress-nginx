@@ -530,7 +530,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "round(sum(irate(nginx_ingress_controller_requests{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\",ingress=~\"$ingress\"}[2m])) by (ingress), 0.001)",
+          "expr": "round(sum(irate(nginx_ingress_controller_requests{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\",exported_namespace=~\"$exported_namespace\",ingress=~\"$ingress\"}[2m])) by (ingress), 0.001)",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -637,7 +637,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(nginx_ingress_controller_requests{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",namespace=~\"$namespace\",ingress=~\"$ingress\",status!~\"[4-5].*\"}[2m])) by (ingress) / sum(rate(nginx_ingress_controller_requests{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",namespace=~\"$namespace\",ingress=~\"$ingress\"}[2m])) by (ingress)",
+          "expr": "sum(rate(nginx_ingress_controller_requests{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",namespace=~\"$namespace\",exported_namespace=~\"$exported_namespace\",ingress=~\"$ingress\",status!~\"[4-5].*\"}[2m])) by (ingress) / sum(rate(nginx_ingress_controller_requests{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",namespace=~\"$namespace\",exported_namespace=~\"$exported_namespace\",ingress=~\"$ingress\"}[2m])) by (ingress)",
           "format": "time_series",
           "instant": false,
           "interval": "10s",
@@ -1345,7 +1345,7 @@
           "refId": "E"
         }
       ],
-      "title": "Ingress Percentile Response Times (Exported Namespaces)",
+      "title": "Ingress Percentile Response Times (Ingress Namespaces)",
       "type": "timeseries"
     },
     {
@@ -1384,7 +1384,7 @@
           "refId": "A"
         }
       ],
-      "title": "Ingress Request Latency Heatmap (Exported Namespaces)",
+      "title": "Ingress Request Latency Heatmap (Ingress Namespaces)",
       "tooltip": {
         "show": true,
         "showHistogram": true
