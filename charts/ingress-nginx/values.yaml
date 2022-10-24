@@ -501,6 +501,8 @@ controller:
       https: https
 
     type: LoadBalancer
+    
+    # loadBalancerClass: ""
 
     ## type: NodePort
     ## nodePorts:
