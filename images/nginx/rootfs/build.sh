@@ -66,10 +66,10 @@ export MODSECURITY_LIB_VERSION=v3.0.5
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.2
 
 # Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.21...master
-export LUA_NGX_VERSION=v0.10.21
+export LUA_NGX_VERSION=0.10.21
 
 # Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/v0.0.11...master
-export LUA_STREAM_NGX_VERSION=v0.0.11
+export LUA_STREAM_NGX_VERSION=0.0.11
 
 # Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/8aa93ead98ba2060d4efd594ae33a35d153589bf...master
 export LUA_UPSTREAM_VERSION=8aa93ead98ba2060d4efd594ae33a35d153589bf
@@ -82,8 +82,10 @@ export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
 # Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/3.3...master
 export GEOIP2_VERSION=a26c6beed77e81553686852dceb6c7fdacc5970d
 
-# Check for recent changes: https://github.com/yaoweibin/nginx_ajp_module/compare/v0.3.0...master
-export NGINX_AJP_VERSION=a964a0bcc6a9f2bfb82a13752d7794a36319ffac
+# Check for recent changes: https://github.com/msva/nginx_ajp_module/compare/fcbb2ccca4901d317ecd7a9dabb3fec9378ff40f...master
+# This is a fork from https://github.com/yaoweibin/nginx_ajp_module
+# Since it has not been updated and is not compatible with NGINX 1.21
+export NGINX_AJP_VERSION=fcbb2ccca4901d317ecd7a9dabb3fec9378ff40f
 
 # Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20220411...v2.1-agentzh
 export LUAJIT_VERSION=2.1-20220411
@@ -246,10 +248,10 @@ get_src 99c47c75c159795c9faf76bbb9fa58e5a50b75286c86565ffcec8514b1c74bf9 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 else
 get_src 9db756000578efaecb43bea4fc6cf631aaa80988d86ffe5d3afeb9927895ffad \
-        "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
+        "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
 
 get_src c7924f28cb014a99636e747ea907724dd55f60e180cb92cde6e8ed48d2278f27 \
-        "https://github.com/openresty/stream-lua-nginx-module/archive/$LUA_STREAM_NGX_VERSION.tar.gz"
+        "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 fi
 
@@ -273,8 +275,8 @@ get_src 1af5a5632dc8b00ae103d51b7bf225de3a7f0df82f5c6a401996c080106e600e \
 get_src 4c1933434572226942c65b2f2b26c8a536ab76aa771a3c7f6c2629faa764976b \
         "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
 
-get_src 94d1512bf0e5e6ffa4eca0489db1279d51f45386fffcb8a1d2d9f7fe93518465 \
-        "https://github.com/yaoweibin/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
+get_src 778fcca851bd69dabfb382dc827d2ee07662f7eca36b5e66e67d5512bad75ef8 \
+        "https://github.com/msva/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
         "https://github.com/openresty/lua-resty-upload/archive/v$LUA_RESTY_UPLOAD_VERSION.tar.gz"
