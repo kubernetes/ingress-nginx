@@ -248,7 +248,7 @@ else
 get_src 9db756000578efaecb43bea4fc6cf631aaa80988d86ffe5d3afeb9927895ffad \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
-get_src 6f8fde03b0d25f009daf7d8ac554923aa28ea6e18bb0f8edb7638ee4be462f46 \
+get_src c7924f28cb014a99636e747ea907724dd55f60e180cb92cde6e8ed48d2278f27 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/$LUA_STREAM_NGX_VERSION.tar.gz"
 
 fi
@@ -279,7 +279,7 @@ get_src 94d1512bf0e5e6ffa4eca0489db1279d51f45386fffcb8a1d2d9f7fe93518465 \
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
         "https://github.com/openresty/lua-resty-upload/archive/v$LUA_RESTY_UPLOAD_VERSION.tar.gz"
 
-get_src e07cd95631a641acf3eeb5596052da93ed38c95edef82c153d32983c3aec2b3f \
+get_src bdbf271003d95aa91cab0a92f24dca129e99b33f79c13ebfcdbbcbb558129491 \
         "https://github.com/openresty/lua-resty-string/archive/v$LUA_RESTY_STRING_VERSION.tar.gz"
 
 get_src 16d72ed133f0c6df376a327386c3ef4e9406cf51003a700737c3805770ade7c5 \
@@ -289,7 +289,7 @@ if [[ ${ARCH} == "s390x" ]]; then
 get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 else
-get_src f469b39ec665671f1805247a6cdb99eecb18bf1ba03cee70d1a969d9e09d79c5 \
+get_src efd6b51520429e64b1bcc10f477d370ebed1631c190f7e4dc270d959a743ad7d \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 fi
 
@@ -314,10 +314,10 @@ get_src 9fcb6db95bc37b6fce77d3b3dc740d593f9d90dce0369b405eb04844d56ac43f \
 get_src 42893da0e3de4ec180c9bf02f82608d78787290a70c5644b538f29d243147396 \
         "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
 
-get_src 7fa6684f0d6836b8677b9513bf53804e88bf273fbe84f0b84b2b6ce4c25ab47d \
+get_src c15aed1a01c88a3a6387d9af67a957dff670357f5fdb4ee182beb44635eef3f1 \
         "https://github.com/openresty/lua-resty-redis/archive/v$LUA_RESTY_REDIS_VERSION.tar.gz"
 
-get_src 6a6fe835ef2ddd65a305db0c38d90578ce06c225d4293b6c225988de63f2b08c \
+get_src efb767487ea3f6031577b9b224467ddbda2ad51a41c5867a47582d4ad85d609e \
         "https://github.com/api7/lua-resty-ipmatcher/archive/v$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
 
 get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
