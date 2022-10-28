@@ -1,5 +1,5 @@
---- nginx-1.19.9/src/http/modules/ngx_http_proxy_module.c	2017-07-16 14:02:51.000000000 +0800
-+++ nginx-1.19.9-patched/src/http/modules/ngx_http_proxy_module.c	2017-07-16 14:02:51.000000000 +0800
+--- nginx-1.21.4/src/http/modules/ngx_http_proxy_module.c	2017-07-16 14:02:51.000000000 +0800
++++ nginx-1.21.4-patched/src/http/modules/ngx_http_proxy_module.c	2017-07-16 14:02:51.000000000 +0800
 @@ -793,13 +793,13 @@ static ngx_keyval_t  ngx_http_proxy_cach
  static ngx_http_variable_t  ngx_http_proxy_vars[] = {
  
