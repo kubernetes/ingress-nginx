@@ -239,7 +239,7 @@ jobs:
           failOnError: false
 
       - name: Prepare cluster for testing
-        uses: azure/setup-helm@b5b231a831f96336bbfeccc1329990f0005c5bb1 #v2.1
+        uses: azure/setup-helm@f382f75448129b3be48f8121b9857be18d815a82 #v2.1
         with:
           version: 'v3.8.0'
         id: local-path
@@ -296,7 +296,7 @@ jobs:
           failOnError: false
 
       - name: Prepare cluster for testing
-        uses: azure/setup-helm@b5b231a831f96336bbfeccc1329990f0005c5bb1 #v2.1
+        uses: azure/setup-helm@f382f75448129b3be48f8121b9857be18d815a82 #v2.1
         with:
           version: 'v3.8.0'
         id: local-path
