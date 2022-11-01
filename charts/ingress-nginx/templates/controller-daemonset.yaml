@@ -177,6 +177,12 @@ spec:
           - name: {{ .Name }}
             image: {{ .Image }}
             command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+            {{- if (or $.Values.controller.containerSecurityContext .containerSecurityContext) }}
+            securityContext: {{ .containerSecurityContext | default $.Values.controller.containerSecurityContext | toYaml | nindent 14 }}
+            {{- end }}
+            volumeMounts:
+              - name: modules
+                mountPath: /modules_mount
         {{- end }}
       {{- end }}
     {{- end }}
