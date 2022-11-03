@@ -30,13 +30,13 @@ MELANGE_DIR ?= melange
 APKO_DIR ?= apko
 MELANGE ?= docker run --rm --privileged -w /work -v "${PWD}":/work distroless.dev/melange:latest
 MELANGE_DETACHED ?= docker run -d -w /work --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
-APKO ?= docker run --rm -w /work -v "${PWD}":/work ko.local:5f90a47e3144af5b529930d71eb58fc6ea0004113aa0cdb3d1da35d6065b594e
+APKO ?= docker run --rm -w /work -v "${PWD}":/work ko.local:282aa9f94ed181bbe42ab3897f41687c92a86260ea0820151c9353ecfc1ae3d6
 KEY ?= melange.rsa
 REPO ?= packages
 TEMPLATE ?= melange/nginx-templates.json
 MELANGE_OPTS ?= -k ${KEY}.pub --signing-key ${KEY} --arch ${ARCHS}
 MELANGE_INGRESS_OPT ?= -k ${KEY}.pub --signing-key ${KEY} --arch ${ARCHS} --empty-workspace
-APKO_OPTS ?= -k ${KEY}.pub --debug --use-docker-mediatypes --sbom=false --build-arch ${ARCHS} ${APKO_DIR}/${FILE}.yaml
+APKO_OPTS ?= -k ${KEY}.pub --debug --sbom=false --build-arch ${ARCHS} ${APKO_DIR}/${FILE}.yaml
 KEY ?= melange.rsa
 REPO ?= $(shell pwd)/packages
 ARCHS ?="amd64,arm64,arm/v6,arm/v7,s390x"

@@ -213,9 +213,7 @@ pipeline:
       set -o errexit
       set -o nounset
       set -o pipefail
-      
-      ls -lah 
-      ls -lah etc/nginx
+
       export BUILD_PATH="${PWD}"
       echo "BUILD_PATH $BUILD_PATH"
       echo "Arch: $(uname -m)"

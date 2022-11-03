@@ -17,12 +17,9 @@ limitations under the License.
 package net
 
 import (
-	"errors"
 	"fmt"
-	"k8s.io/klog/v2"
 	"kernel.org/pub/linux/libs/security/libcap/cap"
 	_net "net"
-	"os"
 	"os/exec"
 )
 
@@ -66,28 +63,16 @@ func IsIPv6Enabled() bool {
 
 // CheckCapNetBind checks if cap_net_bind_service is set for ingress
 func CheckCapNetBind() error {
-	processID := os.Getpid()
-	set, err := cap.GetPID(processID)
-	if err != nil {
-		return err
-	}
-	klog.InfoS("ingress-nginx capability set %v", set.String())
+	orig := cap.GetProc()
 
-	//check effective
-	// Value 10 = NET_BIND_SERVICE
-	effective, err := set.GetFlag(0, 10)
-	if err != nil {
-		return err
-	}
+	defer orig.SetProc() // restore original caps on exit.
 
-	//check permitted
-	permitted, err := set.GetFlag(1, 10)
+	c, err := orig.Dup()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read capabilitiess: %v", err)
 	}
-	klog.InfoS("ingress-nginx capabilities: permitted %v effective %v", permitted, effective)
-	if !permitted && !effective {
-		return errors.New(fmt.Sprintf("ingress-nginx capabilities: permitted %v effective %v", permitted, effective))
+	if on, _ := c.GetFlag(cap.Effective, cap.NET_BIND_SERVICE); !on {
+		return fmt.Errorf("insufficient privilege to bind to low ports - want %q, have %q", cap.NET_BIND_SERVICE, c)
 	}
 
 	return nil
