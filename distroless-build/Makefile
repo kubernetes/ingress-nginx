@@ -30,7 +30,7 @@ MELANGE_DIR ?= melange
 APKO_DIR ?= apko
 MELANGE ?= docker run --rm --privileged -w /work -v "${PWD}":/work distroless.dev/melange:latest
 MELANGE_DETACHED ?= docker run -d -w /work --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
-APKO ?= docker run --rm -w /work -v "${PWD}":/work ko.local:282aa9f94ed181bbe42ab3897f41687c92a86260ea0820151c9353ecfc1ae3d6
+APKO ?= docker run --rm -w /work -v "${PWD}":/work ko.local:ca10c03b79422ee648991e16865b62fd26bac97ed4238e7890d5097896af1840
 KEY ?= melange.rsa
 REPO ?= packages
 TEMPLATE ?= melange/nginx-templates.json
@@ -42,7 +42,7 @@ REPO ?= $(shell pwd)/packages
 ARCHS ?="amd64,arm64,arm/v6,arm/v7,s390x"
 
 define build-package
-	docker run $(2) --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest build ${MELANGE_DIR}/$(1).yaml ${MELANGE_OPTS} --template '$(shell cat ${TEMPLATE})'
+	docker run $(2) --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest build ${MELANGE_DIR}/$(1).yaml ${MELANGE_OPTS} --empty-workspace --template '$(shell cat ${TEMPLATE})'
 endef
 
 keygen: ## Generate Key pair for use with signing apks
@@ -116,6 +116,6 @@ nginx-package:
 	$(call  build-package,nginx)
 
 ingress-packages:
-	$(call  build-package,ingress-nginx-controller)
+	$(call  build-package,ingress)
 	$(call  build-package,dbg)
 	$(call  build-package,wait-shutdown)
