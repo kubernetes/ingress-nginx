@@ -16,7 +16,6 @@
 
 # set default shell
 SHELL=/bin/bash -o pipefail -o errexit
-
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 
 # 0.0.0 shouldn't clobber any released builds
