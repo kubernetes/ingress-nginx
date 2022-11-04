@@ -9,6 +9,13 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Force e2e to run'
+        required: true
+        type: boolean
+
 permissions:
   contents: read
 
@@ -40,9 +47,11 @@ jobs:
               - 'rootfs/**/*'
               - 'TAG'
               - 'test/e2e/**/*'
+              - 'NGINX_BASE'
             charts:
               - 'charts/ingress-nginx/Chart.yaml'
               - 'charts/ingress-nginx/**/*'
+              - 'NGINX_BASE'
 
 
   security:
@@ -126,7 +135,7 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.charts == 'true')
+      (needs.changes.outputs.charts == 'true') || ${{ inputs.run_e2e }} 
 
     strategy:
       matrix:
@@ -209,7 +218,7 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true')
+      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }} 
 
     strategy:
       matrix:
@@ -266,7 +275,7 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true')
+      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }} 
 
     strategy:
       matrix:
