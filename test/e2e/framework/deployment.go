@@ -67,6 +67,12 @@ func WithDeploymentReplicas(r int) func(*deploymentOptions) {
 	}
 }
 
+func WithName(n string) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.name = n
+	}
+}
+
 // NewEchoDeployment creates a new single replica deployment of the echo server image in a particular namespace
 func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 	options := &deploymentOptions{
