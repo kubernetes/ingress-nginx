@@ -34,6 +34,7 @@ import (
 	_ "k8s.io/ingress-nginx/test/e2e/annotations/modsecurity"
 	_ "k8s.io/ingress-nginx/test/e2e/dbg"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
+	_ "k8s.io/ingress-nginx/test/e2e/endpointslices"
 	_ "k8s.io/ingress-nginx/test/e2e/gracefulshutdown"
 	_ "k8s.io/ingress-nginx/test/e2e/ingress"
 	_ "k8s.io/ingress-nginx/test/e2e/leaks"
