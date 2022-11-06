@@ -43,3 +43,6 @@ FROM alpine:3.16.2
 COPY --from=base /opt/third_party/init_module.sh /usr/local/bin/init_module.sh
 COPY --from=nginx /etc/nginx/modules /etc/nginx/modules
 COPY --from=nginx /opt/third_party/install/lib /etc/nginx/modules
+RUN apk update \
+	&& apk upgrade \
+	&& apk add -U bash \
