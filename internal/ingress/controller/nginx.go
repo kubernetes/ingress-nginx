@@ -1080,7 +1080,7 @@ name = "{{ .OtelServiceName }}" # Opentelemetry resource name
 [sampler]
 name = "{{ .OtelSampler }}" # Also: AlwaysOff, TraceIdRatioBased
 ratio = {{ .OtelSamplerRatio }}
-parent_based = {{ .OtelSamplerParantBased }}
+parent_based = {{ .OtelSamplerParentBased }}
 `
 
 func createOpentracingCfg(cfg ngx_config.Configuration) error {
@@ -1130,7 +1130,7 @@ func createOpentelemetryCfg(cfg ngx_config.Configuration) error {
 		return err
 	}
 
-	return os.WriteFile("/etc/nginx/opentelemtry.toml", tmplBuf.Bytes(), file.ReadWriteByUser)
+	return os.WriteFile(cfg.OpentelemetryConfig, tmplBuf.Bytes(), file.ReadWriteByUser)
 }
 
 func cleanTempNginxCfg() error {

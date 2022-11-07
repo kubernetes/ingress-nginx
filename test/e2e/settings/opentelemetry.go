@@ -31,7 +31,7 @@ const (
 	opentelemetryOperationName         = "opentelemetry-operation-name"
 	opentelemetryLocationOperationName = "opentelemetry-location-operation-name"
 	opentelemetryConfig                = "opentelemetry-config"
-	opentelemetryConfigPath            = "/etc/nginx/opentelemtry.toml"
+	opentelemetryConfigPath            = "/etc/nginx/opentelemetry.toml"
 )
 
 var _ = framework.IngressNginxDescribe("Configure Opentelemetry", func() {

@@ -564,7 +564,7 @@ type Configuration struct {
 	EnableOpentelemetry bool `json:"enable-opentelemetry"`
 
 	// OpentelemetryConfig sets the opentelemetry config file
-	// Default: /etc/nginx/opentelemtry.toml
+	// Default: /etc/nginx/opentelemetry.toml
 	OpentelemetryConfig string `json:"opentelemetry-config"`
 
 	// OpentelemetryOperationName specifies a custom name for the server span
@@ -594,9 +594,9 @@ type Configuration struct {
 	// Default: 0.01
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
-	//OtelSamplerParantBased specifies the parent based sampler to be use for any traces created
+	//OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
 	// Default: false
-	OtelSamplerParantBased bool `json:"otel-sampler-parent-based"`
+	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
 	// MaxQueueSize specifies the max queue size for uploading traces
 	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
@@ -957,12 +957,12 @@ func NewDefault() Configuration {
 		BindAddressIpv6:                        defBindAddress,
 		OpentracingTrustIncomingSpan:           true,
 		OpentelemetryTrustIncomingSpan:         true,
-		OpentelemetryConfig:                    "/etc/nginx/opentelemtry.toml",
+		OpentelemetryConfig:                    "/etc/nginx/opentelemetry.toml",
 		OtlpCollectorPort:                      "4317",
 		OtelServiceName:                        "nginx",
 		OtelSampler:                            "AlwaysOff",
 		OtelSamplerRatio:                       0.01,
-		OtelSamplerParantBased:                 false,
+		OtelSamplerParentBased:                 false,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,
