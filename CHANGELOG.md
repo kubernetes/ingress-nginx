@@ -5,6 +5,7 @@
 * Build the stratio ingress-nginx-controller with the community controller:1.2.1 as a base
 * Fix vault retrieve secret recode
 * Avoid race condition
+* [EOS-9406] Fix map CN / UID
 
 ## 1.2.0-0.4.0 (2022-08-08)
 

@@ -45,7 +45,7 @@ local function create_jwt(oauth2_cookie, userinfo_url, signing_key)
                 groups = userinfo["groups"],
                 mail = userinfo["email"],
                 tenant = userinfo["tenant"],
-                uid = userinfo["preferredUsername"]
+                uid = userinfo["user"]
             }
         }
     )
