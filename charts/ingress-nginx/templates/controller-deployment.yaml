@@ -106,8 +106,12 @@ spec:
           {{- if .Values.controller.startupProbe }}
           startupProbe: {{ toYaml .Values.controller.startupProbe | nindent 12 }}
           {{- end }}
+          {{- if .Values.controller.livenessProbe }}
           livenessProbe: {{ toYaml .Values.controller.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.controller.readinessProbe }}
           readinessProbe: {{ toYaml .Values.controller.readinessProbe | nindent 12 }}
+          {{- end }}
           ports:
           {{- range $key, $value := .Values.controller.containerPort }}
             - name: {{ $key }}
