@@ -57,10 +57,10 @@ export MSGPACK_VERSION=3.3.0
 export DATADOG_CPP_VERSION=1.3.2
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.2...master
-export MODSECURITY_VERSION=1.0.2
+export MODSECURITY_VERSION=1.0.3
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.5...v3/master
-export MODSECURITY_LIB_VERSION=v3.0.8
+export MODSECURITY_LIB_VERSION=v3/master
 
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.4
@@ -229,7 +229,7 @@ get_src cbe625cba85291712253db5bc3870d60c709acfad9a8af5a302673d3d201e3ea \
 get_src 71de3d0658935db7ccea20e006b35e58ddc7e4c18878b9523f2addc2371e9270 \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src f8d3ff15520df736c5e20e91d5852ec27e0874566c2afce7dcb979e2298d6980 \
+get_src 32a42256616cc674dca24c8654397390adff15b888b77eb74e0687f023c8751b \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
 
 get_src 43e6a9fcb146ad871515f0d0873947e5d497a1c9c60c58cb102a97b47208b7c3 \
