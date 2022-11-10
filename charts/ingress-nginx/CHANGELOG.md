@@ -2,6 +2,13 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.4.0
+
+* Adding support for disabling liveness and readiness probes to the Helm chart by @njegosrailic in https://github.com/kubernetes/ingress-nginx/pull/9238
+* add:(admission-webhooks) ability to set securityContext by @ybelMekk in https://github.com/kubernetes/ingress-nginx/pull/9186
+* #7652 - Updated Helm chart to use the fullname for the electionID if not specified. by @FutureMatt in https://github.com/kubernetes/ingress-nginx/pull/9133
+* Rename controller-wehbooks-networkpolicy.yaml. by @Gacko in https://github.com/kubernetes/ingress-nginx/pull/9123
+
 ### 4.3.0 
 - Support for Kubernetes v.1.25.0 was added and support for endpoint slices
 - Support for Kubernetes v1.20.0 and v1.21.0 was removed
