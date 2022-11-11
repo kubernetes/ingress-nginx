@@ -1287,7 +1287,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				if aliases := allAliases[host]; len(aliases) == 0 {
 					allAliases[host] = anns.Aliases
 				}
-			} else {
+			} else if len(anns.Aliases) != 0 {
 				klog.Warningf("Aliases already configured for server %q, skipping (Ingress %q)", host, ingKey)
 			}
 
