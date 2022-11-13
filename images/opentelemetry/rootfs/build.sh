@@ -123,7 +123,7 @@ get_src()
 
 install_nginx()
 {
-  export NGINX_VERSION=1.19.10
+  export NGINX_VERSION=1.21.6
 
   # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
   export OPENTELEMETRY_CONTRIB_COMMIT=6467ec2e4d67b08b44580b7eb7a298786f4eef91
@@ -138,7 +138,6 @@ install_nginx()
   git clone https://github.com/open-telemetry/opentelemetry-cpp-contrib.git \
     opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
   cd ${BUILD_PATH}/opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
-  # git checkout nginx
   git reset --hard ${OPENTELEMETRY_CONTRIB_COMMIT}
   cd ${BUILD_PATH}/opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}/instrumentation/nginx
   mkdir -p build
