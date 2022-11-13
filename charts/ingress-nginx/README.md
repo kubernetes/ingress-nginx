@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.3.0](https://img.shields.io/badge/Version-4.3.0-informational?style=flat-square) ![AppVersion: 1.4.0](https://img.shields.io/badge/AppVersion-1.4.0-informational?style=flat-square)
+![Version: 4.4.0](https://img.shields.io/badge/Version-4.4.0-informational?style=flat-square) ![AppVersion: 1.5.1](https://img.shields.io/badge/AppVersion-1.5.1-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -300,7 +300,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.extraContainers | list | `[]` | Additional containers to be added to the controller pod. See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example. |
 | controller.extraEnvs | list | `[]` | Additional environment variables to set |
 | controller.extraInitContainers | list | `[]` | Containers, which are run before the app containers are started. |
-| controller.extraModules | list | `[]` |  |
+| controller.extraModules | list | `[]` | Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module |
 | controller.extraVolumeMounts | list | `[]` | Additional volumeMounts to the controller main container. |
 | controller.extraVolumes | list | `[]` | Additional volumes to the controller pod. |
 | controller.healthCheckHost | string | `""` | Address to bind the health check endpoint. It is better to set this option to the internal node address if the ingress nginx controller is running in the `hostNetwork: true` mode. |
@@ -312,13 +312,13 @@ Kubernetes: `>=1.20.0-0`
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
 | controller.image.chroot | bool | `false` |  |
-| controller.image.digest | string | `"sha256:34ee929b111ffc7aa426ffd409af44da48e5a0eea1eb2207994d9e0c0882d143"` |  |
-| controller.image.digestChroot | string | `"sha256:b67e889f1db8692de7e41d4d9aef8de56645bf048261f31fa7f8bfc6ea2222a0"` |  |
+| controller.image.digest | string | `"sha256:4ba73c697770664c1e00e9f968de14e08f606ff961c76e5d7033a4a9c593c629"` |  |
+| controller.image.digestChroot | string | `"sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529bad0d178fb36147345"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.4.0"` |  |
+| controller.image.tag | string | `"v1.5.1"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
@@ -367,7 +367,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.metrics.serviceMonitor.relabelings | list | `[]` |  |
 | controller.metrics.serviceMonitor.scrapeInterval | string | `"30s"` |  |
 | controller.metrics.serviceMonitor.targetLabels | list | `[]` |  |
-| controller.minAvailable | int | `1` |  |
+| controller.minAvailable | int | `1` | Define either 'minAvailable' or 'maxUnavailable', never both. |
 | controller.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
 | controller.name | string | `"controller"` |  |
 | controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/user-guide/node-selection/ # |
