@@ -52,10 +52,16 @@ type AuthSSLCert struct {
 	CAFileName string `json:"caFilename"`
 	// CASHA contains the SHA1 hash of the 'ca.crt' or combinations of (tls.crt, tls.key, tls.crt) depending on certs in secret
 	CASHA string `json:"caSha"`
+	// CAFileContent contains the file content of a certificate used for authentication. We should dedup this later
+	// TODO: Dedup on the resolver
+	CAFileContent []byte `json:"caFileContent,omitempty"`
 	// CRLFileName contains the path to the secrets 'ca.crl'
 	CRLFileName string `json:"crlFileName"`
 	// CRLSHA contains the SHA1 hash of the 'ca.crl' file
 	CRLSHA string `json:"crlSha"`
+	// CRLFileContent contains the file content of a certificate used for authentication. We should dedup this later
+	// TODO: Dedup on the resolver
+	CRLFileContent []byte `json:"crlFileContent,omitempty"`
 	// PemFileName contains the path to the secrets 'tls.crt' and 'tls.key'
 	PemFileName string `json:"pemFilename"`
 }

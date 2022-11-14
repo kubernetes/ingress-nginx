@@ -117,6 +117,14 @@ Users can provide an override for an explicit electionID if they want via `.Valu
 
 
 {{/*
+Create a default fully qualified dataplane name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "ingress-nginx.dataplane.fullname" -}}
+{{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.dataplane.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Construct the path for the publish-service.
 
 By convention this will simply use the <namespace>/<controller-name> to match the name of the

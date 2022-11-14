@@ -122,12 +122,16 @@ func (n *NGINXController) isValidBackend(backend, namespace string) bool {
 		klog.Warning("failed to validate backend, config is nil")
 		return false
 	}
-	if namespace != n.cfg.Namespace {
+
+	controllerNS := os.Getenv("POD_NAMESPACE")
+	if namespace != controllerNS {
+		klog.Warningf("backend is invalid: namespace %s is different from %s", namespace, controllerNS)
 		return false
 	}
 
 	if _, err := n.cfg.Client.CoreV1().Pods(namespace).Get(context.TODO(),
 		backend, v1.GetOptions{}); err != nil {
+		klog.Warningf("failed to get pods from Namespace: %s", err)
 		return false
 	}
 	return true

@@ -241,6 +241,7 @@ func ConfigureCRL(name string, crl []byte, sslCert *ingress.SSLCert) error {
 
 	sslCert.CRLFileName = crlFileName
 	sslCert.CRLSHA = file.SHA1(crlFileName)
+	sslCert.CRLFileContent = crl
 
 	return nil
 

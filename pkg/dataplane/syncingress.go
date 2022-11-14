@@ -94,16 +94,22 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 		}
 	}
 
-	if configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
+	certChange := checkAndWriteDeltaCertificates(cfg, n.templateConfig)
+
+	if certChange || configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
-		hash, _ := hashstructure.Hash(newcfg, &hashstructure.HashOptions{
+		hash, err := hashstructure.Hash(newcfg, &hashstructure.HashOptions{
 			TagName: "json",
 		})
+		if err != nil {
+			klog.Warningf("error generating config hash: %s", err)
+			return
+		}
 
 		newcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
 
-		err := n.updateConfiguration(cfg)
+		err = n.updateConfiguration(cfg)
 		if err != nil {
 			n.metricCollector.IncReloadErrorCount()
 			n.metricCollector.ConfigSuccess(hash, false)
@@ -163,6 +169,80 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 	n.metricCollector.RemoveMetrics(ri, re, rc)
 
 	n.templateConfig = cfg
+
+}
+
+// TODO: move to a better place
+type certOperation struct {
+	cert      config.CertificateFile
+	operation CertOperationType
+}
+
+type CertOperationType string
+
+const (
+	certAdd    CertOperationType = "ADD"
+	certRemove CertOperationType = "REMOVE"
+)
+
+// TODO: UNIT TEST!!! And e2e tests!
+func checkAndWriteDeltaCertificates(newtmpl *config.TemplateConfig, oldtmpl *config.TemplateConfig) bool {
+	var changed bool
+
+	tempMap := make(map[string]certOperation)
+	// Get added certificates:
+	for k, v := range newtmpl.PersistedCertificates {
+		kold, ok := oldtmpl.PersistedCertificates[k]
+		// if non existent on the old one, add to the tempMap as a newCert
+		if !ok {
+			// format of added file will be +;Filename being ; a separator a + the create operation
+			tempMap[k] = certOperation{
+				operation: certAdd,
+				cert:      v,
+			}
+		} else {
+			// if existent in the old map, let's see if it changed checking the checksum
+			if v.Checksum != kold.Checksum {
+				tempMap[k] = certOperation{
+					operation: certAdd,
+					cert:      v,
+				}
+			}
+		}
+	}
+
+	// Now remove old certificates
+	for k := range oldtmpl.PersistedCertificates {
+		if _, ok := newtmpl.PersistedCertificates[k]; !ok {
+			// if NOK, add on the tempMap an operation to remove it
+			// removal does not need the bytes or the SHA
+			tempMap[k] = certOperation{
+				operation: certRemove,
+				cert:      config.CertificateFile{},
+			}
+		}
+	}
+
+	// If so, let's do the required operations and mark the reload as required
+	if len(tempMap) > 0 {
+		changed = true
+		for k, v := range tempMap {
+			if v.operation == certRemove {
+				klog.Infof("removing  cert %s", k)
+				if err := os.Remove(k); err != nil {
+					klog.Warningf("failed removing old certificate %s: %s", k, err)
+				}
+				continue
+			}
+			klog.Infof("adding/updating cert %s", k)
+			err := os.WriteFile(k, []byte(v.cert.Content), file.ReadWriteByUser)
+			if err != nil {
+				klog.Errorf("could not create PEM certificate file %v: %v", k, err)
+				continue
+			}
+		}
+	}
+	return changed
 
 }
 

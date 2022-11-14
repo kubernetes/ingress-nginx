@@ -947,11 +947,22 @@ func NewDefault() Configuration {
 	return cfg
 }
 
+// CertificateFile contains a certificate file to be stored in dataplane.
+// Checksum will be used to verify if this file needs to be rewritten.
+type CertificateFile struct {
+	Checksum string
+	Content  []byte
+}
+
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
-	Checksum                 string // As we cannot marshall this but it breaks a lot of stuff, just duplicating the field in Template generation
-	BackendChecksum          string
-	DefaultSSLCertificate    *ingress.SSLCert
+	Checksum              string // As we cannot marshall this but it breaks a lot of stuff, just duplicating the field in Template generation
+	BackendChecksum       string
+	DefaultSSLCertificate *ingress.SSLCert
+	// PersistedCertificates is a map containing all the certificates that should be written to the disk.
+	// Before sending the full configuration, we will dedup the certs on other structures and write here.
+	// The index of the map is the certificate filename.
+	PersistedCertificates    map[string]CertificateFile
 	ProxySetHeaders          map[string]string
 	AddHeaders               map[string]string
 	BacklogSize              int

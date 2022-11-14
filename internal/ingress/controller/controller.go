@@ -237,6 +237,25 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return err
 	}
 
+	persistedCertMap := make(map[string]ngx_config.CertificateFile)
+	for s, server := range tmplConfig.Servers {
+		if len(server.CertificateAuth.CAFileContent) > 0 {
+			persistedCertMap[server.CertificateAuth.CAFileName] = ngx_config.CertificateFile{
+				Checksum: server.CertificateAuth.CASHA,
+				Content:  server.CertificateAuth.CAFileContent,
+			}
+			tmplConfig.Servers[s].CertificateAuth.CAFileContent = nil
+		}
+		if len(server.CertificateAuth.CRLFileContent) > 1 {
+			persistedCertMap[server.CertificateAuth.CRLFileName] = ngx_config.CertificateFile{
+				Checksum: server.CertificateAuth.CRLSHA,
+				Content:  server.CertificateAuth.CRLFileContent,
+			}
+			tmplConfig.Servers[s].CertificateAuth.CRLFileContent = nil
+		}
+
+	}
+	tmplConfig.PersistedCertificates = persistedCertMap
 	// TODO (rikatz): So, while migrating / splitting I figured out that the fields are actually used...ooops
 	//utilingress.ClearTemplateContent(&tmplConfig)
 
