@@ -223,6 +223,7 @@ If you start Ingress-Nginx B with the command line argument `--watch-ingress-wit
   helm install ingress-nginx-2 ingress-nginx/ingress-nginx  \
   --namespace ingress-nginx-2 \
   --set controller.ingressClassResource.name=nginx-two \
+  --set controller.ingressClass=nginx-two \
   --set controller.ingressClassResource.controllerValue="example.com/ingress-nginx-2" \
   --set controller.ingressClassResource.enabled=true \
   --set controller.ingressClassByName=true
@@ -234,7 +235,9 @@ If you start Ingress-Nginx B with the command line argument `--watch-ingress-wit
   --namespace kube-system \
   --set controller.electionID=nginx-two-leader \
   --set controller.ingressClassResource.name=nginx-two \
+  --set controller.ingressClass=nginx-two \
   --set controller.ingressClassResource.controllerValue="example.com/ingress-nginx-2" \
   --set controller.ingressClassResource.enabled=true \
   --set controller.ingressClassByName=true
   ```
+  - Note, controller.ingressClassResource.name and controller.ingressClass have to be set with the value of the new class as the first is to create the IngressClass object and the other is to modify the deployment of the actuall ingress controller pod.
