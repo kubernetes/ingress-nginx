@@ -165,6 +165,12 @@ func TestIsSafePath(t *testing.T) {
 			path:    "/xpto/~user/t-e_st.exe",
 		},
 		{
+			name:    "should accept valid path / with regex disabled",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(false),
+			path:    "/",
+		},
+		{
 			name:    "should reject invalid path with invalid chars",
 			want:    false,
 			copyIng: generateDumbIngressforPathTest(false),
@@ -177,6 +183,12 @@ func TestIsSafePath(t *testing.T) {
 			path:    "/foo/bar/(.+)",
 		},
 		{
+			name:    "should accept valid path / with regex enabled",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(true),
+			path:    "/",
+		},
+		{
 			name:    "should accept regex path when regex is enabled",
 			want:    true,
 			copyIng: generateDumbIngressforPathTest(true),
@@ -187,6 +199,12 @@ func TestIsSafePath(t *testing.T) {
 			want:    false,
 			copyIng: generateDumbIngressforPathTest(true),
 			path:    "/foo/bar/;xpto",
+		},
+		{
+			name:    "should reject regex path when regex is enabled but the path is invalid",
+			want:    false,
+			copyIng: generateDumbIngressforPathTest(true),
+			path:    ";xpto",
 		},
 	}
 	for _, tt := range tests {
