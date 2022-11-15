@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -110,5 +111,56 @@ var _ = framework.DescribeAnnotation("server-alias", func() {
 				Status(http.StatusOK).
 				Body().Contains(fmt.Sprintf("host=%v", host))
 		}
+	})
+
+	ginkgo.It("should log no warning if there are two ingresses for one host, with only one server-alias annotation", func() {
+		host := "foo"
+
+		ing := framework.NewSingleIngress("app-a", "/app-a", host, f.Namespace, framework.EchoService, 80, nil)
+		f.EnsureIngress(ing)
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/server-alias": "bar",
+		}
+		ing = framework.NewSingleIngress("app-b", "/app-b", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %v bar", host))
+			})
+
+		// verify that the warning has not been logged
+		logs, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.NotContains(ginkgo.GinkgoT(), logs,
+			fmt.Sprintf("Aliases already configured for server \"%s\", skipping (Ingress \"%s/%s\")", host, f.Namespace, ing.Name))
+	})
+
+	ginkgo.It("should log a warning if there are two ingresses for one host, with server-alias annotations in each ingress", func() {
+		host := "foo"
+
+		ing1annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/server-alias": "bar",
+		}
+		ing := framework.NewSingleIngress("app-a", "/app-a", host, f.Namespace, framework.EchoService, 80, ing1annotations)
+		f.EnsureIngress(ing)
+
+		ing2annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/server-alias": "baz",
+		}
+		ing = framework.NewSingleIngress("app-b", "/app-b", host, f.Namespace, framework.EchoService, 80, ing2annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %v bar", host))
+			})
+
+		// verify that the warning has been logged
+		logs, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.Contains(ginkgo.GinkgoT(), logs,
+			fmt.Sprintf("Aliases already configured for server \"%s\", skipping (Ingress \"%s/%s\")", host, f.Namespace, ing.Name))
 	})
 })
