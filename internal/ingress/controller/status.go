@@ -99,25 +99,16 @@ func setupLeaderElection(config *leaderElectionConfig) {
 		EventRecorder: recorder,
 	}
 
-	// TODO: If we upgrade client-go to v0.24 then we can only use LeaseLock.
-	// MultiLock is used for lock's migration
-	lock := resourcelock.MultiLock{
-		Primary: &resourcelock.ConfigMapLock{
-			ConfigMapMeta: objectMeta,
-			Client:        config.Client.CoreV1(),
-			LockConfig:    resourceLockConfig,
-		},
-		Secondary: &resourcelock.LeaseLock{
-			LeaseMeta:  objectMeta,
-			Client:     config.Client.CoordinationV1(),
-			LockConfig: resourceLockConfig,
-		},
+	lock := &resourcelock.LeaseLock{
+		LeaseMeta:  objectMeta,
+		Client:     config.Client.CoordinationV1(),
+		LockConfig: resourceLockConfig,
 	}
 
 	ttl := 30 * time.Second
 
 	elector, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
-		Lock:          &lock,
+		Lock:          lock,
 		LeaseDuration: ttl,
 		RenewDeadline: ttl / 2,
 		RetryPeriod:   ttl / 4,

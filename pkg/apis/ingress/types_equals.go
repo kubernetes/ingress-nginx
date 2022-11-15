@@ -173,6 +173,9 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	if csa1.Path != csa2.Path {
 		return false
 	}
+	if csa1.Domain != csa2.Domain {
+		return false
+	}
 	if csa1.Expires != csa2.Expires {
 		return false
 	}
@@ -192,7 +195,7 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	return true
 }
 
-//Equal checks the equality between UpstreamByConfig types
+// Equal checks the equality between UpstreamByConfig types
 func (u1 *UpstreamHashByConfig) Equal(u2 *UpstreamHashByConfig) bool {
 	if u1 == u2 {
 		return true

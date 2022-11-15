@@ -67,6 +67,12 @@ func WithDeploymentReplicas(r int) func(*deploymentOptions) {
 	}
 }
 
+func WithName(n string) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.name = n
+	}
+}
+
 // NewEchoDeployment creates a new single replica deployment of the echo server image in a particular namespace
 func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 	options := &deploymentOptions{
@@ -78,7 +84,7 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 		o(options)
 	}
 
-	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:f45fb156e1488ae29aa5e98d2faf8731c79bc5a19c2f39a3c4069566ba629a78", 80, int32(options.replicas),
+	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:778ac6d1188c8de8ecabeddd3c37b72c8adc8c712bad2bd7a81fb23a3514934c", 80, int32(options.replicas),
 		nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},

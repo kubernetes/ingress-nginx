@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors.
+Copyright 2022 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,26 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package store
+package httpexpect
 
-import (
-	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/tools/cache"
-)
-
-// EndpointLister makes a Store that lists Endpoints.
-type EndpointLister struct {
-	cache.Store
+// Array provides methods to inspect attached []interface{} object
+// (Go representation of JSON array).
+type Array struct {
+	chain chain
+	value []interface{}
 }
 
-// ByKey returns the Endpoints of the Service matching key in the local Endpoint Store.
-func (s *EndpointLister) ByKey(key string) (*apiv1.Endpoints, error) {
-	eps, exists, err := s.GetByKey(key)
-	if err != nil {
-		return nil, err
+// Iter returns a new slice of Values attached to array elements.
+func (a *Array) Iter() []Value {
+	if a.chain.failed() {
+		return []Value{}
 	}
-	if !exists {
-		return nil, NotExistsError(key)
+	ret := []Value{}
+	for n := range a.value {
+		ret = append(ret, Value{a.chain, a.value[n]})
 	}
-	return eps.(*apiv1.Endpoints), nil
+	return ret
 }

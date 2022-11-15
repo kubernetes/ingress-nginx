@@ -2,6 +2,21 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 4.4.0
+
+* Adding support for disabling liveness and readiness probes to the Helm chart by @njegosrailic in https://github.com/kubernetes/ingress-nginx/pull/9238
+* add:(admission-webhooks) ability to set securityContext by @ybelMekk in https://github.com/kubernetes/ingress-nginx/pull/9186
+* #7652 - Updated Helm chart to use the fullname for the electionID if not specified. by @FutureMatt in https://github.com/kubernetes/ingress-nginx/pull/9133
+* Rename controller-wehbooks-networkpolicy.yaml. by @Gacko in https://github.com/kubernetes/ingress-nginx/pull/9123
+
+### 4.3.0 
+- Support for Kubernetes v.1.25.0 was added and support for endpoint slices
+- Support for Kubernetes v1.20.0 and v1.21.0 was removed
+- [8890](https://github.com/kubernetes/ingress-nginx/pull/8890) migrate to endpointslices
+- [9059](https://github.com/kubernetes/ingress-nginx/pull/9059) kubewebhookcertgen sha change after go1191
+- [9046](https://github.com/kubernetes/ingress-nginx/pull/9046) Parameterize metrics port name
+- [9104](https://github.com/kubernetes/ingress-nginx/pull/9104) Fix yaml formatting error with multiple annotations
+
 ### 4.2.1
 
 - The sha of kube-webhook-certgen image & the opentelemetry image, in values file, was changed to new images built on alpine-v3.16.1

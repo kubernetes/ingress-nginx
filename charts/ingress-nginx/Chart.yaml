@@ -2,8 +2,8 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 4.2.1
-appVersion: 1.3.0
+version: 4.4.0
+appVersion: 1.5.1
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -12,7 +12,6 @@ keywords:
   - nginx
 sources:
   - https://github.com/kubernetes/ingress-nginx
-type: application
 maintainers:
   - name: rikatz
   - name: strongjz
@@ -26,4 +25,7 @@ annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - "[8896](https://github.com/kubernetes/ingress-nginx/pull/8896) updated to new images built today"
+    - Adding support for disabling liveness and readiness probes to the Helm chart
+    - add:(admission-webhooks) ability to set securityContext
+    - Updated Helm chart to use the fullname for the electionID if not specified
+    - Rename controller-wehbooks-networkpolicy.yaml

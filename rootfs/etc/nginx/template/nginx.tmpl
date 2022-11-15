@@ -361,7 +361,7 @@ http {
     # $ingress_name
     # $service_name
     # $service_port
-    log_format upstreaminfo {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ $cfg.LogFormatUpstream }}';
+    log_format upstreaminfo {{ if $cfg.LogFormatEscapeNone }}escape=none {{ else if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ $cfg.LogFormatUpstream }}';
 
     {{/* map urls that should not appear in access.log */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
@@ -957,7 +957,7 @@ stream {
         set $proxy_upstream_name "-";
 
         {{ if not ( empty $server.CertificateAuth.MatchCN ) }}
-        {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}  
+        {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}
         if ( $ssl_client_s_dn !~ {{ $server.CertificateAuth.MatchCN }} ) {
             return 403 "client certificate unauthorized";
         }
@@ -1288,7 +1288,7 @@ stream {
                     {{- end }}
                     return
                 end
-                if res.status == ngx.HTTP_FORBIDDEN then
+                if res.status == ngx.HTTP_UNAUTHORIZED or res.status == ngx.HTTP_FORBIDDEN then
                     ngx.exit(res.status)
                 end
                 ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
