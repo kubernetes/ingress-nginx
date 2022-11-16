@@ -520,9 +520,15 @@ http {
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
     geo $remote_addr $whitelist_{{ $rl.ID }} {
+        {{- if $rl.Blacklist -}}
+        default 1;
+        {{ range $ip := $rl.Blacklist }}
+        {{ $ip }} 0;{{ end }}
+        {{- else -}}
         default 0;
         {{ range $ip := $rl.Whitelist }}
         {{ $ip }} 1;{{ end }}
+        {{- end -}}
     }
 
     # Ratelimit {{ $rl.Name }}
