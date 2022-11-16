@@ -82,8 +82,7 @@ func main() {
 	mc.Start(conf.ValidationWebhook)
 
 	if conf.EnableProfiling {
-		// TODO: Turn Profiler address configurable via flags
-		go metrics.RegisterProfiler("127.0.0.1", nginx.ProfilerPort)
+		go metrics.RegisterProfiler(nginx.ProfilerAddress, nginx.ProfilerPort)
 	}
 
 	ngx := controller.NewNGINXController(conf, mc)
