@@ -147,10 +147,18 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
+        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
           volumeMounts:
           {{- if .Values.controller.extraModules }}
             - name: modules
+            {{ if .Values.controller.image.chroot }}
+              mountPath: /chroot/modules_mount
+            {{ else }}
+              mountPath: /modules_mount
+            {{ end }}
+          {{- end }}
+          {{- if .Values.controller.opentelemetry.enabled }}
+            - name: opentelemetry
             {{ if .Values.controller.image.chroot }}
               mountPath: /chroot/modules_mount
             {{ else }}
@@ -177,7 +185,7 @@ spec:
       {{- if .Values.controller.extraContainers }}
         {{ toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
-    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
+    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
       initContainers:
       {{- if .Values.controller.extraInitContainers }}
         {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
@@ -195,6 +203,17 @@ spec:
                 mountPath: /modules_mount
         {{- end }}
       {{- end }}
+      {{- if .Values.controller.opentelemetry.enabled}}
+          - name: opentelemetry
+            image: {{ .Values.controller.opentelemetry.image }}
+            command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+            {{- if (or $.Values.controller.containerSecurityContext .containerSecurityContext) }}
+            securityContext: {{ .containerSecurityContext | default $.Values.controller.containerSecurityContext | toYaml | nindent 14 }}
+            {{- end }}
+            volumeMounts:
+              - name: opentelemetry
+                mountPath: /modules_mount
+      {{- end}}
     {{- end }}
     {{- if .Values.controller.hostNetwork }}
       hostNetwork: {{ .Values.controller.hostNetwork }}
@@ -213,10 +232,14 @@ spec:
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
-    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
+    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
       volumes:
       {{- if .Values.controller.extraModules }}
         - name: modules
+          emptyDir: {}
+      {{- end }}
+      {{- if .Values.controller.opentelemetry.enabled }}
+        - name: opentelemetry
           emptyDir: {}
       {{- end }}
       {{- if .Values.controller.customTemplate.configMapName }}
