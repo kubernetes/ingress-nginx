@@ -59,7 +59,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
-
 	ingressutils "k8s.io/ingress-nginx/pkg/util/ingress"
 )
 
