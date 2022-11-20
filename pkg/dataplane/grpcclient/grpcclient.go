@@ -25,6 +25,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ingressconfig "k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -79,6 +80,13 @@ var (
 			  "RetryableStatusCodes": [ "UNAVAILABLE" ]
 		  }
 		}]}`
+
+	// TODO: Turn configurable
+	kacp = keepalive.ClientParameters{
+		Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+		Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
+		PermitWithoutStream: true,             // send pings even without active streams
+	}
 )
 
 // NewGRPCClient receives the gRPC configuration and returns the client to be used
@@ -115,6 +123,7 @@ func NewGRPCClient(config Config) (*Client, error) {
 		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultServiceConfig(retryPolicy),
+		grpc.WithKeepaliveParams(kacp),
 	)
 	if err != nil {
 		return nil, err

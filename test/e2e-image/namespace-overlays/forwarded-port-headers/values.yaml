@@ -1,5 +1,18 @@
 # TODO: remove the need to use fullnameOverride
 fullnameOverride: nginx-ingress
+dataplane:
+  image:
+    repository: ingress-controller/dataplane
+    tag: 1.0.0-dev
+    digest:
+    digestChroot:
+  containerPort:
+    http: "1080"
+    https: "1443"
+
+  extraArgs:
+    http-port: "1080"
+    https-port: "1443"
 controller:
   image:
     repository: ingress-controller/controller

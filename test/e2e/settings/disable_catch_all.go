@@ -20,6 +20,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -36,6 +37,8 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
 
+		// TODO: Error here is due to DP not being able to reconnect to CP. The update happens, but the watch never gets a new
+		// notification.
 		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
 			args := deployment.Spec.Template.Spec.Containers[0].Args
 			args = append(args, "--disable-catch-all=true")
@@ -45,6 +48,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 			return err
 		})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
+		framework.Sleep(5 * time.Second) // Give time to the update to happen
 	})
 
 	ginkgo.It("should ignore catch all Ingress with backend", func() {

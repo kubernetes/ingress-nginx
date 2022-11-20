@@ -1,5 +1,11 @@
 # TODO: remove the need to use fullnameOverride
 fullnameOverride: nginx-ingress
+dataplane:
+  image:
+    repository: ingress-controller/dataplane
+    tag: 1.0.0-dev
+    digest:
+    digestChroot:
 controller:
   image:
     repository: ingress-controller/controller

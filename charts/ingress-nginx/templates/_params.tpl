@@ -68,4 +68,12 @@
 {{- define "ingress-nginx-dataplane.params" -}}
 - /nginx-ingress-dataplane
 - --grpc-host={{ include "ingress-nginx.controller.fullname" . }}-controlplane:{{ .Values.controller.grpcPort}}
+{{- range $key, $value := .Values.dataplane.extraArgs }}
+{{- /* Accept keys without values or with false as value */}}
+{{- if eq ($value | quote | len) 2 }}
+- --{{ $key }}
+{{- else }}
+- --{{ $key }}={{ $value }}
+{{- end }}
+{{- end }}
 {{- end -}}

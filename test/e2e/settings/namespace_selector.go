@@ -54,6 +54,8 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 	})
 
 	ginkgo.AfterEach(func() {
+		// TODO: If you are seeing errors here on clusterrole already existing, gingko is not properly wrapping the real errors.
+		// try setting the "scope" variables on namespace overlay from `namespace-selector` to true so it wont try to create/erase clusterRoles
 		cleanupNamespace(notMatchedNs)
 		cleanupNamespace(matchedNs)
 
@@ -67,7 +69,7 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 
 	ginkgo.Context("With specific watch-namespace-selector flags", func() {
 
-		ginkgo.It("should ingore Ingress of namespace without label foo=bar and accept those of namespace with label foo=bar", func() {
+		ginkgo.It("should ignore Ingress of namespace without label foo=bar and accept those of namespace with label foo=bar", func() {
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return !strings.Contains(cfg, "server_name bar") &&
@@ -118,6 +120,7 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 				WithHeader("Host", notMatchedHost).
 				Expect().
 				Status(http.StatusOK)
+
 		})
 	})
 })

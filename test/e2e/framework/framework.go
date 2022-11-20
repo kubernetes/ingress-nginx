@@ -514,7 +514,7 @@ func (f *Framework) WaitForNginxListening(port int) {
 
 		return true, nil
 	})
-	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress controller pod listening on port 80")
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress controller %s pod listening on port %d", podIP, port)
 }
 
 // WaitForPod waits for a specific Pod to be ready, using a label selector
