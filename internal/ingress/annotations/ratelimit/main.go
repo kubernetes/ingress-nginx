@@ -60,7 +60,7 @@ type Config struct {
 
 	Whitelist []string `json:"whitelist"`
 
-	Blacklist []string `json:"blacklist"`
+	Blocklist []string `json:"blocklist"`
 }
 
 // Equal tests for equality between two RateLimit types
@@ -95,11 +95,11 @@ func (rt1 *Config) Equal(rt2 *Config) bool {
 	if len(rt1.Whitelist) != len(rt2.Whitelist) {
 		return false
 	}
-	if len(rt1.Blacklist) != len(rt2.Blacklist) {
+	if len(rt1.Blocklist) != len(rt2.Blocklist) {
 		return false
 	}
 
-	return sets.StringElementsMatch(rt1.Blacklist, rt2.Blacklist)
+	return sets.StringElementsMatch(rt1.Blocklist, rt2.Blocklist)
 }
 
 // Zone returns information about the NGINX rate limit (limit_req_zone)
@@ -172,8 +172,8 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
-	valBlacklist, _ := parser.GetStringAnnotation("limit-blacklist", ing)
-	cidrsBlacklist, err := net.ParseCIDRs(valBlacklist)
+	valBlocklist, _ := parser.GetStringAnnotation("limit-blocklist", ing)
+	cidrsBlocklist, err := net.ParseCIDRs(valBlocklist)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		Name:           zoneName,
 		ID:             encode(zoneName),
 		Whitelist:      cidrsWhitelist,
-		Blacklist:      cidrsBlacklist,
+		Blocklist:      cidrsBlocklist,
 	}, nil
 }
 

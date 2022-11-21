@@ -526,7 +526,7 @@ These annotations define limits on connections and transmission rates.  These ca
 * `nginx.ingress.kubernetes.io/limit-rate-after`: initial number of kilobytes after which the further transmission of a response to a given connection will be rate limited. This feature must be used with [proxy-buffering](#proxy-buffering) enabled.
 * `nginx.ingress.kubernetes.io/limit-rate`: number of kilobytes per second allowed to send to a given connection.  The zero value disables rate limiting. This feature must be used with [proxy-buffering](#proxy-buffering) enabled.
 * `nginx.ingress.kubernetes.io/limit-whitelist`: client IP source ranges to be excluded from rate-limiting. The value is a comma separated list of CIDRs.
-* `nginx.ingress.kubernetes.io/limit-blacklist`: client IP source ranges to be included for rate-limiting. The value is a comma separated list of CIDRs. Overrides any configuration specified in `limit-whitelist`.
+* `nginx.ingress.kubernetes.io/limit-blocklist`: client IP source ranges to be included for rate-limiting. The value is a comma separated list of CIDRs. Overrides any configuration specified in `limit-whitelist`.
 
 If you specify multiple annotations in a single Ingress rule, limits are applied in the order `limit-connections`, `limit-rpm`, `limit-rps`.
 
