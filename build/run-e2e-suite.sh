@@ -88,3 +88,10 @@ kubectl run --rm \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
   e2e --image=nginx-ingress-controller:e2e
 
+pwd
+hostname
+echo "extracting reports ..."
+#kubectl get cm report1 -o "jsonpath={.data['report_e2e_test_suite\.xml']}" > test/junitreports/report_e2e_test_suite.xml
+#kubectl get cm report2 -o "jsonpath={.data['report_e2e_test_suite_serial\.xml']}"  > test/junitreports/report_e2e_test_suite_serial.xml
+#kubectl get cm report3 -o "jsonpath={.data['report_e2e_test_suite_memleak\.xml']}" > test/junitreports/report_e2e_test_suite_memleak.xml
+echo "done extracting report .."

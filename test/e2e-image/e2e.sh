@@ -34,23 +34,36 @@ ginkgo_args=(
   "-timeout=75m"
 )
 
+reportFileName="$reportFileName"
+
 echo -e "${BGREEN}Running e2e test suite (FOCUS=${FOCUS})...${NC}"
 ginkgo "${ginkgo_args[@]}"               \
   -focus="${FOCUS}"                  \
   -skip="\[Serial\]|\[MemoryLeak\]"  \
   -nodes="${E2E_NODES}" \
+  --junit-report=$reportFileName.xml \
   /e2e.test
+kubectl create cm $reportFileName --from-file $reportFileName.xml
+kubectl label cm $reportFileName content=report
 
 echo -e "${BGREEN}Running e2e test suite with tests that require serial execution...${NC}"
 ginkgo "${ginkgo_args[@]}"   \
   -focus="\[Serial\]"    \
   -skip="\[MemoryLeak\]" \
+  --junit-report=$reportFileName-serial.xml \
   /e2e.test
+kubectl create cm $reportFileName-serial --from-file $reportFileName-serial.xml
+kubectl label cm $reportFileName-serial content=report
+
+
 
 if [[ ${E2E_CHECK_LEAKS} != "" ]]; then
   echo -e "${BGREEN}Running e2e test suite with tests that check for memory leaks...${NC}"
   ginkgo "${ginkgo_args[@]}"    \
     -focus="\[MemoryLeak\]" \
     -skip="\[Serial\]" \
+    --junit-report=$reportFileName-memleak.xml \
     /e2e.test
+  kubectl create cm $reportFileName-memleak --from-file $reportFileName-memleak.xml
+  kubectl label cm $reportFileName-memleak content=report
 fi
