@@ -17,8 +17,13 @@ limitations under the License.
 package ingress
 
 import (
+	"fmt"
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	networkingv1 "k8s.io/api/networking/v1"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
@@ -128,5 +133,85 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 
 	if !newConfig.Equal(&ingress.Configuration{Backends: []*ingress.Backend{{Name: "a-backend-8080"}}, Servers: newServers}) {
 		t.Errorf("Expected new config to not change")
+	}
+}
+
+func generateDumbIngressforPathTest(regexEnabled bool) *networkingv1.Ingress {
+	var annotations = make(map[string]string)
+	regexAnnotation := fmt.Sprintf("%s/use-regex", parser.AnnotationsPrefix)
+	if regexEnabled {
+		annotations[regexAnnotation] = "true"
+	}
+	return &networkingv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "dumb",
+			Namespace:   "default",
+			Annotations: annotations,
+		},
+	}
+}
+
+func TestIsSafePath(t *testing.T) {
+	tests := []struct {
+		name    string
+		copyIng *networkingv1.Ingress
+		path    string
+		want    bool
+	}{
+		{
+			name:    "should accept valid path with regex disabled",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(false),
+			path:    "/xpto/~user/t-e_st.exe",
+		},
+		{
+			name:    "should accept valid path / with regex disabled",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(false),
+			path:    "/",
+		},
+		{
+			name:    "should reject invalid path with invalid chars",
+			want:    false,
+			copyIng: generateDumbIngressforPathTest(false),
+			path:    "/foo/bar/;xpto",
+		},
+		{
+			name:    "should reject regex path when regex is disabled",
+			want:    false,
+			copyIng: generateDumbIngressforPathTest(false),
+			path:    "/foo/bar/(.+)",
+		},
+		{
+			name:    "should accept valid path / with regex enabled",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(true),
+			path:    "/",
+		},
+		{
+			name:    "should accept regex path when regex is enabled",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(true),
+			path:    "/foo/bar/(.+)",
+		},
+		{
+			name:    "should reject regex path when regex is enabled but the path is invalid",
+			want:    false,
+			copyIng: generateDumbIngressforPathTest(true),
+			path:    "/foo/bar/;xpto",
+		},
+		{
+			name:    "should reject regex path when regex is enabled but the path is invalid",
+			want:    false,
+			copyIng: generateDumbIngressforPathTest(true),
+			path:    ";xpto",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsSafePath(tt.copyIng, tt.path); got != tt.want {
+				t.Errorf("IsSafePath() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

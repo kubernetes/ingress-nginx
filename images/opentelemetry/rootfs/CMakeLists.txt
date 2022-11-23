@@ -80,7 +80,7 @@ ExternalProject_Add(
              -DgRPC_SSL_PROVIDER=package
              -DOPENSSL_ROOT_DIR=OpenSSL
              -DgRPC_BUILD_TESTS=OFF
-             -DBUILD_SHARED_LIBS=ON
+             -DBUILD_SHARED_LIBS=OFF
              -DgRPC_INSTALL=ON
   CMAKE_CACHE_ARGS -DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}
   TEST_AFTER_INSTALL 0
