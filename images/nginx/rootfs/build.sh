@@ -56,11 +56,11 @@ export MSGPACK_VERSION=3.3.0
 # Check for recent changes: https://github.com/DataDog/dd-opentracing-cpp/compare/v1.3.2...master
 export DATADOG_CPP_VERSION=1.3.2
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.2...master
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.3...master
 export MODSECURITY_VERSION=1.0.3
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.5...v3/master
-export MODSECURITY_LIB_VERSION=v3/master
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.8...v3/master
+export MODSECURITY_LIB_VERSION=e9a7ba4a60be48f761e0328c6dfcc668d70e35a0
 
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.4
@@ -495,8 +495,9 @@ make install
 
 # build modsecurity library
 cd "$BUILD_PATH"
-git clone --depth=1 -b $MODSECURITY_LIB_VERSION https://github.com/SpiderLabs/ModSecurity
+git clone -n https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
+git checkout $MODSECURITY_LIB_VERSION
 git submodule init
 git submodule update
 
