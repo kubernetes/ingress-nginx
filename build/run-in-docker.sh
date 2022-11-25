@@ -77,7 +77,7 @@ if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   echo "FLAGS=$FLAGS"
   go env
   set -x
-  go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.1.4
+  go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.5.1
   find / -type f -name ginkgo 2>/dev/null
   which ginkgo
   /bin/bash -c "${FLAGS}"
