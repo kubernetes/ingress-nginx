@@ -21,7 +21,13 @@ FROM registry.k8s.io/etcd:${ETCD_VERSION} as etcd
 
 FROM ${BASE_IMAGE}
 
-RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
+RUN set -eux; \
+	if [ -e /etc/nsswitch.conf ]; then \
+		grep '^hosts: files dns' /etc/nsswitch.conf; \
+	else \
+		echo 'hosts: files dns' > /etc/nsswitch.conf; \
+	fi
+
 
 COPY --from=GO   /usr/local/go /usr/local/go
 COPY --from=etcd /usr/local/bin/etcd /usr/local/bin/etcd
