@@ -88,3 +88,29 @@ kubectl run --rm \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
   e2e --image=nginx-ingress-controller:e2e
 
+# Get the junit-reports stored in the configMaps created during e2etests
+echo "Getting the report files out now.."
+reportsDir="test/junitreports"
+reportFileName="report-e2e-test-suite"
+cd $reportsDir
+
+# TODO: find out how to use a variable in jsonpath syntax
+#for cmName in `k get cm -l junitreport=true -o json | jq  '.items[].binaryData | keys[]' | tr '\"' ' '`
+#do
+#
+# kubectl get cm -l junitreport=true -o json | jq -r  '[.items[].binaryData | to_entries[] | {"key": .key, "value": .value  }] | from_entries'
+#
+#
+kubectl get cm $reportFileName.xml.gz -o "jsonpath={.binaryData['report-e2e-test-suite\.xml\.gz']}" > $reportFileName.xml.gz.base64
+kubectl get cm $reportFileName-serial.xml.gz -o "jsonpath={.binaryData['report-e2e-test-suite-serial\.xml\.gz']}" > $reportFileName-serial.xml.gz.base64
+cat $reportFileName.xml.gz.base64 | base64 -d > $reportFileName.xml.gz
+cat $reportFileName-serial.xml.gz.base64 | base64 -d > $reportFileName-serial.xml.gz
+gzip -d $reportFileName.xml.gz
+gzip -d $reportFileName-serial.xml.gz
+rm *.gz
+cd ../..
+# TODO Temporary: if condirion to check if cm exists and only then try the extracti for the memleak report
+#kubectl get cm $reportFileName-serial  -o "jsonpath={.data['report-e2e-test-suite-memleak\.xml\.gz']}" > $reportFileName-memleak.base64
+#cat $reportFileName-memleak.base64 | base64 -d > $reportFileName-memleak.xml.gz
+#gzip -d $reportFileName-memleak.xml.gz
+echo "done getting the reports files out.."
