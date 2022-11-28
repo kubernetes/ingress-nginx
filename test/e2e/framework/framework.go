@@ -252,7 +252,7 @@ func (f *Framework) updateIngressNGINXPod() error {
 // WaitForNginxServer waits until the nginx configuration contains a particular server section.
 // `cfg` passed to matcher is normalized by replacing all tabs and spaces with single space.
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, 5*time.Minute, f.matchNginxConditions(name, matcher))
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 	Sleep(1 * time.Second)
 }
@@ -572,7 +572,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 }
 
 func waitForDeploymentRollout(kubeClientSet kubernetes.Interface, resource *appsv1.Deployment) error {
-	return wait.Poll(Poll, 5*time.Minute, func() (bool, error) {
+	return wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		d, err := kubeClientSet.AppsV1().Deployments(resource.Namespace).Get(context.TODO(), resource.Name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil

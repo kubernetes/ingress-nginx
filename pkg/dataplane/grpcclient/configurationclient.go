@@ -29,14 +29,14 @@ import (
 func (c *Client) ConfigurationService() {
 	stream, err := c.ConfigurationClient.WatchConfigurations(c.ctx, c.Backendname)
 	if err != nil {
-		c.ErrorCh <- fmt.Errorf("error creating configuration client: %w", err)
+		c.grpcErrCh <- fmt.Errorf("error creating configuration client: %w", err)
 		return
 	}
 
 	for {
 		cfg, err := stream.Recv()
 		if err != nil {
-			c.ErrorCh <- fmt.Errorf("error getting configuration: %w", err)
+			c.grpcErrCh <- fmt.Errorf("error getting configuration: %w", err)
 			return
 		}
 		var configtemplate *config.TemplateConfig

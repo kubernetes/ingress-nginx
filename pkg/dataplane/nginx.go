@@ -49,11 +49,15 @@ func NewNGINXConfigurer(ingressconfig *Configuration, mc metric.Collector) *NGIN
 	}
 
 	errCh := make(chan error)
+	grpcErrCh := make(chan error)
 	// TODO: Get this from configuration @Volatus is checking this
 	grpcconf := grpcclient.Config{
-		Address:   ingressconfig.GRPCAddress,
-		Keepalive: false,
+		Options: grpcclient.GRPCDialOptions{
+			Address:   ingressconfig.GRPCAddress,
+			Keepalive: false,
+		},
 		ErrorCh:   errCh,
+		GRPCErrCh: grpcErrCh,
 	}
 	grpccl, err := grpcclient.NewGRPCClient(grpcconf)
 	if err != nil {
@@ -66,6 +70,7 @@ func NewNGINXConfigurer(ingressconfig *Configuration, mc metric.Collector) *NGIN
 		cfg:           ingressconfig,
 		stopCh:        make(chan struct{}),
 		ngxErrCh:      errCh,
+		grpcErrCh:     grpcErrCh,
 		configureLock: &sync.Mutex{},
 		stopLock:      &sync.Mutex{},
 		// TOOD: Right now we will receive the full configuration, but we may want to receive and validate just checksums
@@ -203,7 +208,12 @@ func (n *NGINXConfigurer) Start() {
 			if process.IsRespawnIfRequired(err) {
 				return
 			}
+			klog.Fatalf("Dataplane got an unexpected error, exiting: %s", err)
 
+		case err := <-n.grpcErrCh:
+			// TODO: Maybe we need a mutex or some way to not start multiple times (a map of channels to stop goroutines? a pubsub?)
+			klog.Warningf("Detected error in gRPC connection, restaring the connection: %s", err)
+			n.GRPCClient.Start()
 		case cfg := <-n.GRPCClient.ConfigCh:
 			if n.isShuttingDown {
 				break
@@ -235,6 +245,9 @@ func (n *NGINXConfigurer) Stop() error {
 		return err
 	}
 
+	/*if err := n.GRPCClient.ShutdownFunc(); err != nil {
+		return err
+	}*/ // TODO: Should detect if connection is already closed, otherwise it will panic
 	// wait for the NGINX process to terminate
 	timer := time.NewTicker(time.Second * 1)
 	for range timer.C {

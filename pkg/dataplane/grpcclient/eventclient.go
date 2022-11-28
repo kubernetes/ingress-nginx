@@ -17,8 +17,6 @@ limitations under the License.
 package grpcclient
 
 import (
-	"fmt"
-
 	"k8s.io/klog/v2"
 )
 
@@ -26,17 +24,17 @@ func (c *Client) EventService() {
 
 	stream, err := c.EventClient.PublishEvent(c.ctx)
 	if err != nil {
-		c.ErrorCh <- fmt.Errorf("error creating event client: %w", err)
+		klog.Errorf("error creating event client: %s", err)
 		return
 	}
 
 	for msg := range c.EventCh {
-
 		message := &msg
 		message.Backend = c.Backendname
 		klog.Infof("sending message %+v", message)
 		if err := stream.Send(message); err != nil {
 			klog.Errorf("error sending message: %v", err)
+			return
 		}
 	}
 }

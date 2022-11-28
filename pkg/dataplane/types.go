@@ -86,6 +86,9 @@ type NGINXConfigurer struct {
 	// ngxErrCh is used to detect errors with the NGINX processes
 	ngxErrCh chan error
 
+	// grpcErrCh is used to detect errors with gRPC connection
+	grpcErrCh chan error
+
 	// templateConfig is the config that was received via gRPC and will be applied
 	templateConfig *config.TemplateConfig
 
