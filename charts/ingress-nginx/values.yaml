@@ -364,6 +364,7 @@ controller:
 
   # Mutually exclusive with keda autoscaling
   autoscaling:
+    apiVersion: autoscaling/v2beta2
     enabled: false
     minReplicas: 1
     maxReplicas: 11
