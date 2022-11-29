@@ -278,6 +278,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.allowSnippetAnnotations | bool | `true` | This configuration defines if Ingress Controller should allow users to set their own *-snippet annotations, otherwise this is forbidden / dropped when users add those annotations. Global snippets in ConfigMap are still respected |
 | controller.annotations | object | `{}` | Annotations to be added to the controller Deployment or DaemonSet # |
 | controller.autoscaling.behavior | object | `{}` |  |
+| controller.autoscaling.apiVersion | string | `autoscaling/v2` |  |
 | controller.autoscaling.enabled | bool | `false` |  |
 | controller.autoscaling.maxReplicas | int | `11` |  |
 | controller.autoscaling.minReplicas | int | `1` |  |
