@@ -34,23 +34,39 @@ ginkgo_args=(
   "-timeout=75m"
 )
 
+# Variable for the prefix of report filenames
+reportFileNamePrefix="report-e2e-test-suite"
+
 echo -e "${BGREEN}Running e2e test suite (FOCUS=${FOCUS})...${NC}"
 ginkgo "${ginkgo_args[@]}"               \
   -focus="${FOCUS}"                  \
   -skip="\[Serial\]|\[MemoryLeak\]"  \
   -nodes="${E2E_NODES}" \
+  --junit-report=$reportFileNamePrefix.xml \
   /e2e.test
+# Create configMap out of a compressed report file for extraction later
 
 echo -e "${BGREEN}Running e2e test suite with tests that require serial execution...${NC}"
 ginkgo "${ginkgo_args[@]}"   \
   -focus="\[Serial\]"    \
   -skip="\[MemoryLeak\]" \
+  --junit-report=$reportFileNamePrefix-serial.xml \
   /e2e.test
+# Create configMap out of a compressed report file for extraction later
 
 if [[ ${E2E_CHECK_LEAKS} != "" ]]; then
   echo -e "${BGREEN}Running e2e test suite with tests that check for memory leaks...${NC}"
   ginkgo "${ginkgo_args[@]}"    \
     -focus="\[MemoryLeak\]" \
     -skip="\[Serial\]" \
+    --junit-report=$reportFileNamePrefix-memleak.xml \
     /e2e.test
+# Create configMap out of a compressed report file for extraction later
 fi
+
+for rFile in `ls $reportFileNamePrefix*` 
+do
+  gzip -k $rFile
+  kubectl create cm $rFile.gz --from-file $rFile.gz
+  kubectl label cm $rFile.gz junitreport=true
+done
