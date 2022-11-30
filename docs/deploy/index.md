@@ -428,5 +428,5 @@ Ingress Controller; but if you're using an old version of Kubernetes (1.18 or ea
 of the NGINX Ingress Controller (e.g. version 0.49).
 
 The Helm chart of the NGINX Ingress Controller switched to version 1 in version 4 of the chart. In other words, if 
-you're running Kubernetes 1.19 or earlier, you should use version 3.X of the chart (this can be done by adding 
+you're running Kubernetes 1.18 or earlier, you should use version 3.X of the chart (this can be done by adding 
 `--version='<4'` to the `helm install` command).
