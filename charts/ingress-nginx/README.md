@@ -175,7 +175,7 @@ controller:
     internal:
       enabled: true
       annotations:
-        # Create internal LB. More informations: https://cloud.google.com/kubernetes-engine/docs/how-to/internal-load-balancing
+        # Create internal LB. More information: https://cloud.google.com/kubernetes-engine/docs/how-to/internal-load-balancing
         # For GKE versions 1.17 and later
         networking.gke.io/load-balancer-type: "Internal"
         # For earlier versions
