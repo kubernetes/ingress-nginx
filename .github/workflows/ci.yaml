@@ -267,6 +267,12 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
 
+      - name: Uplaod e2e junit-reports
+        uses: actions/upload-artifact@v2
+        if: success() || failure()
+        with:
+          name: e2e-test-reports
+          path: 'test/junitreports/report*.xml'
 
   kubernetes-chroot:
     name: Kubernetes chroot
