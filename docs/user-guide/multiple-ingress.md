@@ -3,7 +3,8 @@
 By default, deploying multiple Ingress controllers (e.g., `ingress-nginx` & `gce`) will result in all controllers simultaneously racing to update Ingress status fields in confusing ways.
 
 To fix this problem, use [IngressClasses](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class). The `kubernetes.io/ingress.class` annotation is not being preferred or suggested to use as it can be deprecated in future. Better to use the field `ingress.spec.ingressClassName`.
-But, when user has deployed with `scope.enabled`, then the ingress class resource field is not used. The only way to detect ingress in such case will be to use the annotation
+But, when user has deployed with `scope.enabled`, then the ingress class resource field is not used. The only way to detect ingress in such case will be to use the annotation .
+
 
 ## Using IngressClasses
 
