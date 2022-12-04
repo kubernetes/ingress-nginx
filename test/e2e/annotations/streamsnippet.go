@@ -48,10 +48,7 @@ var _ = framework.DescribeSetting("stream-snippet", func() {
 		})
 		f.EnsureIngress(ing)
 
-		svc, err := f.KubeClientSet.
-			CoreV1().
-			Services(f.Namespace).
-			Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
+		svc, err := f.GetNginxService()
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining ingress-nginx service")
 		assert.NotNil(ginkgo.GinkgoT(), svc, "expected a service but none returned")
 
@@ -102,10 +99,7 @@ var _ = framework.DescribeSetting("stream-snippet", func() {
 		})
 		f.EnsureIngress(ing1)
 
-		svc, err := f.KubeClientSet.
-			CoreV1().
-			Services(f.Namespace).
-			Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
+		svc, err := f.GetNginxService()
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining ingress-nginx service")
 		assert.NotNil(ginkgo.GinkgoT(), svc, "expected a service but none returned")
 

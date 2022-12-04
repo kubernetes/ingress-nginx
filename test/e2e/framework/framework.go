@@ -218,6 +218,13 @@ func MemoryLeakIt(text string, body interface{}) bool {
 
 // GetNginxIP returns the number of TCP port where NGINX is running
 func (f *Framework) GetNginxIP() string {
+	svc, err := f.GetNginxService()
+	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX IP address")
+	return svc.Spec.ClusterIP
+}
+
+// GetNginxIP returns the number of TCP port where NGINX is running
+func (f *Framework) GetNginxService() (*corev1.Service, error) {
 	svcName := "nginx-ingress-controller"
 	if Dataplane {
 		svcName = "nginx-ingress-dataplane"
@@ -226,8 +233,7 @@ func (f *Framework) GetNginxIP() string {
 		CoreV1().
 		Services(f.Namespace).
 		Get(context.TODO(), svcName, metav1.GetOptions{})
-	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX IP address")
-	return s.Spec.ClusterIP
+	return s, err
 }
 
 // GetNginxPodIP returns the IP addresses of the running pods
