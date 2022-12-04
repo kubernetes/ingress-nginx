@@ -27,7 +27,7 @@ E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-""}
 ginkgo_args=(
   "-randomize-all"
   "-flake-attempts=2"
-  "-fail-fast"
+  # "-fail-fast"
   "--show-node-events"
   "--poll-progress-after=180s"
 #  "-slow-spec-threshold=${SLOW_E2E_THRESHOLD}"

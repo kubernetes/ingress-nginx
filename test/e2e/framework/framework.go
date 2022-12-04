@@ -71,6 +71,10 @@ type Framework struct {
 	IngressClass string
 
 	pod *corev1.Pod
+
+	// controlPlanePod is used when dataplane feature is enabled and we need to reach
+	// something on controlPlane
+	controlplanePod *corev1.Pod
 }
 
 // NewDefaultFramework makes a new framework and sets up a BeforeEach/AfterEach for
@@ -245,7 +249,7 @@ func (f *Framework) GetIngressNGINXPod() *corev1.Pod {
 // UpdateIngressNGINXPod search and updates the ingress controller running pod
 func (f *Framework) updateIngressNGINXPod() error {
 	var err error
-	f.pod, err = getIngressNGINXPod(f.Namespace, f.KubeClientSet)
+	f.pod, f.controlplanePod, err = getIngressNGINXPod(f.Namespace, f.KubeClientSet)
 	return err
 }
 
@@ -271,10 +275,19 @@ func (f *Framework) WaitForNginxCustomConfiguration(from string, to string, matc
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
 
-// NginxLogs returns the logs of the nginx ingress controller pod running
+// NginxLogs returns the logs of the nginx ingress controller or dataplane pod running
 func (f *Framework) NginxLogs() (string, error) {
 	if isRunning, err := podRunningReady(f.pod); err == nil && isRunning {
 		return Logs(f.KubeClientSet, f.Namespace, f.pod.Name)
+	}
+
+	return "", fmt.Errorf("no nginx ingress controller pod is running (logs)")
+}
+
+// ControlPlaneLogs returns the logs of the nginx ingress controller pod running
+func (f *Framework) ControlPlaneLogs() (string, error) {
+	if isRunning, err := podRunningReady(f.controlplanePod); err == nil && isRunning {
+		return Logs(f.KubeClientSet, f.Namespace, f.controlplanePod.Name)
 	}
 
 	return "", fmt.Errorf("no nginx ingress controller pod is running (logs)")

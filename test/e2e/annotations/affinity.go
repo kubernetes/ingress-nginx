@@ -312,7 +312,7 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 			Expect().
 			Status(http.StatusOK)
 
-		logs, err := f.NginxLogs()
+		logs, err := f.ControlPlaneLogs()
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
 		assert.Contains(ginkgo.GinkgoT(), logs, `session-cookie-path should be set when use-regex is true`)
 	})

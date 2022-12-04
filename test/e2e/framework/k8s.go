@@ -235,46 +235,57 @@ func isPodReady(p *core.Pod) bool {
 }
 
 // getIngressNGINXPod returns the ingress controller running pod
-func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
-	var pod *core.Pod
-	component := "controller"
-	if Dataplane {
-		component = "dataplane"
-	}
+func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, *core.Pod, error) {
 
-	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
-		l, err := kubeClientSet.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("app.kubernetes.io/component=%s", component),
+	getPod := func(component string) (*core.Pod, error) {
+		var runningPod *core.Pod
+		err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
+			l, err := kubeClientSet.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
+				LabelSelector: fmt.Sprintf("app.kubernetes.io/component=%s", component),
+			})
+			if err != nil {
+				return false, nil
+			}
+
+			for _, p := range l.Items {
+				if strings.HasPrefix(p.GetName(), fmt.Sprintf("nginx-ingress-%s", component)) {
+					isRunning, err := podRunningReady(&p)
+					if err != nil {
+						continue
+					}
+
+					if isRunning {
+						runningPod = &p
+						return true, nil
+					}
+				}
+			}
+
+			return false, nil
 		})
 		if err != nil {
-			return false, nil
-		}
-
-		for _, p := range l.Items {
-			if strings.HasPrefix(p.GetName(), fmt.Sprintf("nginx-ingress-%s", component)) {
-				isRunning, err := podRunningReady(&p)
-				if err != nil {
-					continue
-				}
-
-				if isRunning {
-					pod = &p
-					return true, nil
-				}
+			if err == wait.ErrWaitTimeout {
+				return nil, fmt.Errorf("timeout waiting at least one ingress-nginx pod running in namespace %v", ns)
 			}
 		}
 
-		return false, nil
-	})
-	if err != nil {
-		if err == wait.ErrWaitTimeout {
-			return nil, fmt.Errorf("timeout waiting at least one ingress-nginx pod running in namespace %v", ns)
-		}
-
-		return nil, err
+		return runningPod, err
 	}
 
-	return pod, nil
+	controllerPod, err := getPod("controller")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if !Dataplane {
+		return controllerPod, controllerPod, nil
+	}
+
+	dataplanePod, err := getPod("dataplane")
+	if err != nil {
+		return nil, nil, err
+	}
+	return dataplanePod, controllerPod, nil
 }
 
 func createDeploymentWithRetries(c kubernetes.Interface, namespace string, obj *appsv1.Deployment) error {

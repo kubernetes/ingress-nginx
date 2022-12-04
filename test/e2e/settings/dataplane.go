@@ -36,7 +36,7 @@ var _ = framework.IngressNginxDescribe("[Flag] grpc-port", func() {
 
 	ginkgo.Context("Disable local nginx with grpc enabled", func() {
 		ginkgo.It("should reconfigure nginx.conf but skip the server", func() {
-			//ginkgo.Skip("skipping for now")
+			ginkgo.Skip("skipping for now") // TODO: Fix
 
 			host := "test.grpc"
 
