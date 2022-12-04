@@ -19,7 +19,7 @@ set -e
 NC='\e[0m'
 BGREEN='\e[32m'
 
-SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD:-"5s"}
+#SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD:-"5s"}
 FOCUS=${FOCUS:-.*}
 E2E_NODES=${E2E_NODES:-5}
 E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-""}
@@ -28,8 +28,9 @@ ginkgo_args=(
   "-randomize-all"
   "-flake-attempts=2"
   "-fail-fast"
-  "-progress"
-  "-slow-spec-threshold=${SLOW_E2E_THRESHOLD}"
+  "--show-node-events"
+  "--poll-progress-after=180s"
+#  "-slow-spec-threshold=${SLOW_E2E_THRESHOLD}"
   "-succinct"
   "-timeout=75m"
 )
