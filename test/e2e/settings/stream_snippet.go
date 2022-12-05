@@ -50,10 +50,7 @@ var _ = framework.DescribeSetting("configmap stream-snippet", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		svc, err := f.KubeClientSet.
-			CoreV1().
-			Services(f.Namespace).
-			Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
+		svc, err := f.GetNginxService()
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining ingress-nginx service")
 		assert.NotNil(ginkgo.GinkgoT(), svc, "expected a service but none returned")
 

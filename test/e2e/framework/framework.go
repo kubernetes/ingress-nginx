@@ -522,10 +522,11 @@ func (f *Framework) WaitForNginxListening(port int) {
 	}
 
 	podIP := f.GetNginxIP()
-	err = wait.Poll(500*time.Millisecond, DefaultTimeout, func() (bool, error) {
+	var innerErr error
+	err = wait.Poll(3*time.Second, 2*time.Minute, func() (bool, error) {
 		hostPort := net.JoinHostPort(podIP, fmt.Sprintf("%v", port))
-		conn, err := net.Dial("tcp", hostPort)
-		if err != nil {
+		conn, innerErr := net.Dial("tcp", hostPort)
+		if innerErr != nil {
 			return false, nil
 		}
 
@@ -533,7 +534,7 @@ func (f *Framework) WaitForNginxListening(port int) {
 
 		return true, nil
 	})
-	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress controller %s pod listening on port %d", podIP, port)
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress controller %s pod listening on port %d: %s", podIP, port, innerErr)
 }
 
 // WaitForPod waits for a specific Pod to be ready, using a label selector
