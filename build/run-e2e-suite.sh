@@ -99,6 +99,7 @@ cd $reportsDir
 #for cmName in `k get cm -l junitreport=true -o json | jq  '.items[].binaryData | keys[]' | tr '\"' ' '`
 #do
 #
+#
 # kubectl get cm -l junitreport=true -o json | jq -r  '[.items[].binaryData | to_entries[] | {"key": .key, "value": .value  }] | from_entries'
 #
 
