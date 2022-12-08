@@ -355,56 +355,40 @@ Prometheus metrics are exposed on port 10254.
 
 ### Request metrics
 
-* `nginx_ingress_controller_request_duration_seconds` Histogram
-
-  The request processing time in seconds (affected by client speed)
-
+* `nginx_ingress_controller_request_duration_seconds` Histogram\
+  The request processing (time elapsed between the first bytes were read from the client and the log write after the last bytes were sent to the client) time in seconds (affected by client speed).\
   nginx var: `request_time`
 
-* `nginx_ingress_controller_response_duration_seconds` Histogram
-
-  The time spent on receiving the response from the upstream server (affected by client speed)
-
+* `nginx_ingress_controller_response_duration_seconds` Histogram\
+  The time spent on receiving the response from the upstream server in seconds (affected by client speed when the response is bigger than proxy buffers).\
+  Note: can be up to several millis bigger than the `nginx_ingress_controller_request_duration_seconds` because of the different measuring method.
   nginx var: `upstream_response_time`
 
-* `nginx_ingress_controller_header_duration_seconds` Histogram
-
-  The time spent on receiving first header from the upstream server
-
+* `nginx_ingress_controller_header_duration_seconds` Histogram\
+  The time spent on receiving first header from the upstream server\
   nginx var: `upstream_header_time`
 
-* `nginx_ingress_controller_connect_duration_seconds` Histogram
-
-  The time spent on establishing a connection with the upstream server
-
+* `nginx_ingress_controller_connect_duration_seconds` Histogram\
+  The time spent on establishing a connection with the upstream server\
   nginx var: `upstream_connect_time`
 
-* `nginx_ingress_controller_response_size` Histogram
-
-  The response length (including request line, header, and request body)
-
+* `nginx_ingress_controller_response_size` Histogram\
+  The response length (including request line, header, and request body)\
   nginx var: `bytes_sent`
 
-* `nginx_ingress_controller_request_size` Histogram
-
-  The request length (including request line, header, and request body)
-
+* `nginx_ingress_controller_request_size` Histogram\
+  The request length (including request line, header, and request body)\
   nginx var: `request_length`
 
-* `nginx_ingress_controller_requests` Counter
-
+* `nginx_ingress_controller_requests` Counter\
   The total number of client requests
 
-* `nginx_ingress_controller_bytes_sent` Histogram
-
-  The number of bytes sent to a client. **Deprecated**, use `nginx_ingress_controller_response_size`
-
+* `nginx_ingress_controller_bytes_sent` Histogram\
+  The number of bytes sent to a client. **Deprecated**, use `nginx_ingress_controller_response_size`\
   nginx var: `bytes_sent`
 
-* `nginx_ingress_controller_ingress_upstream_latency_seconds` Summary
-
-  Upstream service latency per Ingress. **Deprecated**, use `nginx_ingress_controller_connect_duration_seconds`
-
+* `nginx_ingress_controller_ingress_upstream_latency_seconds` Summary\
+  Upstream service latency per Ingress. **Deprecated**, use `nginx_ingress_controller_connect_duration_seconds`\
   nginx var: `upstream_connect_time`
 
 ```
