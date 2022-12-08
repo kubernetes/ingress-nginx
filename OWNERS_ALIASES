@@ -7,7 +7,6 @@ aliases:
   - thockin
 
   ingress-nginx-admins:
-  - bowei
   - rikatz
   - strongjz
 

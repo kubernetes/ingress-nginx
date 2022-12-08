@@ -98,6 +98,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-domain](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-change-on-failure](#cookie-affinity)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/session-cookie-samesite](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none](#cookie-affinity)|"true" or "false"|
@@ -145,7 +146,7 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 
 * `nginx.ingress.kubernetes.io/canary-by-cookie`: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to `always`, it will be routed to the canary. When the cookie is set to `never`, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence.
 
-* `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - <weight-total>) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of <weight-total> means implies all requests will be sent to the alternative service specified in the Ingress. `<weight-total>` defaults to 100, and can be increased via `nginx.ingress.kubernetes.io/canary-weight-total`.
+* `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - <weight-total>) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of `<weight-total>` means implies all requests will be sent to the alternative service specified in the Ingress. `<weight-total>` defaults to 100, and can be increased via `nginx.ingress.kubernetes.io/canary-weight-total`.
 
 * `nginx.ingress.kubernetes.io/canary-weight-total`: The total weight of traffic. If unspecified, it defaults to 100.
 
@@ -188,6 +189,8 @@ The annotation `nginx.ingress.kubernetes.io/affinity-canary-behavior` defines th
 If you use the ``cookie`` affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation `nginx.ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'INGRESSCOOKIE'.
 
 The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.
+
+Use `nginx.ingress.kubernetes.io/session-cookie-domain` to set the `Domain` attribute of the sticky cookie.
 
 Use `nginx.ingress.kubernetes.io/session-cookie-samesite` to apply a `SameSite` attribute to the sticky cookie. Browser accepted values are `None`, `Lax`, and `Strict`. Some browsers reject cookies with `SameSite=None`, including those created before the `SameSite=None` specification (e.g. Chrome 5X). Other browsers mistakenly treat `SameSite=None` cookies as `SameSite=Strict` (e.g. Safari running on OSX 14). To omit `SameSite=None` from browsers with these incompatibilities, add the annotation `nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true"`.
 
@@ -329,7 +332,7 @@ nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
 
 ### Default Backend
 
-This annotation is of the form `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.  This `<svc name>` is a reference to a service inside of the same namespace in which you are applying this annotation. This annotation overrides the global default backend. In case the service has [multiple ports](https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services), the first one is the one which will received the backend traffic. 
+This annotation is of the form `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.  This `<svc name>` is a reference to a service inside of the same namespace in which you are applying this annotation. This annotation overrides the global default backend. In case the service has [multiple ports](https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services), the first one is the one which will receive the backend traffic. 
 
 This service will be used to handle the response when the configured service in the Ingress rule does not have any active endpoints. It will also be used to handle the error responses if both this annotation and the [custom-http-errors annotation](#custom-http-errors) are set.
 

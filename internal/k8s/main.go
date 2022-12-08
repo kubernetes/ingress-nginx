@@ -121,9 +121,6 @@ func MetaNamespaceKey(obj interface{}) string {
 	return key
 }
 
-// IsIngressV1Ready indicates if the running Kubernetes version is at least v1.19.0
-var IsIngressV1Ready bool
-
 // IngressNGINXController defines the valid value of IngressClass
 // Controller field for ingress-nginx
 const IngressNGINXController = "k8s.io/ingress-nginx"

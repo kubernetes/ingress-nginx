@@ -93,7 +93,8 @@ describe("Monitor", function()
 
         upstream_addr = "10.10.0.1",
         upstream_connect_time = "0.01",
-        upstream_response_time = "0.02",
+        upstream_header_time = "0.02",
+        upstream_response_time = "0.03",
         upstream_response_length = "456",
         upstream_status = "200",
       }
@@ -125,7 +126,8 @@ describe("Monitor", function()
           responseLength = 512,
 
           upstreamLatency = 0.01,
-          upstreamResponseTime = 0.02,
+          upstreamHeaderTime = 0.02,
+          upstreamResponseTime = 0.03,
           upstreamResponseLength = 456,
         },
         {
@@ -143,7 +145,8 @@ describe("Monitor", function()
           responseLength = 512,
 
           upstreamLatency = 0.01,
-          upstreamResponseTime = 0.02,
+          upstreamHeaderTime = 0.02,
+          upstreamResponseTime = 0.03,
           upstreamResponseLength = 456,
         },
       })

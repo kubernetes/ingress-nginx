@@ -11,7 +11,10 @@ This part of the code is responsible for the main logic of Ingress NGINX. It con
 
 ### Core Sync Logics:
 
-Ingress-nginx has an internal model of the ingresses, secrets and endpoints in a given cluster. It maintains two copy of that (1) currently running configuration model and (2) the one generated in response to some changes in the cluster. 
+Ingress-nginx has an internal model of the ingresses, secrets and endpoints in a given cluster. It maintains two copies of that:
+
+1. One copy is the currently running configuration model
+2. Second copy is the one generated in response to some changes in the cluster
 
 The sync logic diffs the two models and if there's a change it tries to converge the running configuration to the new one. 
 
@@ -25,9 +28,7 @@ The following parts of the code can be found:
 
 ### Entrypoint
 
-Is the `main` package, responsible for starting ingress-nginx program.
-
-It can be found in [cmd/nginx](https://github.com/kubernetes/ingress-nginx/tree/main/cmd/nginx) directory.
+The `main` package is responsible for starting ingress-nginx program, which can be found in [cmd/nginx](https://github.com/kubernetes/ingress-nginx/tree/main/cmd/nginx) directory.
 
 ### Version
 
@@ -35,7 +36,7 @@ Is the package of the code responsible for adding `version` subcommand, and can 
 
 ### Internal code
 
-This part of the code contains the internal logics that compose Ingress NGINX Controller, and it's split in:
+This part of the code contains the internal logics that compose Ingress NGINX Controller, and it's split into:
 
 #### Admission Controller
 
@@ -54,13 +55,13 @@ This code can be found in [internal/file](https://github.com/kubernetes/ingress-
 
 Contains all the logics from NGINX Ingress Controller, with some examples being:
 
-* Expected Golang structures that will be used in templates and other parts of the codes - [internal/ingress/types.go](https://github.com/kubernetes/ingress-nginx/blob/main/internal/ingress/types.go).
+* Expected Golang structures that will be used in templates and other parts of the code - [internal/ingress/types.go](https://github.com/kubernetes/ingress-nginx/blob/main/internal/ingress/types.go).
 * supported annotations and its parsing logics - [internal/ingress/annotations](https://github.com/kubernetes/ingress-nginx/tree/main/internal/ingress/annotations).
 * reconciliation loops and logics - [internal/ingress/controller](https://github.com/kubernetes/ingress-nginx/tree/main/internal/ingress/controller)
-* Defaults - define the default struct.
+* defaults - define the default struct - [internal/ingress/defaults](https://github.com/kubernetes/ingress-nginx/tree/main/internal/ingress/defaults).
 * Error interface and types implementation - [internal/ingress/errors](https://github.com/kubernetes/ingress-nginx/tree/main/internal/ingress/errors)
 * Metrics collectors for Prometheus exporting - [internal/ingress/metric](https://github.com/kubernetes/ingress-nginx/tree/main/internal/ingress/metric).
-* Resolver - Extracts information from a controller.
+* Resolver - Extracts information from a controller - [internal/ingress/resolver](https://github.com/kubernetes/ingress-nginx/tree/main/internal/ingress/resolver).
 * Ingress Object status publisher - [internal/ingress/status](https://github.com/kubernetes/ingress-nginx/tree/main/internal/ingress/status).
 
 And other parts of the code that will be written in this document in a future.

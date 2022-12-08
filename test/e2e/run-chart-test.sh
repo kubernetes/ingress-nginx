@@ -50,6 +50,13 @@ export TAG=1.0.0-dev
 export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
+BASEDIR=$(dirname "$0")
+NGINX_BASE_IMAGE=$(cat $BASEDIR/../../NGINX_BASE)
+
+echo "Running e2e with nginx base image ${NGINX_BASE_IMAGE}"
+
+export NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE
+
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
@@ -71,17 +78,23 @@ fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go get github.com/onsi/ginkgo/ginkgo@v1.16.4
+    go get github.com/onsi/ginkgo/v2/ginkgo@v2.5.1
   fi
   echo "[dev-env] building image"
   make -C ${DIR}/../../ clean-image build image
 fi
-  
+
 
 KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | awk '{printf (NR>1?",":"") $1}')
 echo "[dev-env] copying docker images to cluster..."
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
+
+if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
+  echo "[dev-env] apply cert-manager ..."
+  kubectl apply --wait -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
+  sleep 10
+fi
 
 echo "[dev-env] running helm chart e2e tests..."
 # Uses a custom chart-testing image to avoid timeouts waiting for namespace deletion.

@@ -31,10 +31,10 @@ spec:
   externalTrafficPolicy: {{ .Values.controller.metrics.service.externalTrafficPolicy }}
 {{- end }}
   ports:
-    - name: metrics
+    - name: {{ .Values.controller.metrics.portName }}
       port: {{ .Values.controller.metrics.service.servicePort }}
       protocol: TCP
-      targetPort: metrics
+      targetPort: {{ .Values.controller.metrics.portName }}
     {{- $setNodePorts := (or (eq .Values.controller.metrics.service.type "NodePort") (eq .Values.controller.metrics.service.type "LoadBalancer")) }}
     {{- if (and $setNodePorts (not (empty .Values.controller.metrics.service.nodePort))) }}
       nodePort: {{ .Values.controller.metrics.service.nodePort }}

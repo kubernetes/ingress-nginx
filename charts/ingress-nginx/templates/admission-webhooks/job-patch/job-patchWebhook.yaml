@@ -1,4 +1,4 @@
-{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled -}}
+{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled (not .Values.controller.admissionWebhooks.certManager.enabled) -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -58,8 +58,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          securityContext:
-            allowPrivilegeEscalation: false
+          {{- if .Values.controller.admissionWebhooks.extraEnvs }}
+            {{- toYaml .Values.controller.admissionWebhooks.extraEnvs | nindent 12 }}
+          {{- end }}
+          {{- if .Values.controller.admissionWebhooks.patchWebhookJob.securityContext }}
+          securityContext: {{ toYaml .Values.controller.admissionWebhooks.patchWebhookJob.securityContext | nindent 12 }}
+          {{- end }}
           {{- if .Values.controller.admissionWebhooks.patchWebhookJob.resources }}
           resources: {{ toYaml .Values.controller.admissionWebhooks.patchWebhookJob.resources | nindent 12 }}
           {{- end }}
@@ -71,8 +75,8 @@ spec:
     {{- if .Values.controller.admissionWebhooks.patch.tolerations }}
       tolerations: {{ toYaml .Values.controller.admissionWebhooks.patch.tolerations | nindent 8 }}
     {{- end }}
+      {{- if .Values.controller.admissionWebhooks.patch.securityContext }}
       securityContext:
-        runAsNonRoot: true
-        runAsUser: {{ .Values.controller.admissionWebhooks.patch.runAsUser }}
-        fsGroup: {{ .Values.controller.admissionWebhooks.patch.fsGroup }}
+        {{- toYaml .Values.controller.admissionWebhooks.patch.securityContext | nindent 8 }}
+      {{- end }}
 {{- end }}

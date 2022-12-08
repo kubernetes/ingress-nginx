@@ -1,0 +1,16 @@
+name: 'E2E Test Report'
+on:
+  workflow_run:
+    workflows: ['CI']                     # runs after CI workflow
+    types:
+      - completed
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: dorny/test-reporter@v1
+      with:
+        artifact: e2e-test-reports
+        name: JEST Tests                  # Name of the check run which will be created
+        path: 'report*.xml'                     # Path to test results (inside artifact .zip)
+        reporter: jest-junit              # Format of test results

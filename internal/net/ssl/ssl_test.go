@@ -39,7 +39,7 @@ import (
 	"time"
 
 	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/pkg/util/file"
 )
 
 // generateRSACerts generates a self signed certificate using a self generated ca

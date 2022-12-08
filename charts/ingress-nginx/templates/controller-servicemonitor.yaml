@@ -14,7 +14,7 @@ metadata:
   {{- end }}
 spec:
   endpoints:
-    - port: metrics
+    - port: {{ .Values.controller.metrics.portName }}
       interval: {{ .Values.controller.metrics.serviceMonitor.scrapeInterval }}
     {{- if .Values.controller.metrics.serviceMonitor.honorLabels }}
       honorLabels: true

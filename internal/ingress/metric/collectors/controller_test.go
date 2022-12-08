@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 func TestControllerCounters(t *testing.T) {

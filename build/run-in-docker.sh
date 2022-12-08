@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -n "$DEBUG" ]; then
+DEBUG=${DEBUG:-"false"}
+if [ "$DEBUG" == "true" ]; then
   set -x
 fi
 
@@ -37,7 +38,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=${E2E_IMAGE:-k8s.gcr.io/ingress-nginx/e2e-test-runner:v20220524-g8963ed17e@sha256:4fbcbeebd4c24587699b027ad0f0aa7cd9d76b58177a3b50c228bae8141bcf95}
+E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20221125-controller-v1.5.1-21-g9d562c47a@sha256:50c5469f08b664e928a3035ac94a2348955b669d7ac33809abc674c8fd6c19c1}
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 DOCKER_IN_DOCKER_ENABLED=${DOCKER_IN_DOCKER_ENABLED:-}
@@ -62,6 +63,8 @@ else
   PLATFORM_FLAG=
 fi
 
+USER=${USER:-nobody}
+
 echo "..printing env & other vars to stdout"
 echo "HOSTNAME=`hostname`"
 uname -a
@@ -74,20 +77,21 @@ if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   echo "FLAGS=$FLAGS"
   go env
   set -x
-  go install -mod=mod github.com/onsi/ginkgo/ginkgo@v1.16.4 
+  go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.5.1
   find / -type f -name ginkgo 2>/dev/null
   which ginkgo
   /bin/bash -c "${FLAGS}"
   set +x
 else
-  echo "..reached DIND check ELSE block, inside run-in-docker.sh"
+  echo "Reached DIND check ELSE block, inside run-in-docker.sh"
   docker run                                            \
     ${PLATFORM_FLAG} ${PLATFORM}                        \
     --tty                                               \
     --rm                                                \
     ${DOCKER_OPTS}                                      \
+    -e DEBUG=${DEBUG}                                   \
     -e GOCACHE="/go/src/${PKG}/.cache"                  \
-    -e GOMODCACHE="/go/src/${PKG}/.modcache"                  \
+    -e GOMODCACHE="/go/src/${PKG}/.modcache"            \
     -e DOCKER_IN_DOCKER_ENABLED="true"                  \
     -v "${HOME}/.kube:${HOME}/.kube"                    \
     -v "${KUBE_ROOT}:/go/src/${PKG}"                    \
@@ -95,6 +99,5 @@ else
     -v "/var/run/docker.sock:/var/run/docker.sock"      \
     -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
     -w "/go/src/${PKG}"                                 \
-    -u $(id -u ${USER}):$(id -g ${USER})                \
     ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
 fi

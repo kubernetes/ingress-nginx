@@ -64,7 +64,7 @@ local function get_implementation(backend)
 
   local implementation = IMPLEMENTATIONS[name]
   if not implementation then
-    ngx.log(ngx.WARN, backend["load-balance"], "is not supported, ",
+    ngx.log(ngx.WARN, backend["load-balance"], " is not supported, ",
             "falling back to ", DEFAULT_LB_ALG)
     implementation = IMPLEMENTATIONS[DEFAULT_LB_ALG]
   end

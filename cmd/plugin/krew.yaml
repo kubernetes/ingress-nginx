@@ -1,0 +1,41 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: ingress-nginx
+spec:
+  shortDescription: Interact with ingress-nginx
+  description: |
+    The official kubectl plugin for ingress-nginx.
+  version: {{ .TagName }}
+  homepage: https://kubernetes.github.io/ingress-nginx/kubectl-plugin/
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/kubernetes/ingress-nginx/releases/download/{{ .TagName }}/kubectl-ingress-nginx_darwin_arm64.tar.gz" .TagName }}
+    bin: kubectl-ingress-nginx
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    {{addURIAndSha "https://github.com/kubernetes/ingress-nginx/releases/download/{{ .TagName }}/kubectl-ingress-nginx_darwin_amd64.tar.gz" .TagName }}
+    bin: kubectl-ingress-nginx
+    selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    {{addURIAndSha "https://github.com/kubernetes/ingress-nginx/releases/download/{{ .TagName }}/kubectl-ingress-nginx_linux_amd64.tar.gz" .TagName }}
+    bin: kubectl-ingress-nginx
+  - selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+    {{addURIAndSha "https://github.com/kubernetes/ingress-nginx/releases/download/{{ .TagName }}/kubectl-ingress-nginx_linux_arm64.tar.gz" .TagName }}
+    bin: kubectl-ingress-nginx
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    {{addURIAndSha "https://github.com/kubernetes/ingress-nginx/releases/download/{{ .TagName }}/kubectl-ingress-nginx_windows_amd64.tar.gz" .TagName }}
+    bin: kubectl-ingress-nginx.exe

@@ -1,5 +1,6 @@
 
 DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+E2E_BASE_IMAGE="registry.k8s.io/ingress-nginx/e2e-test-runner:v20221125-controller-v1.5.1-21-g9d562c47a@sha256:50c5469f08b664e928a3035ac94a2348955b669d7ac33809abc674c8fd6c19c1"
 
 image:
 	echo "..entered Makefile in /test/e2e-image"
@@ -15,6 +16,7 @@ image:
 	cp -R $(DIR)/../../test/e2e/settings/ocsp/* .
 
 	docker build \
+		--build-arg E2E_BASE_IMAGE=$(E2E_BASE_IMAGE) \
 		--tag nginx-ingress-controller:e2e .
 
 clean:

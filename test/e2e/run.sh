@@ -51,6 +51,12 @@ export TAG=1.0.0-dev
 export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
+NGINX_BASE_IMAGE=$(cat $DIR/../../NGINX_BASE)
+
+echo "Running e2e with nginx base image ${NGINX_BASE_IMAGE}"
+
+export NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE
+
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
@@ -58,7 +64,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c}
+  export K8S_VERSION=${K8S_VERSION:-v1.25.2@sha256:9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -73,7 +79,7 @@ fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go get github.com/onsi/ginkgo/ginkgo@v1.16.4
+    go get github.com/onsi/ginkgo/v2/ginkgo@v2.5.1
   fi
 
   echo "[dev-env] building image"

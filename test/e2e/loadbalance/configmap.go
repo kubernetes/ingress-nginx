@@ -19,7 +19,7 @@ package loadbalance
 import (
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"

@@ -1,6 +1,14 @@
-# Developing for NGINX Ingress Controller
+ Developing for NGINX Ingress Controller
 
 This document explains how to get started with developing for NGINX Ingress controller.
+
+For the really new contributors, who want to contribute to the INGRESS-NGINX project, but need help with understanding some basic concepts,
+that are needed to work with the Kubernetes ingress resource, here is a link to the [New Contributors Guide](https://github.com/kubernetes/ingress-nginx/blob/main/NEW_CONTRIBUTOR.md).
+This guide contains tips on how a http/https request travels, from a browser or a curl command,
+to the webserver process running inside a container, in a pod, in a Kubernetes cluster, but enters the cluster via a ingress resource.
+For those who are familiar with those basic networking concepts like routing of a packet with regards to a
+http request, termination of connection, reverseproxy etc. etc., you can skip this and move on to the sections below.
+(or read it anyways just for context and also provide feedbacks if any)
 
 ## Prerequisites
 

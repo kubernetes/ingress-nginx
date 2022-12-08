@@ -30,10 +30,11 @@ the traffic for the `ingress-nginx` Service IP. See [Traffic policies][metallb-t
     yourself by reading the official documentation thoroughly.
 
 MetalLB can be deployed either with a simple Kubernetes manifest or with Helm. The rest of this example assumes MetalLB
-was deployed following the [Installation][metallb-install] instructions.
+was deployed following the [Installation][metallb-install] instructions, and that the NGINX Ingress controller was installed 
+using the steps described in the [quickstart section of the installation guide][install-quickstart].
 
 MetalLB requires a pool of IP addresses in order to be able to take ownership of the `ingress-nginx` Service. This pool
-can be defined in a ConfigMap named `config` located in the same namespace as the MetalLB controller. This pool of IPs **must** be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.
+can be defined through `IPAddressPool` objects in the same namespace as the MetalLB controller. This pool of IPs **must** be dedicated to MetalLB's use, you can't reuse the Kubernetes node IPs or IPs handed out by a DHCP server.
 
 !!! example
     Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
@@ -47,22 +48,29 @@ can be defined in a ConfigMap named `config` located in the same namespace as th
     host-3   Ready    node     203.0.113.3
     ```
 
-    After creating the following ConfigMap, MetalLB takes ownership of one of the IP addresses in the pool and updates
+    After creating the following objects, MetalLB takes ownership of one of the IP addresses in the pool and updates
     the *loadBalancer* IP field of the `ingress-nginx` Service accordingly.
 
     ```yaml
-    apiVersion: v1
-    kind: ConfigMap
+    ---
+    apiVersion: metallb.io/v1beta1
+    kind: IPAddressPool
     metadata:
+      name: default
       namespace: metallb-system
-      name: config
-    data:
-      config: |
-        address-pools:
-        - name: default
-          protocol: layer2
-          addresses:
-          - 203.0.113.10-203.0.113.15
+    spec:
+      addresses:
+      - 203.0.113.10-203.0.113.15
+      autoAssign: true
+    ---
+    apiVersion: metallb.io/v1beta1
+    kind: L2Advertisement
+    metadata:
+      name: default
+      namespace: metallb-system
+    spec:
+      ipAddressPools:
+      - default
     ```
 
     ```console
@@ -250,6 +258,7 @@ for generating redirect URLs that take into account the URL used by external cli
     ```
 
 [install-baremetal]: ./index.md#bare-metal
+[install-quickstart]: ./index.md#quick-start
 [nodeport-def]: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
 [nodeport-nat]: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-type-nodeport
 [pod-assign]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
