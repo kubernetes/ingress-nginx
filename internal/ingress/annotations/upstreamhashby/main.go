@@ -29,9 +29,10 @@ type upstreamhashby struct {
 
 // Config contains the Consistent hash configuration to be used in the Ingress
 type Config struct {
-	UpstreamHashBy           string `json:"upstream-hash-by,omitempty"`
-	UpstreamHashBySubset     bool   `json:"upstream-hash-by-subset,omitempty"`
-	UpstreamHashBySubsetSize int    `json:"upstream-hash-by-subset-size,omitempty"`
+	UpstreamHashBy            string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashByUseHostname bool   `json:"upstream-hash-by-use-hostname,omitempty"`
+	UpstreamHashBySubset      bool   `json:"upstream-hash-by-subset,omitempty"`
+	UpstreamHashBySubsetSize  int    `json:"upstream-hash-by-subset-size,omitempty"`
 }
 
 // NewParser creates a new UpstreamHashBy annotation parser
@@ -42,6 +43,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress rule
 func (a upstreamhashby) Parse(ing *networking.Ingress) (interface{}, error) {
 	upstreamHashBy, _ := parser.GetStringAnnotation("upstream-hash-by", ing)
+	upstreamHashByUseHostname, _ := parser.GetBoolAnnotation("upstream-hash-by-use-hostname", ing)
 	upstreamHashBySubset, _ := parser.GetBoolAnnotation("upstream-hash-by-subset", ing)
 	upstreamHashbySubsetSize, _ := parser.GetIntAnnotation("upstream-hash-by-subset-size", ing)
 
@@ -49,5 +51,5 @@ func (a upstreamhashby) Parse(ing *networking.Ingress) (interface{}, error) {
 		upstreamHashbySubsetSize = 3
 	}
 
-	return &Config{upstreamHashBy, upstreamHashBySubset, upstreamHashbySubsetSize}, nil
+	return &Config{upstreamHashBy, upstreamHashByUseHostname, upstreamHashBySubset, upstreamHashbySubsetSize}, nil
 }

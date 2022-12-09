@@ -941,8 +941,9 @@ func configureBackends(rawBackends []*ingress.Backend) error {
 		var endpoints []ingress.Endpoint
 		for _, endpoint := range backend.Endpoints {
 			endpoints = append(endpoints, ingress.Endpoint{
-				Address: endpoint.Address,
-				Port:    endpoint.Port,
+				Address:  endpoint.Address,
+				Port:     endpoint.Port,
+				Hostname: endpoint.Hostname,
 			})
 		}
 

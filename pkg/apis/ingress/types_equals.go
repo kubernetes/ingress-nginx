@@ -206,6 +206,9 @@ func (u1 *UpstreamHashByConfig) Equal(u2 *UpstreamHashByConfig) bool {
 	if u1.UpstreamHashBy != u2.UpstreamHashBy {
 		return false
 	}
+	if u1.UpstreamHashByUseHostname != u2.UpstreamHashByUseHostname {
+		return false
+	}
 	if u1.UpstreamHashBySubset != u2.UpstreamHashBySubset {
 		return false
 	}

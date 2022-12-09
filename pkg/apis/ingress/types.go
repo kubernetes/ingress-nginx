@@ -167,9 +167,10 @@ type CookieSessionAffinity struct {
 
 // UpstreamHashByConfig described setting from the upstream-hash-by* annotations.
 type UpstreamHashByConfig struct {
-	UpstreamHashBy           string `json:"upstream-hash-by,omitempty"`
-	UpstreamHashBySubset     bool   `json:"upstream-hash-by-subset,omitempty"`
-	UpstreamHashBySubsetSize int    `json:"upstream-hash-by-subset-size,omitempty"`
+	UpstreamHashBy            string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashByUseHostname bool   `json:"upstream-hash-by-use-hostname,omitempty"`
+	UpstreamHashBySubset      bool   `json:"upstream-hash-by-subset,omitempty"`
+	UpstreamHashBySubsetSize  int    `json:"upstream-hash-by-subset-size,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
@@ -179,6 +180,8 @@ type Endpoint struct {
 	Address string `json:"address"`
 	// Port number of the TCP port
 	Port string `json:"port"`
+	// Hostname of the pod
+	Hostname *string `json:"hostname"`
 	// Target returns a reference to the object providing the endpoint
 	Target *apiv1.ObjectReference `json:"target,omitempty"`
 }

@@ -125,9 +125,10 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 						continue
 					}
 					ups := ingress.Endpoint{
-						Address: epAddress,
-						Port:    fmt.Sprintf("%v", epPort),
-						Target:  ep.TargetRef,
+						Address:  epAddress,
+						Port:     fmt.Sprintf("%v", epPort),
+						Hostname: ep.Hostname,
+						Target:   ep.TargetRef,
 					}
 					upsServers = append(upsServers, ups)
 					processedUpstreamServers[hostPort] = struct{}{}
