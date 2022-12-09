@@ -4,10 +4,16 @@ on:
   pull_request:
     branches:
       - "*"
+    paths-ignore:
+      - 'docs/**/*'
+      - 'deploy/**/*'
 
   push:
     branches:
       - main
+    paths-ignore:
+      - 'docs/**'
+      - 'deploy/**'
 
   workflow_dispatch:
     inputs:
