@@ -5,8 +5,8 @@ on:
     branches:
       - "*"
     paths-ignore:
-      - 'docs/**/*'
-      - 'deploy/**/*'
+      - 'docs/**'
+      - 'deploy/**'
 
   push:
     branches:
