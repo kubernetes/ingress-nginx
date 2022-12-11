@@ -26,7 +26,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/pkg/util/file"
 
 	authfile "k8s.io/ingress-nginx/pkg/util/auth"
 )
@@ -156,12 +155,16 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	case fileAuth:
 		secretVal, err = authfile.DumpSecretAuthFile(passFilename, secret)
 		if err != nil {
-			return nil, err
+			return nil, ing_errors.LocationDenied{
+				Reason: err,
+			}
 		}
 	case mapAuth:
 		secretVal, err = authfile.DumpSecretAuthMap(passFilename, secret)
 		if err != nil {
-			return nil, err
+			return nil, ing_errors.LocationDenied{
+				Reason: err,
+			}
 		}
 	default:
 		return nil, ing_errors.LocationDenied{
@@ -174,7 +177,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 		Realm:         realm,
 		File:          passFilename,
 		Secured:       true,
-		FileSHA:       file.SHA1(passFilename),
+		FileSHA:       authfile.SecretSHA1(secretVal),
 		Secret:        name,
 		SecretContent: secretVal,
 		SecretType:    secretType,

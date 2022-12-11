@@ -27,13 +27,16 @@ import (
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	authfile "k8s.io/ingress-nginx/pkg/util/auth"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 	ingressruntime "k8s.io/ingress-nginx/pkg/util/runtime"
+
 	"k8s.io/klog/v2"
 )
 
@@ -95,8 +98,9 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 	}
 
 	certChange := checkAndWriteDeltaCertificates(cfg, n.templateConfig)
+	authChange := checkAndWriteAuthSecrets(cfg, n.templateConfig)
 
-	if certChange || configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
+	if authChange || certChange || configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
 		hash, err := hashstructure.Hash(newcfg, &hashstructure.HashOptions{
@@ -186,6 +190,57 @@ const (
 )
 
 // TODO: UNIT TEST!!! And e2e tests!
+func checkAndWriteAuthSecrets(newtmpl *config.TemplateConfig, oldtmpl *config.TemplateConfig) bool {
+	var changed bool
+
+	tempAuthOld := make(map[string]auth.Config)
+	tempAuthNew := make(map[string]auth.Config)
+
+	// Get added auth secrets:
+	for _, v := range newtmpl.Servers {
+		for _, location := range v.Locations {
+			if location.BasicDigestAuth.FileSHA != "" {
+				tempAuthNew[location.BasicDigestAuth.File] = location.BasicDigestAuth
+			}
+		}
+	}
+
+	// Get old auth secrets:
+	for _, v := range oldtmpl.Servers {
+		for _, location := range v.Locations {
+			if location.BasicDigestAuth.FileSHA != "" {
+				tempAuthOld[location.BasicDigestAuth.File] = location.BasicDigestAuth
+			}
+		}
+	}
+
+	// Check for removed secrets/files.
+	for authFile := range tempAuthOld {
+		if _, ok := tempAuthNew[authFile]; !ok {
+			changed = true
+			if err := os.Remove(authFile); err != nil && !os.IsNotExist(err) {
+				klog.Warningf("failed removing old auth file %s: %s", authFile, err)
+				continue
+			}
+		}
+	}
+
+	// Check on newMap if the files already exists and SHA matches, otherwise create/update
+	for newAuthFile, newAuthConfig := range tempAuthNew {
+		// If the auth secret didn't existed or existed but is not equal, then rewrite
+		if oldAuthConfig, ok := tempAuthOld[newAuthFile]; !ok || oldAuthConfig.FileSHA != newAuthConfig.FileSHA {
+			changed = true
+			if err := authfile.WriteSecretFile(newAuthFile, newAuthConfig.SecretContent); err != nil {
+				klog.Warningf("failed adding/updating auth file %s: %s", newAuthFile, err)
+				continue
+			}
+		}
+	}
+
+	return changed
+}
+
+// TODO: UNIT TEST!!! And e2e tests!
 func checkAndWriteDeltaCertificates(newtmpl *config.TemplateConfig, oldtmpl *config.TemplateConfig) bool {
 	var changed bool
 
@@ -243,7 +298,6 @@ func checkAndWriteDeltaCertificates(newtmpl *config.TemplateConfig, oldtmpl *con
 		}
 	}
 	return changed
-
 }
 
 // TODO: Add unit test

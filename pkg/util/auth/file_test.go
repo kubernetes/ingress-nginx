@@ -119,7 +119,7 @@ func TestDumpSecretAuthMap(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DumpSecretAuthMap() = %v, want %v", got, tt.want)
+				t.Errorf("DumpSecretAuthMap() = %v, want %v", string(got), string(tt.want))
 			}
 		})
 	}
