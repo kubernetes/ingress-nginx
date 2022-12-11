@@ -435,7 +435,6 @@ jobs:
           SKIP_CLUSTER_CREATION: true
           SKIP_IMAGE_CREATION: true
           IS_DATAPLANE: true
-          FOCUS: 'grpc-port'
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test

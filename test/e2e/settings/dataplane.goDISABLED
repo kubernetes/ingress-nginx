@@ -27,7 +27,6 @@ import (
 NGINX service but still, the controller process should be up and running and responsive */
 
 var _ = framework.IngressNginxDescribe("[Flag] grpc-port", func() {
-
 	f := framework.NewDefaultFramework("grpc-port")
 
 	ginkgo.BeforeEach(func() {
@@ -36,7 +35,6 @@ var _ = framework.IngressNginxDescribe("[Flag] grpc-port", func() {
 
 	ginkgo.Context("Disable local nginx with grpc enabled", func() {
 		ginkgo.It("should reconfigure nginx.conf but skip the server", func() {
-			ginkgo.Skip("skipping for now") // TODO: Fix
 
 			host := "test.grpc"
 
