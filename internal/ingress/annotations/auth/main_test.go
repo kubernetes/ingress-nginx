@@ -29,6 +29,19 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	authfile "k8s.io/ingress-nginx/pkg/util/auth"
+)
+
+const (
+	mockSecretUser = "foo"
+	mockSecretPass = "$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0"
+)
+
+type getSecretFunc func(name string) (*api.Secret, error)
+
+var (
+	GetSecret    = mockSecret{}.GetSecret
+	GetSecretMap = mockSecret{}.GetSecretMap
 )
 
 func buildIngress() *networking.Ingress {
@@ -83,18 +96,33 @@ func (m mockSecret) GetSecret(name string) (*api.Secret, error) {
 		return nil, fmt.Errorf("there is no secret with name %v", name)
 	}
 
+	mockSecretValue := fmt.Sprintf("%s:%s", mockSecretUser, mockSecretPass)
 	return &api.Secret{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Namespace: api.NamespaceDefault,
 			Name:      "demo-secret",
 		},
-		Data: map[string][]byte{"auth": []byte("foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0")},
+		Data: map[string][]byte{"auth": []byte(mockSecretValue)},
+	}, nil
+}
+
+func (m mockSecret) GetSecretMap(name string) (*api.Secret, error) {
+	if name != "default/demo-secret" {
+		return nil, fmt.Errorf("there is no secret with name %v", name)
+	}
+
+	return &api.Secret{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Namespace: api.NamespaceDefault,
+			Name:      "demo-secret",
+		},
+		Data: map[string][]byte{mockSecretUser: []byte(mockSecretPass)},
 	}, nil
 }
 
 func TestIngressWithoutAuth(t *testing.T) {
 	ing := buildIngress()
-	_, dir, _ := dummySecretContent(t)
+	_, dir, _ := dummySecretContent(t, GetSecret)
 	defer os.RemoveAll(dir)
 	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err == nil {
@@ -109,7 +137,7 @@ func TestIngressAuthBadAuthType(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-type")] = "invalid"
 	ing.SetAnnotations(data)
 
-	_, dir, _ := dummySecretContent(t)
+	_, dir, _ := dummySecretContent(t, GetSecret)
 	defer os.RemoveAll(dir)
 
 	expected := ing_errors.NewLocationDenied("invalid authentication type")
@@ -126,7 +154,7 @@ func TestInvalidIngressAuthNoSecret(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
 	ing.SetAnnotations(data)
 
-	_, dir, _ := dummySecretContent(t)
+	_, dir, _ := dummySecretContent(t, GetSecret)
 	defer os.RemoveAll(dir)
 
 	expected := ing_errors.LocationDenied{
@@ -147,7 +175,7 @@ func TestIngressAuth(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
 	ing.SetAnnotations(data)
 
-	_, dir, _ := dummySecretContent(t)
+	_, dir, _ := dummySecretContent(t, GetSecret)
 	defer os.RemoveAll(dir)
 
 	i, err := NewParser(dir, &mockSecret{}).Parse(ing)
@@ -178,7 +206,7 @@ func TestIngressAuthWithoutSecret(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
 	ing.SetAnnotations(data)
 
-	_, dir, _ := dummySecretContent(t)
+	_, dir, _ := dummySecretContent(t, GetSecret)
 	defer os.RemoveAll(dir)
 
 	_, err := NewParser(dir, mockSecret{}).Parse(ing)
@@ -197,7 +225,7 @@ func TestIngressAuthInvalidSecretKey(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
 	ing.SetAnnotations(data)
 
-	_, dir, _ := dummySecretContent(t)
+	_, dir, _ := dummySecretContent(t, GetSecret)
 	defer os.RemoveAll(dir)
 
 	_, err := NewParser(dir, mockSecret{}).Parse(ing)
@@ -206,7 +234,7 @@ func TestIngressAuthInvalidSecretKey(t *testing.T) {
 	}
 }
 
-func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
+func dummySecretContent(t *testing.T, getSecretFunc getSecretFunc) (string, string, *api.Secret) {
 	dir, err := os.MkdirTemp("", fmt.Sprintf("%v", time.Now().Unix()))
 	if err != nil {
 		t.Error(err)
@@ -217,35 +245,46 @@ func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
 		t.Error(err)
 	}
 	defer tmpfile.Close()
-	s, _ := mockSecret{}.GetSecret("default/demo-secret")
+	s, _ := getSecretFunc("default/demo-secret")
 	return tmpfile.Name(), dir, s
 }
 
 func TestDumpSecretAuthFile(t *testing.T) {
-	tmpfile, dir, s := dummySecretContent(t)
+	tmpfile, dir, s := dummySecretContent(t, GetSecret)
 	defer os.RemoveAll(dir)
 
 	sd := s.Data
 	s.Data = nil
 
-	err := dumpSecretAuthFile(tmpfile, s)
+	_, err := authfile.DumpSecretAuthFile(tmpfile, s)
 	if err == nil {
 		t.Errorf("Expected error with secret without auth")
 	}
 
 	s.Data = sd
-	err = dumpSecretAuthFile(tmpfile, s)
+	val, err := authfile.DumpSecretAuthFile(tmpfile, s)
 	if err != nil {
 		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
 	}
+	mockSecretValue := fmt.Sprintf("%s:%s", mockSecretUser, mockSecretPass)
+	if string(val) != mockSecretValue {
+		t.Errorf("unexpected value of secret: %s. Should be %s", string(val), mockSecretValue)
+	}
+
 }
 
 func TestDumpSecretAuthMap(t *testing.T) {
-	tmpfile, dir, s := dummySecretContent(t)
+
+	tmpfile, dir, s := dummySecretContent(t, GetSecretMap)
 	defer os.RemoveAll(dir)
 
-	err := dumpSecretAuthMap(tmpfile, s)
+	val, err := authfile.DumpSecretAuthMap(tmpfile, s)
 	if err != nil {
 		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
+	}
+
+	mockSecretValue := fmt.Sprintf("%s:%s\n", mockSecretUser, mockSecretPass)
+	if string(val) != mockSecretValue {
+		t.Errorf("unexpected value of secret: %s. Should be %s", string(val), mockSecretValue)
 	}
 }
