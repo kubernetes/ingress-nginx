@@ -245,12 +245,6 @@ jobs:
           name: docker.tar.gz
           failOnError: false
 
-      - name: Prepare cluster for testing
-        uses: azure/setup-helm@f382f75448129b3be48f8121b9857be18d815a82 #v2.1
-        with:
-          version: 'v3.8.0'
-        id: local-path
-
       - name: Load images from cache
         run: |
           echo "loading docker images..."
@@ -304,12 +298,6 @@ jobs:
         with:
           name: docker.tar.gz
           failOnError: false
-
-      - name: Prepare cluster for testing
-        uses: azure/setup-helm@f382f75448129b3be48f8121b9857be18d815a82 #v2.1
-        with:
-          version: 'v3.8.0'
-        id: local-path
 
       - name: Load images from cache
         run: |
