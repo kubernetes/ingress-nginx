@@ -189,10 +189,8 @@ jobs:
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
-        with:
-          version: v0.15.0
-          image: kindest/node:${{ matrix.k8s }}
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }}
 
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v1
         with:
@@ -239,11 +237,8 @@ jobs:
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
-        with:
-          version: v0.15.0
-          config: test/e2e/kind.yaml
-          image: kindest/node:${{ matrix.k8s }}
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
 
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v1
         with:
@@ -302,11 +297,8 @@ jobs:
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
-        with:
-          version: v0.15.0
-          config: test/e2e/kind.yaml
-          image: kindest/node:${{ matrix.k8s }}
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
 
       - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af
         with:
@@ -431,10 +423,8 @@ jobs:
       - name: Create Kubernetes cluster
         id: kind
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
-        with:
-          version: v0.15.0
-          image: kindest/node:v1.25.2
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }}
 
       - name: Set up Go 1.19.2
         id: go
