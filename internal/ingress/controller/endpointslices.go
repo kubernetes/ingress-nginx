@@ -117,14 +117,14 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 			useTopologyHints = true
 			// check if all endpointslices has zone hints
 			for _, ep := range eps.Endpoints {
-				if len(ep.Hints.ForZones) == 0 {
+				if ep.Hints == nil || len(ep.Hints.ForZones) == 0 {
 					useTopologyHints = false
 					break
 				}
 			}
-		}
-		if useTopologyHints {
-			klog.V(3).Infof("All endpoint slices has zone hint, using zone %q for Service %q", zoneForHints, svcKey)
+			if useTopologyHints {
+				klog.V(3).Infof("All endpoint slices has zone hint, using zone %q for Service %q", zoneForHints, svcKey)
+			}
 		}
 
 		for _, ep := range eps.Endpoints {

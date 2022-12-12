@@ -130,6 +130,8 @@ type Configuration struct {
 	DeepInspector         bool
 
 	DynamicConfigurationRetries int
+
+	EnableTopologyAwareRouting bool
 }
 
 func getIngressPodZone(svc *apiv1.Service) string {
@@ -441,7 +443,13 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		var endps []ingress.Endpoint
 		/* #nosec */
 		targetPort, err := strconv.Atoi(svcPort) // #nosec
-		zone := getIngressPodZone(svc)
+		var zone string
+		if n.cfg.EnableTopologyAwareRouting {
+			zone = getIngressPodZone(svc)
+		} else {
+			zone = emptyZone
+		}
+
 		if err != nil {
 			// not a port number, fall back to using port name
 			klog.V(3).Infof("Searching Endpoints with %v port name %q for Service %q", proto, svcPort, nsName)
@@ -511,7 +519,12 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
 		return upstream
 	}
-	zone := getIngressPodZone(svc)
+	var zone string
+	if n.cfg.EnableTopologyAwareRouting {
+		zone = getIngressPodZone(svc)
+	} else {
+		zone = emptyZone
+	}
 	endps := getEndpointsFromSlices(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
 	if len(endps) == 0 {
 		klog.Warningf("Service %q does not have any active Endpoint", svcKey)
@@ -840,7 +853,12 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				}
 
 				sp := location.DefaultBackend.Spec.Ports[0]
-				zone := getIngressPodZone(location.DefaultBackend)
+				var zone string
+				if n.cfg.EnableTopologyAwareRouting {
+					zone = getIngressPodZone(location.DefaultBackend)
+				} else {
+					zone = emptyZone
+				}
 				endps := getEndpointsFromSlices(location.DefaultBackend, &sp, apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
 				// custom backend is valid only if contains at least one endpoint
 				if len(endps) > 0 {
@@ -1097,7 +1115,12 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	if err != nil {
 		return upstreams, err
 	}
-	zone := getIngressPodZone(svc)
+	var zone string
+	if n.cfg.EnableTopologyAwareRouting {
+		zone = getIngressPodZone(svc)
+	} else {
+		zone = emptyZone
+	}
 	klog.V(3).Infof("Obtaining ports information for Service %q", svcKey)
 	// Ingress with an ExternalName Service and no port defined for that Service
 	if svc.Spec.Type == apiv1.ServiceTypeExternalName {
