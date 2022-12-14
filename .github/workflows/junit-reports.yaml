@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: dorny/test-reporter@v1
       with:
-        artifact: e2e-test-reports
-        name: JEST Tests                  # Name of the check run which will be created
+        artifact: /e2e-test-reports-(.*)/
+        name: JEST Tests $1                 # Name of the check run which will be created
         path: 'report*.xml'                     # Path to test results (inside artifact .zip)
         reporter: jest-junit              # Format of test results
