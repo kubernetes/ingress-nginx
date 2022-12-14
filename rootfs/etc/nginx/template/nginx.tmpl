@@ -470,7 +470,7 @@ http {
     ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
     ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
 
-    {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
+    {{ if and (gt (len $cfg.CustomHTTPErrors) 0) $cfg.ProxyInterceptErrors }}
     proxy_intercept_errors on;
     {{ end }}
 
@@ -1442,7 +1442,7 @@ stream {
             {{ end }}
 
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}
-            {{ if $location.CustomHTTPErrors }}
+            {{ if and $location.CustomHTTPErrors $location.ProxyInterceptErrors }}
             # Custom error pages per ingress
             proxy_intercept_errors on;
             {{ end }}
