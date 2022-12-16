@@ -1738,6 +1738,7 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 			rule.Host = defServerName
 		}
 
+	OUTER:
 		for _, path := range rule.HTTP.Paths {
 			if path.Backend.Service == nil {
 				// skip non-service backends
@@ -1759,7 +1760,7 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 			// same ingress
 			for _, existing := range existingIngresses {
 				if existing.ObjectMeta.Namespace == ing.ObjectMeta.Namespace && existing.ObjectMeta.Name == ing.ObjectMeta.Name {
-					return nil
+					continue OUTER
 				}
 			}
 
@@ -1776,9 +1777,6 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
 				}
 			}
-
-			// no overlap
-			return nil
 		}
 	}
 
