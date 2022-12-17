@@ -79,7 +79,7 @@ fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go get github.com/onsi/ginkgo/v2/ginkgo@v2.5.1
+    go get github.com/onsi/ginkgo/v2/ginkgo@v2.6.0
   fi
 
   echo "[dev-env] building image"
