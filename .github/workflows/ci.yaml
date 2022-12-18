@@ -393,9 +393,16 @@ jobs:
     permissions:
       contents: read  # for dorny/paths-filter to fetch a list of changed files
       pull-requests: read  # for dorny/paths-filter to read pull requests
+
     runs-on: ubuntu-latest
+
     env:
       PLATFORMS: linux/amd64
+
+    strategy:
+      matrix:
+        k8s: [ v1.23.13, v1.24.7, v1.25.3 ]
+
     steps:
       - name: Checkout
         uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
