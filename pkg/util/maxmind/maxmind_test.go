@@ -14,62 +14,56 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package nginx
+package maxmind
 
 import (
 	"reflect"
 	"testing"
 )
 
-func resetForTesting() {
-	fileExists = _fileExists
-	MaxmindLicenseKey = ""
-	MaxmindEditionIDs = ""
-	MaxmindEditionFiles = []string{}
-	MaxmindMirror = ""
-}
-
 func TestGeoLite2DBExists(t *testing.T) {
 	tests := []struct {
-		name      string
-		setup     func()
-		want      bool
-		wantFiles []string
+		name              string
+		maxmindEditionIDs string
+		setup             func()
+		want              bool
+		wantFiles         []string
+		wantLen           int
 	}{
 		{
 			name:      "empty",
-			wantFiles: []string{},
+			wantFiles: nil,
+			wantLen:   0,
 		},
 		{
-			name: "existing files",
+			name:              "existing files",
+			maxmindEditionIDs: "GeoLite2-City,GeoLite2-ASN",
+			want:              true,
+			wantFiles:         []string{"GeoLite2-City.mmdb", "GeoLite2-ASN.mmdb"},
+			wantLen:           2,
 			setup: func() {
-				MaxmindEditionIDs = "GeoLite2-City,GeoLite2-ASN"
 				fileExists = func(string) bool {
 					return true
 				}
 			},
-			want:      true,
-			wantFiles: []string{"GeoLite2-City.mmdb", "GeoLite2-ASN.mmdb"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resetForTesting()
-			// mimics assignment in flags.go
-			config := &MaxmindEditionFiles
-
 			if tt.setup != nil {
 				tt.setup()
 			}
-			if got := GeoLite2DBExists(); got != tt.want {
+			files, got := GeoLite2DBExists(tt.maxmindEditionIDs)
+			if got != tt.want {
 				t.Errorf("GeoLite2DBExists() = %v, want %v", got, tt.want)
 			}
-			if !reflect.DeepEqual(MaxmindEditionFiles, tt.wantFiles) {
-				t.Errorf("nginx.MaxmindEditionFiles = %v, want %v", MaxmindEditionFiles, tt.wantFiles)
+			if !reflect.DeepEqual(files, tt.wantFiles) {
+				t.Errorf("nginx.MaxmindEditionFiles = %v, want %v", files, tt.wantFiles)
 			}
-			if !reflect.DeepEqual(*config, tt.wantFiles) {
-				t.Errorf("config.MaxmindEditionFiles = %v, want %v", *config, tt.wantFiles)
+			if !reflect.DeepEqual(len(files), tt.wantLen) {
+				t.Errorf("nginx.MaxmindEditionFiles = %v, want %v", len(files), tt.wantLen)
 			}
+
 		})
 	}
 }

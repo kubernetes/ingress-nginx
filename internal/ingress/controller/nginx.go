@@ -60,6 +60,7 @@ import (
 
 	"k8s.io/ingress-nginx/pkg/util/file"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
+	"k8s.io/ingress-nginx/pkg/util/maxmind"
 	ingressruntime "k8s.io/ingress-nginx/pkg/util/runtime"
 
 	klog "k8s.io/klog/v2"
@@ -626,7 +627,6 @@ func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCf
 		IsSSLPassthroughEnabled:  n.cfg.EnableSSLPassthrough,
 		ListenPorts:              n.cfg.ListenPorts,
 		EnableMetrics:            n.cfg.EnableMetrics,
-		MaxmindEditionFiles:      n.cfg.MaxmindEditionFiles,
 		HealthzURI:               nginx.HealthPath,
 		MonitorMaxBatchSize:      n.cfg.MonitorMaxBatchSize,
 		PID:                      nginx.PID,
@@ -641,6 +641,12 @@ func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCf
 		if dhfile != "" && dhcontent != nil {
 			tc.DHParamFile = dhfile
 			tc.DHParamContent = dhcontent
+		}
+	}
+
+	if cfg.UseGeoIP2 {
+		if files, exists := maxmind.GeoLite2DBExists(n.cfg.MaxMindEditionIDs); exists {
+			tc.MaxmindEditionFiles = files
 		}
 	}
 

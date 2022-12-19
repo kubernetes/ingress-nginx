@@ -55,6 +55,7 @@ type Configuration struct {
 	MaxWorkerOpenFiles int
 
 	MaxmindEditionFiles *[]string
+	MaxMindEditionIDs   string
 
 	MonitorMaxBatchSize int
 

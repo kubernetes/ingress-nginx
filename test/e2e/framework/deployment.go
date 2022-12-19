@@ -490,3 +490,17 @@ func (f *Framework) UpdateIngressControllerDeployment(fn func(deployment *appsv1
 
 	return f.updateIngressNGINXPod()
 }
+
+// UpdateIngressControllerOrDataplaneDeployment updates the ingress-nginx deployment
+func (f *Framework) UpdateIngressControllerOrDataplaneDeployment(fn func(deployment *appsv1.Deployment) error) error {
+	deploymentName := "nginx-ingress-controller"
+	if Dataplane {
+		deploymentName = "nginx-ingress-dataplane"
+	}
+	err := UpdateDeployment(f.KubeClientSet, f.Namespace, deploymentName, 1, fn)
+	if err != nil {
+		return err
+	}
+
+	return f.updateIngressNGINXPod()
+}

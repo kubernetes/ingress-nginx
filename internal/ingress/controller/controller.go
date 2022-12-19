@@ -118,6 +118,7 @@ type Configuration struct {
 	DisableFullValidationTest bool
 
 	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
+	MaxMindEditionIDs   string
 	MaxmindEditionFiles *[]string
 
 	MonitorMaxBatchSize int

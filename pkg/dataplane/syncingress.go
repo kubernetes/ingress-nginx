@@ -35,6 +35,7 @@ import (
 	authfile "k8s.io/ingress-nginx/pkg/util/auth"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
+	"k8s.io/ingress-nginx/pkg/util/maxmind"
 	ingressruntime "k8s.io/ingress-nginx/pkg/util/runtime"
 
 	"k8s.io/klog/v2"
@@ -73,6 +74,8 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 			name := cfg.DefaultSSLCertificate.Name
 			if name == "" {
 				name = ssl.FakeCertificateName
+			} else {
+				name = fmt.Sprintf("%s-%s", cfg.DefaultSSLCertificate.Namespace, cfg.DefaultSSLCertificate.Name)
 			}
 			if _, err := ssl.StoreSSLCertOnDisk(name, cfg.DefaultSSLCertificate); err != nil {
 				klog.ErrorS(err, "failed to create default certificate file")
@@ -97,10 +100,21 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 		}
 	}
 
+	ticketChanges := false
+	// TODO: We don't have an e2e test for sslsessionticket and I catch this by random case. Add e2e test for this!
+	if cfg.Cfg.SSLSessionTickets && cfg.Cfg.SSLSessionTicketKey != "" &&
+		cfg.Cfg.SSLSessionTicketKey != n.templateConfig.Cfg.SSLSessionTicketKey {
+		ticketChanges = true
+		if err := file.WriteSSLTicketFile(cfg.Cfg.SSLSessionTicketKey, "/etc/nginx/tickets.key"); err != nil {
+			klog.ErrorS(err, "failed to write sslsession key file")
+			return
+		}
+	}
+
 	certChange := checkAndWriteDeltaCertificates(cfg, n.templateConfig)
 	authChange := checkAndWriteAuthSecrets(cfg, n.templateConfig)
 
-	if authChange || certChange || configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
+	if ticketChanges || authChange || certChange || configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
 		hash, err := hashstructure.Hash(newcfg, &hashstructure.HashOptions{
@@ -325,6 +339,12 @@ func (n *NGINXConfigurer) updateConfiguration(cfg *config.TemplateConfig) error 
 	cfg.BacklogSize = ingressruntime.SysctlSomaxconn()
 	cfg.Cfg.Resolver = n.resolver
 	cfg.Cfg.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
+
+	if cfg.Cfg.UseGeoIP2 {
+		if files, exists := maxmind.GeoLite2DBExists(n.cfg.MaxMindEditionIDs); exists {
+			cfg.MaxmindEditionFiles = files
+		}
+	}
 
 	content, err := n.t.Write(*cfg)
 	if err != nil {

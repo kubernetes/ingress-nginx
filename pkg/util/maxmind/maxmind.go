@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package nginx
+package maxmind
 
 import (
 	"archive/tar"
@@ -34,24 +34,6 @@ import (
 	klog "k8s.io/klog/v2"
 )
 
-// MaxmindLicenseKey maxmind license key to download databases
-var MaxmindLicenseKey = ""
-
-// MaxmindEditionIDs maxmind editions (GeoLite2-City, GeoLite2-Country, GeoIP2-ISP, etc)
-var MaxmindEditionIDs = ""
-
-// MaxmindEditionFiles maxmind databases on disk
-var MaxmindEditionFiles []string
-
-// MaxmindMirror maxmind database mirror url (http://geoip.local)
-var MaxmindMirror = ""
-
-// MaxmindRetriesCount number of attempts to download the GeoIP DB
-var MaxmindRetriesCount = 1
-
-// MaxmindRetriesTimeout maxmind download retries timeout in seconds, 0 - do not retry to download if something went wrong
-var MaxmindRetriesTimeout = time.Second * 0
-
 // minimumRetriesCount minimum value of the MaxmindRetriesCount parameter. If MaxmindRetriesCount less than minimumRetriesCount, it will be set to minimumRetriesCount
 const minimumRetriesCount = 1
 
@@ -62,28 +44,51 @@ const (
 	maxmindURL = "https://download.maxmind.com/app/geoip_download?license_key=%v&edition_id=%v&suffix=tar.gz"
 )
 
+type Config struct {
+	EditionIDs     string
+	LicenseKey     string
+	Mirror         string
+	RetriesCount   int
+	RetriesTimeout time.Duration
+}
+
+func BootstrapMaxmindFiles(config Config) ([]string, error) {
+	var err error
+	if err = ValidateGeoLite2DBEditions(config.EditionIDs); err != nil {
+		return nil, err
+	}
+	if config.LicenseKey != "" || config.Mirror != "" {
+		if err = DownloadGeoLite2DB(config.RetriesCount, config.RetriesTimeout, config.EditionIDs, config.Mirror, config.LicenseKey); err != nil {
+			return nil, fmt.Errorf("unexpected error downloading GeoIP2 database: %w", err)
+		}
+	}
+	if files, exists := GeoLite2DBExists(config.EditionIDs); exists && len(files) > 0 {
+		return files, nil
+	}
+	return nil, nil
+}
+
 // GeoLite2DBExists checks if the required databases for
 // the GeoIP2 NGINX module are present in the filesystem
 // and indexes the discovered databases for iteration in
 // the config.
-func GeoLite2DBExists() bool {
+func GeoLite2DBExists(maxmindEditionIDs string) ([]string, bool) {
 	files := []string{}
-	for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
+	for _, dbName := range strings.Split(maxmindEditionIDs, ",") {
 		filename := dbName + dbExtension
 		if !fileExists(path.Join(geoIPPath, filename)) {
 			klog.Error(filename, " not found")
-			return false
+			return nil, false
 		}
 		files = append(files, filename)
 	}
-	MaxmindEditionFiles = files
 
-	return true
+	return files, true
 }
 
 // DownloadGeoLite2DB downloads the required databases by the
 // GeoIP2 NGINX module using a license key from MaxMind.
-func DownloadGeoLite2DB(attempts int, period time.Duration) error {
+func DownloadGeoLite2DB(attempts int, period time.Duration, maxmindEditionIDs, maxmindMirror, maxmindLicenseKey string) error {
 	if attempts < minimumRetriesCount {
 		attempts = minimumRetriesCount
 	}
@@ -103,8 +108,8 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 
 	_ = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
 		var dlError error
-		for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
-			dlError = downloadDatabase(dbName)
+		for _, dbName := range strings.Split(maxmindEditionIDs, ",") {
+			dlError = downloadDatabase(maxmindMirror, maxmindLicenseKey, dbName)
 			if dlError != nil {
 				break
 			}
@@ -138,8 +143,8 @@ func createURL(mirror, licenseKey, dbName string) string {
 	return fmt.Sprintf(maxmindURL, licenseKey, dbName)
 }
 
-func downloadDatabase(dbName string) error {
-	url := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
+func downloadDatabase(maxmindMirror, maxmindLicenseKey, dbName string) error {
+	url := createURL(maxmindMirror, maxmindLicenseKey, dbName)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -201,7 +206,7 @@ func downloadDatabase(dbName string) error {
 }
 
 // ValidateGeoLite2DBEditions check provided Maxmind database editions names
-func ValidateGeoLite2DBEditions() error {
+func ValidateGeoLite2DBEditions(maxmindEditionIDs string) error {
 	allowedEditions := map[string]bool{
 		"GeoIP2-Anonymous-IP":    true,
 		"GeoIP2-Country":         true,
@@ -215,7 +220,7 @@ func ValidateGeoLite2DBEditions() error {
 		"GeoLite2-City":          true,
 	}
 
-	for _, edition := range strings.Split(MaxmindEditionIDs, ",") {
+	for _, edition := range strings.Split(maxmindEditionIDs, ",") {
 		if !allowedEditions[edition] {
 			return fmt.Errorf("unknown Maxmind GeoIP2 edition name: '%s'", edition)
 		}

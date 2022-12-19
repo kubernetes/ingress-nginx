@@ -18,9 +18,7 @@ package store
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
-	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -45,7 +43,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/ingress-nginx/internal/ingress/inspector"
 
-	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	klog "k8s.io/klog/v2"
 
@@ -1081,22 +1078,8 @@ func (s *k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName str
 	s.backendConfig.SSLSessionTicketKey = ""
 
 	if ticketString != "" {
-		ticketBytes := base64.StdEncoding.WithPadding(base64.StdPadding).DecodedLen(len(ticketString))
-
-		// 81 used instead of 80 because of padding
-		if !(ticketBytes == 48 || ticketBytes == 81) {
-			klog.Warningf("ssl-session-ticket-key must contain either 48 or 80 bytes")
-		}
-
-		decodedTicket, err := base64.StdEncoding.DecodeString(ticketString)
-		if err != nil {
-			klog.Errorf("unexpected error decoding ssl-session-ticket-key: %v", err)
-			return
-		}
-
-		err = os.WriteFile(fileName, decodedTicket, file.ReadWriteByUser)
-		if err != nil {
-			klog.Errorf("unexpected error writing ssl-session-ticket-key to %s: %v", fileName, err)
+		if err := file.WriteSSLTicketFile(ticketString, fileName); err != nil {
+			klog.Errorf("error writing SSL ticket file: %s", err)
 			return
 		}
 
@@ -1125,10 +1108,6 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	}
 
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
-	if s.backendConfig.UseGeoIP2 && !nginx.GeoLite2DBExists() {
-		klog.Warning("The GeoIP2 feature is enabled but the databases are missing. Disabling")
-		s.backendConfig.UseGeoIP2 = false
-	}
 
 	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }

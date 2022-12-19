@@ -19,12 +19,14 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 	"k8s.io/ingress-nginx/pkg/dataplane"
+	"k8s.io/ingress-nginx/pkg/util/maxmind"
 	"k8s.io/klog/v2"
 )
 
@@ -56,6 +58,13 @@ func ParseDataplaneFlags() (bool, *dataplane.Configuration, error) {
 		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength")
 		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent")
 		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics")
+
+		maxmindEditionIDs = flags.String("maxmind-edition-ids", "GeoLite2-City,GeoLite2-ASN", `Maxmind edition ids to download GeoLite2 Databases.`)
+
+		maxmindMirror         = flags.String("maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases`)
+		maxmindLicenseKey     = flags.String("maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases. https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases`)
+		maxmindRetriesCount   = flags.Int("maxmind-retries-count", 1, "Number of attempts to download the GeoIP DB.")
+		maxmindRetriesTimeout = flags.Duration("maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
 
 		/*healthzPort = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
 		healthzHost = flags.String("healthz-host", "", "Address to bind the healthz endpoint.")*/
@@ -97,5 +106,24 @@ func ParseDataplaneFlags() (bool, *dataplane.Configuration, error) {
 			SSLProxy: *sslProxyPort,
 		},
 	}
+
+	if *maxmindEditionIDs != "" {
+		maxmindConfig := maxmind.Config{
+			EditionIDs:     *maxmindEditionIDs,
+			LicenseKey:     *maxmindLicenseKey,
+			Mirror:         *maxmindMirror,
+			RetriesCount:   *maxmindRetriesCount,
+			RetriesTimeout: *maxmindRetriesTimeout,
+		}
+		files, err := maxmind.BootstrapMaxmindFiles(maxmindConfig)
+		if err != nil {
+			klog.ErrorS(err, "failed bootstrapping maxmind files")
+			return false, nil, err
+		}
+
+		config.MaxmindEditionFiles = &files
+		config.MaxMindEditionIDs = *maxmindEditionIDs
+	}
+
 	return false, config, err
 }

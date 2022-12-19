@@ -46,7 +46,7 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 	ginkgo.It("should include geoip2 line in config when enabled and db file exists", func() {
 		edition := "GeoLite2-Country"
 
-		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+		err := f.UpdateIngressControllerOrDataplaneDeployment(func(deployment *appsv1.Deployment) error {
 			args := deployment.Spec.Template.Spec.Containers[0].Args
 			args = append(args, "--maxmind-edition-ids="+edition)
 			deployment.Spec.Template.Spec.Containers[0].Args = args

@@ -12,7 +12,7 @@
 # setup custom paths that do not require root access
 pid {{ .PID }};
 
-{{ if $cfg.UseGeoIP2 }}
+{{ if and $cfg.UseGeoIP2 (gt (len $all.MaxmindEditionFiles) 0) }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
 
@@ -176,7 +176,7 @@ http {
     geoip_proxy_recursive on;
     {{ end }}
 
-    {{ if $cfg.UseGeoIP2 }}
+    {{ if and $cfg.UseGeoIP2 (gt (len $all.MaxmindEditionFiles) 0) }}
     # https://github.com/leev/ngx_http_geoip2_module#example-usage
 
     {{ range $index, $file := $all.MaxmindEditionFiles }}

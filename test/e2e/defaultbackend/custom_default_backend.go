@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -49,7 +50,9 @@ var _ = framework.IngressNginxDescribe("[Default Backend] custom service", func(
 			func(server string) bool {
 				return strings.Contains(server, `set $proxy_upstream_name "upstream-default-backend"`)
 			})
-
+		// TODO: We are waiting here as dataplane needs some time to reconfigure, but we should do the
+		// wait against the dataplane deployment
+		framework.Sleep(15 * time.Second)
 		f.HTTPTestClient().
 			GET("/").
 			Expect().
