@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.16.2 as base
+FROM alpine:3.17.0 as base
 
 RUN mkdir -p /opt/third_party/install
 COPY . /opt/third_party/
