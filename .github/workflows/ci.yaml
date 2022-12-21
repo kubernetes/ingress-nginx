@@ -103,7 +103,7 @@ jobs:
         run: |
           sudo apt-get -qq update || true
           sudo apt-get install -y pigz
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.25.5/bin/linux/amd64/kubectl
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -222,7 +222,7 @@ jobs:
     strategy:
       matrix:
         k8s: [v1.23.13, v1.24.7, v1.25.3]
-
+        chroot: [true, false]
     steps:
       - name: Checkout
         uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
@@ -252,6 +252,7 @@ jobs:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
           SKIP_IMAGE_CREATION: true
+          IS_CHROOT: ${{ matrix.chroot }}
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
@@ -262,62 +263,6 @@ jobs:
         with:
           name: e2e-test-reports-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
-
-  kubernetes-chroot:
-    name: Kubernetes chroot
-    runs-on: ubuntu-latest
-    needs:
-      - changes
-      - build
-    if: |
-      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
-
-    strategy:
-      matrix:
-        k8s: [v1.23.13, v1.24.7, v1.25.3]
-
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
-
-      - name: cache
-        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
-        with:
-          name: docker.tar.gz
-
-      - name: Create Kubernetes ${{ matrix.k8s }} cluster
-        id: kind
-        run: |
-          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
-
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
-        with:
-          name: docker.tar.gz
-          failOnError: false
-
-      - name: Load images from cache
-        run: |
-          echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
-
-      - name: Run e2e tests
-        env:
-          KIND_CLUSTER_NAME: kind
-          SKIP_CLUSTER_CREATION: true
-          SKIP_IMAGE_CREATION: true
-          IS_CHROOT: true
-        run: |
-          kind get kubeconfig > $HOME/.kube/kind-config-kind
-          make kind-e2e-test
-
-      - name: Uplaod e2e junit-reports
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
-        if: success() || failure()
-        with:
-          name: e2e-test-reports-chroot-${{ matrix.k8s }}
-          path: 'test/junitreports/report*.xml'
-
 
   test-image-build:
     permissions:
