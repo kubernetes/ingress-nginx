@@ -1,6 +1,6 @@
 package:
   name: yaml-cpp
-  version: {{ .YAML_CPP_VERSION }}
+  version: ${{ range.YAML_CPP_VERSION }}
   epoch: 0
   description: "yaml-cpp is a YAML parser and emitter in C++ matching the YAML 1.2 spec."
   target-architecture:
@@ -12,12 +12,16 @@ package:
   dependencies:
     runtime:
 
+data:
+  - name: YAML_CPP_VERSION
+    item: yaml-cpp-0.7.0
+  - name: YAML_CPP_VERSION_SHA
+    item: 43e6a9fcb146ad871515f0d0873947e5d497a1c9c60c58cb102a97b47208b7c3
 environment:
   contents:
     repositories:
       - https://dl-cdn.alpinelinux.org/alpine/edge/main
       - https://dl-cdn.alpinelinux.org/alpine/edge/community
-      -
     packages:
       - alpine-baselayout-data
       - busybox
@@ -37,15 +41,15 @@ environment:
 pipeline:
   - uses: fetch
     with:
-      uri: https://github.com/jbeder/yaml-cpp/archive/{{ .YAML_CPP_VERSION }}.tar.gz
-      expected-sha256: {{ .YAML_CPP_VERSION_SHA }}
+      uri: https://github.com/jbeder/yaml-cpp/archive/${{ range.YAML_CPP_VERSION }}.tar.gz
+      expected-sha256: ${{ range.YAML_CPP_VERSION_SHA }}
       strip-components: 1
   - name: 'Configure YAML_CPP'
     with:
-      YAML_CPP_VERSION: {{ .YAML_CPP_VERSION }}
+      YAML_CPP_VERSION: ${{ range.YAML_CPP_VERSION }}
     runs: |
       echo "::::::::::::::::::::::::::::::::::::::"
-      echo ":::: yaml-cpp-{{ .YAML_CPP_VERSION }} ::::"
+      echo ":::: yaml-cpp-${{ range.YAML_CPP_VERSION }} ::::"
       echo "::::::::::::::::::::::::::::::::::::::"
       
       cmake -DCMAKE_BUILD_TYPE=Release \
