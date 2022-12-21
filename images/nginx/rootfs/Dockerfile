@@ -21,7 +21,7 @@ RUN apk update \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.16.2
+FROM alpine:3.17.0
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
