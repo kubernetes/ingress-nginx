@@ -18,7 +18,6 @@ jobs:
     if: |
       (github.repository == 'kubernetes/ingress-nginx')
     outputs:
-      docs: ${{ steps.filter.outputs.docs }}
       charts: ${{ steps.filter.outputs.charts }}
 
     steps:
@@ -32,7 +31,6 @@ jobs:
           filters: |
             charts:
               - 'charts/ingress-nginx/Chart.yaml'
-              - 'charts/ingress-nginx/values.yaml'
 
   chart:
     name: Release Chart
