@@ -305,7 +305,7 @@ jobs:
               - 'images/${{matrix.image}}/**'
 
       - name: ${{matrix.image}} image build
-        if: ${{ steps.filter-images.outputs.change == 'true' }} ||
+        if: ${{ steps.filter-images.outputs.change == 'true' }} || ${{ inputs.image_builds }}
         run: |
           cd images/${{matrix.image}} && make build
 
