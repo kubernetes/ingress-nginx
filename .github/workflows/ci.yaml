@@ -15,6 +15,10 @@ on:
         description: 'Force e2e to run'
         required: false
         type: boolean
+      image_builds:
+        description: 'Force all images builds to run'
+        required: false
+        type: boolean
 
 permissions:
   contents: read
@@ -301,7 +305,7 @@ jobs:
               - 'images/${{matrix.image}}/**'
 
       - name: ${{matrix.image}} image build
-        if: ${{ steps.filter-images.outputs.change == 'true' }}
+        if: ${{ steps.filter-images.outputs.change == 'true' }} ||
         run: |
           cd images/${{matrix.image}} && make build
 
