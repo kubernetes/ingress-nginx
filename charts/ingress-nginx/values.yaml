@@ -366,6 +366,7 @@ controller:
   autoscaling:
     apiVersion: autoscaling/v2
     enabled: false
+    annotations: {}
     minReplicas: 1
     maxReplicas: 11
     targetCPUUtilizationPercentage: 50
