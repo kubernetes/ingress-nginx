@@ -300,9 +300,12 @@ http {
     client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
 
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
-    http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
-    http2_max_requests              {{ $cfg.HTTP2MaxRequests }};
     http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
+    {{ if and (gt $http2_max_header_size 0) (gt $http2_max_requests 0) }}
+        http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
+        http2_max_requests              {{ $cfg.HTTP2MaxRequests }};
+    {{ end }}
+
 
     types_hash_max_size             2048;
     server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};
