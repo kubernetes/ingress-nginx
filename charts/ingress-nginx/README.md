@@ -294,7 +294,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.admissionWebhooks.service.type | string | `"ClusterIP"` |  |
 | controller.affinity | object | `{}` | Affinity and anti-affinity rules for server scheduling to nodes # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity # |
 | controller.allowSnippetAnnotations | bool | `true` | This configuration defines if Ingress Controller should allow users to set their own *-snippet annotations, otherwise this is forbidden / dropped when users add those annotations. Global snippets in ConfigMap are still respected |
-| controller.annotations | object | `{}` | Annotations to be added to the controller Deployment or DaemonSet # |
+| controller.annotations | object | `{}` | Annotations to be added to the controller Deployment or DaemonSet or StatefulSet # |
 | controller.autoscaling.annotations | object | `{}` |  |
 | controller.autoscaling.apiVersion | string | `"autoscaling/v2"` |  |
 | controller.autoscaling.behavior | object | `{}` |  |
@@ -357,8 +357,8 @@ Kubernetes: `>=1.20.0-0`
 | controller.keda.restoreToOriginalReplicaCount | bool | `false` |  |
 | controller.keda.scaledObject.annotations | object | `{}` |  |
 | controller.keda.triggers | list | `[]` |  |
-| controller.kind | string | `"Deployment"` | Use a `DaemonSet` or `Deployment` |
-| controller.labels | object | `{}` | Labels to be added to the controller Deployment or DaemonSet and other resources that do not have option to specify labels # |
+| controller.kind | string | `"Deployment"` | Use a `DaemonSet` or `Deployment` or `StatefulSet`; `Both` creates a `DaemonSet` and a `Deployment` |
+| controller.labels | object | `{}` | Labels to be added to the controller Deployment or DaemonSet or StatefulSet and other resources that do not have option to specify labels # |
 | controller.lifecycle | object | `{"preStop":{"exec":{"command":["/wait-shutdown"]}}}` | Improve connection draining when ingress controller pod is deleted using a lifecycle hook: With this new hook, we increased the default terminationGracePeriodSeconds from 30 seconds to 300, allowing the draining of connections up to five minutes. If the active connections end before that, the pod will terminate gracefully at that time. To effectively take advantage of this feature, the Configmap feature worker-shutdown-timeout new value is 240s instead of 10s. # |
 | controller.livenessProbe.failureThreshold | int | `5` |  |
 | controller.livenessProbe.httpGet.path | string | `"/healthz"` |  |
@@ -398,6 +398,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.opentelemetry.image | string | `"registry.k8s.io/ingress-nginx/opentelemetry:v20230312-helm-chart-4.5.2-28-g66a760794@sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f"` |  |
 | controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
 | controller.podLabels | object | `{}` | Labels to add to the pod container metadata |
+| controller.podManagementPolicy | string | `"OrderedReady"` | Pod management policy for StatefulSet # |
 | controller.podSecurityContext | object | `{}` | Security Context policies for controller pods |
 | controller.priorityClassName | string | `""` |  |
 | controller.proxySetHeaders | object | `{}` | Will add custom headers before sending traffic to backends according to https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/custom-headers |
@@ -452,7 +453,8 @@ Kubernetes: `>=1.20.0-0`
 | controller.topologySpreadConstraints | list | `[]` | Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in. # Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/ # |
 | controller.udp.annotations | object | `{}` | Annotations to be added to the udp config configmap |
 | controller.udp.configMapNamespace | string | `""` | Allows customization of the udp-services-configmap; defaults to $(POD_NAMESPACE) |
-| controller.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet # |
+| controller.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet or StatefulSet # |
+| controller.volumeClaimTemplates | list | `[]` | Volume claim templates for StatefulSet pods # |
 | controller.watchIngressWithoutClass | bool | `false` | Process Ingress objects without ingressClass annotation/ingressClassName field Overrides value for --watch-ingress-without-class flag of the controller binary Defaults to false |
 | defaultBackend.affinity | object | `{}` |  |
 | defaultBackend.autoscaling.annotations | object | `{}` |  |

@@ -1,4 +1,4 @@
-{{- if and .Values.controller.service.enabled .Values.controller.service.external.enabled -}}
+{{- if or (eq .Values.controller.kind "StatefulSet") (and .Values.controller.service.enabled .Values.controller.service.external.enabled) -}}
 apiVersion: v1
 kind: Service
 metadata:

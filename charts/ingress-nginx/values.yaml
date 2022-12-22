@@ -165,20 +165,21 @@ controller:
   #         key: FOO
   #         name: secret-resource
 
-  # -- Use a `DaemonSet` or `Deployment`
+  # -- Use a `DaemonSet` or `Deployment` or `StatefulSet`; `Both` creates a `DaemonSet` and a `Deployment`
   kind: Deployment
-  # -- Annotations to be added to the controller Deployment or DaemonSet
+
+  # -- Annotations to be added to the controller Deployment or DaemonSet or StatefulSet
   ##
   annotations: {}
   #  keel.sh/pollSchedule: "@every 60m"
 
-  # -- Labels to be added to the controller Deployment or DaemonSet and other resources that do not have option to specify labels
+  # -- Labels to be added to the controller Deployment or DaemonSet or StatefulSet and other resources that do not have option to specify labels
   ##
   labels: {}
   #  keel.sh/policy: patch
   #  keel.sh/trigger: poll
 
-  # -- The update strategy to apply to the Deployment or DaemonSet
+  # -- The update strategy to apply to the Deployment or DaemonSet or StatefulSet
   ##
   updateStrategy: {}
   #  rollingUpdate:
@@ -188,6 +189,15 @@ controller:
   # -- `minReadySeconds` to avoid killing pods before we are ready
   ##
   minReadySeconds: 0
+
+  # -- Pod management policy for StatefulSet
+  ##
+  podManagementPolicy: OrderedReady
+
+  # -- Volume claim templates for StatefulSet pods
+  ##
+  volumeClaimTemplates: []
+
   # -- Node tolerations for server scheduling to nodes with taints
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##

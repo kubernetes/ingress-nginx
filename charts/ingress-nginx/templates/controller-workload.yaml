@@ -1,7 +1,21 @@
-{{- if or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both") -}}
-{{- include  "isControllerTagValid" . -}}
+{{- $kinds := list }}
+{{- if eq .Values.controller.kind "Deployment" }}
+{{- $kinds = list "Deployment" }}
+{{- else if eq .Values.controller.kind "StatefulSet" }}
+{{- $kinds = list "StatefulSet" }}
+{{- else if eq .Values.controller.kind "DaemonSet" }}
+{{- $kinds = list "DaemonSet" }}
+{{- else if eq .Values.controller.kind "Both" }}
+{{- $kinds = list "DaemonSet" "Deployment" }}
+{{- else }}
+{{- fail "Unsupported value for controller.kind" }}
+{{- end }}
+{{- include  "isControllerTagValid" . }}
+{{- range $kind := $kinds }}
+---
+{{- with $ }}
 apiVersion: apps/v1
-kind: Deployment
+kind: {{ $kind }}
 metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
@@ -19,15 +33,29 @@ spec:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: controller
-  {{- if not .Values.controller.autoscaling.enabled }}
+  {{- if and (ne $kind "DaemonSet") (not .Values.controller.autoscaling.enabled) }}
   replicas: {{ .Values.controller.replicaCount }}
   {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   {{- if .Values.controller.updateStrategy }}
-  strategy:
-    {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
+  {{- if eq $kind "Deployment" }}
+  strategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
+  {{- else }}
+  updateStrategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
   {{- end }}
+  {{- end }}
+  {{- if eq $kind "StatefulSet" }}
+  serviceName: {{ include "ingress-nginx.controller.fullname" . }}
+  {{- with .Values.controller.podManagementPolicy }}
+  podManagementPolicy: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.controller.volumeClaimTemplates }}
+  volumeClaimTemplates: {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if and (gt (.Values.controller.minReadySeconds | int) 0) (or (ne $kind "StatefulSet") (.Capabilities.KubeVersion.Version | semverCompare ">= 1.23")) }}
   minReadySeconds: {{ .Values.controller.minReadySeconds }}
+  {{- end }}
   template:
     metadata:
     {{- if .Values.controller.podAnnotations }}
@@ -240,4 +268,5 @@ spec:
         {{ toYaml .Values.controller.extraVolumes | nindent 8 }}
       {{- end }}
     {{- end }}
+{{- end }}
 {{- end }}
