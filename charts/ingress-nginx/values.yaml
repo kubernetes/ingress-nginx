@@ -13,6 +13,7 @@ commonLabels: {}
 # scmhash: abc123
 # myLabel: aakkmd
 
+# -- Defines if alpha feature "split cp/dp" should be used
 useDataplaneMode: false
 
 controller:

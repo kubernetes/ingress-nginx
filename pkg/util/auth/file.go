@@ -17,7 +17,7 @@ limitations under the License.
 package auth
 
 import (
-	"crypto/sha1"
+	"crypto/sha1" // #nosec
 	"encoding/hex"
 	"fmt"
 	"os"
