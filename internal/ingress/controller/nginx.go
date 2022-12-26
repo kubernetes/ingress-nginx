@@ -310,9 +310,9 @@ func (n *NGINXController) Start() {
 		},
 	})
 
-	if n.cfg.EnableSSLPassthrough {
+	/*if n.cfg.EnableSSLPassthrough {
 		n.setupSSLProxy()
-	}
+	}*/
 
 	if n.gRPCServer == nil {
 		klog.InfoS("Starting NGINX process")

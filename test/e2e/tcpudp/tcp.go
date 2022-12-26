@@ -59,10 +59,7 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 			Update(context.TODO(), config, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating configmap")
 
-		svc, err := f.KubeClientSet.
-			CoreV1().
-			Services(f.Namespace).
-			Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
+		svc, err := f.GetNginxService()
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining ingress-nginx service")
 		assert.NotNil(ginkgo.GinkgoT(), svc, "expected a service but none returned")
 
@@ -123,10 +120,7 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 		f.EnsureService(externalService)
 
 		// Expose the `external name` port on the `ingress-nginx` service
-		svc, err := f.KubeClientSet.
-			CoreV1().
-			Services(f.Namespace).
-			Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
+		svc, err := f.GetNginxService()
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining ingress-nginx service")
 		assert.NotNil(ginkgo.GinkgoT(), svc, "expected a service but none returned")
 

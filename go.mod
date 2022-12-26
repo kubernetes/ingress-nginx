@@ -25,10 +25,11 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
 	github.com/yudai/gojsondiff v1.0.0
-	github.com/zakjan/cert-chain-resolver v0.0.0-20211122211144-c6b0b792af9a
+	github.com/zakjan/cert-chain-resolver v0.0.0-20221221105603-fcedb00c5b30
 	golang.org/x/crypto v0.4.0
 	google.golang.org/grpc v1.51.0
-	google.golang.org/grpc/examples v0.0.0-20221220003428-4f16fbe410f7
+	google.golang.org/grpc/examples v0.0.0-20221222230243-0e5421c1e533
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 	k8s.io/api v0.25.4
@@ -61,6 +62,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
@@ -102,8 +104,10 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/urfave/cli v1.22.1 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
@@ -118,7 +122,6 @@ require (
 	golang.org/x/tools v0.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
