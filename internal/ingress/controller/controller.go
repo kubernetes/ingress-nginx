@@ -37,6 +37,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
+
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -46,7 +48,10 @@ import (
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	"k8s.io/ingress-nginx/pkg/util/auth"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
+	sslutil "k8s.io/ingress-nginx/pkg/util/ssl"
+
 	"k8s.io/klog/v2"
 )
 
@@ -238,6 +243,35 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return err
 	}
 
+	getProxySSLCert := func(persistedMap map[string]ngx_config.CertificateFile, proxySSL proxyssl.Config) (bool, error) {
+		if len(proxySSL.CAFileContent) > 0 {
+			persistedMap[proxySSL.CAFileName] = ngx_config.CertificateFile{
+				Checksum: proxySSL.CASHA,
+				Content:  proxySSL.CAFileContent,
+			}
+			if proxySSL.PemFileName != "" {
+				cert, err := n.store.GetLocalSSLCert(proxySSL.SecretName)
+				if err != nil {
+					klog.Errorf("Error getting proxyssl certificate:\n%v", err)
+					return false, err
+				}
+
+				certbytes, err := sslutil.AssembleCACertWithCertAndKey(proxySSL.CAFileContent, []byte(cert.PemCertKey))
+				if err != nil {
+					klog.Errorf("Error assembling proxyssl certificate:\n%v", err)
+					return false, err
+				}
+				sha := auth.SecretSHA1(certbytes)
+				persistedMap[proxySSL.PemFileName] = ngx_config.CertificateFile{
+					Checksum: sha,
+					Content:  certbytes,
+				}
+			}
+			return true, nil
+		}
+		return false, nil
+	}
+
 	persistedCertMap := make(map[string]ngx_config.CertificateFile)
 	for s, server := range tmplConfig.Servers {
 		if len(server.CertificateAuth.CAFileContent) > 0 {
@@ -254,7 +288,24 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			}
 			tmplConfig.Servers[s].CertificateAuth.CRLFileContent = nil
 		}
-
+		sslservercertchanged, err := getProxySSLCert(persistedCertMap, server.ProxySSL)
+		if err != nil {
+			return err
+		}
+		// Cleanup template config to dedup stuff
+		if sslservercertchanged {
+			tmplConfig.Servers[s].ProxySSL.CAFileContent = nil
+		}
+		for lidx, location := range server.Locations {
+			ssllocationcertchanged, err := getProxySSLCert(persistedCertMap, location.ProxySSL)
+			if err != nil {
+				return err
+			}
+			// Cleanup template config to dedup stuff
+			if ssllocationcertchanged {
+				tmplConfig.Servers[s].Locations[lidx].ProxySSL.CAFileContent = nil
+			}
+		}
 	}
 	tmplConfig.PersistedCertificates = persistedCertMap
 	// TODO (rikatz): So, while migrating / splitting I figured out that the fields are actually used...ooops

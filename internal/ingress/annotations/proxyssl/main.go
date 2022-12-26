@@ -52,6 +52,7 @@ type Config struct {
 	Verify             string `json:"verify"`
 	VerifyDepth        int    `json:"verifyDepth"`
 	ProxySSLServerName string `json:"proxySSLServerName"`
+	SecretName         string `json:"secretName"`
 }
 
 // Equal tests for equality between two Config types
@@ -78,6 +79,9 @@ func (pssl1 *Config) Equal(pssl2 *Config) bool {
 		return false
 	}
 	if pssl1.ProxySSLServerName != pssl2.ProxySSLServerName {
+		return false
+	}
+	if pssl1.SecretName != pssl2.SecretName {
 		return false
 	}
 	return true
@@ -168,6 +172,7 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 	if err != nil || !proxySSLOnOffRegex.MatchString(config.ProxySSLServerName) {
 		config.ProxySSLServerName = defaultProxySSLServerName
 	}
+	config.SecretName = proxysslsecret
 
 	return config, nil
 }
