@@ -247,7 +247,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			}
 			tmplConfig.Servers[s].CertificateAuth.CAFileContent = nil
 		}
-		if len(server.CertificateAuth.CRLFileContent) > 1 {
+		if len(server.CertificateAuth.CRLFileContent) > 0 {
 			persistedCertMap[server.CertificateAuth.CRLFileName] = ngx_config.CertificateFile{
 				Checksum: server.CertificateAuth.CRLSHA,
 				Content:  server.CertificateAuth.CRLFileContent,

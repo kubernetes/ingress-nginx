@@ -297,7 +297,7 @@ func checkAndWriteDeltaCertificates(newtmpl *config.TemplateConfig, oldtmpl *con
 		changed = true
 		for k, v := range tempMap {
 			if v.operation == certRemove {
-				klog.Infof("removing  cert %s", k)
+				klog.Infof("removing cert %s", k)
 				if err := os.Remove(k); err != nil {
 					klog.Warningf("failed removing old certificate %s: %s", k, err)
 				}

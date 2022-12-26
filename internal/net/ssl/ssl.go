@@ -39,6 +39,7 @@ import (
 
 	"github.com/zakjan/cert-chain-resolver/certUtil"
 	"k8s.io/apimachinery/pkg/util/sets"
+	sslutil "k8s.io/ingress-nginx/pkg/util/ssl"
 
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 
@@ -194,24 +195,13 @@ func StoreSSLCertOnDisk(name string, sslCert *ingress.SSLCert) (string, error) {
 // ConfigureCACertWithCertAndKey appends ca into existing PEM file consisting of cert and key
 // and sets relevant fields in sslCert object
 func ConfigureCACertWithCertAndKey(name string, ca []byte, sslCert *ingress.SSLCert) error {
-	var buffer bytes.Buffer
 
-	_, err := buffer.Write([]byte(sslCert.PemCertKey))
+	fileBytes, err := sslutil.AssembleCACertWithCertAndKey(ca, []byte(sslCert.PemCertKey))
 	if err != nil {
-		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.CAFileName, err)
+		return fmt.Errorf("could not create certfile bytes: %v: %w", sslCert.CAFileName, err)
 	}
 
-	_, err = buffer.Write([]byte("\n"))
-	if err != nil {
-		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.CAFileName, err)
-	}
-
-	_, err = buffer.Write(ca)
-	if err != nil {
-		return fmt.Errorf("could not write ca data to cert file %v: %v", sslCert.CAFileName, err)
-	}
-
-	return os.WriteFile(sslCert.CAFileName, buffer.Bytes(), 0644)
+	return os.WriteFile(sslCert.CAFileName, fileBytes, 0644)
 }
 
 // ConfigureCRL creates a CRL file and append it into the SSLCert
