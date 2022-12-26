@@ -19,6 +19,7 @@ package annotations
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/onsi/ginkgo/v2"
 
@@ -433,6 +434,8 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
+
+		framework.Sleep(15 * time.Second) // Wait for config to be replicated to dataplane
 
 		f.HTTPTestClient().
 			GET("/").
