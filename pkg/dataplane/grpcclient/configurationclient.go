@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
+	"google.golang.org/grpc"
 
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
@@ -27,7 +28,7 @@ import (
 )
 
 func (c *Client) ConfigurationService() {
-	stream, err := c.ConfigurationClient.WatchConfigurations(c.ctx, c.Backendname)
+	stream, err := c.ConfigurationClient.WatchConfigurations(c.ctx, c.Backendname, grpc.WaitForReady(true))
 	if err != nil {
 		c.grpcErrCh <- fmt.Errorf("error creating configuration client: %w", err)
 		return

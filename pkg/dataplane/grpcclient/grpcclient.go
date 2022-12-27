@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -31,6 +32,8 @@ import (
 	ingressconfig "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/klog/v2"
+
+	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 /* TODO for this client:
@@ -71,11 +74,16 @@ type Client struct {
 	grpcErrCh           chan error
 	EventClient         ingress.EventServiceClient
 	ConfigurationClient ingress.ConfigurationClient
+	HealthClient        healthgrpc.HealthClient
 	ctx                 context.Context
 }
 
 var (
 	retryPolicy = `{
+		"loadBalancingPolicy": "round_robin",
+		"healthCheckConfig": {
+		  "serviceName": ""
+		},
 		"methodConfig": [{
 		  "name": [{"service": "ingressv1.Configuration"}],
 		  "name": [{"service": "ingressv1.EventService"}],
@@ -94,6 +102,9 @@ var (
 		Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
 		Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
 		PermitWithoutStream: true,             // send pings even without active streams
+	}
+	connectParams = grpc.ConnectParams{
+		MinConnectTimeout: 5 * time.Second,
 	}
 )
 
@@ -133,11 +144,17 @@ func (c *Client) Start() {
 	var newConn *grpc.ClientConn
 	err := wait.Poll(1*time.Second, 30*time.Second, func() (bool, error) {
 		var err error
+
+		backoffCfg := backoff.DefaultConfig
+		backoffCfg.MaxDelay = 15 * time.Second
+		connectParams.Backoff = backoffCfg
 		newConn, err = grpc.Dial(
 			c.Options.Address,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithDefaultServiceConfig(retryPolicy),
 			grpc.WithKeepaliveParams(kacp),
+			grpc.WithConnectParams(connectParams),
+			grpc.WithBlock(),
 		)
 		if err != nil {
 			klog.Warningf("error while trying to connect to controller, retrying: %s", err)
@@ -146,6 +163,7 @@ func (c *Client) Start() {
 
 		c.EventClient = ingress.NewEventServiceClient(newConn)
 		c.ConfigurationClient = ingress.NewConfigurationClient(newConn)
+		c.HealthClient = healthgrpc.NewHealthClient(newConn)
 		cfg, err := c.ConfigurationClient.GetConfigurations(c.ctx, c.Backendname)
 		if err != nil {
 			klog.Warningf("failed to get initial configuration: %s", err)
@@ -173,8 +191,10 @@ func (c *Client) Start() {
 	})
 	if err != nil {
 		c.grpcErrCh <- fmt.Errorf("gRPC server didn't became ready, will retry: %s", err)
+		return
 	}
 
 	go c.EventService()
 	go c.ConfigurationService()
+	go c.HealthService() // TODO: This helps, or make it worse?
 }

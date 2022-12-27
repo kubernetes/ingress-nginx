@@ -36,6 +36,7 @@ import (
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -62,6 +63,8 @@ import (
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 	"k8s.io/ingress-nginx/pkg/util/maxmind"
 	ingressruntime "k8s.io/ingress-nginx/pkg/util/runtime"
+
+	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 
 	klog "k8s.io/klog/v2"
 )
@@ -351,8 +354,11 @@ func (n *NGINXController) Start() {
 		}()
 	}
 
+	var healthcheck *health.Server
 	if n.gRPCServer != nil {
 		klog.InfoS("Starting grpc server", "port", n.cfg.ListenPorts.GRPCPort)
+		healthcheck = health.NewServer()
+		healthgrpc.RegisterHealthServer(n.gRPCServer, healthcheck)
 		ingress.RegisterEventServiceServer(n.gRPCServer, &EventServer{
 			n: n,
 		})
@@ -368,11 +374,17 @@ func (n *NGINXController) Start() {
 			klog.ErrorS(n.gRPCServer.Serve(lis), "failed to start gRPC Server")
 		}()
 	}
+	if healthcheck != nil {
+		healthcheck.SetServingStatus("", healthgrpc.HealthCheckResponse_SERVING)
+	}
 
 	for {
 		select {
 		case err := <-n.ngxErrCh:
 			if n.isShuttingDown {
+				if healthcheck != nil {
+					healthcheck.SetServingStatus("", healthgrpc.HealthCheckResponse_NOT_SERVING)
+				}
 				return
 			}
 
@@ -384,6 +396,9 @@ func (n *NGINXController) Start() {
 
 		case event := <-n.updateCh.Out():
 			if n.isShuttingDown {
+				if healthcheck != nil {
+					healthcheck.SetServingStatus("", healthgrpc.HealthCheckResponse_NOT_SERVING)
+				}
 				break
 			}
 
@@ -400,6 +415,9 @@ func (n *NGINXController) Start() {
 				klog.Warningf("Unexpected event type received %T", event)
 			}
 		case <-n.stopCh:
+			if healthcheck != nil {
+				healthcheck.SetServingStatus("", healthgrpc.HealthCheckResponse_NOT_SERVING)
+			}
 			return
 		}
 	}
