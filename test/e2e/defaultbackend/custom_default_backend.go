@@ -52,7 +52,7 @@ var _ = framework.IngressNginxDescribe("[Default Backend] custom service", func(
 			})
 		// TODO: We are waiting here as dataplane needs some time to reconfigure, but we should do the
 		// wait against the dataplane deployment
-		framework.Sleep(15 * time.Second)
+		framework.Sleep(30 * time.Second)
 		f.HTTPTestClient().
 			GET("/").
 			Expect().

@@ -196,5 +196,5 @@ func (c *Client) Start() {
 
 	go c.EventService()
 	go c.ConfigurationService()
-	go c.HealthService() // TODO: This helps, or make it worse?
+	// go c.HealthService() // TODO: This helps, or make it worse?
 }
