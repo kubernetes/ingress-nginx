@@ -1,5 +1,7 @@
 # Changelog
 
+All New change are in [Changelog](./changelog)
+
 ### 1.5.1 
 
 * Upgrade NGINX to 1.21.6
