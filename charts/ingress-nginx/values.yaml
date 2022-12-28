@@ -23,9 +23,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.4.0"
-    digest: sha256:34ee929b111ffc7aa426ffd409af44da48e5a0eea1eb2207994d9e0c0882d143
-    digestChroot: sha256:b67e889f1db8692de7e41d4d9aef8de56645bf048261f31fa7f8bfc6ea2222a0
+    tag: "v1.5.1"
+    digest: sha256:4ba73c697770664c1e00e9f968de14e08f606ff961c76e5d7033a4a9c593c629
+    digestChroot: sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529bad0d178fb36147345
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -349,7 +349,10 @@ controller:
 
   replicaCount: 1
 
+  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
   minAvailable: 1
+  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
+  # maxUnavailable: 1
 
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
   ## ref: https://github.com/kubernetes/ingress-nginx/issues/4735#issuecomment-551204903
@@ -365,7 +368,9 @@ controller:
 
   # Mutually exclusive with keda autoscaling
   autoscaling:
+    apiVersion: autoscaling/v2
     enabled: false
+    annotations: {}
     minReplicas: 1
     maxReplicas: 11
     targetCPUUtilizationPercentage: 50
@@ -373,7 +378,7 @@ controller:
     behavior: {}
       # scaleDown:
       #   stabilizationWindowSeconds: 300
-      #  policies:
+      #   policies:
       #   - type: Pods
       #     value: 1
       #     periodSeconds: 180
@@ -581,14 +586,20 @@ controller:
   #   image: busybox
   #   command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
 
+  # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
   extraModules: []
-  ## Modules, which are mounted into the core nginx image
-  # - name: opentelemetry
-  #   image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
+  #   containerSecurityContext:
+  #     allowPrivilegeEscalation: false
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
   # mounted volume.
+
+  opentelemetry:
+    enabled: false
+    image: registry.k8s.io/ingress-nginx/opentelemetry:v20221114-controller-v1.5.1-6-ga66ee73c5@sha256:41076fd9fb4255677c1a3da1ac3fc41477f06eba3c7ebf37ffc8f734dad51d7c
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
 
   admissionWebhooks:
     annotations: {}
@@ -631,6 +642,8 @@ controller:
       type: ClusterIP
 
     createSecretJob:
+      securityContext:
+        allowPrivilegeEscalation: false
       resources: {}
         # limits:
         #   cpu: 10m
@@ -640,6 +653,8 @@ controller:
         #   memory: 20Mi
 
     patchWebhookJob:
+      securityContext:
+        allowPrivilegeEscalation: false
       resources: {}
 
     patch:
@@ -667,6 +682,17 @@ controller:
         runAsUser: 2000
         fsGroup: 2000
 
+    # Use certmanager to generate webhook certs
+    certManager:
+      enabled: false
+      # self-signed root certificate
+      rootCert:
+        duration: ""  # default to be 5y
+      admissionCert:
+        duration: ""  # default to be 1y
+      # issuerRef:
+      #   name: "issuer"
+      #   kind: "ClusterIssuer"
 
   metrics:
     port: 10254

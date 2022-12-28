@@ -848,3 +848,5 @@ As you can see from the above output there are several headers added to the curl
 - Cluster Creation tools
     - [kind](https://kind.sigs.k8s.io/docs/user/quick-start/)
     - [minikube](https://minikube.sigs.k8s.io/docs/start/)
+- MacOS users
+	- [docker-mac-net-connect](https://github.com/chipmk/docker-mac-net-connect) - See this [issue](https://github.com/kubernetes/minikube/issues/7332)
