@@ -80,6 +80,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	}
 
 	hostPort := net.JoinHostPort(proxy.IP, fmt.Sprintf("%v", proxy.Port))
+	klog.V(4).InfoS("passing to", "hostport", hostPort)
 	clientConn, err := net.Dial("tcp", hostPort)
 	if err != nil {
 		klog.V(4).ErrorS(err, "error dialing proxy", "ip", proxy.IP, "port", proxy.Port, "hostname", proxy.Hostname)
@@ -99,7 +100,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 		}
 		proxyProtocolHeader := fmt.Sprintf("PROXY %s %s %s %d %d\r\n", protocol, remoteAddr.IP.String(), localAddr.IP.String(), remoteAddr.Port, localAddr.Port)
 		klog.V(4).InfoS("Writing Proxy Protocol", "header", proxyProtocolHeader)
-		_, err = fmt.Fprintf(clientConn, proxyProtocolHeader)
+		_, err = fmt.Fprint(clientConn, proxyProtocolHeader)
 	}
 	if err != nil {
 		klog.ErrorS(err, "Error writing Proxy Protocol header")
@@ -126,8 +127,5 @@ func pipe(client, server net.Conn) {
 	go doCopy(server, client, cancel)
 	go doCopy(client, server, cancel)
 
-	select {
-	case <-cancel:
-		return
-	}
+	<-cancel
 }
