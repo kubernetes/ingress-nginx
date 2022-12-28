@@ -79,9 +79,9 @@ Promoting the images basically means that images, that were pushed to staging co
 
 ### d. Merge
 
-- Merge success is required for next step
+- Merge success is required.
 
-- Proceed only after cloud-build is successful in building a new Ingress-Nginx-Controller image.
+- Proceed only after cloud-build is successful in building a new e2e-test-runner image.
 
 
 [//]: # (### d. Change-testrunner-image-sha PR)
