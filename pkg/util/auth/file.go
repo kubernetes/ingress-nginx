@@ -30,7 +30,7 @@ import (
 
 // DumpSecretAuthFile dumps the content of a secret into a file
 // in the expected format for the specified authorization
-func DumpSecretAuthFile(filename string, secret *api.Secret) ([]byte, error) {
+func DumpSecretAuthFile(secret *api.Secret) ([]byte, error) {
 	secretVal, ok := secret.Data["auth"]
 	if !ok {
 		return nil, ing_errors.LocationDenied{
@@ -38,16 +38,12 @@ func DumpSecretAuthFile(filename string, secret *api.Secret) ([]byte, error) {
 		}
 	}
 
-	// TODO: Stop writing secret locally
-	if err := WriteSecretFile(filename, secretVal); err != nil {
-		return nil, err
-	}
 	return secretVal, nil
 }
 
 // DumpSecretAuthFile dumps the content of a secret into a file
 // with each key being the user and the value as password
-func DumpSecretAuthMap(filename string, secret *api.Secret) ([]byte, error) {
+func DumpSecretAuthMap(secret *api.Secret) ([]byte, error) {
 	builder := &strings.Builder{}
 	for user, pass := range secret.Data {
 		builder.WriteString(user)
@@ -58,9 +54,6 @@ func DumpSecretAuthMap(filename string, secret *api.Secret) ([]byte, error) {
 
 	secretVal := []byte(builder.String())
 
-	if err := WriteSecretFile(filename, secretVal); err != nil {
-		return nil, err
-	}
 	return secretVal, nil
 }
 

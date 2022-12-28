@@ -256,13 +256,13 @@ func TestDumpSecretAuthFile(t *testing.T) {
 	sd := s.Data
 	s.Data = nil
 
-	_, err := authfile.DumpSecretAuthFile(tmpfile, s)
+	_, err := authfile.DumpSecretAuthFile(s)
 	if err == nil {
 		t.Errorf("Expected error with secret without auth")
 	}
 
 	s.Data = sd
-	val, err := authfile.DumpSecretAuthFile(tmpfile, s)
+	val, err := authfile.DumpSecretAuthFile(s)
 	if err != nil {
 		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
 	}
@@ -278,7 +278,7 @@ func TestDumpSecretAuthMap(t *testing.T) {
 	tmpfile, dir, s := dummySecretContent(t, GetSecretMap)
 	defer os.RemoveAll(dir)
 
-	val, err := authfile.DumpSecretAuthMap(tmpfile, s)
+	val, err := authfile.DumpSecretAuthMap(s)
 	if err != nil {
 		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
 	}

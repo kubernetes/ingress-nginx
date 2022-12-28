@@ -77,18 +77,9 @@ func (s *ConfigurationServer) WatchConfigurations(backend *ingress.BackendName, 
 		return fmt.Errorf("received request from invalid backend: %s/%s, refusing", backend.Namespace, backend.Name)
 	}
 
-	backendName := fmt.Sprintf("%s/%s", backend.Namespace, backend.Name)
+	clientConfigs := s.n.GRPCSubscribers.Subscribe()
 
-	s.n.GRPCSubscribers.Lock.Lock()
-	s.n.GRPCSubscribers.Clients[backendName] = make(chan int)
-	s.n.GRPCSubscribers.Lock.Unlock()
-
-	defer func() {
-		s.n.GRPCSubscribers.Lock.Lock()
-		close(s.n.GRPCSubscribers.Clients[backendName])
-		delete(s.n.GRPCSubscribers.Clients, backendName)
-		s.n.GRPCSubscribers.Lock.Unlock()
-	}()
+	defer s.n.GRPCSubscribers.Evict(clientConfigs)
 
 	// We send the configuration first time so the dataplane can start its sync
 	if err := s.sendFullConfiguration(stream); err != nil {
@@ -96,7 +87,11 @@ func (s *ConfigurationServer) WatchConfigurations(backend *ingress.BackendName, 
 		return err
 	}
 	for {
-		syncType := <-s.n.GRPCSubscribers.Clients[backendName]
+		syncCh := <-clientConfigs
+		syncType, ok := syncCh.(uint)
+		if !ok {
+			continue
+		}
 		var err error
 		if err = stream.Context().Err(); err != nil {
 			return fmt.Errorf("context error: %s", err)

@@ -67,6 +67,8 @@ import (
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 
 	klog "k8s.io/klog/v2"
+
+	pubsub "github.com/moby/pubsub"
 )
 
 const (
@@ -115,10 +117,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 		Proxy: &tcpproxy.TCPProxy{},
 
-		GRPCSubscribers: Subscribers{
-			Lock:    sync.RWMutex{},
-			Clients: make(map[string]chan int),
-		},
+		GRPCSubscribers: pubsub.NewPublisher(10*time.Second, 1024),
 
 		metricCollector: mc,
 
@@ -248,7 +247,7 @@ type NGINXController struct {
 	updateCh *channels.RingChannel
 
 	// Subscribers are the subscribers of gRPC Endpoint
-	GRPCSubscribers Subscribers
+	GRPCSubscribers *pubsub.Publisher
 
 	// ngxErrCh is used to detect errors with the NGINX processes
 	ngxErrCh chan error
