@@ -85,9 +85,10 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 	}
 
 	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:778ac6d1188c8de8ecabeddd3c37b72c8adc8c712bad2bd7a81fb23a3514934c", 80, int32(options.replicas),
-		nil,
+		nil, nil, nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
+		true,
 	)
 
 	f.EnsureDeployment(deployment)
@@ -183,7 +184,7 @@ func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) 
 	assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
 
 	deployment := newDeployment(name, f.Namespace, f.GetNginxBaseImage(), 80, 1,
-		nil,
+		nil, nil, nil,
 		[]corev1.VolumeMount{
 			{
 				Name:      name,
@@ -203,7 +204,7 @@ func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) 
 					},
 				},
 			},
-		},
+		}, true,
 	)
 
 	f.EnsureDeployment(deployment)
@@ -334,8 +335,8 @@ func (f *Framework) NewGRPCBinDeployment() {
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
-func newDeployment(name, namespace, image string, port int32, replicas int32, command []string,
-	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume) *appsv1.Deployment {
+func newDeployment(name, namespace, image string, port int32, replicas int32, command []string, args []string, env []corev1.EnvVar,
+	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool) *appsv1.Deployment {
 	probe := &corev1.Probe{
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       1,
@@ -381,9 +382,7 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 									ContainerPort: port,
 								},
 							},
-							ReadinessProbe: probe,
-							LivenessProbe:  probe,
-							VolumeMounts:   volumeMounts,
+							VolumeMounts: volumeMounts,
 						},
 					},
 					Volumes: volumes,
@@ -392,10 +391,20 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 		},
 	}
 
+	if setProbe {
+		d.Spec.Template.Spec.Containers[0].ReadinessProbe = probe
+		d.Spec.Template.Spec.Containers[0].LivenessProbe = probe
+	}
 	if len(command) > 0 {
 		d.Spec.Template.Spec.Containers[0].Command = command
 	}
 
+	if len(args) > 0 {
+		d.Spec.Template.Spec.Containers[0].Args = args
+	}
+	if len(env) > 0 {
+		d.Spec.Template.Spec.Containers[0].Env = env
+	}
 	return d
 }
 
@@ -404,9 +413,13 @@ func (f *Framework) NewHttpbinDeployment() {
 	f.NewDeployment(HTTPBinService, "registry.k8s.io/ingress-nginx/e2e-test-httpbin@sha256:c6372ef57a775b95f18e19d4c735a9819f2e7bb4641e5e3f27287d831dfeb7e8", 80, 1)
 }
 
-// NewDeployment creates a new deployment in a particular namespace.
 func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {
-	deployment := newDeployment(name, f.Namespace, image, port, replicas, nil, nil, nil)
+	f.NewDeploymentWithOpts(name, image, port, replicas, nil, nil, nil, nil, nil, true)
+}
+
+// NewDeployment creates a new deployment in a particular namespace.
+func (f *Framework) NewDeploymentWithOpts(name, image string, port int32, replicas int32, command []string, args []string, env []corev1.EnvVar, volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool) {
+	deployment := newDeployment(name, f.Namespace, image, port, replicas, command, args, env, volumeMounts, volumes, setProbe)
 
 	f.EnsureDeployment(deployment)
 
