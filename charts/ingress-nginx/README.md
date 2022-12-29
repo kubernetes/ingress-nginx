@@ -323,7 +323,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.extraModules | list | `[]` | Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module |
 | controller.extraVolumeMounts | list | `[]` | Additional volumeMounts to the controller main container. |
 | controller.extraVolumes | list | `[]` | Additional volumes to the controller pod. |
-| controller.grpcPort | int | `10000` | Enables grpc-port and alpha feature "controlplane" if different than -1 |
+| controller.grpcPort | int | `10000` | Enables grpc-port and alpha feature "controlplane" if greater than 0 |
 | controller.healthCheckHost | string | `""` | Address to bind the health check endpoint. It is better to set this option to the internal node address if the ingress nginx controller is running in the `hostNetwork: true` mode. |
 | controller.healthCheckPath | string | `"/healthz"` | Path of the health check endpoint. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. |
 | controller.hostNetwork | bool | `false` | Required for use with CNI based kubernetes installations (such as ones set up by kubeadm), since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920 is merged |
@@ -453,22 +453,6 @@ Kubernetes: `>=1.20.0-0`
 | controller.udp.configMapNamespace | string | `""` | Allows customization of the udp-services-configmap; defaults to $(POD_NAMESPACE) |
 | controller.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet # |
 | controller.watchIngressWithoutClass | bool | `false` | Process Ingress objects without ingressClass annotation/ingressClassName field Overrides value for --watch-ingress-without-class flag of the controller binary Defaults to false |
-| dataplane.admissionWebhooks.annotations | object | `{}` |  |
-| dataplane.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
-| dataplane.admissionWebhooks.enabled | bool | `true` |  |
-| dataplane.admissionWebhooks.extraEnvs | list | `[]` | Additional environment variables to set |
-| dataplane.admissionWebhooks.failurePolicy | string | `"Fail"` | Admission Webhook failure policy to use |
-| dataplane.admissionWebhooks.key | string | `"/usr/local/certificates/key"` |  |
-| dataplane.admissionWebhooks.labels | object | `{}` | Labels to be added to admission webhooks |
-| dataplane.admissionWebhooks.namespaceSelector | object | `{}` |  |
-| dataplane.admissionWebhooks.networkPolicyEnabled | bool | `false` |  |
-| dataplane.admissionWebhooks.objectSelector | object | `{}` |  |
-| dataplane.admissionWebhooks.port | int | `8443` |  |
-| dataplane.admissionWebhooks.service.annotations | object | `{}` |  |
-| dataplane.admissionWebhooks.service.externalIPs | list | `[]` |  |
-| dataplane.admissionWebhooks.service.loadBalancerSourceRanges | list | `[]` |  |
-| dataplane.admissionWebhooks.service.servicePort | int | `443` |  |
-| dataplane.admissionWebhooks.service.type | string | `"ClusterIP"` |  |
 | dataplane.affinity | object | `{}` | Affinity and anti-affinity rules for server scheduling to nodes # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity # |
 | dataplane.annotations | object | `{}` | Annotations to be added to the controller Deployment or DaemonSet # |
 | dataplane.autoscaling.behavior | object | `{}` |  |
@@ -506,16 +490,6 @@ Kubernetes: `>=1.20.0-0`
 | dataplane.image.registry | string | `"registry.k8s.io"` |  |
 | dataplane.image.runAsUser | int | `101` |  |
 | dataplane.image.tag | string | `"v1.3.1"` |  |
-| dataplane.keda.apiVersion | string | `"keda.sh/v1alpha1"` |  |
-| dataplane.keda.behavior | object | `{}` |  |
-| dataplane.keda.cooldownPeriod | int | `300` |  |
-| dataplane.keda.enabled | bool | `false` |  |
-| dataplane.keda.maxReplicas | int | `11` |  |
-| dataplane.keda.minReplicas | int | `1` |  |
-| dataplane.keda.pollingInterval | int | `30` |  |
-| dataplane.keda.restoreToOriginalReplicaCount | bool | `false` |  |
-| dataplane.keda.scaledObject.annotations | object | `{}` |  |
-| dataplane.keda.triggers | list | `[]` |  |
 | dataplane.kind | string | `"Deployment"` | Use a `DaemonSet` or `Deployment` |
 | dataplane.labels | object | `{}` | Labels to be added to the controller Deployment or DaemonSet and other resources that do not have option to specify labels # |
 | dataplane.minAvailable | int | `1` |  |
@@ -528,9 +502,6 @@ Kubernetes: `>=1.20.0-0`
 | dataplane.replicaCount | int | `1` |  |
 | dataplane.resources.requests.cpu | string | `"100m"` |  |
 | dataplane.resources.requests.memory | string | `"90Mi"` |  |
-| dataplane.scope.enabled | bool | `false` | Enable 'scope' or not |
-| dataplane.scope.namespace | string | `""` | Namespace to limit the controller to; defaults to $(POD_NAMESPACE) |
-| dataplane.scope.namespaceSelector | string | `""` | When scope.enabled == false, instead of watching all namespaces, we watching namespaces whose labels only match with namespaceSelector. Format like foo=bar. Defaults to empty, means watching all namespaces. |
 | dataplane.service.annotations | object | `{}` |  |
 | dataplane.service.appProtocol | bool | `true` | If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http It allows choosing the protocol for each backend specified in the Kubernetes service. See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244 Will be ignored for Kubernetes versions older than 1.20 # |
 | dataplane.service.enableHttp | bool | `true` |  |

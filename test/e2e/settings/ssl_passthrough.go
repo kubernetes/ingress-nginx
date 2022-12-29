@@ -54,6 +54,9 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 
 	ginkgo.Describe("With enable-ssl-passthrough enabled", func() {
 		ginkgo.It("should enable ssl-passthrough-proxy-port on a different port", func() {
+			if framework.Dataplane {
+				ginkgo.Skip("skipping on dataplane") // TODO: will be implemented on DP on a followup
+			}
 
 			err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
@@ -77,6 +80,10 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 		})
 
 		ginkgo.It("should pass unknown traffic to default backend and handle known traffic", func() {
+
+			if framework.Dataplane {
+				ginkgo.Skip("skipping on dataplane") // TODO: will be implemented on DP on a followup
+			}
 
 			host := "testpassthrough.com"
 			echoName := "echopass"

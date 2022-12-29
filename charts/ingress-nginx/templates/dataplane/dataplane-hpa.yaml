@@ -1,0 +1,52 @@
+{{- if and .Values.dataplane.autoscaling.enabled (or (eq .Values.dataplane.kind "Deployment") (eq .Values.dataplane.kind "Both")) -}}
+{{- if not .Values.dataplane.keda.enabled }}
+
+apiVersion: {{ .Values.dataplane.autoscaling.apiVersion }}
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+  {{- with .Values.dataplane.autoscaling.annotations }}
+  {{- toYaml . | trimSuffix "\n" | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dataplane
+    {{- with .Values.dataplane.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "ingress-nginx.dataplane.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "ingress-nginx.dataplane.fullname" . }}
+  minReplicas: {{ .Values.dataplane.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.dataplane.autoscaling.maxReplicas }}
+  metrics:
+  {{- with .Values.dataplane.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
+  {{- end }}
+  {{- with .Values.dataplane.autoscaling.targetCPUUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
+  {{- end }}
+  {{- with .Values.dataplane.autoscalingTemplate }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- with .Values.dataplane.autoscaling.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+

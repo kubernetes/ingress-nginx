@@ -134,7 +134,7 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.dataplane.customTemplate.configMapName .Values.dataplane.extraVolumeMounts .Values.dataplane.admissionWebhooks.enabled .Values.dataplane.extraModules) }}
+        {{- if (or .Values.dataplane.customTemplate.configMapName .Values.dataplane.extraVolumeMounts .Values.dataplane.extraModules) }}
           volumeMounts:
           {{- if .Values.dataplane.extraModules }}
             - name: modules
@@ -188,7 +188,7 @@ spec:
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.dataplane.terminationGracePeriodSeconds }}
-    {{- if (or .Values.dataplane.customTemplate.configMapName .Values.dataplane.extraVolumeMounts .Values.dataplane.admissionWebhooks.enabled .Values.dataplane.extraVolumes .Values.dataplane.extraModules) }}
+    {{- if (or .Values.dataplane.customTemplate.configMapName .Values.dataplane.extraVolumeMounts .Values.dataplane.extraVolumes .Values.dataplane.extraModules) }}
       volumes:
       {{- if .Values.dataplane.extraModules }}
         - name: modules
@@ -201,11 +201,6 @@ spec:
             items:
             - key: {{ .Values.dataplane.customTemplate.configMapKey }}
               path: nginx.tmpl
-      {{- end }}
-      {{- if .Values.dataplane.admissionWebhooks.enabled }}
-        - name: webhook-cert
-          secret:
-            secretName: {{ include "ingress-nginx.fullname" . }}-admission
       {{- end }}
       {{- if .Values.dataplane.extraVolumes }}
         {{ toYaml .Values.dataplane.extraVolumes | nindent 8 }}
