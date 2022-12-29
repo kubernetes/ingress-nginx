@@ -3,8 +3,8 @@
 ### 1.5.2
 Images:
 
- * registry.k8s.io/controller:controller-v1.5.2@sha256:3870522ed937c9efb94bfa31a7eb16009831567a0d4cbe01846fc5486d622655
- * registry.k8s.io/controller-chroot:controller-v1.5.2@sha256:84613555694f2c59a8b2551126d226c9aa648544ebf0cde1e0df942f7dbce42b
+ * registry.k8s.io/ingress-nginx/controller:controller-v1.5.2@sha256:3870522ed937c9efb94bfa31a7eb16009831567a0d4cbe01846fc5486d622655
+ * registry.k8s.io/ingress-nginx/controller-chroot:controller-v1.5.2@sha256:84613555694f2c59a8b2551126d226c9aa648544ebf0cde1e0df942f7dbce42b
  
 ### All Changes:
 
