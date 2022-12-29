@@ -27,10 +27,12 @@ import (
 	"github.com/mitchellh/hashstructure"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	authfile "k8s.io/ingress-nginx/pkg/util/auth"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 	"k8s.io/ingress-nginx/pkg/util/maxmind"
@@ -109,8 +111,8 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 		}
 	}
 
-	certChange := utilingress.CheckAndWriteDeltaCertificates(cfg.PersistedCertificates, n.templateConfig.PersistedCertificates)
-	authChange := utilingress.CheckAndWriteAuthSecrets(cfg.Servers, n.templateConfig.Servers)
+	certChange := checkAndWriteDeltaCertificates(cfg, n.templateConfig)
+	authChange := checkAndWriteAuthSecrets(cfg, n.templateConfig)
 
 	if ticketChanges || authChange || certChange || configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
 		klog.InfoS("Configuration changes detected, backend reload required")
@@ -186,6 +188,130 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 
 	n.templateConfig = cfg
 
+}
+
+// TODO: move to a better place
+type certOperation struct {
+	cert      config.CertificateFile
+	operation CertOperationType
+}
+
+type CertOperationType string
+
+const (
+	certAdd    CertOperationType = "ADD"
+	certRemove CertOperationType = "REMOVE"
+)
+
+// TODO: UNIT TEST!!! And e2e tests!
+func checkAndWriteAuthSecrets(newtmpl *config.TemplateConfig, oldtmpl *config.TemplateConfig) bool {
+	var changed bool
+
+	tempAuthOld := make(map[string]auth.Config)
+	tempAuthNew := make(map[string]auth.Config)
+
+	// Get added auth secrets:
+	for _, v := range newtmpl.Servers {
+		for _, location := range v.Locations {
+			if location.BasicDigestAuth.FileSHA != "" {
+				tempAuthNew[location.BasicDigestAuth.File] = location.BasicDigestAuth
+			}
+		}
+	}
+
+	// Get old auth secrets:
+	for _, v := range oldtmpl.Servers {
+		for _, location := range v.Locations {
+			if location.BasicDigestAuth.FileSHA != "" {
+				tempAuthOld[location.BasicDigestAuth.File] = location.BasicDigestAuth
+			}
+		}
+	}
+
+	// Check for removed secrets/files.
+	for authFile := range tempAuthOld {
+		if _, ok := tempAuthNew[authFile]; !ok {
+			changed = true
+			if err := os.Remove(authFile); err != nil && !os.IsNotExist(err) {
+				klog.Warningf("failed removing old auth file %s: %s", authFile, err)
+				continue
+			}
+		}
+	}
+
+	// Check on newMap if the files already exists and SHA matches, otherwise create/update
+	for newAuthFile, newAuthConfig := range tempAuthNew {
+		// If the auth secret didn't existed or existed but is not equal, then rewrite
+		if oldAuthConfig, ok := tempAuthOld[newAuthFile]; !ok || oldAuthConfig.FileSHA != newAuthConfig.FileSHA {
+			changed = true
+			if err := authfile.WriteSecretFile(newAuthFile, newAuthConfig.SecretContent); err != nil {
+				klog.Warningf("failed adding/updating auth file %s: %s", newAuthFile, err)
+				continue
+			}
+		}
+	}
+
+	return changed
+}
+
+// TODO: UNIT TEST!!! And e2e tests!
+func checkAndWriteDeltaCertificates(newtmpl *config.TemplateConfig, oldtmpl *config.TemplateConfig) bool {
+	var changed bool
+
+	tempMap := make(map[string]certOperation)
+	// Get added certificates:
+	for k, v := range newtmpl.PersistedCertificates {
+		kold, ok := oldtmpl.PersistedCertificates[k]
+		// if non existent on the old one, add to the tempMap as a newCert
+		if !ok {
+			// format of added file will be +;Filename being ; a separator a + the create operation
+			tempMap[k] = certOperation{
+				operation: certAdd,
+				cert:      v,
+			}
+		} else {
+			// if existent in the old map, let's see if it changed checking the checksum
+			if v.Checksum != kold.Checksum {
+				tempMap[k] = certOperation{
+					operation: certAdd,
+					cert:      v,
+				}
+			}
+		}
+	}
+
+	// Now remove old certificates
+	for k := range oldtmpl.PersistedCertificates {
+		if _, ok := newtmpl.PersistedCertificates[k]; !ok {
+			// if NOK, add on the tempMap an operation to remove it
+			// removal does not need the bytes or the SHA
+			tempMap[k] = certOperation{
+				operation: certRemove,
+				cert:      config.CertificateFile{},
+			}
+		}
+	}
+
+	// If so, let's do the required operations and mark the reload as required
+	if len(tempMap) > 0 {
+		changed = true
+		for k, v := range tempMap {
+			if v.operation == certRemove {
+				klog.Infof("removing cert %s", k)
+				if err := os.Remove(k); err != nil {
+					klog.Warningf("failed removing old certificate %s: %s", k, err)
+				}
+				continue
+			}
+			klog.Infof("adding/updating cert %s", k)
+			err := os.WriteFile(k, []byte(v.cert.Content), file.ReadWriteByUser)
+			if err != nil {
+				klog.Errorf("could not create PEM certificate file %v: %v", k, err)
+				continue
+			}
+		}
+	}
+	return changed
 }
 
 // TODO: Add unit test

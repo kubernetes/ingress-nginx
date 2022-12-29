@@ -179,9 +179,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	})
 
 	pcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
-	authChange := utilingress.CheckAndWriteAuthSecrets(pcfg.Servers, n.runningConfig.Servers)
 
-	if authChange || !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
+	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
 		err := n.OnUpdate(*pcfg)
@@ -240,12 +239,10 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	cfg := n.store.GetBackendConfiguration()
 	tmplConfig, err := n.renderTemplate(cfg, *pcfg)
 	if err != nil {
-		klog.Errorf("Unexpected failure rendering NGINX conf for gRPC:\n%v", err)
+		klog.Errorf("Unexpected failure rendering  NGINX conf for gRPC:\n%v", err)
 		return err
 	}
 
-	// Below function is used to fetch ProxySSL secrets. It is used by the CP/DP feature, so the map of certificates
-	// can be sent to dataplane.
 	getProxySSLCert := func(persistedMap map[string]ngx_config.CertificateFile, proxySSL proxyssl.Config) (bool, error) {
 		if len(proxySSL.CAFileContent) > 0 {
 			persistedMap[proxySSL.CAFileName] = ngx_config.CertificateFile{
@@ -275,9 +272,6 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return false, nil
 	}
 
-	// Here we assemble all the required persisted certificates (those that need to be present on disk) and create
-	// the map that will be sent to dataplane.
-	// Mid-term we need a way to send from CP only the deltas and operations
 	persistedCertMap := make(map[string]ngx_config.CertificateFile)
 	for s, server := range tmplConfig.Servers {
 		if len(server.CertificateAuth.CAFileContent) > 0 {
@@ -314,14 +308,17 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		}
 	}
 	tmplConfig.PersistedCertificates = persistedCertMap
+	// TODO (rikatz): So, while migrating / splitting I figured out that the fields are actually used...ooops
+	//utilingress.ClearTemplateContent(&tmplConfig)
 
 	tmplConfig.GeneratedTime = time.Now().UnixNano()
 	n.templateConfig = &tmplConfig
-
-	if n.GRPCSubscribers != nil {
-		klog.Warningf("Notifying %d clients of full configuration", n.GRPCSubscribers.Len())
-		n.GRPCSubscribers.Publish(FullConfiguration)
+	n.GRPCSubscribers.Lock.Lock()
+	for k, ch := range n.GRPCSubscribers.Clients {
+		klog.Warningf("Notifying client %s of full configuration", k)
+		ch <- FullConfiguration
 	}
+	n.GRPCSubscribers.Lock.Unlock()
 
 	ri := utilingress.GetRemovedIngresses(n.runningConfig, pcfg)
 	re := utilingress.GetRemovedHosts(n.runningConfig, pcfg)

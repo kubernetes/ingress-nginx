@@ -130,7 +130,8 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	if sns == "" {
 		sns = ing.Namespace
 	}
-
+	// TODO: Raise this as a breaking change, we don't allow secrets on different
+	// namespaces anymore!
 	if sns != ing.Namespace {
 		return nil, ing_errors.LocationDenied{
 			Reason: fmt.Errorf("secrets on different namespaces are not allowed for auth"),
@@ -152,14 +153,14 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	var secretVal []byte
 	switch secretType {
 	case fileAuth:
-		secretVal, err = authfile.DumpSecretAuthFile(secret)
+		secretVal, err = authfile.DumpSecretAuthFile(passFilename, secret)
 		if err != nil {
 			return nil, ing_errors.LocationDenied{
 				Reason: err,
 			}
 		}
 	case mapAuth:
-		secretVal, err = authfile.DumpSecretAuthMap(secret)
+		secretVal, err = authfile.DumpSecretAuthMap(passFilename, secret)
 		if err != nil {
 			return nil, ing_errors.LocationDenied{
 				Reason: err,

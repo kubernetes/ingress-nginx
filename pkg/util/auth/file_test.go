@@ -43,6 +43,17 @@ func TestDumpSecretAuthFile(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:     "should reject invalid path",
+			filename: "/somethinginvalid/path",
+			secret: &api.Secret{
+				Data: map[string][]byte{
+					"auth": []byte("bla"),
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name:     "should accept secret",
 			filename: "/tmp/secret1",
 			secret: &api.Secret{
@@ -56,7 +67,7 @@ func TestDumpSecretAuthFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DumpSecretAuthFile(tt.secret)
+			got, err := DumpSecretAuthFile(tt.filename, tt.secret)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DumpSecretAuthFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -77,6 +88,17 @@ func TestDumpSecretAuthMap(t *testing.T) {
 		wantErr  bool
 	}{
 		{
+			name:     "should reject invalid path",
+			filename: "/somethinginvalid/path",
+			secret: &api.Secret{
+				Data: map[string][]byte{
+					"auth": []byte("bla"),
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name:     "should accept secret",
 			filename: "/tmp/secret1",
 			secret: &api.Secret{
@@ -91,7 +113,7 @@ func TestDumpSecretAuthMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DumpSecretAuthMap(tt.secret)
+			got, err := DumpSecretAuthMap(tt.filename, tt.secret)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DumpSecretAuthMap() error = %v, wantErr %v", err, tt.wantErr)
 				return
