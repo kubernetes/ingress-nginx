@@ -91,13 +91,13 @@ const (
 
 // CheckAndWriteDeltaCertificates takes two maps of certificateFiles, add/remove those on Filesystem and return if somethins was changes
 // TODO: UNIT TEST!!! And e2e tests!
-func CheckAndWriteDeltaCertificates(oldCerts map[string]config.CertificateFile, newCerts map[string]config.CertificateFile) bool {
+func CheckAndWriteDeltaCertificates(newtmpl *config.TemplateConfig, oldtmpl *config.TemplateConfig) bool {
 	var changed bool
 
 	tempMap := make(map[string]certOperation)
 	// Get added certificates:
-	for k, v := range newCerts {
-		kold, ok := oldCerts[k]
+	for k, v := range newtmpl.PersistedCertificates {
+		kold, ok := oldtmpl.PersistedCertificates[k]
 		// if non existent on the old one, add to the tempMap as a newCert
 		if !ok {
 			// format of added file will be +;Filename being ; a separator a + the create operation
@@ -117,8 +117,8 @@ func CheckAndWriteDeltaCertificates(oldCerts map[string]config.CertificateFile, 
 	}
 
 	// Now remove old certificates
-	for k := range oldCerts {
-		if _, ok := newCerts[k]; !ok {
+	for k := range oldtmpl.PersistedCertificates {
+		if _, ok := newtmpl.PersistedCertificates[k]; !ok {
 			// if NOK, add on the tempMap an operation to remove it
 			// removal does not need the bytes or the SHA
 			tempMap[k] = certOperation{

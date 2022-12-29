@@ -33,6 +33,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/klog/v2"
 
+	_ "google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 )
 

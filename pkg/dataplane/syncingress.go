@@ -109,7 +109,7 @@ func (n *NGINXConfigurer) fullReconfiguration(cfg *config.TemplateConfig) {
 		}
 	}
 
-	certChange := utilingress.CheckAndWriteDeltaCertificates(cfg.PersistedCertificates, n.templateConfig.PersistedCertificates)
+	certChange := utilingress.CheckAndWriteDeltaCertificates(cfg, n.templateConfig)
 	authChange := utilingress.CheckAndWriteAuthSecrets(cfg.Servers, n.templateConfig.Servers)
 
 	if ticketChanges || authChange || certChange || configMapChange || !utilingress.IsDynamicConfigurationEnough(newcfg, oldcfg) {
