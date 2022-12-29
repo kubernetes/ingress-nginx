@@ -313,11 +313,12 @@ func (n *NGINXController) Start() {
 		},
 	})
 
-	/*if n.cfg.EnableSSLPassthrough {
-		n.setupSSLProxy()
-	}*/
-
 	if n.gRPCServer == nil {
+
+		if n.cfg.EnableSSLPassthrough {
+			n.setupSSLProxy()
+		}
+
 		klog.InfoS("Starting NGINX process")
 		cmd := n.command.ExecCommand()
 
@@ -631,7 +632,7 @@ func (n *NGINXController) renderTemplate(cfg ngx_config.Configuration, ingressCf
 		DefaultSSLCertificate:    n.getDefaultSSLCertificate(),
 		ProxySetHeaders:          setHeaders,
 		AddHeaders:               addHeaders,
-		BacklogSize:              ingressruntime.SysctlSomaxconn(), // TODO: must be calculated in dataplane. Keeping for compatibility right now
+		BacklogSize:              ingressruntime.SysctlSomaxconn(), // This is ignored by dataplane and calculated directly
 		Backends:                 ingressCfg.Backends,
 		PassthroughBackends:      ingressCfg.PassthroughBackends,
 		Servers:                  ingressCfg.Servers,

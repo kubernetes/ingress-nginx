@@ -37,13 +37,10 @@ import (
 )
 
 /* TODO for this client:
-- Implement LB: https://github.com/grpc/grpc-go/blob/master/examples/features/load_balancing/client/main.go
 - Allow usage of xDS: https://github.com/grpc/grpc-go/blob/master/examples/features/xds/server/main.go
 - Check keepalive usage https://github.com/grpc/grpc-go/tree/master/examples/features/keepalive
 - Allow usage of gzip or snappy: https://github.com/grpc/grpc-go/tree/master/examples/features/compression
 - Authenticate using mTLS: https://github.com/grpc/grpc-go/tree/master/examples/features/encryption/mTLS
-- Implement health service: https://github.com/grpc/grpc-go/tree/master/examples/features/health
-- Implement retry config: https://github.com/grpc/grpc-go/tree/master/examples/features/retry
 */
 
 // Config defines the gRPC configuration to be used
@@ -55,9 +52,7 @@ type Config struct {
 }
 
 type GRPCDialOptions struct {
-	Address     string
-	Keepalive   bool   // TODO: Not used yet
-	RetryPolicy string // TODO: Not used yet, will be a struct
+	Address string
 }
 
 // Client defines the client structure
@@ -196,5 +191,4 @@ func (c *Client) Start() {
 
 	go c.EventService()
 	go c.ConfigurationService()
-	// go c.HealthService() // TODO: This helps, or make it worse?
 }

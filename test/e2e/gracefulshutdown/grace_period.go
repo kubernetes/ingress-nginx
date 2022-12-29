@@ -33,8 +33,10 @@ var _ = framework.IngressNginxDescribe("[Shutdown] Grace period shutdown", func(
 	f := framework.NewDefaultFramework("shutdown-grace-period")
 
 	ginkgo.It("/healthz should return status code 500 during shutdown grace period", func() {
-		ginkgo.Skip("Skipping to test the rest of dp merge") // TODO: Fix this on CPDP
 
+		if framework.Dataplane {
+			ginkgo.Skip("Skipping to test the rest of dp merge") // TODO: Fix this on CPDP
+		}
 		f.NewSlowEchoDeployment()
 
 		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {

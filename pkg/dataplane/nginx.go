@@ -53,8 +53,7 @@ func NewNGINXConfigurer(ingressconfig *Configuration, mc metric.Collector) *NGIN
 	// TODO: Get this from configuration @Volatus is checking this
 	grpcconf := grpcclient.Config{
 		Options: grpcclient.GRPCDialOptions{
-			Address:   ingressconfig.GRPCAddress,
-			Keepalive: false,
+			Address: ingressconfig.GRPCAddress,
 		},
 		ErrorCh:   errCh,
 		GRPCErrCh: grpcErrCh,
