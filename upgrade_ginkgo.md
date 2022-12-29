@@ -1,6 +1,6 @@
 # GINKGO UPGRADE
 
-#### Bumping ginkgo in the project requires following PRs.
+#### Bumping ginkgo in the project requires four PRs.
 
 ## 1. Dependabot PR   
 
@@ -65,7 +65,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - Create a branch in your fork, named as the issue number for this release
 
-- In the related branch, of your fork, edit the file /registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml.
+- In the related branch, of your fork, edit the file k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml.
 
 - For making it easier, you can edit your branch directly in the browser. But be careful about making any mistake.
 
@@ -75,7 +75,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 ### c. Create PR
 
-- Open pull request to promote the new controller image.
+- Open pull request to promote the new e2e-test-runner image.
 
 ### d. Merge
 
@@ -84,10 +84,47 @@ Promoting the images basically means that images, that were pushed to staging co
 - Proceed only after cloud-build is successful in building a new e2e-test-runner image.
 
 
-[//]: # (### d. Change-testrunner-image-sha PR)
+## 4. Change testrunner-image-sha PR
 
-[//]: # ()
-[//]: # (- In this case look for the sha of the test-runner image. Although new image is built, it needs to be promoted and then the sha in the test code needs to change to new image's sha.  Only then ginkgo updated version from the new test-runner becomes available for use during e2e tests)
+### a. Get the sha
 
-[//]: # (- Look at the RELEASE.md for the link to the GCP staging repo to check sha of new image)
+- Make sure to get the tag and sha of the promoted image from the step before, either from cloudbuild or from [here](https://console.cloud.google.com/gcr/images/k8s-artifacts-prod/us/ingress-nginx/e2e-test-runner).
+
+### a. Make sure your git workspace is ready
+
+- Get your git workspace ready
+
+  - If not using a pre-existing fork, then Fork the repo kubernetes/ingress-nginx
+
+  - Clone (to laptop or wherever)
+
+  - Add upstream
+
+  - Set upstream url to no_push
+
+  - Checkout & switch to branch, named as per related new-release-issue-number
+
+  - If already forked, and upstream already added, then `git fetch --all` and `git rebase upstream/main` (not  origin)
+
+  - Checkout a branch in your fork's clone
+
+  - Perform any other diligence as needed
+
+- Prefer to edit only and only in your branch, in your Fork
+
+### b. Change testrunner-image-sha
+
+- You need update the testrunner-image-sha in the following files :
+  
+  - [run-in-docker.sh](https://github.com/kubernetes/ingress-nginx/blob/main/build/run-in-docker.sh#L41)
+  - [Makefile](https://github.com/kubernetes/ingress-nginx/blob/main/test/e2e-image/Makefile#L3)
+
+### c. Create PR
+
+- Look at this PR for how it was done before [example PR](https://github.com/kubernetes/ingress-nginx/pull/9444)
+- Create a PR
+
+### d. Merge
+
+- Finally merge the PR.
 

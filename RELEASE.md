@@ -109,7 +109,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - Create a branch in your fork, named as the issue number for this release
 
-- In the related branch, of your fork, edit the file /registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml.
+- In the related branch, of your fork, edit the file k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml.
 
 - For making it easier, you can edit your branch directly in the browser. But be careful about making any mistake.
 
