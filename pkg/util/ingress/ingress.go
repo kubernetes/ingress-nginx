@@ -32,7 +32,7 @@ import (
 
 const (
 	alphaNumericChars = `\-\.\_\~a-zA-Z0-9/`
-	regexEnabledChars = `\^\$\[\]\(\)\{\}\*\+`
+	regexEnabledChars = `\^\$\[\]\(\)\{\}\*\+\?\|`
 )
 
 var (
@@ -251,7 +251,8 @@ func BuildRedirects(servers []*ingress.Server) []*redirect {
 // It will behave differently if regex is enabled or not
 func IsSafePath(copyIng *networkingv1.Ingress, path string) bool {
 	isRegex, _ := parser.GetBoolAnnotation("use-regex", copyIng)
-	if isRegex {
+	isRewrite, _ := parser.GetBoolAnnotation("rewrite-target", copyIng)
+	if isRegex || isRewrite {
 		return pathRegexEnabled(path)
 	}
 	return pathAlphaNumeric(path)

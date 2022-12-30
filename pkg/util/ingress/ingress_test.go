@@ -195,6 +195,18 @@ func TestIsSafePath(t *testing.T) {
 			path:    "/foo/bar/(.+)",
 		},
 		{
+			name:    "should accept another regex path when regex is enabled",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(true),
+			path:    "/v1/?(.*)",
+		},
+		{
+			name:    "should accept more regex path when regex is enabled",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(true),
+			path:    "/something(/|$)(.*)",
+		},
+		{
 			name:    "should reject regex path when regex is enabled but the path is invalid",
 			want:    false,
 			copyIng: generateDumbIngressforPathTest(true),
