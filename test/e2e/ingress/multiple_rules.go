@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("single ingress - multiple hosts", func() {
+var _ = framework.IngressNginxDescribe("[Ingress] single ingress - multiple hosts", func() {
 	f := framework.NewDefaultFramework("simh")
 	pathprefix := networking.PathTypePrefix
 	ginkgo.BeforeEach(func() {

@@ -77,7 +77,7 @@ controller:
     type: NodePort
   electionID: ingress-controller-leader
   ingressClassResource:
-    # We will create and remove each IC/ClusterRole/ClusterRoleBinding per test so there's no conflict
+    # We will create and remove each IC/ClusterRole/ClusterRoleBinding per test so disable the one created by the chart to avoid conflicts
     enabled: false
   extraArgs:
     tcp-services-configmap: $NAMESPACE/tcp-services
