@@ -30,7 +30,8 @@ Do not try to edit it manually.
 
 "
 
-for FILE in $(find $DIR/test/e2e -name "*.go");do
+find_test_files_cmd="find ${DIR}/test/e2e -path ${DIR}/test/e2e/framework -prune -o -name \"*\.go\" ! -wholename \"${DIR}/test/e2e/e2e*\.go\" -print"
+for FILE in $(eval $find_test_files_cmd); do
     # describe definition
     DESCRIBE=$(cat $FILE | grep -n -oP 'Describe.*')
     # line number
