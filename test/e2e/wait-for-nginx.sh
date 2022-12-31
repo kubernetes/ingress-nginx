@@ -48,9 +48,8 @@ metadata:
 EOF
 
 OTEL_MODULE=$(cat <<EOF
-  extraModules:
-    - name: opentelemetry
-      image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7
+  opentelemetry:
+    enabled: true
 EOF
 )
 
@@ -111,7 +110,6 @@ controller:
     - name: coredump
       hostPath:
         path: /tmp/coredump
-
 
 ${OTEL_MODULE}
 
