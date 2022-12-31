@@ -263,6 +263,10 @@ type Configuration struct {
 	// Default: 4 8k
 	LargeClientHeaderBuffers string `json:"large-client-header-buffers"`
 
+	// Disable all escaping
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	LogFormatEscapeNone bool `json:"log-format-escape-none,omitempty"`
+
 	// Enable json escaping
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
 	LogFormatEscapeJSON bool `json:"log-format-escape-json,omitempty"`

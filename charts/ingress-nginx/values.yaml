@@ -23,9 +23,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.3.1"
-    digest: sha256:54f7fe2c6c5a9db9a0ebf1131797109bb7a4d91f56b9b362bde2abd237dd1974
-    digestChroot: sha256:a8466b19c621bd550b1645e27a004a5cc85009c858a9ab19490216735ac432b1
+    tag: "v1.5.1"
+    digest: sha256:4ba73c697770664c1e00e9f968de14e08f606ff961c76e5d7033a4a9c593c629
+    digestChroot: sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529bad0d178fb36147345
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -99,8 +99,8 @@ controller:
       # -- 'hostPort' https port
       https: 443
 
-  # -- Election ID to use for status update
-  electionID: ingress-controller-leader
+  # -- Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader'
+  electionID: ""
 
   ## This section refers to the creation of the IngressClass resource
   ## IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
@@ -345,7 +345,10 @@ controller:
 
   replicaCount: 1
 
+  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
   minAvailable: 1
+  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
+  # maxUnavailable: 1
 
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
   ## ref: https://github.com/kubernetes/ingress-nginx/issues/4735#issuecomment-551204903
@@ -361,7 +364,9 @@ controller:
 
   # Mutually exclusive with keda autoscaling
   autoscaling:
+    apiVersion: autoscaling/v2
     enabled: false
+    annotations: {}
     minReplicas: 1
     maxReplicas: 11
     targetCPUUtilizationPercentage: 50
@@ -369,7 +374,7 @@ controller:
     behavior: {}
       # scaleDown:
       #   stabilizationWindowSeconds: 300
-      #  policies:
+      #   policies:
       #   - type: Pods
       #     value: 1
       #     periodSeconds: 180
@@ -577,14 +582,20 @@ controller:
   #   image: busybox
   #   command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
 
+  # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
   extraModules: []
-  ## Modules, which are mounted into the core nginx image
-  # - name: opentelemetry
-  #   image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
+  #   containerSecurityContext:
+  #     allowPrivilegeEscalation: false
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
   # mounted volume.
+
+  opentelemetry:
+    enabled: false
+    image: registry.k8s.io/ingress-nginx/opentelemetry:v20221114-controller-v1.5.1-6-ga66ee73c5@sha256:41076fd9fb4255677c1a3da1ac3fc41477f06eba3c7ebf37ffc8f734dad51d7c
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
 
   admissionWebhooks:
     annotations: {}
@@ -627,6 +638,8 @@ controller:
       type: ClusterIP
 
     createSecretJob:
+      securityContext:
+        allowPrivilegeEscalation: false
       resources: {}
         # limits:
         #   cpu: 10m
@@ -636,6 +649,8 @@ controller:
         #   memory: 20Mi
 
     patchWebhookJob:
+      securityContext:
+        allowPrivilegeEscalation: false
       resources: {}
 
     patch:
@@ -646,8 +661,8 @@ controller:
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v1.3.0
-        digest: sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+        tag: v20220916-gd32f8c343
+        digest: sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
@@ -663,9 +678,21 @@ controller:
         runAsUser: 2000
         fsGroup: 2000
 
+    # Use certmanager to generate webhook certs
+    certManager:
+      enabled: false
+      # self-signed root certificate
+      rootCert:
+        duration: ""  # default to be 5y
+      admissionCert:
+        duration: ""  # default to be 1y
+      # issuerRef:
+      #   name: "issuer"
+      #   kind: "ClusterIssuer"
 
   metrics:
     port: 10254
+    portName: metrics
     # if this port is changed, change healthz-port: in extraArgs: accordingly
     enabled: false
 

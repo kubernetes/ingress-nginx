@@ -19,6 +19,7 @@ package flags
 import (
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"time"
 
@@ -73,10 +74,10 @@ The class of an Ingress object is set using the field IngressClassName in Kubern
 referenced in an Ingress Object should be the same value specified here to make this object be watched.`)
 
 		watchWithoutClass = flags.Bool("watch-ingress-without-class", false,
-			`Define if Ingress Controller should also watch for Ingresses without an IngressClass or the annotation specified`)
+			`Define if Ingress Controller should also watch for Ingresses without an IngressClass or the annotation specified.`)
 
 		ingressClassByName = flags.Bool("ingress-class-by-name", false,
-			`Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class`)
+			`Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class.`)
 
 		configMap = flags.String("configmap", "",
 			`Name of the ConfigMap containing custom global configurations for the controller.`)
@@ -111,7 +112,7 @@ namespaces are watched if this parameter is left empty.`)
 			`Selector selects namespaces the controller watches for updates to Kubernetes objects.`)
 
 		profiling = flags.Bool("profiling", true,
-			`Enable profiling via web interface host:port/debug/pprof/`)
+			`Enable profiling via web interface host:port/debug/pprof/ .`)
 
 		defSSLCertificate = flags.String("default-ssl-certificate", "",
 			`Secret containing a SSL certificate to be used by the default HTTPS server (catch-all).
@@ -146,7 +147,7 @@ Requires the update-status parameter.`)
 			`Enable SSL Passthrough.`)
 
 		disableServiceExternalName = flags.Bool("disable-svc-external-name", false,
-			`Disable support for Services of type ExternalName`)
+			`Disable support for Services of type ExternalName.`)
 
 		annotationsPrefix = flags.String("annotations-prefix", parser.DefaultAnnotationsPrefix,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
@@ -164,16 +165,16 @@ extension for this to succeed.`)
 Requires the update-status parameter.`)
 
 		enableMetrics = flags.Bool("enable-metrics", true,
-			`Enables the collection of NGINX metrics`)
+			`Enables the collection of NGINX metrics.`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
-			`Export metrics per-host`)
+			`Export metrics per-host.`)
 		reportStatusClasses = flags.Bool("report-status-classes", false,
-			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics`)
+			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics.`)
 
-		timeBuckets         = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime")
-		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength")
-		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent")
-		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics")
+		timeBuckets         = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime.")
+		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength.")
+		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent.")
+		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics.")
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
@@ -184,7 +185,7 @@ Requires the update-status parameter.`)
 		healthzHost   = flags.String("healthz-host", "", "Address to bind the healthz endpoint.")
 
 		disableCatchAll = flags.Bool("disable-catch-all", false,
-			`Disable support for catch-all Ingresses`)
+			`Disable support for catch-all Ingresses.`)
 
 		validationWebhook = flags.String("validating-webhook", "",
 			`The address to start an admission controller on to validate incoming ingresses.
@@ -194,14 +195,15 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		validationWebhookKey = flags.String("validating-webhook-key", "",
 			`The path of the validating webhook key PEM.`)
 		disableFullValidationTest = flags.Bool("disable-full-test", false,
-			`Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default)`)
+			`Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default).`)
 
 		statusPort = flags.Int("status-port", 10246, `Port to use for the lua HTTP endpoint configuration.`)
 		streamPort = flags.Int("stream-port", 10247, "Port to use for the lua TCP/UDP endpoint configuration.")
 
-		internalLoggerAddress = flags.String("internal-logger-address", "127.0.0.1:11514", "Address to be used when binding internal syslogger")
+		internalLoggerAddress = flags.String("internal-logger-address", "127.0.0.1:11514", "Address to be used when binding internal syslogger.")
 
-		profilerPort = flags.Int("profiler-port", 10245, "Port to use for expose the ingress controller Go profiler when it is enabled.")
+		profilerPort    = flags.Int("profiler-port", 10245, "Port to use for expose the ingress controller Go profiler when it is enabled.")
+		profilerAddress = flags.IP("profiler-address", net.ParseIP("127.0.0.1"), "IP address used by the ingress controller to expose the Go Profiler when it is enabled.")
 
 		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
 
@@ -214,9 +216,9 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		dynamicConfigurationRetries = flags.Int("dynamic-configuration-retries", 15, "Number of times to retry failed dynamic configuration before failing to sync an ingress.")
 	)
 
-	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases`)
+	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
 	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
-https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases`)
+https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases .`)
 	flags.StringVar(&nginx.MaxmindEditionIDs, "maxmind-edition-ids", "GeoLite2-City,GeoLite2-ASN", `Maxmind edition ids to download GeoLite2 Databases.`)
 	flags.IntVar(&nginx.MaxmindRetriesCount, "maxmind-retries-count", 1, "Number of attempts to download the GeoIP DB.")
 	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
@@ -275,6 +277,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	nginx.StatusPort = *statusPort
 	nginx.StreamPort = *streamPort
 	nginx.ProfilerPort = *profilerPort
+	nginx.ProfilerAddress = profilerAddress.String()
 
 	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)

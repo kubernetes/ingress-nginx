@@ -1,10 +1,207 @@
 # Changelog
 
+All New change are in [Changelog](./changelog)
+
+### 1.5.1 
+
+* Upgrade NGINX to 1.21.6
+* Upgrade Golang 1.19.2
+* Fix Service Name length Bug [9245](https://github.com/kubernetes/ingress-nginx/pull/9245)
+* CVE fixes CVE-2022-32149, CVE-2022-27664, CVE-2022-1996
+
+Images:
+
+* registry.k8s.io/ingress-nginx/controller:v1.5.1@sha256:4ba73c697770664c1e00e9f968de14e08f606ff961c76e5d7033a4a9c593c629
+* registry.k8s.io/ingress-nginx/controller-chroot:v1.5.1@sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529bad0d178fb36147345
+
+### All Changes:
+
+* chore Fixed to Support Versions table by @yutachaos in https://github.com/kubernetes/ingress-nginx/pull/9117
+* Updated incorrect version number in the Installation Guide by @afro-coder in https://github.com/kubernetes/ingress-nginx/pull/9120
+* Updated the Developer guide with New Contributor information by @afro-coder in https://github.com/kubernetes/ingress-nginx/pull/9114
+* Remove deprecated net dependency by @rikatz in https://github.com/kubernetes/ingress-nginx/pull/9110
+* Fixed docs helm-docs version by @yutachaos in https://github.com/kubernetes/ingress-nginx/pull/9121
+* Fix CVE 2022 27664 by @strongjz in https://github.com/kubernetes/ingress-nginx/pull/9109
+* upgrade to golang 1.19.2 by @strongjz in https://github.com/kubernetes/ingress-nginx/pull/9124
+* fix e2e resource leak when ginkgo exit before clear resource by @loveRhythm1990 in https://github.com/kubernetes/ingress-nginx/pull/9103
+* fix: handle 401 and 403 by external auth by @johanneswuerbach in https://github.com/kubernetes/ingress-nginx/pull/9131
+* Move bowei to emeritus owner by @rikatz in https://github.com/kubernetes/ingress-nginx/pull/9150
+* fix null ports by @tombokombo in https://github.com/kubernetes/ingress-nginx/pull/9149
+* Documentation added for  implemented redirection in the proxy to ensure image pulling by @Sanghamitra-PERSONAL in https://github.com/kubernetes/ingress-nginx/pull/9098
+* updating runner with golang 1.19.2 by @strongjz in https://github.com/kubernetes/ingress-nginx/pull/9158
+* Add install command for OVHcloud by @scraly in https://github.com/kubernetes/ingress-nginx/pull/9171
+* GitHub Templates: Remove trailing whitespaces. by @Gacko in https://github.com/kubernetes/ingress-nginx/pull/9172
+* Update helm chart changelog to show that kubernetes v1.21.x is no longer supported by @cskinfill in https://github.com/kubernetes/ingress-nginx/pull/9147
+* Add section to troubleshooting docs for failure to listen on port by @jrhunger in https://github.com/kubernetes/ingress-nginx/pull/9185
+* Implement parseFloat for annotations by @kirs in https://github.com/kubernetes/ingress-nginx/pull/9195
+* fix typo in docs. by @guettli in https://github.com/kubernetes/ingress-nginx/pull/9167
+* add:(admission-webhooks) ability to set securityContext by @ybelMekk in https://github.com/kubernetes/ingress-nginx/pull/9186
+* Fix Markdown header level by @jaens in https://github.com/kubernetes/ingress-nginx/pull/9210
+* chore: bump NGINX version v1.21.4 by @tao12345666333 in https://github.com/kubernetes/ingress-nginx/pull/8889
+* chore: update NGINX to 1.21.6 by @tao12345666333 in https://github.com/kubernetes/ingress-nginx/pull/9231
+* fix svc long name by @tombokombo in https://github.com/kubernetes/ingress-nginx/pull/9245
+* update base image of nginx to 1.21.6 by @strongjz in https://github.com/kubernetes/ingress-nginx/pull/9257
+* Fix CVE-2022-32149 by @esigo in https://github.com/kubernetes/ingress-nginx/pull/9258
+* Fix CVE-2022-1996 by @esigo in https://github.com/kubernetes/ingress-nginx/pull/9244
+* Adding support for disabling liveness and readiness probes to the Helm chart by @njegosrailic in https://github.com/kubernetes/ingress-nginx/pull/9238
+* fix CVE-2022-27664 by @esigo in https://github.com/kubernetes/ingress-nginx/pull/9273
+* Add CVE-2022-27664 #9273 in latest release  by @strongjz in https://github.com/kubernetes/ingress-nginx/pull/9275
+
+### Dependencies updates:
+
+* Bump docker/setup-buildx-action from 2.0.0 to 2.1.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9180
+* Bump dorny/paths-filter from 2.10.2 to 2.11.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9183
+* Bump helm/chart-releaser-action from 1.4.0 to 1.4.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9136
+* Bump github/codeql-action from 2.1.25 to 2.1.27 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9137
+* Bump ossf/scorecard-action from 2.0.3 to 2.0.4 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9138
+* Bump google.golang.org/grpc from 1.49.0 to 1.50.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9134
+* Bump actions/checkout from 3.0.2 to 3.1.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9135
+* Bump actions/dependency-review-action from 2.5.0 to 2.5.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9237
+* Bump github/codeql-action from 2.1.28 to 2.1.29 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9236
+* Bump github.com/spf13/cobra from 1.6.0 to 1.6.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9233
+* Bump actions/upload-artifact from 3.1.0 to 3.1.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9234
+* Bump azure/setup-helm from 3.3 to 3.4 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9235
+* Bump github.com/onsi/ginkgo/v2 from 2.3.1 to 2.4.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9201
+* Bump goreleaser/goreleaser-action from 3.1.0 to 3.2.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9208
+* Bump github.com/stretchr/testify from 1.8.0 to 1.8.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9202
+* Bump ossf/scorecard-action from 2.0.4 to 2.0.6 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9203
+* Bump docker/setup-buildx-action from 2.1.0 to 2.2.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9204
+* Bump actions/setup-go from 3.3.0 to 3.3.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9205
+* Bump github/codeql-action from 2.1.27 to 2.1.28 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9206
+* Bump actions/download-artifact from 3.0.0 to 3.0.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9207
+* Bump github.com/prometheus/client_model from 0.2.0 to 0.3.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9200
+* Bump github.com/spf13/cobra from 1.5.0 to 1.6.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9173
+* Bump google.golang.org/grpc from 1.50.0 to 1.50.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9174
+* Bump k8s.io/component-base from 0.25.2 to 0.25.3 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9175
+* Bump github.com/fsnotify/fsnotify from 1.5.4 to 1.6.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9176
+* Bump github.com/onsi/ginkgo/v2 from 2.2.0 to 2.3.1 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9177
+* Bump geekyeggo/delete-artifact from 1.0.0 to 2.0.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9178
+* Bump actions/dependency-review-action from 2.4.0 to 2.5.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9179
+* Bump docker/setup-qemu-action from 2.0.0 to 2.1.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9181
+* Bump securego/gosec from 2.13.1 to 2.14.0 by @dependabot in https://github.com/kubernetes/ingress-nginx/pull/9182
+
+
+## New Contributors
+* @yutachaos made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9117
+* @Gacko made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9123
+* @loveRhythm1990 made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9103
+* @johanneswuerbach made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9131
+* @FutureMatt made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9133
+* @Sanghamitra-PERSONAL made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9098
+* @scraly made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9171
+* @cskinfill made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9147
+* @jrhunger made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9185
+* @guettli made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9167
+* @ybelMekk made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9186
+* @jaens made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9210
+
+**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-v1.4.0...controller-v1.5.1
+
+###  1.4.0
+
+### Community Updates
+
+We will discuss the results of our Community Survey, progress on the stabilization project, and ideas going
+forward with the project at 
+[Kubecon NA 2022 in Detroit](https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/). Come join us 
+and let us hear what you'd like to see in the future for ingress-nginx.
+
+https://kccncna2022.sched.com/event/18lgl?iframe=no
+
+[**Kubernetes Registry change notice**](https://twitter.com/BenTheElder/status/1575898507235323904)
+The [@kubernetesio](https://twitter.com/kubernetesio) container image host http://k8s.gcr.io is 
+*actually* getting redirected to the community controlled http://registry.k8s.io starting with a small portion of 
+traffic on October 3rd.
+
+If you notice any issues, *please* ping [Ben Elder](https://twitter.com/BenTheElder), 
+[@thockin](https://twitter.com/thockin), [@ameukam](https://twitter.com/ameukam),or report issues in slack to
+[sig-k8s-infra slack channel](https://kubernetes.slack.com/archives/CCK68P2Q2).
+
+### What's Changed
+
+* 1.4.0 updates ingress-nginx to use Endpointslices instead of Endpoints. Thank you, @tombokombo, for your work in
+[8890](https://github.com/kubernetes/ingress-nginx/pull/8890)
+* Update to Prometheus metric names, more information [available here]( https://github.com/kubernetes/ingress-nginx/pull/8728
+)
+* Deprecated Kubernetes versions 1.20-1.21, Added support for, 1.25, currently supported versions v1.22, v1.23, v1.24, v1.25  
+
+ADDED
+* `_request_duration_seconds` Histogram
+* `_connect_duration_seconds` Histogram
+* `_header_duration_seconds` Histogram
+* `_response_duration_seconds` Histogram
+
+Updated
+* `_response_size` Histogram
+* `_request_size` Histogram
+* `_requests` Counter
+
+DEPRECATED
+* `_bytes_sent` Histogram
+* _ingress_upstream_latency_seconds` Summary
+
+REMOVED
+* `ingress_upstream_header_seconds`  Summary
+
+Also upgraded to golang 1.19.1
+
+Images:
+
+* registry.k8s.io/ingress-nginx/controller:v1.4.0@sha256:34ee929b111ffc7aa426ffd409af44da48e5a0eea1eb2207994d9e0c0882d143
+* registry.k8s.io/ingress-nginx/controller-chroot:v1.4.0@sha256:b67e889f1db8692de7e41d4d9aef8de56645bf048261f31fa7f8bfc6ea2222a0
+
+
+### All Changes:
+
+* [9104](https://github.com/kubernetes/ingress-nginx/pull/9104) Fix yaml formatting error with multiple annotations
+* [9090](https://github.com/kubernetes/ingress-nginx/pull/9090) fix chroot module mount path
+* [9088](https://github.com/kubernetes/ingress-nginx/pull/9088) Add annotation for setting sticky cookie domain
+* [9086](https://github.com/kubernetes/ingress-nginx/pull/9086) Update Version ModSecurity and Coreruleset
+* [9081](https://github.com/kubernetes/ingress-nginx/pull/9081) plugin - endpoints to slices
+* [9078](https://github.com/kubernetes/ingress-nginx/pull/9078) expand CI testing for all stable versions of Kubernetes
+* [9074](https://github.com/kubernetes/ingress-nginx/pull/9074) fix: do not apply job-patch psp on Kubernetes 1.25 and newer
+* [9072](https://github.com/kubernetes/ingress-nginx/pull/9072) Added a Link to the New Contributors Tips
+* [9069](https://github.com/kubernetes/ingress-nginx/pull/9069) Add missing space to error message
+* [9059](https://github.com/kubernetes/ingress-nginx/pull/9059) kubewebhookcertgen sha change after go1191
+* [9058](https://github.com/kubernetes/ingress-nginx/pull/9058) updated testrunner image sha after bump to go1191
+* [9046](https://github.com/kubernetes/ingress-nginx/pull/9046) Parameterize metrics port name
+* [9036](https://github.com/kubernetes/ingress-nginx/pull/9036) update OpenTelemetry image
+* [9035](https://github.com/kubernetes/ingress-nginx/pull/9035) Added instructions for Rancher Desktop
+* [9028](https://github.com/kubernetes/ingress-nginx/pull/9028) fix otel init_module
+* [9023](https://github.com/kubernetes/ingress-nginx/pull/9023) updates for fixing 1.3.1 release
+* [9018](https://github.com/kubernetes/ingress-nginx/pull/9018) Add v1.25 test and reduce amount of e2e tests
+* [9017](https://github.com/kubernetes/ingress-nginx/pull/9017) fix LD_LIBRARY_PATH for opentelemetry
+
+### Dependencies updates:
+
+* [9085](https://github.com/kubernetes/ingress-nginx/pull/9085) Bump actions/dependency-review-action from 2.1.0 to 2.4.0
+* [9084](https://github.com/kubernetes/ingress-nginx/pull/9084) Bump actions/checkout from 1 to 3
+* [9083](https://github.com/kubernetes/ingress-nginx/pull/9083) Bump github/codeql-action from 2.1.24 to 2.1.25
+* [9089](https://github.com/kubernetes/ingress-nginx/pull/9089) Bump k8s.io/component-base from 0.25.1 to 0.25.2
+* [9066](https://github.com/kubernetes/ingress-nginx/pull/9066) Bump github/codeql-action from 2.1.23 to 2.1.24
+* [9065](https://github.com/kubernetes/ingress-nginx/pull/9065) Bump k8s.io/component-base from 0.25.0 to 0.25.1
+* [9064](https://github.com/kubernetes/ingress-nginx/pull/9064) Bump github.com/onsi/ginkgo/v2 from 2.1.6 to 2.2.0
+* [9057](https://github.com/kubernetes/ingress-nginx/pull/9057) bump go to v1.19.1
+* [9053](https://github.com/kubernetes/ingress-nginx/pull/9053) Bump ossf/scorecard-action from 2.0.2 to 2.0.3
+* [9052](https://github.com/kubernetes/ingress-nginx/pull/9052) Bump github/codeql-action from 2.1.22 to 2.1.23
+* [9045](https://github.com/kubernetes/ingress-nginx/pull/9045) Bump actions/upload-artifact from 3.0.0 to 3.1.0
+* [9044](https://github.com/kubernetes/ingress-nginx/pull/9044) Bump ossf/scorecard-action from 1.1.2 to 2.0.2
+* [9043](https://github.com/kubernetes/ingress-nginx/pull/9043) Bump k8s.io/klog/v2 from 2.80.0 to 2.80.1
+* [9022](https://github.com/kubernetes/ingress-nginx/pull/9022) Bump github.com/onsi/ginkgo/v2 from 2.1.4 to 2.1.6
+* [9021](https://github.com/kubernetes/ingress-nginx/pull/9021) Bump k8s.io/klog/v2 from 2.70.1 to 2.80.0
+
+## New Contributors
+* @gunamata made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9035
+* @afro-coder made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/8924
+* @wilmardo made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9074
+* @nicolasjulian made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9086
+* @mtneug made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9088
+* @knbnnate made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/8692
+* @mklauber made their first contribution in https://github.com/kubernetes/ingress-nginx/pull/9104
+
+**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-v1.3.1...controller-v1.4.0
+
 ### 1.3.1
-
-Please fill out our 2022 Ingress-Nginx User Survey and let us know what you want to see in future releases.
-
-https://www.surveymonkey.com/r/ingressngx2022
 
 In v1.3.1 leader elections will be done entirely using the Lease API and no longer using configmaps. 
 v1.3.0 is a safe transition version, using v1.3.0 can automatically complete the merging of election locks, and then you can safely upgrade to v1.3.1.

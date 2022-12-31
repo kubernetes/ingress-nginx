@@ -141,6 +141,34 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			Body().Contains("401 Authorization Required")
 	})
 
+	ginkgo.It("should return status code 401 and cors headers when authentication and cors is configured but Authorization header is not configured", func() {
+		host := "auth"
+
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-type":   "basic",
+			"nginx.ingress.kubernetes.io/auth-secret": s.Name,
+			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
+			"nginx.ingress.kubernetes.io/enable-cors": "true",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "server_name auth")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusUnauthorized).
+			Header("Access-Control-Allow-Origin").Equal("*")
+	})
+
 	ginkgo.It("should return status code 200 when authentication is configured and Authorization header is sent", func() {
 		host := "auth"
 

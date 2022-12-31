@@ -10,7 +10,7 @@
 - --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}-internal
 {{- end }}
 {{- end }}
-- --election-id={{ .Values.controller.electionID }}
+- --election-id={{ include "ingress-nginx.controller.electionID" . }}
 - --controller-class={{ .Values.controller.ingressClassResource.controllerValue }}
 {{- if .Values.controller.ingressClass }}
 - --ingress-class={{ .Values.controller.ingressClass }}
