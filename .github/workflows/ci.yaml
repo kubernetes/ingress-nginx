@@ -186,12 +186,56 @@ jobs:
             ingress-controller/controller:1.0.0-dev \
             ingress-controller/controller-chroot:1.0.0-dev \
             | pigz > docker.tar.gz
+          
+          pigz rootfs/bin/amd64/scannable-nginx-ingress-controller
 
       - name: cache
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
         with:
           name: docker.tar.gz
           path: docker.tar.gz
+
+      - name: Upload scannable binary
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+        with:
+          name: scannable-nginx-ingress-controller.gz
+          path: rootfs/bin/amd64/scannable-nginx-ingress-controller.gz
+
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - build
+    steps:
+      - name: Download binary
+        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
+        with:
+          name: scannable-nginx-ingress-controller.gz
+
+      - name: Unzip binary
+        run: |
+          echo "loading ingress binary file..."
+          pigz -d scannable-nginx-ingress-controller.gz
+
+      - name: Scan for Vulnerabilities in Code
+        uses: Templum/govulncheck-action@v0.0.8
+        with:
+          go-version: 1.19.1
+          vulncheck-version: latest
+          skip-upload: true
+          package: scannable-nginx-ingress-controller
+          fail-on-vuln: false
+
+      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+        with:
+          name: scannable-nginx-ingress-controller.gz
+          failOnError: false
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: govulncheck-report.sarif
 
   helm:
     name: Helm chart
