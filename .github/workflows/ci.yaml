@@ -186,7 +186,9 @@ jobs:
             ingress-controller/controller:1.0.0-dev \
             ingress-controller/controller-chroot:1.0.0-dev \
             | pigz > docker.tar.gz
-          
+
+          # pigz needs write permission to unzip the scannable binary  
+          sudo chown -R $USER:$USER /home/runner/work/ingress-nginx
           pigz rootfs/bin/amd64/scannable-nginx-ingress-controller
 
       - name: cache
