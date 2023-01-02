@@ -209,8 +209,7 @@ jobs:
     needs:
       - changes
       - build
-    permissions:
-      security-events: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
@@ -230,6 +229,7 @@ jobs:
         with:
           go-version: 1.19
           vulncheck-version: latest
+          skip-upload: true
           package: scannable-nginx-ingress-controller
           fail-on-vuln: false
 
@@ -237,6 +237,11 @@ jobs:
         with:
           name: scannable-nginx-ingress-controller.gz
           failOnError: false
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: govulncheck-report.sarif
 
   helm:
     name: Helm chart
