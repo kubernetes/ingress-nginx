@@ -1,0 +1,29 @@
+project_name: ingress-nginx
+release:
+  github:
+    owner: kubernetes
+    name: ingress-nginx
+builds:
+  - id: ingress-nginx
+    goos:
+    - darwin
+    - linux
+    - windows
+    goarch:
+    - arm64
+    - amd64
+    env:
+    - CGO_ENABLED=0
+    - GO111MODULE=on
+    main: cmd/plugin/main.go
+    binary: kubectl-ingress-nginx
+    ldflags: |
+      -s -w
+      -X k8s.io/ingress-nginx/version.COMMIT={{ .Commit }}
+      -X k8s.io/ingress-nginx/version.RELEASE={{ .Tag }}
+archives:
+  - id: ingress-nginx
+    builds:
+    - ingress-nginx
+    name_template: "kubectl-{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz

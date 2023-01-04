@@ -1,0 +1,41 @@
+name: kubectl plugin
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "cmd/plugin/**"
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # for goreleaser/goreleaser-action
+
+jobs:
+  release-plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        with:
+          go-version: 1.19
+          check-latest: true
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@8f67e590f2d095516493f017008adc464e63adb1 # v4.1.0
+        with:
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update new version in krew-index
+        uses: rajatjindal/krew-release-bot@92da038bbf995803124a8e50ebd438b2f37bbbb0 # v0.0.43
+        with:
+          krew_template_file: cmd/plugin/krew.yaml

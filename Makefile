@@ -53,13 +53,6 @@ ifneq ($(PLATFORM),)
 	PLATFORM_FLAG="--platform"
 endif
 
-MAC_OS = $(shell uname -s)
-ifeq ($(MAC_OS), Darwin)
-	MAC_DOCKER_FLAGS="--load"
-else
-	MAC_DOCKER_FLAGS=
-endif
-
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
 BASE_IMAGE ?= $(shell cat NGINX_BASE)
@@ -75,11 +68,10 @@ image: clean-image ## Build image for a particular arch.
 	docker build \
 		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
-		$(MAC_DOCKER_FLAGS) \
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		--build-arg TARGET_ARCH="$(ARCH)" \
+		--build-arg TARGETARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
@@ -93,11 +85,10 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
 	docker build \
 		--no-cache \
-		$(MAC_DOCKER_FLAGS) \
 		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
-		--build-arg TARGET_ARCH="$(ARCH)" \
+		--build-arg TARGETARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile-chroot
@@ -126,18 +117,6 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 		build/build.sh
 
 
-.PHONY: build-plugin
-build-plugin:  ## Build ingress-nginx krew plugin.
-	@build/run-in-docker.sh \
-		PKG=$(PKG) \
-		MAC_OS=$(MAC_OS) \
-		ARCH=$(ARCH) \
-		COMMIT_SHA=$(COMMIT_SHA) \
-		REPO_INFO=$(REPO_INFO) \
-		TAG=$(TAG) \
-		build/build-plugin.sh
-
-
 .PHONY: clean
 clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
@@ -146,6 +125,7 @@ clean: ## Remove .gocache directory.
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.
 	@build/run-in-docker.sh \
+	    MAC_OS=$(MAC_OS) \
 		hack/verify-all.sh
 
 ###############################
@@ -161,6 +141,7 @@ test:  ## Run go unit tests.
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
+		GOFLAGS="-buildvcs=false" \
 		test/test.sh
 
 .PHONY: lua-test
@@ -218,7 +199,10 @@ dev-env-stop: ## Deletes local Kubernetes cluster created by kind.
 
 .PHONY: live-docs
 live-docs: ## Build and launch a local copy of the documentation website in http://localhost:8000
-	@docker build ${PLATFORM_FLAG} ${PLATFORM} -t ingress-nginx-docs .github/actions/mkdocs
+	@docker build ${PLATFORM_FLAG} ${PLATFORM} \
+                  		--no-cache \
+                  		$(MAC_DOCKER_FLAGS) \
+                  		 -t ingress-nginx-docs .github/actions/mkdocs
 	@docker run ${PLATFORM_FLAG} ${PLATFORM} --rm -it \
 		-p 8000:8000 \
 		-v ${PWD}:/docs \

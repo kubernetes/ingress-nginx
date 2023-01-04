@@ -19,8 +19,9 @@ package defaultbackend
 import (
 	"net/http"
 
-	"github.com/gavv/httpexpect/v2"
-	"github.com/onsi/ginkgo"
+	"k8s.io/ingress-nginx/test/e2e/framework/httpexpect"
+
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -64,15 +65,13 @@ var _ = framework.IngressNginxDescribe("[Default Backend]", func() {
 		for _, test := range testCases {
 			ginkgo.By(test.Name)
 
-			var req *httpexpect.Request
+			var req *httpexpect.HTTPRequest
 
 			switch test.Scheme {
 			case framework.HTTP:
-				req = f.HTTPTestClient().Request(test.Method, test.Path)
-				req.WithURL(f.GetURL(framework.HTTP) + test.Path)
+				req = f.HTTPTestClient().DoRequest(test.Method, test.Path).WithURL(f.GetURL(framework.HTTP) + test.Path)
 			case framework.HTTPS:
-				req = f.HTTPTestClient().Request(test.Method, test.Path)
-				req.WithURL(f.GetURL(framework.HTTPS) + test.Path)
+				req = f.HTTPTestClient().DoRequest(test.Method, test.Path).WithURL(f.GetURL(framework.HTTPS) + test.Path)
 			default:
 				ginkgo.Fail("Unexpected request scheme")
 			}

@@ -39,16 +39,13 @@ import (
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
-	"k8s.io/klog/v2"
+	"k8s.io/ingress-nginx/pkg/tcpproxy"
 
 	adm_controller "k8s.io/ingress-nginx/internal/admission/controller"
-	"k8s.io/ingress-nginx/internal/file"
-	"k8s.io/ingress-nginx/internal/ingress"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -60,7 +57,12 @@ import (
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/internal/task"
-	"k8s.io/ingress-nginx/internal/watch"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
+
+	"k8s.io/ingress-nginx/pkg/util/file"
+	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
+
+	klog "k8s.io/klog/v2"
 )
 
 const (
@@ -101,7 +103,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 		runningConfig: new(ingress.Configuration),
 
-		Proxy: &TCPProxy{},
+		Proxy: &tcpproxy.TCPProxy{},
 
 		metricCollector: mc,
 
@@ -171,7 +173,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 	n.t = ngxTpl
 
-	_, err = watch.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
+	_, err = file.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
 	if err != nil {
 		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
 	}
@@ -195,7 +197,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	for _, f := range filesToWatch {
-		_, err = watch.NewFileWatcher(f, func() {
+		_, err = file.NewFileWatcher(f, func() {
 			klog.InfoS("File changed detected. Reloading NGINX", "path", f)
 			n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
 		})
@@ -241,7 +243,7 @@ type NGINXController struct {
 
 	isShuttingDown bool
 
-	Proxy *TCPProxy
+	Proxy *tcpproxy.TCPProxy
 
 	store store.Storer
 
@@ -439,7 +441,7 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
 
 	if n.cfg.EnableSSLPassthrough {
-		servers := []*TCPServer{}
+		servers := []*tcpproxy.TCPServer{}
 		for _, pb := range ingressCfg.PassthroughBackends {
 			svc := pb.Service
 			if svc == nil {
@@ -464,7 +466,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 			}
 
 			// TODO: Allow PassthroughBackends to specify they support proxy-protocol
-			servers = append(servers, &TCPServer{
+			servers = append(servers, &tcpproxy.TCPServer{
 				Hostname:      pb.Hostname,
 				IP:            svc.Spec.ClusterIP,
 				Port:          port,
@@ -600,10 +602,9 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		IsIPV6Enabled:            n.isIPV6Enabled && !cfg.DisableIpv6,
 		NginxStatusIpv4Whitelist: cfg.NginxStatusIpv4Whitelist,
 		NginxStatusIpv6Whitelist: cfg.NginxStatusIpv6Whitelist,
-		RedirectServers:          buildRedirects(ingressCfg.Servers),
+		RedirectServers:          utilingress.BuildRedirects(ingressCfg.Servers),
 		IsSSLPassthroughEnabled:  n.cfg.EnableSSLPassthrough,
 		ListenPorts:              n.cfg.ListenPorts,
-		PublishService:           n.GetPublishService(),
 		EnableMetrics:            n.cfg.EnableMetrics,
 		MaxmindEditionFiles:      n.cfg.MaxmindEditionFiles,
 		HealthzURI:               nginx.HealthPath,
@@ -751,8 +752,8 @@ func (n *NGINXController) setupSSLProxy() {
 	proxyPort := n.cfg.ListenPorts.SSLProxy
 
 	klog.InfoS("Starting TLS proxy for SSL Passthrough")
-	n.Proxy = &TCPProxy{
-		Default: &TCPServer{
+	n.Proxy = &tcpproxy.TCPProxy{
+		Default: &tcpproxy.TCPServer{
 			Hostname:      "localhost",
 			IP:            "127.0.0.1",
 			Port:          proxyPort,
@@ -829,24 +830,6 @@ func clearL4serviceEndpoints(config *ingress.Configuration) {
 	}
 	config.TCPEndpoints = clearedTCPL4Services
 	config.UDPEndpoints = clearedUDPL4Services
-}
-
-// IsDynamicConfigurationEnough returns whether a Configuration can be
-// dynamically applied, without reloading the backend.
-func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configuration) bool {
-	copyOfRunningConfig := *n.runningConfig
-	copyOfPcfg := *pcfg
-
-	copyOfRunningConfig.Backends = []*ingress.Backend{}
-	copyOfPcfg.Backends = []*ingress.Backend{}
-
-	clearL4serviceEndpoints(&copyOfRunningConfig)
-	clearL4serviceEndpoints(&copyOfPcfg)
-
-	clearCertificates(&copyOfRunningConfig)
-	clearCertificates(&copyOfPcfg)
-
-	return copyOfRunningConfig.Equal(&copyOfPcfg)
 }
 
 // configureDynamically encodes new Backends in JSON format and POSTs the
@@ -1018,7 +1001,7 @@ func configureCertificates(rawServers []*ingress.Server) error {
 		}
 	}
 
-	redirects := buildRedirects(rawServers)
+	redirects := utilingress.BuildRedirects(rawServers)
 	for _, redirect := range redirects {
 		configure(redirect.From, redirect.SSLCert)
 	}
@@ -1137,66 +1120,4 @@ func cleanTempNginxCfg() error {
 	}
 
 	return nil
-}
-
-type redirect struct {
-	From    string
-	To      string
-	SSLCert *ingress.SSLCert
-}
-
-func buildRedirects(servers []*ingress.Server) []*redirect {
-	names := sets.String{}
-	redirectServers := make([]*redirect, 0)
-
-	for _, srv := range servers {
-		if !srv.RedirectFromToWWW {
-			continue
-		}
-
-		to := srv.Hostname
-
-		var from string
-		if strings.HasPrefix(to, "www.") {
-			from = strings.TrimPrefix(to, "www.")
-		} else {
-			from = fmt.Sprintf("www.%v", to)
-		}
-
-		if names.Has(to) {
-			continue
-		}
-
-		klog.V(3).InfoS("Creating redirect", "from", from, "to", to)
-		found := false
-		for _, esrv := range servers {
-			if esrv.Hostname == from {
-				found = true
-				break
-			}
-		}
-
-		if found {
-			klog.Warningf("Already exists an Ingress with %q hostname. Skipping creation of redirection from %q to %q.", from, from, to)
-			continue
-		}
-
-		r := &redirect{
-			From: from,
-			To:   to,
-		}
-
-		if srv.SSLCert != nil {
-			if ssl.IsValidHostname(from, srv.SSLCert.CN) {
-				r.SSLCert = srv.SSLCert
-			} else {
-				klog.Warningf("the server %v has SSL configured but the SSL certificate does not contains a CN for %v. Redirects will not work for HTTPS to HTTPS", from, to)
-			}
-		}
-
-		redirectServers = append(redirectServers, r)
-		names.Insert(to)
-	}
-
-	return redirectServers
 }

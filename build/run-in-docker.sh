@@ -38,7 +38,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20220624-g3348cd71e@sha256:2a34e322b7ff89abdfa0b6202f903bf5618578b699ff609a3ddabac0aae239c8}
+E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20221221-controller-v1.5.1-62-g6ffaef32a@sha256:8f025472964cd15ae2d379503aba150565a8d78eb36b41ddfc5f1e3b1ca81a8e}
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 DOCKER_IN_DOCKER_ENABLED=${DOCKER_IN_DOCKER_ENABLED:-}
@@ -65,29 +65,21 @@ fi
 
 USER=${USER:-nobody}
 
-if [[ ${MAC_OS} == "Darwin" ]]; then
-	MAC_DOCKER_FLAGS=""
-else
-	MAC_DOCKER_FLAGS="-u $(id -u ${USER}):$(id -g ${USER})" #idk why mac/git fails on the gobuild if these are presented to dockerrun.sh script
-fi
-
-echo "..printing env & other vars to stdout"
-echo "HOSTNAME=`hostname`"
-uname -a
-env
-echo "DIND_ENABLED=$DOCKER_IN_DOCKER_ENABLED"
-echo "done..printing env & other vars to stdout"
+#echo "..printing env & other vars to stdout"
+#echo "HOSTNAME=`hostname`"
+#uname -a
+#env
+#echo "DIND_ENABLED=$DOCKER_IN_DOCKER_ENABLED"
+#echo "done..printing env & other vars to stdout"
 
 if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   echo "..reached DIND check TRUE block, inside run-in-docker.sh"
   echo "FLAGS=$FLAGS"
-  go env
-  set -x
-  go install -mod=mod github.com/onsi/ginkgo/ginkgo@v1.16.4
+  #go env
+  go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.6.1
   find / -type f -name ginkgo 2>/dev/null
   which ginkgo
   /bin/bash -c "${FLAGS}"
-  set +x
 else
   echo "Reached DIND check ELSE block, inside run-in-docker.sh"
   docker run                                            \
@@ -105,6 +97,5 @@ else
     -v "/var/run/docker.sock:/var/run/docker.sock"      \
     -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
     -w "/go/src/${PKG}"                                 \
-    ${MAC_DOCKER_FLAGS}                                 \
     ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
 fi

@@ -78,6 +78,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieExpires)] = "4500"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieMaxAge)] = "3000"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookiePath)] = "/foo"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieDomain)] = "foo.bar"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieChangeOnFailure)] = "true"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieSecure)] = "true"
 	ing.SetAnnotations(data)
@@ -110,6 +111,10 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 
 	if nginxAffinity.Cookie.Path != "/foo" {
 		t.Errorf("expected /foo as session-cookie-path but returned %v", nginxAffinity.Cookie.Path)
+	}
+
+	if nginxAffinity.Cookie.Domain != "foo.bar" {
+		t.Errorf("expected foo.bar as session-cookie-domain but returned %v", nginxAffinity.Cookie.Domain)
 	}
 
 	if !nginxAffinity.Cookie.ChangeOnFailure {

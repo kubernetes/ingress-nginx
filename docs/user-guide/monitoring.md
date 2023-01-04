@@ -1,9 +1,11 @@
-# Prometheus and Grafana installation
-Two different methods to install and configure Prometheus and Grafana are described in this doc. 
-- Prometheus and Grafana installation using Pod Annotations. This installs Prometheus and Grafana in the same namespace as NGINX Ingress
-- Prometheus and Grafana installation using Service Monitors. This installs Prometheus and Grafana in two different namespaces. This is the preferred method, and helm charts supports this by default. 
+# Monitoring
 
-## PROMETHEUS AND GRAFANA INSTALLATION USING POD ANNOTATIONS
+Two different methods to install and configure Prometheus and Grafana are described in this doc.
+* Prometheus and Grafana installation using Pod Annotations. This installs Prometheus and Grafana in the same namespace as NGINX Ingress
+* Prometheus and Grafana installation using Service Monitors. This installs Prometheus and Grafana in two different namespaces. This is the preferred method, and helm charts supports this by default.
+
+## Prometheus and Grafana installation using Pod Annotations
+
 This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the NGINX Ingress controller.
 
 !!! important
@@ -168,7 +170,7 @@ According to the above example, this URL will be http://10.192.0.3:31086
   - By default request metrics are labeled with the hostname. When you have a wildcard domain ingress, then there will be no metrics for that ingress (to prevent the metrics from exploding in cardinality). To get metrics in this case you need to run the ingress controller with `--metrics-per-host=false` (you will lose labeling by hostname, but still have labeling by ingress).
 
 ### Grafana dashboard using ingress resource
-  - If you want to expose the dashboard for grafana using a ingress resource, then you can : 
+  - If you want to expose the dashboard for grafana using a ingress resource, then you can :
     - change the service type of the prometheus-server service and the grafana service to "ClusterIP" like this :
     ```
     kubectl -n ingress-nginx edit svc grafana
@@ -179,18 +181,18 @@ According to the above example, this URL will be http://10.192.0.3:31086
     - create a ingress resource with backend as "grafana" and port as "3000"
   - Similarly, you can edit the service "prometheus-server" and add a ingress resource.
 
-## PROMETHEUS AND GRAFANA INSTALLATION USING SERVICE MONITORS
-This document assumes you're using helm and using the kube-prometheus-stack package to install Prometheus and Grafana. 
+## Prometheus and Grafana installation using Service Monitors
+This document assumes you're using helm and using the kube-prometheus-stack package to install Prometheus and Grafana.
 
 ### Verify NGINX Ingress controller is installed
 
 - The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
-- To check if Ingress controller is deployed, 
+- To check if Ingress controller is deployed,
   ```
-  kubectl get pods -n ingress-nginx 
+  kubectl get pods -n ingress-nginx
   ```
-- The result should look something like: 
+- The result should look something like:
   ```
   NAME                                        READY   STATUS    RESTARTS   AGE
   ingress-nginx-controller-7c489dc7b7-ccrf6   1/1     Running   0          19h
@@ -205,8 +207,8 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
   ```
   ```
   NAME         	NAMESPACE    	REVISION	UPDATED                             	STATUS  	CHART                       	APP VERSION
-  ingress-nginx	ingress-nginx	10      	2022-01-20 18:08:55.267373 -0800 PST	deployed	ingress-nginx-4.0.16        	1.1.1      
-  prometheus   	prometheus   	1       	2022-01-20 16:07:25.086828 -0800 PST	deployed	kube-prometheus-stack-30.1.0	0.53.1  
+  ingress-nginx	ingress-nginx	10      	2022-01-20 18:08:55.267373 -0800 PST	deployed	ingress-nginx-4.0.16        	1.1.1
+  prometheus   	prometheus   	1       	2022-01-20 16:07:25.086828 -0800 PST	deployed	kube-prometheus-stack-30.1.0	0.53.1
   ```
 - Notice that prometheus is installed in a differenet namespace than ingress-nginx
 
@@ -218,9 +220,9 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
   ```
   controller.metrics.enabled=true
   controller.metrics.serviceMonitor.enabled=true
-  controller.metrics.serviceMonitor.additionalLabels.release="prometheus" 
+  controller.metrics.serviceMonitor.additionalLabels.release="prometheus"
   ```
-- The easiest way of doing this is to helm upgrade 
+- The easiest way of doing this is to helm upgrade
   ```
   helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
@@ -248,7 +250,7 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
 - Since Prometheus is running in a different namespace and not in the ingress-nginx namespace, it would not be able to discover ServiceMonitors in other namespaces when installed. Reconfigure your kube-prometheus-stack Helm installation to set `serviceMonitorSelectorNilUsesHelmValues` flag to false. By default, Prometheus only discovers PodMonitors within its own namespace. This should be disabled by setting `podMonitorSelectorNilUsesHelmValues` to false
 - The configurations required are:
   ```
-  prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false 
+  prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false
   prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
   ```
 - The easiest way of doing this is to use `helm upgrade ...`
@@ -271,12 +273,12 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
   ```
 
 ### Connect and view Prometheus dashboard
-- Port forward to Prometheus service. Find out the name of the prometheus service by using the following command: 
+- Port forward to Prometheus service. Find out the name of the prometheus service by using the following command:
   ```
   kubectl get svc -n prometheus
   ```
 
-  The result of this command would look like: 
+  The result of this command would look like:
   ```
   NAME                                      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
   alertmanager-operated                     ClusterIP   None             <none>        9093/TCP,9094/TCP,9094/UDP   7h46m
@@ -292,22 +294,22 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
   ```
   kubectl port-forward svc/prometheus-kube-prometheus-prometheus -n prometheus 9090:9090
   ```
-  When you run the above command, you should see something like: 
+  When you run the above command, you should see something like:
   ```
   Forwarding from 127.0.0.1:9090 -> 9090
   Forwarding from [::1]:9090 -> 9090
   ```
 - Open your browser and visit the following URL http://localhost:{port-forwarded-port} according to the above example it would be, http://localhost:9090
-  
+
   ![Prometheus Dashboard](../images/prometheus-dashboard1.png)
 
-### Connect and view Grafana dashboard 
-- Port forward to Grafana service. Find out the name of the Grafana service by using the following command: 
+### Connect and view Grafana dashboard
+- Port forward to Grafana service. Find out the name of the Grafana service by using the following command:
   ```
   kubectl get svc -n prometheus
   ```
 
-  The result of this command would look like: 
+  The result of this command would look like:
   ```
   NAME                                      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
   alertmanager-operated                     ClusterIP   None             <none>        9093/TCP,9094/TCP,9094/UDP   7h46m
@@ -323,7 +325,7 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
   ```
   kubectl port-forward svc/prometheus-grafana  3000:80 -n prometheus
   ```
-  When you run the above command, you should see something like: 
+  When you run the above command, you should see something like:
   ```
   Forwarding from 127.0.0.1:3000 -> 3000
   Forwarding from [::1]:3000 -> 3000
@@ -345,4 +347,149 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
   - Click "Import"
 
   ![Grafana Dashboard](../images/grafana-dashboard1.png)
- 
+
+
+## Exposed metrics
+
+Prometheus metrics are exposed on port 10254.
+
+### Request metrics
+
+* `nginx_ingress_controller_request_duration_seconds` Histogram
+
+  The request processing time in milliseconds (affected by client speed)
+
+  nginx var: `request_time`
+
+* `nginx_ingress_controller_response_duration_seconds` Histogram
+
+  The time spent on receiving the response from the upstream server (affected by client speed)
+
+  nginx var: `upstream_response_time`
+
+* `nginx_ingress_controller_header_duration_seconds` Histogram
+
+  The time spent on receiving first header from the upstream server
+
+  nginx var: `upstream_header_time`
+
+* `nginx_ingress_controller_connect_duration_seconds` Histogram
+
+  The time spent on establishing a connection with the upstream server
+
+  nginx var: `upstream_connect_time`
+
+* `nginx_ingress_controller_response_size` Histogram
+
+  The response length (including request line, header, and request body)
+
+  nginx var: `bytes_sent`
+
+* `nginx_ingress_controller_request_size` Histogram
+
+  The request length (including request line, header, and request body)
+
+  nginx var: `request_length`
+
+* `nginx_ingress_controller_requests` Counter
+
+  The total number of client requests
+
+* `nginx_ingress_controller_bytes_sent` Histogram
+
+  The number of bytes sent to a client. **Deprecated**, use `nginx_ingress_controller_response_size`
+
+  nginx var: `bytes_sent`
+
+* `nginx_ingress_controller_ingress_upstream_latency_seconds` Summary
+
+  Upstream service latency per Ingress. **Deprecated**, use `nginx_ingress_controller_connect_duration_seconds`
+
+  nginx var: `upstream_connect_time`
+
+```
+# HELP nginx_ingress_controller_bytes_sent The number of bytes sent to a client. DEPRECATED! Use nginx_ingress_controller_response_size
+# TYPE nginx_ingress_controller_bytes_sent histogram
+# HELP nginx_ingress_controller_connect_duration_seconds The time spent on establishing a connection with the upstream server
+# TYPE nginx_ingress_controller_connect_duration_seconds nginx_ingress_controller_connect_duration_seconds
+* HELP nginx_ingress_controller_header_duration_seconds The time spent on receiving first header from the upstream server
+# TYPE nginx_ingress_controller_header_duration_seconds histogram
+# HELP nginx_ingress_controller_ingress_upstream_latency_seconds Upstream service latency per Ingress DEPRECATED! Use nginx_ingress_controller_connect_duration_seconds
+# TYPE nginx_ingress_controller_ingress_upstream_latency_seconds summary
+# HELP nginx_ingress_controller_request_duration_seconds The request processing time in milliseconds
+# TYPE nginx_ingress_controller_request_duration_seconds histogram
+# HELP nginx_ingress_controller_request_size The request length (including request line, header, and request body)
+# TYPE nginx_ingress_controller_request_size histogram
+# HELP nginx_ingress_controller_requests The total number of client requests.
+# TYPE nginx_ingress_controller_requests counter
+# HELP nginx_ingress_controller_response_duration_seconds The time spent on receiving the response from the upstream server
+# TYPE nginx_ingress_controller_response_duration_seconds histogram
+# HELP nginx_ingress_controller_response_size The response length (including request line, header, and request body)
+# TYPE nginx_ingress_controller_response_size histogram
+```
+
+
+### Nginx process metrics
+```
+# HELP nginx_ingress_controller_nginx_process_connections current number of client connections with state {active, reading, writing, waiting}
+# TYPE nginx_ingress_controller_nginx_process_connections gauge
+# HELP nginx_ingress_controller_nginx_process_connections_total total number of connections with state {accepted, handled}
+# TYPE nginx_ingress_controller_nginx_process_connections_total counter
+# HELP nginx_ingress_controller_nginx_process_cpu_seconds_total Cpu usage in seconds
+# TYPE nginx_ingress_controller_nginx_process_cpu_seconds_total counter
+# HELP nginx_ingress_controller_nginx_process_num_procs number of processes
+# TYPE nginx_ingress_controller_nginx_process_num_procs gauge
+# HELP nginx_ingress_controller_nginx_process_oldest_start_time_seconds start time in seconds since 1970/01/01
+# TYPE nginx_ingress_controller_nginx_process_oldest_start_time_seconds gauge
+# HELP nginx_ingress_controller_nginx_process_read_bytes_total number of bytes read
+# TYPE nginx_ingress_controller_nginx_process_read_bytes_total counter
+# HELP nginx_ingress_controller_nginx_process_requests_total total number of client requests
+# TYPE nginx_ingress_controller_nginx_process_requests_total counter
+# HELP nginx_ingress_controller_nginx_process_resident_memory_bytes number of bytes of memory in use
+# TYPE nginx_ingress_controller_nginx_process_resident_memory_bytes gauge
+# HELP nginx_ingress_controller_nginx_process_virtual_memory_bytes number of bytes of memory in use
+# TYPE nginx_ingress_controller_nginx_process_virtual_memory_bytes gauge
+# HELP nginx_ingress_controller_nginx_process_write_bytes_total number of bytes written
+# TYPE nginx_ingress_controller_nginx_process_write_bytes_total counter
+```
+
+### Controller metrics
+```
+# HELP nginx_ingress_controller_build_info A metric with a constant '1' labeled with information about the build.
+# TYPE nginx_ingress_controller_build_info gauge
+# HELP nginx_ingress_controller_check_success Cumulative number of Ingress controller syntax check operations
+# TYPE nginx_ingress_controller_check_success counter
+# HELP nginx_ingress_controller_config_hash Running configuration hash actually running
+# TYPE nginx_ingress_controller_config_hash gauge
+# HELP nginx_ingress_controller_config_last_reload_successful Whether the last configuration reload attempt was successful
+# TYPE nginx_ingress_controller_config_last_reload_successful gauge
+# HELP nginx_ingress_controller_config_last_reload_successful_timestamp_seconds Timestamp of the last successful configuration reload.
+# TYPE nginx_ingress_controller_config_last_reload_successful_timestamp_seconds gauge
+# HELP nginx_ingress_controller_ssl_certificate_info Hold all labels associated to a certificate
+# TYPE nginx_ingress_controller_ssl_certificate_info gauge
+# HELP nginx_ingress_controller_success Cumulative number of Ingress controller reload operations
+# TYPE nginx_ingress_controller_success counter
+```
+
+### Admission metrics
+```
+# HELP nginx_ingress_controller_admission_config_size The size of the tested configuration
+# TYPE nginx_ingress_controller_admission_config_size gauge
+# HELP nginx_ingress_controller_admission_render_duration The processing duration of ingresses rendering by the admission controller (float seconds)
+# TYPE nginx_ingress_controller_admission_render_duration gauge
+# HELP nginx_ingress_controller_admission_render_ingresses The length of ingresses rendered by the admission controller
+# TYPE nginx_ingress_controller_admission_render_ingresses gauge
+# HELP nginx_ingress_controller_admission_roundtrip_duration The complete duration of the admission controller at the time to process a new event (float seconds)
+# TYPE nginx_ingress_controller_admission_roundtrip_duration gauge
+# HELP nginx_ingress_controller_admission_tested_duration The processing duration of the admission controller tests (float seconds)
+# TYPE nginx_ingress_controller_admission_tested_duration gauge
+# HELP nginx_ingress_controller_admission_tested_ingresses The length of ingresses processed by the admission controller
+# TYPE nginx_ingress_controller_admission_tested_ingresses gauge
+```
+
+### Histogram buckets
+
+You can configure buckets for histogram metrics using these command line options (here are their default values):
+* `--time-buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]`
+* `--length-buckets=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]`
+* `--size-buckets=[10, 100, 1000, 10000, 100000, 1e+06, 1e+07]`

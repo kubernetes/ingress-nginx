@@ -2,8 +2,8 @@ apiVersion: v2
 name: ingress-nginx
 # When the version is modified, make sure the artifacthub.io/changes list is updated
 # Also update CHANGELOG.md
-version: 4.1.4
-appVersion: 1.2.1
+version: 4.4.2
+appVersion: 1.5.1
 home: https://github.com/kubernetes/ingress-nginx
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
@@ -12,13 +12,12 @@ keywords:
   - nginx
 sources:
   - https://github.com/kubernetes/ingress-nginx
-type: application
 maintainers:
   - name: rikatz
   - name: strongjz
   - name: tao12345666333
 engine: gotpl
-kubeVersion: ">=1.19.0-0"
+kubeVersion: ">=1.20.0-0"
 annotations:
   # Use this annotation to indicate that this chart version is a pre-release.
   # https://artifacthub.io/docs/topics/annotations/helm/
@@ -26,11 +25,7 @@ annotations:
   # List of changes for the release in artifacthub.io
   # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx?modal=changelog
   artifacthub.io/changes: |
-    - "[8459](https://github.com/kubernetes/ingress-nginx/pull/8459) Update default allowed CORS headers"
-    - "[8202](https://github.com/kubernetes/ingress-nginx/pull/8202) disable modsecurity on error page"
-    - "[8178](https://github.com/kubernetes/ingress-nginx/pull/8178) Add header Host into mirror annotations"
-    - "[8213](https://github.com/kubernetes/ingress-nginx/pull/8213) feat: always set auth cookie"
-    - "[8548](https://github.com/kubernetes/ingress-nginx/pull/8548) Implement reporting status classes in metrics"
-    - "[8612](https://github.com/kubernetes/ingress-nginx/pull/8612) move so files under /etc/nginx/modules"
-    - "[8624](https://github.com/kubernetes/ingress-nginx/pull/8624) Add patch to remove root and alias directives"
-    - "[8623](https://github.com/kubernetes/ingress-nginx/pull/8623) Improve path rule"
+    - Adding support for disabling liveness and readiness probes to the Helm chart
+    - add:(admission-webhooks) ability to set securityContext
+    - Updated Helm chart to use the fullname for the electionID if not specified
+    - Rename controller-wehbooks-networkpolicy.yaml

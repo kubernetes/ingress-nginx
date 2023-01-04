@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/internal/sets"
+	"k8s.io/ingress-nginx/pkg/util/sets"
 )
 
 // Config returns external authentication configuration for an Ingress rule
@@ -149,7 +149,8 @@ func ValidHeader(header string) bool {
 // ValidCacheDuration checks if the provided string is a valid cache duration
 // spec: [code ...] [time ...];
 // with: code is an http status code
-//       time must match the time regex and may appear multiple times, e.g. `1h 30m`
+//
+//	time must match the time regex and may appear multiple times, e.g. `1h 30m`
 func ValidCacheDuration(duration string) bool {
 	elements := strings.Split(duration, " ")
 	seenDuration := false

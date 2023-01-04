@@ -1,13 +1,14 @@
 name: Performance Test
-on: 
+
+on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'     
+        description: 'Log level'
         required: true
         default: 'warning'
       tags:
-        description: 'K6 Load Test'  
+        description: 'K6 Load Test'
 
 permissions:
   contents: read
@@ -18,11 +19,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
- 
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+
       - name: Install K6
         run: |
           wget https://github.com/grafana/k6/releases/download/v0.38.2/k6-v0.38.2-linux-amd64.tar.gz
+          echo '7c9e5a26aaa2c638c042f6dfda7416161b8d2e0d4cb930721a38083b8be109ab *k6-v0.38.2-linux-amd64.tar.gz' | shasum -c
           tar -xvf k6-v0.38.2-linux-amd64.tar.gz k6-v0.38.2-linux-amd64/k6
           mv k6-v0.38.2-linux-amd64/k6 .
           ./k6
@@ -32,7 +34,7 @@ jobs:
           mkdir $HOME/.kube
           make dev-env
           podName=`kubectl -n ingress-nginx get po | grep -i controller | awk '{print $1}'`
-          if [[ -z ${podName} ]] ; then 
+          if [[ -z ${podName} ]] ; then
             sleep 5
           fi
           kubectl wait pod -n ingress-nginx --for condition=Ready $podName
@@ -45,7 +47,7 @@ jobs:
             kubectl create ing k6 --class nginx \
             --rule test.ingress-nginx-controller.ga/*=k6:80
           podName=`kubectl get po | grep -i k6 | awk '{print $1}'`
-          if [[ -z ${podName} ]] ; then 
+          if [[ -z ${podName} ]] ; then
             sleep 5
           fi
           kubectl wait pod --for condition=Ready $podName

@@ -16,10 +16,10 @@
 
 GO_BUILD_CMD="go build"
 
-if [ -n "$DEBUG" ]; then
-	set -x
-	GO_BUILD_CMD="go build -v"
-fi
+#if [ -n "$DEBUG" ]; then
+#	set -x
+#	GO_BUILD_CMD="go build -v"
+#fi
 
 set -o errexit
 set -o nounset
@@ -51,26 +51,28 @@ echo "Building ${PKG}/cmd/nginx"
 
 ${GO_BUILD_CMD} \
   -trimpath -ldflags="-buildid= -w -s \
-    -X ${PKG}/version.RELEASE=${TAG} \
-    -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
-    -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -X ${PKG}/version.RELEASE=${TAG} \
+  -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
+  -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -buildvcs=false \
   -o "${TARGETS_DIR}/nginx-ingress-controller" "${PKG}/cmd/nginx"
 
 echo "Building ${PKG}/cmd/dbg"
 
 ${GO_BUILD_CMD} \
   -trimpath -ldflags="-buildid= -w -s \
-    -X ${PKG}/version.RELEASE=${TAG} \
-    -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
-    -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -X ${PKG}/version.RELEASE=${TAG} \
+  -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
+  -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -buildvcs=false \
   -o "${TARGETS_DIR}/dbg" "${PKG}/cmd/dbg"
 
 echo "Building ${PKG}/cmd/waitshutdown"
 
 ${GO_BUILD_CMD} \
   -trimpath -ldflags="-buildid= -w -s \
-    -X ${PKG}/version.RELEASE=${TAG} \
-    -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
-    -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -X ${PKG}/version.RELEASE=${TAG} \
+  -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
+  -X ${PKG}/version.REPO=${REPO_INFO}" \
+  -buildvcs=false \
   -o "${TARGETS_DIR}/wait-shutdown" "${PKG}/cmd/waitshutdown"
-

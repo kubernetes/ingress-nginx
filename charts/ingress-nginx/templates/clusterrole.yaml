@@ -29,6 +29,13 @@ rules:
     verbs:
       - list
       - watch
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - list
+      - watch
 {{- if and .Values.controller.scope.enabled .Values.controller.scope.namespace }}
   - apiGroups:
       - ""
@@ -82,6 +89,14 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - watch
+      - get
 {{- end }}
 
 {{- end }}
