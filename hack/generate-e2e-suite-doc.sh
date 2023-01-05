@@ -18,10 +18,6 @@ if [ -n "$DEBUG" ]; then
 	set -x
 fi
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
 URL="https://github.com/kubernetes/ingress-nginx/tree/main/"
 DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 
@@ -34,7 +30,7 @@ Do not try to edit it manually.
 
 "
 
-for FILE in `find $DIR/test/e2e -name "*.go"`;do
+for FILE in $(find $DIR/test/e2e -name "*.go");do
     # describe definition
     DESCRIBE=$(cat $FILE | grep -n -oP 'Describe.*')
     # line number
