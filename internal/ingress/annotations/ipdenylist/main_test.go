@@ -96,7 +96,7 @@ func TestParseAnnotations(t *testing.T) {
 		"test parse a malicious escaped string": {
 			net:       `10.0.0.0/8"rm /tmp",11.0.0.0/8`,
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
+			errOut:    `the annotation does not contain a valid IP address or network: invalid CIDR address: 10.0.0.0/8"rm /tmp"`,
 		},
 		"test parse multiple valid cidr": {
 			net:        "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
