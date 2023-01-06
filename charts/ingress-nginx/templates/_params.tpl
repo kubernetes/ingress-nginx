@@ -51,7 +51,7 @@
 {{- if .Values.controller.watchIngressWithoutClass }}
 - --watch-ingress-without-class=true
 {{- end }}
-{{- if .Values.controller.enableTopologyAwareRouting -}}
+{{- if .Values.controller.enableTopologyAwareRouting }}
 - --enable-topology-aware-routing=true
 {{- end }}
 {{- range $key, $value := .Values.controller.extraArgs }}

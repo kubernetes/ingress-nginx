@@ -40,16 +40,25 @@ const SlowEchoService = "slow-echo"
 const HTTPBinService = "httpbin"
 
 type deploymentOptions struct {
-	namespace string
-	name      string
-	replicas  int
-	image     string
+	namespace      string
+	name           string
+	replicas       int
+	svcAnnotations map[string]string
 }
 
 // WithDeploymentNamespace allows configuring the deployment's namespace
 func WithDeploymentNamespace(n string) func(*deploymentOptions) {
 	return func(o *deploymentOptions) {
 		o.namespace = n
+	}
+}
+
+// WithSvcTopologyAnnotations create svc with topology aware hints sets to auto
+func WithSvcTopologyAnnotations() func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.svcAnnotations = map[string]string{
+			"service.kubernetes.io/topology-aware-hints": "auto",
+		}
 	}
 }
 
@@ -95,8 +104,9 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      options.name,
-			Namespace: options.namespace,
+			Name:        options.name,
+			Namespace:   options.namespace,
+			Annotations: options.svcAnnotations,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
