@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -90,6 +90,11 @@ func TestParseAnnotations(t *testing.T) {
 		},
 		"test parse a empty net": {
 			net:       "",
+			expectErr: true,
+			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
+		},
+		"test parse a malicious escaped string": {
+			net:       `10.0.0.0/8"rm /tmp",11.0.0.0/8`,
 			expectErr: true,
 			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
 		},
