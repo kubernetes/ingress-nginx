@@ -33,7 +33,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("[Endpointslices] topology aware hints", func() {
+var _ = framework.IngressNginxDescribe("[TopologyHints] topology aware routing", func() {
 	f := framework.NewDefaultFramework("topology")
 	host := "topology-svc.foo.com"
 
