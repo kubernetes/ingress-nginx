@@ -1058,6 +1058,8 @@ stream {
             opentracing_propagate_context;
             {{ end }}
 
+            access_log off;
+
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
             {{ if $all.Cfg.EnableModsecurity }}
             modsecurity off;
