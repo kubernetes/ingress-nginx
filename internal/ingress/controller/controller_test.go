@@ -339,6 +339,23 @@ func TestCheckIngress(t *testing.T) {
 				t.Errorf("with a new ingress without error, no error should be returned")
 			}
 		})
+
+		t.Run("When invalid path is passed to Ingress", func(t *testing.T) {
+			nginx.store = fakeIngressStore{
+				ingresses: []*ingress.Ingress{},
+			}
+			nginx.command = testNginxTestCommand{
+				t:   t,
+				err: nil,
+			}
+			ing.Spec.Rules[0].HTTP.Paths = append(ing.Spec.Rules[0].HTTP.Paths, networking.HTTPIngressPath{
+				Path: "/foo/bar/;xpto",
+			})
+			if err := nginx.CheckIngress(ing); err == nil {
+				t.Errorf("with an invalid path, ingress should be rejected")
+			}
+		})
+
 	})
 
 	t.Run("When the ingress is marked as deleted", func(t *testing.T) {

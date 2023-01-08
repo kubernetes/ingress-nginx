@@ -165,6 +165,12 @@ func TestIsSafePath(t *testing.T) {
 			path:    "",
 		},
 		{
+			name:    "should accept / path",
+			want:    true,
+			copyIng: generateDumbIngressforPathTest(false),
+			path:    "/",
+		},
+		{
 			name:    "should accept valid path with regex disabled",
 			want:    true,
 			copyIng: generateDumbIngressforPathTest(false),

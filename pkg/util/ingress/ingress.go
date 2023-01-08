@@ -252,7 +252,16 @@ func BuildRedirects(servers []*ingress.Server) []*redirect {
 func IsSafePath(copyIng *networkingv1.Ingress, path string) bool {
 	isRegex, _ := parser.GetBoolAnnotation("use-regex", copyIng)
 	isRewrite, _ := parser.GetBoolAnnotation("rewrite-target", copyIng)
-	if isRegex || isRewrite {
+	isImplSpecific := false
+	for _, rules := range copyIng.Spec.Rules {
+		for _, paths := range rules.HTTP.Paths {
+			if paths.PathType != nil && *paths.PathType == networkingv1.PathTypeImplementationSpecific {
+				isImplSpecific = true
+				break
+			}
+		}
+	}
+	if isRegex || isRewrite || isImplSpecific {
 		return pathRegexEnabled(path)
 	}
 	return pathAlphaNumeric(path)

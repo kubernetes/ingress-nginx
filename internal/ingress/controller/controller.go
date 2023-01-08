@@ -305,6 +305,18 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 
 	k8s.SetDefaultNGINXPathType(ing)
 
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			continue
+		}
+
+		for _, path := range rule.HTTP.Paths {
+			if !utilingress.IsSafePath(ing, path.Path) {
+				return fmt.Errorf("ingress contains invalid path: %s", path.Path)
+			}
+		}
+	}
+
 	allIngresses := n.store.ListIngresses()
 
 	filter := func(toCheck *ingress.Ingress) bool {
