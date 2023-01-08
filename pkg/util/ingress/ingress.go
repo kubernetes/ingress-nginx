@@ -37,9 +37,9 @@ const (
 
 var (
 	// pathAlphaNumeric is a regex validation of something like "^/[a-zA-Z]+$" on path
-	pathAlphaNumeric = regexp.MustCompile("^/[" + alphaNumericChars + "]*$").MatchString
+	pathAlphaNumeric = regexp.MustCompile("^[/" + alphaNumericChars + "]*$").MatchString
 	// pathRegexEnabled is a regex validation of paths that may contain regex.
-	pathRegexEnabled = regexp.MustCompile("^/[" + alphaNumericChars + regexEnabledChars + "]*$").MatchString
+	pathRegexEnabled = regexp.MustCompile("^[/" + alphaNumericChars + regexEnabledChars + "]*$").MatchString
 )
 
 func GetRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
