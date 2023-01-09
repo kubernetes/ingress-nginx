@@ -357,7 +357,7 @@ Prometheus metrics are exposed on port 10254.
 
 * `nginx_ingress_controller_request_duration_seconds` Histogram
 
-  The request processing time in milliseconds (affected by client speed)
+  The request processing time in seconds (affected by client speed)
 
   nginx var: `request_time`
 

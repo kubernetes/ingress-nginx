@@ -149,6 +149,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 
 	def = config.NewDefault()
 	def.LuaSharedDicts = defaultLuaSharedDicts
+	def.DenylistSourceRange = []string{"2.2.2.2/32"}
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
 	def.DisableIpv6DNS = true
 
@@ -161,6 +162,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.Checksum = fmt.Sprintf("%v", hash)
 
 	to = ReadConfig(map[string]string{
+		"denylist-source-range":  "2.2.2.2/32",
 		"whitelist-source-range": "1.1.1.1/32",
 		"disable-ipv6-dns":       "true",
 	})

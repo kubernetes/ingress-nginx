@@ -19,19 +19,25 @@ if [ "$DEBUG" == "true" ]; then
   set -x
 fi
 
+RUNTIME=${RUNTIME:-"docker"}
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
 # temporal directory for the /etc/ingress-controller directory
-INGRESS_VOLUME=$(mktemp -d)
+if [[ "$OSTYPE" == darwin* ]] && [[ "$RUNTIME" == podman ]]; then
+  mkdir -p "tmp"
+  INGRESS_VOLUME=$(pwd)/$(mktemp -d tmp/XXXXXX)
+else
+  INGRESS_VOLUME=$(mktemp -d)
+  if [[ "$OSTYPE" == darwin* ]]; then
+    INGRESS_VOLUME=/private$INGRESS_VOLUME
+  fi
+fi
 
 # make sure directory for SSL cert storage exists under ingress volume
 mkdir "${INGRESS_VOLUME}/ssl"
-
-if [[ "$OSTYPE" == darwin* ]]; then
-  INGRESS_VOLUME=/private$INGRESS_VOLUME
-fi
 
 function cleanup {
   rm -rf "${INGRESS_VOLUME}"
@@ -39,6 +45,11 @@ function cleanup {
 trap cleanup EXIT
 
 E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20221221-controller-v1.5.1-62-g6ffaef32a@sha256:8f025472964cd15ae2d379503aba150565a8d78eb36b41ddfc5f1e3b1ca81a8e}
+
+if [[ "$RUNTIME" == podman ]]; then
+  # Podman does not support both tag and digest
+  E2E_IMAGE=$(echo $E2E_IMAGE | awk -F "@sha" '{print $1}')
+fi
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 DOCKER_IN_DOCKER_ENABLED=${DOCKER_IN_DOCKER_ENABLED:-}
@@ -82,20 +93,12 @@ if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   /bin/bash -c "${FLAGS}"
 else
   echo "Reached DIND check ELSE block, inside run-in-docker.sh"
-  docker run                                            \
-    ${PLATFORM_FLAG} ${PLATFORM}                        \
-    --tty                                               \
-    --rm                                                \
-    ${DOCKER_OPTS}                                      \
-    -e DEBUG=${DEBUG}                                   \
-    -e GOCACHE="/go/src/${PKG}/.cache"                  \
-    -e GOMODCACHE="/go/src/${PKG}/.modcache"            \
-    -e DOCKER_IN_DOCKER_ENABLED="true"                  \
-    -v "${HOME}/.kube:${HOME}/.kube"                    \
-    -v "${KUBE_ROOT}:/go/src/${PKG}"                    \
-    -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" \
-    -v "/var/run/docker.sock:/var/run/docker.sock"      \
-    -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
-    -w "/go/src/${PKG}"                                 \
-    ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
+
+  args="${PLATFORM_FLAG} ${PLATFORM} --tty --rm ${DOCKER_OPTS} -e DEBUG=${DEBUG} -e GOCACHE="/go/src/${PKG}/.cache" -e GOMODCACHE="/go/src/${PKG}/.modcache" -e DOCKER_IN_DOCKER_ENABLED="true" -v "${HOME}/.kube:${HOME}/.kube" -v "${KUBE_ROOT}:/go/src/${PKG}" -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" -v "${INGRESS_VOLUME}:/etc/ingress-controller/" -w "/go/src/${PKG}""
+
+  if [[ "$RUNTIME" == "docker" ]]; then
+    args="$args -v /var/run/docker.sock:/var/run/docker.sock"
+  fi
+
+  ${RUNTIME} run $args ${E2E_IMAGE} /bin/bash -c "${FLAGS}"
 fi

@@ -19,6 +19,11 @@ spec:
   replicas: {{ .Values.defaultBackend.replicaCount }}
 {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- if .Values.defaultBackend.updateStrategy }}
+  strategy:
+    {{ toYaml .Values.defaultBackend.updateStrategy | nindent 4 }}
+  {{- end }}
+  minReadySeconds: {{ .Values.defaultBackend.minReadySeconds }}
   template:
     metadata:
     {{- if .Values.defaultBackend.podAnnotations }}

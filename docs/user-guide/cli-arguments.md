@@ -18,6 +18,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--disable-catch-all`              | Disable support for catch-all Ingresses. (default false) |
 | `--disable-full-test` | Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default). |
 | `--disable-svc-external-name` | Disable support for Services of type ExternalName. (default false) |
+| `--disable-sync-events` | Disables the creation of 'Sync' Event resources, but still logs them |
 | `--dynamic-configuration-retries` | Number of times to retry failed dynamic configuration before failing to sync an ingress. (default 15) |
 | `--election-id`                    | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
 | `--enable-metrics`                 | Enables the collection of NGINX metrics. (default true) |
