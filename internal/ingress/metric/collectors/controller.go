@@ -32,6 +32,7 @@ var (
 	ingressOperation = []string{"controller_namespace", "controller_class", "controller_pod", "namespace", "ingress"}
 	sslLabelHost     = []string{"namespace", "class", "host", "secret_name"}
 	sslInfoLabels    = []string{"namespace", "class", "host", "secret_name", "identifier", "issuer_organization", "issuer_common_name", "serial_number", "public_key_algorithm"}
+	orphanityLabels  = []string{"controller_namespace", "controller_class", "controller_pod", "namespace", "ingress", "type"}
 )
 
 // Controller defines base metrics about the ingress controller
@@ -179,7 +180,7 @@ func NewController(pod, namespace, class string) *Controller {
 				Help: `Gauge reporting status of ingress orphanity, 1 indicates orphaned ingress.
 			'namespace' is the string used to identify namespace of ingress, 'ingress' for ingress name and 'type' for 'no-service' or 'no-endpoint' of orphanity`,
 			},
-			[]string{"namespace", "ingress", "type"},
+			orphanityLabels,
 		),
 	}
 
