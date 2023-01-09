@@ -2404,6 +2404,7 @@ func newNGINXController(t *testing.T) *NGINXController {
 			Controller:      "k8s.io/ingress-nginx",
 			AnnotationValue: "nginx",
 		},
+		false,
 	)
 
 	sslCert := ssl.GetFakeSSLCert()
@@ -2468,7 +2469,8 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		&ingressclass.IngressClassConfiguration{
 			Controller:      "k8s.io/ingress-nginx",
 			AnnotationValue: "nginx",
-		})
+		},
+		false)
 
 	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{
