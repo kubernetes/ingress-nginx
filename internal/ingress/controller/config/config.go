@@ -519,6 +519,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
 	ProxyHTTPVersion string `json:"proxy-http-version"`
 
+	// Disables NGINX proxy-intercept-errors when error_page/custom-http-errors are set
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
+	ProxyInterceptErrors bool `json:"proxy-intercept-errors,omitempty"`
+
 	// Sets the ipv4 addresses on which the server will accept requests.
 	BindAddressIpv4 []string `json:"bind-address-ipv4,omitempty"`
 
@@ -873,6 +877,7 @@ func NewDefault() Configuration {
 		VariablesHashBucketSize:          256,
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,
+		ProxyInterceptErrors:             true,
 		ProxyStreamTimeout:               "600s",
 		ProxyStreamNextUpstream:          true,
 		ProxyStreamNextUpstreamTimeout:   "600s",
@@ -895,6 +900,7 @@ func NewDefault() Configuration {
 			PreserveTrailingSlash:    false,
 			SSLRedirect:              true,
 			CustomHTTPErrors:         []int{},
+			ProxyInterceptErrors:     true,
 			DenylistSourceRange:      []string{},
 			WhitelistSourceRange:     []string{},
 			SkipAccessLogURLs:        []string{},

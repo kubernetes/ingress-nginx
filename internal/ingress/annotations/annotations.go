@@ -20,6 +20,7 @@ import (
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyintercepterrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/streamsnippet"
@@ -86,6 +87,7 @@ type Ingress struct {
 	Connection           connection.Config
 	CorsConfig           cors.Config
 	CustomHTTPErrors     []int
+	ProxyInterceptErrors bool
 	DefaultBackend       *apiv1.Service
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
 	FastCGI            fastcgi.Config
@@ -139,6 +141,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Connection":           connection.NewParser(cfg),
 			"CorsConfig":           cors.NewParser(cfg),
 			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
+			"ProxyInterceptErrors": proxyintercepterrors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"FastCGI":              fastcgi.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
