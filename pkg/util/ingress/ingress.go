@@ -32,7 +32,7 @@ import (
 
 const (
 	alphaNumericChars = `\-\.\_\~a-zA-Z0-9/`
-	regexEnabledChars = `\^\$\[\]\(\)\{\}\*\+`
+	regexEnabledChars = `\^\$\[\]\(\)\{\}\*\+\|`
 )
 
 var (
