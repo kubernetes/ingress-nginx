@@ -30,13 +30,13 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return proxyInterceptErrors{r}
 }
 
-func (s proxyInterceptErrors) Parse(ing *networking.Ingress) (interface{}, error) {
-	defBackend := s.r.GetDefaultBackend()
-
+func (pie proxyInterceptErrors) Parse(ing *networking.Ingress) (interface{}, error) {
 	val, err := parser.GetBoolAnnotation("proxy-intercept-errors", ing)
+
 	// A missing annotation is not a problem, just use the default
 	if err == errors.ErrMissingAnnotations {
-		return defBackend.ProxyInterceptErrors, nil
+		return true, nil
+		// default is true and only matters when "custom-http-errors" is also set
 	}
 
 	return val, nil
