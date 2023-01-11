@@ -34,8 +34,8 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
-func buildLoadBalancerIngressByIP() []apiv1.LoadBalancerIngress {
-	return []apiv1.LoadBalancerIngress{
+func buildLoadBalancerIngressByIP() []networking.IngressLoadBalancerIngress {
+	return []networking.IngressLoadBalancerIngress{
 		{
 			IP:       "10.0.0.1",
 			Hostname: "foo1",
@@ -123,17 +123,20 @@ func buildSimpleClientSet() *testclient.Clientset {
 			},
 		}},
 		&apiv1.ServiceList{Items: []apiv1.Service{
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: apiv1.NamespaceDefault,
-				},
-				Status: apiv1.ServiceStatus{
-					LoadBalancer: apiv1.LoadBalancerStatus{
-						Ingress: buildLoadBalancerIngressByIP(),
-					},
-				},
-			},
+			// This is commented out as the ServiceStatus.LoadBalancer field expects a LoadBalancerStatus object
+			// which is incompatible with the current Ingress struct which expects a IngressLoadBalancerStatus object
+			// TODO: update this service when the ServiceStatus struct gets updated
+			//{
+			//	ObjectMeta: metav1.ObjectMeta{
+			//		Name:      "foo",
+			//		Namespace: apiv1.NamespaceDefault,
+			//	},
+			//	Status: apiv1.ServiceStatus{
+			//		LoadBalancer: apiv1.LoadBalancerStatus{
+			//			Ingress: buildLoadBalancerIngressByIP(),
+			//		},
+			//	},
+			//},
 			{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo_non_exist",
@@ -199,8 +202,8 @@ func buildExtensionsIngresses() []networking.Ingress {
 				Namespace: apiv1.NamespaceDefault,
 			},
 			Status: networking.IngressStatus{
-				LoadBalancer: apiv1.LoadBalancerStatus{
-					Ingress: []apiv1.LoadBalancerIngress{
+				LoadBalancer: networking.IngressLoadBalancerStatus{
+					Ingress: []networking.IngressLoadBalancerIngress{
 						{
 							IP:       "10.0.0.1",
 							Hostname: "foo1",
@@ -218,8 +221,8 @@ func buildExtensionsIngresses() []networking.Ingress {
 				},
 			},
 			Status: networking.IngressStatus{
-				LoadBalancer: apiv1.LoadBalancerStatus{
-					Ingress: []apiv1.LoadBalancerIngress{
+				LoadBalancer: networking.IngressLoadBalancerStatus{
+					Ingress: []networking.IngressLoadBalancerIngress{
 						{
 							IP:       "0.0.0.0",
 							Hostname: "foo.bar.com",
@@ -234,8 +237,8 @@ func buildExtensionsIngresses() []networking.Ingress {
 				Namespace: apiv1.NamespaceDefault,
 			},
 			Status: networking.IngressStatus{
-				LoadBalancer: apiv1.LoadBalancerStatus{
-					Ingress: []apiv1.LoadBalancerIngress{},
+				LoadBalancer: networking.IngressLoadBalancerStatus{
+					Ingress: []networking.IngressLoadBalancerIngress{},
 				},
 			},
 		},
@@ -261,7 +264,7 @@ func (til *testIngressLister) ListIngresses() []*ingress.Ingress {
 				Namespace: apiv1.NamespaceDefault,
 			},
 			Status: networking.IngressStatus{
-				LoadBalancer: apiv1.LoadBalancerStatus{
+				LoadBalancer: networking.IngressLoadBalancerStatus{
 					Ingress: buildLoadBalancerIngressByIP(),
 				},
 			},
@@ -325,7 +328,7 @@ func TestStatusActions(t *testing.T) {
 	fk.sync("just-test")
 	// PublishService is empty, so the running address is: ["11.0.0.2"]
 	// after updated, the ingress's ip should only be "11.0.0.2"
-	newIPs := []apiv1.LoadBalancerIngress{{
+	newIPs := []networking.IngressLoadBalancerIngress{{
 		IP: "11.0.0.2",
 	}}
 	fooIngress1, err1 := fk.Client.NetworkingV1().Ingresses(apiv1.NamespaceDefault).Get(context.TODO(), "foo_ingress_1", metav1.GetOptions{})
@@ -342,7 +345,7 @@ func TestStatusActions(t *testing.T) {
 	// execute shutdown
 	fk.Shutdown()
 	// ingress should be empty
-	newIPs2 := []apiv1.LoadBalancerIngress{}
+	newIPs2 := []networking.IngressLoadBalancerIngress{}
 	fooIngress2, err2 := fk.Client.NetworkingV1().Ingresses(apiv1.NamespaceDefault).Get(context.TODO(), "foo_ingress_1", metav1.GetOptions{})
 	if err2 != nil {
 		t.Fatalf("unexpected error")
@@ -659,7 +662,7 @@ func TestRunningAddressesWithPublishStatusAddressesAndSpaces(t *testing.T) {
 }
 
 func TestStandardizeLoadBalancerIngresses(t *testing.T) {
-	fkEndpoints := []apiv1.LoadBalancerIngress{
+	fkEndpoints := []networking.IngressLoadBalancerIngress{
 		{IP: "2001:db8::68"},
 		{IP: "10.0.0.1"},
 		{Hostname: "opensource-k8s-ingress"},
@@ -690,7 +693,7 @@ func TestStandardizeLoadBalancerIngresses(t *testing.T) {
 
 func TestIngressSliceEqual(t *testing.T) {
 	fk1 := buildLoadBalancerIngressByIP()
-	fk2 := append(buildLoadBalancerIngressByIP(), apiv1.LoadBalancerIngress{
+	fk2 := append(buildLoadBalancerIngressByIP(), networking.IngressLoadBalancerIngress{
 		IP:       "10.0.0.5",
 		Hostname: "foo5",
 	})
@@ -700,8 +703,8 @@ func TestIngressSliceEqual(t *testing.T) {
 	fk4[2].IP = "11.0.0.3"
 
 	fooTests := []struct {
-		lhs []apiv1.LoadBalancerIngress
-		rhs []apiv1.LoadBalancerIngress
+		lhs []networking.IngressLoadBalancerIngress
+		rhs []networking.IngressLoadBalancerIngress
 		er  bool
 	}{
 		{fk1, fk1, true},
@@ -710,7 +713,7 @@ func TestIngressSliceEqual(t *testing.T) {
 		{fk4, fk1, false},
 		{fk1, nil, false},
 		{nil, nil, true},
-		{[]apiv1.LoadBalancerIngress{}, []apiv1.LoadBalancerIngress{}, true},
+		{[]networking.IngressLoadBalancerIngress{}, []networking.IngressLoadBalancerIngress{}, true},
 	}
 
 	for _, fooTest := range fooTests {
