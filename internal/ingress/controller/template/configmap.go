@@ -41,6 +41,7 @@ const (
 	customHTTPErrors              = "custom-http-errors"
 	skipAccessLogUrls             = "skip-access-log-urls"
 	whitelistSourceRange          = "whitelist-source-range"
+	denylistSourceRange           = "denylist-source-range"
 	proxyRealIPCIDR               = "proxy-real-ip-cidr"
 	bindAddress                   = "bind-address"
 	httpRedirectCode              = "http-redirect-code"
@@ -100,6 +101,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to := config.NewDefault()
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
+	denyList := make([]string, 0)
 	whiteList := make([]string, 0)
 	proxyList := make([]string, 0)
 	hideHeadersList := make([]string, 0)
@@ -167,6 +169,11 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[skipAccessLogUrls]; ok {
 		delete(conf, skipAccessLogUrls)
 		skipUrls = splitAndTrimSpace(val, ",")
+	}
+
+	if val, ok := conf[denylistSourceRange]; ok {
+		delete(conf, denylistSourceRange)
+		denyList = append(denyList, splitAndTrimSpace(val, ",")...)
 	}
 
 	if val, ok := conf[whitelistSourceRange]; ok {
@@ -395,6 +402,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
+	to.DenylistSourceRange = denyList
 	to.WhitelistSourceRange = whiteList
 	to.ProxyRealIPCIDR = proxyList
 	to.BindAddressIpv4 = bindAddressIpv4List

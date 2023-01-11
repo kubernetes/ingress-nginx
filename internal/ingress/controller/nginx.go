@@ -136,7 +136,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		n.updateCh,
 		config.DisableCatchAll,
 		config.DeepInspector,
-		config.IngressClassConfiguration)
+		config.IngressClassConfiguration,
+		config.DisableSyncEvents)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 

@@ -401,6 +401,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.Rewrite).Equal(&l2.Rewrite) {
 		return false
 	}
+	if !(&l1.Denylist).Equal(&l2.Denylist) {
+		return false
+	}
 	if !(&l1.Whitelist).Equal(&l2.Whitelist) {
 		return false
 	}

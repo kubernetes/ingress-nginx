@@ -125,7 +125,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -206,7 +207,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 		ic := createIngressClass(clientSet, t, "not-k8s.io/not-ingress-nginx")
@@ -310,7 +312,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 		validSpec := commonIngressSpec
@@ -426,7 +429,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			ingressClassconfig)
+			ingressClassconfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -556,7 +560,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			ingressClassconfig)
+			ingressClassconfig,
+			false)
 
 		storer.Run(stopCh)
 		validSpec := commonIngressSpec
@@ -656,7 +661,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -750,7 +756,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 		invalidSpec := commonIngressSpec
@@ -836,7 +843,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -932,7 +940,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -1056,7 +1065,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -1177,7 +1187,8 @@ func TestStore(t *testing.T) {
 			updateCh,
 			false,
 			true,
-			DefaultClassConfig)
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 

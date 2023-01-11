@@ -214,6 +214,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		deepInspector = flags.Bool("deep-inspect", true, "Enables ingress object security deep inspector")
 
 		dynamicConfigurationRetries = flags.Int("dynamic-configuration-retries", 15, "Number of times to retry failed dynamic configuration before failing to sync an ingress.")
+
+		disableSyncEvents = flags.Bool("disable-sync-events", false, "Disables the creation of 'Sync' event resources")
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
@@ -364,6 +366,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		ValidationWebhookCertPath: *validationWebhookCert,
 		ValidationWebhookKeyPath:  *validationWebhookKey,
 		InternalLoggerAddress:     *internalLoggerAddress,
+		DisableSyncEvents:         *disableSyncEvents,
 	}
 
 	if *apiserverHost != "" {
