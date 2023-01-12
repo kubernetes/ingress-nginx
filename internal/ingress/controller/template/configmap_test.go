@@ -64,6 +64,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"access-log-path":               "/var/log/test/access.log",
 		"error-log-path":                "/var/log/test/error.log",
 		"use-gzip":                      "false",
+		"gzip-disable":                  "msie6",
 		"gzip-level":                    "9",
 		"gzip-min-length":               "1024",
 		"gzip-types":                    "text/html",
@@ -87,6 +88,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.ProxyReadTimeout = 1
 	def.ProxySendTimeout = 2
 	def.UseProxyProtocol = true
+	def.GzipDisable = "msie6"
 	def.GzipLevel = 9
 	def.GzipMinLength = 1024
 	def.GzipTypes = "text/html"

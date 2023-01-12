@@ -103,6 +103,7 @@ The following table shows a configuration option's name, type, and the default v
 |[brotli-min-length](#brotli-min-length)|int|20|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
+|[gzip-disable](#gzip-disable)|string|""|
 |[gzip-level](#gzip-level)|int|1|
 |[gzip-min-length](#gzip-min-length)|int|256|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
@@ -714,6 +715,10 @@ _**default:**_ `application/xml+rss application/atom+xml application/javascript 
 ## use-http2
 
 Enables or disables [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
+
+## gzip-disable
+
+Disables gzipping of responses for requests with "User-Agent" header fields matching any of the specified regular expressions. The special mask `msie6` corresponds to the regular expression `MSIE [4-6]\.`, but works faster.
 
 ## gzip-level
 
