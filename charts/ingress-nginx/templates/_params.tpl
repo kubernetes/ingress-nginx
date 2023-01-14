@@ -7,7 +7,7 @@
 {{- if .Values.controller.service.external.enabled }}
 - --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}
 {{- else if .Values.controller.service.internal.enabled }}
-- --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}-internal
+- --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}-{{ .Values.controller.service.internal.nameSuffix | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 - --election-id={{ include "ingress-nginx.controller.electionID" . }}

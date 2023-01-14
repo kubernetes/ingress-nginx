@@ -11,7 +11,7 @@ metadata:
   {{- if .Values.controller.metrics.service.labels }}
     {{- toYaml .Values.controller.metrics.service.labels | nindent 4 }}
   {{- end }}
-  name: {{ include "ingress-nginx.controller.fullname" . }}-metrics
+  name: {{ include "ingress-nginx.controller.metrics.servicename" . }}
   namespace: {{ .Release.Namespace }}
 spec:
   type: {{ .Values.controller.metrics.service.type }}

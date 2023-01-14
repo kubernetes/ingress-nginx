@@ -538,6 +538,9 @@ controller:
       ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
       # externalTrafficPolicy: ""
 
+      # --- Suffix to be used to name the internal service
+      nameSuffix: internal
+
   # shareProcessNamespace enables process namespace sharing within the pod.
   # This can be used for example to signal log rotation using `kill -USR1` from a sidecar.
   shareProcessNamespace: false
@@ -634,6 +637,8 @@ controller:
       externalIPs: []
       # loadBalancerIP: ""
       loadBalancerSourceRanges: []
+      # --- Suffix to be used to name the admission webhook service
+      nameSuffix: admission
       servicePort: 443
       type: ClusterIP
 
@@ -710,6 +715,8 @@ controller:
 
       # loadBalancerIP: ""
       loadBalancerSourceRanges: []
+      # --- Suffix to be used to name the metrics service
+      nameSuffix: metrics
       servicePort: 10254
       type: ClusterIP
       # externalTrafficPolicy: ""

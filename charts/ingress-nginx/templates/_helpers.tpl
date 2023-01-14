@@ -86,6 +86,49 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Create a name for the controller internal service.
+We fail if longer than 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "ingress-nginx.controller.internal.servicename" -}}
+{{- $name := printf "%s-%s" (include "ingress-nginx.controller.fullname" .) .Values.controller.service.internal.nameSuffix | trimSuffix "-" -}}
+{{- if gt (len $name) 63 -}}
+  {{- fail (printf "Internal service name must be shorter than 63 characters. Got: %s" $name) -}}
+{{- end -}}
+{{- print $name -}}
+{{- end -}}
+
+{{/*
+Create a name for the controller metrics service.
+We fail if longer than 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "ingress-nginx.controller.metrics.servicename" -}}
+{{- $name := printf "%s-%s" (include "ingress-nginx.controller.fullname" .) .Values.controller.metrics.service.nameSuffix | trimSuffix "-" -}}
+{{- if gt (len $name) 63 -}}
+  {{- fail (printf "Metrics service name must be shorter than 63 characters. Got: %s" $name) -}}
+{{- end -}}
+{{- print $name -}}
+{{- end -}}
+
+{{/*
+Create a name for the controller admission webhook service.
+We fail if longer than 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "ingress-nginx.controller.admission.servicename" -}}
+{{- $name := printf "%s-%s" (include "ingress-nginx.controller.fullname" .) .Values.controller.admissionWebhooks.service.nameSuffix | trimSuffix "-" -}}
+{{- if gt (len $name) 63 -}}
+  {{- fail (printf "Admission webhook service name must be shorter than 63 characters. Got: %s" $name) -}}
+{{- end -}}
+{{- print $name -}}
+{{- end -}}
+
+{{/*
+Create the short admission webhook name.
+*/}}
+{{- define "ingress-nginx.admission.name" -}}
+{{- printf "%s-%s" (include "ingress-nginx.fullname" .) (.Values.controller.admissionWebhooks.service.nameSuffix | trimSuffix "-") -}}
+{{- end -}}
+
+{{/*
 Construct a unique electionID.
 Users can provide an override for an explicit electionID if they want via `.Values.controller.electionID`
 */}}
