@@ -1,0 +1,17 @@
+controller:
+  admissionWebhooks:
+    certManager:
+      enabled: true
+    service:
+      nameSuffix: adm
+  metrics:
+    enabled: true
+    service:
+      nameSuffix: mtr
+  service:
+    type: ClusterIP
+    internal:
+      enabled: true
+      nameSuffix: int
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-internal: "true"
