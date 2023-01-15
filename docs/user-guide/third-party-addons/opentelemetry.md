@@ -135,12 +135,14 @@ graph TB
 
 To install the example and collectors run:
 
-1. Enable Ingress addon with extra module:
+1. Enable Ingress addon with:
 
     ```yaml
-      extraModules:
-      - name: opentelemetry
-        image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
+      opentelemetry:
+        enabled: true
+        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230107-helm-chart-4.4.2-2-g96b3d2165@sha256:331b9bebd6acfcd2d3048abbdd86555f5be76b7e3d0b5af4300b04235c6056c9
+        containerSecurityContext:
+        allowPrivilegeEscalation: false
     ```
 
 2. Enable OpenTelemetry and set the otlp-collector-host:
@@ -151,7 +153,7 @@ To install the example and collectors run:
       kind: ConfigMap
       data:
         enable-opentelemetry: "true"
-        opentelemetry-config: "/etc/nginx/opentelemtry.toml"
+        opentelemetry-config: "/etc/nginx/opentelemetry.toml"
         opentelemetry-operation-name: "HTTP $request_method $service_name $uri"
         OpentelemetryTrustIncomingSpan: "true"
         otlp-collector-host: "otel-coll-collector.otel.svc"
