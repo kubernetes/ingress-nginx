@@ -325,6 +325,10 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 
 	k8s.SetDefaultNGINXPathType(ing)
 
+	if err := utilingress.ValidateIngressPath(ing, cfg.DisablePathTypeValidation, cfg.PathAdditionalAllowedChars); err != nil {
+		return fmt.Errorf("ingress contains invalid characters: %s", err)
+	}
+
 	allIngresses := n.store.ListIngresses()
 
 	filter := func(toCheck *ingress.Ingress) bool {

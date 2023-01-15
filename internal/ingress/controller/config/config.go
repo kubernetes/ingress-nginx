@@ -777,6 +777,17 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
 	// Default: ""
 	DebugConnections []string `json:"debug-connections"`
+
+	// DisablePathTypeValidation allows the admin to disable the pathType validation.
+	// If PathTypeValidation is enabled, the Controller will only allow alphanumeric
+	// characters on path (0-9, a-z, A-Z, "-", ".", "_", "~", "/")
+	DisablePathTypeValidation bool `json:"disable-pathtype-validation"`
+
+	// PathAdditionalAllowedChars allows the admin to specify what are the additional
+	// characters allowed in case of pathType=ImplementationSpecific.
+	// Case disable-pathtype-validation=true, this characters will be allowed on any path.
+	// Defaults to: "^%$[](){}*+?"
+	PathAdditionalAllowedChars string `json:"path-additional-allowed-chars"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -813,6 +824,8 @@ func NewDefault() Configuration {
 		ClientHeaderTimeout:              60,
 		ClientBodyBufferSize:             "8k",
 		ClientBodyTimeout:                60,
+		DisablePathTypeValidation:        false,
+		PathAdditionalAllowedChars:       "^%$[](){}*+?",
 		EnableUnderscoresInHeaders:       false,
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,

@@ -846,6 +846,11 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 	copyIng := &networkingv1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 
+	if err := ingressutils.ValidateIngressPath(ing, s.backendConfig.DisablePathTypeValidation, s.backendConfig.PathAdditionalAllowedChars); err != nil {
+		klog.Errorf("ingress %s contains invalid path and will be skipped: %s", err)
+		return
+	}
+
 	if s.backendConfig.AnnotationValueWordBlocklist != "" {
 		if err := checkBadAnnotationValue(copyIng.Annotations, s.backendConfig.AnnotationValueWordBlocklist); err != nil {
 			klog.Warningf("skipping ingress %s: %s", key, err)
@@ -864,10 +869,6 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 		for pi, path := range rule.HTTP.Paths {
 			if path.Path == "" {
 				copyIng.Spec.Rules[ri].HTTP.Paths[pi].Path = "/"
-			}
-			if !ingressutils.IsSafePath(copyIng, path.Path) {
-				klog.Warningf("ingress %s contains invalid path %s", key, path.Path)
-				return
 			}
 		}
 	}
