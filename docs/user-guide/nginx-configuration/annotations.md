@@ -109,6 +109,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/x-forwarded-prefix](#x-forwarded-prefix-header)|string|
 |[nginx.ingress.kubernetes.io/load-balance](#custom-nginx-load-balancing)|string|
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
+|[nginx.ingress.kubernetes.io/denylist-source-range](#denylist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
 |[nginx.ingress.kubernetes.io/proxy-buffers-number](#proxy-buffers-number)|number|
@@ -148,7 +149,7 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 
 * `nginx.ingress.kubernetes.io/canary-by-cookie`: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to `always`, it will be routed to the canary. When the cookie is set to `never`, it will never be routed to the canary. For any other value, the cookie will be ignored and the request compared against the other canary rules by precedence.
 
-* `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - <weight-total>) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of <weight-total> means implies all requests will be sent to the alternative service specified in the Ingress. `<weight-total>` defaults to 100, and can be increased via `nginx.ingress.kubernetes.io/canary-weight-total`.
+* `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - <weight-total>) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of `<weight-total>` means implies all requests will be sent to the alternative service specified in the Ingress. `<weight-total>` defaults to 100, and can be increased via `nginx.ingress.kubernetes.io/canary-weight-total`.
 
 * `nginx.ingress.kubernetes.io/canary-weight-total`: The total weight of traffic. If unspecified, it defaults to 100.
 
@@ -639,6 +640,17 @@ To enable this feature use the annotation `nginx.ingress.kubernetes.io/from-to-w
 
 !!! attention
     For HTTPS to HTTPS redirects is mandatory the SSL Certificate defined in the Secret, located in the TLS section of Ingress, contains both FQDN in the common name of the certificate.
+
+### Denylist source range
+
+You can specify blocked client IP source ranges through the `nginx.ingress.kubernetes.io/denylist-source-range` annotation.
+The value is a comma separated list of [CIDRs](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing), e.g.  `10.0.0.0/24,172.10.0.1`.
+
+To configure this setting globally for all Ingress rules, the `denylist-source-range` value may be set in the [NGINX ConfigMap](./configmap.md#denylist-source-range).
+
+!!! note
+    Adding an annotation to an Ingress rule overrides any global restriction.
+
 
 ### Whitelist source range
 

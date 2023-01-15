@@ -78,17 +78,23 @@ fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go get github.com/onsi/ginkgo/v2/ginkgo@v2.1.4
+    go get github.com/onsi/ginkgo/v2/ginkgo@v2.6.1
   fi
   echo "[dev-env] building image"
   make -C ${DIR}/../../ clean-image build image
 fi
-  
+
 
 KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | awk '{printf (NR>1?",":"") $1}')
 echo "[dev-env] copying docker images to cluster..."
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
+
+if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
+  echo "[dev-env] apply cert-manager ..."
+  kubectl apply --wait -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
+  sleep 10
+fi
 
 echo "[dev-env] running helm chart e2e tests..."
 # Uses a custom chart-testing image to avoid timeouts waiting for namespace deletion.

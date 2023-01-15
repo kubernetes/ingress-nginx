@@ -59,6 +59,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	ingressutils "k8s.io/ingress-nginx/pkg/util/ingress"
 )
 
 // IngressFilterFunc decides if an Ingress should be omitted or not
@@ -250,7 +251,8 @@ func New(
 	updateCh *channels.RingChannel,
 	disableCatchAll bool,
 	deepInspector bool,
-	icConfig *ingressclass.IngressClassConfiguration) Storer {
+	icConfig *ingressclass.IngressClassConfiguration,
+	disableSyncEvents bool) Storer {
 
 	store := &k8sStore{
 		informers:             &Informer{},
@@ -266,9 +268,11 @@ func New(
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
-	eventBroadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{
-		Interface: client.CoreV1().Events(namespace),
-	})
+	if !disableSyncEvents {
+		eventBroadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{
+			Interface: client.CoreV1().Events(namespace),
+		})
+	}
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{
 		Component: "nginx-ingress-controller",
 	})
@@ -860,6 +864,10 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 		for pi, path := range rule.HTTP.Paths {
 			if path.Path == "" {
 				copyIng.Spec.Rules[ri].HTTP.Paths[pi].Path = "/"
+			}
+			if !ingressutils.IsSafePath(copyIng, path.Path) {
+				klog.Warningf("ingress %s contains invalid path %s", key, path.Path)
+				return
 			}
 		}
 	}

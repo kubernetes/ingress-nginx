@@ -97,12 +97,12 @@ install_otel()
         -DWITH_JAEGER=OFF \
         -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
         -DBUILD_TESTING=OFF \
-        -DBUILD_SHARED_LIBS=ON \
+        -DBUILD_SHARED_LIBS=OFF \
         -DWITH_OTLP=ON \
         -DWITH_OTLP_GRPC=ON \
-        -DWITH_EXAMPLES=OFF \
-        -DWITH_ABSEIL=ON \
         -DWITH_OTLP_HTTP=OFF \
+        -DWITH_ABSEIL=OFF \
+        -DWITH_EXAMPLES=OFF \
         ..
   cmake --build . -j ${CORES} --target install
 }
@@ -123,10 +123,10 @@ get_src()
 
 install_nginx()
 {
-  export NGINX_VERSION=1.19.10
+  export NGINX_VERSION=1.21.6
 
   # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
-  export OPENTELEMETRY_CONTRIB_COMMIT=6467ec2e4d67b08b44580b7eb7a298786f4eef91
+  export OPENTELEMETRY_CONTRIB_COMMIT=1ec94c82095bab61f06c7393b6f3272469d285af
 
   mkdir -p /etc/nginx
   cd "$BUILD_PATH"
@@ -153,50 +153,6 @@ install_nginx()
   cp ${INSTAL_DIR}/otel_ngx_module.so /etc/nginx/modules/otel_ngx_module.so
 
   mkdir -p ${INSTAL_DIR}/lib
-  cp /usr/lib/libopentelemetry_exporter_otlp_grpc.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libopentelemetry_otlp_recordable.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libprotobuf.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libopentelemetry_trace.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libopentelemetry_resources.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libopentelemetry_common.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libstdc++.so* ${INSTAL_DIR}/lib
-
-  cp /usr/lib/libgrpc.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libgcc_s.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libgrpc++.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_bad_variant_access.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_synchronization.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_raw_hash_set.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_hash.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_statusor.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libgpr.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libupb.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_status.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_time.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_strings.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_stacktrace.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_symbolize.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_malloc_internal.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_base.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_spinlock_wait.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_raw_logging_internal.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libre2.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libaddress_sorting.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_cord.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_bad_optional_access.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_str_format_internal.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_throw_delegate.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_time_zone.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_city.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_low_level_hash.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_cordz_info.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_int128.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_strings_internal.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_debugging_internal.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_cord_internal.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_cordz_functions.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_cordz_handle.so* ${INSTAL_DIR}/lib
-  cp /usr/lib/libabsl_exponential_biased.so* ${INSTAL_DIR}/lib
 }
 
 while getopts ":hpng:o:" option; do

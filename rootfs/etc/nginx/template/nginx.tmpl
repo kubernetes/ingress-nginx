@@ -736,6 +736,8 @@ stream {
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;";
 
     lua_shared_dict tcp_udp_configuration_data 5M;
+    
+    {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
     init_by_lua_block {
         collectgarbage("collect")
@@ -957,7 +959,7 @@ stream {
         set $proxy_upstream_name "-";
 
         {{ if not ( empty $server.CertificateAuth.MatchCN ) }}
-        {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}  
+        {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}
         if ( $ssl_client_s_dn !~ {{ $server.CertificateAuth.MatchCN }} ) {
             return 403 "client certificate unauthorized";
         }
@@ -1057,6 +1059,8 @@ stream {
             opentracing on;
             opentracing_propagate_context;
             {{ end }}
+
+            access_log off;
 
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
             {{ if $all.Cfg.EnableModsecurity }}
@@ -1262,10 +1266,18 @@ stream {
             {{ buildModSecurityForLocation $all.Cfg $location }}
 
             {{ if isLocationAllowed $location }}
+            {{ if gt (len $location.Denylist.CIDR) 0 }}
+            {{ range $ip := $location.Denylist.CIDR }}
+            deny {{ $ip }};{{ end }}
+            {{ end }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
             {{ range $ip := $location.Whitelist.CIDR }}
             allow {{ $ip }};{{ end }}
             deny all;
+            {{ end }}
+
+            {{ if $location.CorsConfig.CorsEnabled }}
+            {{ template "CORS" $location }}
             {{ end }}
 
             {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}
@@ -1288,7 +1300,7 @@ stream {
                     {{- end }}
                     return
                 end
-                if res.status == ngx.HTTP_FORBIDDEN then
+                if res.status == ngx.HTTP_UNAUTHORIZED or res.status == ngx.HTTP_FORBIDDEN then
                     ngx.exit(res.status)
                 end
                 ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
@@ -1328,10 +1340,6 @@ stream {
             {{ $limits := buildRateLimit $location }}
             {{ range $limit := $limits }}
             {{ $limit }}{{ end }}
-
-            {{ if $location.CorsConfig.CorsEnabled }}
-            {{ template "CORS" $location }}
-            {{ end }}
 
             {{ buildInfluxDB $location.InfluxDB }}
 

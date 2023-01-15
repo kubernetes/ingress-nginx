@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.16.2 as base
+FROM alpine:3.17.0 as base
 
 RUN mkdir -p /opt/third_party/install
 COPY . /opt/third_party/
@@ -21,17 +21,17 @@ COPY . /opt/third_party/
 # install build tools
 RUN apk update \
 	&& apk upgrade \
-	&& apk add -U bash \
+	&& apk add -U bash cmake \
 	&& bash /opt/third_party/build.sh -p
 
 # install gRPC
 FROM base as grpc
-RUN bash /opt/third_party/build.sh -g v1.43.2
+RUN bash /opt/third_party/build.sh -g v1.49.2
 
 # install OpenTelemetry-cpp
 FROM base as otel-cpp
 COPY --from=grpc /opt/third_party/install/ /usr
-RUN bash /opt/third_party/build.sh -o v1.3.0
+RUN bash /opt/third_party/build.sh -o v1.8.1
 
 # install otel_ngx_module.so
 FROM base as nginx
@@ -39,7 +39,7 @@ COPY --from=grpc /opt/third_party/install/ /usr
 COPY --from=otel-cpp /opt/third_party/install/ /usr
 RUN bash /opt/third_party/build.sh -n
 
-FROM alpine:3.16.2
+FROM alpine:3.17.0 as final
 COPY --from=base /opt/third_party/init_module.sh /usr/local/bin/init_module.sh
 COPY --from=nginx /etc/nginx/modules /etc/nginx/modules
 COPY --from=nginx /opt/third_party/install/lib /etc/nginx/modules

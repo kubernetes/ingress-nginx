@@ -64,5 +64,5 @@ Enter your extended release note in the block below. If the PR requires addition
 For more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md
 -->
 ```release-note
-PLACE RELEASE NOTES HERE 
+PLACE RELEASE NOTES HERE
 ```
