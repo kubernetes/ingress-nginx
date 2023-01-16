@@ -77,6 +77,10 @@ controller:
   # -- Process IngressClass per name (additionally as per spec.controller).
   ingressClassByName: false
 
+  # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-aware-hints="auto"
+  # Defaults to false
+  enableTopologyAwareRouting: false
+
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.
