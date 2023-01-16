@@ -453,6 +453,8 @@ Prometheus metrics are exposed on port 10254.
 # TYPE nginx_ingress_controller_ssl_certificate_info gauge
 # HELP nginx_ingress_controller_success Cumulative number of Ingress controller reload operations
 # TYPE nginx_ingress_controller_success counter
+# HELP nginx_ingress_controller_orphan_ingress Gauge reporting status of ingress orphanity, 1 indicates orphaned ingress. 'namespace' is the string used to identify namespace of ingress, 'ingress' for ingress name and 'type' for 'no-service' or 'no-endpoint' of orphanity
+# TYPE nginx_ingress_controller_orphan_ingress gauge
 ```
 
 ### Admission metrics
