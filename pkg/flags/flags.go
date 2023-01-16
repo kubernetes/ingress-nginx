@@ -216,6 +216,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		dynamicConfigurationRetries = flags.Int("dynamic-configuration-retries", 15, "Number of times to retry failed dynamic configuration before failing to sync an ingress.")
 
 		disableSyncEvents = flags.Bool("disable-sync-events", false, "Disables the creation of 'Sync' event resources")
+
+		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto.")
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
@@ -348,6 +350,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		SyncRateLimit:               *syncRateLimit,
 		HealthCheckHost:             *healthzHost,
 		DynamicConfigurationRetries: *dynamicConfigurationRetries,
+		EnableTopologyAwareRouting:  *enableTopologyAwareRouting,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
