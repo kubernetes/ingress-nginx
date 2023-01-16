@@ -168,12 +168,12 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid path value should return an error")
 
-		secondIngress := framework.NewSingleIngress("second-ingress", "/xpto123*", host, f.Namespace, framework.EchoService, 80, nil)
+		secondIngress := framework.NewSingleIngress("second-ingress", "/abc123*", host, f.Namespace, framework.EchoService, 80, nil)
 		secondIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImplSpecific
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with regex on path and pathType ImplementationSpecific should not return an error")
 
-		thirdIngress := framework.NewSingleIngress("third-ingress", "", host, f.Namespace, framework.EchoService, 80, nil)
+		thirdIngress := framework.NewSingleIngress("third-ingress", "", "other-admission", f.Namespace, framework.EchoService, 80, nil)
 		thirdIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImplSpecific
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), thirdIngress, metav1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with empty path should be allowed with pathType ImplementationSpecific")
