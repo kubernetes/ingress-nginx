@@ -345,7 +345,7 @@ func TestStatusActions(t *testing.T) {
 	// execute shutdown
 	fk.Shutdown()
 	// ingress should be empty
-	newIPs2 := []networking.IngressLoadBalancerIngress{}
+	var newIPs2 []networking.IngressLoadBalancerIngress
 	fooIngress2, err2 := fk.Client.NetworkingV1().Ingresses(apiv1.NamespaceDefault).Get(context.TODO(), "foo_ingress_1", metav1.GetOptions{})
 	if err2 != nil {
 		t.Fatalf("unexpected error")
@@ -385,7 +385,7 @@ func TestKeyfunc(t *testing.T) {
 func TestRunningAddressesWithPublishService(t *testing.T) {
 	testCases := map[string]struct {
 		fakeClient  *testclient.Clientset
-		expected    []apiv1.LoadBalancerIngress
+		expected    []networking.IngressLoadBalancerIngress
 		errExpected bool
 	}{
 		"service type ClusterIP": {
@@ -419,7 +419,7 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 				},
 				},
 			),
-			[]apiv1.LoadBalancerIngress{
+			[]networking.IngressLoadBalancerIngress{
 				{IP: "1.1.1.1"},
 			},
 			false,
@@ -440,7 +440,7 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 				},
 				},
 			),
-			[]apiv1.LoadBalancerIngress{
+			[]networking.IngressLoadBalancerIngress{
 				{IP: "1.1.1.1"},
 			},
 			false,
@@ -461,7 +461,7 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 				},
 				},
 			),
-			[]apiv1.LoadBalancerIngress{
+			[]networking.IngressLoadBalancerIngress{
 				{Hostname: "foo.bar"},
 			},
 			false,
@@ -498,7 +498,7 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 				},
 				},
 			),
-			[]apiv1.LoadBalancerIngress{
+			[]networking.IngressLoadBalancerIngress{
 				{IP: "10.0.0.1"},
 				{Hostname: "foo"},
 				{
@@ -533,7 +533,7 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 				},
 				},
 			),
-			[]apiv1.LoadBalancerIngress{
+			[]networking.IngressLoadBalancerIngress{
 				{IP: "10.0.0.1"},
 			},
 			false,
@@ -571,7 +571,7 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 			}
 
 			if ra == nil {
-				t.Fatalf("returned nil but expected valid []apiv1.LoadBalancerIngress")
+				t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 			}
 
 			if !reflect.DeepEqual(tc.expected, ra) {
@@ -587,7 +587,7 @@ func TestRunningAddressesWithPods(t *testing.T) {
 
 	r, _ := fk.runningAddresses()
 	if r == nil {
-		t.Fatalf("returned nil but expected valid []apiv1.LoadBalancerIngress")
+		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
 	rl := len(r)
 	if len(r) != 1 {
@@ -595,7 +595,7 @@ func TestRunningAddressesWithPods(t *testing.T) {
 	}
 	rv := r[0]
 	if rv.IP != "11.0.0.2" {
-		t.Errorf("returned %v but expected %v", rv, apiv1.LoadBalancerIngress{IP: "11.0.0.2"})
+		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: "11.0.0.2"})
 	}
 }
 
@@ -605,7 +605,7 @@ func TestRunningAddressesWithPublishStatusAddress(t *testing.T) {
 
 	ra, _ := fk.runningAddresses()
 	if ra == nil {
-		t.Fatalf("returned nil but expected valid []apiv1.LoadBalancerIngress")
+		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
 	rl := len(ra)
 	if len(ra) != 1 {
@@ -613,7 +613,7 @@ func TestRunningAddressesWithPublishStatusAddress(t *testing.T) {
 	}
 	rv := ra[0]
 	if rv.IP != "127.0.0.1" {
-		t.Errorf("returned %v but expected %v", rv, apiv1.LoadBalancerIngress{IP: "127.0.0.1"})
+		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: "127.0.0.1"})
 	}
 }
 
@@ -623,7 +623,7 @@ func TestRunningAddressesWithPublishStatusAddresses(t *testing.T) {
 
 	ra, _ := fk.runningAddresses()
 	if ra == nil {
-		t.Fatalf("returned nil but expected valid []apiv1.LoadBalancerIngress")
+		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
 	rl := len(ra)
 	if len(ra) != 2 {
@@ -632,10 +632,10 @@ func TestRunningAddressesWithPublishStatusAddresses(t *testing.T) {
 	rv := ra[0]
 	rv2 := ra[1]
 	if rv.IP != "127.0.0.1" {
-		t.Errorf("returned %v but expected %v", rv, apiv1.LoadBalancerIngress{IP: "127.0.0.1"})
+		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: "127.0.0.1"})
 	}
 	if rv2.IP != "1.1.1.1" {
-		t.Errorf("returned %v but expected %v", rv2, apiv1.LoadBalancerIngress{IP: "1.1.1.1"})
+		t.Errorf("returned %v but expected %v", rv2, networking.IngressLoadBalancerIngress{IP: "1.1.1.1"})
 	}
 }
 
@@ -645,7 +645,7 @@ func TestRunningAddressesWithPublishStatusAddressesAndSpaces(t *testing.T) {
 
 	ra, _ := fk.runningAddresses()
 	if ra == nil {
-		t.Fatalf("returned nil but expected valid []apiv1.LoadBalancerIngresst")
+		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngresst")
 	}
 	rl := len(ra)
 	if len(ra) != 2 {
@@ -654,10 +654,10 @@ func TestRunningAddressesWithPublishStatusAddressesAndSpaces(t *testing.T) {
 	rv := ra[0]
 	rv2 := ra[1]
 	if rv.IP != "127.0.0.1" {
-		t.Errorf("returned %v but expected %v", rv, apiv1.LoadBalancerIngress{IP: "127.0.0.1"})
+		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: "127.0.0.1"})
 	}
 	if rv2.IP != "1.1.1.1" {
-		t.Errorf("returned %v but expected %v", rv2, apiv1.LoadBalancerIngress{IP: "1.1.1.1"})
+		t.Errorf("returned %v but expected %v", rv2, networking.IngressLoadBalancerIngress{IP: "1.1.1.1"})
 	}
 }
 
@@ -671,7 +671,7 @@ func TestStandardizeLoadBalancerIngresses(t *testing.T) {
 	r := standardizeLoadBalancerIngresses(fkEndpoints)
 
 	if r == nil {
-		t.Fatalf("returned nil but expected a valid []apiv1.LoadBalancerIngress")
+		t.Fatalf("returned nil but expected a valid []networking.IngressLoadBalancerIngress")
 	}
 	rl := len(r)
 	if rl != 3 {
@@ -679,15 +679,15 @@ func TestStandardizeLoadBalancerIngresses(t *testing.T) {
 	}
 	re1 := r[0]
 	if re1.Hostname != "opensource-k8s-ingress" {
-		t.Fatalf("returned %v but expected %v", re1, apiv1.LoadBalancerIngress{Hostname: "opensource-k8s-ingress"})
+		t.Fatalf("returned %v but expected %v", re1, networking.IngressLoadBalancerIngress{Hostname: "opensource-k8s-ingress"})
 	}
 	re2 := r[1]
 	if re2.IP != "10.0.0.1" {
-		t.Fatalf("returned %v but expected %v", re2, apiv1.LoadBalancerIngress{IP: "10.0.0.1"})
+		t.Fatalf("returned %v but expected %v", re2, networking.IngressLoadBalancerIngress{IP: "10.0.0.1"})
 	}
 	re3 := r[2]
 	if re3.IP != "2001:db8::68" {
-		t.Fatalf("returned %v but expected %v", re3, apiv1.LoadBalancerIngress{IP: "2001:db8::68"})
+		t.Fatalf("returned %v but expected %v", re3, networking.IngressLoadBalancerIngress{IP: "2001:db8::68"})
 	}
 }
 
