@@ -50,10 +50,12 @@ import (
 )
 
 const (
-	defUpstreamName = "upstream-default-backend"
-	defServerName   = "_"
-	rootLocation    = "/"
-	emptyZone       = ""
+	defUpstreamName             = "upstream-default-backend"
+	defServerName               = "_"
+	rootLocation                = "/"
+	emptyZone                   = ""
+	orphanMetricLabelNoService  = "no-service"
+	orphanMetricLabelNoEndpoint = "no-endpoint"
 )
 
 // Configuration contains all the settings required by an Ingress controller
@@ -1052,7 +1054,15 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					endp, err := n.serviceEndpoints(svcKey, port.String())
 					if err != nil {
 						klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
+						n.metricCollector.IncOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoService)
 						continue
+					}
+					n.metricCollector.DecOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoService)
+
+					if len(endp) == 0 {
+						n.metricCollector.IncOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoEndpoint)
+					} else {
+						n.metricCollector.DecOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoEndpoint)
 					}
 					upstreams[name].Endpoints = endp
 				}
