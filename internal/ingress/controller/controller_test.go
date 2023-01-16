@@ -2481,8 +2481,9 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 	}
 
 	return &NGINXController{
-		store:   storer,
-		cfg:     config,
-		command: NewNginxCommand(),
+		store:           storer,
+		cfg:             config,
+		command:         NewNginxCommand(),
+		metricCollector: metric.DummyCollector{},
 	}
 }

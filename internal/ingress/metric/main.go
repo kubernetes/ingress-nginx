@@ -43,6 +43,8 @@ type Collector interface {
 
 	IncCheckCount(string, string)
 	IncCheckErrorCount(string, string)
+	IncOrphanIngress(string, string, string)
+	DecOrphanIngress(string, string, string)
 
 	RemoveMetrics(ingresses, endpoints, certificates []string)
 
@@ -179,6 +181,14 @@ func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 func (c *collector) SetSSLInfo(servers []*ingress.Server) {
 	klog.V(2).Infof("Updating ssl certificate info metrics")
 	c.ingressController.SetSSLInfo(servers)
+}
+
+func (c *collector) IncOrphanIngress(namespace string, name string, orphanityType string) {
+	c.ingressController.IncOrphanIngress(namespace, name, orphanityType)
+}
+
+func (c *collector) DecOrphanIngress(namespace string, name string, orphanityType string) {
+	c.ingressController.DecOrphanIngress(namespace, name, orphanityType)
 }
 
 func (c *collector) SetHosts(hosts sets.String) {
