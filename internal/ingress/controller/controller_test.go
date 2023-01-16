@@ -276,8 +276,8 @@ func TestCheckIngress(t *testing.T) {
 								HTTP: &networking.HTTPIngressRuleValue{
 									Paths: []networking.HTTPIngressPath{
 										{
-											Path:     "/xpto/(a+)",
-											PathType: &pathTypeExact,
+											Path:     "/example(/|$)(.*)",
+											PathType: &pathTypePrefix,
 										},
 									},
 								},
