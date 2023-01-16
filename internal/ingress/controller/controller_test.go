@@ -254,7 +254,7 @@ func TestCheckIngress(t *testing.T) {
 				ingresses: []*ingress.Ingress{},
 				configuration: ngx_config.Configuration{
 					DisablePathTypeValidation:  true,
-					PathAdditionalAllowedChars: "^%$[](){}*+?",
+					PathAdditionalAllowedChars: "^%$[](){}*+?|",
 				},
 			}
 			nginx.command = testNginxTestCommand{

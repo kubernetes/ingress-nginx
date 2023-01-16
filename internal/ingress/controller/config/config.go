@@ -825,7 +825,7 @@ func NewDefault() Configuration {
 		ClientBodyBufferSize:             "8k",
 		ClientBodyTimeout:                60,
 		DisablePathTypeValidation:        false,
-		PathAdditionalAllowedChars:       "^%$[](){}*+?",
+		PathAdditionalAllowedChars:       "^%$[](){}*+?|",
 		EnableUnderscoresInHeaders:       false,
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,

@@ -1342,4 +1342,4 @@ will be allowed.
 
 See also [#disable-pathtype-validation](#disable-pathtype-validation).
 
-_**default:**_ "^%$[](){}*+?"
+_**default:**_ "^%$[](){}*+?|"
