@@ -50,10 +50,12 @@ import (
 )
 
 const (
-	defUpstreamName = "upstream-default-backend"
-	defServerName   = "_"
-	rootLocation    = "/"
-	emptyZone       = ""
+	defUpstreamName             = "upstream-default-backend"
+	defServerName               = "_"
+	rootLocation                = "/"
+	emptyZone                   = ""
+	orphanMetricLabelNoService  = "no-service"
+	orphanMetricLabelNoEndpoint = "no-endpoint"
 )
 
 // Configuration contains all the settings required by an Ingress controller
