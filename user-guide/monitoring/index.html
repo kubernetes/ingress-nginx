@@ -166,6 +166,8 @@ Forwarding from [::1]:3000 -&gt; 3000
 # TYPE nginx_ingress_controller_ssl_certificate_info gauge
 # HELP nginx_ingress_controller_success Cumulative number of Ingress controller reload operations
 # TYPE nginx_ingress_controller_success counter
+# HELP nginx_ingress_controller_orphan_ingress Gauge reporting status of ingress orphanity, 1 indicates orphaned ingress. &#39;namespace&#39; is the string used to identify namespace of ingress, &#39;ingress&#39; for ingress name and &#39;type&#39; for &#39;no-service&#39; or &#39;no-endpoint&#39; of orphanity
+# TYPE nginx_ingress_controller_orphan_ingress gauge
 </code></pre></div> <h3 id=admission-metrics>Admission metrics<a class=headerlink href=#admission-metrics title="Permanent link"> ¶</a></h3> <div class=highlight><pre><span></span><code># HELP nginx_ingress_controller_admission_config_size The size of the tested configuration
 # TYPE nginx_ingress_controller_admission_config_size gauge
 # HELP nginx_ingress_controller_admission_render_duration The processing duration of ingresses rendering by the admission controller (float seconds)
