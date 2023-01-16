@@ -718,7 +718,7 @@ Enables or disables [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.h
 
 ## gzip-disable
 
-Disables gzipping of responses for requests with "User-Agent" header fields matching any of the specified regular expressions. The special mask `msie6` corresponds to the regular expression `MSIE [4-6]\.`, but works faster.
+Disables [gzipping](http://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable) of responses for requests with "User-Agent" header fields matching any of the specified regular expressions.
 
 ## gzip-level
 
