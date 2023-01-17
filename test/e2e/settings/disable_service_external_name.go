@@ -21,8 +21,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gavv/httpexpect/v2"
-	"github.com/onsi/ginkgo"
+	"k8s.io/ingress-nginx/test/e2e/framework/httpexpect"
+
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

@@ -24,9 +24,9 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
-	"k8s.io/ingress-nginx/internal/runtime"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	"k8s.io/ingress-nginx/pkg/util/runtime"
 )
 
 var (
@@ -262,6 +262,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers
 	// Default: 4 8k
 	LargeClientHeaderBuffers string `json:"large-client-header-buffers"`
+
+	// Disable all escaping
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	LogFormatEscapeNone bool `json:"log-format-escape-none,omitempty"`
 
 	// Enable json escaping
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
@@ -768,6 +772,11 @@ type Configuration struct {
 	// GlobalRateLimitStatucCode determines the HTTP status code to return
 	// when limit is exceeding during global rate limiting.
 	GlobalRateLimitStatucCode int `json:"global-rate-limit-status-code"`
+
+	// DebugConnections Enables debugging log for selected client connections
+	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
+	// Default: ""
+	DebugConnections []string `json:"debug-connections"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -932,6 +941,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedMaxIdleTimeout: 10000,
 		GlobalRateLimitMemcachedPoolSize:       50,
 		GlobalRateLimitStatucCode:              429,
+		DebugConnections:                       []string{},
 	}
 
 	if klog.V(5).Enabled() {

@@ -23,7 +23,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -145,7 +145,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				ginkgo.By("returning a 200 status when the canary deployment has 0 replicas and a request is sent to the mainline ingress")
 
 				f.NewEchoDeployment()
-				f.NewDeployment(canaryService, "k8s.gcr.io/e2e-test-images/echoserver:2.3", 8080, 0)
+				f.NewDeployment(canaryService, "registry.k8s.io/e2e-test-images/echoserver:2.3", 8080, 0)
 
 				resp, _, errs = gorequest.New().
 					Get(f.GetURL(framework.HTTP)).

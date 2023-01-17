@@ -6,6 +6,9 @@ on:
       - main
       - legacy
 
+permissions:
+  contents: read
+
 jobs:
 
   changes:
@@ -22,9 +25,9 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
 
-      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # v2
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.10.2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -49,7 +52,7 @@ jobs:
     steps:
 
       - name: Checkout master
-        uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
         with:
           # Fetch entire history. Required for chart-releaser; see https://github.com/helm/chart-releaser-action/issues/13#issuecomment-602063896
           fetch-depth: 0
@@ -61,7 +64,7 @@ jobs:
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
       
       - name: Helm Chart Releaser
-        uses: helm/chart-releaser-action@v1.4.0
+        uses: helm/chart-releaser-action@v1.4.1
         env:
           CR_SKIP_EXISTING: "false"
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

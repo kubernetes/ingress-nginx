@@ -26,9 +26,9 @@ import (
 
 	"k8s.io/apiserver/pkg/server/healthz"
 
-	"k8s.io/ingress-nginx/internal/file"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/nginx"
+	"k8s.io/ingress-nginx/pkg/util/file"
 )
 
 func TestNginxCheck(t *testing.T) {

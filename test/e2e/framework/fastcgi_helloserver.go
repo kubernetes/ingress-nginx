@@ -17,7 +17,7 @@ limitations under the License.
 package framework
 
 import (
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -58,7 +58,7 @@ func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int3
 					Containers: []corev1.Container{
 						{
 							Name:  "fastcgi-helloserver",
-							Image: "k8s.gcr.io/ingress-nginx/e2e-test-fastcgi-helloserver@sha256:723b8187e1768d199b93fd939c37c1ce9427dcbca72ec6415f4d890bca637fcc",
+							Image: "registry.k8s.io/ingress-nginx/e2e-test-fastcgi-helloserver@sha256:723b8187e1768d199b93fd939c37c1ce9427dcbca72ec6415f4d890bca637fcc",
 							Env:   []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{

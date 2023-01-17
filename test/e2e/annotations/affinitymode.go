@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -42,7 +42,7 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 		host := "affinity-mode-balance.com"
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
-		annotations["ginx.ingress.kubernetes.io/session-cookie-name"] = "hello-cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "hello-cookie"
 		annotations["nginx.ingress.kubernetes.io/session-cookie-expires"] = "172800"
 		annotations["nginx.ingress.kubernetes.io/session-cookie-max-age"] = "172800"
 		annotations["nginx.ingress.kubernetes.io/ssl-redirect"] = "false"
@@ -75,7 +75,7 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 		host := "affinity-mode-persistent.com"
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
-		annotations["ginx.ingress.kubernetes.io/session-cookie-name"] = "hello-cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "hello-cookie"
 		annotations["nginx.ingress.kubernetes.io/session-cookie-expires"] = "172800"
 		annotations["nginx.ingress.kubernetes.io/session-cookie-max-age"] = "172800"
 		annotations["nginx.ingress.kubernetes.io/ssl-redirect"] = "false"
