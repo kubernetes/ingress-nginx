@@ -192,6 +192,11 @@ func IngressNginxDescribe(text string, body func()) bool {
 	return ginkgo.Describe(text, body)
 }
 
+// IngressNginxDescribeSerial wrapper function for ginkgo describe. Adds namespacing.
+func IngressNginxDescribeSerial(text string, body func()) bool {
+	return ginkgo.Describe(text, ginkgo.Serial, body)
+}
+
 // DescribeAnnotation wrapper function for ginkgo describe. Adds namespacing.
 func DescribeAnnotation(text string, body func()) bool {
 	return ginkgo.Describe("[Annotations] "+text, body)
@@ -200,11 +205,6 @@ func DescribeAnnotation(text string, body func()) bool {
 // DescribeSetting wrapper function for ginkgo describe. Adds namespacing.
 func DescribeSetting(text string, body func()) bool {
 	return ginkgo.Describe("[Setting] "+text, body)
-}
-
-// MemoryLeakIt is wrapper function for ginkgo It.  Adds "[MemoryLeak]" tag and makes static analysis easier.
-func MemoryLeakIt(text string, body interface{}) bool {
-	return ginkgo.It(text+" [MemoryLeak]", body)
 }
 
 // GetNginxIP returns the number of TCP port where NGINX is running

@@ -78,7 +78,7 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 var (
 	// IngressPodDetails hold information about the ingress-nginx pod
 	IngressPodDetails *PodInfo
-	// IngressNodeDetails old information about the node running ingress-nginx pod
+	// IngressNodeDetails hold information about the node running ingress-nginx pod
 	IngressNodeDetails *NodeInfo
 )
 

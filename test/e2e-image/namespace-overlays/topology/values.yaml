@@ -8,6 +8,7 @@ controller:
     digest:
     digestChroot:
   scope:
+    # Necessary to allow the ingress controller to get the topology information from the nodes
     enabled: false
   config:
     worker-processes: "1"
