@@ -180,9 +180,6 @@ func SetDefaultNGINXPathType(ing *networkingv1.Ingress) {
 				p.PathType = &defaultPathType
 			}
 
-			if *p.PathType == networkingv1.PathTypeImplementationSpecific {
-				p.PathType = &defaultPathType
-			}
 		}
 	}
 }

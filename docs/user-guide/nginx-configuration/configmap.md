@@ -216,6 +216,8 @@ The following table shows a configuration option's name, type, and the default v
 |[service-upstream](#service-upstream)|bool|"false"|
 |[ssl-reject-handshake](#ssl-reject-handshake)|bool|"false"|
 |[debug-connections](#debug-connections)|[]string|"127.0.0.1,1.1.1.1/24"|
+|[disable-pathtype-validation](#disable-pathtype-validation)|bool|"false"|
+|[path-additional-allowed-chars](#path-additional-allowed-chars)|string|"^%$[](){}*+?"|
 
 ## add-headers
 
@@ -1326,3 +1328,24 @@ _**default:**_ ""
 
 _References:_
 [http://nginx.org/en/docs/ngx_core_module.html#debug_connection](http://nginx.org/en/docs/ngx_core_module.html#debug_connection)
+
+## disable-pathtype-validation
+Ingress Controller validates the pathType, and only allows special characters on "path" if pathType is
+ImplementationSpecific. 
+
+The only characters allowed on ingresses with pathType not ImplementationSpecific 
+will be 0-9, a-z, A-Z, "-", ".", "_", "~", "/".
+
+If the validation is disabled, the [#path-additional-allowed-chars](#path-additional-allowed-chars) will
+be allowed on any pathType.
+
+This behavior can be disabled, so special characters are accepted regardless of pathType
+_**default:**_ "false"
+
+## path-additional-allowed-chars
+When validating path on Ingress resources, defines the additional set of special characters that
+will be allowed.
+
+See also [#disable-pathtype-validation](#disable-pathtype-validation).
+
+_**default:**_ "^%$[](){}*+?|"
