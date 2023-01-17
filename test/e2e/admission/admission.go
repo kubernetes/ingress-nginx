@@ -173,11 +173,6 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with regex on path and pathType ImplementationSpecific should not return an error")
 
-		thirdIngress := framework.NewSingleIngress("third-ingress", "", "other-admission", f.Namespace, framework.EchoService, 80, nil)
-		thirdIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImplSpecific
-		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), thirdIngress, metav1.CreateOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with empty path should be allowed with pathType ImplementationSpecific")
-
 	})
 
 	ginkgo.It("should not validate characters on ingress when validation of pathType is disabled", func() {

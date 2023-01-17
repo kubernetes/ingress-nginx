@@ -311,7 +311,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.containerPort | object | `{"http":80,"https":443}` | Configures the ports that the nginx-controller listens on |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
-| controller.disablePathTypeValidation | bool | `false` | This configuration defines if Ingress Controller should validate pathType.  If this is true, special characters will be allowed on paths of any pathType. If  false, special characters are only allowed on paths with pathType = ImplementationSpecific |
+| controller.disablePathTypeValidation | bool | `false` | This configuration defines if Ingress Controller should validate pathType. If this is true, special characters will be allowed on paths of any pathType. If false, special characters are only allowed on paths with pathType = ImplementationSpecific |
 | controller.dnsConfig | object | `{}` | Optionally customize the pod dnsConfig. |
 | controller.dnsPolicy | string | `"ClusterFirst"` | Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'. By default, while using host network, name resolution uses the host's DNS. If you wish nginx-controller to keep resolving names inside the k8s network, use ClusterFirstWithHostNet. |
 | controller.electionID | string | `""` | Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader' |
