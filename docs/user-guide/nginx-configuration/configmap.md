@@ -62,7 +62,7 @@ The following table shows a configuration option's name, type, and the default v
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
 |[hsts-preload](#hsts-preload)|bool|"false"|
 |[keep-alive](#keep-alive)|int|75|
-|[keep-alive-requests](#keep-alive-requests)|int|100|
+|[keep-alive-requests](#keep-alive-requests)|int|1000|
 |[large-client-header-buffers](#large-client-header-buffers)|string|"4 8k"|
 |[log-format-escape-none](#log-format-escape-none)|bool|"false"|
 |[log-format-escape-json](#log-format-escape-json)|bool|"false"|
