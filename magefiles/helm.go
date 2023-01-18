@@ -104,7 +104,7 @@ func updateChartReleaseNotes(releasesNotes []string) {
 	for i := range releasesNotes {
 		releaseNoteString = fmt.Sprintf("%s - %s\n", releaseNoteString, releasesNotes[i])
 	}
-	Info("HLEM Release note string %s", releaseNoteString)
+	Info("HELM Release note string %s", releaseNoteString)
 	chart.Annotations["artifacthub.io/changes"] = releaseNoteString
 	err = chartutil.SaveChartfile(HelmChartPath, chart)
 	CheckIfError(err, "HELM Saving updated release notes for Chart")
