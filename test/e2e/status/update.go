@@ -19,6 +19,7 @@ package settings
 import (
 	"context"
 	"fmt"
+	v1 "k8s.io/api/networking/v1"
 	"log"
 	"net"
 	"strings"
@@ -28,7 +29,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	appsv1 "k8s.io/api/apps/v1"
-	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -87,7 +87,7 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 		ing, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error getting %s/%v Ingress", f.Namespace, host)
 
-		ing.Status.LoadBalancer.Ingress = []apiv1.LoadBalancerIngress{}
+		ing.Status.LoadBalancer.Ingress = []v1.IngressLoadBalancerIngress{}
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).UpdateStatus(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error cleaning Ingress status")
 		framework.Sleep(10 * time.Second)
@@ -121,9 +121,9 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 			return true, nil
 		})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error waiting for ingress status")
-		assert.Equal(ginkgo.GinkgoT(), ing.Status.LoadBalancer.Ingress, ([]apiv1.LoadBalancerIngress{
+		assert.Equal(ginkgo.GinkgoT(), ing.Status.LoadBalancer.Ingress, []v1.IngressLoadBalancerIngress{
 			{IP: "1.1.0.0"},
-		}))
+		})
 	})
 })
 
