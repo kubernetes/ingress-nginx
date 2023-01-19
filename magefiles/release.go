@@ -56,7 +56,7 @@ var ctx = context.Background() // Context used for GitHub Client
 const INDEX_DOCS = "docs/deploy/index.md" //index.md has a version of the controller and needs to updated
 const CHANGELOG = "Changelog.md"          //Name of the changelog
 
-//ControllerImage - struct with info about controllers
+// ControllerImage - struct with info about controllers
 type ControllerImage struct {
 	Tag      string
 	Digest   string
@@ -64,7 +64,7 @@ type ControllerImage struct {
 	Name     string
 }
 
-//IngressRelease All the information about an ingress-nginx release that gets updated
+// IngressRelease All the information about an ingress-nginx release that gets updated
 type IngressRelease struct {
 	ControllerVersion string
 	ControllerImage   ControllerImage
@@ -72,7 +72,7 @@ type IngressRelease struct {
 	Release           *github.RepositoryRelease
 }
 
-//ReleaseNote - All the pieces of information/documents that get updated during a release
+// ReleaseNote - All the pieces of information/documents that get updated during a release
 type ReleaseNote struct {
 	Version                   string
 	NewControllerVersion      string
@@ -85,16 +85,16 @@ type ReleaseNote struct {
 	PreviousHelmChartVersion  string
 }
 
-//IMAGES_YAML returns this data structure
+// IMAGES_YAML returns this data structure
 type ImageYamls []ImageElement
 
-//ImageElement - a specific image and it's data structure the dmap is a list of shas and container versions
+// ImageElement - a specific image and it's data structure the dmap is a list of shas and container versions
 type ImageElement struct {
 	Name string              `json:"name"`
 	Dmap map[string][]string `json:"dmap"`
 }
 
-//init will set the GitHub token from the committers/releasers env var
+// init will set the GitHub token from the committers/releasers env var
 func init() {
 	GITHUB_TOKEN = os.Getenv("GITHUB_TOKEN")
 }
@@ -189,7 +189,7 @@ func updateIndexMD(old, new string) error {
 	return nil
 }
 
-//runs the hack/generate-deploy-scripts.sh
+// runs the hack/generate-deploy-scripts.sh
 func updateE2EDocs() {
 	updates, err := sh.Output("./hack/generate-e2e-suite-doc.sh")
 	CheckIfError(err, "Could not run update hack script")
@@ -197,7 +197,7 @@ func updateE2EDocs() {
 	CheckIfError(err, "Could not write new e2e test file ")
 }
 
-//The static deploy scripts use kustomize to generate them, this function ensures kustomize is installed
+// The static deploy scripts use kustomize to generate them, this function ensures kustomize is installed
 func installKustomize() error {
 	Info("Install Kustomize")
 	var g0 = sh.RunCmd("go")
@@ -209,7 +209,6 @@ func installKustomize() error {
 	return nil
 }
 
-//
 func updateStaticManifest() error {
 	CheckIfError(installKustomize(), "error installing kustomize")
 	//hack/generate-deploy-scripts.sh
