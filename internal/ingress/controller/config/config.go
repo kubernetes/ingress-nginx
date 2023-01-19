@@ -438,6 +438,11 @@ type Configuration struct {
 	// Default: true
 	UseHTTP2 bool `json:"use-http2,omitempty"`
 
+	// Disables gzipping of responses for requests with "User-Agent" header fields matching any of
+	// the specified regular expressions.
+	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable
+	GzipDisable string `json:"gzip-disable,omitempty"`
+
 	// gzip Compression Level that will be used
 	GzipLevel int `json:"gzip-level,omitempty"`
 
@@ -781,6 +786,17 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
 	// Default: ""
 	DebugConnections []string `json:"debug-connections"`
+
+	// DisablePathTypeValidation allows the admin to disable the pathType validation.
+	// If PathTypeValidation is enabled, the Controller will only allow alphanumeric
+	// characters on path (0-9, a-z, A-Z, "-", ".", "_", "~", "/")
+	DisablePathTypeValidation bool `json:"disable-pathtype-validation"`
+
+	// PathAdditionalAllowedChars allows the admin to specify what are the additional
+	// characters allowed in case of pathType=ImplementationSpecific.
+	// Case disable-pathtype-validation=true, this characters will be allowed on any path.
+	// Defaults to: "^%$[](){}*+?"
+	PathAdditionalAllowedChars string `json:"path-additional-allowed-chars"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -798,7 +814,6 @@ func NewDefault() Configuration {
 	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}, false}
 
 	cfg := Configuration{
-
 		AllowSnippetAnnotations:          true,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
@@ -817,6 +832,8 @@ func NewDefault() Configuration {
 		ClientHeaderTimeout:              60,
 		ClientBodyBufferSize:             "8k",
 		ClientBodyTimeout:                60,
+		DisablePathTypeValidation:        false,
+		PathAdditionalAllowedChars:       "^%$[](){}*+?|",
 		EnableUnderscoresInHeaders:       false,
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,
@@ -839,7 +856,7 @@ func NewDefault() Configuration {
 		GzipMinLength:                    256,
 		GzipTypes:                        gzipTypes,
 		KeepAlive:                        75,
-		KeepAliveRequests:                100,
+		KeepAliveRequests:                1000,
 		LargeClientHeaderBuffers:         "4 8k",
 		LogFormatEscapeJSON:              false,
 		LogFormatStream:                  logFormatStream,

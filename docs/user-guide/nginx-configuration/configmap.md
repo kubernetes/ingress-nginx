@@ -62,7 +62,7 @@ The following table shows a configuration option's name, type, and the default v
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
 |[hsts-preload](#hsts-preload)|bool|"false"|
 |[keep-alive](#keep-alive)|int|75|
-|[keep-alive-requests](#keep-alive-requests)|int|100|
+|[keep-alive-requests](#keep-alive-requests)|int|1000|
 |[large-client-header-buffers](#large-client-header-buffers)|string|"4 8k"|
 |[log-format-escape-none](#log-format-escape-none)|bool|"false"|
 |[log-format-escape-json](#log-format-escape-json)|bool|"false"|
@@ -103,7 +103,9 @@ The following table shows a configuration option's name, type, and the default v
 |[brotli-min-length](#brotli-min-length)|int|20|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
+|[gzip-disable](#gzip-disable)|string|""|
 |[gzip-level](#gzip-level)|int|1|
+|[gzip-min-length](#gzip-min-length)|int|256|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
@@ -215,6 +217,8 @@ The following table shows a configuration option's name, type, and the default v
 |[service-upstream](#service-upstream)|bool|"false"|
 |[ssl-reject-handshake](#ssl-reject-handshake)|bool|"false"|
 |[debug-connections](#debug-connections)|[]string|"127.0.0.1,1.1.1.1/24"|
+|[disable-pathtype-validation](#disable-pathtype-validation)|bool|"false"|
+|[path-additional-allowed-chars](#path-additional-allowed-chars)|string|"^%$[](){}*+?"|
 
 ## add-headers
 
@@ -694,7 +698,8 @@ _**default:**_ false
 ## enable-brotli
 
 Enables or disables compression of HTTP responses using the ["brotli" module](https://github.com/google/ngx_brotli).
-The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`. _**default:**_ is disabled
+The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`. 
+_**default:**_ false
 
 > __Note:__ Brotli does not works in Safari < 11. For more information see [https://caniuse.com/#feat=brotli](https://caniuse.com/#feat=brotli)
 
@@ -714,6 +719,10 @@ _**default:**_ `application/xml+rss application/atom+xml application/javascript 
 ## use-http2
 
 Enables or disables [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
+
+## gzip-disable
+
+Disables [gzipping](http://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable) of responses for requests with "User-Agent" header fields matching any of the specified regular expressions.
 
 ## gzip-level
 
@@ -1326,3 +1335,24 @@ _**default:**_ ""
 
 _References:_
 [http://nginx.org/en/docs/ngx_core_module.html#debug_connection](http://nginx.org/en/docs/ngx_core_module.html#debug_connection)
+
+## disable-pathtype-validation
+Ingress Controller validates the pathType, and only allows special characters on "path" if pathType is
+ImplementationSpecific. 
+
+The only characters allowed on ingresses with pathType not ImplementationSpecific 
+will be 0-9, a-z, A-Z, "-", ".", "_", "~", "/".
+
+If the validation is disabled, the [#path-additional-allowed-chars](#path-additional-allowed-chars) will
+be allowed on any pathType.
+
+This behavior can be disabled, so special characters are accepted regardless of pathType
+_**default:**_ "false"
+
+## path-additional-allowed-chars
+When validating path on Ingress resources, defines the additional set of special characters that
+will be allowed.
+
+See also [#disable-pathtype-validation](#disable-pathtype-validation).
+
+_**default:**_ "^%$[](){}*+?|"

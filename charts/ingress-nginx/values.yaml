@@ -77,11 +77,20 @@ controller:
   # -- Process IngressClass per name (additionally as per spec.controller).
   ingressClassByName: false
 
+  # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-aware-hints="auto"
+  # Defaults to false
+  enableTopologyAwareRouting: false
+
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.
   # Global snippets in ConfigMap are still respected
   allowSnippetAnnotations: true
+
+  # -- This configuration defines if Ingress Controller should validate pathType.
+  # If this is true, special characters will be allowed on paths of any pathType. If
+  # false, special characters are only allowed on paths with pathType = ImplementationSpecific
+  disablePathTypeValidation: false
 
   # -- Required for use with CNI based kubernetes installations (such as ones set up by kubeadm),
   # since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920
@@ -700,6 +709,8 @@ controller:
       annotations: {}
       # prometheus.io/scrape: "true"
       # prometheus.io/port: "10254"
+      # -- Labels to be added to the metrics service resource
+      labels: {}
 
       # clusterIP: ""
 

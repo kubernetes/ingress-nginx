@@ -24,6 +24,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--enable-metrics`                 | Enables the collection of NGINX metrics. (default true) |
 | `--enable-ssl-chain-completion`    | Autocomplete SSL certificate chains with missing intermediate CA certificates. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default false)|
 | `--enable-ssl-passthrough`         | Enable SSL Passthrough. (default false) |
+| `--enable-topology-aware-routing`  | Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto. (default false) |
 | `--health-check-path`              | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
 | `--health-check-timeout`           | Time limit, in seconds, for a probe to health-check-path to succeed. (default 10) |
 | `--healthz-port`                   | Port to use for the healthz endpoint. (default 10254) |

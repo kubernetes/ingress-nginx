@@ -311,10 +311,12 @@ Kubernetes: `>=1.20.0-0`
 | controller.containerPort | object | `{"http":80,"https":443}` | Configures the ports that the nginx-controller listens on |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
+| controller.disablePathTypeValidation | bool | `false` | This configuration defines if Ingress Controller should validate pathType. If this is true, special characters will be allowed on paths of any pathType. If false, special characters are only allowed on paths with pathType = ImplementationSpecific |
 | controller.dnsConfig | object | `{}` | Optionally customize the pod dnsConfig. |
 | controller.dnsPolicy | string | `"ClusterFirst"` | Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'. By default, while using host network, name resolution uses the host's DNS. If you wish nginx-controller to keep resolving names inside the k8s network, use ClusterFirstWithHostNet. |
 | controller.electionID | string | `""` | Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader' |
 | controller.enableMimalloc | bool | `true` | Enable mimalloc as a drop-in replacement for malloc. # ref: https://github.com/microsoft/mimalloc # |
+| controller.enableTopologyAwareRouting | bool | `false` | This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-aware-hints="auto" Defaults to false |
 | controller.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | controller.extraArgs | object | `{}` | Additional command line arguments to pass to nginx-ingress-controller E.g. to specify the default SSL certificate you can use |
 | controller.extraContainers | list | `[]` | Additional containers to be added to the controller pod. See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example. |
@@ -376,6 +378,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.metrics.prometheusRule.rules | list | `[]` |  |
 | controller.metrics.service.annotations | object | `{}` |  |
 | controller.metrics.service.externalIPs | list | `[]` | List of IP addresses at which the stats-exporter service is available # Ref: https://kubernetes.io/docs/user-guide/services/#external-ips # |
+| controller.metrics.service.labels | object | `{}` | Labels to be added to the metrics service resource |
 | controller.metrics.service.loadBalancerSourceRanges | list | `[]` |  |
 | controller.metrics.service.servicePort | int | `10254` |  |
 | controller.metrics.service.type | string | `"ClusterIP"` |  |
