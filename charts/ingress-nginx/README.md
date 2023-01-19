@@ -309,6 +309,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.configMapNamespace | string | `""` | Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE) |
 | controller.containerName | string | `"controller"` | Configures the controller container name |
 | controller.containerPort | object | `{"http":80,"https":443}` | Configures the ports that the nginx-controller listens on |
+| controller.containerSecurityContext | object | `{}` | Security Context policies for controller main container. See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
 | controller.disablePathTypeValidation | bool | `false` | This configuration defines if Ingress Controller should validate pathType. If this is true, special characters will be allowed on paths of any pathType. If false, special characters are only allowed on paths with pathType = ImplementationSpecific |
@@ -462,7 +463,7 @@ Kubernetes: `>=1.20.0-0`
 | defaultBackend.autoscaling.minReplicas | int | `1` |  |
 | defaultBackend.autoscaling.targetCPUUtilizationPercentage | int | `50` |  |
 | defaultBackend.autoscaling.targetMemoryUtilizationPercentage | int | `50` |  |
-| defaultBackend.containerSecurityContext | object | `{}` | Security Context policies for controller main container. See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
+| defaultBackend.containerSecurityContext | object | `{}` | Security Context policies for default backend container. See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
 | defaultBackend.enabled | bool | `false` |  |
 | defaultBackend.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | defaultBackend.extraArgs | object | `{}` |  |
