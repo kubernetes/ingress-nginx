@@ -56,10 +56,6 @@ var _ = framework.IngressNginxDescribeSerial("[Flag] watch namespace selector", 
 	ginkgo.AfterEach(func() {
 		cleanupNamespace(notMatchedNs)
 		cleanupNamespace(matchedNs)
-
-		// we need to uninstall chart because of clusterRole (controller.scope.enabled=false) which is not destroyed with namespace
-		err := f.UninstallChart()
-		assert.Nil(ginkgo.GinkgoT(), err, "uninstalling helm chart")
 	})
 
 	ginkgo.Context("With specific watch-namespace-selector flags", func() {

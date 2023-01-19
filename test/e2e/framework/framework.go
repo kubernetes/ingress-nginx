@@ -150,7 +150,11 @@ func (f *Framework) AfterEach() {
 
 	defer func(kubeClient kubernetes.Interface, ingressclass string) {
 		defer ginkgo.GinkgoRecover()
-		err := deleteIngressClass(kubeClient, ingressclass)
+
+		err := f.UninstallChart()
+		assert.Nil(ginkgo.GinkgoT(), err, "uninstalling helm chart")
+
+		err = deleteIngressClass(kubeClient, ingressclass)
 		assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
 	}(f.KubeClientSet, f.IngressClass)
 

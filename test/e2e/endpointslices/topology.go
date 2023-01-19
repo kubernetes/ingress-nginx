@@ -40,12 +40,6 @@ var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware rou
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(2), framework.WithSvcTopologyAnnotations())
 	})
 
-	ginkgo.AfterEach(func() {
-		// we need to uninstall chart because of clusterRole (controller.scope.enabled=false) which is not destroyed with namespace
-		err := f.UninstallChart()
-		assert.Nil(ginkgo.GinkgoT(), err, "uninstalling helm chart")
-	})
-
 	ginkgo.It("should return 200 when service has topology hints", func() {
 
 		annotations := make(map[string]string)

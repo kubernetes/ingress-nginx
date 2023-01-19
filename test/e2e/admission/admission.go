@@ -48,11 +48,6 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 		f.NewSlowEchoDeployment()
 	})
 
-	ginkgo.AfterEach(func() {
-		err := f.UninstallChart()
-		assert.Nil(ginkgo.GinkgoT(), err, "uninstalling helm chart")
-	})
-
 	ginkgo.It("reject ingress with global-rate-limit annotations when memcached is not configured", func() {
 		host := "admission-test"
 
