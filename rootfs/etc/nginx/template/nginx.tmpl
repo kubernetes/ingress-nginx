@@ -1180,6 +1180,10 @@ stream {
 
             add_header Set-Cookie $auth_cookie;
 
+            {{ if $location.CorsConfig.CorsEnabled }}
+            {{ template "CORS" $location }}
+            {{ end }}
+
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
             {{ if $all.Cfg.EnableModsecurity }}
             modsecurity off;
