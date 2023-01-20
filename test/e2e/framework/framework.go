@@ -387,7 +387,7 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 }
 
 // WaitForReload calls the passed function and
-// asser it has caused at least 1 reload.
+// asserts it has caused at least 1 reload.
 func (f *Framework) WaitForReload(fn func()) {
 	initialReloadCount := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
 
