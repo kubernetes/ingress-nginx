@@ -67,5 +67,29 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/aaa/.*").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/aaa/(.+)").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/aaa/?(.*)").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+
+		f.HTTPTestClient().
+			GET("/aaa/?(.+)").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
 	})
 })
