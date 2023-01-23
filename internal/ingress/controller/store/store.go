@@ -141,7 +141,6 @@ type Informer struct {
 
 // Lister contains object listers (stores).
 type Lister struct {
-	Ingress               IngressLister
 	IngressClass          IngressClassLister
 	Service               ServiceLister
 	EndpointSlice         EndpointSliceLister
@@ -330,7 +329,6 @@ func New(
 	)
 
 	store.informers.Ingress = infFactory.Networking().V1().Ingresses().Informer()
-	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
 
 	if !icConfig.IgnoreIngressClass {
 		store.informers.IngressClass = infFactory.Networking().V1().IngressClasses().Informer()

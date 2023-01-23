@@ -1389,7 +1389,6 @@ func newStore() *k8sStore {
 		listers: &Lister{
 			// add more listers if needed
 			IngressClass:          IngressClassLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
-			Ingress:               IngressLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
 			IngressWithAnnotation: IngressWithAnnotationsLister{cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)},
 		},
 		sslStore:         NewSSLCertTracker(),
@@ -1409,17 +1408,11 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 			Namespace: "testns",
 		},
 	}
-	if err := s.listers.Ingress.Add(ingTpl); err != nil {
-		t.Errorf("error adding the Ingress template: %v", err)
-	}
 
 	t.Run("with TLS secret", func(t *testing.T) {
 		ing := ingTpl.DeepCopy()
 		ing.Spec = networking.IngressSpec{
 			TLS: []networking.IngressTLS{{SecretName: "tls"}},
-		}
-		if err := s.listers.Ingress.Update(ing); err != nil {
-			t.Errorf("error updating the Ingress: %v", err)
 		}
 		s.updateSecretIngressMap(ing)
 
@@ -1433,9 +1426,6 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "auth",
 		})
-		if err := s.listers.Ingress.Update(ing); err != nil {
-			t.Errorf("error updating the Ingress: %v", err)
-		}
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/auth")) {
@@ -1448,9 +1438,6 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "testns/auth",
 		})
-		if err := s.listers.Ingress.Update(ing); err != nil {
-			t.Errorf("error updating the Ingress: %v", err)
-		}
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/auth")) {
@@ -1463,9 +1450,6 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "anotherns/auth",
 		})
-		if err := s.listers.Ingress.Update(ing); err != nil {
-			t.Errorf("error updating the Ingress: %v", err)
-		}
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); l != 0 {
@@ -1478,9 +1462,6 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "ns/name/garbage",
 		})
-		if err := s.listers.Ingress.Update(ing); err != nil {
-			t.Errorf("error updating the Ingress: %v", err)
-		}
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); l != 0 {
