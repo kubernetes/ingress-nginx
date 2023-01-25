@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package proxyintercepterrors
+package disableproxyintercepterrors
 
 import (
 	networking "k8s.io/api/networking/v1"
@@ -21,17 +21,17 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-type proxyInterceptErrors struct {
+type disableProxyInterceptErrors struct {
 	r resolver.Resolver
 }
 
-// NewParser creates a new proxyintercepterrors annotation parser
+// NewParser creates a new disableProxyInterceptErrors annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return proxyInterceptErrors{r}
+	return disableProxyInterceptErrors{r}
 }
 
-func (pie proxyInterceptErrors) Parse(ing *networking.Ingress) (interface{}, error) {
-	val, err := parser.GetBoolAnnotation("proxy-intercept-errors", ing)
+func (pie disableProxyInterceptErrors) Parse(ing *networking.Ingress) (interface{}, error) {
+	val, err := parser.GetBoolAnnotation("disable-proxy-intercept-errors", ing)
 
 	// A missing annotation is not a problem, just use the default
 	if err == errors.ErrMissingAnnotations {

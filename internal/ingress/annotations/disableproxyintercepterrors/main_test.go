@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package proxyintercepterrors
+package disableproxyintercepterrors
 
 import (
 	"testing"
@@ -51,11 +51,11 @@ func TestParseAnnotations(t *testing.T) {
 	}
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("proxy-intercept-errors")] = "true"
+	data[parser.GetAnnotationWithPrefix("disable-proxy-intercept-errors")] = "true"
 	ing.SetAnnotations(data)
 	// test ingress using the annotation without a TLS section
 	_, err = NewParser(&resolver.Mock{}).Parse(ing)
 	if err != nil {
-		t.Errorf("unexpected error parsing ingress with proxy intercept errors")
+		t.Errorf("unexpected error parsing ingress with disable-proxy-intercept-errors")
 	}
 }

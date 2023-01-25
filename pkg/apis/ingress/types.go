@@ -353,7 +353,7 @@ type Location struct {
 	// e.g. custom 404 and 503 when service-a does not exist or is not available
 	// but service-a can return 404 and 503 error codes without intercept
 	// +optional
-	ProxyInterceptErrors bool `json:"proxy-intercept-errors"`
+	DisableProxyInterceptErrors bool `json:"disable-proxy-intercept-errors"`
 	// ModSecurity allows to enable and configure modsecurity
 	// +optional
 	ModSecurity modsecurity.Config `json:"modsecurity"`
