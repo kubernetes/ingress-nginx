@@ -473,7 +473,7 @@ http {
     ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
     ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
 
-    {{ if and (gt (len $cfg.CustomHTTPErrors) 0) (not $cfg.ProxyInterceptErrors) }}
+    {{ if and $cfg.CustomHTTPErrors (not $cfg.DisableProxyInterceptErrors) }}
     proxy_intercept_errors on;
     {{ end }}
 
