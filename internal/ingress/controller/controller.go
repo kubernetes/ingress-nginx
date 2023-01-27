@@ -339,7 +339,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	startTest := time.Now().UnixNano() / 1000000
 	_, servers, pcfg := n.getConfiguration(ings)
 
-	err := checkOverlap(ing, allIngresses, servers)
+	err := checkOverlap(ing, pcfg.Backends, servers)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
@@ -550,7 +550,7 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 	for _, server := range servers {
 		// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of
 		// proxy_pass, fastcgi_pass, uwsgi_pass, scgi_pass, memcached_pass, or grpc_pass, then the special processing is performed.
-		// In response to a request with URI equal to // this string, but without the trailing slash, a permanent redirect with the
+		// In response to a request with URI equal to this string, but without the trailing slash, a permanent redirect with the
 		// code 301 will be returned to the requested URI with the slash appended. If this is not desired, an exact match of the
 		// URIand location could be defined like this:
 		//
@@ -1482,7 +1482,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.DefaultBackendUpstreamName = defUpstreamName
 }
 
-// OK to merge canary ingresses iff there exists one or more ingresses to potentially merge into
+// OK to merge canary ingresses if there exists one or more ingresses to potentially merge into
 func nonCanaryIngressExists(ingresses []*ingress.Ingress, canaryIngresses []*ingress.Ingress) bool {
 	return len(ingresses)-len(canaryIngresses) > 0
 }
@@ -1728,7 +1728,7 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 	}
 }
 
-func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers []*ingress.Server) error {
+func checkOverlap(ing *networking.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) error {
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
 			continue
@@ -1738,7 +1738,6 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 			rule.Host = defServerName
 		}
 
-	OUTER:
 		for _, path := range rule.HTTP.Paths {
 			if path.Backend.Service == nil {
 				// skip non-service backends
@@ -1750,41 +1749,30 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 				path.Path = rootLocation
 			}
 
-			existingIngresses := ingressForHostPath(rule.Host, path.Path, servers)
+			existingIngresses, numCanaries := ingressForHostPath(rule.Host, path.Path, upstreams, servers)
 
-			// no previous ingress
-			if len(existingIngresses) == 0 {
-				continue
-			}
-
-			// same ingress
+			// check for path overlap
 			for _, existing := range existingIngresses {
-				if existing.ObjectMeta.Namespace == ing.ObjectMeta.Namespace && existing.ObjectMeta.Name == ing.ObjectMeta.Name {
-					continue OUTER
+				if ing.ObjectMeta.UID != existing.ObjectMeta.UID {
+					if _, err := parser.GetBoolAnnotation("canary", ing); err == nil && numCanaries > 1 {
+						return fmt.Errorf(`host "%s" and path "%s" is already defined in a canary ingress`, rule.Host, path.Path)
+					} else if err == errors.ErrMissingAnnotations {
+						return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
+					} else if err != nil {
+						return fmt.Errorf(`Uanble to read annotation: %s`, err)
+					}
 				}
 			}
 
-			// path overlap. Check if one of the ingresses has a canary annotation
-			isCanaryEnabled, annotationErr := parser.GetBoolAnnotation("canary", ing)
-			for _, existing := range existingIngresses {
-				isExistingCanaryEnabled, existingAnnotationErr := parser.GetBoolAnnotation("canary", existing)
-
-				if isCanaryEnabled && isExistingCanaryEnabled {
-					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
-				}
-
-				if annotationErr == errors.ErrMissingAnnotations && existingAnnotationErr == errors.ErrMissingAnnotations {
-					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
-				}
-			}
 		}
 	}
 
 	return nil
 }
 
-func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*networking.Ingress {
+func ingressForHostPath(hostname, path string, upstreams []*ingress.Backend, servers []*ingress.Server) ([]*networking.Ingress, int) {
 	ingresses := make([]*networking.Ingress, 0)
+	var numCanaries int
 
 	for _, server := range servers {
 		if hostname != server.Hostname {
@@ -1801,10 +1789,15 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 			}
 
 			ingresses = append(ingresses, &location.Ingress.Ingress)
+			for _, upstream := range upstreams {
+				if location.Backend == upstream.Name {
+					numCanaries += len(upstream.AlternativeBackends)
+				}
+			}
 		}
 	}
 
-	return ingresses
+	return ingresses, numCanaries
 }
 
 func (n *NGINXController) getStreamSnippets(ingresses []*ingress.Ingress) []string {
