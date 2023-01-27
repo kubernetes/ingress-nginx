@@ -263,7 +263,7 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 
 	})
 
-	ginkgo.It("should return 403 using auth-tls-match-cn with no matching CN from client", func() {
+	ginkgo.It("should return 403 using auth-tls-exact-match-cn with no matching CN from client", func() {
 		host := "authtls.foo.com"
 		nameSpace := f.Namespace
 
@@ -275,9 +275,10 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
-			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
-			"nginx.ingress.kubernetes.io/auth-tls-match-cn":      "CN=notgonnamatch",
+			"nginx.ingress.kubernetes.io/auth-tls-secret":         nameSpace + "/" + host,
+			"nginx.ingress.kubernetes.io/auth-tls-verify-client":  "on",
+			"nginx.ingress.kubernetes.io/auth-tls-exact-match-cn": "true",
+			"nginx.ingress.kubernetes.io/auth-tls-match-cn":       "notgonnamatch",
 		}
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
@@ -292,7 +293,7 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 			Status(http.StatusForbidden)
 	})
 
-	ginkgo.It("should return 200 using auth-tls-match-cn with matching CN from client", func() {
+	ginkgo.It("should return 200 using auth-tls-exact-match-cn with matching CN from client", func() {
 		host := "authtls.foo.com"
 		nameSpace := f.Namespace
 
@@ -304,13 +305,13 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
-			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
-			"nginx.ingress.kubernetes.io/auth-tls-match-cn":      "CN=authtls",
+			"nginx.ingress.kubernetes.io/auth-tls-secret":         nameSpace + "/" + host,
+			"nginx.ingress.kubernetes.io/auth-tls-verify-client":  "on",
+			"nginx.ingress.kubernetes.io/auth-tls-exact-match-cn": "true",
+			"nginx.ingress.kubernetes.io/auth-tls-match-cn":       "authtls.foo.com-client",
 		}
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
-
 		assertSslClientCertificateConfig(f, host, "on", "1")
 
 		f.HTTPTestClientWithTLSConfig(clientConfig).
@@ -335,7 +336,7 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
 			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
-			"nginx.ingress.kubernetes.io/auth-tls-match-cn":      "CN=(itwillmatch|withthenextoption|authtls)",
+			"nginx.ingress.kubernetes.io/auth-tls-match-cn":      "(itwillmatch|withthenextoption|authtls)",
 		}
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))

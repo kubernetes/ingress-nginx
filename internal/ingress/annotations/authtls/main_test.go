@@ -17,6 +17,7 @@ limitations under the License.
 package authtls
 
 import (
+	"regexp"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -131,12 +132,16 @@ func TestAnnotations(t *testing.T) {
 	if u.MatchCN != "" {
 		t.Errorf("expected empty string, but got %v", u.MatchCN)
 	}
+	if u.ExactMatchCN != false {
+		t.Errorf("expected empty string, but got %v", u.ExactMatchCN)
+	}
 
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "2"
 	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
-	data[parser.GetAnnotationWithPrefix("auth-tls-match-cn")] = "CN=hello-app"
+	data[parser.GetAnnotationWithPrefix("auth-tls-match-cn")] = "he"
+	data[parser.GetAnnotationWithPrefix("auth-tls-exact-match-cn")] = "true"
 
 	ing.SetAnnotations(data)
 
@@ -165,8 +170,15 @@ func TestAnnotations(t *testing.T) {
 	if u.PassCertToUpstream != true {
 		t.Errorf("expected %v but got %v", true, u.PassCertToUpstream)
 	}
-	if u.MatchCN != "CN=hello-app" {
-		t.Errorf("expected %v but got %v", "CN=hello-app", u.MatchCN)
+	match, err := regexp.MatchString(u.MatchCN, "hello")
+	if err != nil {
+		t.Errorf("unexpected error matching CN %v", err)
+	}
+	if !match {
+		t.Errorf("expected %v but got %v", "hello", u.MatchCN)
+	}
+	if u.ExactMatchCN != true {
+		t.Errorf("expected %v but got %v", true, u.ExactMatchCN)
 	}
 }
 
@@ -203,6 +215,7 @@ func TestInvalidAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "abcd"
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "nahh"
 	data[parser.GetAnnotationWithPrefix("auth-tls-match-cn")] = "<script>nope</script>"
+	data[parser.GetAnnotationWithPrefix("auth-tls-exact-match-cn")] = "<script>definitely nope</script>"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(fakeSecret).Parse(ing)
@@ -225,6 +238,9 @@ func TestInvalidAnnotations(t *testing.T) {
 	}
 	if u.MatchCN != "" {
 		t.Errorf("expected empty string but got %v", u.MatchCN)
+	}
+	if u.ExactMatchCN != false {
+		t.Errorf("expected %v but got %v", false, u.ExactMatchCN)
 	}
 
 }

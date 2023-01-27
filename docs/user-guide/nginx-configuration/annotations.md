@@ -29,6 +29,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-tls-match-cn](#client-certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-exact-match-cn](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|
@@ -270,7 +271,9 @@ You can further customize client certificate authentication and behavior with th
     * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the upstream service.
 * `nginx.ingress.kubernetes.io/auth-tls-error-page`: The URL/Page that user should be redirected in case of a Certificate Authentication Error
 * `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`: Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
-* `nginx.ingress.kubernetes.io/auth-tls-match-cn`: Adds a sanity check for the CN of the client certificate that is sent over using a string / regex starting with "CN=", example: `"CN=myvalidclient"`. If the certificate CN sent during mTLS does not match your string / regex it will fail with status code 403. Another way of using this is by adding multiple options in your regex, example: `"CN=(option1|option2|myvalidclient)"`. In this case, as long as one of the options in the brackets matches the certificate CN then you will receive a 200 status code. 
+* `nginx.ingress.kubernetes.io/auth-tls-match-cn`: Adds a sanity check for the CN of the client certificate that is sent over using a regex. If the certificate CN sent during mTLS does not match your regex, it will fail with status code 403. Another way of using this is by adding multiple options in your regex, example: your actual CN is `"myvalidclient.com"` and the annotation regex you pass in is: `"(option1|option2|myvalid)"` then myvalid would give you a match. In this case, as long as one of the options in the brackets regex matches the certificate CN then you will receive a 200 status code.
+* `nginx.ingress.kubernetes.io/auth-tls-exact-match-cn`: Adds on to the strictness of the auth-tls-match-cn check. Adding a `"true"` flag makes the check an exact match for the CN of the client certificate that is sent over. Example: `"myvalidclient.com"`. If the certificate CN sent during mTLS does not match your string exactly, it will fail with status code 403. With exact match set to true, if you were to pass `"myvalidclient.co"`, it would not match because it is missing the `"m"` at the end. This defaults to false when using auth-tls-match-cn. 
+
 
 The following headers are sent to the upstream service according to the `auth-tls-*` annotations:
 
