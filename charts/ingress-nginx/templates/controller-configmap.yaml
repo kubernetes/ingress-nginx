@@ -14,7 +14,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   allow-snippet-annotations: "{{ .Values.controller.allowSnippetAnnotations }}"
-  disable-pathtype-validation: "{{ .Values.controller.disablePathTypeValidation }}"
+  enable-pathtype-validation: "{{ .Values.controller.EnablePathTypeValidation }}"
 {{- if .Values.controller.addHeaders }}
   add-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers
 {{- end }}

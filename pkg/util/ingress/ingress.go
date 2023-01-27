@@ -246,7 +246,7 @@ func BuildRedirects(servers []*ingress.Server) []*redirect {
 	return redirectServers
 }
 
-func ValidateIngressPath(copyIng *networkingv1.Ingress, disablePathTypeValidation bool, additionalChars string) error {
+func ValidateIngressPath(copyIng *networkingv1.Ingress, enablePathTypeValidation bool, additionalChars string) error {
 
 	if copyIng == nil {
 		return nil
@@ -259,31 +259,46 @@ func ValidateIngressPath(copyIng *networkingv1.Ingress, disablePathTypeValidatio
 	}
 
 	for _, rule := range copyIng.Spec.Rules {
+
 		if rule.HTTP == nil {
 			continue
 		}
-		if err := checkPath(rule.HTTP.Paths, disablePathTypeValidation, regexPath); err != nil {
+
+		if err := checkPath(rule.HTTP.Paths, enablePathTypeValidation, regexPath); err != nil {
 			return fmt.Errorf("error validating ingressPath: %w", err)
 		}
 	}
 	return nil
 }
 
-func checkPath(paths []networkingv1.HTTPIngressPath, disablePathTypeValidation bool, regexSpecificChars *regexp.Regexp) error {
+func checkPath(paths []networkingv1.HTTPIngressPath, enablePathTypeValidation bool, regexSpecificChars *regexp.Regexp) error {
+
 	for _, path := range paths {
 		if path.PathType == nil {
 			path.PathType = &defaultPathType
 		}
 
-		if disablePathTypeValidation || *path.PathType == networkingv1.PathTypeImplementationSpecific {
+		klog.V(9).InfoS("PathType Validation", "enablePathTypeValidation", enablePathTypeValidation, "regexSpecificChars", regexSpecificChars.String(), "Path", path.Path)
+
+		switch pathType := *path.PathType; pathType {
+		case networkingv1.PathTypeImplementationSpecific:
+
 			if !regexSpecificChars.MatchString(path.Path) {
 				return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
 			}
-			continue
-		}
 
-		if !pathAlphaNumericRegex(path.Path) {
-			return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
+		case networkingv1.PathTypeExact, networkingv1.PathTypePrefix:
+			if enablePathTypeValidation {
+				if !pathAlphaNumericRegex(path.Path) {
+					return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
+				}
+				continue
+			}
+			if !regexSpecificChars.MatchString(path.Path) {
+				return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
+			}
+		default:
+			return fmt.Errorf("unknown path type %v on path %v", *path.PathType, path.Path)
 		}
 	}
 	return nil
