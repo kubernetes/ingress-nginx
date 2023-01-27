@@ -59,11 +59,12 @@ func (p *TCPProxy) Get(host string) *TCPServer {
 // and open a connection to the passthrough server.
 func (p *TCPProxy) Handle(conn net.Conn) {
 	defer conn.Close()
-	data := make([]byte, 4096)
+	// See: https://www.ibm.com/docs/en/ztpf/1.1.0.15?topic=sessions-ssl-record-format
+	data := make([]byte, 16384)
 
 	length, err := conn.Read(data)
 	if err != nil {
-		klog.V(4).ErrorS(err, "Error reading the first 4k of the connection")
+		klog.V(4).ErrorS(err, "Error reading data from the connection")
 		return
 	}
 
