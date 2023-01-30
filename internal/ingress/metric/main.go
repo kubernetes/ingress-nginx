@@ -25,8 +25,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 // Collector defines the interface for a metric collector
@@ -43,6 +43,8 @@ type Collector interface {
 
 	IncCheckCount(string, string)
 	IncCheckErrorCount(string, string)
+	IncOrphanIngress(string, string, string)
+	DecOrphanIngress(string, string, string)
 
 	RemoveMetrics(ingresses, endpoints, certificates []string)
 
@@ -69,7 +71,7 @@ type collector struct {
 }
 
 // NewCollector creates a new metric collector the for ingress controller
-func NewCollector(metricsPerHost bool, registry *prometheus.Registry, ingressclass string, buckets collectors.HistogramBuckets) (Collector, error) {
+func NewCollector(metricsPerHost, reportStatusClasses bool, registry *prometheus.Registry, ingressclass string, buckets collectors.HistogramBuckets) (Collector, error) {
 	podNamespace := os.Getenv("POD_NAMESPACE")
 	if podNamespace == "" {
 		podNamespace = "default"
@@ -87,7 +89,7 @@ func NewCollector(metricsPerHost bool, registry *prometheus.Registry, ingresscla
 		return nil, err
 	}
 
-	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost, buckets)
+	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost, reportStatusClasses, buckets)
 	if err != nil {
 		return nil, err
 	}
@@ -179,6 +181,14 @@ func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 func (c *collector) SetSSLInfo(servers []*ingress.Server) {
 	klog.V(2).Infof("Updating ssl certificate info metrics")
 	c.ingressController.SetSSLInfo(servers)
+}
+
+func (c *collector) IncOrphanIngress(namespace string, name string, orphanityType string) {
+	c.ingressController.IncOrphanIngress(namespace, name, orphanityType)
+}
+
+func (c *collector) DecOrphanIngress(namespace string, name string, orphanityType string) {
+	c.ingressController.DecOrphanIngress(namespace, name, orphanityType)
 }
 
 func (c *collector) SetHosts(hosts sets.String) {

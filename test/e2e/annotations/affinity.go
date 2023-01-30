@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +34,8 @@ import (
 
 var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 	f := framework.NewDefaultFramework("affinity")
+
+	pathImpl := networking.PathTypeImplementationSpecific
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
@@ -222,6 +224,51 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 			Header("Set-Cookie").Contains(fmt.Sprintf("Expires=%s", expected)).Contains("Max-Age=259200")
 	})
 
+	ginkgo.It("should set cookie with domain", func() {
+		host := "cookiedomain.foo.com"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "DomainCookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-domain"] = "foo.bar"
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Set-Cookie").Contains("Domain=foo.bar")
+	})
+
+	ginkgo.It("should not set cookie without domain annotation", func() {
+		host := "cookienodomain.foo.com"
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/affinity"] = "cookie"
+		annotations["nginx.ingress.kubernetes.io/session-cookie-name"] = "NoDomainCookie"
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Set-Cookie").NotContains("; Domain")
+	})
+
 	ginkgo.It("should work with use-regex annotation and session-cookie-path", func() {
 		host := "useregex.foo.com"
 		annotations := make(map[string]string)
@@ -231,6 +278,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 		annotations["nginx.ingress.kubernetes.io/session-cookie-path"] = "/foo/bar"
 
 		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
+
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -254,6 +303,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 		annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 
 		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
+
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

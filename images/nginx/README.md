@@ -19,7 +19,9 @@ This image provides a default configuration file with no backend servers.
 
 _Using docker_
 
+NGINX base image we use is defined in NGINX_BASE file at the root of the project 
+
 ```console
-docker run -v /some/nginx.conf:/etc/nginx/nginx.conf:ro k8s.gcr.io/ingress-nginx/nginx:v20210926-g5662db450@sha256:1ef404b5e8741fe49605a1f40c3fdd8ef657aecdb9526ea979d1672eeabd0cd9
+docker run -v /some/nginx.conf:/etc/nginx/nginx.conf:ro $(cat ../../NGINX_BASE)
 ```
 

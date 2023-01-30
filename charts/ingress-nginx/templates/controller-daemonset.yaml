@@ -68,10 +68,13 @@ spec:
           value: {{ $value | quote }}
     {{- end }}
     {{- end }}
+    {{- if .Values.controller.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.controller.shareProcessNamespace }}
+    {{- end }}
       containers:
         - name: {{ .Values.controller.containerName }}
           {{- with .Values.controller.image }}
-          image: "{{- if .repository -}}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{- end -}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
+          image: "{{- if .repository -}}{{ .repository }}{{ else }}{{ .registry }}/{{ include "ingress-nginx.image" . }}{{- end -}}:{{ .tag }}{{ include "ingress-nginx.imageDigest" . }}"
           {{- end }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
         {{- if .Values.controller.lifecycle }}
@@ -79,14 +82,7 @@ spec:
         {{- end }}
           args:
             {{- include "ingress-nginx.params" . | nindent 12 }}
-          securityContext:
-            capabilities:
-                drop:
-                - ALL
-                add:
-                - NET_BIND_SERVICE
-            runAsUser: {{ .Values.controller.image.runAsUser }}
-            allowPrivilegeEscalation: {{ .Values.controller.image.allowPrivilegeEscalation }}
+          securityContext: {{ include "controller.containerSecurityContext" . | nindent 12 }}
           env:
             - name: POD_NAME
               valueFrom:
@@ -106,8 +102,12 @@ spec:
           {{- if .Values.controller.startupProbe }}
           startupProbe: {{ toYaml .Values.controller.startupProbe | nindent 12 }}
           {{- end }}
+          {{- if .Values.controller.livenessProbe }}
           livenessProbe: {{ toYaml .Values.controller.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.controller.readinessProbe }}
           readinessProbe: {{ toYaml .Values.controller.readinessProbe | nindent 12 }}
+          {{- end }}
           ports:
           {{- range $key, $value := .Values.controller.containerPort }}
             - name: {{ $key }}
@@ -118,7 +118,7 @@ spec:
               {{- end }}
           {{- end }}
           {{- if .Values.controller.metrics.enabled }}
-            - name: metrics
+            - name: {{ .Values.controller.metrics.portName }}
               containerPort: {{ .Values.controller.metrics.port }}
               protocol: TCP
           {{- end }}
@@ -128,7 +128,7 @@ spec:
               protocol: TCP
           {{- end }}
           {{- range $key, $value := .Values.tcp }}
-            - name: {{ $key }}-tcp
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-tcp
               containerPort: {{ $key }}
               protocol: TCP
               {{- if $.Values.controller.hostPort.enabled }}
@@ -136,7 +136,7 @@ spec:
               {{- end }}
           {{- end }}
           {{- range $key, $value := .Values.udp }}
-            - name: {{ $key }}-udp
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-udp
               containerPort: {{ $key }}
               protocol: UDP
               {{- if $.Values.controller.hostPort.enabled }}
@@ -181,6 +181,12 @@ spec:
           - name: {{ .Name }}
             image: {{ .Image }}
             command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+            {{- if (or $.Values.controller.containerSecurityContext .containerSecurityContext) }}
+            securityContext: {{ .containerSecurityContext | default $.Values.controller.containerSecurityContext | toYaml | nindent 14 }}
+            {{- end }}
+            volumeMounts:
+              - name: modules
+                mountPath: /modules_mount
         {{- end }}
       {{- end }}
     {{- end }}
@@ -219,6 +225,13 @@ spec:
         - name: webhook-cert
           secret:
             secretName: {{ include "ingress-nginx.fullname" . }}-admission
+        {{- if .Values.controller.admissionWebhooks.certManager.enabled }}
+            items:
+              - key: tls.crt
+                path: cert
+              - key: tls.key
+                path: key
+        {{- end }}
       {{- end }}
       {{- if .Values.controller.extraVolumes }}
         {{ toYaml .Values.controller.extraVolumes | nindent 8 }}

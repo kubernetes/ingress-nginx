@@ -71,6 +71,13 @@ func buildIngress() *networking.Ingress {
 	}
 }
 
+func boolToString(v bool) string {
+	if v {
+		return "true"
+	}
+	return "false"
+}
+
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 
@@ -86,19 +93,20 @@ func TestAnnotations(t *testing.T) {
 		requestRedirect        string
 		authSnippet            string
 		authCacheKey           string
+		authAlwaysSetCookie    bool
 		expErr                 bool
 	}{
-		{"empty", "", "", "", "", "", "", "", true},
-		{"no scheme", "bar", "bar", "", "", "", "", "", true},
-		{"invalid host", "http://", "http://", "", "", "", "", "", true},
-		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", "", "", true},
-		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "POST", "", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "", "", "", false},
-		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "http://foo.com/redirect-me", "", "", false},
-		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "proxy_set_header My-Custom-Header 42;", "", false},
-		{"auth cache ", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "", "$foo$bar", false},
-		{"redirect param", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "origUrl", "", "", "", "", false},
+		{"empty", "", "", "", "", "", "", "", false, true},
+		{"no scheme", "bar", "bar", "", "", "", "", "", false, true},
+		{"invalid host", "http://", "http://", "", "", "", "", "", false, true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", "", "", false, true},
+		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", "", "", false, false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "POST", "", "", "", false, false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "", "", "", false, false},
+		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "http://foo.com/redirect-me", "", "", false, false},
+		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "proxy_set_header My-Custom-Header 42;", "", false, false},
+		{"auth cache ", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "", "$foo$bar", false, false},
+		{"redirect param", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "origUrl", "", "", "", "", true, false},
 	}
 
 	for _, test := range tests {
@@ -109,6 +117,7 @@ func TestAnnotations(t *testing.T) {
 		data[parser.GetAnnotationWithPrefix("auth-request-redirect")] = test.requestRedirect
 		data[parser.GetAnnotationWithPrefix("auth-snippet")] = test.authSnippet
 		data[parser.GetAnnotationWithPrefix("auth-cache-key")] = test.authCacheKey
+		data[parser.GetAnnotationWithPrefix("auth-always-set-cookie")] = boolToString(test.authAlwaysSetCookie)
 
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
@@ -145,6 +154,10 @@ func TestAnnotations(t *testing.T) {
 		}
 		if u.AuthCacheKey != test.authCacheKey {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.authCacheKey, u.AuthCacheKey)
+		}
+
+		if u.AlwaysSetCookie != test.authAlwaysSetCookie {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.authAlwaysSetCookie, u.AlwaysSetCookie)
 		}
 	}
 }
@@ -239,6 +252,71 @@ func TestCacheDurationAnnotations(t *testing.T) {
 
 		if !reflect.DeepEqual(u.AuthCacheDuration, test.parsedDuration) {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.duration, u.AuthCacheDuration)
+		}
+	}
+}
+
+func TestKeepaliveAnnotations(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	tests := []struct {
+		title                string
+		url                  string
+		keepaliveConnections string
+		keepaliveRequests    string
+		keepaliveTimeout     string
+		expectedConnections  int
+		expectedRequests     int
+		expectedTimeout      int
+	}{
+		{"all set", "http://goog.url", "5", "500", "50", 5, 500, 50},
+		{"no annotation", "http://goog.url", "", "", "", defaultKeepaliveConnections, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"default for connections", "http://goog.url", "x", "500", "50", defaultKeepaliveConnections, 500, 50},
+		{"default for requests", "http://goog.url", "5", "x", "50", 5, defaultKeepaliveRequests, 50},
+		{"default for invalid timeout", "http://goog.url", "5", "500", "x", 5, 500, defaultKeepaliveTimeout},
+		{"variable in host", "http://$host:5000/a/b", "5", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"variable in path", "http://goog.url:5000/$path", "5", "", "", 5, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"negative connections", "http://goog.url", "-2", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"negative requests", "http://goog.url", "5", "-1", "", 0, -1, defaultKeepaliveTimeout},
+		{"negative timeout", "http://goog.url", "5", "", "-1", 0, defaultKeepaliveRequests, -1},
+		{"negative request and timeout", "http://goog.url", "5", "-2", "-3", 0, -2, -3},
+	}
+
+	for _, test := range tests {
+		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
+		data[parser.GetAnnotationWithPrefix("auth-keepalive")] = test.keepaliveConnections
+		data[parser.GetAnnotationWithPrefix("auth-keepalive-timeout")] = test.keepaliveTimeout
+		data[parser.GetAnnotationWithPrefix("auth-keepalive-requests")] = test.keepaliveRequests
+
+		i, err := NewParser(&resolver.Mock{}).Parse(ing)
+		if err != nil {
+			t.Errorf("%v: unexpected error: %v", test.title, err)
+			continue
+		}
+
+		u, ok := i.(*Config)
+		if !ok {
+			t.Errorf("%v: expected an External type", test.title)
+			continue
+		}
+
+		if u.URL != test.url {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.url, u.URL)
+		}
+
+		if u.KeepaliveConnections != test.expectedConnections {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedConnections, u.KeepaliveConnections)
+		}
+
+		if u.KeepaliveRequests != test.expectedRequests {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedRequests, u.KeepaliveRequests)
+		}
+
+		if u.KeepaliveTimeout != test.expectedTimeout {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedTimeout, u.KeepaliveTimeout)
 		}
 	}
 }

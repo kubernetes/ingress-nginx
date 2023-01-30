@@ -36,9 +36,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -124,7 +124,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -204,7 +206,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 		ic := createIngressClass(clientSet, t, "not-k8s.io/not-ingress-nginx")
@@ -307,7 +311,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 		validSpec := commonIngressSpec
@@ -422,7 +428,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			ingressClassconfig)
+			true,
+			ingressClassconfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -551,7 +559,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			ingressClassconfig)
+			true,
+			ingressClassconfig,
+			false)
 
 		storer.Run(stopCh)
 		validSpec := commonIngressSpec
@@ -650,7 +660,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -743,7 +755,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 		invalidSpec := commonIngressSpec
@@ -828,7 +842,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -923,7 +939,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -1046,7 +1064,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 
@@ -1166,7 +1186,9 @@ func TestStore(t *testing.T) {
 			clientSet,
 			updateCh,
 			false,
-			DefaultClassConfig)
+			true,
+			DefaultClassConfig,
+			false)
 
 		storer.Run(stopCh)
 

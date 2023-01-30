@@ -38,7 +38,7 @@ chmod +x ${CODEGEN_PKG}/generate-groups.sh
 #  nginxingress:v1alpha1 \
 #  --output-base "$(dirname ${BASH_SOURCE})/../../.."
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy" \
-  k8s.io/ingress-nginx/internal k8s.io/ingress-nginx/internal \
+  k8s.io/ingress-nginx/internal k8s.io/ingress-nginx/pkg/apis \
   .:ingress \
   --output-base "$(dirname ${BASH_SOURCE})/../../.." \
   --go-header-file ${SCRIPT_ROOT}/hack/boilerplate/boilerplate.generated.go.txt

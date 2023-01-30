@@ -18,7 +18,7 @@ package metric
 
 import (
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 // NewDummyCollector returns a dummy metric collector
@@ -40,6 +40,12 @@ func (dc DummyCollector) IncReloadCount() {}
 
 // IncReloadErrorCount ...
 func (dc DummyCollector) IncReloadErrorCount() {}
+
+// IncOrphanIngress ...
+func (dc DummyCollector) IncOrphanIngress(string, string, string) {}
+
+// DecOrphanIngress ...
+func (dc DummyCollector) DecOrphanIngress(string, string, string) {}
 
 // IncCheckCount ...
 func (dc DummyCollector) IncCheckCount(string, string) {}

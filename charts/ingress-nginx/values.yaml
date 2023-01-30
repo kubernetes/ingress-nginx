@@ -16,13 +16,16 @@ commonLabels: {}
 controller:
   name: controller
   image:
-    registry: k8s.gcr.io
+    ## Keep false as default for now!
+    chroot: false
+    registry: registry.k8s.io
     image: ingress-nginx/controller
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.1.2"
-    digest: sha256:28b11ce69e57843de44e3db6413e98d09de0f6688e33d4bd384002a44f78405c
+    tag: "v1.5.1"
+    digest: sha256:4ba73c697770664c1e00e9f968de14e08f606ff961c76e5d7033a4a9c593c629
+    digestChroot: sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529bad0d178fb36147345
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -74,11 +77,20 @@ controller:
   # -- Process IngressClass per name (additionally as per spec.controller).
   ingressClassByName: false
 
+  # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-aware-hints="auto"
+  # Defaults to false
+  enableTopologyAwareRouting: false
+
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.
   # Global snippets in ConfigMap are still respected
   allowSnippetAnnotations: true
+
+  # -- This configuration defines if Ingress Controller should validate pathType.
+  # If this is true, special characters will be allowed on paths of any pathType. If
+  # false, special characters are only allowed on paths with pathType = ImplementationSpecific
+  disablePathTypeValidation: false
 
   # -- Required for use with CNI based kubernetes installations (such as ones set up by kubeadm),
   # since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920
@@ -96,8 +108,8 @@ controller:
       # -- 'hostPort' https port
       https: 443
 
-  # -- Election ID to use for status update
-  electionID: ingress-controller-leader
+  # -- Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader'
+  electionID: ""
 
   ## This section refers to the creation of the IngressClass resource
   ## IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
@@ -272,7 +284,7 @@ controller:
   ##
   topologySpreadConstraints: []
     # - maxSkew: 1
-    #   topologyKey: failure-domain.beta.kubernetes.io/zone
+    #   topologyKey: topology.kubernetes.io/zone
     #   whenUnsatisfiable: DoNotSchedule
     #   labelSelector:
     #     matchLabels:
@@ -342,7 +354,10 @@ controller:
 
   replicaCount: 1
 
+  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
   minAvailable: 1
+  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
+  # maxUnavailable: 1
 
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
   ## ref: https://github.com/kubernetes/ingress-nginx/issues/4735#issuecomment-551204903
@@ -358,7 +373,9 @@ controller:
 
   # Mutually exclusive with keda autoscaling
   autoscaling:
+    apiVersion: autoscaling/v2
     enabled: false
+    annotations: {}
     minReplicas: 1
     maxReplicas: 11
     targetCPUUtilizationPercentage: 50
@@ -366,7 +383,7 @@ controller:
     behavior: {}
       # scaleDown:
       #   stabilizationWindowSeconds: 300
-      #  policies:
+      #   policies:
       #   - type: Pods
       #     value: 1
       #     periodSeconds: 180
@@ -457,7 +474,8 @@ controller:
     ##
     externalIPs: []
 
-    # loadBalancerIP: ""
+    # -- Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+    loadBalancerIP: ""
     loadBalancerSourceRanges: []
 
     enableHttp: true
@@ -529,6 +547,10 @@ controller:
       ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
       # externalTrafficPolicy: ""
 
+  # shareProcessNamespace enables process namespace sharing within the pod.
+  # This can be used for example to signal log rotation using `kill -USR1` from a sidecar.
+  shareProcessNamespace: false
+
   # -- Additional containers to be added to the controller pod.
   # See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example.
   extraContainers: []
@@ -569,14 +591,20 @@ controller:
   #   image: busybox
   #   command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
 
+  # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
   extraModules: []
-  ## Modules, which are mounted into the core nginx image
-  # - name: opentelemetry
-  #   image: busybox
+  #   containerSecurityContext:
+  #     allowPrivilegeEscalation: false
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
   # mounted volume.
+
+  opentelemetry:
+    enabled: false
+    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230107-helm-chart-4.4.2-2-g96b3d2165@sha256:331b9bebd6acfcd2d3048abbdd86555f5be76b7e3d0b5af4300b04235c6056c9
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
 
   admissionWebhooks:
     annotations: {}
@@ -586,6 +614,15 @@ controller:
     ## These annotations will be added to the ValidatingWebhookConfiguration and
     ## the Jobs Spec of the admission webhooks.
     enabled: true
+    # -- Additional environment variables to set
+    extraEnvs: []
+    # extraEnvs:
+    #   - name: FOO
+    #     valueFrom:
+    #       secretKeyRef:
+    #         key: FOO
+    #         name: secret-resource
+    # -- Admission Webhook failure policy to use
     failurePolicy: Fail
     # timeoutSeconds: 10
     port: 8443
@@ -598,6 +635,7 @@ controller:
 
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
+    networkPolicyEnabled: false
 
     service:
       annotations: {}
@@ -609,6 +647,8 @@ controller:
       type: ClusterIP
 
     createSecretJob:
+      securityContext:
+        allowPrivilegeEscalation: false
       resources: {}
         # limits:
         #   cpu: 10m
@@ -618,18 +658,20 @@ controller:
         #   memory: 20Mi
 
     patchWebhookJob:
+      securityContext:
+        allowPrivilegeEscalation: false
       resources: {}
 
     patch:
       enabled: true
       image:
-        registry: k8s.gcr.io
+        registry: registry.k8s.io
         image: ingress-nginx/kube-webhook-certgen
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v1.1.1
-        digest: sha256:64d8c73dca984af206adf9d6d7e46aa550362b1d7a01f3a0a91b20cc67868660
+        tag: v20220916-gd32f8c343
+        digest: sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
@@ -640,11 +682,26 @@ controller:
       tolerations: []
       # -- Labels to be added to patch job resources
       labels: {}
-      runAsUser: 2000
-      fsGroup: 2000
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 2000
+        fsGroup: 2000
+
+    # Use certmanager to generate webhook certs
+    certManager:
+      enabled: false
+      # self-signed root certificate
+      rootCert:
+        duration: ""  # default to be 5y
+      admissionCert:
+        duration: ""  # default to be 1y
+      # issuerRef:
+      #   name: "issuer"
+      #   kind: "ClusterIssuer"
 
   metrics:
     port: 10254
+    portName: metrics
     # if this port is changed, change healthz-port: in extraArgs: accordingly
     enabled: false
 
@@ -652,6 +709,8 @@ controller:
       annotations: {}
       # prometheus.io/scrape: "true"
       # prometheus.io/port: "10254"
+      # -- Labels to be added to the metrics service resource
+      labels: {}
 
       # clusterIP: ""
 
@@ -750,7 +809,7 @@ defaultBackend:
 
   name: defaultbackend
   image:
-    registry: k8s.gcr.io
+    registry: registry.k8s.io
     image: defaultbackend-amd64
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
@@ -792,6 +851,17 @@ defaultBackend:
     periodSeconds: 5
     successThreshold: 1
     timeoutSeconds: 5
+
+  # -- The update strategy to apply to the Deployment or DaemonSet
+  ##
+  updateStrategy: {}
+  #  rollingUpdate:
+  #    maxUnavailable: 1
+  #  type: RollingUpdate
+
+  # -- `minReadySeconds` to avoid killing pods before we are ready
+  ##
+  minReadySeconds: 0
 
   # -- Node tolerations for server scheduling to nodes with taints
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
@@ -901,17 +971,21 @@ serviceAccount:
 imagePullSecrets: []
 # - name: secretName
 
-# -- TCP service key:value pairs
+# -- TCP service key-value pairs
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md
 ##
 tcp: {}
 #  8080: "default/example-tcp-svc:9000"
 
-# -- UDP service key:value pairs
+# -- UDP service key-value pairs
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md
 ##
 udp: {}
 #  53: "kube-system/kube-dns:53"
+
+# -- Prefix for TCP and UDP ports names in ingress controller service
+## Some cloud providers, like Yandex Cloud may have a requirements for a port name regex to support cloud load balancer integration
+portNamePrefix: ""
 
 # -- (string) A base64-encoded Diffie-Hellman parameter.
 # This can be generated with: `openssl dhparam 4096 2> /dev/null | base64`

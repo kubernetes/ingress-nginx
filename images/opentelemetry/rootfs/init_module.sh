@@ -18,4 +18,5 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-cp -R /etc/nginx/modules /modules_mount/etc/nginx/modules
+mkdir -p /modules_mount/etc/nginx/modules/otel
+cp -R /etc/nginx/modules/* /modules_mount/etc/nginx/modules/otel

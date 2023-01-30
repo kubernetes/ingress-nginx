@@ -34,7 +34,6 @@ import (
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
@@ -43,6 +42,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/nginx"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 func init() {
@@ -502,14 +502,49 @@ func TestShouldApplyGlobalAuth(t *testing.T) {
 
 func TestBuildAuthResponseHeaders(t *testing.T) {
 	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
-	expected := []string{
-		"auth_request_set $authHeader0 $upstream_http_h1;",
-		"proxy_set_header 'h1' $authHeader0;",
-		"auth_request_set $authHeader1 $upstream_http_h_with_caps_and_dashes;",
-		"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
+	tests := []struct {
+		headers  []string
+		expected []string
+		lua      bool
+	}{
+		{
+			headers: externalAuthResponseHeaders,
+			lua:     false,
+			expected: []string{
+				"auth_request_set $authHeader0 $upstream_http_h1;",
+				"proxy_set_header 'h1' $authHeader0;",
+				"auth_request_set $authHeader1 $upstream_http_h_with_caps_and_dashes;",
+				"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
+			},
+		},
+		{
+			headers: externalAuthResponseHeaders,
+			lua:     true,
+			expected: []string{
+				"set $authHeader0 '';",
+				"proxy_set_header 'h1' $authHeader0;",
+				"set $authHeader1 '';",
+				"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
+			},
+		},
 	}
 
-	headers := buildAuthResponseHeaders(proxySetHeader(nil), externalAuthResponseHeaders)
+	for _, test := range tests {
+		got := buildAuthResponseHeaders(proxySetHeader(nil), test.headers, test.lua)
+		if !reflect.DeepEqual(test.expected, got) {
+			t.Errorf("Expected \n'%v'\nbut returned \n'%v'", test.expected, got)
+		}
+	}
+}
+
+func TestBuildAuthResponseLua(t *testing.T) {
+	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
+	expected := []string{
+		"ngx.var.authHeader0 = res.header['h1']",
+		"ngx.var.authHeader1 = res.header['H-With-Caps-And-Dashes']",
+	}
+
+	headers := buildAuthUpstreamLuaHeaders(externalAuthResponseHeaders)
 
 	if !reflect.DeepEqual(expected, headers) {
 		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
@@ -530,6 +565,139 @@ func TestBuildAuthProxySetHeaders(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, headers) {
 		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
+	}
+}
+
+func TestBuildAuthUpstreamName(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildAuthUpstreamName(invalidType, "")
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	loc := &ingress.Location{
+		ExternalAuth: authreq.Config{
+			URL: "foo.com/auth",
+		},
+		Path: "/cat",
+	}
+
+	encodedAuthURL := strings.Replace(base64.URLEncoding.EncodeToString([]byte(loc.Path)), "=", "", -1)
+	externalAuthPath := fmt.Sprintf("external-auth-%v-default", encodedAuthURL)
+
+	testCases := []struct {
+		title    string
+		host     string
+		expected string
+	}{
+		{"valid host", "auth.my.site", fmt.Sprintf("%s-%s", "auth.my.site", externalAuthPath)},
+		{"valid host", "your.auth.site", fmt.Sprintf("%s-%s", "your.auth.site", externalAuthPath)},
+		{"empty host", "", ""},
+	}
+
+	for _, testCase := range testCases {
+		str := buildAuthUpstreamName(loc, testCase.host)
+		if str != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, str)
+		}
+	}
+}
+
+func TestShouldApplyAuthUpstream(t *testing.T) {
+	authURL := "foo.com/auth"
+
+	loc := &ingress.Location{
+		ExternalAuth: authreq.Config{
+			URL:                  authURL,
+			KeepaliveConnections: 0,
+		},
+		Path: "/cat",
+	}
+
+	cfg := config.Configuration{
+		UseHTTP2: false,
+	}
+
+	testCases := []struct {
+		title                string
+		authURL              string
+		keepaliveConnections int
+		expected             bool
+	}{
+		{"authURL, no keepalive", authURL, 0, false},
+		{"authURL, keepalive", authURL, 10, true},
+		{"empty, no keepalive", "", 0, false},
+		{"empty, keepalive", "", 10, false},
+	}
+
+	for _, testCase := range testCases {
+		loc.ExternalAuth.URL = testCase.authURL
+		loc.ExternalAuth.KeepaliveConnections = testCase.keepaliveConnections
+
+		result := shouldApplyAuthUpstream(loc, cfg)
+		if result != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+		}
+	}
+
+	// keepalive is not supported with UseHTTP2
+	cfg.UseHTTP2 = true
+	for _, testCase := range testCases {
+		loc.ExternalAuth.URL = testCase.authURL
+		loc.ExternalAuth.KeepaliveConnections = testCase.keepaliveConnections
+
+		result := shouldApplyAuthUpstream(loc, cfg)
+		if result != false {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, false, result)
+		}
+	}
+}
+
+func TestExtractHostPort(t *testing.T) {
+	testCases := []struct {
+		title    string
+		url      string
+		expected string
+	}{
+		{"full URL", "https://my.auth.site:5000/path", "my.auth.site:5000"},
+		{"URL with no port", "http://my.auth.site/path", "my.auth.site"},
+		{"URL with no path", "https://my.auth.site:5000", "my.auth.site:5000"},
+		{"URL no port and path", "http://my.auth.site", "my.auth.site"},
+		{"missing method", "my.auth.site/path", ""},
+		{"all empty", "", ""},
+	}
+
+	for _, testCase := range testCases {
+		result := extractHostPort(testCase.url)
+		if result != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+		}
+	}
+}
+
+func TestChangeHostPort(t *testing.T) {
+	testCases := []struct {
+		title    string
+		url      string
+		host     string
+		expected string
+	}{
+		{"full URL", "https://my.auth.site:5000/path", "your.domain", "https://your.domain/path"},
+		{"URL with no port", "http://my.auth.site/path", "your.domain", "http://your.domain/path"},
+		{"URL with no path", "http://my.auth.site:5000", "your.domain:8888", "http://your.domain:8888"},
+		{"URL with no port and path", "https://my.auth.site", "your.domain:8888", "https://your.domain:8888"},
+		{"invalid host", "my.auth.site/path", "", ""},
+		{"missing method", "my.auth.site/path", "your.domain", ""},
+		{"all empty", "", "", ""},
+	}
+
+	for _, testCase := range testCases {
+		result := changeHostPort(testCase.url, testCase.host)
+		if result != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+		}
 	}
 }
 

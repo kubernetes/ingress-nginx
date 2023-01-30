@@ -1,3 +1,4 @@
+{{- if (semverCompare "<1.25.0-0" .Capabilities.KubeVersion.Version) }}
 {{- if and .Values.podSecurityPolicy.enabled (empty .Values.controller.existingPsp) -}}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -12,6 +13,9 @@ metadata:
 spec:
   allowedCapabilities:
     - NET_BIND_SERVICE
+  {{- if .Values.controller.image.chroot }}
+    - SYS_CHROOT
+  {{- end }}
 {{- if .Values.controller.sysctls }}
   allowedUnsafeSysctls:
   {{- range $sysctl, $value := .Values.controller.sysctls }}
@@ -86,4 +90,5 @@ spec:
   readOnlyRootFilesystem: false
   seLinux:
     rule: 'RunAsAny'
+{{- end }}
 {{- end }}

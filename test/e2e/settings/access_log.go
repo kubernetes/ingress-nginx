@@ -19,7 +19,8 @@ package settings
 import (
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -31,17 +32,19 @@ var _ = framework.DescribeSetting("access-log", func() {
 		ginkgo.It("use the default configuration", func() {
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
-					return strings.Contains(cfg, "access_log /var/log/nginx/access.log upstreaminfo") &&
-						strings.Contains(cfg, "access_log /var/log/nginx/access.log log_stream")
+					return (strings.Contains(cfg, "access_log /var/log/nginx/access.log upstreaminfo") &&
+						strings.Contains(cfg, "access_log /var/log/nginx/access.log log_stream")) ||
+						(strings.Contains(cfg, "access_log syslog:server=127.0.0.1:11514 upstreaminfo") &&
+							strings.Contains(cfg, "access_log syslog:server=127.0.0.1:11514 log_stream"))
 				})
 		})
 
 		ginkgo.It("use the specified configuration", func() {
-			f.UpdateNginxConfigMapData("access-log-path", "/tmp/access.log")
+			f.UpdateNginxConfigMapData("access-log-path", "/tmp/nginx/access.log")
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
-					return strings.Contains(cfg, "access_log /tmp/access.log upstreaminfo") &&
-						strings.Contains(cfg, "access_log /tmp/access.log log_stream")
+					return strings.Contains(cfg, "access_log /tmp/nginx/access.log upstreaminfo") &&
+						strings.Contains(cfg, "access_log /tmp/nginx/access.log log_stream")
 				})
 		})
 	})
@@ -49,11 +52,12 @@ var _ = framework.DescribeSetting("access-log", func() {
 	ginkgo.Context("http-access-log-path", func() {
 
 		ginkgo.It("use the specified configuration", func() {
-			f.UpdateNginxConfigMapData("http-access-log-path", "/tmp/http-access.log")
+			f.UpdateNginxConfigMapData("http-access-log-path", "/tmp/nginx/http-access.log")
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
-					return strings.Contains(cfg, "access_log /tmp/http-access.log upstreaminfo") &&
-						strings.Contains(cfg, "access_log /var/log/nginx/access.log log_stream")
+					return strings.Contains(cfg, "access_log /tmp/nginx/http-access.log upstreaminfo") &&
+						(strings.Contains(cfg, "access_log /var/log/nginx/access.log log_stream") ||
+							strings.Contains(cfg, "access_log syslog:server=127.0.0.1:11514 log_stream"))
 				})
 		})
 	})
@@ -61,11 +65,12 @@ var _ = framework.DescribeSetting("access-log", func() {
 	ginkgo.Context("stream-access-log-path", func() {
 
 		ginkgo.It("use the specified configuration", func() {
-			f.UpdateNginxConfigMapData("stream-access-log-path", "/tmp/stream-access.log")
+			f.UpdateNginxConfigMapData("stream-access-log-path", "/tmp/nginx/stream-access.log")
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
-					return strings.Contains(cfg, "access_log /tmp/stream-access.log log_stream") &&
-						strings.Contains(cfg, "access_log /var/log/nginx/access.log upstreaminfo")
+					return strings.Contains(cfg, "access_log /tmp/nginx/stream-access.log log_stream") &&
+						(strings.Contains(cfg, "access_log /var/log/nginx/access.log upstreaminfo") ||
+							strings.Contains(cfg, "access_log syslog:server=127.0.0.1:11514 upstreaminfo"))
 				})
 		})
 	})
@@ -74,13 +79,13 @@ var _ = framework.DescribeSetting("access-log", func() {
 
 		ginkgo.It("use the specified configuration", func() {
 			f.SetNginxConfigMapData(map[string]string{
-				"http-access-log-path":   "/tmp/http-access.log",
-				"stream-access-log-path": "/tmp/stream-access.log",
+				"http-access-log-path":   "/tmp/nginx/http-access.log",
+				"stream-access-log-path": "/tmp/nginx/stream-access.log",
 			})
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
-					return strings.Contains(cfg, "access_log /tmp/http-access.log upstreaminfo") &&
-						strings.Contains(cfg, "access_log /tmp/stream-access.log log_stream")
+					return strings.Contains(cfg, "access_log /tmp/nginx/http-access.log upstreaminfo") &&
+						strings.Contains(cfg, "access_log /tmp/nginx/stream-access.log log_stream")
 				})
 		})
 	})

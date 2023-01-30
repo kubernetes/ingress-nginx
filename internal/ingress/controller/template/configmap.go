@@ -34,13 +34,14 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
-	"k8s.io/ingress-nginx/internal/runtime"
+	"k8s.io/ingress-nginx/pkg/util/runtime"
 )
 
 const (
 	customHTTPErrors              = "custom-http-errors"
 	skipAccessLogUrls             = "skip-access-log-urls"
 	whitelistSourceRange          = "whitelist-source-range"
+	denylistSourceRange           = "denylist-source-range"
 	proxyRealIPCIDR               = "proxy-real-ip-cidr"
 	bindAddress                   = "bind-address"
 	httpRedirectCode              = "http-redirect-code"
@@ -62,8 +63,10 @@ const (
 	globalAuthSnippet             = "global-auth-snippet"
 	globalAuthCacheKey            = "global-auth-cache-key"
 	globalAuthCacheDuration       = "global-auth-cache-duration"
+	globalAuthAlwaysSetCookie     = "global-auth-always-set-cookie"
 	luaSharedDictsKey             = "lua-shared-dicts"
 	plugins                       = "plugins"
+	debugConnections              = "debug-connections"
 )
 
 var (
@@ -98,6 +101,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to := config.NewDefault()
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
+	denyList := make([]string, 0)
 	whiteList := make([]string, 0)
 	proxyList := make([]string, 0)
 	hideHeadersList := make([]string, 0)
@@ -110,6 +114,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	blockRefererList := make([]string, 0)
 	responseHeaders := make([]string, 0)
 	luaSharedDicts := make(map[string]int)
+	debugConnectionsList := make([]string, 0)
 
 	//parse lua shared dict values
 	if val, ok := conf[luaSharedDictsKey]; ok {
@@ -164,6 +169,11 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[skipAccessLogUrls]; ok {
 		delete(conf, skipAccessLogUrls)
 		skipUrls = splitAndTrimSpace(val, ",")
+	}
+
+	if val, ok := conf[denylistSourceRange]; ok {
+		delete(conf, denylistSourceRange)
+		denyList = append(denyList, splitAndTrimSpace(val, ",")...)
 	}
 
 	if val, ok := conf[whitelistSourceRange]; ok {
@@ -315,6 +325,16 @@ func ReadConfig(src map[string]string) config.Configuration {
 		to.GlobalExternalAuth.AuthCacheDuration = cacheDurations
 	}
 
+	if val, ok := conf[globalAuthAlwaysSetCookie]; ok {
+		delete(conf, globalAuthAlwaysSetCookie)
+
+		alwaysSetCookie, err := strconv.ParseBool(val)
+		if err != nil {
+			klog.Warningf("Global auth location denied - %s", fmt.Errorf("cannot convert %s to bool: %v", globalAuthAlwaysSetCookie, err))
+		}
+		to.GlobalExternalAuth.AlwaysSetCookie = alwaysSetCookie
+	}
+
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value
 	if val, ok := conf[proxyHeaderTimeout]; ok {
 		delete(conf, proxyHeaderTimeout)
@@ -362,8 +382,27 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, plugins)
 	}
 
+	if val, ok := conf[debugConnections]; ok {
+		delete(conf, debugConnections)
+		for _, i := range splitAndTrimSpace(val, ",") {
+			validIp := net.ParseIP(i)
+			if validIp != nil {
+				debugConnectionsList = append(debugConnectionsList, i)
+			} else {
+				_, _, err := net.ParseCIDR(i)
+				if err == nil {
+					debugConnectionsList = append(debugConnectionsList, i)
+				} else {
+					klog.Warningf("%v is not a valid IP or CIDR address", i)
+				}
+			}
+		}
+		to.DebugConnections = debugConnectionsList
+	}
+
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
+	to.DenylistSourceRange = denyList
 	to.WhitelistSourceRange = whiteList
 	to.ProxyRealIPCIDR = proxyList
 	to.BindAddressIpv4 = bindAddressIpv4List

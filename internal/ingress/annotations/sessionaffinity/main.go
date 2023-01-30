@@ -52,6 +52,9 @@ const (
 	// This is used to control the cookie path when use-regex is set to true
 	annotationAffinityCookiePath = "session-cookie-path"
 
+	// This is used to control the cookie Domain
+	annotationAffinityCookieDomain = "session-cookie-domain"
+
 	// This is used to control the SameSite attribute of the cookie
 	annotationAffinityCookieSameSite = "session-cookie-samesite"
 
@@ -87,6 +90,8 @@ type Cookie struct {
 	MaxAge string `json:"maxage"`
 	// The path that a cookie will be set on
 	Path string `json:"path"`
+	// The domain that a cookie will be set on
+	Domain string `json:"domain"`
 	// Flag that allows cookie regeneration on request failure
 	ChangeOnFailure bool `json:"changeonfailure"`
 	// Secure flag to be set
@@ -125,6 +130,11 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 	cookie.Path, err = parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
 	if err != nil {
 		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookiePath)
+	}
+
+	cookie.Domain, err = parser.GetStringAnnotation(annotationAffinityCookieDomain, ing)
+	if err != nil {
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieDomain)
 	}
 
 	cookie.SameSite, err = parser.GetStringAnnotation(annotationAffinityCookieSameSite, ing)

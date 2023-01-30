@@ -1,3 +1,4 @@
+{{- if (semverCompare "<1.25.0-0" .Capabilities.KubeVersion.Version) }}
 {{- if and .Values.podSecurityPolicy.enabled .Values.defaultBackend.enabled (empty .Values.defaultBackend.existingPsp) -}}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -33,4 +34,5 @@ spec:
   - projected
   - secret
   - downwardAPI
+{{- end }}
 {{- end }}

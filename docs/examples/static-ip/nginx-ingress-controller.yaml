@@ -24,7 +24,7 @@ spec:
       # hostNetwork: true
       terminationGracePeriodSeconds: 60
       containers:
-      - image: k8s.gcr.io/ingress-nginx/controller:v1.0.5
+      - image: registry.k8s.io/ingress-nginx/controller:v1.0.5
         name: controller
         readinessProbe:
           httpGet:

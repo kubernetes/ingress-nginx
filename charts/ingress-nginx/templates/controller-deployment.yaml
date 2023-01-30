@@ -72,10 +72,13 @@ spec:
           value: {{ $value | quote }}
     {{- end }}
     {{- end }}
+    {{- if .Values.controller.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.controller.shareProcessNamespace }}
+    {{- end }}
       containers:
         - name: {{ .Values.controller.containerName }}
           {{- with .Values.controller.image }}
-          image: "{{- if .repository -}}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{- end -}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
+          image: "{{- if .repository -}}{{ .repository }}{{ else }}{{ .registry }}/{{ include "ingress-nginx.image" . }}{{- end -}}:{{ .tag }}{{ include "ingress-nginx.imageDigest" . }}"
           {{- end }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
         {{- if .Values.controller.lifecycle }}
@@ -103,8 +106,12 @@ spec:
           {{- if .Values.controller.startupProbe }}
           startupProbe: {{ toYaml .Values.controller.startupProbe | nindent 12 }}
           {{- end }}
+          {{- if .Values.controller.livenessProbe }}
           livenessProbe: {{ toYaml .Values.controller.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.controller.readinessProbe }}
           readinessProbe: {{ toYaml .Values.controller.readinessProbe | nindent 12 }}
+          {{- end }}
           ports:
           {{- range $key, $value := .Values.controller.containerPort }}
             - name: {{ $key }}
@@ -115,7 +122,7 @@ spec:
               {{- end }}
           {{- end }}
           {{- if .Values.controller.metrics.enabled }}
-            - name: metrics
+            - name: {{ .Values.controller.metrics.portName }}
               containerPort: {{ .Values.controller.metrics.port }}
               protocol: TCP
           {{- end }}
@@ -125,7 +132,7 @@ spec:
               protocol: TCP
           {{- end }}
           {{- range $key, $value := .Values.tcp }}
-            - name: {{ $key }}-tcp
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-tcp
               containerPort: {{ $key }}
               protocol: TCP
               {{- if $.Values.controller.hostPort.enabled }}
@@ -133,18 +140,22 @@ spec:
               {{- end }}
           {{- end }}
           {{- range $key, $value := .Values.udp }}
-            - name: {{ $key }}-udp
+            - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-udp
               containerPort: {{ $key }}
               protocol: UDP
               {{- if $.Values.controller.hostPort.enabled }}
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
+        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
           volumeMounts:
-          {{- if .Values.controller.extraModules }}
+          {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
             - name: modules
+            {{ if .Values.controller.image.chroot }}
+              mountPath: /chroot/modules_mount
+            {{ else }}
               mountPath: /modules_mount
+            {{ end }}
           {{- end }}
           {{- if .Values.controller.customTemplate.configMapName }}
             - mountPath: /etc/nginx/template
@@ -166,21 +177,21 @@ spec:
       {{- if .Values.controller.extraContainers }}
         {{ toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
-    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
+    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
       initContainers:
       {{- if .Values.controller.extraInitContainers }}
         {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
       {{- end }}
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
-          - name: {{ .name }}
-            image: {{ .image }}
-            command: ['sh', '-c', '/usr/local/bin/init_module.sh']
-            volumeMounts:
-              - name: modules
-                mountPath: /modules_mount
+          {{ $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext | nindent 8) }}
         {{- end }}
       {{- end }}
+      {{- if .Values.controller.opentelemetry.enabled}}
+          {{ $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" "opentelemetry" "image" .Values.controller.opentelemetry.image "containerSecurityContext" $otelContainerSecurityContext) | nindent 8}}
+      {{- end}}
     {{- end }}
     {{- if .Values.controller.hostNetwork }}
       hostNetwork: {{ .Values.controller.hostNetwork }}
@@ -199,9 +210,9 @@ spec:
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
-    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
+    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
       volumes:
-      {{- if .Values.controller.extraModules }}
+      {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled)}}
         - name: modules
           emptyDir: {}
       {{- end }}
@@ -217,6 +228,13 @@ spec:
         - name: webhook-cert
           secret:
             secretName: {{ include "ingress-nginx.fullname" . }}-admission
+        {{- if .Values.controller.admissionWebhooks.certManager.enabled }}
+            items:
+              - key: tls.crt
+                path: cert
+              - key: tls.key
+                path: key
+        {{- end }}
       {{- end }}
       {{- if .Values.controller.extraVolumes }}
         {{ toYaml .Values.controller.extraVolumes | nindent 8 }}

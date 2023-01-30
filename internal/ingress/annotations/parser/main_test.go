@@ -130,6 +130,47 @@ rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/serv
 	}
 }
 
+func TestGetFloatAnnotation(t *testing.T) {
+	ing := buildIngress()
+
+	_, err := GetFloatAnnotation("", nil)
+	if err == nil {
+		t.Errorf("expected error but retuned nil")
+	}
+
+	tests := []struct {
+		name   string
+		field  string
+		value  string
+		exp    float32
+		expErr bool
+	}{
+		{"valid - A", "string", "1.5", 1.5, false},
+		{"valid - B", "string", "2", 2, false},
+		{"valid - C", "string", "100.0", 100, false},
+	}
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	for _, test := range tests {
+		data[GetAnnotationWithPrefix(test.field)] = test.value
+
+		s, err := GetFloatAnnotation(test.field, ing)
+		if test.expErr {
+			if err == nil {
+				t.Errorf("%v: expected error but retuned nil", test.name)
+			}
+			continue
+		}
+		if s != test.exp {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.name, test.exp, s)
+		}
+
+		delete(data, test.field)
+	}
+}
+
 func TestGetIntAnnotation(t *testing.T) {
 	ing := buildIngress()
 

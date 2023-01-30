@@ -28,7 +28,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/internal/sets"
+	"k8s.io/ingress-nginx/pkg/util/sets"
 )
 
 // Config returns external authentication configuration for an Ingress rule
@@ -44,11 +44,22 @@ type Config struct {
 	AuthSnippet            string            `json:"authSnippet"`
 	AuthCacheKey           string            `json:"authCacheKey"`
 	AuthCacheDuration      []string          `json:"authCacheDuration"`
+	KeepaliveConnections   int               `json:"keepaliveConnections"`
+	KeepaliveRequests      int               `json:"keepaliveRequests"`
+	KeepaliveTimeout       int               `json:"keepaliveTimeout"`
 	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
+	AlwaysSetCookie        bool              `json:"alwaysSetCookie,omitempty"`
 }
 
 // DefaultCacheDuration is the fallback value if no cache duration is provided
 const DefaultCacheDuration = "200 202 401 5m"
+
+// fallback values when no keepalive parameters are set
+const (
+	defaultKeepaliveConnections = 0
+	defaultKeepaliveRequests    = 1000
+	defaultKeepaliveTimeout     = 60
+)
 
 // Equal tests for equality between two Config types
 func (e1 *Config) Equal(e2 *Config) bool {
@@ -90,6 +101,22 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		return false
 	}
 
+	if e1.KeepaliveConnections != e2.KeepaliveConnections {
+		return false
+	}
+
+	if e1.KeepaliveRequests != e2.KeepaliveRequests {
+		return false
+	}
+
+	if e1.KeepaliveTimeout != e2.KeepaliveTimeout {
+		return false
+	}
+
+	if e1.AlwaysSetCookie != e2.AlwaysSetCookie {
+		return false
+	}
+
 	return sets.StringElementsMatch(e1.AuthCacheDuration, e2.AuthCacheDuration)
 }
 
@@ -122,7 +149,8 @@ func ValidHeader(header string) bool {
 // ValidCacheDuration checks if the provided string is a valid cache duration
 // spec: [code ...] [time ...];
 // with: code is an http status code
-//       time must match the time regex and may appear multiple times, e.g. `1h 30m`
+//
+//	time must match the time regex and may appear multiple times, e.g. `1h 30m`
 func ValidCacheDuration(duration string) bool {
 	elements := strings.Split(duration, " ")
 	seenDuration := false
@@ -193,6 +221,43 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		klog.V(3).InfoS("auth-cache-key annotation is undefined and will not be set")
 	}
 
+	keepaliveConnections, err := parser.GetIntAnnotation("auth-keepalive", ing)
+	if err != nil {
+		klog.V(3).InfoS("auth-keepalive annotation is undefined and will be set to its default value")
+		keepaliveConnections = defaultKeepaliveConnections
+	}
+	switch {
+	case keepaliveConnections < 0:
+		klog.Warningf("auth-keepalive annotation (%s) contains a negative value, setting auth-keepalive to 0", authURL.Host)
+		keepaliveConnections = 0
+	case keepaliveConnections > 0:
+		// NOTE: upstream block cannot reference a variable in the server directive
+		if strings.IndexByte(authURL.Host, '$') != -1 {
+			klog.Warningf("auth-url annotation (%s) contains $ in the host:port part, setting auth-keepalive to 0", authURL.Host)
+			keepaliveConnections = 0
+		}
+	}
+
+	keepaliveRequests, err := parser.GetIntAnnotation("auth-keepalive-requests", ing)
+	if err != nil {
+		klog.V(3).InfoS("auth-keepalive-requests annotation is undefined and will be set to its default value")
+		keepaliveRequests = defaultKeepaliveRequests
+	}
+	if keepaliveRequests <= 0 {
+		klog.Warningf("auth-keepalive-requests annotation (%s) should be greater than zero, setting auth-keepalive to 0", authURL.Host)
+		keepaliveConnections = 0
+	}
+
+	keepaliveTimeout, err := parser.GetIntAnnotation("auth-keepalive-timeout", ing)
+	if err != nil {
+		klog.V(3).InfoS("auth-keepalive-timeout annotation is undefined and will be set to its default value")
+		keepaliveTimeout = defaultKeepaliveTimeout
+	}
+	if keepaliveTimeout <= 0 {
+		klog.Warningf("auth-keepalive-timeout annotation (%s) should be greater than zero, setting auth-keepalive 0", authURL.Host)
+		keepaliveConnections = 0
+	}
+
 	durstr, _ := parser.GetStringAnnotation("auth-cache-duration", ing)
 	authCacheDuration, err := ParseStringToCacheDurations(durstr)
 	if err != nil {
@@ -238,6 +303,8 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	requestRedirect, _ := parser.GetStringAnnotation("auth-request-redirect", ing)
 
+	alwaysSetCookie, _ := parser.GetBoolAnnotation("auth-always-set-cookie", ing)
+
 	return &Config{
 		URL:                    urlString,
 		Host:                   authURL.Hostname(),
@@ -249,7 +316,11 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		AuthSnippet:            authSnippet,
 		AuthCacheKey:           authCacheKey,
 		AuthCacheDuration:      authCacheDuration,
+		KeepaliveConnections:   keepaliveConnections,
+		KeepaliveRequests:      keepaliveRequests,
+		KeepaliveTimeout:       keepaliveTimeout,
 		ProxySetHeaders:        proxySetHeaders,
+		AlwaysSetCookie:        alwaysSetCookie,
 	}, nil
 }
 

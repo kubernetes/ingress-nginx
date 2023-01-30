@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -45,7 +45,7 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			func(server string) bool {
 				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: GET, PUT, POST, DELETE, PATCH, OPTIONS';") &&
 					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Origin: $http_origin';") &&
-					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';") &&
+					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';") &&
 					strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 1728000';") &&
 					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Credentials: true';") &&
 					strings.Contains(server, "set $http_origin *;") &&

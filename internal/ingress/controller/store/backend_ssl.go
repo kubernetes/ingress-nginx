@@ -20,15 +20,17 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/klog/v2"
-
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/ingress-nginx/internal/file"
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
+
+	klog "k8s.io/klog/v2"
+
 	"k8s.io/ingress-nginx/internal/net/ssl"
+
+	"k8s.io/ingress-nginx/pkg/util/file"
 )
 
 // syncSecret synchronizes the content of a TLS Secret (certificate(s), secret

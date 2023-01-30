@@ -19,9 +19,10 @@ package settings
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -41,8 +42,22 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies", func(
 	f := framework.NewDefaultFramework("pod-security-policies")
 
 	ginkgo.It("should be running with a Pod Security Policy", func() {
+		k8sversion, err := f.KubeClientSet.Discovery().ServerVersion()
+		if err != nil {
+			assert.Nil(ginkgo.GinkgoT(), err, "getting version")
+		}
+
+		numversion, err := strconv.Atoi(k8sversion.Minor)
+		if err != nil {
+			assert.Nil(ginkgo.GinkgoT(), err, "converting version")
+		}
+
+		if numversion > 24 {
+			ginkgo.Skip("PSP not supported in this version")
+		}
+
 		psp := createPodSecurityPolicy()
-		_, err := f.KubeClientSet.PolicyV1beta1().PodSecurityPolicies().Create(context.TODO(), psp, metav1.CreateOptions{})
+		_, err = f.KubeClientSet.PolicyV1beta1().PodSecurityPolicies().Create(context.TODO(), psp, metav1.CreateOptions{})
 		if !k8sErrors.IsAlreadyExists(err) {
 			assert.Nil(ginkgo.GinkgoT(), err, "creating Pod Security Policy")
 		}

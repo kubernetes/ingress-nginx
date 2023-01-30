@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.13
+FROM alpine:3.17.0
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8

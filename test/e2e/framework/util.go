@@ -22,7 +22,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -189,7 +189,7 @@ func CreateIngressClass(namespace string, c kubernetes.Interface) (string, error
 	return ic.Name, nil
 }
 
-//deleteIngressClass deletes an IngressClass and its related ClusterRole* objects
+// deleteIngressClass deletes an IngressClass and its related ClusterRole* objects
 func deleteIngressClass(c kubernetes.Interface, ingressclass string) error {
 	var err error
 	grace := int64(0)
@@ -215,7 +215,7 @@ func deleteIngressClass(c kubernetes.Interface, ingressclass string) error {
 	return nil
 }
 
-//GetIngressClassName returns the default IngressClassName given a namespace
+// GetIngressClassName returns the default IngressClassName given a namespace
 func GetIngressClassName(namespace string) *string {
 	icname := fmt.Sprintf("ic-%s", namespace)
 	return &icname

@@ -1016,6 +1016,7 @@
     {
       "columns": [],
       "datasource": "${DS_PROMETHEUS}",
+      "description": "This data is real time, independent of dashboard time range",
       "fontSize": "100%",
       "gridPos": {
         "h": 8,
@@ -1234,6 +1235,172 @@
       "type": "table"
     },
     {
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "hideTimeOverride": false,
+      "id": 91,
+      "links": [],
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.3.4",
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "histogram_quantile(0.80, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress!=\"\",controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\",ingress=~\"$ingress\"}[2m])) by (le))",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "P80",
+          "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "histogram_quantile(0.90, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress!=\"\",controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\",ingress=~\"$ingress\"}[2m])) by (le))",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "P90",
+          "refId": "D"
+        },
+        {
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "histogram_quantile(0.99, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress!=\"\",controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\",ingress=~\"$ingress\"}[2m])) by (le))",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "P99",
+          "refId": "E"
+        }
+      ],
+      "title": "Ingress Percentile Response Times",
+      "type": "timeseries"
+    },
+    {
+      "cards": {},
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolateWarm",
+        "exponent": 0.5,
+        "mode": "spectrum"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "${DS_PROMETHEUS}",
+      "description": "",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 89,
+      "legend": {
+        "show": true
+      },
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(increase(nginx_ingress_controller_request_duration_seconds_bucket{ingress!=\"\",controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\",ingress=~\"$ingress\"}[2m])) by (le)",
+          "format": "heatmap",
+          "interval": "",
+          "legendFormat": "{{le}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Ingress Request Latency Heatmap",
+      "tooltip": {
+        "show": true,
+        "showHistogram": true
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "yAxis": {
+        "format": "s",
+        "logBase": 1,
+        "show": true
+      },
+      "yBucketBound": "auto"
+    },
+    {
       "columns": [
         {
           "text": "Current",
@@ -1246,7 +1413,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 31
       },
       "height": "1024",
       "id": 85,

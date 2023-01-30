@@ -1,0 +1,63 @@
+{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.certManager.enabled -}}
+{{- if not .Values.controller.admissionWebhooks.certManager.issuerRef -}}
+# Create a selfsigned Issuer, in order to create a root CA certificate for
+# signing webhook serving certificates
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ingress-nginx.fullname" . }}-self-signed-issuer
+  namespace: {{ .Release.Namespace }}
+spec:
+  selfSigned: {}
+---
+# Generate a CA Certificate used to sign certificates for the webhook
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ingress-nginx.fullname" . }}-root-cert
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: {{ include "ingress-nginx.fullname" . }}-root-cert
+  duration: {{ .Values.controller.admissionWebhooks.certManager.rootCert.duration | default "43800h0m0s" | quote }}
+  issuerRef:
+    name: {{ include "ingress-nginx.fullname" . }}-self-signed-issuer
+  commonName: "ca.webhook.ingress-nginx"
+  isCA: true
+  subject:
+    organizations:
+      - ingress-nginx
+---
+# Create an Issuer that uses the above generated CA certificate to issue certs
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ingress-nginx.fullname" . }}-root-issuer
+  namespace: {{ .Release.Namespace }}
+spec:
+  ca:
+    secretName: {{ include "ingress-nginx.fullname" . }}-root-cert
+{{- end }}
+---
+# generate a server certificate for the apiservices to use
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ingress-nginx.fullname" . }}-admission
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: {{ include "ingress-nginx.fullname" . }}-admission
+  duration: {{ .Values.controller.admissionWebhooks.certManager.admissionCert.duration | default "8760h0m0s" | quote }}
+  issuerRef:
+    {{- if .Values.controller.admissionWebhooks.certManager.issuerRef }}
+    {{- toYaml .Values.controller.admissionWebhooks.certManager.issuerRef | nindent 4 }}
+    {{- else }}
+    name: {{ include "ingress-nginx.fullname" . }}-root-issuer
+    {{- end }}
+  dnsNames:
+    - {{ include "ingress-nginx.controller.fullname" . }}-admission
+    - {{ include "ingress-nginx.controller.fullname" . }}-admission.{{ .Release.Namespace }}
+    - {{ include "ingress-nginx.controller.fullname" . }}-admission.{{ .Release.Namespace }}.svc
+  subject:
+    organizations:
+      - ingress-nginx-admission
+{{- end -}}

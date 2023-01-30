@@ -30,7 +30,7 @@ import (
 const (
 	// Default values
 	defaultCorsMethods = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
-	defaultCorsHeaders = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+	defaultCorsHeaders = "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
 	defaultCorsMaxAge  = 1728000
 )
 

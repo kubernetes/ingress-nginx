@@ -1,4 +1,4 @@
-timeout: 600s
+timeout: 1800s
 options:
   substitution_option: ALLOW_LOOSE
 steps:
@@ -16,7 +16,7 @@ steps:
     - -c
     - |
       gcloud auth configure-docker \
-      && make push
+      && cd images/fastcgi-helloserver && make push
 substitutions:
   _GIT_TAG: "12345"
   _PULL_BASE_REF: "master"

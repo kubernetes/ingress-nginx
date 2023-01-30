@@ -59,18 +59,18 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - coordination.k8s.io
     resources:
-      - configmaps
+      - leases
     resourceNames:
-      - {{ .Values.controller.electionID }}
+      - {{ include "ingress-nginx.controller.electionID" . }}
     verbs:
       - get
       - update
   - apiGroups:
-      - ""
+      - coordination.k8s.io
     resources:
-      - configmaps
+      - leases
     verbs:
       - create
   - apiGroups:
@@ -80,6 +80,14 @@ rules:
     verbs:
       - create
       - patch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - watch
+      - get
 {{- if .Values.podSecurityPolicy.enabled }}
   - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']

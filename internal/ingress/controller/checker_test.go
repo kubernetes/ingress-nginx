@@ -26,9 +26,9 @@ import (
 
 	"k8s.io/apiserver/pkg/server/healthz"
 
-	"k8s.io/ingress-nginx/internal/file"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/nginx"
+	"k8s.io/ingress-nginx/pkg/util/file"
 )
 
 func TestNginxCheck(t *testing.T) {
@@ -76,7 +76,7 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// create pid file
-			os.MkdirAll("/tmp", file.ReadWriteByUser)
+			os.MkdirAll("/tmp/nginx", file.ReadWriteByUser)
 			pidFile, err := os.Create(nginx.PID)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)

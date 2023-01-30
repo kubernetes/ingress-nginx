@@ -10,7 +10,7 @@
 - --publish-service={{ template "ingress-nginx.controller.publishServicePath" . }}-internal
 {{- end }}
 {{- end }}
-- --election-id={{ .Values.controller.electionID }}
+- --election-id={{ include "ingress-nginx.controller.electionID" . }}
 - --controller-class={{ .Values.controller.ingressClassResource.controllerValue }}
 {{- if .Values.controller.ingressClass }}
 - --ingress-class={{ .Values.controller.ingressClass }}
@@ -50,6 +50,9 @@
 {{- end }}
 {{- if .Values.controller.watchIngressWithoutClass }}
 - --watch-ingress-without-class=true
+{{- end }}
+{{- if .Values.controller.enableTopologyAwareRouting }}
+- --enable-topology-aware-routing=true
 {{- end }}
 {{- range $key, $value := .Values.controller.extraArgs }}
 {{- /* Accept keys without values or with false as value */}}

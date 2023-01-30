@@ -18,7 +18,7 @@ SHELL=/bin/bash -o pipefail -o errexit
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
-TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
+TAG ?=v1.0.0
 REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-echo
@@ -26,6 +26,7 @@ IMAGE = $(REGISTRY)/e2e-test-echo
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
+BASE_IMAGE = $(shell cat $(DIR)/../../NGINX_BASE)
 # build with buildx
 PLATFORMS?=linux/amd64
 OUTPUT=
@@ -36,9 +37,9 @@ build: ensure-buildx
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
-		--build-arg BASE_IMAGE=k8s.gcr.io/ingress-nginx/nginx:v20210926-g5662db450@sha256:1ef404b5e8741fe49605a1f40c3fdd8ef657aecdb9526ea979d1672eeabd0cd9 \
-		--build-arg LUAROCKS_VERSION=3.3.1 \
-		--build-arg LUAROCKS_SHA=837481e408f7c06b59befe7ec194537c657687d624894bca7f79034302141a34 \
+		--build-arg BASE_IMAGE=${BASE_IMAGE} \
+		--build-arg LUAROCKS_VERSION=3.8.0 \
+		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
 		-t $(IMAGE):$(TAG) rootfs
 
 # push the cross built image

@@ -2,16 +2,18 @@
 
 By default, deploying multiple Ingress controllers (e.g., `ingress-nginx` & `gce`) will result in all controllers simultaneously racing to update Ingress status fields in confusing ways.
 
-To fix this problem, use [IngressClasses](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class). The `kubernetes.io/ingress.class` annotation  is deprecated from kubernetes v1.22+.
+To fix this problem, use [IngressClasses](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class). The `kubernetes.io/ingress.class` annotation is not being preferred or suggested to use as it can be deprecated in future. Better to use the field `ingress.spec.ingressClassName`.
+But, when user has deployed with `scope.enabled`, then the ingress class resource field is not used.
+
 
 ## Using IngressClasses
 
 If all ingress controllers respect IngressClasses (e.g. multiple instances of ingress-nginx v1.0), you can deploy two Ingress controllers by granting them control over two different IngressClasses, then selecting one of the two IngressClasses with `ingressClassName`.
 
-First, ensure the `--controller-class=` and `--ingress-class` are set to something different on each ingress controller:
+First, ensure the `--controller-class=` and `--ingress-class` are set to something different on each ingress controller, If your additional ingress controller is to be installed in a namespace, where there is/are one/more-than-one ingress-nginx-controller(s) already installed, then you need to specify a different unique `--election-id` for the new instance of the controller.
 
 ```yaml
-# ingress-nginx Deployment/Statfulset
+# ingress-nginx Deployment/Statefulset
 spec:
   template:
      spec:
@@ -19,6 +21,7 @@ spec:
          - name: ingress-nginx-internal-controller
            args:
              - /nginx-ingress-controller
+             - '--election-id=ingress-controller-leader'
              - '--controller-class=k8s.io/internal-ingress-nginx'
              - '--ingress-class=k8s.io/internal-nginx'
             ...
@@ -53,6 +56,7 @@ or if installing with Helm:
 
 ```yaml
 controller:
+  electionID: ingress-controller-leader
   ingressClassResource:
     name: internal-nginx  # default: nginx
     enabled: true

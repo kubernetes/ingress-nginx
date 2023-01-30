@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -70,6 +70,15 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 
 			f.WaitForNginxConfiguration(func(server string) bool {
 				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_timeout\s*120s;`, server)
+				return match
+			})
+		})
+
+		ginkgo.It("should set keepalive time to upstream server", func() {
+			f.UpdateNginxConfigMapData("upstream-keepalive-time", "75s")
+
+			f.WaitForNginxConfiguration(func(server string) bool {
+				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_time\s*75s;`, server)
 				return match
 			})
 		})

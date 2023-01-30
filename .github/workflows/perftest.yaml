@@ -1,0 +1,72 @@
+name: Performance Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'K6 Load Test'
+
+permissions:
+  contents: read
+
+jobs:
+  k6_test_run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+
+      - name: Install K6
+        run: |
+          wget https://github.com/grafana/k6/releases/download/v0.38.2/k6-v0.38.2-linux-amd64.tar.gz
+          echo '7c9e5a26aaa2c638c042f6dfda7416161b8d2e0d4cb930721a38083b8be109ab *k6-v0.38.2-linux-amd64.tar.gz' | shasum -c
+          tar -xvf k6-v0.38.2-linux-amd64.tar.gz k6-v0.38.2-linux-amd64/k6
+          mv k6-v0.38.2-linux-amd64/k6 .
+          ./k6
+
+      - name: Make dev-env
+        run: |
+          mkdir $HOME/.kube
+          make dev-env
+          podName=`kubectl -n ingress-nginx get po | grep -i controller | awk '{print $1}'`
+          if [[ -z ${podName} ]] ; then
+            sleep 5
+          fi
+          kubectl wait pod -n ingress-nginx --for condition=Ready $podName
+          kubectl get all -A
+
+      - name: Deploy workload
+        run: |
+          kubectl create deploy k6 --image kennethreitz/httpbin --port 80 && \
+            kubectl expose deploy k6 --port 80 && \
+            kubectl create ing k6 --class nginx \
+            --rule test.ingress-nginx-controller.ga/*=k6:80
+          podName=`kubectl get po | grep -i k6 | awk '{print $1}'`
+          if [[ -z ${podName} ]] ; then
+            sleep 5
+          fi
+          kubectl wait pod --for condition=Ready $podName
+          kubectl get all,secrets,ing
+
+      - name: Tune OS
+        run : |
+          sudo sysctl -A 2>/dev/null | egrep -i "local_port_range|tw_reuse|tcp_timestamps"
+          sudo sh -c "ulimit"
+          sudo sysctl -w net.ipv4.ip_local_port_range="1024 65535"
+          sudo sysctl -w net.ipv4.tcp_tw_reuse=1
+          sudo sysctl -w net.ipv4.tcp_timestamps=1
+          sudo sh -c "ulimit "
+
+      - name: Run smoke test
+        run: |
+          vmstat -at 5 | tee vmstat_report &
+          #./k6 login cloud -t $K6_TOKEN
+          #./k6 run -o cloud ./smoketest.js
+          ./k6 run test/k6/smoketest.js
+          pkill vmstat
+          cat vmstat_report

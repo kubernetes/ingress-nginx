@@ -36,7 +36,7 @@ if ! command -v kind &> /dev/null; then
 fi
 
 if ! command -v kubectl &> /dev/null; then
-  echo "Please install kubectl 1.15 or higher"
+  echo "Please install kubectl 1.24.0 or higher"
   exit 1
 fi
 
@@ -45,15 +45,16 @@ if ! command -v helm &> /dev/null; then
   exit 1
 fi
 
-HELM_VERSION=$(helm version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+') || true
-if [[ ${HELM_VERSION} < "v3.0.0" ]]; then
-  echo "Please upgrade helm to v3.0.0 or higher"
+HELM_VERSION=$(helm version 2>&1 | cut -f1 -d"," | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
+echo $HELM_VERSION
+if [[ ${HELM_VERSION} -lt 3.10.0 ]]; then
+  echo "Please upgrade helm to v3.10.0 or higher"
   exit 1
 fi
 
-KUBE_CLIENT_VERSION=$(kubectl version --client --short | awk '{print $3}' | cut -d. -f2) || true
-if [[ ${KUBE_CLIENT_VERSION} -lt 14 ]]; then
-  echo "Please update kubectl to 1.15 or higher"
+KUBE_CLIENT_VERSION=$(kubectl version --client --short 2>/dev/null | grep Client | awk '{print $3}' | cut -d. -f2) || true
+if [[ ${KUBE_CLIENT_VERSION} -lt 24 ]]; then
+  echo "Please update kubectl to 1.24.2 or higher"
   exit 1
 fi
 
@@ -61,32 +62,13 @@ echo "[dev-env] building image"
 make build image
 docker tag "${REGISTRY}/controller:${TAG}" "${DEV_IMAGE}"
 
-export K8S_VERSION=${K8S_VERSION:-v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6}
+export K8S_VERSION=${K8S_VERSION:-v1.25.2@sha256:9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace}
 
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
 if ! kind get clusters -q | grep -q ${KIND_CLUSTER_NAME}; then
-echo "[dev-env] creating Kubernetes cluster with kind"
-cat <<EOF | kind create cluster --name ${KIND_CLUSTER_NAME} --image "kindest/node:${K8S_VERSION}" --config=-
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  kubeadmConfigPatches:
-  - |
-    kind: InitConfiguration
-    nodeRegistration:
-      kubeletExtraArgs:
-        node-labels: "ingress-ready=true"
-        authorization-mode: "AlwaysAllow"
-  extraPortMappings:
-  - containerPort: 80
-    hostPort: 80
-    protocol: TCP
-  - containerPort: 443
-    hostPort: 443
-    protocol: TCP
-EOF
+  echo "[dev-env] creating Kubernetes cluster with kind"
+  kind create cluster --name ${KIND_CLUSTER_NAME} --image "kindest/node:${K8S_VERSION}" --config ${DIR}/kind.yaml
 else
   echo "[dev-env] using existing Kubernetes kind cluster"
 fi

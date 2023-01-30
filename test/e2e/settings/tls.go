@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -83,28 +83,6 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 
 			assert.Equal(ginkgo.GinkgoT(), int(resp.TLS.Version), tls.VersionTLS12)
 			assert.Equal(ginkgo.GinkgoT(), resp.TLS.CipherSuite, tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384)
-		})
-		ginkgo.It("enforcing TLS v1.0", func() {
-			f.SetNginxConfigMapData(map[string]string{
-				sslCiphers:   testCiphers,
-				sslProtocols: "TLSv1",
-			})
-
-			f.WaitForNginxConfiguration(
-				func(cfg string) bool {
-					return strings.Contains(cfg, "ssl_protocols TLSv1;")
-				})
-
-			resp := f.HTTPTestClientWithTLSConfig(tlsConfig).
-				GET("/").
-				WithURL(f.GetURL(framework.HTTPS)).
-				WithHeader("Host", host).
-				Expect().
-				Status(http.StatusOK).
-				Raw()
-
-			assert.Equal(ginkgo.GinkgoT(), int(resp.TLS.Version), tls.VersionTLS10)
-			assert.Equal(ginkgo.GinkgoT(), resp.TLS.CipherSuite, tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA)
 		})
 	})
 

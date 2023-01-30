@@ -43,9 +43,38 @@ capabilities:
   - ALL
   add:
   - NET_BIND_SERVICE
+  {{- if .Values.controller.image.chroot }}
+  - SYS_CHROOT
+  {{- end }}
 runAsUser: {{ .Values.controller.image.runAsUser }}
 allowPrivilegeEscalation: {{ .Values.controller.image.allowPrivilegeEscalation }}
 {{- end }}
+{{- end -}}
+
+{{/*
+Get specific image
+*/}}
+{{- define "ingress-nginx.image" -}}
+{{- if .chroot -}}
+{{- printf "%s-chroot" .image -}}
+{{- else -}}
+{{- printf "%s" .image -}}
+{{- end }}
+{{- end -}}
+
+{{/*
+Get specific image digest
+*/}}
+{{- define "ingress-nginx.imageDigest" -}}
+{{- if .chroot -}}
+{{- if .digestChroot -}}
+{{- printf "@%s" .digestChroot -}}
+{{- end }}
+{{- else -}}
+{{ if .digest -}}
+{{- printf "@%s" .digest -}}
+{{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -54,6 +83,16 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 */}}
 {{- define "ingress-nginx.controller.fullname" -}}
 {{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.controller.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Construct a unique electionID.
+Users can provide an override for an explicit electionID if they want via `.Values.controller.electionID`
+*/}}
+{{- define "ingress-nginx.controller.electionID" -}}
+{{- $defElectionID := printf "%s-leader" (include "ingress-nginx.fullname" .) -}}
+{{- $electionID := default $defElectionID .Values.controller.electionID -}}
+{{- print $electionID -}}
 {{- end -}}
 
 {{/*
@@ -153,4 +192,21 @@ IngressClass parameters.
           parameters:
 {{ toYaml .Values.controller.ingressClassResource.parameters | indent 4}}
   {{ end }}
+{{- end -}}
+
+{{/*
+Extra modules.
+*/}}
+{{- define "extraModules" -}}
+
+- name: {{ .name }}
+  image: {{ .image }}
+  command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+  {{- if (.containerSecurityContext) }}
+  securityContext: {{ .containerSecurityContext | toYaml | nindent 4 }}
+  {{- end }}
+  volumeMounts:
+    - name: {{ toYaml "modules"}}
+      mountPath: {{ toYaml "/modules_mount"}}
+
 {{- end -}}

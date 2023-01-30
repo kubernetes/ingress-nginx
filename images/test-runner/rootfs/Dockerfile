@@ -16,12 +16,18 @@ ARG BASE_IMAGE
 ARG GOLANG_VERSION
 ARG ETCD_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine as GO
-FROM k8s.gcr.io/etcd:${ETCD_VERSION} as etcd
+FROM golang:${GOLANG_VERSION}-alpine3.17 as GO
+FROM registry.k8s.io/etcd:${ETCD_VERSION} as etcd
 
 FROM ${BASE_IMAGE}
 
-RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
+RUN set -eux; \
+	if [ -e /etc/nsswitch.conf ]; then \
+		grep '^hosts: files dns' /etc/nsswitch.conf; \
+	else \
+		echo 'hosts: files dns' > /etc/nsswitch.conf; \
+	fi
+
 
 COPY --from=GO   /usr/local/go /usr/local/go
 COPY --from=etcd /usr/local/bin/etcd /usr/local/bin/etcd
@@ -49,7 +55,7 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
-RUN go get github.com/onsi/ginkgo/ginkgo golang.org/x/lint/golint
+RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.6.1  && go install golang.org/x/lint/golint@latest
 
 ARG RESTY_CLI_VERSION
 ARG RESTY_CLI_SHA

@@ -5,9 +5,15 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
 
   changes:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
     runs-on: ubuntu-latest
     if: |
       (github.repository == 'kubernetes/ingress-nginx')
@@ -16,17 +22,16 @@ jobs:
       charts: ${{ steps.filter.outputs.charts }}
 
     steps:
-
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           filters: |
             docs:
-              - 'docs/**/*'
+             - 'docs/**/*'
 
   docs:
     name: Update
@@ -41,9 +46,8 @@ jobs:
       contents: write # needed to write releases
 
     steps:
-
       - name: Checkout master
-        uses: actions/checkout@v2
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
       - name: Deploy
         uses: ./.github/actions/mkdocs

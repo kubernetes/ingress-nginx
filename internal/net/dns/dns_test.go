@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 
-	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/pkg/util/file"
 )
 
 func TestGetDNSServers(t *testing.T) {

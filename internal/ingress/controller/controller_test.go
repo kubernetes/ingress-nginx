@@ -34,13 +34,14 @@ import (
 	"github.com/eapache/channels"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"k8s.io/ingress-nginx/internal/file"
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
+
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
@@ -56,6 +57,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
+
+	"k8s.io/ingress-nginx/pkg/util/file"
 )
 
 type fakeIngressStore struct {
@@ -83,7 +86,7 @@ func (fakeIngressStore) GetService(key string) (*corev1.Service, error) {
 	return nil, fmt.Errorf("test error")
 }
 
-func (fakeIngressStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
+func (fakeIngressStore) GetServiceEndpointsSlices(key string) ([]*discoveryv1.EndpointSlice, error) {
 	return nil, fmt.Errorf("test error")
 }
 
@@ -198,6 +201,97 @@ func TestCheckIngress(t *testing.T) {
 			},
 		},
 	}
+
+	t.Run("when validating pathType", func(t *testing.T) {
+		t.Run("When ingress contains invalid path and pathType validation is not disabled", func(t *testing.T) {
+			nginx.store = fakeIngressStore{
+				ingresses: []*ingress.Ingress{},
+				configuration: ngx_config.Configuration{
+					DisablePathTypeValidation: false,
+				},
+			}
+			nginx.command = testNginxTestCommand{
+				t:        t,
+				err:      nil,
+				expected: "",
+			}
+			nginx.cfg.IngressClassConfiguration = &ingressclass.IngressClassConfiguration{
+				WatchWithoutClass: true,
+			}
+			ingPath := &networking.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-ingress1",
+					Namespace: "user-namespace1",
+					Annotations: map[string]string{
+						"kubernetes.io/ingress.class": "nginx",
+					},
+				},
+				Spec: networking.IngressSpec{
+					Rules: []networking.IngressRule{
+						{
+							Host: "example.com",
+							IngressRuleValue: networking.IngressRuleValue{
+								HTTP: &networking.HTTPIngressRuleValue{
+									Paths: []networking.HTTPIngressPath{
+										{
+											Path:     "/xpto/(a+)",
+											PathType: &pathTypePrefix,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			if nginx.CheckIngress(ingPath) == nil {
+				t.Errorf("invalid path on pathTypePrefix and validation enabled should return an error")
+			}
+		})
+		t.Run("When ingress contains invalid path and pathType validation is disabled", func(t *testing.T) {
+			nginx.store = fakeIngressStore{
+				ingresses: []*ingress.Ingress{},
+				configuration: ngx_config.Configuration{
+					DisablePathTypeValidation:  true,
+					PathAdditionalAllowedChars: "^%$[](){}*+?|",
+				},
+			}
+			nginx.command = testNginxTestCommand{
+				t:        t,
+				err:      nil,
+				expected: "_,example.com",
+			}
+
+			ingPath := &networking.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-ingress2",
+					Namespace: "user-namespace2",
+				},
+				Spec: networking.IngressSpec{
+					Rules: []networking.IngressRule{
+						{
+							Host: "example.com",
+							IngressRuleValue: networking.IngressRuleValue{
+								HTTP: &networking.HTTPIngressRuleValue{
+									Paths: []networking.HTTPIngressPath{
+										{
+											Path:     "/example(/|$)(.*)",
+											PathType: &pathTypePrefix,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			if nginx.CheckIngress(ingPath) != nil {
+				t.Errorf("invalid path on pathTypePrefix and validation disabled should not return an error: %s", nginx.CheckIngress(ingPath))
+			}
+		})
+	})
 	t.Run("when the class is the nginx one", func(t *testing.T) {
 		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
 		nginx.command = testNginxTestCommand{
@@ -2396,10 +2490,12 @@ func newNGINXController(t *testing.T) *NGINXController {
 		clientSet,
 		channels.NewRingChannel(10),
 		false,
+		true,
 		&ingressclass.IngressClassConfiguration{
 			Controller:      "k8s.io/ingress-nginx",
 			AnnotationValue: "nginx",
 		},
+		false,
 	)
 
 	sslCert := ssl.GetFakeSSLCert()
@@ -2460,10 +2556,12 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		clientSet,
 		channels.NewRingChannel(10),
 		false,
+		true,
 		&ingressclass.IngressClassConfiguration{
 			Controller:      "k8s.io/ingress-nginx",
 			AnnotationValue: "nginx",
-		})
+		},
+		false)
 
 	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{
@@ -2474,8 +2572,9 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 	}
 
 	return &NGINXController{
-		store:   storer,
-		cfg:     config,
-		command: NewNginxCommand(),
+		store:           storer,
+		cfg:             config,
+		command:         NewNginxCommand(),
+		metricCollector: metric.DummyCollector{},
 	}
 }

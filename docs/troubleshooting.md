@@ -110,7 +110,7 @@ $ kubectl edit deploy -n <namespace-of-ingress-controller> ingress-nginx-control
 
 - `--v=2` shows details using `diff` about the changes in the configuration in nginx
 - `--v=3` shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format
-- `--v=5` configures NGINX in [debug mode](http://nginx.org/en/docs/debugging_log.html)
+- `--v=5` configures NGINX in [debug mode](https://nginx.org/en/docs/debugging_log.html)
 
 ## Authentication to the Kubernetes API Server
 
@@ -256,7 +256,7 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
     ```console
     $ docker ps | grep ingress-nginx-controller
     CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
-    d9e1d243156a        k8s.gcr.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
+    d9e1d243156a        registry.k8s.io/ingress-nginx/controller   "/usr/bin/dumb-init …"   19 minutes ago      Up 19 minutes                                                                            k8s_ingress-nginx-controller_ingress-nginx-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0
     ```
 
 3. Exec into the container
@@ -316,3 +316,166 @@ Note: The below is based on the nginx [documentation](https://docs.nginx.com/ngi
     ```console
     cat nginx_conf.txt
     ```
+    
+## Image related issues faced on Nginx 4.2.5 or other versions (Helm chart versions) 
+
+1. Incase you face below error while installing Nginx using helm chart (either by helm commands or helm_release terraform provider ) 
+```
+Warning  Failed     5m5s (x4 over 6m34s)   kubelet            Failed to pull image "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47": rpc error: code = Unknown desc = failed to pull and unpack image "registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47": failed to resolve reference "registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47": failed to do request: Head "https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47": EOF
+```
+   Then please follow the below steps.
+
+2. During troubleshooting you can also execute the below commands to test the connectivities from you local machines and repositories  details
+
+      a. curl registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47 > /dev/null
+      ```
+      (⎈ |myprompt)➜  ~ curl registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47 > /dev/null
+                          % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                                          Dload  Upload   Total   Spent    Left  Speed
+                          0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+       (⎈ |myprompt)➜  ~
+      ```
+      b. curl -I https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+      ```
+      (⎈ |myprompt)➜  ~ curl -I https://eu.gcr.io/v2/k8s-artifacts-prod/ingress-nginx/kube-webhook-certgen/manifests/sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+                                          HTTP/2 200
+                                          docker-distribution-api-version: registry/2.0
+                                          content-type: application/vnd.docker.distribution.manifest.list.v2+json
+                                          docker-content-digest: sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+                                          content-length: 1384
+                                          date: Wed, 28 Sep 2022 16:46:28 GMT
+                                          server: Docker Registry
+                                          x-xss-protection: 0
+                                          x-frame-options: SAMEORIGIN
+                                          alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"
+
+        (⎈ |myprompt)➜  ~
+      ```
+   Redirection in the proxy is implemented to ensure the pulling of the images.
+
+3. This is the solution recommended to whitelist the below image repositories : 
+     ```
+     *.appspot.com    
+     *.k8s.io        
+     *.pkg.dev
+     *.gcr.io
+     
+     ```
+     More details about the above repos : 
+     a. *.k8s.io -> To ensure you can pull any images from registry.k8s.io
+     b. *.gcr.io -> GCP services are used for image hosting. This is part of the domains suggested by GCP to allow and ensure users can pull images from their container registry services.
+     c. *.appspot.com -> This a Google domain. part of the domain used for GCR.
+
+## Unable to listen on port (80/443)
+One possible reason for this error is lack of permission to bind to the port.  Ports 80, 443, and any other port < 1024 are Linux privileged ports which historically could only be bound by root.  The ingress-nginx-controller uses the CAP_NET_BIND_SERVICE [linux capability](https://man7.org/linux/man-pages/man7/capabilities.7.html) to allow binding these ports as a normal user (www-data / 101).  This involves two components:
+1. In the image, the /nginx-ingress-controller file has the cap_net_bind_service capability added (e.g. via [setcap](https://man7.org/linux/man-pages/man8/setcap.8.html)) 
+2. The NET_BIND_SERVICE capability is added to the container in the containerSecurityContext of the deployment.
+
+If encountering this on one/some node(s) and not on others, try to purge and pull a fresh copy of the image to the affected node(s), in case there has been corruption of the underlying layers to lose the capability on the executable.
+
+### Create a test pod
+The /nginx-ingress-controller process exits/crashes when encountering this error, making it difficult to troubleshoot what is happening inside the container.  To get around this, start an equivalent container running "sleep 3600", and exec into it for further troubleshooting.  For example:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ingress-nginx-sleep
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  containers:
+    - name: nginx
+      image: ##_CONTROLLER_IMAGE_##
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "500m"
+        limits:
+          memory: "1Gi"
+          cpu: "1"
+      command: ["sleep"]
+      args: ["3600"]
+      ports:
+      - containerPort: 80
+        name: http
+        protocol: TCP
+      - containerPort: 443
+        name: https
+        protocol: TCP
+      securityContext:
+        allowPrivilegeEscalation: true
+        capabilities:
+          add:
+          - NET_BIND_SERVICE
+          drop:
+          - ALL
+        runAsUser: 101
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: ##_NODE_NAME_##
+  tolerations:
+  - key: "node.kubernetes.io/unschedulable"
+    operator: "Exists"
+    effect: NoSchedule
+```
+* update the namespace if applicable/desired
+* replace `##_NODE_NAME_##` with the problematic node (or remove nodeSelector section if problem is not confined to one node)
+* replace `##_CONTROLLER_IMAGE_##` with the same image as in use by your ingress-nginx deployment
+* confirm the securityContext section matches what is in place for ingress-nginx-controller pods in your cluster
+
+Apply the YAML and open a shell into the pod.
+Try to manually run the controller process:
+```console
+$ /nginx-ingress-controller
+```
+You should get the same error as from the ingress controller pod logs.
+
+Confirm the capabilities are properly surfacing into the pod:
+```console
+$ grep CapBnd /proc/1/status
+CapBnd: 0000000000000400
+```
+The above value has only net_bind_service enabled (per security context in YAML which adds that and drops all). If you get a different value, then you can decode it on another linux box (capsh not available in this container) like below, and then figure out why specified capabilities are not propagating into the pod/container.
+```console
+$ capsh --decode=0000000000000400
+0x0000000000000400=cap_net_bind_service
+```
+
+## Create a test pod as root
+(Note, this may be restricted by PodSecurityPolicy, PodSecurityAdmission/Standards, OPA Gatekeeper, etc. in which case you will need to do the appropriate workaround for testing, e.g. deploy in a new namespace without the restrictions.)
+To test further you may want to install additional utilities, etc.  Modify the pod yaml by:
+* changing runAsUser from 101 to 0
+* removing the "drop..ALL" section from the capabilities.
+
+Some things to try after shelling into this container:
+
+Try running the controller as the www-data (101) user:
+```console
+$ chmod 4755 /nginx-ingress-controller
+$ /nginx-ingress-controller
+```
+Examine the errors to see if there is still an issue listening on the port or if it passed that and moved on to other expected errors due to running out of context.
+
+Install the libcap package and check capabilities on the file:
+```console
+$ apk add libcap
+(1/1) Installing libcap (2.50-r0)
+Executing busybox-1.33.1-r7.trigger
+OK: 26 MiB in 41 packages
+$ getcap /nginx-ingress-controller
+/nginx-ingress-controller cap_net_bind_service=ep
+```
+(if missing, see above about purging image on the server and re-pulling)
+
+Strace the executable to see what system calls are being executed when it fails:
+```console
+$ apk add strace
+(1/1) Installing strace (5.12-r0)
+Executing busybox-1.33.1-r7.trigger
+OK: 28 MiB in 42 packages
+$ strace /nginx-ingress-controller
+execve("/nginx-ingress-controller", ["/nginx-ingress-controller"], 0x7ffeb9eb3240 /* 131 vars */) = 0
+arch_prctl(ARCH_SET_FS, 0x29ea690)      = 0
+...
+```

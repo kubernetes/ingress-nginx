@@ -78,11 +78,19 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 var (
 	// IngressPodDetails hold information about the ingress-nginx pod
 	IngressPodDetails *PodInfo
+	// IngressNodeDetails old information about the node running ingress-nginx pod
+	IngressNodeDetails *NodeInfo
 )
 
 // PodInfo contains runtime information about the pod running the Ingres controller
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type PodInfo struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+}
+
+// NodeInfo contains runtime information about the node pod running the Ingres controller, eg. zone where pod is running
+type NodeInfo struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
 }
@@ -108,6 +116,18 @@ func GetIngressPod(kubeClient clientset.Interface) error {
 	pod.ObjectMeta.DeepCopyInto(&IngressPodDetails.ObjectMeta)
 	IngressPodDetails.SetLabels(pod.GetLabels())
 
+	IngressNodeDetails = &NodeInfo{
+		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Node"},
+	}
+	// Try to get node info/labels to determine topology zone where pod is running
+	node, err := kubeClient.CoreV1().Nodes().Get(context.TODO(), pod.Spec.NodeName, metav1.GetOptions{})
+	if err != nil {
+		klog.Warningf("Unable to get NODE information: %v", err)
+	} else {
+		node.ObjectMeta.DeepCopyInto(&IngressNodeDetails.ObjectMeta)
+		IngressNodeDetails.SetLabels(node.GetLabels())
+	}
+
 	return nil
 }
 
@@ -120,9 +140,6 @@ func MetaNamespaceKey(obj interface{}) string {
 
 	return key
 }
-
-// IsIngressV1Ready indicates if the running Kubernetes version is at least v1.19.0
-var IsIngressV1Ready bool
 
 // IngressNGINXController defines the valid value of IngressClass
 // Controller field for ingress-nginx
@@ -163,9 +180,6 @@ func SetDefaultNGINXPathType(ing *networkingv1.Ingress) {
 				p.PathType = &defaultPathType
 			}
 
-			if *p.PathType == networkingv1.PathTypeImplementationSpecific {
-				p.PathType = &defaultPathType
-			}
 		}
 	}
 }

@@ -10,7 +10,7 @@ Anytime we reference a TLS secret, we mean a PEM-encoded X.509, RSA (2048) secre
 You can generate a self-signed certificate and private key with:
 
 ```bash
-$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}"
+$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}" -addext "subjectAltName = DNS:${HOST}"
 ```
 
 Then create the secret in the cluster via:
@@ -28,7 +28,7 @@ Ensure that the relevant [ingress rules specify a matching host name](https://ku
 ## Default SSL Certificate
 
 NGINX provides the option to configure a server as a catch-all with
-[server_name](http://nginx.org/en/docs/http/server_names.html)
+[server_name](https://nginx.org/en/docs/http/server_names.html)
 for requests that do not match any of the configured server names.
 This configuration works out-of-the-box for HTTP traffic.
 For HTTPS, a certificate is naturally required.

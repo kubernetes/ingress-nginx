@@ -51,6 +51,12 @@ export TAG=1.0.0-dev
 export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
 
+NGINX_BASE_IMAGE=$(cat $DIR/../../NGINX_BASE)
+
+echo "Running e2e with nginx base image ${NGINX_BASE_IMAGE}"
+
+export NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE
+
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
@@ -58,7 +64,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6}
+  export K8S_VERSION=${K8S_VERSION:-v1.25.2@sha256:9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -73,12 +79,15 @@ fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go get github.com/onsi/ginkgo/ginkgo@v1.16.4
+    go get github.com/onsi/ginkgo/v2/ginkgo@v2.6.1
   fi
 
   echo "[dev-env] building image"
-  make -C ${DIR}/../../ clean-image build image
+  make -C ${DIR}/../../ clean-image build image image-chroot
+  echo "[dev-env] .. done building controller images"
+  echo "[dev-env] now building e2e-image.."
   make -C ${DIR}/../e2e-image image
+  echo "[dev-env] ..done building e2e-image"
 fi
 
 # Preload images used in e2e tests
@@ -87,6 +96,11 @@ KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk 
 echo "[dev-env] copying docker images to cluster..."
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} nginx-ingress-controller:e2e
+
+if [ "${IS_CHROOT:-false}" = "true" ]; then
+   docker tag ${REGISTRY}/controller-chroot:${TAG} ${REGISTRY}/controller:${TAG}
+fi
+
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
 
 echo "[dev-env] running e2e tests..."

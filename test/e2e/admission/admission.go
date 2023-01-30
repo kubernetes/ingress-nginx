@@ -24,12 +24,20 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
+
+	networkingv1 "k8s.io/api/networking/v1"
+)
+
+var (
+	pathExact        = networkingv1.PathTypeExact
+	pathPrefix       = networkingv1.PathTypePrefix
+	pathImplSpecific = networkingv1.PathTypeImplementationSpecific
 )
 
 var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
@@ -110,6 +118,23 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with the same host and path should not return an error using a canary annotation")
 	})
 
+	ginkgo.It("should block ingress with invalid path", func() {
+		host := "invalid-path"
+
+		firstIngress := framework.NewSingleIngress("valid-path", "/mypage", host, f.Namespace, framework.EchoService, 80, nil)
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+			})
+
+		secondIngress := framework.NewSingleIngress("second-ingress", "/etc/nginx", host, f.Namespace, framework.EchoService, 80, nil)
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid path should return an error")
+	})
+
 	ginkgo.It("should return an error if there is an error validating the ingress definition", func() {
 		host := "admission-test"
 
@@ -133,6 +158,32 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		firstIngress := framework.NewSingleIngress("first-ingress", "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid annotation value should return an error")
+	})
+
+	ginkgo.It("should reject ingress with bad characters and pathType != ImplementationSpecific", func() {
+		host := "admission-test"
+
+		firstIngress := framework.NewSingleIngress("first-ingress", "/xpto*", host, f.Namespace, framework.EchoService, 80, nil)
+		firstIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathPrefix
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid path value should return an error")
+
+		secondIngress := framework.NewSingleIngress("second-ingress", "/abc123*", host, f.Namespace, framework.EchoService, 80, nil)
+		secondIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImplSpecific
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with regex on path and pathType ImplementationSpecific should not return an error")
+
+	})
+
+	ginkgo.It("should not validate characters on ingress when validation of pathType is disabled", func() {
+		host := "admission-test"
+
+		f.UpdateNginxConfigMapData("disable-pathtype-validation", "true")
+
+		firstIngress := framework.NewSingleIngress("first-ingress", "/xpto*", host, f.Namespace, framework.EchoService, 80, nil)
+		firstIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathPrefix
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with regex chars on path and pathType validation disabled should be accepted")
 	})
 
 	ginkgo.It("should return an error if there is a forbidden value in some annotation", func() {

@@ -20,8 +20,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/config"
+	"github.com/onsi/ginkgo/v2"
 	"k8s.io/component-base/logs"
 
 	// required
@@ -35,11 +34,13 @@ import (
 	_ "k8s.io/ingress-nginx/test/e2e/annotations/modsecurity"
 	_ "k8s.io/ingress-nginx/test/e2e/dbg"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
+	_ "k8s.io/ingress-nginx/test/e2e/endpointslices"
 	_ "k8s.io/ingress-nginx/test/e2e/gracefulshutdown"
 	_ "k8s.io/ingress-nginx/test/e2e/ingress"
 	_ "k8s.io/ingress-nginx/test/e2e/leaks"
 	_ "k8s.io/ingress-nginx/test/e2e/loadbalance"
 	_ "k8s.io/ingress-nginx/test/e2e/lua"
+	_ "k8s.io/ingress-nginx/test/e2e/nginx"
 	_ "k8s.io/ingress-nginx/test/e2e/security"
 	_ "k8s.io/ingress-nginx/test/e2e/servicebackend"
 	_ "k8s.io/ingress-nginx/test/e2e/settings"
@@ -61,6 +62,6 @@ func RunE2ETests(t *testing.T) {
 		framework.Logf("Using kubectl path '%s'", framework.KubectlPath)
 	}
 
-	framework.Logf("Starting e2e run %q on Ginkgo node %d", framework.RunID, config.GinkgoConfig.ParallelNode)
+	framework.Logf("Starting e2e run %q on Ginkgo node %d", framework.RunID, ginkgo.GinkgoParallelProcess())
 	ginkgo.RunSpecs(t, "nginx-ingress-controller e2e suite")
 }
