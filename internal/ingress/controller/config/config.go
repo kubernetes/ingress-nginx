@@ -806,7 +806,7 @@ func NewDefault() Configuration {
 	defBlockEntity := make([]string, 0)
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
-        defSSLConfCommands := make([]string, 0)
+	defSSLConfCommands := make([]string, 0)
 	defResponseHeaders := make([]string, 0)
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
