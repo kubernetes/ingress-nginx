@@ -75,6 +75,23 @@ jobs:
           # G307 TODO: Deferring unsafe method "Close"
           args: -exclude=G109,G601,G104,G204,G304,G306,G307 -tests=false -exclude-dir=test -exclude-dir=images/  -exclude-dir=docs/ ./...
 
+  e2e-docs:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      (needs.changes.outputs.go == 'true')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+
+      - name: Check if E2E tests documentation is up-to-date
+        run: |
+          ./hack/generate-e2e-suite-doc.sh > docs/e2e-tests.md
+          if ! git diff --exit-code; then
+            echo "ERROR: the E2E tests documentation isn't up-to-date, please run ./hack/generate-e2e-suite-doc.sh" >&2
+            exit 1
+          fi
+
   lint:
     runs-on: ubuntu-latest
     needs: changes
