@@ -252,7 +252,7 @@ func TestValidateIngressPath(t *testing.T) {
 			name:                     "should deny path with bad characters and pathType not implementationSpecific",
 			EnablePathTypeValidation: true,
 			wantErr:                  true,
-			additionalChars:          defaultAdditionalChars,
+			additionalChars:          "()",
 			copyIng:                  generateDumbIngressforPathTest(&pathTypeExact, "/foo/bar/(.+)"),
 		},
 		{
@@ -263,7 +263,7 @@ func TestValidateIngressPath(t *testing.T) {
 		},
 		{
 			name:                     "should accept path with regex characters and pathType exact, but pathType validation disabled",
-			wantErr:                  true,
+			wantErr:                  false,
 			additionalChars:          defaultAdditionalChars,
 			EnablePathTypeValidation: true,
 			copyIng:                  generateDumbIngressforPathTest(&pathTypeExact, "/foo/bar/(.+)"),

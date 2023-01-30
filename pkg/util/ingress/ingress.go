@@ -246,16 +246,16 @@ func BuildRedirects(servers []*ingress.Server) []*redirect {
 	return redirectServers
 }
 
-func ValidateIngressPath(copyIng *networkingv1.Ingress, enablePathTypeValidation bool, additionalChars string) error {
+func ValidateIngressPath(copyIng *networkingv1.Ingress, enablePathTypeValidation bool, pathAdditionalAllowedChars string) error {
 
 	if copyIng == nil {
 		return nil
 	}
 
-	escapedAdditionalChars := regexp.QuoteMeta(additionalChars)
-	regexPath, err := regexp.Compile("^[" + alphaNumericChars + escapedAdditionalChars + "]*$")
+	escapedPathAdditionalAllowedChars := regexp.QuoteMeta(pathAdditionalAllowedChars)
+	regexPath, err := regexp.Compile("^[" + alphaNumericChars + escapedPathAdditionalAllowedChars + "]*$")
 	if err != nil {
-		return fmt.Errorf("ingress has misconfigured validation regex on configmap: %s - %w", additionalChars, err)
+		return fmt.Errorf("ingress has misconfigured validation regex on configmap: %s - %w", pathAdditionalAllowedChars, err)
 	}
 
 	for _, rule := range copyIng.Spec.Rules {
@@ -282,21 +282,25 @@ func checkPath(paths []networkingv1.HTTPIngressPath, enablePathTypeValidation bo
 
 		switch pathType := *path.PathType; pathType {
 		case networkingv1.PathTypeImplementationSpecific:
-
+			//only match on regex chars per Ingress spec when path is implementation specific
 			if !regexSpecificChars.MatchString(path.Path) {
 				return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
 			}
 
 		case networkingv1.PathTypeExact, networkingv1.PathTypePrefix:
+			//enforce path type validation
 			if enablePathTypeValidation {
+				//only allow alphanumeric chars, no regex chars
 				if !pathAlphaNumericRegex(path.Path) {
 					return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
 				}
 				continue
 			}
+			//path validation is disabled, so we check what regex chars are allowed by user
 			if !regexSpecificChars.MatchString(path.Path) {
 				return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
 			}
+
 		default:
 			return fmt.Errorf("unknown path type %v on path %v", *path.PathType, path.Path)
 		}
