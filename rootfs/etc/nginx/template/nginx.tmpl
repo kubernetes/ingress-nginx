@@ -452,7 +452,8 @@ http {
 
     {{ if not (empty $cfg.SSLCiphers) }}
     # allow to specify specific openssl commands
-    ssl_conf_command {{ $cfg.SSLConfCommand }};
+    {{ range $sslConfCmd := $cfg.SSLConfCommand }}
+    ssl_conf_command {{ $sslConfCmd }};
     {{ end }}
 
     {{ if not (empty $cfg.SSLCiphers) }}

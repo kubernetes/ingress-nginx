@@ -339,7 +339,7 @@ type Configuration struct {
 
 	// Allows configuration of arbitrary OpenSSL configuration
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_conf_command
-	SSLConfCommand string `json:"ssl-conf-command,omitempty"`
+	SSLConfCommand []string `json:"ssl-conf-command,omitempty"`
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
 	// the OpenSSL library
@@ -777,6 +777,7 @@ func NewDefault() Configuration {
 	defBlockEntity := make([]string, 0)
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
+        defSSLConfCommand := make([]string, 0)
 	defResponseHeaders := make([]string, 0)
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
@@ -846,7 +847,7 @@ func NewDefault() Configuration {
 		ReusePort:                        true,
 		ShowServerTokens:                 false,
 		SSLBufferSize:                    sslBufferSize,
-		SSLConfCommand:                   "",
+		SSLConfCommand:                   defSSLConfCommand,
 		SSLCiphers:                       sslCiphers,
 		SSLECDHCurve:                     "auto",
 		SSLProtocols:                     sslProtocols,
