@@ -450,9 +450,9 @@ http {
     # slightly reduce the time-to-first-byte
     ssl_buffer_size {{ $cfg.SSLBufferSize }};
 
-    {{ if gt (len $cfg.SSLConfCommand) 0 }}
+    {{ if gt (len $cfg.SSLConfCommands) 0 }}
     # allow to specify specific openssl commands
-    {{ range $sslConfCmd := $cfg.SSLConfCommand }}
+    {{ range $sslConfCmd := $cfg.SSLConfCommands }}
     ssl_conf_command {{ $sslConfCmd }};
     {{ end }}
     {{ end }}
