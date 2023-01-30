@@ -82,7 +82,7 @@ The following table shows a configuration option's name, type, and the default v
 |[plugins](#plugins)|[]string| |
 |[reuse-port](#reuse-port)|bool|"true"|
 |[server-tokens](#server-tokens)|bool|"false"|
-|[ssl-conf-command](#ssl-conf-command)|string|""|
+|[ssl-conf-command](#ssl-conf-command)|[]string| |
 |[ssl-ciphers](#ssl-ciphers)|string|"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"|
 |[ssl-ecdh-curve](#ssl-ecdh-curve)|string|"auto"|
 |[ssl-dh-param](#ssl-dh-param)|string|""|
