@@ -30,12 +30,13 @@ var _ = framework.DescribeSetting("ssl-conf-command", func() {
 
 	ginkgo.It("Add ssl conf command", func() {
 		wlKey := "ssl-conf-command"
-		wlValue := "Ciphersuites TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256"
+		wlValue := "Options PrioritizeChaCha,Ciphersuites TLS_CHACHA20_POLY1305_SHA256"
 
 		f.UpdateNginxConfigMapData(wlKey, wlValue)
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return strings.Contains(cfg, fmt.Sprintf("ssl-conf-command '%s';", wlValue))
+			return strings.Contains(cfg, "ssl-conf-command 'Options PrioritizeChaCha';") &&
+				strings.Contains(cfg, "ssl-conf-command 'Ciphersuites TLS_CHACHA20_POLY1305_SHA256';")
 		})
 	})
 })
