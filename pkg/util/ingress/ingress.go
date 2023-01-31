@@ -295,10 +295,12 @@ func checkPath(paths []networkingv1.HTTPIngressPath, enablePathTypeValidation bo
 					return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
 				}
 				continue
-			}
-			//path validation is disabled, so we check what regex chars are allowed by user
-			if !regexSpecificChars.MatchString(path.Path) {
-				return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
+			} else {
+				//path validation is disabled, so we check what regex chars are allowed by user
+				if !regexSpecificChars.MatchString(path.Path) {
+					return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
+				}
+				continue
 			}
 
 		default:
