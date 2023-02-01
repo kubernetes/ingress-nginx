@@ -35,8 +35,7 @@ func (pie disableProxyInterceptErrors) Parse(ing *networking.Ingress) (interface
 
 	// A missing annotation is not a problem, just use the default
 	if err == errors.ErrMissingAnnotations {
-		return false, nil
-		// default is false
+		return false, nil // default is false
 	}
 
 	return val, nil
