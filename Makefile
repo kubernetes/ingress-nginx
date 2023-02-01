@@ -153,11 +153,11 @@ lua-test: ## Run lua unit tests.
 
 .PHONY: e2e-test
 e2e-test:  ## Run e2e tests (expects access to a working Kubernetes cluster).
-	@build/run-e2e-suite.sh
+	@test/e2e/run-e2e-suite.sh
 
 .PHONY: kind-e2e-test
 kind-e2e-test:  ## Run e2e tests using kind.
-	@test/e2e/run.sh
+	@test/e2e/run-kind-e2e.sh
 
 .PHONY: kind-e2e-chart-tests
 kind-e2e-chart-tests: ## Run helm chart e2e tests
