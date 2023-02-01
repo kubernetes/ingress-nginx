@@ -846,7 +846,7 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 	copyIng := &networkingv1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 
-	if err := ingressutils.ValidateIngressPath(ing, s.backendConfig.DisablePathTypeValidation, s.backendConfig.PathAdditionalAllowedChars); err != nil {
+	if err := ingressutils.ValidateIngressPath(ing, s.backendConfig.EnablePathTypeValidation, s.backendConfig.PathAdditionalAllowedChars); err != nil {
 		klog.Errorf("ingress %s contains invalid path and will be skipped: %s", key, err)
 		return
 	}

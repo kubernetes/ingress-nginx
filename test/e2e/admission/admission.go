@@ -160,8 +160,21 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid annotation value should return an error")
 	})
 
-	ginkgo.It("should reject ingress with bad characters and pathType != ImplementationSpecific", func() {
+	ginkgo.It("ADMISSION should not validate characters on ingress when validation of pathType is disabled", func() {
 		host := "admission-test"
+
+		f.UpdateNginxConfigMapData("enable-pathtype-validation", "false")
+
+		firstIngress := framework.NewSingleIngress("first-ingress", "/xpto*", host, f.Namespace, framework.EchoService, 80, nil)
+		firstIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathPrefix
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with regex chars on path and pathType validation disabled should be accepted")
+	})
+
+	ginkgo.It("ADMISSION should reject ingress with bad characters and pathType != ImplementationSpecific", func() {
+		host := "admission-test"
+
+		f.UpdateNginxConfigMapData("enable-pathtype-validation", "true")
 
 		firstIngress := framework.NewSingleIngress("first-ingress", "/xpto*", host, f.Namespace, framework.EchoService, 80, nil)
 		firstIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathPrefix
@@ -175,18 +188,7 @@ var _ = framework.IngressNginxDescribe("[Serial] admission controller", func() {
 
 	})
 
-	ginkgo.It("should not validate characters on ingress when validation of pathType is disabled", func() {
-		host := "admission-test"
-
-		f.UpdateNginxConfigMapData("disable-pathtype-validation", "true")
-
-		firstIngress := framework.NewSingleIngress("first-ingress", "/xpto*", host, f.Namespace, framework.EchoService, 80, nil)
-		firstIngress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathPrefix
-		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with regex chars on path and pathType validation disabled should be accepted")
-	})
-
-	ginkgo.It("should return an error if there is a forbidden value in some annotation", func() {
+	ginkgo.It("ADMISSION should return an error if there is a forbidden value in some annotation", func() {
 		host := "admission-test"
 
 		annotations := map[string]string{
