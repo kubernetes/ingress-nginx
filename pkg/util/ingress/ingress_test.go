@@ -212,11 +212,11 @@ const (
 
 func TestValidateIngressPath(t *testing.T) {
 	tests := []struct {
-		name                      string
-		copyIng                   *networkingv1.Ingress
-		disablePathTypeValidation bool
-		additionalChars           string
-		wantErr                   bool
+		name                     string
+		copyIng                  *networkingv1.Ingress
+		EnablePathTypeValidation bool
+		additionalChars          string
+		wantErr                  bool
 	}{
 		{
 			name:    "should return nil when ingress = nil",
@@ -251,49 +251,53 @@ func TestValidateIngressPath(t *testing.T) {
 		{
 			name:            "should deny path with bad characters and pathType not implementationSpecific",
 			wantErr:         true,
-			additionalChars: defaultAdditionalChars,
+			additionalChars: "()",
 			copyIng:         generateDumbIngressforPathTest(&pathTypeExact, "/foo/bar/(.+)"),
 		},
 		{
-			name:            "should accept path with regex characters and pathType implementationSpecific",
-			wantErr:         false,
-			additionalChars: defaultAdditionalChars,
-			copyIng:         generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.+)"),
+			name:                     "should accept path with regex characters and pathType implementationSpecific",
+			wantErr:                  false,
+			additionalChars:          defaultAdditionalChars,
+			EnablePathTypeValidation: false,
+			copyIng:                  generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.+)"),
 		},
 		{
-			name:                      "should accept path with regex characters and pathType exact, but pathType validation disabled",
-			wantErr:                   false,
-			additionalChars:           defaultAdditionalChars,
-			disablePathTypeValidation: true,
-			copyIng:                   generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.+)"),
+			name:                     "should accept path with regex characters and pathType exact, but pathType validation disabled",
+			wantErr:                  false,
+			additionalChars:          defaultAdditionalChars,
+			EnablePathTypeValidation: false,
+			copyIng:                  generateDumbIngressforPathTest(&pathTypeExact, "/foo/bar/(.+)"),
 		},
 		{
-			name:                      "should reject path when the allowed additional set does not match",
-			wantErr:                   true,
-			additionalChars:           "().?",
-			disablePathTypeValidation: false,
-			copyIng:                   generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.+)"),
+			name:                     "should reject path when the allowed additional set does not match",
+			wantErr:                  true,
+			additionalChars:          "().?",
+			EnablePathTypeValidation: false,
+			copyIng:                  generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.+)"),
 		},
 		{
-			name:            "should accept path when the allowed additional set does match",
-			wantErr:         false,
-			additionalChars: "().?",
-			copyIng:         generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.?)"),
+			name:                     "should accept path when the allowed additional set does match",
+			wantErr:                  false,
+			additionalChars:          "().?",
+			EnablePathTypeValidation: false,
+			copyIng:                  generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.?)"),
 		},
 		{
-			name:    "should block if at least one path is bad",
-			wantErr: true,
-			copyIng: generateComplexIngress(generateDumbIngressforPathTest(&pathTypeExact, "/foo/bar/(.?)")),
+			name:                     "should block if at least one path is bad",
+			wantErr:                  true,
+			EnablePathTypeValidation: false,
+			copyIng:                  generateComplexIngress(generateDumbIngressforPathTest(&pathTypeExact, "/foo/bar/(.?)")),
 		},
 		{
-			name:    "should block if at least one path is bad",
-			wantErr: true,
-			copyIng: generateComplexIngress(generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.?)")),
+			name:                     "should block if at least one path is bad",
+			wantErr:                  true,
+			EnablePathTypeValidation: false,
+			copyIng:                  generateComplexIngress(generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.?)")),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ValidateIngressPath(tt.copyIng, tt.disablePathTypeValidation, tt.additionalChars); (err != nil) != tt.wantErr {
+			if err := ValidateIngressPath(tt.copyIng, tt.EnablePathTypeValidation, tt.additionalChars); (err != nil) != tt.wantErr {
 				t.Errorf("ValidateIngressPath() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

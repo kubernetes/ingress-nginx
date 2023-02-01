@@ -203,11 +203,11 @@ func TestCheckIngress(t *testing.T) {
 	}
 
 	t.Run("when validating pathType", func(t *testing.T) {
-		t.Run("When ingress contains invalid path and pathType validation is not disabled", func(t *testing.T) {
+		t.Run("When ingress contains invalid path and pathType validation is enabled", func(t *testing.T) {
 			nginx.store = fakeIngressStore{
 				ingresses: []*ingress.Ingress{},
 				configuration: ngx_config.Configuration{
-					DisablePathTypeValidation: false,
+					EnablePathTypeValidation: true,
 				},
 			}
 			nginx.command = testNginxTestCommand{
@@ -253,7 +253,7 @@ func TestCheckIngress(t *testing.T) {
 			nginx.store = fakeIngressStore{
 				ingresses: []*ingress.Ingress{},
 				configuration: ngx_config.Configuration{
-					DisablePathTypeValidation:  true,
+					EnablePathTypeValidation:   false,
 					PathAdditionalAllowedChars: "^%$[](){}*+?|",
 				},
 			}
