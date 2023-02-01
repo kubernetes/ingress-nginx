@@ -158,6 +158,9 @@ func (Release) NewRelease(version string) {
 
 	releaseNotes.helmTemplate()
 
+	err = validateHelm()
+	CheckIfError(err, "RELEASE Validating Helm Chart Changes")
+
 	//update static manifest
 	CheckIfError(updateStaticManifest(), "Error Updating Static manifests")
 
@@ -293,7 +296,7 @@ func makeReleaseNotes(newVersion string) (*ReleaseNote, error) {
 	var helmUpdates []string
 	prRegex := regexp.MustCompile("\\(#\\d+\\)")
 	depBot := regexp.MustCompile("^(\\w){1,10} Bump ")
-	helmRegex := regexp.MustCompile("helm|chart")
+	helmRegex := regexp.MustCompile("helm|chart|(?i)values")
 	for i, s := range commits {
 		//matches on PR
 		if prRegex.Match([]byte(s)) {
@@ -413,7 +416,7 @@ func (r ReleaseNote) helmTemplate() {
 	Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
-	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/Changelog-%s.md", r.Version))
+	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/Changelog-%s.md", r.NewHelmChartVersion))
 	if err != nil {
 		ErrorF("Could not create changelog file %s", err)
 	}
