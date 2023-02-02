@@ -258,7 +258,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.admissionWebhooks.annotations | object | `{}` |  |
 | controller.admissionWebhooks.certManager.admissionCert.duration | string | `""` |  |
 | controller.admissionWebhooks.certManager.enabled | bool | `false` |  |
-| controller.admissionWebhooks.certManager.rootCert.duration | string | `nil` |  |
+| controller.admissionWebhooks.certManager.rootCert.duration | string | `""` |  |
 | controller.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.createSecretJob.securityContext.allowPrivilegeEscalation | bool | `false` |  |
