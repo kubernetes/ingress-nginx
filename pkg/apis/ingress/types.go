@@ -168,9 +168,10 @@ type CookieSessionAffinity struct {
 
 // UpstreamHashByConfig described setting from the upstream-hash-by* annotations.
 type UpstreamHashByConfig struct {
-	UpstreamHashBy           string `json:"upstream-hash-by,omitempty"`
-	UpstreamHashBySubset     bool   `json:"upstream-hash-by-subset,omitempty"`
-	UpstreamHashBySubsetSize int    `json:"upstream-hash-by-subset-size,omitempty"`
+	UpstreamHashBy              string  `json:"upstream-hash-by,omitempty"`
+	UpstreamHashBySubset        bool    `json:"upstream-hash-by-subset,omitempty"`
+	UpstreamHashBySubsetSize    int     `json:"upstream-hash-by-subset-size,omitempty"`
+	UpstreamHashByBalanceFactor float32 `json:"upstream-hash-by-balance-factor,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
