@@ -624,7 +624,7 @@ controller:
             # self-signed root certificate
             rootCert:
                 # default to be 5y
-                duration:
+                duration: ""
             admissionCert:
                 # default to be 1y
                 duration: ""
