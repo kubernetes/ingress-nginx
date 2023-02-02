@@ -21,7 +21,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"strings"
 	"syscall"
 
 	jsoniter "github.com/json-iterator/go"
@@ -41,14 +40,15 @@ type socketData struct {
 	RequestLength float64 `json:"requestLength"`
 	RequestTime   float64 `json:"requestTime"`
 
-	Latency      float64 `json:"upstreamLatency"`
-	HeaderTime   float64 `json:"upstreamHeaderTime"`
-	ResponseTime float64 `json:"upstreamResponseTime"`
-	Namespace    string  `json:"namespace"`
-	Ingress      string  `json:"ingress"`
-	Service      string  `json:"service"`
-	Canary       string  `json:"canary"`
-	Path         string  `json:"path"`
+	Latency             float64 `json:"upstreamLatency"`
+	HeaderTime          float64 `json:"upstreamHeaderTime"`
+	ResponseTime        float64 `json:"upstreamResponseTime"`
+	UpstreamCacheStatus string  `json:"upstreamCacheStatus"`
+	Namespace           string  `json:"namespace"`
+	Ingress             string  `json:"ingress"`
+	Service             string  `json:"service"`
+	Canary              string  `json:"canary"`
+	Path                string  `json:"path"`
 }
 
 // HistogramBuckets allow customizing prometheus histogram buckets values
@@ -57,8 +57,6 @@ type HistogramBuckets struct {
 	LengthBuckets []float64
 	SizeBuckets   []float64
 }
-
-type metricMapping map[string]prometheus.Collector
 
 // SocketCollector stores prometheus metrics and ingress meta-data
 type SocketCollector struct {
@@ -103,7 +101,6 @@ var requestTags = []string{
 func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPerUndefinedHost, reportStatusClasses bool, buckets HistogramBuckets, bucketFactor float64, maxBuckets uint32, excludeMetrics []string) (*SocketCollector, error) {
 	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
-	//nolint:errcheck // Ignore unlink error
 	_ = syscall.Unlink(socket)
 
 	listener, err := net.Listen("unix", socket)
@@ -126,16 +123,6 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPer
 	if metricsPerHost {
 		requestTags = append(requestTags, "host")
 	}
-
-	em := make(map[string]struct{}, len(excludeMetrics))
-	for _, m := range excludeMetrics {
-		// remove potential nginx_ingress_controller prefix from the metric name
-		// TBD: how to handle fully qualified histogram metrics e.g. _buckets and _sum. Should we just remove the suffix and remove the histogram metric or ignore it?
-		em[strings.TrimPrefix(m, "nginx_ingress_controller_")] = struct{}{}
-	}
-
-	// create metric mapping with only the metrics that are not excluded
-	mm := make(metricMapping)
 
 	sc := &SocketCollector{
 		listener: listener,
@@ -263,38 +250,6 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPer
 	return sc, nil
 }
 
-func containsMetric(excludeMetrics map[string]struct{}, name string) bool {
-	if _, ok := excludeMetrics[name]; ok {
-		klog.V(3).InfoS("Skipping metric", "metric", name)
-		return true
-	}
-	return false
-}
-
-func counterMetric(opts *prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.CounterVec {
-	if containsMetric(excludeMetrics, opts.Name) {
-		return nil
-	}
-	m := prometheus.NewCounterVec(
-		*opts,
-		requestTags,
-	)
-	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
-	return m
-}
-
-func histogramMetric(opts *prometheus.HistogramOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.HistogramVec {
-	if containsMetric(excludeMetrics, opts.Name) {
-		return nil
-	}
-	m := prometheus.NewHistogramVec(
-		*opts,
-		requestTags,
-	)
-	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
-	return m
-}
-
 func (sc *SocketCollector) handleMessage(msg []byte) {
 	klog.V(5).InfoS("Metric", "message", string(msg))
 
@@ -319,23 +274,25 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 
 		// Note these must match the order in requestTags at the top
 		requestLabels := prometheus.Labels{
-			"status":    stats.Status,
-			"method":    stats.Method,
-			"path":      stats.Path,
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"service":   stats.Service,
-			"canary":    stats.Canary,
+			"status":              stats.Status,
+			"upstreamCacheStatus": stats.UpstreamCacheStatus,
+			"method":              stats.Method,
+			"path":                stats.Path,
+			"namespace":           stats.Namespace,
+			"ingress":             stats.Ingress,
+			"service":             stats.Service,
+			"canary":              stats.Canary,
 		}
 
 		collectorLabels := prometheus.Labels{
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"status":    stats.Status,
-			"service":   stats.Service,
-			"canary":    stats.Canary,
-			"method":    stats.Method,
-			"path":      stats.Path,
+			"namespace":           stats.Namespace,
+			"upstreamCacheStatus": stats.UpstreamCacheStatus,
+			"ingress":             stats.Ingress,
+			"status":              stats.Status,
+			"service":             stats.Service,
+			"canary":              stats.Canary,
+			"method":              stats.Method,
+			"path":                stats.Path,
 		}
 		if sc.metricsPerHost {
 			requestLabels["host"] = stats.Host
