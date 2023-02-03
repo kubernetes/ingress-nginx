@@ -826,16 +826,18 @@ defaultBackend:
     #  - name: copy-portal-skins
     #    emptyDir: {}
 
-    autoscaling:
-        annotations: {}
-        enabled: false
-        minReplicas: 1
-        maxReplicas: 2
-        targetCPUUtilizationPercentage: 50
-        targetMemoryUtilizationPercentage: 50
-    service:
-        annotations: {}
-        # clusterIP: ""
+  autoscaling:
+    annotations: {}
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+
+  service:
+    annotations: {}
+
+    # clusterIP: ""
 
         # -- List of IP addresses at which the default backend service is available
         ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
