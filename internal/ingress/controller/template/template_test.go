@@ -2109,3 +2109,30 @@ func TestCleanConf(t *testing.T) {
 		t.Errorf("cleanConf result don't match with expected: %s", diff)
 	}
 }
+
+func TestBuildCorsOriginRegex(t *testing.T) {
+	testCases := []struct {
+		allowCredentials string
+		allowedOrigins   []string
+		expected         string
+	}{
+		{
+			"true",
+			[]string{"*"},
+			"set $cors_origin $http_origin;\nset $cors 'true';",
+		},
+		{
+			"false",
+			[]string{"*"},
+			"set $cors_origin *;\nset $cors 'true';",
+		},
+	}
+
+	for _, testCase := range testCases {
+		actual := buildCorsOriginRegex(testCase.allowCredentials, testCase.allowedOrigins)
+
+		if testCase.expected != actual {
+			t.Errorf("CORS origin block not matching. Actual: '%s', Expected '%s'", actual, testCase.expected)
+		}
+	}
+}
