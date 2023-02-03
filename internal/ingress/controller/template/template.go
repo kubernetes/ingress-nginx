@@ -1788,7 +1788,7 @@ func buildOriginRegex(origin string) string {
 
 func buildCorsOriginRegex(corsOrigins []string) string {
 	if len(corsOrigins) == 1 && corsOrigins[0] == "*" {
-		return "set $http_origin *;\nset $cors 'true';"
+		return "set $cors_origin *;\nset $cors 'true';"
 	}
 
 	var originsRegex string = "if ($http_origin ~* ("
@@ -1802,6 +1802,6 @@ func buildCorsOriginRegex(corsOrigins []string) string {
 			}
 		}
 	}
-	originsRegex = originsRegex + ")$ ) { set $cors 'true'; }"
+	originsRegex = originsRegex + ")$ ) { set $cors_origin $http_origin;\nset $cors 'true'; }"
 	return originsRegex
 }
