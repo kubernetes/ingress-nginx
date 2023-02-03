@@ -923,7 +923,7 @@ stream {
      {{ $cors := .CorsConfig }}
      # Cors Preflight methods needs additional options and different Return Code
      {{ if $cors.CorsAllowOrigin }}
-        {{ buildCorsOriginRegex $cors.CorsAllowOrigin }}
+        {{ buildCorsOriginRegex $cors.CorsAllowCredentials $cors.CorsAllowOrigin }}
      {{ end }}
      if ($request_method = 'OPTIONS') {
         set $cors ${cors}options;

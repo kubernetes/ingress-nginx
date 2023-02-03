@@ -1786,9 +1786,13 @@ func buildOriginRegex(origin string) string {
 	return fmt.Sprintf("(%s)", origin)
 }
 
-func buildCorsOriginRegex(corsOrigins []string) string {
+func buildCorsOriginRegex(corsAllowCredentials string, corsOrigins []string) string {
 	if len(corsOrigins) == 1 && corsOrigins[0] == "*" {
-		return "set $cors_origin *;\nset $cors 'true';"
+		corsOrigin := "*"
+		if corsAllowCredentials == "true" {
+			corsOrigin = "$http_origin"
+		}
+		return fmt.Sprintf("set $cors_origin %s;\nset $cors 'true';", corsOrigin)
 	}
 
 	var originsRegex string = "if ($http_origin ~* ("
