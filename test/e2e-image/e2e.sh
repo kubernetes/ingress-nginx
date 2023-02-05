@@ -41,9 +41,19 @@ reportFileNamePrefix="report-e2e-test-suite"
 echo -e "${BGREEN}Running e2e test suite (FOCUS=${FOCUS})...${NC}"
 ginkgo "${ginkgo_args[@]}"               \
   -focus="${FOCUS}"                  \
-  -skip="\[Serial\]|\[MemoryLeak\]"  \
+  -skip="\[Serial\]|\[MemoryLeak\]|\[TopologyHints\]"  \
   -nodes="${E2E_NODES}" \
   --junit-report=$reportFileNamePrefix.xml \
+  /e2e.test
+# Create configMap out of a compressed report file for extraction later
+
+# Must be isolated, there is a collision if multiple helms tries to install same clusterRole at same time
+echo -e "${BGREEN}Running e2e test for topology aware hints...${NC}"
+ginkgo "${ginkgo_args[@]}" \
+  -focus="\[TopologyHints\]" \
+  -skip="\[Serial\]|\[MemoryLeak\]]" \
+  -nodes="${E2E_NODES}" \
+  --junit-report=$reportFileNamePrefix-topology.xml \
   /e2e.test
 # Create configMap out of a compressed report file for extraction later
 
