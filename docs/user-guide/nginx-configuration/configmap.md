@@ -25,21 +25,6 @@ data:
 
 The following table shows a configuration option's name, type, and the default value:
 
-|name|type|default|
-|:---|:---|:------|
-|[enable-opentelemetry](#enable-opentelemetry)|bool|"false"|
-|[opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-span)|bool|"true"|
-|[opentelemetry-operation-name](#opentelemetry-operation-name)|string|""|
-|[opentelemetry-config](#/etc/nginx/opentelemtry.toml)|string|"/etc/nginx/opentelemtry.toml"|
-|[otlp-collector-host](#otlp-collector-host)|string|""|
-|[otlp-collector-port](#otlp-collector-port)|int|4317|
-|[otel-max-queuesize](#otel-max-queuesize)|int||
-|[otel-schedule-delay-millis](#otel-schedule-delay-millis)|int||
-|[otel-max-export-batch-size](#otel-max-export-batch-size)|int||
-|[otel-service-name](#otel-service-name)|string|"nginx"|
-|[otel-sampler](#otel-sampler)|string|"AlwaysOff"|
-|[otel-sampler-parent-based](#otel-sampler-parent-based)|bool|"false"|
-|[otel-sampler-ratio](#otel-sampler-ratio)|float|0.01|
 | name                                                                            | type         | default                                                                                                                                                                                                                                                                                                                                                      |
 |:--------------------------------------------------------------------------------|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [add-headers](#add-headers)                                                     | string       | ""                                                                                                                                                                                                                                                                                                                                                           |
@@ -172,6 +157,32 @@ The following table shows a configuration option's name, type, and the default v
 | [datadog-operation-name-override](#datadog-operation-name-override)             | string       | "nginx.handle"                                                                                                                                                                                                                                                                                                                                               |
 | [datadog-priority-sampling](#datadog-priority-sampling)                         | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |
 | [datadog-sample-rate](#datadog-sample-rate)                                     | float        | 1.0                                                                                                                                                                                                                                                                                                                                                          |
+|[enable-opentelemetry](#enable-opentelemetry)                                    |bool          |"false"
+                                   |
+|[opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-span)          |bool          |"true"
+                                   |
+|[opentelemetry-operation-name](#opentelemetry-operation-name)                    |string        |""
+                                   |
+|[opentelemetry-config](#/etc/nginx/opentelemtry.toml)                            |string        |"/etc/nginx/opentelemtry.toml"
+                                   |
+|[otlp-collector-host](#otlp-collector-host)                                      |string        |""
+                                   |
+|[otlp-collector-port](#otlp-collector-port)                                      |int           |4317
+                                   |
+|[otel-max-queuesize](#otel-max-queuesize)                                        |int           |
+                                   |
+|[otel-schedule-delay-millis](#otel-schedule-delay-millis)                        |int           |
+                                   |
+|[otel-max-export-batch-size](#otel-max-export-batch-size)                        |int           |
+                                   |
+|[otel-service-name](#otel-service-name)                                          |string        |"nginx"
+                                   |
+|[otel-sampler](#otel-sampler)|string                                             |"AlwaysOff"   |
+                                   |
+|[otel-sampler-parent-based](#otel-sampler-parent-based)                          |bool          |"false"
+                                   |
+|[otel-sampler-ratio](#otel-sampler-ratio)                                        |float         |0.01
+                                   |
 | [main-snippet](#main-snippet)                                                   | string       | ""                                                                                                                                                                                                                                                                                                                                                           |
 | [http-snippet](#http-snippet)                                                   | string       | ""                                                                                                                                                                                                                                                                                                                                                           |
 | [server-snippet](#server-snippet)                                               | string       | ""                                                                                                                                                                                                                                                                                                                                                           |
