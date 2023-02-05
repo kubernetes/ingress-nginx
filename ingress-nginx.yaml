@@ -1,0 +1,68 @@
+CURRENT_VERSION: "v1.5.1"
+GOLANG_VERSION: "1.19.2"
+GIT_TAG: "controller-v1.5.1"
+NGINX_BASE_IMAGE: "registry.k8s.io/ingress-nginx/nginx:0b5e0685112e4537ee20a0bdbba451e9f6158aa3@sha256:3f5e28bb248d5170e77b77fc2a1a385724aeff41a0b34b5afad7dd9cf93de000"
+NGINX_VERSION: "1.21.6"
+VERSION_TABLE:
+  - "v1.5.1":
+    - Alpine: "3.16.2"
+    - Kubernetes: ["1.25","1.24","1.23"]
+    - NGINX: "1.21.6"
+    - CONTROLLER_IMAGE: "registry.k8s.io/ingress-nginx/controller:v1.5.1@sha256:4ba73c697770664c1e00e9f968de14e08f606ff961c76e5d7033a4a9c593c629"
+    - CHROOT_CONTROLLER_IMAGE: "registry.k8s.io/ingress-nginx/controller-chroot:v1.5.1@sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529bad0d178fb36147345"
+  - "v1.4.0":
+      - Alpine: "3.16.2"
+      - Kubernetes: [  "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.3.1":
+      - Alpine: "3.16.2"
+      - Kubernetes: [  "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.3.0":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.2.1":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.1.3":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.1.2":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.1.1":
+      - Alpine: "3.16.2"
+      - Kubernetes: [  "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.1.0":
+      - Alpine: "3.16.2"
+      - Kubernetes: [  "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.0.5":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.0.4":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.0.3":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.0.2":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.0.1":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"
+  - "v1.0.0":
+      - Alpine: "3.16.2"
+      - Kubernetes: [ "1.24","1.23", "1.22", "1.21", "1.20" ]
+      - NGINX: "1.19.10"

@@ -14,9 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ! [ -z "$DEBUG" ]; then
+if [ -n "$DEBUG" ]; then
 	set -x
+else
+  trap cleanup EXIT
 fi
+
+function cleanup {
+  kubectl delete pod e2e 2>/dev/null || true
+}
 
 set -o errexit
 set -o nounset
@@ -43,16 +49,11 @@ if [ "$missing" = true ]; then
   exit 1
 fi
 
-function cleanup {
-  kubectl delete pod e2e 2>/dev/null || true
-}
-trap cleanup EXIT
-
 E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-}
 FOCUS=${FOCUS:-.*}
 
 BASEDIR=$(dirname "$0")
-NGINX_BASE_IMAGE=$(cat $BASEDIR/../NGINX_BASE)
+NGINX_BASE_IMAGE=$(cat $BASEDIR/../../NGINX_BASE)
 
 export E2E_CHECK_LEAKS
 export FOCUS

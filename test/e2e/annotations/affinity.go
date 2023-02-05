@@ -35,6 +35,8 @@ import (
 var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 	f := framework.NewDefaultFramework("affinity")
 
+	pathImpl := networking.PathTypeImplementationSpecific
+
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
 	})
@@ -276,6 +278,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 		annotations["nginx.ingress.kubernetes.io/session-cookie-path"] = "/foo/bar"
 
 		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
+
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -299,6 +303,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 		annotations["nginx.ingress.kubernetes.io/use-regex"] = "true"
 
 		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
+
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

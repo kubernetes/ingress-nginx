@@ -24,11 +24,14 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
+	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-log", func() {
 	f := framework.NewDefaultFramework("rewrite")
+
+	pathImpl := networking.PathTypeImplementationSpecific
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
@@ -126,6 +129,7 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
 		ing = framework.NewSingleIngress("regex", "/foo.+", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -168,6 +172,8 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
 		ing = framework.NewSingleIngress("regex", "/foo/bar/[a-z]{3}", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
+
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -196,6 +202,8 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend/$1",
 		}
 		ing := framework.NewSingleIngress("regex", "/foo/bar/(.+)", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
+
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

@@ -32,6 +32,7 @@ var (
 	ingressOperation = []string{"controller_namespace", "controller_class", "controller_pod", "namespace", "ingress"}
 	sslLabelHost     = []string{"namespace", "class", "host", "secret_name"}
 	sslInfoLabels    = []string{"namespace", "class", "host", "secret_name", "identifier", "issuer_organization", "issuer_common_name", "serial_number", "public_key_algorithm"}
+	orphanityLabels  = []string{"controller_namespace", "controller_class", "controller_pod", "namespace", "ingress", "type"}
 )
 
 // Controller defines base metrics about the ingress controller
@@ -48,6 +49,7 @@ type Controller struct {
 	checkIngressOperationErrors *prometheus.CounterVec
 	sslExpireTime               *prometheus.GaugeVec
 	sslInfo                     *prometheus.GaugeVec
+	OrphanIngress               *prometheus.GaugeVec
 
 	constLabels prometheus.Labels
 	labels      prometheus.Labels
@@ -171,6 +173,15 @@ func NewController(pod, namespace, class string) *Controller {
 			},
 			[]string{"name"},
 		),
+		OrphanIngress: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: PrometheusNamespace,
+				Name:      "orphan_ingress",
+				Help: `Gauge reporting status of ingress orphanity, 1 indicates orphaned ingress.
+			'namespace' is the string used to identify namespace of ingress, 'ingress' for ingress name and 'type' for 'no-service' or 'no-endpoint' of orphanity`,
+			},
+			orphanityLabels,
+		),
 	}
 
 	return cm
@@ -214,6 +225,26 @@ func (cm *Controller) IncCheckErrorCount(namespace, name string) {
 	cm.checkIngressOperationErrors.MustCurryWith(cm.constLabels).With(labels).Inc()
 }
 
+// IncOrphanIngress sets the the orphaned ingress gauge to one
+func (cm *Controller) IncOrphanIngress(namespace string, name string, orphanityType string) {
+	labels := prometheus.Labels{
+		"namespace": namespace,
+		"ingress":   name,
+		"type":      orphanityType,
+	}
+	cm.OrphanIngress.MustCurryWith(cm.constLabels).With(labels).Set(1.0)
+}
+
+// DecOrphanIngress sets the the orphaned ingress gauge to zero (all services has their endpoints)
+func (cm *Controller) DecOrphanIngress(namespace string, name string, orphanityType string) {
+	labels := prometheus.Labels{
+		"namespace": namespace,
+		"ingress":   name,
+		"type":      orphanityType,
+	}
+	cm.OrphanIngress.MustCurryWith(cm.constLabels).With(labels).Set(0.0)
+}
+
 // ConfigSuccess set a boolean flag according to the output of the controller configuration reload
 func (cm *Controller) ConfigSuccess(hash uint64, success bool) {
 	if success {
@@ -242,6 +273,7 @@ func (cm Controller) Describe(ch chan<- *prometheus.Desc) {
 	cm.sslInfo.Describe(ch)
 	cm.leaderElection.Describe(ch)
 	cm.buildInfo.Describe(ch)
+	cm.OrphanIngress.Describe(ch)
 }
 
 // Collect implements the prometheus.Collector interface.
@@ -257,6 +289,7 @@ func (cm Controller) Collect(ch chan<- prometheus.Metric) {
 	cm.sslInfo.Collect(ch)
 	cm.leaderElection.Collect(ch)
 	cm.buildInfo.Collect(ch)
+	cm.OrphanIngress.Collect(ch)
 }
 
 // SetSSLExpireTime sets the expiration time of SSL Certificates
