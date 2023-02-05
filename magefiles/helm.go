@@ -20,14 +20,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	semver "github.com/blang/semver/v4"
-	"github.com/helm/helm/pkg/chartutil"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	yamlpath "github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
-	"os"
-	"strings"
+	"helm.sh/helm/v3/pkg/chartutil"
 )
 
 const HelmChartPath = "charts/ingress-nginx/Chart.yaml"
