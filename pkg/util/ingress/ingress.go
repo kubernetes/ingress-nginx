@@ -282,9 +282,11 @@ func checkPath(paths []networkingv1.HTTPIngressPath, enablePathTypeValidation bo
 
 		switch pathType := *path.PathType; pathType {
 		case networkingv1.PathTypeImplementationSpecific:
-			//only match on regex chars per Ingress spec when path is implementation specific
-			if !regexSpecificChars.MatchString(path.Path) {
-				return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
+			if enablePathTypeValidation {
+				//only match on regex chars per Ingress spec when path is implementation specific
+				if !regexSpecificChars.MatchString(path.Path) {
+					return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
+				}
 			}
 
 		case networkingv1.PathTypeExact, networkingv1.PathTypePrefix:

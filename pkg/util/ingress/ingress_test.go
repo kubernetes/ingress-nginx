@@ -272,7 +272,7 @@ func TestValidateIngressPath(t *testing.T) {
 			name:                     "should reject path when the allowed additional set does not match",
 			wantErr:                  true,
 			additionalChars:          "().?",
-			EnablePathTypeValidation: false,
+			EnablePathTypeValidation: true,
 			copyIng:                  generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.+)"),
 		},
 		{
@@ -291,7 +291,7 @@ func TestValidateIngressPath(t *testing.T) {
 		{
 			name:                     "should block if at least one path is bad",
 			wantErr:                  true,
-			EnablePathTypeValidation: false,
+			EnablePathTypeValidation: true,
 			copyIng:                  generateComplexIngress(generateDumbIngressforPathTest(&pathTypeImplSpecific, "/foo/bar/(.?)")),
 		},
 	}
