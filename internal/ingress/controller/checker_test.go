@@ -45,6 +45,7 @@ func TestNginxCheck(t *testing.T) {
 
 			mux := http.NewServeMux()
 
+			// Status server
 			listener, err := tryListen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
 			if err != nil {
 				t.Fatalf("creating tcp listener: %s", err)
@@ -65,9 +66,30 @@ func TestNginxCheck(t *testing.T) {
 
 			n := &NGINXController{
 				cfg: &Configuration{
-					ListenPorts: &ngx_config.ListenPorts{},
+					ListenPorts: &ngx_config.ListenPorts{
+						HTTP: 80,
+					},
 				},
 			}
+
+			// http server
+			httpListener, err := tryListen("tcp", fmt.Sprintf(":%v", n.cfg.ListenPorts.HTTP))
+			if err != nil {
+				t.Fatalf("creating tcp listener: %s", err)
+			}
+			defer httpListener.Close()
+
+			httpServer := &httptest.Server{
+				Listener: httpListener,
+				Config: &http.Server{
+					Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						w.WriteHeader(http.StatusOK)
+						fmt.Fprintf(w, "ok")
+					}),
+				},
+			}
+			defer httpServer.Close()
+			httpServer.Start()
 
 			t.Run("no pid or process", func(t *testing.T) {
 				if err := callHealthz(true, tt.healthzPath, mux); err == nil {

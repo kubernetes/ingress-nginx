@@ -69,5 +69,14 @@ func (n *NGINXController) Check(_ *http.Request) error {
 		return fmt.Errorf("dynamic load balancer not started")
 	}
 
+	statusCode, _, err = nginx.NewGetHealthzRequest(n.cfg.ListenPorts.HTTP, "/healthz")
+	if err != nil {
+		return fmt.Errorf("checking if default http port is responding: %w", err)
+	}
+
+	if statusCode != 200 {
+		return fmt.Errorf("default nginx http port not responding")
+	}
+
 	return nil
 }
