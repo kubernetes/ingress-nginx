@@ -99,4 +99,14 @@ var _ = framework.DescribeAnnotation("upstream-hash-by-*", func() {
 		podMap := startIngress(f, annotations)
 		assert.Equal(ginkgo.GinkgoT(), len(podMap), 3)
 	})
+
+	ginkgo.It("should connect to the same pod with bounded loads", func() {
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/upstream-hash-by": "$request_uri",
+			"nginx.ingress.kubernetes.io/upstream-hash-by-balance-factor": "1.5",
+		}
+
+		podMap := startIngress(f, annotations)
+		assert.Equal(ginkgo.GinkgoT(), len(podMap), 1)
+	})
 })
