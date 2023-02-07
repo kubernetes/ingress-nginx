@@ -485,7 +485,7 @@ func TestCollector(t *testing.T) {
 				t.Errorf("registering collector failed: %s", err)
 			}
 
-			sc.SetHosts(sets.NewString("testshop.com"))
+			sc.SetHosts(sets.New[string]("testshop.com"))
 
 			for _, d := range c.data {
 				sc.handleMessage([]byte(d))
