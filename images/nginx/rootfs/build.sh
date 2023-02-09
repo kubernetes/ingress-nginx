@@ -123,9 +123,6 @@ export LUA_RESTY_MEMCACHED_VERSION=0.16
 # Check for recent changes: https://github.com/openresty/lua-resty-redis/compare/v0.30...master
 export LUA_RESTY_REDIS_VERSION=0.30
 
-# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6.1...master
-export LUA_RESTY_IPMATCHER_VERSION=0.6.1
-
 # Check for recent changes:  https://github.com/microsoft/mimalloc/compare/v1.7.6...master
 export MIMALOC_VERSION=1.7.6
 
@@ -316,9 +313,6 @@ get_src 42893da0e3de4ec180c9bf02f82608d78787290a70c5644b538f29d243147396 \
 
 get_src c15aed1a01c88a3a6387d9af67a957dff670357f5fdb4ee182beb44635eef3f1 \
         "https://github.com/openresty/lua-resty-redis/archive/v$LUA_RESTY_REDIS_VERSION.tar.gz"
-
-get_src efb767487ea3f6031577b9b224467ddbda2ad51a41c5867a47582d4ad85d609e \
-        "https://github.com/api7/lua-resty-ipmatcher/archive/v$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
 
 get_src d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da \
         "https://github.com/microsoft/mimalloc/archive/refs/tags/v${MIMALOC_VERSION}.tar.gz"
@@ -711,9 +705,6 @@ make install
 
 cd "$BUILD_PATH/lua-resty-redis-$LUA_RESTY_REDIS_VERSION"
 make install
-
-cd "$BUILD_PATH/lua-resty-ipmatcher-$LUA_RESTY_IPMATCHER_VERSION"
-INST_LUADIR=/usr/local/lib/lua make install
 
 cd "$BUILD_PATH/mimalloc-$MIMALOC_VERSION"
 mkdir -p out/release

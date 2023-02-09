@@ -10,7 +10,8 @@ description = {
    license = "Apache License 2.0"
 }
 dependencies = {
-   "lua-resty-global-throttle >= 0.2"
+   "lua-resty-global-throttle >= 0.2",
+   "lua-resty-ipmatcher >= 0.6.1"
 }
 build = {
    type = "make",
