@@ -9,7 +9,7 @@ require (
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.11.0
+	helm.sh/helm/v3 v3.11.1
 )
 
 require (
