@@ -105,9 +105,6 @@ export LUA_RESTY_COOKIE_VERSION=303e32e512defced053a6484bc0745cf9dc0d39e
 # Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/v0.22...master
 export LUA_RESTY_DNS=0.22
 
-# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.16.1...master
-export LUA_RESTY_HTTP=0ce55d6d15da140ecc5966fa848204c6fd9074e8
-
 # Check for recent changes: https://github.com/openresty/lua-resty-lock/compare/v0.08...master
 export LUA_RESTY_LOCK=0.08
 
@@ -304,9 +301,6 @@ get_src 2b4683f9abe73e18ca00345c65010c9056777970907a311d6e1699f753141de2 \
 
 get_src 70e9a01eb32ccade0d5116a25bcffde0445b94ad35035ce06b94ccd260ad1bf0 \
         "https://github.com/openresty/lua-resty-dns/archive/v$LUA_RESTY_DNS.tar.gz"
-
-get_src 9fcb6db95bc37b6fce77d3b3dc740d593f9d90dce0369b405eb04844d56ac43f \
-        "https://github.com/ledgetech/lua-resty-http/archive/$LUA_RESTY_HTTP.tar.gz"
 
 get_src 42893da0e3de4ec180c9bf02f82608d78787290a70c5644b538f29d243147396 \
         "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
@@ -688,10 +682,6 @@ cd "$BUILD_PATH/lua-resty-dns-$LUA_RESTY_DNS"
 make install
 
 cd "$BUILD_PATH/lua-resty-lock-$LUA_RESTY_LOCK"
-make install
-
-# required for OCSP verification
-cd "$BUILD_PATH/lua-resty-http-$LUA_RESTY_HTTP"
 make install
 
 cd "$BUILD_PATH/lua-resty-upload-$LUA_RESTY_UPLOAD_VERSION"
