@@ -99,9 +99,6 @@ export LUA_RESTY_CACHE=0.11
 # Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.23...master
 export LUA_RESTY_CORE=0.1.23
 
-# Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/v0.1.0...master
-export LUA_RESTY_COOKIE_VERSION=303e32e512defced053a6484bc0745cf9dc0d39e
-
 # Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/v0.22...master
 export LUA_RESTY_DNS=0.22
 
@@ -289,9 +286,6 @@ fi
 
 get_src 0c551d6898f89f876e48730f9b55790d0ba07d5bc0aa6c76153277f63c19489f \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz"
-
-get_src 5ed48c36231e2622b001308622d46a0077525ac2f751e8cc0c9905914254baa4 \
-        "https://github.com/cloudflare/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz"
 
 get_src e810ed124fe788b8e4aac2c8960dda1b9a6f8d0ca94ce162f28d3f4d877df8af \
         "https://github.com/openresty/lua-resty-lrucache/archive/v$LUA_RESTY_CACHE.tar.gz"
@@ -668,10 +662,6 @@ export LUA_INCLUDE_DIR=/usr/local/include/luajit-2.1
 ln -s $LUA_INCLUDE_DIR /usr/include/lua5.1
 
 cd "$BUILD_PATH/lua-cjson-$LUA_CJSON_VERSION"
-make all
-make install
-
-cd "$BUILD_PATH/lua-resty-cookie-$LUA_RESTY_COOKIE_VERSION"
 make all
 make install
 

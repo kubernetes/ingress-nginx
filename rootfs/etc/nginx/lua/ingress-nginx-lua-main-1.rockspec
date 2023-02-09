@@ -12,7 +12,8 @@ description = {
 dependencies = {
    "lua-resty-global-throttle >= 0.2",
    "lua-resty-ipmatcher >= 0.6.1",
-   "lua-resty-http >= 0.16.1"
+   "lua-resty-http >= 0.16.1",
+   "lua-resty-cookie >= 0.1.0"
 }
 build = {
    type = "make",
