@@ -32,6 +32,7 @@ import (
 
 const HelmChartPath = "charts/ingress-nginx/Chart.yaml"
 const HelmChartValues = "charts/ingress-nginx/values.yaml"
+const ArtHubImage = "public.ecr.aws/artifacthub/ah:v1.5.0"
 
 type Helm mg.Namespace
 
@@ -100,9 +101,13 @@ func updateChartReleaseNotes(releasesNotes []string) {
 	Info("HELM Updating the Chart Release notes")
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
 	CheckIfError(err, "HELM Could not Load Chart to update release notes %s", HelmChartPath)
-	var releaseNoteString string
+	releaseNoteString := ""
 	for i := range releasesNotes {
-		releaseNoteString = fmt.Sprintf("%s - %s\n", releaseNoteString, releasesNotes[i])
+		if len(releaseNoteString) == 0 {
+			releaseNoteString = fmt.Sprintf("- \"%s\"\n", releasesNotes[i])
+		} else {
+			releaseNoteString = fmt.Sprintf("%s- \"%s\"\n", releaseNoteString, releasesNotes[i])
+		}
 	}
 	Info("HELM Release note string %s", releaseNoteString)
 	chart.Annotations["artifacthub.io/changes"] = releaseNoteString
@@ -117,6 +122,36 @@ func UpdateChartChangelog() {
 // UpdateAppVersion Updates the Helm App Version of Ingress Nginx Controller
 func (Helm) UpdateChartValue(key, value string) {
 	updateChartValue(key, value)
+}
+
+func runArtifactHub() error {
+	Info("---------------------Running Artifact Hub Lint on Charts---------------")
+	dir, err := os.Getwd()
+	if err != nil {
+		ErrorF("Could not get current dir %s", err)
+		return err
+	}
+
+	return sh.RunV("docker",
+		"run",
+		"--rm",
+		"-v", fmt.Sprintf("%s:/work", dir),
+		"-w", "/work",
+		ArtHubImage,
+		"ah", "lint", "-p", "charts/ingress-nginx")
+}
+
+func validateHelm() error {
+	err := runArtifactHub()
+	if err != nil {
+		return err
+	}
+	Info("---------------------Running Verify Charts Lint Script---------------")
+	err = sh.RunV("./build/run-in-docker.sh", "./hack/verify-chart-lint.sh")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func updateChartValue(key, value string) {
