@@ -14,6 +14,25 @@
 
 ARG BASE_IMAGE
 
+# Prepare Lua files and their dependencies.
+FROM ${BASE_IMAGE} as lua_builder
+RUN apk add \
+  make \
+  wget \
+  git
+RUN curl -sSL -o /tmp/luarocks.tar.gz https://github.com/luarocks/luarocks/archive/refs/tags/v3.9.2.tar.gz \
+  && echo "a0b36cd68586cd79966d0106bb2e5a4f5523327867995fd66bee4237062b3e3b */tmp/luarocks.tar.gz" | sha256sum -c - \
+  && tar -C /tmp -xzf /tmp/luarocks.tar.gz \
+  && cd /tmp/luarocks* \
+  && ./configure \
+  && make \
+  && make install
+COPY etc/nginx/lua /lua
+WORKDIR /lua
+RUN luarocks make --local --tree /luarocks ingress-nginx-lua-main-1.rockspec
+
+
+# Build the final image.
 FROM ${BASE_IMAGE}
 
 ARG TARGETARCH
@@ -39,7 +58,11 @@ RUN apk update \
     diffutils \
   && rm -rf /var/cache/apk/*
 
-COPY --chown=www-data:www-data etc /etc
+COPY --chown=www-data:www-data etc/nginx/template /etc/nginx/template
+COPY --chown=www-data:www-data etc/nginx/nginx.conf /etc/nginx
+COPY --chown=www-data:www-data etc/nginx/opentracing.json /etc/nginx
+COPY --from=lua_builder --chown=www-data:www-data /luarocks/lib/luarocks/rocks-5.1/ingress-nginx-lua/main-1/ingress-nginx-lua /etc/nginx/lua 
+COPY --from=lua_builder --chown=www-data:www-data /luarocks/share/lua/5.1 /usr/local/lib/lua
 
 COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
 COPY --chown=www-data:www-data bin/${TARGETARCH}/nginx-ingress-controller /
