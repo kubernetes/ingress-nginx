@@ -253,7 +253,6 @@ Kubernetes: `>=1.20.0-0`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | commonLabels | object | `{}` |  |
-| controller.EnablePathTypeValidation | bool | `false` | This configuration defines if Ingress Controller should validate pathType. If false, special characters will be allowed on paths of any pathType. If true, special characters are only allowed on paths with pathType = ImplementationSpecific |
 | controller.addHeaders | object | `{}` | Will add custom headers before sending response traffic to the client according to: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers |
 | controller.admissionWebhooks.annotations | object | `{}` |  |
 | controller.admissionWebhooks.certManager.admissionCert.duration | string | `""` |  |
