@@ -466,11 +466,14 @@ func New(
 
 			var errOld, errCur error
 			var classCur string
-			if !icConfig.IgnoreIngressClass {
-				_, errOld = store.GetIngressClass(oldIng, icConfig)
-				classCur, errCur = store.GetIngressClass(curIng, icConfig)
-			}
-			if errOld != nil && errCur == nil {
+
+			_, errOld = store.GetIngressClass(oldIng, icConfig)
+			classCur, errCur = store.GetIngressClass(curIng, icConfig)
+
+			if errCur != nil && errOld != nil {
+				klog.InfoS("Ignoring ingress because of error while validating ingress class", "ingress", klog.KObj(curIng), "error", errCur)
+				return
+			} else if errOld != nil && errCur == nil {
 				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(curIng))
 					return
