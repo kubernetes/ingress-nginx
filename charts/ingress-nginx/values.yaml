@@ -87,11 +87,6 @@ controller:
   # Global snippets in ConfigMap are still respected
   allowSnippetAnnotations: true
 
-  # -- This configuration defines if Ingress Controller should validate pathType.
-  # If false, special characters will be allowed on paths of any pathType.
-  # If true, special characters are only allowed on paths with pathType = ImplementationSpecific
-  EnablePathTypeValidation: false
-
   # -- Required for use with CNI based kubernetes installations (such as ones set up by kubeadm),
   # since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920
   # is merged
