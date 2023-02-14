@@ -153,6 +153,9 @@ func updateChartValue(key, value string) {
 	Info("HELM Ingress Nginx Helm Chart update %s %s", key, value)
 }
 
+func (Helm) Helmdocs() error {
+	return runHelmDocs()
+}
 func runHelmDocs() error {
 	err := installHelmDocs()
 	if err != nil {

@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.4.2](https://img.shields.io/badge/Version-4.4.2-informational?style=flat-square) ![AppVersion: 1.5.1](https://img.shields.io/badge/AppVersion-1.5.1-informational?style=flat-square)
+![Version: 4.5.0](https://img.shields.io/badge/Version-4.5.0-informational?style=flat-square) ![AppVersion: 1.6.3](https://img.shields.io/badge/AppVersion-1.6.3-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -253,7 +253,6 @@ Kubernetes: `>=1.20.0-0`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | commonLabels | object | `{}` |  |
-| controller.EnablePathTypeValidation | bool | `false` | This configuration defines if Ingress Controller should validate pathType. If false, special characters will be allowed on paths of any pathType. If true, special characters are only allowed on paths with pathType = ImplementationSpecific |
 | controller.addHeaders | object | `{}` | Will add custom headers before sending response traffic to the client according to: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers |
 | controller.admissionWebhooks.annotations | object | `{}` |  |
 | controller.admissionWebhooks.certManager.admissionCert.duration | string | `""` |  |
@@ -334,13 +333,13 @@ Kubernetes: `>=1.20.0-0`
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
 | controller.image.chroot | bool | `false` |  |
-| controller.image.digest | string | `"sha256:4ba73c697770664c1e00e9f968de14e08f606ff961c76e5d7033a4a9c593c629"` |  |
-| controller.image.digestChroot | string | `"sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529bad0d178fb36147345"` |  |
+| controller.image.digest | string | `"sha256:b92667e0afde1103b736e6a3f00dd75ae66eec4e71827d19f19f471699e909d2"` |  |
+| controller.image.digestChroot | string | `"sha256:4b4a249c9a35ac16a8ec0e22f6c522b8707f7e59e656e64a4ad9ace8fea830a4"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.5.1"` |  |
+| controller.image.tag | string | `"v1.6.3"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
