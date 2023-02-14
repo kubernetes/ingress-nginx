@@ -1,14 +1,59 @@
 # Changelog
 
-### 1.5.2
+### 1.6.3
 Images:
 
-<<<<<<< HEAD
- * registry.k8s.io/ingress-nginx/controller:controller-v1.5.2@sha256:3870522ed937c9efb94bfa31a7eb16009831567a0d4cbe01846fc5486d622655
- * registry.k8s.io/ingress-nginx/controller-chroot:controller-v1.5.2@sha256:84613555694f2c59a8b2551126d226c9aa648544ebf0cde1e0df942f7dbce42b
+ * registry.k8s.io/controller:controller-v1.6.3@sha256:b92667e0afde1103b736e6a3f00dd75ae66eec4e71827d19f19f471699e909d2
+ * registry.k8s.io/controller-chroot:controller-v1.6.3@sha256:4b4a249c9a35ac16a8ec0e22f6c522b8707f7e59e656e64a4ad9ace8fea830a4
  
 ### All Changes:
 
+* Revert Implement pathType validation (#9511) (#9607)
+* update history and allow to pass a target test  (#9605)
+* Allow to pass a target test (#9542)
+* Replace deprecated command with environment file (#9581)
+* build 1.6.2 to fix (#9569)
+* add lint on chart before release (#9570)
+* tcpproxy: increase buffer size to 16K (#9548)
+* Move and spell-check Kubernetes 1.22 migration FAQ (#9544)
+* Add CORS template check inside location for externalAuth.SignURL (#8814)
+* fix(grafana-dashboard): remove hardcoded namespace references (#9523)
+* Replace deprecated command with environment file (#9581)
+* add path validation to implementation specific as well (#9573)
+* add lint on chart before release (#9570)
+* Switch logic on path type validation and setting it to false (#9543)
+* tcpproxy: increase buffer size to 16K (#9548)
+* Move and spell-check Kubernetes 1.22 migration FAQ (#9544)
+* Add CORS template check inside location for externalAuth.SignURL (#8814)
+* fix(grafana-dashboard): remove hardcoded namespace references (#9523)
+* Align default value for keepalive_request with NGINX default (#9518)
+* Implement pathType validation (#9511)
+* feat(configmap): expose gzip-disable (#9505)
+* Values: Add missing `controller.metrics.service.labels`. (#9501)
+* Add docs about orphan_ingress metric (#9514)
+* Add new prometheus metric for orphaned ingress (#8230)
+* Sanitise request metrics in monitoring docs (#9384)
+* Change default value of enable-brotli (#9500)
+* feat: support topology aware hints (#9165)
+* Remove 1.5.2 from readme (#9498)
+* Remove nonexistent load flag from docker build commands (#9122)
+* added option to disable sync event creation (#8528)
+* Add buildResolvers to the stream module (#9184)
+* fix: disable auth access logs (#9049)
+* Adding ipdenylist annotation (#8795)
+* Add update updateStrategy and minReadySeconds for defaultBackend (#8506)
+* Fix indentation on serviceAccount annotation (#9129)
+* Update monitoring.md (#9269)
+* add github actions stale bot (#9439)
+* Admission Webhooks/Job: Add `NetworkPolicy`. (#9218)
+* update OpenTelemetry image (#9491)
+* bump OpenTelemetry (#9489)
+* Optional podman support (#9294)
+* fix change images (#9463)
+* move tests to gh actions (#9461)
+* Automated Release Controller 1.5.2 (#9455)
+* Add sslpassthrough tests (#9457)
+* updated the link in RELEASE.md file (#9456)
 * restart 1.5.2 release process (#9450)
 * Update command line arguments documentation (#9224)
 * start release 1.5.2 (#9445)
@@ -20,24 +65,6 @@ Images:
 * update the nginx run container for alpine:3.17.0 (#9430)
 * cleanup: remove ioutil for new go version (#9427)
 * start upgrade to golang 1.19.4 and alpine 3.17.0 (#9417)
-=======
- * registry.k8s.io/controller:controller-v1.5.2@sha256:c1c091b88a6c936a83bd7g098v62f60a87868d12452529bad0d178fb36143346
- * registry.k8s.io/controller-chroot:controller-v1.5.2@sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529b350d178fb36147345
- 
-### All Changes:
-
-<<<<<<< HEAD
->>>>>>> f4164ae0b (THE CHANGELOG WORKS)
-=======
-* upgrade nginx base image (#9436)
-* test the new e2e test images (#9444)
-* avoid builds and tests for non-code changes (#9392)
-* CI updates (#9440)
-* HPA: Add `controller.autoscaling.annotations` to `values.yaml`. (#9253)
-* update the nginx run container for alpine:3.17.0 (#9430)
-* cleanup: remove ioutil for new go version (#9427)
-* start upgrade to golang 1.19.4 and alpine 3.17.0 (#9417)
->>>>>>> 9ecab7d85 (e2e doc updates work now)
 * ci: remove setup-helm step (#9404)
 * ci: remove setup-kind step (#9401)
 * Add reporter for all tests (#9395)
@@ -73,10 +100,17 @@ Images:
 * add containerSecurityContext to extraModules init containers (kubernetes#9016) (#9242)
 
 ### Dependencies updates: 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 9ecab7d85 (e2e doc updates work now)
+* Bump google.golang.org/grpc from 1.52.0 to 1.52.3 (#9555)
+* Bump k8s.io/klog/v2 from 2.80.1 to 2.90.0 (#9553)
+* Bump sigs.k8s.io/controller-runtime from 0.13.1 to 0.14.2 (#9552)
+* Bump google.golang.org/grpc from 1.51.0 to 1.52.0 (#9512)
+* Bump `client-go` to remove dependence on go-autorest dependency (#9488)
+* Bump google.golang.org/grpc from 1.52.0 to 1.52.3 (#9555)
+* Bump k8s.io/klog/v2 from 2.80.1 to 2.90.0 (#9553)
+* Bump sigs.k8s.io/controller-runtime from 0.13.1 to 0.14.2 (#9552)
+* Bump google.golang.org/grpc from 1.51.0 to 1.52.0 (#9512)
+* Bump `client-go` to remove dependence on go-autorest dependency (#9488)
+* Bump golang.org/x/crypto from 0.4.0 to 0.5.0 (#9494)
 * Bump golang.org/x/crypto from 0.3.0 to 0.4.0 (#9397)
 * Bump github.com/onsi/ginkgo/v2 from 2.6.0 to 2.6.1 (#9432)
 * Bump github.com/onsi/ginkgo/v2 from 2.6.0 to 2.6.1 (#9421)
@@ -85,11 +119,6 @@ Images:
 * Bump goreleaser/goreleaser-action from 3.2.0 to 4.1.0 (#9426)
 * Bump actions/dependency-review-action from 3.0.1 to 3.0.2 (#9424)
 * Bump ossf/scorecard-action from 2.0.6 to 2.1.0 (#9422)
-<<<<<<< HEAD
-=======
->>>>>>> f4164ae0b (THE CHANGELOG WORKS)
-=======
->>>>>>> 9ecab7d85 (e2e doc updates work now)
 * Bump github.com/prometheus/common from 0.37.0 to 0.39.0 (#9416)
 * Bump github.com/onsi/ginkgo/v2 from 2.5.1 to 2.6.0 (#9408)
 * Bump github.com/onsi/ginkgo/v2 from 2.5.1 to 2.6.0 (#9398)
@@ -104,12 +133,4 @@ Images:
 * Bump actions/dependency-review-action from 2.5.1 to 3.0.0 (#9301)
 * Bump k8s.io/component-base from 0.25.3 to 0.25.4 (#9300)
  
-<<<<<<< HEAD
-<<<<<<< HEAD
-**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.1...controller-controller-v1.5.2
-=======
-**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.2...controller-controller-v1.5.1
->>>>>>> f4164ae0b (THE CHANGELOG WORKS)
-=======
-**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.1...controller-controller-v1.5.2
->>>>>>> 9ecab7d85 (e2e doc updates work now)
+**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.1...controller-controller-v1.6.3
