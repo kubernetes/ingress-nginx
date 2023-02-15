@@ -3,6 +3,7 @@
 <span class=go>kind: Ingress</span>
 <span class=go>metadata:</span>
 <span class=go>  annotations:</span>
+<span class=go>    nginx.ingress.kubernetes.io/use-regex: &quot;true&quot;</span>
 <span class=go>    nginx.ingress.kubernetes.io/rewrite-target: /$2</span>
 <span class=go>  name: rewrite</span>
 <span class=go>  namespace: default</span>
