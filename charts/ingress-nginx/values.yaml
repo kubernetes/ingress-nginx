@@ -598,8 +598,8 @@ controller:
                 ## for backwards compatibility consider setting the full image url via the repository value below
                 ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
                 ## repository:
-                tag: v20220916-gd32f8c343
-                digest: sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f
+                tag: v20221220-controller-v1.5.1-58-g787ea74b6
+                digest: sha256:4d99688e557396f5baa150e019ff7d5b7334f9b9f9a8dab64038c5c2a006f6b5
                 pullPolicy: IfNotPresent
             # -- Provide a priority class name to the webhook patching job
             ##
