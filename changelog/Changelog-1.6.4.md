@@ -1,13 +1,16 @@
 # Changelog
 
-### 1.6.3
+### 1.6.4
 Images:
 
- * registry.k8s.io/controller:controller-v1.6.3@sha256:b92667e0afde1103b736e6a3f00dd75ae66eec4e71827d19f19f471699e909d2
- * registry.k8s.io/controller-chroot:controller-v1.6.3@sha256:4b4a249c9a35ac16a8ec0e22f6c522b8707f7e59e656e64a4ad9ace8fea830a4
+ * registry.k8s.io/controller:controller-v1.6.4@sha256:15be4666c53052484dd2992efacf2f50ea77a78ae8aa21ccd91af6baaa7ea22f
+ * registry.k8s.io/controller-chroot:controller-v1.6.4@sha256:0de01e2c316c3ca7847ca13b32d077af7910d07f21a4a82f81061839764f8f81
  
 ### All Changes:
 
+* remove tests and regex path checks (#9626)
+* Fix incorrect annotation name in upstream hashing configuration (#9617)
+* Release docs for Controller v1.6.3 and Helm v4.5.0 (#9614)
 * Revert Implement pathType validation (#9511) (#9607)
 * update history and allow to pass a target test  (#9605)
 * Allow to pass a target test (#9542)
@@ -19,7 +22,6 @@ Images:
 * Add CORS template check inside location for externalAuth.SignURL (#8814)
 * fix(grafana-dashboard): remove hardcoded namespace references (#9523)
 * Replace deprecated command with environment file (#9581)
-* add path validation to implementation specific as well (#9573)
 * add lint on chart before release (#9570)
 * Switch logic on path type validation and setting it to false (#9543)
 * tcpproxy: increase buffer size to 16K (#9548)
@@ -27,7 +29,6 @@ Images:
 * Add CORS template check inside location for externalAuth.SignURL (#8814)
 * fix(grafana-dashboard): remove hardcoded namespace references (#9523)
 * Align default value for keepalive_request with NGINX default (#9518)
-* Implement pathType validation (#9511)
 * feat(configmap): expose gzip-disable (#9505)
 * Values: Add missing `controller.metrics.service.labels`. (#9501)
 * Add docs about orphan_ingress metric (#9514)
@@ -89,7 +90,6 @@ Images:
 * remove the configmap related permissions (#9310)
 * remove hardcoded datasource from grafana dashboard (#9284)
 * update gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b to 3.0.0 (#9277)
-* Validate ingress path fields  (#9309)
 * added SAN to cert create command (#9295)
 * Missing controller.ingressClass (#9304)
 * OpenTelemetry static linking (#9286)
@@ -133,4 +133,4 @@ Images:
 * Bump actions/dependency-review-action from 2.5.1 to 3.0.0 (#9301)
 * Bump k8s.io/component-base from 0.25.3 to 0.25.4 (#9300)
  
-**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.1...controller-controller-v1.6.3
+**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.1...controller-controller-v1.6.4
