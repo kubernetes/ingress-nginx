@@ -27,7 +27,7 @@ Support for websockets is provided by NGINX out of the box. No special configura
 
 The only requirement to avoid the close of connections is the increase of the values of `proxy-read-timeout` and `proxy-send-timeout`.
 
-The default value of this settings is `60 seconds`.
+The default value of these settings is `60 seconds`.
 
 A more adequate value to support websockets is a value higher than one hour (`3600`).
 
