@@ -62,7 +62,7 @@ It will install the controller in the `ingress-nginx` namespace, creating that n
 **If you don't have Helm** or if you prefer to use a YAML manifest, you can run the following command instead:
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.6.3/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.6.4/deploy/static/provider/cloud/deploy.yaml
 ```
 
 !!! info
