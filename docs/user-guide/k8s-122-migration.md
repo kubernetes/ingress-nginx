@@ -131,7 +131,7 @@ and add the value `spec.ingressClassName=nginx` in your Ingress objects.
 
 ## I have many ingress objects in my cluster. What should I do?
 
-If you have lot of ingress objects without ingressClass configuration,
+If you have a lot of ingress objects without ingressClass configuration,
 you can run the ingress controller with the flag `--watch-ingress-without-class=true`.
 
 ### What is the flag `--watch-ingress-without-class`?
@@ -187,10 +187,10 @@ Bear in mind that if you start Ingress-Nginx B with the command line argument `-
 4. If you start Ingress-Nginx B with the command line argument `--watch-ingress-without-class=true` and you run Ingress-Nginx A with the command line argument `--watch-ingress-without-class=false` then this is a supported configuration.
    If you have two ingress-nginx controllers for the same cluster, both running with `--watch-ingress-without-class=true` then there is likely to be a conflict.
 
-## Why am I am seeing "ingress class annotation is not equal to the expected by Ingress Controller" in my controller logs?
+## Why am I seeing "ingress class annotation is not equal to the expected by Ingress Controller" in my controller logs?
 
 It is highly likely that you will also see the name of the ingress resource in the same error message.
-This error message has been observed on use the deprecated annotation (`kubernetes.io/ingress.class`) in a Ingress resource manifest.
+This error message has been observed on use the deprecated annotation (`kubernetes.io/ingress.class`) in an Ingress resource manifest.
 It is recommended to use the `.spec.ingressClassName` field of the Ingress resource, to specify the name of the IngressClass of the Ingress you are defining.
 
 ## How can I easily install multiple instances of the ingress-nginx controller in the same cluster?
