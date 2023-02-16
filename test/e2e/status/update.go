@@ -19,7 +19,6 @@ package settings
 import (
 	"context"
 	"fmt"
-	v1 "k8s.io/api/networking/v1"
 	"log"
 	"net"
 	"strings"
@@ -29,6 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
