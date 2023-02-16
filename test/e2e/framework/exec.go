@@ -152,6 +152,16 @@ func (f *Framework) KubectlProxy(port int) (int, *exec.Cmd, error) {
 	return -1, cmd, fmt.Errorf("failed to parse port from proxy stdout: %s", output)
 }
 
+func (f *Framework) UninstallChart() error {
+	cmd := exec.Command("helm", "uninstall", "--namespace", f.Namespace, "nginx-ingress")
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("unexpected error uninstalling ingress-nginx release: %v", err)
+	}
+
+	return nil
+}
+
 func startCmdAndStreamOutput(cmd *exec.Cmd) (stdout, stderr io.ReadCloser, err error) {
 	stdout, err = cmd.StdoutPipe()
 	if err != nil {

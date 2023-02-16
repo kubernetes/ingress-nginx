@@ -49,14 +49,8 @@ if [ "$missing" = true ]; then
   exit 1
 fi
 
-E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-}
-FOCUS=${FOCUS:-.*}
-
 BASEDIR=$(dirname "$0")
 NGINX_BASE_IMAGE=$(cat $BASEDIR/../../NGINX_BASE)
-
-export E2E_CHECK_LEAKS
-export FOCUS
 
 echo -e "${BGREEN}Granting permissions to ingress-nginx e2e service account...${NC}"
 kubectl create serviceaccount ingress-nginx-e2e || true
@@ -66,7 +60,6 @@ kubectl create clusterrolebinding permissive-binding \
   --user=kubelet \
   --serviceaccount=default:ingress-nginx-e2e || true
 
-
 VER=$(kubectl version  --client=false -o json |jq '.serverVersion.minor |tonumber')
 if [ $VER -lt 24 ]; then
   echo -e "${BGREEN}Waiting service account...${NC}"; \
@@ -75,7 +68,6 @@ if [ $VER -lt 24 ]; then
     sleep 3; \
   done
 fi
-
 
 echo -e "Starting the e2e test pod"
 
@@ -90,38 +82,10 @@ kubectl run --rm \
   e2e --image=nginx-ingress-controller:e2e
 
 # Get the junit-reports stored in the configMaps created during e2etests
-echo "Getting the report files out now.."
+echo "Getting the report file out now.."
 reportsDir="test/junitreports"
-reportFileName="report-e2e-test-suite"
-[ ! -e ${reportsDir} ] && mkdir $reportsDir
+reportFile="report-e2e-test-suite.xml.gz"
+mkdir -p $reportsDir
 cd $reportsDir
-
-# TODO: Seeking Rikatz help here to extract in a loop. Tried things like below without success
-#for cmName in `k get cm -l junitreport=true -o json | jq  '.items[].binaryData | keys[]' | tr '\"' ' '`
-#do
-#
-#
-# kubectl get cm -l junitreport=true -o json | jq -r  '[.items[].binaryData | to_entries[] | {"key": .key, "value": .value  }] | from_entries'
-#
-
-# Below lines successfully extract the report but they are one line per report.
-# We only have 3 ginkgo reports so its ok for now
-# But still, ideally this should be a loop as talked about in comments a few lines above
-kubectl get cm $reportFileName.xml.gz -o "jsonpath={.binaryData['report-e2e-test-suite\.xml\.gz']}" > $reportFileName.xml.gz.base64
-kubectl get cm $reportFileName-serial.xml.gz -o "jsonpath={.binaryData['report-e2e-test-suite-serial\.xml\.gz']}" > $reportFileName-serial.xml.gz.base64
-
-cat $reportFileName.xml.gz.base64 | base64 -d > $reportFileName.xml.gz
-cat $reportFileName-serial.xml.gz.base64 | base64 -d > $reportFileName-serial.xml.gz
-
-gzip -d $reportFileName.xml.gz
-gzip -d $reportFileName-serial.xml.gz
-
-rm *.base64
-cd ../..
-
-# TODO Temporary: if condition to check if the memleak cm exists and only then try the extract for the memleak report
-#
-#kubectl get cm $reportFileName-serial  -o "jsonpath={.data['report-e2e-test-suite-memleak\.xml\.gz']}" > $reportFileName-memleak.base64
-#cat $reportFileName-memleak.base64 | base64 -d > $reportFileName-memleak.xml.gz
-#gzip -d $reportFileName-memleak.xml.gz
-echo "done getting the reports files out.."
+kubectl get cm $reportFile -o "jsonpath={.binaryData['${reportFile//\./\\.}']}" | base64 -d | gunzip > ${reportFile%\.gz}
+echo "done getting the report file out.."
