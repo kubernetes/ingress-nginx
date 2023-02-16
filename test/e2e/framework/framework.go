@@ -150,7 +150,11 @@ func (f *Framework) AfterEach() {
 
 	defer func(kubeClient kubernetes.Interface, ingressclass string) {
 		defer ginkgo.GinkgoRecover()
-		err := deleteIngressClass(kubeClient, ingressclass)
+
+		err := f.UninstallChart()
+		assert.Nil(ginkgo.GinkgoT(), err, "uninstalling helm chart")
+
+		err = deleteIngressClass(kubeClient, ingressclass)
 		assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
 	}(f.KubeClientSet, f.IngressClass)
 
@@ -192,6 +196,11 @@ func IngressNginxDescribe(text string, body func()) bool {
 	return ginkgo.Describe(text, body)
 }
 
+// IngressNginxDescribeSerial wrapper function for ginkgo describe. Adds namespacing.
+func IngressNginxDescribeSerial(text string, body func()) bool {
+	return ginkgo.Describe(text, ginkgo.Serial, body)
+}
+
 // DescribeAnnotation wrapper function for ginkgo describe. Adds namespacing.
 func DescribeAnnotation(text string, body func()) bool {
 	return ginkgo.Describe("[Annotations] "+text, body)
@@ -200,11 +209,6 @@ func DescribeAnnotation(text string, body func()) bool {
 // DescribeSetting wrapper function for ginkgo describe. Adds namespacing.
 func DescribeSetting(text string, body func()) bool {
 	return ginkgo.Describe("[Setting] "+text, body)
-}
-
-// MemoryLeakIt is wrapper function for ginkgo It.  Adds "[MemoryLeak]" tag and makes static analysis easier.
-func MemoryLeakIt(text string, body interface{}) bool {
-	return ginkgo.It(text+" [MemoryLeak]", body)
 }
 
 // GetNginxIP returns the number of TCP port where NGINX is running
@@ -387,7 +391,7 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 }
 
 // WaitForReload calls the passed function and
-// asser it has caused at least 1 reload.
+// asserts it has caused at least 1 reload.
 func (f *Framework) WaitForReload(fn func()) {
 	initialReloadCount := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
 

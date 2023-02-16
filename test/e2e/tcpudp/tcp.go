@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -36,57 +37,38 @@ import (
 
 var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 	f := framework.NewDefaultFramework("tcp")
+	var ip string
+
+	ginkgo.BeforeEach(func() {
+		ip = f.GetNginxIP()
+	})
 
 	ginkgo.It("should expose a TCP service", func() {
 		f.NewEchoDeployment()
 
-		config, err := f.KubeClientSet.
-			CoreV1().
-			ConfigMaps(f.Namespace).
-			Get(context.TODO(), "tcp-services", metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining tcp-services configmap")
-		assert.NotNil(ginkgo.GinkgoT(), config, "expected a configmap but none returned")
-
-		if config.Data == nil {
-			config.Data = map[string]string{}
+		cm := f.GetConfigMap(f.Namespace, "tcp-services")
+		cm.Data = map[string]string{
+			"8080": fmt.Sprintf("%v/%v:80", f.Namespace, framework.EchoService),
 		}
+		f.EnsureConfigMap(cm)
 
-		config.Data["8080"] = fmt.Sprintf("%v/%v:80", f.Namespace, framework.EchoService)
-
-		_, err = f.KubeClientSet.
-			CoreV1().
-			ConfigMaps(f.Namespace).
-			Update(context.TODO(), config, metav1.UpdateOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating configmap")
-
-		svc, err := f.KubeClientSet.
-			CoreV1().
-			Services(f.Namespace).
-			Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining ingress-nginx service")
-		assert.NotNil(ginkgo.GinkgoT(), svc, "expected a service but none returned")
-
+		svc := f.GetService(f.Namespace, "nginx-ingress-controller")
 		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
 			Name:       framework.EchoService,
 			Port:       8080,
 			TargetPort: intstr.FromInt(8080),
 		})
-		_, err = f.KubeClientSet.
+		_, err := f.KubeClientSet.
 			CoreV1().
 			Services(f.Namespace).
 			Update(context.TODO(), svc, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
-
-		// wait for update and nginx reload and new endpoint is available
-		framework.Sleep()
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-%v-80"`,
 					f.Namespace, framework.EchoService))
 			})
-
-		ip := f.GetNginxIP()
 
 		f.HTTPTestClient().
 			GET("/").
@@ -122,44 +104,25 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 		}
 		f.EnsureService(externalService)
 
-		// Expose the `external name` port on the `ingress-nginx` service
-		svc, err := f.KubeClientSet.
-			CoreV1().
-			Services(f.Namespace).
-			Get(context.TODO(), "nginx-ingress-controller", metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining ingress-nginx service")
-		assert.NotNil(ginkgo.GinkgoT(), svc, "expected a service but none returned")
-
+		// Expose the `external name` port on the `ingress-nginx-controller` service
+		svc := f.GetService(f.Namespace, "nginx-ingress-controller")
 		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
 			Name:       "dns-svc",
 			Port:       5353,
 			TargetPort: intstr.FromInt(5353),
 		})
-		_, err = f.KubeClientSet.
+		_, err := f.KubeClientSet.
 			CoreV1().
 			Services(f.Namespace).
 			Update(context.TODO(), svc, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
 
 		// Update the TCP configmap to link port 5353 to the DNS external name service
-		config, err := f.KubeClientSet.
-			CoreV1().
-			ConfigMaps(f.Namespace).
-			Get(context.TODO(), "tcp-services", metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining tcp-services configmap")
-		assert.NotNil(ginkgo.GinkgoT(), config, "expected a configmap but none returned")
-
-		if config.Data == nil {
-			config.Data = map[string]string{}
+		config := f.GetConfigMap(f.Namespace, "tcp-services")
+		config.Data = map[string]string{
+			"5353": fmt.Sprintf("%v/dns-external-name-svc:5353", f.Namespace),
 		}
-
-		config.Data["5353"] = fmt.Sprintf("%v/dns-external-name-svc:5353", f.Namespace)
-
-		_, err = f.KubeClientSet.
-			CoreV1().
-			ConfigMaps(f.Namespace).
-			Update(context.TODO(), config, metav1.UpdateOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating configmap")
+		f.EnsureConfigMap(config)
 
 		// Validate that the generated nginx config contains the expected `proxy_upstream_name` value
 		f.WaitForNginxConfiguration(
@@ -168,7 +131,6 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 			})
 
 		// Execute the test. Use the `external name` service to resolve a domain name.
-		ip := f.GetNginxIP()
 		resolver := net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -203,4 +165,57 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error from DNS resolver")
 		assert.Contains(ginkgo.GinkgoT(), ips, "8.8.4.4")
 	})
+
+	ginkgo.It("should reload after an update in the configuration", func() {
+
+		ginkgo.By("setting up a first deployment")
+		f.NewEchoDeployment(framework.WithDeploymentName("first-service"))
+
+		cm := f.GetConfigMap(f.Namespace, "tcp-services")
+		cm.Data = map[string]string{
+			"8080": fmt.Sprintf("%v/first-service:80", f.Namespace),
+		}
+		f.EnsureConfigMap(cm)
+
+		checksumRegex := regexp.MustCompile(`Configuration checksum:\s+(\d+)`)
+		checksum := ""
+
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				// before returning, extract the current checksum
+				match := checksumRegex.FindStringSubmatch(cfg)
+				if len(match) > 0 {
+					checksum = match[1]
+				}
+
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-first-service-80"`,
+					f.Namespace))
+			})
+		assert.NotEmpty(ginkgo.GinkgoT(), checksum)
+
+		ginkgo.By("updating the tcp service to a second deployment")
+		f.NewEchoDeployment(framework.WithDeploymentName("second-service"))
+
+		cm = f.GetConfigMap(f.Namespace, "tcp-services")
+		cm.Data["8080"] = fmt.Sprintf("%v/second-service:80", f.Namespace)
+		f.EnsureConfigMap(cm)
+
+		newChecksum := ""
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				match := checksumRegex.FindStringSubmatch(cfg)
+				if len(match) > 0 {
+					newChecksum = match[1]
+				}
+
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-second-service-80"`,
+					f.Namespace))
+			})
+		assert.NotEqual(ginkgo.GinkgoT(), checksum, newChecksum)
+
+		logs, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.Contains(ginkgo.GinkgoT(), logs, "Backend successfully reloaded")
+	})
+
 })

@@ -701,7 +701,6 @@ func New(
 		},
 	}
 
-	// TODO: add e2e test to verify that changes to one or more configmap trigger an update
 	changeTriggerUpdate := func(name string) bool {
 		return name == configmap || name == tcp || name == udp
 	}

@@ -31,7 +31,7 @@ TAG ?= $(shell cat TAG)
 
 # e2e settings
 # Allow limiting the scope of the e2e tests. By default run everything
-FOCUS ?= .*
+FOCUS ?=
 # number of parallel test
 E2E_NODES ?= 7
 # run e2e test suite with tests that check for memory leaks? (default is false)
