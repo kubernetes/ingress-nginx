@@ -465,7 +465,6 @@ func New(
 
 			var errOld, errCur error
 			var classCur string
-
 			_, errOld = store.GetIngressClass(oldIng, icConfig)
 			classCur, errCur = store.GetIngressClass(curIng, icConfig)
 
