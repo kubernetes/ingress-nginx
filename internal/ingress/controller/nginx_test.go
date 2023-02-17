@@ -62,7 +62,7 @@ func TestConfigureDynamically(t *testing.T) {
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusCreated)
 
-				if r.Method != "POST" {
+				if r.Method != http.MethodPost {
 					t.Errorf("expected a 'POST' request, got '%s'", r.Method)
 				}
 
@@ -222,7 +222,7 @@ func TestConfigureCertificates(t *testing.T) {
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusCreated)
 
-				if r.Method != "POST" {
+				if r.Method != http.MethodPost {
 					t.Errorf("expected a 'POST' request, got '%s'", r.Method)
 				}
 
