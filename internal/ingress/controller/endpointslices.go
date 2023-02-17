@@ -128,7 +128,7 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 		}
 
 		for _, ep := range eps.Endpoints {
-			if !(*ep.Conditions.Ready) {
+			if (ep.Conditions.Ready != nil) && !(*ep.Conditions.Ready) {
 				continue
 			}
 			epHasZone := false
