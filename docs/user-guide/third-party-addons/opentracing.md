@@ -8,14 +8,16 @@ By default this feature is disabled.
 ## Usage
 
 To enable the instrumentation we must enable OpenTracing in the configuration ConfigMap:
-```
+
+```yaml
 data:
   enable-opentracing: "true"
 ```
 
 To enable or disable instrumentation for a single Ingress, use
 the `enable-opentracing` annotation:
-```
+
+```yaml
 kind: Ingress
 metadata:
   annotations:
@@ -24,11 +26,12 @@ metadata:
 
 We must also set the host to use when uploading traces:
 
-```
+```yaml
 zipkin-collector-host: zipkin.default.svc.cluster.local
 jaeger-collector-host: jaeger-agent.default.svc.cluster.local
 datadog-collector-host: datadog-agent.default.svc.cluster.local
 ```
+
 NOTE: While the option is called `jaeger-collector-host`, you will need to point this to a `jaeger-agent`, and not the `jaeger-collector` component.
 Alternatively, you can set `jaeger-endpoint` and specify the full endpoint for uploading traces. This will use TCP and should be used for a collector rather than an agent.
 
@@ -39,7 +42,8 @@ Next you will need to deploy a distributed tracing system which uses OpenTracing
 have been tested.
 
 Other optional configuration options:
-```
+
+```yaml
 # specifies the name to use for the server span
 opentracing-operation-name
 
@@ -117,9 +121,9 @@ datadog-sample-rate
 
 All these options (including host) allow environment variables, such as `$HOSTNAME` or `$HOST_IP`. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like `$HOST_IP` (which can be 'mounted' with the `status.hostIP` fieldpath, as described [here](https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api)) to make sure traces will be sent to the local agent.
 
-
 Note that you can also set whether to trust incoming spans (global default is true) per-location using annotations like the following:
-```
+
+```yaml
 kind: Ingress
 metadata:
   annotations:
@@ -132,95 +136,120 @@ The following examples show how to deploy and test different distributed tracing
 
 ### Zipkin
 
-In the [rnburn/zipkin-date-server](https://github.com/rnburn/zipkin-date-server)
-GitHub repository is an example of a dockerized date service. To install the example and Zipkin collector run:
+1. Deploy a simple zipkin service.
 
-```
-kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
-kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml
-```
+    ```bash
+    kubectl create deployment zipkin --image=docker.io/openzipkin/zipkin:latest --replicas=1
+    kubectl create service clusterip zipkin --tcp=9411:9411
+    ```
 
-Also we need to configure the Ingress-NGINX controller ConfigMap with the required values:
+2. Update the ConfigMap to add `zipkin-collector-host` configuration.
 
-```
-$ echo '
-apiVersion: v1
-kind: ConfigMap
-data:
-  enable-opentracing: "true"
-  zipkin-collector-host: zipkin.default.svc.cluster.local
-metadata:
-  name: ingress-nginx-controller
-  namespace: kube-system
-' | kubectl replace -f -
-```
+    ```bash
+    echo '
+    apiVersion: v1
+    kind: ConfigMap
+    data:
+      enable-opentracing: "true"
+      zipkin-collector-host: zipkin.default.svc.cluster.local
+    metadata:
+      name: ingress-nginx-controller
+      namespace: kube-system
+    ' | kubectl replace -f -
+    ```
 
-In the Zipkin interface we can see the details:
-![zipkin screenshot](../../images/zipkin-demo.png "zipkin collector screenshot")
+3. Apply a basic Service and Ingress Resource.
+
+    ```bash
+    kubectl create deployment nginxhello --image=registry.k8s.io/e2e-test-images/echoserver:2.3 --replicas=1
+    kubectl create service clusterip nginxhello --tcp=80:8080
+    kubectl create ingress nginxhello-ingress --class=nginx --rule="foo.bar.com/*=nginxhello:80"
+    ```
+
+4. Add Minikube IP to `/etc/hosts`:
+
+    ```bash
+    echo "$(minikube ip) foo.bar.com" | sudo tee -a /etc/hosts
+    ```
+
+5. Test the ingress.
+
+    ```bash
+    curl foo.bar.com
+    ```
+
+6. In the Zipkin interface we can see the details:
+    ![zipkin screenshot](../../images/zipkin-demo.png "zipkin collector screenshot")
 
 ### Jaeger
 
 1. Enable Ingress addon in Minikube:
-    ```
-    $ minikube addons enable ingress
+
+    ```bash
+    minikube addons enable ingress
     ```
 
 2. Add Minikube IP to /etc/hosts:
-    ```
-    $ echo "$(minikube ip) example.com" | sudo tee -a /etc/hosts
+
+    ```bash
+    echo "$(minikube ip) example.com" | sudo tee -a /etc/hosts
     ```
 
 3. Apply a basic Service and Ingress Resource:
-    ```
+
+    ```bash
     # Create Echoheaders Deployment
-    $ kubectl run echoheaders --image=registry.k8s.io/echoserver:1.4 --replicas=1 --port=8080
+    kubectl run echoheaders --image=registry.k8s.io/echoserver:1.4 --replicas=1 --port=8080
 
     # Expose as a Cluster-IP
-    $ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
+    kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
 
     # Apply the Ingress Resource
-    $ echo '
-      apiVersion: networking.k8s.io/v1
-      kind: Ingress
-      metadata:
-        name: echo-ingress
-      spec:
-        ingressClassName: nginx
-        rules:
-        - host: example.com
-          http:
-            paths:
-            - path: /echo
-              pathType: Prefix
-              backend:
-                service:
-                  name: echoheaders-x
-                  port:
-                    number: 80
-      ' | kubectl apply -f -
+    echo '
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: echo-ingress
+    spec:
+      ingressClassName: nginx
+      rules:
+      - host: example.com
+        http:
+          paths:
+          - path: /echo
+            pathType: Prefix
+            backend:
+              service:
+                name: echoheaders-x
+                port:
+                  number: 80
+    ' | kubectl apply -f -
     ```
 
 4. Enable OpenTracing and set the jaeger-collector-host:
-    ```
-    $ echo '
-      apiVersion: v1
-      kind: ConfigMap
-      data:
-        enable-opentracing: "true"
-        jaeger-collector-host: jaeger-agent.default.svc.cluster.local
-      metadata:
-        name: ingress-nginx-controller
-        namespace: kube-system
-      ' | kubectl replace -f -
+
+    ```bash
+    echo '
+    apiVersion: v1
+    kind: ConfigMap
+    data:
+      enable-opentracing: "true"
+      jaeger-collector-host: jaeger-agent.default.svc.cluster.local
+    metadata:
+      name: ingress-nginx-controller
+      namespace: kube-system
+    ' | kubectl replace -f -
     ```
 
 5. Apply the Jaeger All-In-One Template:
-    ```
-    $ kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml
+
+    ```bash
+    kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml
     ```
 
 6. Make a few requests to the Service:
-    ```
+
+    ```log
     $ curl example.com/echo -d "meow"
 
     CLIENT VALUES:
@@ -253,7 +282,8 @@ In the Zipkin interface we can see the details:
     ```
 
 7. View the Jaeger UI:
-    ```
+
+    ```log
     $ minikube service jaeger-query --url
 
     http://192.168.99.100:30183
