@@ -71,10 +71,3 @@ If TLS is enabled for the Ingress, a Secret containing the certificate and key m
     tls.crt: <base64 encoded cert>
     tls.key: <base64 encoded key>
   type: kubernetes.io/tls
-
-{{- if .Values.controller.headers }}
-#################################################################################
-######   WARNING: `controller.headers` has been deprecated!                 #####
-######            It has been renamed to `controller.proxySetHeaders`.      #####
-#################################################################################
-{{- end }}
