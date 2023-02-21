@@ -827,6 +827,7 @@ defaultBackend:
     #    emptyDir: {}
 
   autoscaling:
+    apiVersion: autoscaling/v2
     annotations: {}
     enabled: false
     minReplicas: 1
