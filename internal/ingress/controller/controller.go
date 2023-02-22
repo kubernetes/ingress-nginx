@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/hashstructure"
+	"github.com/mitchellh/hashstructure/v2"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -187,7 +187,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
-		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
+		hash, _ := hashstructure.Hash(pcfg, hashstructure.FormatV1, &hashstructure.HashOptions{
 			TagName: "json",
 		})
 
