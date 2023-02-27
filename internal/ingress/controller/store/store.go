@@ -882,9 +882,14 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 
 	k8s.SetDefaultNGINXPathType(copyIng)
 
-	err := s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
+	parsed, err := s.annotations.Extract(ing)
+	if err != nil {
+		klog.Error(err)
+		return
+	}
+	err = s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
 		Ingress:           *copyIng,
-		ParsedAnnotations: s.annotations.Extract(ing),
+		ParsedAnnotations: parsed,
 	})
 	if err != nil {
 		klog.Error(err)
@@ -920,6 +925,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 		"proxy-ssl-secret",
 		"secure-verify-ca-secret",
 	}
+
 	for _, ann := range secretAnnotations {
 		secrKey, err := objectRefAnnotationNsKey(ann, ing)
 		if err != nil && !errors.IsMissingAnnotations(err) {
@@ -938,7 +944,8 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 // objectRefAnnotationNsKey returns an object reference formatted as a
 // 'namespace/name' key from the given annotation name.
 func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, error) {
-	annValue, err := parser.GetStringAnnotation(ann, ing)
+	// We pass nil fields, as this is an internal process and we don't need to validate it.
+	annValue, err := parser.GetStringAnnotation(ann, ing, nil)
 	if err != nil {
 		return "", err
 	}
@@ -950,6 +957,9 @@ func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, er
 
 	if secrNs == "" {
 		return fmt.Sprintf("%v/%v", ing.Namespace, secrName), nil
+	}
+	if secrNs != ing.Namespace {
+		return "", fmt.Errorf("cross namespace secret is not supported")
 	}
 	return annValue, nil
 }

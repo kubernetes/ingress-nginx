@@ -38,7 +38,8 @@ func TestParse(t *testing.T) {
 		annotations map[string]string
 		expected    string
 	}{
-		{map[string]string{annotation: "ip_hash"}, "ip_hash"},
+		{map[string]string{annotation: "ewma"}, "ewma"},
+		{map[string]string{annotation: "ip_hash"}, ""}, // This is invalid and should not return anything
 		{map[string]string{}, ""},
 		{nil, ""},
 	}

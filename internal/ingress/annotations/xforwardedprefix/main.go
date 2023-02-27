@@ -23,17 +23,41 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	xForwardedForPrefixAnnotation = "x-forwarded-prefix"
+)
+
+var xForwardedForAnnotations = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		xForwardedForPrefixAnnotation: {
+			Validator:     parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows regexes but on a very limited set
+			Documentation: `This annotation can be used to add the non-standard X-Forwarded-Prefix header to the upstream request with a string value`,
+		},
+	},
+}
+
 type xforwardedprefix struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new xforwardedprefix annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return xforwardedprefix{r}
+	return xforwardedprefix{
+		r:                r,
+		annotationConfig: xForwardedForAnnotations,
+	}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to add an x-forwarded-prefix header to the request
 func (cbbs xforwardedprefix) Parse(ing *networking.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation("x-forwarded-prefix", ing)
+	return parser.GetStringAnnotation(xForwardedForPrefixAnnotation, ing, cbbs.annotationConfig.Annotations)
+}
+
+func (cbbs xforwardedprefix) GetDocumentation() parser.AnnotationFields {
+	return cbbs.annotationConfig.Annotations
 }

@@ -27,19 +27,44 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	serverAliasAnnotation = "server-alias"
+)
+
+var aliasAnnotation = parser.Annotation{
+	Group: "alias",
+	Annotations: parser.AnnotationFields{
+		serverAliasAnnotation: {
+			Validator: parser.ValidateArrayOfServerName,
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskLow, // Low, as it allows regexes but on a very limited set
+			Documentation: `this annotation can be used to define additional server 
+			aliases for this Ingress`,
+		},
+	},
+}
+
 type alias struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new Alias annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return alias{r}
+	return alias{
+		r:                r,
+		annotationConfig: aliasAnnotation,
+	}
+}
+
+func (a alias) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to add an alias to the provided hosts
 func (a alias) Parse(ing *networking.Ingress) (interface{}, error) {
-	val, err := parser.GetStringAnnotation("server-alias", ing)
+	val, err := parser.GetStringAnnotation(serverAliasAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		return []string{}, err
 	}

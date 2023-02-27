@@ -74,7 +74,7 @@ func TestIngressAnnotationServiceUpstreamEnabled(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("service-upstream")] = "true"
+	data[parser.GetAnnotationWithPrefix(serviceUpstreamAnnotation)] = "true"
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -93,7 +93,7 @@ func TestIngressAnnotationServiceUpstreamSetFalse(t *testing.T) {
 
 	// Test with explicitly set to false
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("service-upstream")] = "false"
+	data[parser.GetAnnotationWithPrefix(serviceUpstreamAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -155,7 +155,7 @@ func TestParseAnnotationsOverridesDefaultConfig(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("service-upstream")] = "false"
+	data[parser.GetAnnotationWithPrefix(serviceUpstreamAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(mockBackend{}).Parse(ing)

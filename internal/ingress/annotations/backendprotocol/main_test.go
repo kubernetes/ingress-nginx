@@ -77,7 +77,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	}
 
 	// Test invalid annotation set
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "INVALID"
+	data[parser.GetAnnotationWithPrefix(backendProtocolAnnotation)] = "INVALID"
 	ing.SetAnnotations(data)
 
 	i, err = NewParser(&resolver.Mock{}).Parse(ing)
@@ -97,7 +97,7 @@ func TestParseAnnotations(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTPS"
+	data[parser.GetAnnotationWithPrefix(backendProtocolAnnotation)] = "  HTTPS  "
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(&resolver.Mock{}).Parse(ing)

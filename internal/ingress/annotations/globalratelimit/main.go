@@ -22,8 +22,10 @@ import (
 	"time"
 
 	networking "k8s.io/api/networking/v1"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/net"
@@ -31,6 +33,46 @@ import (
 )
 
 const defaultKey = "$remote_addr"
+
+const (
+	globalRateLimitAnnotation             = "global-rate-limit"
+	globalRateLimitWindowAnnotation       = "global-rate-limit-window"
+	globalRateLimitKeyAnnotation          = "global-rate-limit-key"
+	globalRateLimitIgnoredCidrsAnnotation = "global-rate-limit-ignored-cidrs"
+)
+
+var globalRateLimitAnnotationConfig = parser.Annotation{
+	Group: "ratelimit",
+	Annotations: parser.AnnotationFields{
+		globalRateLimitAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation configures maximum allowed number of requests per window`,
+		},
+		globalRateLimitWindowAnnotation: {
+			Validator:     parser.ValidateDuration,
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `Configures a time window (i.e 1m) that the limit is applied`,
+		},
+		globalRateLimitKeyAnnotation: {
+			Validator: parser.ValidateRegex(*parser.NGINXVariable, true),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskHigh,
+			Documentation: `This annotation Configures a key for counting the samples. Defaults to $remote_addr. 
+			You can also combine multiple NGINX variables here, like ${remote_addr}-${http_x_api_client} which would mean the limit will be applied to 
+			requests coming from the same API client (indicated by X-API-Client HTTP request header) with the same source IP address`,
+		},
+		globalRateLimitIgnoredCidrsAnnotation: {
+			Validator: parser.ValidateCIDRs,
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation defines a comma separated list of IPs and CIDRs to match client IP against. 
+			When there's a match request is not considered for rate limiting.`,
+		},
+	},
+}
 
 // Config encapsulates all global rate limit attributes
 type Config struct {
@@ -63,12 +105,16 @@ func (l *Config) Equal(r *Config) bool {
 }
 
 type globalratelimit struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new globalratelimit annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return globalratelimit{r}
+	return globalratelimit{
+		r:                r,
+		annotationConfig: globalRateLimitAnnotationConfig,
+	}
 }
 
 // Parse extracts globalratelimit annotations from the given ingress
@@ -76,8 +122,16 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 	config := &Config{}
 
-	limit, _ := parser.GetIntAnnotation("global-rate-limit", ing)
-	rawWindowSize, _ := parser.GetStringAnnotation("global-rate-limit-window", ing)
+	limit, err := parser.GetIntAnnotation(globalRateLimitAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil && errors.IsInvalidContent(err) {
+		return nil, err
+	}
+	rawWindowSize, err := parser.GetStringAnnotation(globalRateLimitWindowAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil && errors.IsValidationError(err) {
+		return config, ing_errors.LocationDenied{
+			Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: %w", err),
+		}
+	}
 
 	if limit == 0 || len(rawWindowSize) == 0 {
 		return config, nil
@@ -90,12 +144,18 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		}
 	}
 
-	key, _ := parser.GetStringAnnotation("global-rate-limit-key", ing)
+	key, err := parser.GetStringAnnotation(globalRateLimitKeyAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		klog.Warningf("invalid %s, defaulting to %s", globalRateLimitKeyAnnotation, defaultKey)
+	}
 	if len(key) == 0 {
 		key = defaultKey
 	}
 
-	rawIgnoredCIDRs, _ := parser.GetStringAnnotation("global-rate-limit-ignored-cidrs", ing)
+	rawIgnoredCIDRs, err := parser.GetStringAnnotation(globalRateLimitIgnoredCidrsAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil && errors.IsInvalidContent(err) {
+		return nil, err
+	}
 	ignoredCIDRs, err := net.ParseCIDRs(rawIgnoredCIDRs)
 	if err != nil {
 		return nil, err
@@ -108,4 +168,8 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.IgnoredCIDRs = ignoredCIDRs
 
 	return config, nil
+}
+
+func (a globalratelimit) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
 }

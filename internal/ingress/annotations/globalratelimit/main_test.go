@@ -150,6 +150,22 @@ func TestGlobalRateLimiting(t *testing.T) {
 			nil,
 		},
 		{
+			"global-rate-limit-complex-key",
+			map[string]string{
+				annRateLimit:       "100",
+				annRateLimitWindow: "2m",
+				annRateLimitKey:    "${http_x_api_user}${otherinfo}",
+			},
+			&Config{
+				Namespace:    expectedUID,
+				Limit:        100,
+				WindowSize:   120,
+				Key:          "${http_x_api_user}${otherinfo}",
+				IgnoredCIDRs: make([]string, 0),
+			},
+			nil,
+		},
+		{
 			"incorrect duration for window",
 			map[string]string{
 				annRateLimit:       "100",
@@ -157,8 +173,8 @@ func TestGlobalRateLimiting(t *testing.T) {
 				annRateLimitKey:    "$http_x_api_user",
 			},
 			&Config{},
-			ing_errors.LocationDenied{
-				Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: time: unknown unit \"mb\" in duration \"2mb\""),
+			ing_errors.ValidationError{
+				Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: annotation nginx.ingress.kubernetes.io/global-rate-limit-window contains invalid value"),
 			},
 		},
 	}
@@ -168,7 +184,7 @@ func TestGlobalRateLimiting(t *testing.T) {
 
 		i, actualErr := NewParser(mockBackend{}).Parse(ing)
 		if (testCase.expectedErr == nil || actualErr == nil) && testCase.expectedErr != actualErr {
-			t.Errorf("expected error 'nil' but got '%v'", actualErr)
+			t.Errorf("%s expected error '%v' but got '%v'", testCase.title, testCase.expectedErr, actualErr)
 		} else if testCase.expectedErr != nil && actualErr != nil &&
 			testCase.expectedErr.Error() != actualErr.Error() {
 			t.Errorf("expected error '%v' but got '%v'", testCase.expectedErr, actualErr)
