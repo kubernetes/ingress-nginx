@@ -25,19 +25,40 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	defaultBackendAnnotation = "default-backend"
+)
+
+var defaultBackendAnnotations = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		defaultBackendAnnotation: {
+			Validator: parser.ValidateServiceName,
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskLow,
+			Documentation: `This service will be used to handle the response when the configured service in the Ingress rule does not have any active endpoints. 
+			It will also be used to handle the error responses if both this annotation and the custom-http-errors annotation are set.`,
+		},
+	},
+}
+
 type backend struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new default backend annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return backend{r}
+	return backend{
+		r:                r,
+		annotationConfig: defaultBackendAnnotations,
+	}
 }
 
 // Parse parses the annotations contained in the ingress to use
 // a custom default backend
 func (db backend) Parse(ing *networking.Ingress) (interface{}, error) {
-	s, err := parser.GetStringAnnotation("default-backend", ing)
+	s, err := parser.GetStringAnnotation(defaultBackendAnnotation, ing, db.annotationConfig.Annotations)
 	if err != nil {
 		return nil, err
 	}
@@ -49,4 +70,8 @@ func (db backend) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	return svc, nil
+}
+
+func (db backend) GetDocumentation() parser.AnnotationFields {
+	return db.annotationConfig.Annotations
 }

@@ -192,11 +192,13 @@ func TestHeaderAnnotations(t *testing.T) {
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
 			if err == nil {
-				t.Error("expected error but retuned nil")
+				t.Errorf("%v expected error but retuned nil", test.title)
 			}
 			continue
 		}
-
+		if err != nil {
+			t.Errorf("no error was expected but %v happened in %s", err, test.title)
+		}
 		u, ok := i.(*Config)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)

@@ -44,7 +44,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipallowlist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sessionaffinity"
@@ -2418,7 +2418,7 @@ func TestGetBackendServers(t *testing.T) {
 						},
 					},
 					ParsedAnnotations: &annotations.Ingress{
-						Whitelist:            ipwhitelist.SourceRange{CIDR: []string{"10.0.0.0/24"}},
+						Allowlist:            ipallowlist.SourceRange{CIDR: []string{"10.0.0.0/24"}},
 						ServerSnippet:        "bla",
 						ConfigurationSnippet: "blo",
 					},
@@ -2439,7 +2439,7 @@ func TestGetBackendServers(t *testing.T) {
 					t.Errorf("config snippet should be empty, got '%s'", s.Locations[0].ConfigurationSnippet)
 				}
 
-				if len(s.Locations[0].Whitelist.CIDR) != 1 || s.Locations[0].Whitelist.CIDR[0] != "10.0.0.0/24" {
+				if len(s.Locations[0].Allowlist.CIDR) != 1 || s.Locations[0].Allowlist.CIDR[0] != "10.0.0.0/24" {
 					t.Errorf("allow list was incorrectly dropped, len should be 1 and contain 10.0.0.0/24")
 				}
 

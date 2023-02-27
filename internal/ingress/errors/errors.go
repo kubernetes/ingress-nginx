@@ -110,3 +110,25 @@ func New(m string) error {
 func Errorf(format string, args ...interface{}) error {
 	return fmt.Errorf(format, args...)
 }
+
+type ValidationError struct {
+	Reason error
+}
+
+func (e ValidationError) Error() string {
+	return e.Reason.Error()
+}
+
+// NewValidationError returns a new LocationDenied error
+func NewValidationError(annotation string) error {
+	return ValidationError{
+		Reason: fmt.Errorf("annotation %s contains invalid value", annotation),
+	}
+}
+
+// IsValidationError checks if the err is an error which
+// indicates that some annotation value is invalid
+func IsValidationError(e error) bool {
+	_, ok := e.(ValidationError)
+	return ok
+}

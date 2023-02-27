@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-var annotation = parser.GetAnnotationWithPrefix("server-alias")
+var annotation = parser.GetAnnotationWithPrefix(serverAliasAnnotation)
 
 func TestParse(t *testing.T) {
 	ap := NewParser(&resolver.Mock{})
@@ -38,14 +38,16 @@ func TestParse(t *testing.T) {
 	testCases := []struct {
 		annotations map[string]string
 		expected    []string
+		wantErr     bool
 	}{
-		{map[string]string{annotation: "a.com, b.com, ,    c.com"}, []string{"a.com", "b.com", "c.com"}},
-		{map[string]string{annotation: "www.example.com"}, []string{"www.example.com"}},
-		{map[string]string{annotation: "*.example.com,www.example.*"}, []string{"*.example.com", "www.example.*"}},
-		{map[string]string{annotation: `~^www\d+\.example\.com$`}, []string{`~^www\d+\.example\.com$`}},
-		{map[string]string{annotation: ""}, []string{}},
-		{map[string]string{}, []string{}},
-		{nil, []string{}},
+		{map[string]string{annotation: "a.com, b.com, ,    c.com"}, []string{"a.com", "b.com", "c.com"}, false},
+		{map[string]string{annotation: "www.example.com"}, []string{"www.example.com"}, false},
+		{map[string]string{annotation: "*.example.com,www.example.*"}, []string{"*.example.com", "www.example.*"}, false},
+		{map[string]string{annotation: `~^www\d+\.example\.com$`}, []string{`~^www\d+\.example\.com$`}, false},
+		{map[string]string{annotation: `www.xpto;lala`}, []string{}, true},
+		{map[string]string{annotation: ""}, []string{}, true},
+		{map[string]string{}, []string{}, true},
+		{nil, []string{}, true},
 	}
 
 	ing := &networking.Ingress{
@@ -58,7 +60,10 @@ func TestParse(t *testing.T) {
 
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
-		result, _ := ap.Parse(ing)
+		result, err := ap.Parse(ing)
+		if (err != nil) != testCase.wantErr {
+			t.Errorf("ParseAliasAnnotation() annotation: %s, error = %v, wantErr %v", testCase.annotations, err, testCase.wantErr)
+		}
 		if !reflect.DeepEqual(result, testCase.expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}

@@ -25,6 +25,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -85,8 +86,8 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 func TestWithoutAnnotations(t *testing.T) {
 	ing := buildIngress()
 	_, err := NewParser(mockBackend{}).Parse(ing)
-	if err != nil {
-		t.Error("unexpected error with ingress without annotations")
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		t.Errorf("unexpected error with ingress without annotations: %s", err)
 	}
 }
 
@@ -94,22 +95,22 @@ func TestRateLimiting(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("limit-connections")] = "0"
-	data[parser.GetAnnotationWithPrefix("limit-rps")] = "0"
-	data[parser.GetAnnotationWithPrefix("limit-rpm")] = "0"
+	data[parser.GetAnnotationWithPrefix(limitRateConnectionsAnnotation)] = "0"
+	data[parser.GetAnnotationWithPrefix(limitRateRPSAnnotation)] = "0"
+	data[parser.GetAnnotationWithPrefix(limitRateRPMAnnotation)] = "0"
 	ing.SetAnnotations(data)
 
 	_, err := NewParser(mockBackend{}).Parse(ing)
 	if err != nil {
-		t.Errorf("unexpected error with invalid limits (0)")
+		t.Errorf("unexpected error with invalid limits (0): %s", err)
 	}
 
 	data = map[string]string{}
-	data[parser.GetAnnotationWithPrefix("limit-connections")] = "5"
-	data[parser.GetAnnotationWithPrefix("limit-rps")] = "100"
-	data[parser.GetAnnotationWithPrefix("limit-rpm")] = "10"
-	data[parser.GetAnnotationWithPrefix("limit-rate-after")] = "100"
-	data[parser.GetAnnotationWithPrefix("limit-rate")] = "10"
+	data[parser.GetAnnotationWithPrefix(limitRateConnectionsAnnotation)] = "5"
+	data[parser.GetAnnotationWithPrefix(limitRateRPSAnnotation)] = "100"
+	data[parser.GetAnnotationWithPrefix(limitRateRPMAnnotation)] = "10"
+	data[parser.GetAnnotationWithPrefix(limitRateAfterAnnotation)] = "100"
+	data[parser.GetAnnotationWithPrefix(limitRateAnnotation)] = "10"
 
 	ing.SetAnnotations(data)
 
@@ -147,12 +148,12 @@ func TestRateLimiting(t *testing.T) {
 	}
 
 	data = map[string]string{}
-	data[parser.GetAnnotationWithPrefix("limit-connections")] = "5"
-	data[parser.GetAnnotationWithPrefix("limit-rps")] = "100"
-	data[parser.GetAnnotationWithPrefix("limit-rpm")] = "10"
-	data[parser.GetAnnotationWithPrefix("limit-rate-after")] = "100"
-	data[parser.GetAnnotationWithPrefix("limit-rate")] = "10"
-	data[parser.GetAnnotationWithPrefix("limit-burst-multiplier")] = "3"
+	data[parser.GetAnnotationWithPrefix(limitRateConnectionsAnnotation)] = "5"
+	data[parser.GetAnnotationWithPrefix(limitRateRPSAnnotation)] = "100"
+	data[parser.GetAnnotationWithPrefix(limitRateRPMAnnotation)] = "10"
+	data[parser.GetAnnotationWithPrefix(limitRateAfterAnnotation)] = "100"
+	data[parser.GetAnnotationWithPrefix(limitRateAnnotation)] = "10"
+	data[parser.GetAnnotationWithPrefix(limitRateBurstMultiplierAnnotation)] = "3"
 
 	ing.SetAnnotations(data)
 
@@ -187,5 +188,63 @@ func TestRateLimiting(t *testing.T) {
 	}
 	if rateLimit.LimitRate != 10 {
 		t.Errorf("expected 10 in limit by limitrate but %v was returned", rateLimit.LimitRate)
+	}
+}
+
+func TestAnnotationCIDR(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(limitRateConnectionsAnnotation)] = "5"
+	data[parser.GetAnnotationWithPrefix(limitAllowlistAnnotation)] = "192.168.0.5, 192.168.50.32/24"
+	ing.SetAnnotations(data)
+
+	i, err := NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	rateLimit, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected a RateLimit type")
+	}
+	if len(rateLimit.Allowlist) != 2 {
+		t.Errorf("expected 2 cidrs in limit by ip but %v was returned", len(rateLimit.Allowlist))
+	}
+
+	data = map[string]string{}
+	data[parser.GetAnnotationWithPrefix(limitRateConnectionsAnnotation)] = "5"
+	data[parser.GetAnnotationWithPrefix(limitWhitelistAnnotation)] = "192.168.0.5, 192.168.50.32/24, 10.10.10.1"
+	ing.SetAnnotations(data)
+
+	i, err = NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	rateLimit, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected a RateLimit type")
+	}
+	if len(rateLimit.Allowlist) != 3 {
+		t.Errorf("expected 3 cidrs in limit by ip but %v was returned", len(rateLimit.Allowlist))
+	}
+
+	// Parent annotation surpasses any alias
+	data = map[string]string{}
+	data[parser.GetAnnotationWithPrefix(limitRateConnectionsAnnotation)] = "5"
+	data[parser.GetAnnotationWithPrefix(limitWhitelistAnnotation)] = "192.168.0.5, 192.168.50.32/24, 10.10.10.1"
+	data[parser.GetAnnotationWithPrefix(limitAllowlistAnnotation)] = "192.168.0.9"
+	ing.SetAnnotations(data)
+
+	i, err = NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	rateLimit, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected a RateLimit type")
+	}
+	if len(rateLimit.Allowlist) != 1 {
+		t.Errorf("expected 1 cidrs in limit by ip but %v was returned", len(rateLimit.Allowlist))
 	}
 }

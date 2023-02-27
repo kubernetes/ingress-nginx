@@ -93,7 +93,7 @@ func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
 
-	data[parser.GetAnnotationWithPrefix("proxy-ssl-secret")] = "default/demo-secret"
+	data[parser.GetAnnotationWithPrefix(proxySSLSecretAnnotation)] = "default/demo-secret"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-ciphers")] = "HIGH:-SHA"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-name")] = "$host"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-protocols")] = "TLSv1.3 SSLv2 TLSv1   TLSv1.2"

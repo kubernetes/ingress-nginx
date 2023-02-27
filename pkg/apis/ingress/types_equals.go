@@ -400,7 +400,7 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.Denylist).Equal(&l2.Denylist) {
 		return false
 	}
-	if !(&l1.Whitelist).Equal(&l2.Whitelist) {
+	if !(&l1.Allowlist).Equal(&l2.Allowlist) {
 		return false
 	}
 	if !(&l1.Proxy).Equal(&l2.Proxy) {
