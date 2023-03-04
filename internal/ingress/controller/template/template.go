@@ -1732,7 +1732,7 @@ func buildServerName(hostname string) string {
 	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
 }
 
-// parseComplexNGINXVar parses things like "$my${complex}ngx\$var" into
+// parseComplexNginxVarIntoLuaTable parses things like "$my${complex}ngx\$var" into
 // [["$var", "complex", "my", "ngx"]]. In other words, 2nd and 3rd elements
 // in the result are actual NGINX variable names, whereas first and 4th elements
 // are string literals.
