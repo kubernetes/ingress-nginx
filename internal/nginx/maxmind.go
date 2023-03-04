@@ -37,6 +37,9 @@ import (
 // MaxmindLicenseKey maxmind license key to download databases
 var MaxmindLicenseKey = ""
 
+// MaxmindLicenseKeyFile file containing maxmind license key
+var MaxmindLicenseKeyFile = ""
+
 // MaxmindEditionIDs maxmind editions (GeoLite2-City, GeoLite2-Country, GeoIP2-ISP, etc)
 var MaxmindEditionIDs = ""
 
@@ -139,6 +142,14 @@ func createURL(mirror, licenseKey, dbName string) string {
 }
 
 func downloadDatabase(dbName string) error {
+	if MaxmindLicenseKeyFile != "" {
+		b, err := os.ReadFile(MaxmindLicenseKeyFile)
+		if err != nil {
+			return err
+		}
+		MaxmindLicenseKey = string(b)
+	}
+
 	url := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

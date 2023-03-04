@@ -220,6 +220,7 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto.")
 	)
 
+	flags.StringVar(&nginx.MaxmindLicenseKeyFile, "maxmind-license-key-file", "", "File containing Maxmind license key.")
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
 	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
 https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases .`)
@@ -374,6 +375,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 
 	if *apiserverHost != "" {
 		config.RootCAFile = *rootCAFile
+	}
+
+	if nginx.MaxmindLicenseKeyFile != "" && nginx.MaxmindLicenseKey != "" {
+		return false, nil, fmt.Errorf("flags --maxmind-license-key-file and --maxmind-license-key are mutually exclusive")
 	}
 
 	var err error
