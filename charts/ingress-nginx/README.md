@@ -139,6 +139,20 @@ controller:
       domainName: "kubernetes-example.com"
 ```
 
+### AWS Internal Load Balancer Only
+To provision and use internal load balancer only
+```yaml
+controller:
+  service:
+    external: 
+      enabled: false
+    internal:
+      enabled: true
+      annotations:
+        # Create internal ELB
+        service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+```
+
 ### Additional Internal Load Balancer
 
 This setup is useful when you need both external and internal load balancers but don't want to have multiple ingress controllers and multiple ingress objects per application.
