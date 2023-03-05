@@ -150,6 +150,12 @@ controller:
     # -- Maxmind license key to download GeoLite2 Databases.
     ## https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
     maxmindLicenseKey: ""
+    # -- Alternatively provide the name of a secret to get the Maxmind license key from
+    maxmindLicenseKeySecret: ""
+    # -- Customize the location to mount the Maxmind license key secret
+    maxmindLicenseKeySecretVolumeMountPath: "/etc/maxmind"
+    # -- Customize the filename for the Maxmind license key secret
+    maxmindLicenseKeyFilename: "license_key"
     # -- Additional command line arguments to pass to nginx-ingress-controller
     # E.g. to specify the default SSL certificate you can use
     extraArgs: {}

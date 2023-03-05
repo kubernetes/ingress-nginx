@@ -167,6 +167,11 @@ spec:
               mountPath: /usr/local/certificates/
               readOnly: true
           {{- end }}
+          {{- if .Values.controller.maxmindLicenseKeySecret }}
+            - name: maxmind-license-key
+              mountPath: {{ .Values.controller.maxmindLicenseKeySecretVolumeMountPath }}
+              readOnly: true
+          {{- end }}
           {{- if .Values.controller.extraVolumeMounts }}
             {{- toYaml .Values.controller.extraVolumeMounts | nindent 12 }}
           {{- end }}
@@ -235,6 +240,14 @@ spec:
               - key: tls.key
                 path: key
         {{- end }}
+      {{- end }}
+      {{- if .Values.controller.maxmindLicenseKeySecret }}
+        - name: maxmind-license-key
+          secret:
+            secretName: {{ .Values.controller.maxmindLicenseKeySecret }}
+            items:
+              - key: {{ .Values.controller.maxmindLicenseKeyFilename }}
+                path: {{ .Values.controller.maxmindLicenseKeyFilename }}
       {{- end }}
       {{- if .Values.controller.extraVolumes }}
         {{ toYaml .Values.controller.extraVolumes | nindent 8 }}

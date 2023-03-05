@@ -39,6 +39,9 @@
 {{- if .Values.controller.maxmindLicenseKey }}
 - --maxmind-license-key={{ .Values.controller.maxmindLicenseKey }}
 {{- end }}
+{{- if .Values.controller.maxmindLicenseKeySecret }}
+- --maxmind-license-key-file={{ .Values.controller.maxmindLicenseKeySecretVolumeMountPath }}/{{ .Values.controller.maxmindLicenseKeyFilename }}
+{{- end }}
 {{- if .Values.controller.healthCheckHost }}
 - --healthz-host={{ .Values.controller.healthCheckHost }}
 {{- end }}
