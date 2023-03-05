@@ -104,7 +104,7 @@ Describe here `kubectl plugin`, `dbg`, `waitshutdown` and cover the hack scripts
 
 ### kubectl plugin
 
-It containes kubectl plugin for inspecting your ingress-nginx deployments.
+It contains kubectl plugin for inspecting your ingress-nginx deployments.
 This part of code can be found in [cmd/plugin](https://github.com/kubernetes/ingress-nginx/tree/main/cmd/plugin) directory
 Detail functions flow and available flow can be found in [kubectl-plugin](https://github.com/kubernetes/ingress-nginx/blob/main/docs/kubectl-plugin.md)
 

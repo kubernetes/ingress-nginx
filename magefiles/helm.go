@@ -20,14 +20,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	semver "github.com/blang/semver/v4"
 	"github.com/helm/helm/pkg/chartutil"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	yamlpath "github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
-	"os"
-	"strings"
 )
 
 const HelmChartPath = "charts/ingress-nginx/Chart.yaml"
@@ -114,7 +115,7 @@ func UpdateChartChangelog() {
 
 }
 
-// UpdateAppVersion Updates the Helm App Version of Ingress Nginx Controller
+// UpdateChartValue Updates the Helm ChartValue
 func (Helm) UpdateChartValue(key, value string) {
 	updateChartValue(key, value)
 }

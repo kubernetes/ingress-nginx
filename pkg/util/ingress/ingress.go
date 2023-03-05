@@ -46,7 +46,7 @@ func GetRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
 	return oldSet.Difference(newSet).List()
 }
 
-// GetRemovedCertificateSerialNumber extracts the difference of certificates between two configurations
+// GetRemovedCertificateSerialNumbers extracts the difference of certificates between two configurations
 func GetRemovedCertificateSerialNumbers(rucfg, newcfg *ingress.Configuration) []string {
 	oldCertificates := sets.NewString()
 	newCertificates := sets.NewString()
