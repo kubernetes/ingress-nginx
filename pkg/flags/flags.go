@@ -386,7 +386,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		if err = nginx.ValidateGeoLite2DBEditions(); err != nil {
 			return false, nil, err
 		}
-		if nginx.MaxmindLicenseKey != "" || nginx.MaxmindMirror != "" {
+		if nginx.MaxmindLicenseKey != "" || nginx.MaxmindLicenseKeyFile != "" || nginx.MaxmindMirror != "" {
 			klog.InfoS("downloading maxmind GeoIP2 databases")
 			if err = nginx.DownloadGeoLite2DB(nginx.MaxmindRetriesCount, nginx.MaxmindRetriesTimeout); err != nil {
 				klog.ErrorS(err, "unexpected error downloading GeoIP2 database")
