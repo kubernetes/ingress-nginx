@@ -407,97 +407,185 @@ controller:
   customTemplate:
     configMapName: ""
     configMapKey: ""
+
   service:
+    # -- Enable controller services or not. This does not influence the creation of either the admission webhook or the metrics service.
     enabled: true
-    # -- If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were
-    # using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
-    # It allows choosing the protocol for each backend specified in the Kubernetes service.
-    # See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244
-    # Will be ignored for Kubernetes versions older than 1.20
-    ##
-    appProtocol: true
-    # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine.
+
+    external:
+      # -- Enable the external controller service or not. Useful for internal-only deployments.
+      enabled: true
+
+    # -- Annotations to be added to the external controller service. See `controller.service.internal.annotations` for annotations to be added to the internal controller service.
     annotations: {}
+    # -- Labels to be added to both controller services.
     labels: {}
-    # clusterIP: ""
 
-    # -- List of IP addresses at which the controller services are available
-    ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
-    ##
+    # -- Type of both controller services.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+    type: LoadBalancer
+
+    # -- Pre-defined cluster internal IP address of the external controller service. Take care of collisions with existing services.
+    # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
+    clusterIP: ""
+
+    # -- List of node IP addresses at which the external controller service is available.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     externalIPs: []
-    # -- Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+
+    # -- Deprecated: Pre-defined IP address of the external controller service. Used by cloud providers to connect the resulting load balancer service to a pre-existing static IP.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
     loadBalancerIP: ""
+    # -- Restrict access to the external controller service. Values must be CIDRs. Allows any source address by default.
     loadBalancerSourceRanges: []
-    # -- Used by cloud providers to select a load balancer implementation other than the cloud provider default. https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+    # -- Load balancer class of the external controller service. Used by cloud providers to select a load balancer implementation other than the cloud provider default.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
     loadBalancerClass: ""
-    enableHttp: true
-    enableHttps: true
-    ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
-    ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
-    # externalTrafficPolicy: ""
 
-    ## Must be either "None" or "ClientIP" if set. Kubernetes will default to "None".
-    ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
-    # sessionAffinity: ""
+    # -- External traffic policy of the external controller service. Set to "Local" to preserve source IP on providers supporting it.
+    # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    externalTrafficPolicy: ""
 
-    ## Specifies the health check node port (numeric port number) for the service. If healthCheckNodePort isn’t specified,
-    ## the service controller allocates a port from your cluster’s NodePort range.
-    ## Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    # -- Session affinity of the external controller service. Must be either "None" or "ClientIP" if set. Defaults to "None".
+    # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
+    sessionAffinity: ""
+
+    # -- Specifies the health check node port (numeric port number) for the external controller service.
+    # If not specified, the service controller allocates a port from your cluster's node port range.
+    # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     # healthCheckNodePort: 0
 
-    # -- Represents the dual-stack-ness requested or required by this Service. Possible values are
-    # SingleStack, PreferDualStack or RequireDualStack.
-    # The ipFamilies and clusterIPs fields depend on the value of this field.
-    ## Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
-    ipFamilyPolicy: "SingleStack"
-    # -- List of IP families (e.g. IPv4, IPv6) assigned to the service. This field is usually assigned automatically
-    # based on cluster configuration and the ipFamilyPolicy field.
-    ## Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
+    # -- Represents the dual-stack capabilities of the external controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack.
+    # Fields `ipFamilies` and `clusterIP` depend on the value of this field.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: SingleStack
+    # -- List of IP families (e.g. IPv4, IPv6) assigned to the external controller service. This field is usually assigned automatically based on cluster configuration and the `ipFamilyPolicy` field.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
     ipFamilies:
       - IPv4
+
+    # -- Enable the HTTP listener on both controller services or not.
+    enableHttp: true
+    # -- Enable the HTTPS listener on both controller services or not.
+    enableHttps: true
+
     ports:
+      # -- Port the external HTTP listener is published with.
       http: 80
+      # -- Port the external HTTPS listener is published with.
       https: 443
+
     targetPorts:
+      # -- Port of the ingress controller the external HTTP listener is mapped to.
       http: http
+      # -- Port of the ingress controller the external HTTPS listener is mapped to.
       https: https
-    type: LoadBalancer
-    ## type: NodePort
-    ## nodePorts:
-    ##   http: 32080
-    ##   https: 32443
-    ##   tcp:
-    ##     8080: 32808
+
+    # -- Declare the app protocol of the external HTTP and HTTPS listeners or not. Supersedes provider-specific annotations for declaring the backend protocol.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
+    appProtocol: true
+
     nodePorts:
+      # -- Node port allocated for the external HTTP listener. If left empty, the service controller allocates one from the configured node port range.
       http: ""
+      # -- Node port allocated for the external HTTPS listener. If left empty, the service controller allocates one from the configured node port range.
       https: ""
+      # -- Node port mapping for external TCP listeners. If left empty, the service controller allocates them from the configured node port range.
+      # Example:
+      # tcp:
+      #   8080: 30080
       tcp: {}
+      # -- Node port mapping for external UDP listeners. If left empty, the service controller allocates them from the configured node port range.
+      # Example:
+      # udp:
+      #   53: 30053
       udp: {}
-    external:
-      enabled: true
+
     internal:
-      # -- Enables an additional internal load balancer (besides the external one).
+      # -- Enable the internal controller service or not. Remember to configure `controller.service.internal.annotations` when enabling this.
       enabled: false
-      # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine.
+
+      # -- Annotations to be added to the internal controller service. Mandatory for the internal controller service to be created. Varies with the cloud service.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
       annotations: {}
-      # -- Used by cloud providers to connect the resulting internal LoadBalancer to a pre-existing static IP. Make sure to add to the service the needed annotation to specify the subnet which the static IP belongs to. For instance, `networking.gke.io/internal-load-balancer-subnet` for GCP and `service.beta.kubernetes.io/aws-load-balancer-subnets` for AWS.
+
+      # -- Pre-defined cluster internal IP address of the internal controller service. Take care of collisions with existing services.
+      # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
+      clusterIP: ""
+
+      # -- List of node IP addresses at which the internal controller service is available.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
+      externalIPs: []
+
+      # -- Deprecated: Pre-defined IP address of the internal controller service. Used by cloud providers to connect the resulting load balancer service to a pre-existing static IP.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
       loadBalancerIP: ""
-      # -- Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
+      # -- Restrict access to the internal controller service. Values must be CIDRs. Allows any source address by default.
       loadBalancerSourceRanges: []
-      ## Set external traffic policy to: "Local" to preserve source IP on
-      ## providers supporting it
-      ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
-      # externalTrafficPolicy: ""
+      # -- Load balancer class of the internal controller service. Used by cloud providers to select a load balancer implementation other than the cloud provider default.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+      loadBalancerClass: ""
 
-      # -- Custom port mapping for internal service
+      # -- External traffic policy of the internal controller service. Set to "Local" to preserve source IP on providers supporting it.
+      # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+      externalTrafficPolicy: ""
+
+      # -- Session affinity of the internal controller service. Must be either "None" or "ClientIP" if set. Defaults to "None".
+      # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
+      sessionAffinity: ""
+
+      # -- Specifies the health check node port (numeric port number) for the internal controller service.
+      # If not specified, the service controller allocates a port from your cluster's node port range.
+      # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+      # healthCheckNodePort: 0
+
+      # -- Represents the dual-stack capabilities of the internal controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack.
+      # Fields `ipFamilies` and `clusterIP` depend on the value of this field.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+      ipFamilyPolicy: SingleStack
+      # -- List of IP families (e.g. IPv4, IPv6) assigned to the internal controller service. This field is usually assigned automatically based on cluster configuration and the `ipFamilyPolicy` field.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+      ipFamilies:
+        - IPv4
+
       ports: {}
-      #  http: 80
-      #  https: 443
+        # -- Port the internal HTTP listener is published with.
+        # Defaults to the value of `controller.service.ports.http`.
+        # http: 80
+        # -- Port the internal HTTPS listener is published with.
+        # Defaults to the value of `controller.service.ports.https`.
+        # https: 443
 
-      # -- Custom target port mapping for internal service
       targetPorts: {}
-      #  http: http
-      #  https: https
+        # -- Port of the ingress controller the internal HTTP listener is mapped to.
+        # Defaults to the value of `controller.service.targetPorts.http`.
+        # http: http
+        # -- Port of the ingress controller the internal HTTPS listener is mapped to.
+        # Defaults to the value of `controller.service.targetPorts.https`.
+        # https: https
+
+      # -- Declare the app protocol of the internal HTTP and HTTPS listeners or not. Supersedes provider-specific annotations for declaring the backend protocol.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
+      appProtocol: true
+
+      nodePorts:
+        # -- Node port allocated for the internal HTTP listener. If left empty, the service controller allocates one from the configured node port range.
+        http: ""
+        # -- Node port allocated for the internal HTTPS listener. If left empty, the service controller allocates one from the configured node port range.
+        https: ""
+        # -- Node port mapping for internal TCP listeners. If left empty, the service controller allocates them from the configured node port range.
+        # Example:
+        # tcp:
+        #   8080: 30080
+        tcp: {}
+        # -- Node port mapping for internal UDP listeners. If left empty, the service controller allocates them from the configured node port range.
+        # Example:
+        # udp:
+        #   53: 30053
+        udp: {}
+
   # shareProcessNamespace enables process namespace sharing within the pod.
   # This can be used for example to signal log rotation using `kill -USR1` from a sidecar.
   shareProcessNamespace: false
