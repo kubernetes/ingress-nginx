@@ -28,27 +28,28 @@ import (
 
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
-	var pod, deployment, selector *string
+	var pod, deployment, selector, container *string
 	cmd := &cobra.Command{
 		Use:   "ssh",
 		Short: "ssh into a running ingress-nginx pod",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			util.PrintError(ssh(flags, *pod, *deployment, *selector))
+			util.PrintError(ssh(flags, *pod, *deployment, *selector, *container))
 			return nil
 		},
 	}
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
 	selector = util.AddSelectorFlag(cmd)
+	container = util.AddContainerFlag(cmd)
 
 	return cmd
 }
 
-func ssh(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string) error {
+func ssh(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err
 	}
 
-	return kubectl.Exec(flags, []string{"exec", "-it", "-n", pod.Namespace, pod.Name, "--", "/bin/bash"})
+	return kubectl.Exec(flags, []string{"exec", "-it", "-n", pod.Namespace, "-c", container, pod.Name, "--", "/bin/bash"})
 }

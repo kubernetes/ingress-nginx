@@ -68,7 +68,7 @@ Use "ingress-nginx [command] --help" for more information about a command.
 ## Common Flags
 
 - Every subcommand supports the basic `kubectl` configuration flags like `--namespace`, `--context`, `--client-key` and so on.
-- Subcommands that act on a particular `ingress-nginx` pod (`backends`, `certs`, `conf`, `exec`, `general`, `logs`, `ssh`), support the `--deployment <deployment>` and `--pod <pod>` flags to select either a pod from a deployment with the given name, or a pod with the given name. The `--deployment` flag defaults to `ingress-nginx-controller`.
+- Subcommands that act on a particular `ingress-nginx` pod (`backends`, `certs`, `conf`, `exec`, `general`, `logs`, `ssh`), support the `--deployment <deployment>`, `--pod <pod>`, and `--container <container>` flags to select either a pod from a deployment with the given name, or a pod with the given name (and the given container name). The `--deployment` flag defaults to `ingress-nginx-controller`, and the `--container` flag defaults to `controller`.
 - Subcommands that inspect resources (`ingresses`, `lint`) support the `--all-namespaces` flag, which causes them to inspect resources in every namespace.
 
 ## Subcommands
