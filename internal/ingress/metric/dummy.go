@@ -54,7 +54,7 @@ func (dc DummyCollector) IncCheckCount(string, string) {}
 func (dc DummyCollector) IncCheckErrorCount(string, string) {}
 
 // RemoveMetrics dummy implementation
-func (dc DummyCollector) RemoveMetrics(_, _, _ []string) {}
+func (dc DummyCollector) RemoveMetrics(_, _ []string) {}
 
 // Start dummy implementation
 func (dc DummyCollector) Start(_ string) {}

@@ -46,7 +46,7 @@ type Collector interface {
 	IncOrphanIngress(string, string, string)
 	DecOrphanIngress(string, string, string)
 
-	RemoveMetrics(ingresses, endpoints, certificates []string)
+	RemoveMetrics(ingresses, certificates []string)
 
 	SetSSLExpireTime([]*ingress.Server)
 	SetSSLInfo(servers []*ingress.Server)
@@ -131,9 +131,9 @@ func (c *collector) IncReloadErrorCount() {
 	c.ingressController.IncReloadErrorCount()
 }
 
-func (c *collector) RemoveMetrics(ingresses, hosts, certificates []string) {
+func (c *collector) RemoveMetrics(ingresses, certificates []string) {
 	c.socket.RemoveMetrics(ingresses, c.registry)
-	c.ingressController.RemoveMetrics(hosts, certificates, c.registry)
+	c.ingressController.RemoveMetrics(certificates, c.registry)
 }
 
 func (c *collector) Start(admissionStatus string) {
