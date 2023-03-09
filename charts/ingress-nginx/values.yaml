@@ -527,6 +527,8 @@ controller:
 
     # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
     extraModules: []
+    # - name: mytestmodule
+    #   image: registry.k8s.io/ingress-nginx/mytestmodule
     #   containerSecurityContext:
     #     allowPrivilegeEscalation: false
     #
