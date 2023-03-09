@@ -19,6 +19,7 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -146,9 +147,12 @@ func updateChartValue(key, value string) {
 	}
 
 	//// write to file
-	newValueFile, err := yaml.Marshal(&n)
+	var b bytes.Buffer
+	yamlEncoder := yaml.NewEncoder(&b)
+	yamlEncoder.SetIndent(2)
+	err = yamlEncoder.Encode(&n)
 	CheckIfError(err, "HELM Could not Marshal new Values file")
-	err = os.WriteFile(HelmChartValues, newValueFile, 0644)
+	err = os.WriteFile(HelmChartValues, b.Bytes(), 0644)
 	CheckIfError(err, "HELM Could not write new Values file to %s", HelmChartValues)
 
 	Info("HELM Ingress Nginx Helm Chart update %s %s", key, value)
