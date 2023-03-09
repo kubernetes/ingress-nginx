@@ -792,7 +792,7 @@ rewrite "(?i)%s" %s break;
 
 func filterRateLimits(input interface{}) []ratelimit.Config {
 	ratelimits := []ratelimit.Config{}
-	found := sets.String{}
+	found := sets.Set[string]{}
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
@@ -815,12 +815,12 @@ func filterRateLimits(input interface{}) []ratelimit.Config {
 // for connection limit by IP address, one for limiting requests per minute, and
 // one for limiting requests per second.
 func buildRateLimitZones(input interface{}) []string {
-	zones := sets.String{}
+	zones := sets.Set[string]{}
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
 		klog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
-		return zones.List()
+		return zones.UnsortedList()
 	}
 
 	for _, server := range servers {
@@ -859,7 +859,7 @@ func buildRateLimitZones(input interface{}) []string {
 		}
 	}
 
-	return zones.List()
+	return zones.UnsortedList()
 }
 
 // buildRateLimit produces an array of limit_req to be used inside the Path of
@@ -1654,7 +1654,7 @@ func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Loc
 func buildMirrorLocations(locs []*ingress.Location) string {
 	var buffer bytes.Buffer
 
-	mapped := sets.String{}
+	mapped := sets.Set[string]{}
 
 	for _, loc := range locs {
 		if loc.Mirror.Source == "" || loc.Mirror.Target == "" {
@@ -1732,7 +1732,7 @@ func buildServerName(hostname string) string {
 	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
 }
 
-// parseComplexNGINXVar parses things like "$my${complex}ngx\$var" into
+// parseComplexNginxVarIntoLuaTable parses things like "$my${complex}ngx\$var" into
 // [["$var", "complex", "my", "ngx"]]. In other words, 2nd and 3rd elements
 // in the result are actual NGINX variable names, whereas first and 4th elements
 // are string literals.

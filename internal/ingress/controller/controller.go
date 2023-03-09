@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/hashstructure"
+	"github.com/mitchellh/hashstructure/v2"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -187,7 +187,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
-		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
+		hash, _ := hashstructure.Hash(pcfg, hashstructure.FormatV1, &hashstructure.HashOptions{
 			TagName: "json",
 		})
 
@@ -324,10 +324,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	}
 
 	k8s.SetDefaultNGINXPathType(ing)
-
-	if err := utilingress.ValidateIngressPath(ing, cfg.EnablePathTypeValidation, cfg.PathAdditionalAllowedChars); err != nil {
-		return fmt.Errorf("ingress contains invalid characters: %s", err)
-	}
 
 	allIngresses := n.store.ListIngresses()
 
@@ -545,11 +541,11 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 }
 
 // getConfiguration returns the configuration matching the standard kubernetes ingress
-func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.String, []*ingress.Server, *ingress.Configuration) {
+func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.Set[string], []*ingress.Server, *ingress.Configuration) {
 	upstreams, servers := n.getBackendServers(ingresses)
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
-	hosts := sets.NewString()
+	hosts := sets.New[string]()
 
 	for _, server := range servers {
 		// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of

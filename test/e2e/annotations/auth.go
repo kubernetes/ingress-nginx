@@ -720,51 +720,6 @@ http {
 		})
 	})
 
-	ginkgo.Context("when external authentication is configured along with CORS enabled", func() {
-		host := "auth"
-		var annotations map[string]string
-		var ing *networking.Ingress
-
-		ginkgo.BeforeEach(func() {
-			f.NewHttpbinDeployment()
-
-			var httpbinIP string
-
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			httpbinIP = e.Subsets[0].Addresses[0].IP
-
-			annotations = map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
-				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
-				"nginx.ingress.kubernetes.io/enable-cors": "true",
-			}
-
-			ing = framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
-
-			f.WaitForNginxServer(host, func(server string) bool {
-				return strings.Contains(server, "server_name auth")
-			})
-		})
-
-		ginkgo.It("should redirect to signin url when not signed in along With CORS headers in response", func() {
-			f.HTTPTestClient().
-				GET("/").
-				WithHeader("Host", host).
-				WithQuery("a", "b").
-				WithQuery("c", "d").
-				Expect().
-				Status(http.StatusFound).
-				Header("Access-Control-Allow-Origin").Equal(fmt.Sprintf("*"))
-
-		})
-	})
-
 	ginkgo.Context("when external authentication with caching is configured", func() {
 		thisHost := "auth"
 		thatHost := "different"

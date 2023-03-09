@@ -52,7 +52,7 @@ type Collector interface {
 	SetSSLInfo(servers []*ingress.Server)
 
 	// SetHosts sets the hostnames that are being served by the ingress controller
-	SetHosts(sets.String)
+	SetHosts(set sets.Set[string])
 
 	Start(string)
 	Stop(string)
@@ -191,7 +191,7 @@ func (c *collector) DecOrphanIngress(namespace string, name string, orphanityTyp
 	c.ingressController.DecOrphanIngress(namespace, name, orphanityType)
 }
 
-func (c *collector) SetHosts(hosts sets.String) {
+func (c *collector) SetHosts(hosts sets.Set[string]) {
 	c.socket.SetHosts(hosts)
 }
 

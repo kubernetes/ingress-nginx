@@ -8,6 +8,7 @@ controller:
     digest:
     digestChroot:
   scope:
+    # Necessary to allow the ingress controller to get the topology information from the nodes
     enabled: false
   config:
     worker-processes: "1"
@@ -19,12 +20,7 @@ controller:
     periodSeconds: 1
   service:
     type: NodePort
-  electionID: ingress-controller-leader
-  ingressClassResource:
-    # We will create and remove each IC/ClusterRole/ClusterRoleBinding per test so there's no conflict
-    enabled: false
   extraArgs:
-    tcp-services-configmap: $NAMESPACE/tcp-services
     # e2e tests do not require information about ingress status
     update-status: "false"
   terminationGracePeriodSeconds: 1
@@ -32,19 +28,6 @@ controller:
     enabled: false
 
   enableTopologyAwareRouting: true
-
-  # ulimit -c unlimited
-  # mkdir -p /tmp/coredump
-  # chmod a+rwx /tmp/coredump
-  # echo "/tmp/coredump/core.%e.%p.%h.%t" > /proc/sys/kernel/core_pattern
-  extraVolumeMounts:
-    - name: coredump
-      mountPath: /tmp/coredump
-
-  extraVolumes:
-    - name: coredump
-      hostPath:
-        path: /tmp/coredump
 
 rbac:
   create: true

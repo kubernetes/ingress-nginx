@@ -59,7 +59,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
-	ingressutils "k8s.io/ingress-nginx/pkg/util/ingress"
 )
 
 // IngressFilterFunc decides if an Ingress should be omitted or not
@@ -702,7 +701,6 @@ func New(
 		},
 	}
 
-	// TODO: add e2e test to verify that changes to one or more configmap trigger an update
 	changeTriggerUpdate := func(name string) bool {
 		return name == configmap || name == tcp || name == udp
 	}
@@ -845,11 +843,6 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 
 	copyIng := &networkingv1.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
-
-	if err := ingressutils.ValidateIngressPath(ing, s.backendConfig.EnablePathTypeValidation, s.backendConfig.PathAdditionalAllowedChars); err != nil {
-		klog.Errorf("ingress %s contains invalid path and will be skipped: %s", key, err)
-		return
-	}
 
 	if s.backendConfig.AnnotationValueWordBlocklist != "" {
 		if err := checkBadAnnotationValue(copyIng.Annotations, s.backendConfig.AnnotationValueWordBlocklist); err != nil {

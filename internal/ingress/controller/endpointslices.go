@@ -34,7 +34,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
-// getEndpoints returns a list of Endpoint structs for a given service/target port combination.
+// getEndpointsFromSlices returns a list of Endpoint structs for a given service/target port combination.
 func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto corev1.Protocol, zoneForHints string,
 	getServiceEndpointsSlices func(string) ([]*discoveryv1.EndpointSlice, error)) []ingress.Endpoint {
 
@@ -128,7 +128,7 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 		}
 
 		for _, ep := range eps.Endpoints {
-			if !(*ep.Conditions.Ready) {
+			if (ep.Conditions.Ready != nil) && !(*ep.Conditions.Ready) {
 				continue
 			}
 			epHasZone := false
