@@ -1,6 +1,6 @@
 module k8s.io/ingress-nginx
 
-go 1.19
+go 1.20
 
 require (
 	github.com/armon/go-proxyproto v0.0.0-20210323213023-7e956b284f0a
@@ -93,7 +93,7 @@ require (
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
