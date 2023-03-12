@@ -19,9 +19,9 @@ package annotations
 import (
 	"context"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"net/url"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -899,7 +899,8 @@ http {
 //   Auth error
 
 func buildSecret(username, password, name, namespace string) *corev1.Secret {
-	out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	//out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	out, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	encpass := fmt.Sprintf("%v:%s\n", username, out)
 	assert.Nil(ginkgo.GinkgoT(), err)
 
@@ -917,7 +918,8 @@ func buildSecret(username, password, name, namespace string) *corev1.Secret {
 }
 
 func buildMapSecret(username, password, name, namespace string) *corev1.Secret {
-	out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	//out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	out, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	assert.Nil(ginkgo.GinkgoT(), err)
 
 	return &corev1.Secret{
