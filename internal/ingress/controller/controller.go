@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -968,14 +969,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			// configure traffic shaping for canary
 			if anns.Canary.Enabled {
 				upstreams[defBackend].NoServer = true
-				upstreams[defBackend].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-					Weight:        anns.Canary.Weight,
-					WeightTotal:   anns.Canary.WeightTotal,
-					Header:        anns.Canary.Header,
-					HeaderValue:   anns.Canary.HeaderValue,
-					HeaderPattern: anns.Canary.HeaderPattern,
-					Cookie:        anns.Canary.Cookie,
-				}
+				upstreams[defBackend].TrafficShapingPolicy = newTrafficShapingPolicy(anns.Canary)
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
@@ -1040,13 +1034,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				// configure traffic shaping for canary
 				if anns.Canary.Enabled {
 					upstreams[name].NoServer = true
-					upstreams[name].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-						Weight:        anns.Canary.Weight,
-						Header:        anns.Canary.Header,
-						HeaderValue:   anns.Canary.HeaderValue,
-						HeaderPattern: anns.Canary.HeaderPattern,
-						Cookie:        anns.Canary.Cookie,
-					}
+					upstreams[name].TrafficShapingPolicy = newTrafficShapingPolicy(anns.Canary)
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
@@ -1818,4 +1806,16 @@ func (n *NGINXController) getStreamSnippets(ingresses []*ingress.Ingress) []stri
 		snippets = append(snippets, i.ParsedAnnotations.StreamSnippet)
 	}
 	return snippets
+}
+
+// newTrafficShapingPolicy creates new ingress.TrafficShapingPolicy instance using canary configuration
+func newTrafficShapingPolicy(cfg canary.Config) ingress.TrafficShapingPolicy {
+	return ingress.TrafficShapingPolicy{
+		Weight:        cfg.Weight,
+		WeightTotal:   cfg.WeightTotal,
+		Header:        cfg.Header,
+		HeaderValue:   cfg.HeaderValue,
+		HeaderPattern: cfg.HeaderPattern,
+		Cookie:        cfg.Cookie,
+	}
 }
