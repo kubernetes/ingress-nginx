@@ -420,7 +420,7 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
 func (f *Framework) NewHttpbinDeployment() {
-	f.NewDeployment(HTTPBinService, "registry.k8s.io/ingress-nginx/e2e-test-httpbin@sha256:c6372ef57a775b95f18e19d4c735a9819f2e7bb4641e5e3f27287d831dfeb7e8", 80, 1)
+	f.NewDeployment(HTTPBinService, "registry.k8s.io/ingress-nginx/e2e-test-httpbin@sha256:23eb4b1775fbaa2adca55c73cf0341e1224d6308689b6f4b3aa1523312eb81c", 80, 1)
 }
 
 func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {
