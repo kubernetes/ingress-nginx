@@ -188,7 +188,7 @@ jobs:
             | pigz > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: docker.tar.gz
           path: docker.tar.gz
@@ -320,7 +320,7 @@ jobs:
           make kind-e2e-test
 
       - name: Uplaod e2e junit-reports
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: success() || failure()
         with:
           name: e2e-test-reports-${{ matrix.k8s }}
@@ -375,7 +375,7 @@ jobs:
           make kind-e2e-test
 
       - name: Uplaod e2e junit-reports
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: success() || failure()
         with:
           name: e2e-test-reports-chroot-${{ matrix.k8s }}
