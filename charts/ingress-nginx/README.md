@@ -456,6 +456,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.watchIngressWithoutClass | bool | `false` | Process Ingress objects without ingressClass annotation/ingressClassName field Overrides value for --watch-ingress-without-class flag of the controller binary Defaults to false |
 | defaultBackend.affinity | object | `{}` |  |
 | defaultBackend.autoscaling.annotations | object | `{}` |  |
+| defaultBackend.autoscaling.apiVersion | string | `"autoscaling/v2"` |  |
 | defaultBackend.autoscaling.enabled | bool | `false` |  |
 | defaultBackend.autoscaling.maxReplicas | int | `2` |  |
 | defaultBackend.autoscaling.minReplicas | int | `1` |  |
