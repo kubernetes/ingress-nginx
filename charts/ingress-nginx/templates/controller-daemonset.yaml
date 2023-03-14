@@ -33,7 +33,7 @@ spec:
       {{- end }}
     {{- end }}
       labels:
-        {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
+        {{- include "ingress-nginx.labels" . | nindent 8 }}
         app.kubernetes.io/component: controller
         {{- with .Values.controller.labels }}
         {{- toYaml . | nindent 8 }}
