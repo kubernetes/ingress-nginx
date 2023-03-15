@@ -50,6 +50,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
+|[nginx.ingress.kubernetes.io/custom-headers](#custom-headers)|string|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
@@ -336,6 +337,19 @@ If `custom-http-errors` is also specified globally, the error values specified i
 Example usage:
 ```
 nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
+```
+
+### Custom Headers
+This annotation is of the form `nginx.ingress.kubernetes.io/custom-headers: custom-headers-configmap` to specify a configmap name that contains custom headers. This annotation uses `more_set_headers` nginx directive.
+
+Example configmap:
+```yaml
+apiVersion: v1
+data:
+  Content-Type: application/json
+kind: ConfigMap
+metadata:
+  name: custom-headers-configmap
 ```
 
 ### Default Backend
