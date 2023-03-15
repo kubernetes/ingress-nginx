@@ -135,7 +135,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Canary":                      canary.NewParser(cfg),
 			"CertificateAuth":             authtls.NewParser(cfg),
 			"ClientBodyBufferSize":        clientbodybuffersize.NewParser(cfg),
-			"ClientHeaders":               customheaders.NewParser(cfg),
+			"CustomHeaders":               customheaders.NewParser(cfg),
 			"ConfigurationSnippet":        snippet.NewParser(cfg),
 			"Connection":                  connection.NewParser(cfg),
 			"CorsConfig":                  cors.NewParser(cfg),
