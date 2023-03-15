@@ -40,7 +40,7 @@ var (
 
 // ValidHeader checks is the provided string satisfies the header's name regex
 func ValidHeader(header string) bool {
-	return headerRegexp.Match([]byte(header))
+	return headerRegexp.MatchString(header)
 }
 
 type customHeaders struct {
