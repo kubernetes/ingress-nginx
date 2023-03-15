@@ -1504,6 +1504,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) {
 	loc.BasicDigestAuth = anns.BasicDigestAuth
 	loc.ClientBodyBufferSize = anns.ClientBodyBufferSize
+	loc.CustomHeaders = anns.CustomHeaders
 	loc.ConfigurationSnippet = anns.ConfigurationSnippet
 	loc.CorsConfig = anns.CorsConfig
 	loc.ExternalAuth = anns.ExternalAuth
