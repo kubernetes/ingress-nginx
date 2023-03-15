@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-// Config returns external authentication configuration for an Ingress rule
+// Config returns the custom response headers for an Ingress rule
 type Config struct {
 	Headers map[string]string `json:"headers,omitempty"`
 }
@@ -47,13 +47,13 @@ type customHeaders struct {
 	r resolver.Resolver
 }
 
-// NewParser creates a new authentication request annotation parser
+// NewParser creates a new custom response headers annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return customHeaders{r}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
-// rule used to use an Config URL as source for authentication
+// Parse parses the annotations contained in the ingress to use
+// custom response headers
 func (a customHeaders) Parse(ing *networking.Ingress) (interface{}, error) {
 	clientHeadersConfigMapName, err := parser.GetStringAnnotation("custom-headers", ing)
 	if err != nil {
