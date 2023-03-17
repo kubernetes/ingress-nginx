@@ -378,7 +378,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		}
 
 		if stats.Latency != -1 {
-			if sc.requestTime != nil {
+			if sc.connectTime != nil {
 				connectTimeMetric, err := sc.connectTime.GetMetricWith(requestLabels)
 				if err != nil {
 					klog.ErrorS(err, "Error fetching connect time metric")
