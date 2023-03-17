@@ -107,7 +107,7 @@ var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets, excludedMetrics []string) (*SocketCollector, error) {
+func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets, excludeMetrics []string) (*SocketCollector, error) {
 	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	_ = syscall.Unlink(socket)
@@ -133,8 +133,8 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		requestTags = append(requestTags, "host")
 	}
 
-	em := make(map[string]struct{}, len(excludedMetrics))
-	for _, m := range excludedMetrics {
+	em := make(map[string]struct{}, len(excludeMetrics))
+	for _, m := range excludeMetrics {
 		// remove potential nginx_ingress_controller prefix from the metric name
 		// TBD: how to handle fully qualified histogram metrics e.g. _buckets and _sum. Should we just remove the suffix and remove the histogram metric or ignore it?
 		em[strings.TrimPrefix(m, "nginx_ingress_controller_")] = struct{}{}
@@ -277,16 +277,16 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 	return sc, nil
 }
 
-func containsMetric(excludedMetrics map[string]struct{}, name string) bool {
-	if _, ok := excludedMetrics[name]; ok {
+func containsMetric(excludeMetrics map[string]struct{}, name string) bool {
+	if _, ok := excludeMetrics[name]; ok {
 		klog.V(3).InfoS("Skipping metric", "metric", name)
 		return true
 	}
 	return false
 }
 
-func summaryMetric(opts prometheus.SummaryOpts, requestTags []string, excludedMetrics map[string]struct{}) *prometheus.SummaryVec {
-	if containsMetric(excludedMetrics, opts.Name) {
+func summaryMetric(opts prometheus.SummaryOpts, requestTags []string, excludeMetrics map[string]struct{}) *prometheus.SummaryVec {
+	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
 	return prometheus.NewSummaryVec(
@@ -295,8 +295,8 @@ func summaryMetric(opts prometheus.SummaryOpts, requestTags []string, excludedMe
 	)
 }
 
-func counterMetric(opts prometheus.CounterOpts, requestTags []string, excludedMetrics map[string]struct{}) *prometheus.CounterVec {
-	if containsMetric(excludedMetrics, opts.Name) {
+func counterMetric(opts prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}) *prometheus.CounterVec {
+	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
 	return prometheus.NewCounterVec(
@@ -305,8 +305,8 @@ func counterMetric(opts prometheus.CounterOpts, requestTags []string, excludedMe
 	)
 }
 
-func histogramMetric(opts prometheus.HistogramOpts, requestTags []string, excludedMetrics map[string]struct{}) *prometheus.HistogramVec {
-	if containsMetric(excludedMetrics, opts.Name) {
+func histogramMetric(opts prometheus.HistogramOpts, requestTags []string, excludeMetrics map[string]struct{}) *prometheus.HistogramVec {
+	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
 	return prometheus.NewHistogramVec(
@@ -378,7 +378,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		}
 
 		if stats.Latency != -1 {
-			if sc.connectTime != nil {
+			if sc.requestTime != nil {
 				connectTimeMetric, err := sc.connectTime.GetMetricWith(requestLabels)
 				if err != nil {
 					klog.ErrorS(err, "Error fetching connect time metric")
