@@ -70,7 +70,7 @@ func main() {
 	mc := metric.NewDummyCollector()
 	if conf.EnableMetrics {
 		// TODO: Ingress class is not a part of dataplane anymore
-		mc, err = metric.NewCollector(conf.MetricsPerHost, conf.ReportStatusClasses, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets)
+		mc, err = metric.NewCollector(conf.MetricsPerHost, conf.ReportStatusClasses, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets, conf.ExcludeSocketMetrics)
 		if err != nil {
 			klog.Fatalf("Error creating prometheus collector:  %v", err)
 		}
