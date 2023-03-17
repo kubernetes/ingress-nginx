@@ -17,13 +17,12 @@ data:
 {{- if .Values.controller.addHeaders }}
   add-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers
 {{- end }}
-{{- if or .Values.controller.proxySetHeaders .Values.controller.headers }}
+{{- if .Values.controller.proxySetHeaders }}
   proxy-set-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
 {{- end }}
 {{- if .Values.dhParam }}
-  ssl-dh-param: {{ printf "%s/%s" .Release.Namespace (include "ingress-nginx.controller.fullname" .) }}
+  ssl-dh-param: {{ .Release.Namespace }}/{{ include "ingress-nginx.controller.fullname" . }}
 {{- end }}
 {{- range $key, $value := .Values.controller.config }}
-    {{- $key | nindent 2 }}: {{ $value | quote }}
+  {{- $key | nindent 2 }}: {{ $value | quote }}
 {{- end }}
-
