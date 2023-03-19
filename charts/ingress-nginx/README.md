@@ -271,11 +271,11 @@ Kubernetes: `>=1.20.0-0`
 | controller.admissionWebhooks.networkPolicyEnabled | bool | `false` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
-| controller.admissionWebhooks.patch.image.digest | string | `"sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f"` |  |
+| controller.admissionWebhooks.patch.image.digest | string | `"sha256:01d181618f270f2a96c04006f33b2699ad3ccb02da48d0f89b22abce084b292f"` |  |
 | controller.admissionWebhooks.patch.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |
 | controller.admissionWebhooks.patch.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.admissionWebhooks.patch.image.registry | string | `"registry.k8s.io"` |  |
-| controller.admissionWebhooks.patch.image.tag | string | `"v20220916-gd32f8c343"` |  |
+| controller.admissionWebhooks.patch.image.tag | string | `"v20230312-helm-chart-4.5.2-28-g66a760794"` |  |
 | controller.admissionWebhooks.patch.labels | object | `{}` | Labels to be added to patch job resources |
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
