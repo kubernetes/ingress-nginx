@@ -68,9 +68,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 		},
 	}
 
-	cm, err := f.EnsureConfigMap(configuration)
-	assert.Nil(ginkgo.GinkgoT(), err, "creating an Influxdb deployment")
-	assert.NotNil(ginkgo.GinkgoT(), cm, "expected a configmap but none returned")
+	f.EnsureConfigMap(configuration)
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -136,7 +134,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 
 	d := f.EnsureDeployment(deployment)
 
-	err = waitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
+	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for influxdb pod to become ready")

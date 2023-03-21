@@ -26,7 +26,7 @@ func (f *Framework) VerifyHealthz(ip string, statusCode int) error {
 	url := fmt.Sprintf("http://%v:10254/healthz", ip)
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("creating GET request for URL %q failed: %v", url, err)
 	}

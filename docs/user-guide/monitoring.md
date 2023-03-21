@@ -170,7 +170,7 @@ According to the above example, this URL will be http://10.192.0.3:31086
   - By default request metrics are labeled with the hostname. When you have a wildcard domain ingress, then there will be no metrics for that ingress (to prevent the metrics from exploding in cardinality). To get metrics in this case you need to run the ingress controller with `--metrics-per-host=false` (you will lose labeling by hostname, but still have labeling by ingress).
 
 ### Grafana dashboard using ingress resource
-  - If you want to expose the dashboard for grafana using a ingress resource, then you can :
+  - If you want to expose the dashboard for grafana using an ingress resource, then you can :
     - change the service type of the prometheus-server service and the grafana service to "ClusterIP" like this :
     ```
     kubectl -n ingress-nginx edit svc grafana
@@ -178,8 +178,8 @@ According to the above example, this URL will be http://10.192.0.3:31086
     - This will open the currently deployed service grafana in the default editor configured in your shell (vi/nvim/nano/other)
     - scroll down to line 34 that looks like "type: NodePort"
     - change it to look like "type: ClusterIP". Save and exit.
-    - create a ingress resource with backend as "grafana" and port as "3000"
-  - Similarly, you can edit the service "prometheus-server" and add a ingress resource.
+    - create an ingress resource with backend as "grafana" and port as "3000"
+  - Similarly, you can edit the service "prometheus-server" and add an ingress resource.
 
 ## Prometheus and Grafana installation using Service Monitors
 This document assumes you're using helm and using the kube-prometheus-stack package to install Prometheus and Grafana.

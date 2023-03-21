@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os/exec"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,18 +32,12 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("[TopologyHints] topology aware routing", func() {
+var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware routing", func() {
 	f := framework.NewDefaultFramework("topology")
 	host := "topology-svc.foo.com"
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(2), framework.WithSvcTopologyAnnotations())
-	})
-
-	ginkgo.AfterEach(func() {
-		// we need to uninstall chart because of clusterRole which is not destroyed with namespace
-		err := uninstallChart(f)
-		assert.Nil(ginkgo.GinkgoT(), err, "uninstalling helm chart")
 	})
 
 	ginkgo.It("should return 200 when service has topology hints", func() {
@@ -100,13 +93,3 @@ var _ = framework.IngressNginxDescribe("[TopologyHints] topology aware routing",
 		}
 	})
 })
-
-func uninstallChart(f *framework.Framework) error {
-	cmd := exec.Command("helm", "uninstall", "--namespace", f.Namespace, "nginx-ingress")
-	_, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("unexpected error uninstalling ingress-nginx release: %v", err)
-	}
-
-	return nil
-}

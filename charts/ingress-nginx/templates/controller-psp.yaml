@@ -28,9 +28,9 @@ spec:
   volumes:
     - 'configMap'
     - 'emptyDir'
-    #- 'projected'
+    - 'projected'
     - 'secret'
-    #- 'downwardAPI'
+    - 'downwardAPI'
 {{- if .Values.controller.hostNetwork }}
   hostNetwork: {{ .Values.controller.hostNetwork }}
 {{- end }}

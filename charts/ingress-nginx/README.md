@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.4.2](https://img.shields.io/badge/Version-4.4.2-informational?style=flat-square) ![AppVersion: 1.5.1](https://img.shields.io/badge/AppVersion-1.5.1-informational?style=flat-square)
+![Version: 4.5.2](https://img.shields.io/badge/Version-4.5.2-informational?style=flat-square) ![AppVersion: 1.6.4](https://img.shields.io/badge/AppVersion-1.6.4-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -228,7 +228,7 @@ A validating and configuration requires the endpoint to which the request is sen
 #### Alternatives
 It should be possible to use [cert-manager/cert-manager](https://github.com/cert-manager/cert-manager) if a more complete solution is required.
 
-You can enable automatic self-signed TLS certificate provisioning via cert-manager by setting the `controller.admissionWebhooks.certManager.enable` value to true.
+You can enable automatic self-signed TLS certificate provisioning via cert-manager by setting the `controller.admissionWebhooks.certManager.enabled` value to true.
 
 Please ensure that cert-manager is correctly installed and configured.
 
@@ -253,7 +253,6 @@ Kubernetes: `>=1.20.0-0`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | commonLabels | object | `{}` |  |
-| controller.EnablePathTypeValidation | bool | `false` | This configuration defines if Ingress Controller should validate pathType. If false, special characters will be allowed on paths of any pathType. If true, special characters are only allowed on paths with pathType = ImplementationSpecific |
 | controller.addHeaders | object | `{}` | Will add custom headers before sending response traffic to the client according to: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers |
 | controller.admissionWebhooks.annotations | object | `{}` |  |
 | controller.admissionWebhooks.certManager.admissionCert.duration | string | `""` |  |
@@ -272,11 +271,11 @@ Kubernetes: `>=1.20.0-0`
 | controller.admissionWebhooks.networkPolicyEnabled | bool | `false` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
-| controller.admissionWebhooks.patch.image.digest | string | `"sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f"` |  |
+| controller.admissionWebhooks.patch.image.digest | string | `"sha256:01d181618f270f2a96c04006f33b2699ad3ccb02da48d0f89b22abce084b292f"` |  |
 | controller.admissionWebhooks.patch.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |
 | controller.admissionWebhooks.patch.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.admissionWebhooks.patch.image.registry | string | `"registry.k8s.io"` |  |
-| controller.admissionWebhooks.patch.image.tag | string | `"v20220916-gd32f8c343"` |  |
+| controller.admissionWebhooks.patch.image.tag | string | `"v20230312-helm-chart-4.5.2-28-g66a760794"` |  |
 | controller.admissionWebhooks.patch.labels | object | `{}` | Labels to be added to patch job resources |
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
@@ -334,13 +333,13 @@ Kubernetes: `>=1.20.0-0`
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
 | controller.image.chroot | bool | `false` |  |
-| controller.image.digest | string | `"sha256:4ba73c697770664c1e00e9f968de14e08f606ff961c76e5d7033a4a9c593c629"` |  |
-| controller.image.digestChroot | string | `"sha256:c1c091b88a6c936a83bd7b098662760a87868d12452529bad0d178fb36147345"` |  |
+| controller.image.digest | string | `"sha256:15be4666c53052484dd2992efacf2f50ea77a78ae8aa21ccd91af6baaa7ea22f"` |  |
+| controller.image.digestChroot | string | `"sha256:0de01e2c316c3ca7847ca13b32d077af7910d07f21a4a82f81061839764f8f81"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.5.1"` |  |
+| controller.image.tag | string | `"v1.6.4"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
@@ -396,7 +395,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/user-guide/node-selection/ # |
 | controller.opentelemetry.containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
 | controller.opentelemetry.enabled | bool | `false` |  |
-| controller.opentelemetry.image | string | `"registry.k8s.io/ingress-nginx/opentelemetry:v20230107-helm-chart-4.4.2-2-g96b3d2165@sha256:331b9bebd6acfcd2d3048abbdd86555f5be76b7e3d0b5af4300b04235c6056c9"` |  |
+| controller.opentelemetry.image | string | `"registry.k8s.io/ingress-nginx/opentelemetry:v20230312-helm-chart-4.5.2-28-g66a760794@sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f"` |  |
 | controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
 | controller.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | controller.podSecurityContext | object | `{}` | Security Context policies for controller pods |
@@ -457,6 +456,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.watchIngressWithoutClass | bool | `false` | Process Ingress objects without ingressClass annotation/ingressClassName field Overrides value for --watch-ingress-without-class flag of the controller binary Defaults to false |
 | defaultBackend.affinity | object | `{}` |  |
 | defaultBackend.autoscaling.annotations | object | `{}` |  |
+| defaultBackend.autoscaling.apiVersion | string | `"autoscaling/v2"` |  |
 | defaultBackend.autoscaling.enabled | bool | `false` |  |
 | defaultBackend.autoscaling.maxReplicas | int | `2` |  |
 | defaultBackend.autoscaling.minReplicas | int | `1` |  |
@@ -509,7 +509,7 @@ Kubernetes: `>=1.20.0-0`
 | defaultBackend.serviceAccount.name | string | `""` |  |
 | defaultBackend.tolerations | list | `[]` | Node tolerations for server scheduling to nodes with taints # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ # |
 | defaultBackend.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet # |
-| dhParam | string | `nil` | A base64-encoded Diffie-Hellman parameter. This can be generated with: `openssl dhparam 4096 2> /dev/null | base64` # Ref: https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/ssl-dh-param |
+| dhParam | string | `""` | A base64-encoded Diffie-Hellman parameter. This can be generated with: `openssl dhparam 4096 2> /dev/null | base64` # Ref: https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/ssl-dh-param |
 | imagePullSecrets | list | `[]` | Optional array of imagePullSecrets containing private registry credentials # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | podSecurityPolicy.enabled | bool | `false` |  |
 | portNamePrefix | string | `""` | Prefix for TCP and UDP ports names in ingress controller service # Some cloud providers, like Yandex Cloud may have a requirements for a port name regex to support cloud load balancer integration |

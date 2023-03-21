@@ -78,7 +78,7 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 var (
 	// IngressPodDetails hold information about the ingress-nginx pod
 	IngressPodDetails *PodInfo
-	// IngressNodeDetails old information about the node running ingress-nginx pod
+	// IngressNodeDetails hold information about the node running ingress-nginx pod
 	IngressNodeDetails *NodeInfo
 )
 
@@ -180,6 +180,9 @@ func SetDefaultNGINXPathType(ing *networkingv1.Ingress) {
 				p.PathType = &defaultPathType
 			}
 
+			if *p.PathType == networkingv1.PathTypeImplementationSpecific {
+				p.PathType = &defaultPathType
+			}
 		}
 	}
 }

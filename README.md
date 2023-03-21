@@ -38,6 +38,7 @@ the versions listed. Ingress-Nginx versions may work on older versions but the p
 
 | Ingress-NGINX version | k8s supported version        | Alpine Version | Nginx Version |
 |-----------------------|------------------------------|----------------|---------------|
+| v1.6.4                | 1.26, 1.25, 1.24, 1.23       | 3.17.0         | 1.21.6        |
 | v1.5.1                | 1.25, 1.24, 1.23             | 3.16.2         | 1.21.6        |
 | v1.4.0                | 1.25, 1.24, 1.23, 1.22       | 3.16.2         | 1.19.10†      |
 | v1.3.1                | 1.24, 1.23, 1.22, 1.21, 1.20 | 3.16.2         | 1.19.10†      |
