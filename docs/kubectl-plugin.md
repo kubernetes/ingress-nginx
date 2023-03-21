@@ -208,7 +208,7 @@ modsecurity
 modules
 nginx.conf
 opentracing.json
-opentelemtry.toml
+opentelemetry.toml
 owasp-modsecurity-crs
 template
 ```

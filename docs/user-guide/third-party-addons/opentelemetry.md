@@ -42,7 +42,7 @@ opentelemetry-operation-name
 # sets whether or not to trust incoming telemetry spans
 opentelemetry-trust-incoming-span
 
-# specifies the port to use when uploading traces, Default: 9411
+# specifies the port to use when uploading traces, Default: 4317
 otlp-collector-port
 
 # specifies the service name to use for any traces created, Default: nginx
@@ -155,7 +155,7 @@ To install the example and collectors run:
         enable-opentelemetry: "true"
         opentelemetry-config: "/etc/nginx/opentelemetry.toml"
         opentelemetry-operation-name: "HTTP $request_method $service_name $uri"
-        OpentelemetryTrustIncomingSpan: "true"
+        opentelemetry-trust-incoming-span: "true"
         otlp-collector-host: "otel-coll-collector.otel.svc"
         otlp-collector-port: "4317"
         otel-max-queuesize: "2048"
@@ -167,7 +167,7 @@ To install the example and collectors run:
         otel-sampler-parent-based: "false"
       metadata:
         name: ingress-nginx-controller
-        namespace: kube-system
+        namespace: ingress-nginx
       ' | kubectl replace -f -
     ```
 
