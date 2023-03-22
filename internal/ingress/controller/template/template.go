@@ -265,6 +265,7 @@ var (
 		"buildAuthSignURL":                   buildAuthSignURL,
 		"buildAuthSignURLLocation":           buildAuthSignURLLocation,
 		"buildOpentracing":                   buildOpentracing,
+		"buildOpentelemetry":                 buildOpentelemetry,
 		"proxySetHeader":                     proxySetHeader,
 		"buildInfluxDB":                      buildInfluxDB,
 		"enforceRegexModifier":               enforceRegexModifier,
@@ -274,7 +275,9 @@ var (
 		"buildHTTPListener":                  buildHTTPListener,
 		"buildHTTPSListener":                 buildHTTPSListener,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
+		"buildOpentelemetryForLocation":      buildOpentelemetryForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
+		"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
@@ -1239,6 +1242,33 @@ func buildOpentracing(c interface{}, s interface{}) string {
 	return buf.String()
 }
 
+func buildOpentelemetry(c interface{}, s interface{}) string {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return ""
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return ""
+	}
+
+	if !shouldLoadOpentelemetryModule(cfg, servers) {
+		return ""
+	}
+
+	buf := bytes.NewBufferString("")
+
+	buf.WriteString("\r\n")
+
+	if cfg.OpentelemetryOperationName != "" {
+		buf.WriteString(fmt.Sprintf("opentelemetry_operation_name \"%s\";\n", cfg.OpentelemetryOperationName))
+	}
+	return buf.String()
+}
+
 // buildInfluxDB produces the single line configuration
 // needed by the InfluxDB module to send request's metrics
 // for the current resource
@@ -1358,6 +1388,13 @@ func opentracingPropagateContext(location *ingress.Location) string {
 	}
 
 	return "opentracing_propagate_context;"
+}
+
+func opentelemetryPropagateContext(location *ingress.Location) string {
+	if location == nil {
+		return ""
+	}
+	return "opentelemetry_propagate;"
 }
 
 // shouldLoadModSecurityModule determines whether or not the ModSecurity module needs to be loaded.
@@ -1575,6 +1612,36 @@ func buildOpentracingForLocation(isOTEnabled bool, isOTTrustSet bool, location *
 	return opc
 }
 
+func buildOpentelemetryForLocation(isOTEnabled bool, isOTTrustSet bool, location *ingress.Location) string {
+	isOTEnabledInLoc := location.Opentelemetry.Enabled
+	isOTSetInLoc := location.Opentelemetry.Set
+
+	if isOTEnabled {
+		if isOTSetInLoc && !isOTEnabledInLoc {
+			return "opentelemetry off;"
+		}
+	} else if !isOTSetInLoc || !isOTEnabledInLoc {
+		return ""
+	}
+
+	opc := opentelemetryPropagateContext(location)
+	if opc != "" {
+		opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
+	}
+
+	if location.Opentelemetry.OperationName != "" {
+		opc = opc + "\nopentelemetry_operation_name " + location.Opentelemetry.OperationName + ";"
+	}
+
+	if (!isOTTrustSet && !location.Opentelemetry.TrustSet) ||
+		(location.Opentelemetry.TrustSet && !location.Opentelemetry.TrustEnabled) {
+		opc = opc + "\nopentelemetry_trust_incoming_spans off;"
+	} else {
+		opc = opc + "\nopentelemetry_trust_incoming_spans on;"
+	}
+	return opc
+}
+
 // shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.
 // First, it checks if `enable-opentracing` is set in the ConfigMap. If it is not, it iterates over all locations to
 // check if Opentracing is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentracing`.
@@ -1603,6 +1670,35 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 		}
 	}
 
+	return false
+}
+
+// shouldLoadOpentelemetryModule determines whether or not the Opentelemetry module needs to be loaded.
+// It checks if `enable-opentelemetry` is set in the ConfigMap.
+func shouldLoadOpentelemetryModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	if cfg.EnableOpentelemetry {
+		return true
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.Opentelemetry.Enabled {
+				return true
+			}
+		}
+	}
 	return false
 }
 
