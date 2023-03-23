@@ -23,7 +23,7 @@ RUN apk update \
   && apk upgrade \
   && /chroot.sh
 
-FROM alpine:3.17.0
+FROM alpine:3.17.2
 
 ARG TARGETARCH
 ARG VERSION
@@ -49,8 +49,8 @@ RUN apk update \
   && apk upgrade \
   && apk add -U --no-cache \
      bash \
-     curl \
      openssl \
+     curl \
      ca-certificates \
      dumb-init \
      tzdata \

@@ -105,7 +105,7 @@ func (k8s *k8s) patchAPIService(ctx context.Context, objectName string, ca []byt
 	return nil
 }
 
-// PatchWebhookConfigurations will patch validatingWebhook and mutatingWebhook clientConfig configurations with
+// patchWebhookConfigurations will patch validatingWebhook and mutatingWebhook clientConfig configurations with
 // the provided ca data. If failurePolicy is provided, patch all webhooks with this value
 func (k8s *k8s) patchWebhookConfigurations(
 	ctx context.Context,

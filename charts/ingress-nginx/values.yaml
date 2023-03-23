@@ -23,9 +23,9 @@ controller:
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: "v1.6.3"
-        digest: sha256:b92667e0afde1103b736e6a3f00dd75ae66eec4e71827d19f19f471699e909d2
-        digestChroot: sha256:4b4a249c9a35ac16a8ec0e22f6c522b8707f7e59e656e64a4ad9ace8fea830a4
+        tag: "v1.6.4"
+        digest: sha256:15be4666c53052484dd2992efacf2f50ea77a78ae8aa21ccd91af6baaa7ea22f
+        digestChroot: sha256:0de01e2c316c3ca7847ca13b32d077af7910d07f21a4a82f81061839764f8f81
         pullPolicy: IfNotPresent
         # www-data -> uid 101
         runAsUser: 101
@@ -527,6 +527,8 @@ controller:
 
     # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
     extraModules: []
+    # - name: mytestmodule
+    #   image: registry.k8s.io/ingress-nginx/mytestmodule
     #   containerSecurityContext:
     #     allowPrivilegeEscalation: false
     #
@@ -536,7 +538,7 @@ controller:
 
     opentelemetry:
         enabled: false
-        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230107-helm-chart-4.4.2-2-g96b3d2165@sha256:331b9bebd6acfcd2d3048abbdd86555f5be76b7e3d0b5af4300b04235c6056c9
+        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230312-helm-chart-4.5.2-28-g66a760794@sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f
         containerSecurityContext:
             allowPrivilegeEscalation: false
     admissionWebhooks:
@@ -598,8 +600,8 @@ controller:
                 ## for backwards compatibility consider setting the full image url via the repository value below
                 ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
                 ## repository:
-                tag: v20220916-gd32f8c343
-                digest: sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f
+                tag: v20230312-helm-chart-4.5.2-28-g66a760794
+                digest: sha256:01d181618f270f2a96c04006f33b2699ad3ccb02da48d0f89b22abce084b292f
                 pullPolicy: IfNotPresent
             # -- Provide a priority class name to the webhook patching job
             ##
@@ -827,6 +829,7 @@ defaultBackend:
     #    emptyDir: {}
 
     autoscaling:
+        apiVersion: autoscaling/v2
         annotations: {}
         enabled: false
         minReplicas: 1
@@ -885,4 +888,4 @@ portNamePrefix: ""
 # -- (string) A base64-encoded Diffie-Hellman parameter.
 # This can be generated with: `openssl dhparam 4096 2> /dev/null | base64`
 ## Ref: https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/ssl-dh-param
-dhParam:
+dhParam: ""

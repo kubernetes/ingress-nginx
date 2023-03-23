@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/hashstructure"
+	"github.com/mitchellh/hashstructure/v2"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -187,7 +188,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
-		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
+		hash, _ := hashstructure.Hash(pcfg, hashstructure.FormatV1, &hashstructure.HashOptions{
 			TagName: "json",
 		})
 
@@ -541,11 +542,11 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 }
 
 // getConfiguration returns the configuration matching the standard kubernetes ingress
-func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.String, []*ingress.Server, *ingress.Configuration) {
+func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.Set[string], []*ingress.Server, *ingress.Configuration) {
 	upstreams, servers := n.getBackendServers(ingresses)
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
-	hosts := sets.NewString()
+	hosts := sets.New[string]()
 
 	for _, server := range servers {
 		// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of
@@ -968,14 +969,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			// configure traffic shaping for canary
 			if anns.Canary.Enabled {
 				upstreams[defBackend].NoServer = true
-				upstreams[defBackend].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-					Weight:        anns.Canary.Weight,
-					WeightTotal:   anns.Canary.WeightTotal,
-					Header:        anns.Canary.Header,
-					HeaderValue:   anns.Canary.HeaderValue,
-					HeaderPattern: anns.Canary.HeaderPattern,
-					Cookie:        anns.Canary.Cookie,
-				}
+				upstreams[defBackend].TrafficShapingPolicy = newTrafficShapingPolicy(anns.Canary)
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
@@ -1040,13 +1034,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				// configure traffic shaping for canary
 				if anns.Canary.Enabled {
 					upstreams[name].NoServer = true
-					upstreams[name].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-						Weight:        anns.Canary.Weight,
-						Header:        anns.Canary.Header,
-						HeaderValue:   anns.Canary.HeaderValue,
-						HeaderPattern: anns.Canary.HeaderPattern,
-						Cookie:        anns.Canary.Cookie,
-					}
+					upstreams[name].TrafficShapingPolicy = newTrafficShapingPolicy(anns.Canary)
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
@@ -1456,6 +1444,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.EnableGlobalAuth = anns.EnableGlobalAuth
 	loc.HTTP2PushPreload = anns.HTTP2PushPreload
 	loc.Opentracing = anns.Opentracing
+	loc.Opentelemetry = anns.Opentelemetry
 	loc.Proxy = anns.Proxy
 	loc.ProxySSL = anns.ProxySSL
 	loc.RateLimit = anns.RateLimit
@@ -1819,4 +1808,16 @@ func (n *NGINXController) getStreamSnippets(ingresses []*ingress.Ingress) []stri
 		snippets = append(snippets, i.ParsedAnnotations.StreamSnippet)
 	}
 	return snippets
+}
+
+// newTrafficShapingPolicy creates new ingress.TrafficShapingPolicy instance using canary configuration
+func newTrafficShapingPolicy(cfg canary.Config) ingress.TrafficShapingPolicy {
+	return ingress.TrafficShapingPolicy{
+		Weight:        cfg.Weight,
+		WeightTotal:   cfg.WeightTotal,
+		Header:        cfg.Header,
+		HeaderValue:   cfg.HeaderValue,
+		HeaderPattern: cfg.HeaderPattern,
+		Cookie:        cfg.Cookie,
+	}
 }

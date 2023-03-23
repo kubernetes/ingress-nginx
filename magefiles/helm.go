@@ -19,15 +19,17 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"os"
+	"strings"
+
 	semver "github.com/blang/semver/v4"
 	"github.com/helm/helm/pkg/chartutil"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	yamlpath "github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
-	"os"
-	"strings"
 )
 
 const HelmChartPath = "charts/ingress-nginx/Chart.yaml"
@@ -114,7 +116,7 @@ func UpdateChartChangelog() {
 
 }
 
-// UpdateAppVersion Updates the Helm App Version of Ingress Nginx Controller
+// UpdateChartValue Updates the Helm ChartValue
 func (Helm) UpdateChartValue(key, value string) {
 	updateChartValue(key, value)
 }
@@ -145,9 +147,12 @@ func updateChartValue(key, value string) {
 	}
 
 	//// write to file
-	newValueFile, err := yaml.Marshal(&n)
+	var b bytes.Buffer
+	yamlEncoder := yaml.NewEncoder(&b)
+	yamlEncoder.SetIndent(2)
+	err = yamlEncoder.Encode(&n)
 	CheckIfError(err, "HELM Could not Marshal new Values file")
-	err = os.WriteFile(HelmChartValues, newValueFile, 0644)
+	err = os.WriteFile(HelmChartValues, b.Bytes(), 0644)
 	CheckIfError(err, "HELM Could not write new Values file to %s", HelmChartValues)
 
 	Info("HELM Ingress Nginx Helm Chart update %s %s", key, value)

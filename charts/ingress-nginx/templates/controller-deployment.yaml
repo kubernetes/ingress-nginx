@@ -37,7 +37,7 @@ spec:
       {{- end }}
     {{- end }}
       labels:
-        {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
+        {{- include "ingress-nginx.labels" . | nindent 8 }}
         app.kubernetes.io/component: controller
         {{- with .Values.controller.labels }}
         {{- toYaml . | nindent 8 }}
@@ -185,7 +185,7 @@ spec:
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
           {{ $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext | nindent 8) }}
+{{ include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext) | indent 8 }}
         {{- end }}
       {{- end }}
       {{- if .Values.controller.opentelemetry.enabled}}

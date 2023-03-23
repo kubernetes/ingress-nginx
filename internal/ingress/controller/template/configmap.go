@@ -26,7 +26,7 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/mitchellh/hashstructure"
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/mitchellh/mapstructure"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -431,7 +431,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 		klog.Warningf("unexpected error merging defaults: %v", err)
 	}
 
-	hash, err := hashstructure.Hash(to, &hashstructure.HashOptions{
+	hash, err := hashstructure.Hash(to, hashstructure.FormatV1, &hashstructure.HashOptions{
 		TagName: "json",
 	})
 	if err != nil {

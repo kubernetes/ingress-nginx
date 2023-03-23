@@ -55,7 +55,7 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
-RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.6.1  && go install golang.org/x/lint/golint@latest
+RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.9.0  && go install golang.org/x/lint/golint@latest
 
 ARG RESTY_CLI_VERSION
 ARG RESTY_CLI_SHA
