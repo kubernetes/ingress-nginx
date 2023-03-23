@@ -53,7 +53,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--ssl-passthrough-proxy-port`     | Port to use internally for SSL Passthrough. (default 442) |
 | `--status-port`                    | Port to use for the lua HTTP endpoint configuration. (default 10246) |
 | `--status-update-interval`         | Time interval in seconds in which the status should check if an update is required. Default is 60 seconds. (default 60) |
-| `--exclude-socket-metrics`         | Set of socket metrics to exclude which won't be exported nor being calculated. E.g. 'nginx_ingress_controller_success,nginx_ingress_controller_header_duration_seconds'. |
+| `--exclude-socket-metrics`         | Set of socket request metrics to exclude which won't be exported nor being calculated. E.g. 'nginx_ingress_controller_request_size,nginx_ingress_controller_header_duration_seconds'. |
 | `--stream-port`                    | Port to use for the lua TCP/UDP endpoint configuration. (default 10247) |
 | `--sync-period`                    | Period at which the controller forces the repopulation of its local object stores. Disabled by default. |
 | `--sync-rate-limit`                | Define the sync frequency upper limit. (default 0.3) |
