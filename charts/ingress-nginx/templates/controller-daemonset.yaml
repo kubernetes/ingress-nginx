@@ -53,12 +53,12 @@ spec:
       imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.priorityClassName }}
-      priorityClassName: {{ .Values.controller.priorityClassName }}
+      priorityClassName: {{ .Values.controller.priorityClassName | quote }}
     {{- end }}
     {{- if or .Values.controller.podSecurityContext .Values.controller.sysctls }}
       securityContext:
     {{- end }}
-    {{- if .Values.controller.podSecurityContext  }}
+    {{- if .Values.controller.podSecurityContext }}
         {{- toYaml .Values.controller.podSecurityContext | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.sysctls }}
@@ -147,7 +147,11 @@ spec:
           volumeMounts:
           {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
             - name: modules
+            {{ if .Values.controller.image.chroot }}
+              mountPath: /chroot/modules_mount
+            {{ else }}
               mountPath: /modules_mount
+            {{ end }}
           {{- end }}
           {{- if .Values.controller.customTemplate.configMapName }}
             - mountPath: /etc/nginx/template
