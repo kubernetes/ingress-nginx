@@ -143,9 +143,9 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
+        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
           volumeMounts:
-          {{- if .Values.controller.extraModules }}
+          {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
             - name: modules
               mountPath: /modules_mount
           {{- end }}
@@ -169,9 +169,7 @@ spec:
       {{- if .Values.controller.extraContainers }}
         {{ toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
-
-
-    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
+    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
       initContainers:
       {{- if .Values.controller.extraInitContainers }}
         {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
