@@ -43,14 +43,62 @@ func NumCPU() int {
 		return cpus
 	}
 
-	cpuQuota := readCgroupFileToInt64(cgroupPath, "cpu.cfs_quota_us")
-	cpuPeriod := readCgroupFileToInt64(cgroupPath, "cpu.cfs_period_us")
+	cgroupVersion := getCgroupVersion();
+	cpuQuota := -1;
+	cpuPeriod := -1;
+
+	if cgroupVersion == 1  {
+		cpuQuota := readCgroupFileToInt64(cgroupPath, "cpu.cfs_quota_us")
+		cpuPeriod := readCgroupFileToInt64(cgroupPath, "cpu.cfs_period_us")
+	} else if cgroupVersion == 2 {
+		cpuQuota, cpuPeriod := readCgroup2FileToInt64Tuple(cgroupPath, "cpu.max")
+	} 
 
 	if cpuQuota == -1 || cpuPeriod == -1 {
 		return cpus
 	}
 
 	return int(math.Ceil(float64(cpuQuota) / float64(cpuPeriod)))
+}
+
+func getCgroupVersion() int64 {
+	// TODO: detect version
+	return 2;
+}
+
+func readCgroup2FileToInt64Tuple(cgroupPath, cgroupFile string) (int64, int64) {
+	contents, err := os.ReadFile(filepath.Join(cgroupPath, cgroupFile))
+
+	if err != nil {
+		return -1, -1;
+	}
+
+	// file contents looks like: $MAX $PERIOD
+	// $MAX can have value "max" indicating no limit
+
+	values :=  strings.Fields(string(contents));
+
+	if values[0] == "max" {
+		return -1, -1;
+	}
+
+	cpuQuota, err := strconv.ParseInt(values[0], 10, 64);
+
+	if  err != nil {
+		return -1, -1;
+	}
+
+	if len(values) == 1 {
+		return cpuQuota, 1;
+	}
+
+	cpuPeriod, err := strconv.ParseInt(values[1], 10, 64);
+
+	if err != nil {
+		return -1, -1;
+	}
+
+	return cpuQuota, cpuPeriod;
 }
 
 func readCgroupFileToInt64(cgroupPath, cgroupFile string) int64 {
