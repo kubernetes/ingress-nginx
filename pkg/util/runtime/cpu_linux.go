@@ -62,8 +62,12 @@ func NumCPU() int {
 }
 
 func getCgroupVersion() int64 {
-	// TODO: detect version
-	return 2;
+	// /sys/fs/cgroup/cgroup.controllers will not exist with cgroupsv1
+	if _, err := os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {
+		return 2;
+	} else {
+		return 1;
+	}
 }
 
 func readCgroup2FileToInt64Tuple(cgroupPath, cgroupFile string) (int64, int64) {
@@ -75,6 +79,7 @@ func readCgroup2FileToInt64Tuple(cgroupPath, cgroupFile string) (int64, int64) {
 
 	// file contents looks like: $MAX $PERIOD
 	// $MAX can have value "max" indicating no limit
+	// it is possible for $PERIOD to be unset
 
 	values :=  strings.Fields(string(contents));
 
