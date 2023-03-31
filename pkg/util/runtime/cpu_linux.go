@@ -48,10 +48,10 @@ func NumCPU() int {
 	cpuPeriod := -1
 
 	if cgroupVersion == 1 {
-		cpuQuota := readCgroupFileToInt64(cgroupPath, "cpu.cfs_quota_us")
-		cpuPeriod := readCgroupFileToInt64(cgroupPath, "cpu.cfs_period_us")
+		cpuQuota = readCgroupFileToInt64(cgroupPath, "cpu.cfs_quota_us")
+		cpuPeriod = readCgroupFileToInt64(cgroupPath, "cpu.cfs_period_us")
 	} else if cgroupVersion == 2 {
-		cpuQuota, cpuPeriod := readCgroup2FileToInt64Tuple(cgroupPath, "cpu.max")
+		cpuQuota, cpuPeriod = readCgroup2FileToInt64Tuple(cgroupPath, "cpu.max")
 	}
 
 	if cpuQuota == -1 || cpuPeriod == -1 {
