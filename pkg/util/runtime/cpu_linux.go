@@ -44,8 +44,8 @@ func NumCPU() int {
 	}
 
 	cgroupVersion := getCgroupVersion()
-	cpuQuota := -1
-	cpuPeriod := -1
+	cpuQuota := int64(-1)
+	cpuPeriod := int64(-1)
 
 	if cgroupVersion == 1 {
 		cpuQuota = readCgroupFileToInt64(cgroupPath, "cpu.cfs_quota_us")
