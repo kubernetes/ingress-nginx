@@ -25,6 +25,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--enable-ssl-chain-completion`    | Autocomplete SSL certificate chains with missing intermediate CA certificates. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default false)|
 | `--enable-ssl-passthrough`         | Enable SSL Passthrough. (default false) |
 | `--enable-topology-aware-routing`  | Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto. (default false) |
+| `--exclude-socket-metrics`         | Set of socket request metrics to exclude which won't be exported nor being calculated. The possible socket request metrics to exclude are documented in the monitoring guide e.g. 'nginx_ingress_controller_request_duration_seconds,nginx_ingress_controller_response_size'|
 | `--health-check-path`              | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
 | `--health-check-timeout`           | Time limit, in seconds, for a probe to health-check-path to succeed. (default 10) |
 | `--healthz-port`                   | Port to use for the healthz endpoint. (default 10254) |
@@ -53,7 +54,6 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--ssl-passthrough-proxy-port`     | Port to use internally for SSL Passthrough. (default 442) |
 | `--status-port`                    | Port to use for the lua HTTP endpoint configuration. (default 10246) |
 | `--status-update-interval`         | Time interval in seconds in which the status should check if an update is required. Default is 60 seconds. (default 60) |
-| `--exclude-socket-metrics`         | Set of socket request metrics to exclude which won't be exported nor being calculated. E.g. 'nginx_ingress_controller_request_size,nginx_ingress_controller_header_duration_seconds'. |
 | `--stream-port`                    | Port to use for the lua TCP/UDP endpoint configuration. (default 10247) |
 | `--sync-period`                    | Period at which the controller forces the repopulation of its local object stores. Disabled by default. |
 | `--sync-rate-limit`                | Define the sync frequency upper limit. (default 0.3) |

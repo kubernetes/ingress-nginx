@@ -61,6 +61,8 @@ type HistogramBuckets struct {
 	SizeBuckets   []float64
 }
 
+type metricMapping map[string]prometheus.Collector
+
 // SocketCollector stores prometheus metrics and ingress meta-data
 type SocketCollector struct {
 	prometheus.Collector
@@ -79,7 +81,7 @@ type SocketCollector struct {
 
 	listener net.Listener
 
-	metricMapping map[string]prometheus.Collector
+	metricMapping metricMapping
 
 	hosts sets.Set[string]
 
@@ -140,6 +142,9 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		em[strings.TrimPrefix(m, "nginx_ingress_controller_")] = struct{}{}
 	}
 
+	// create metric mapping with only the metrics that are not excluded
+	mm := make(metricMapping)
+
 	sc := &SocketCollector{
 		listener: listener,
 
@@ -156,6 +161,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			requestTags,
 			em,
+			mm,
 		),
 
 		headerTime: histogramMetric(
@@ -168,6 +174,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			requestTags,
 			em,
+			mm,
 		),
 		responseTime: histogramMetric(
 			prometheus.HistogramOpts{
@@ -179,6 +186,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			requestTags,
 			em,
+			mm,
 		),
 
 		requestTime: histogramMetric(
@@ -191,6 +199,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			requestTags,
 			em,
+			mm,
 		),
 
 		responseLength: histogramMetric(
@@ -203,6 +212,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			requestTags,
 			em,
+			mm,
 		),
 
 		requestLength: histogramMetric(
@@ -215,6 +225,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			requestTags,
 			em,
+			mm,
 		),
 
 		requests: counterMetric(
@@ -226,6 +237,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			requestTags,
 			em,
+			mm,
 		),
 
 		bytesSent: histogramMetric(
@@ -238,6 +250,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			requestTags,
 			em,
+			mm,
 		),
 
 		upstreamLatency: summaryMetric(
@@ -250,30 +263,11 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			},
 			[]string{"ingress", "namespace", "service", "canary"},
 			em,
+			mm,
 		),
 	}
 
-	sc.metricMapping = map[string]prometheus.Collector{
-		prometheus.BuildFQName(PrometheusNamespace, "", "requests"): sc.requests,
-
-		prometheus.BuildFQName(PrometheusNamespace, "", "connect_duration_seconds"):  sc.connectTime,
-		prometheus.BuildFQName(PrometheusNamespace, "", "header_duration_seconds"):   sc.headerTime,
-		prometheus.BuildFQName(PrometheusNamespace, "", "response_duration_seconds"): sc.responseTime,
-		prometheus.BuildFQName(PrometheusNamespace, "", "request_duration_seconds"):  sc.requestTime,
-
-		prometheus.BuildFQName(PrometheusNamespace, "", "request_size"):  sc.requestLength,
-		prometheus.BuildFQName(PrometheusNamespace, "", "response_size"): sc.responseLength,
-
-		prometheus.BuildFQName(PrometheusNamespace, "", "bytes_sent"): sc.bytesSent,
-
-		prometheus.BuildFQName(PrometheusNamespace, "", "ingress_upstream_latency_seconds"): sc.upstreamLatency,
-	}
-
-	for m := range em {
-		// remove excluded metrics from the metricMapping
-		delete(sc.metricMapping, prometheus.BuildFQName(PrometheusNamespace, "", m))
-	}
-
+	sc.metricMapping = mm
 	return sc, nil
 }
 
@@ -285,34 +279,40 @@ func containsMetric(excludeMetrics map[string]struct{}, name string) bool {
 	return false
 }
 
-func summaryMetric(opts prometheus.SummaryOpts, requestTags []string, excludeMetrics map[string]struct{}) *prometheus.SummaryVec {
+func summaryMetric(opts prometheus.SummaryOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.SummaryVec {
 	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
-	return prometheus.NewSummaryVec(
+	m := prometheus.NewSummaryVec(
 		opts,
 		requestTags,
 	)
+	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
+	return m
 }
 
-func counterMetric(opts prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}) *prometheus.CounterVec {
+func counterMetric(opts prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.CounterVec {
 	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
-	return prometheus.NewCounterVec(
+	m := prometheus.NewCounterVec(
 		opts,
 		requestTags,
 	)
+	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
+	return m
 }
 
-func histogramMetric(opts prometheus.HistogramOpts, requestTags []string, excludeMetrics map[string]struct{}) *prometheus.HistogramVec {
+func histogramMetric(opts prometheus.HistogramOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.HistogramVec {
 	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
-	return prometheus.NewHistogramVec(
+	m := prometheus.NewHistogramVec(
 		opts,
 		requestTags,
 	)
+	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
+	return m
 }
 
 func (sc *SocketCollector) handleMessage(msg []byte) {
