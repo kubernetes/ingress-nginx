@@ -53,12 +53,12 @@ spec:
       imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.priorityClassName }}
-      priorityClassName: {{ .Values.controller.priorityClassName }}
+      priorityClassName: {{ .Values.controller.priorityClassName | quote }}
     {{- end }}
     {{- if or .Values.controller.podSecurityContext .Values.controller.sysctls }}
       securityContext:
     {{- end }}
-    {{- if .Values.controller.podSecurityContext  }}
+    {{- if .Values.controller.podSecurityContext }}
         {{- toYaml .Values.controller.podSecurityContext | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.sysctls }}

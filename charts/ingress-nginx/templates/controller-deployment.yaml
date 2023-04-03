@@ -24,8 +24,7 @@ spec:
   {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   {{- if .Values.controller.updateStrategy }}
-  strategy:
-    {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
+  strategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
   {{- end }}
   minReadySeconds: {{ .Values.controller.minReadySeconds }}
   template:
