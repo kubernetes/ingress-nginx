@@ -538,7 +538,7 @@ controller:
 
   opentelemetry:
     enabled: false
-    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230312-helm-chart-4.5.2-28-g66a760794@sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f
+    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230404-helm-chart-4.6.0-13-g91057c439@sha256:a6b8b6a562884dbfc38748c1560b71ded09ba18c14abc4a989f93e7c3136ed5b
     containerSecurityContext:
       allowPrivilegeEscalation: false
   admissionWebhooks:
@@ -600,8 +600,8 @@ controller:
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v20230312-helm-chart-4.5.2-28-g66a760794
-        digest: sha256:01d181618f270f2a96c04006f33b2699ad3ccb02da48d0f89b22abce084b292f
+        tag: v20230404-helm-chart-4.6.0-11-gc76179c04
+        digest: sha256:46a9364c2907dbde8a9fd01e75db44d4e0ba2ff9d7ab2ec9fe63e86a31cf8164
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##

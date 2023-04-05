@@ -271,11 +271,11 @@ Kubernetes: `>=1.20.0-0`
 | controller.admissionWebhooks.networkPolicyEnabled | bool | `false` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
-| controller.admissionWebhooks.patch.image.digest | string | `"sha256:01d181618f270f2a96c04006f33b2699ad3ccb02da48d0f89b22abce084b292f"` |  |
+| controller.admissionWebhooks.patch.image.digest | string | `"sha256:46a9364c2907dbde8a9fd01e75db44d4e0ba2ff9d7ab2ec9fe63e86a31cf8164"` |  |
 | controller.admissionWebhooks.patch.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |
 | controller.admissionWebhooks.patch.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.admissionWebhooks.patch.image.registry | string | `"registry.k8s.io"` |  |
-| controller.admissionWebhooks.patch.image.tag | string | `"v20230312-helm-chart-4.5.2-28-g66a760794"` |  |
+| controller.admissionWebhooks.patch.image.tag | string | `"v20230404-helm-chart-4.6.0-11-gc76179c04"` |  |
 | controller.admissionWebhooks.patch.labels | object | `{}` | Labels to be added to patch job resources |
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
@@ -395,7 +395,7 @@ Kubernetes: `>=1.20.0-0`
 | controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/user-guide/node-selection/ # |
 | controller.opentelemetry.containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
 | controller.opentelemetry.enabled | bool | `false` |  |
-| controller.opentelemetry.image | string | `"registry.k8s.io/ingress-nginx/opentelemetry:v20230312-helm-chart-4.5.2-28-g66a760794@sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f"` |  |
+| controller.opentelemetry.image | string | `"registry.k8s.io/ingress-nginx/opentelemetry:v20230404-helm-chart-4.6.0-13-g91057c439@sha256:a6b8b6a562884dbfc38748c1560b71ded09ba18c14abc4a989f93e7c3136ed5b"` |  |
 | controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
 | controller.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | controller.podSecurityContext | object | `{}` | Security Context policies for controller pods |
