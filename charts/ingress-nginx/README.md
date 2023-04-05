@@ -8,10 +8,9 @@ To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.c
 
 This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
-## Prerequisites
+## Requirements
 
-- Chart version 3.x.x: Kubernetes v1.16+
-- Chart version 4.x.x and above: Kubernetes v1.19+
+Kubernetes: `>=1.20.0-0`
 
 ## Get Repo Info
 
@@ -52,10 +51,6 @@ helm upgrade [RELEASE_NAME] [CHART] --install
 
 _See [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) for command documentation._
 
-### Upgrading With Zero Downtime in Production
-
-By default the ingress-nginx controller has service interruptions whenever it's pods are restarted or redeployed. In order to fix that, see the excellent blog post by Lindsay Landry from Codecademy: [Kubernetes: Nginx and Zero Downtime in Production](https://medium.com/codecademy-engineering/kubernetes-nginx-and-zero-downtime-in-production-2c910c6a5ed8).
-
 ### Migrating from stable/nginx-ingress
 
 There are two main ways to migrate a release from `stable/nginx-ingress` to `ingress-nginx/ingress-nginx` chart:
@@ -66,7 +61,6 @@ There are two main ways to migrate a release from `stable/nginx-ingress` to `ing
     1. Redirect your DNS traffic from the old controller to the new controller
     1. Log traffic from both controllers during this changeover
     1. [Uninstall](#uninstall-chart) the old controller once traffic has fully drained from it
-    1. For details on all of these steps see [Upgrading With Zero Downtime in Production](#upgrading-with-zero-downtime-in-production)
 
 Note that there are some different and upgraded configurations between the two charts, described by Rimas Mocevicius from JFrog in the "Upgrading to ingress-nginx Helm chart" section of [Migrating from Helm chart nginx-ingress to ingress-nginx](https://rimusz.net/migrating-to-ingress-nginx). As the `ingress-nginx/ingress-nginx` chart continues to update, you will want to check current differences by running [helm configuration](#configuration) commands on both charts.
 
@@ -124,19 +118,6 @@ controller:
       service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
       service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
       service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: '3600'
-```
-
-### AWS route53-mapper
-
-To configure the LoadBalancer service with the [route53-mapper addon](https://github.com/kubernetes/kops/blob/be63d4f1a7a46daaf1c4c482527328236850f111/addons/route53-mapper/README.md), add the `domainName` annotation and `dns` label:
-
-```yaml
-controller:
-  service:
-    labels:
-      dns: "route53"
-    annotations:
-      domainName: "kubernetes-example.com"
 ```
 
 ### Additional Internal Load Balancer
@@ -243,10 +224,6 @@ Error: UPGRADE FAILED: Service "?????-controller" is invalid: spec.clusterIP: In
 Detail of how and why are in [this issue](https://github.com/helm/charts/pull/13646) but to resolve this you can set `xxxx.service.omitClusterIP` to `true` where `xxxx` is the service referenced in the error.
 
 As of version `1.26.0` of this chart, by simply not providing any clusterIP value, `invalid: spec.clusterIP: Invalid value: "": field is immutable` will no longer occur since `clusterIP: ""` will not be rendered.
-
-## Requirements
-
-Kubernetes: `>=1.20.0-0`
 
 ## Values
 
@@ -522,4 +499,3 @@ Kubernetes: `>=1.20.0-0`
 | serviceAccount.name | string | `""` |  |
 | tcp | object | `{}` | TCP service key-value pairs # Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md # |
 | udp | object | `{}` | UDP service key-value pairs # Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md # |
-
