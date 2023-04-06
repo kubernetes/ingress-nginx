@@ -3,7 +3,8 @@ FROM ${E2E_BASE_IMAGE} AS BASE
 
 FROM alpine:3.17.2
 
-RUN apk add -U --no-cache \
+RUN apk update \
+	&& apk upgrade && apk add -U --no-cache \
   ca-certificates \
   bash \
   curl \

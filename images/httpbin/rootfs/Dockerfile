@@ -17,7 +17,7 @@ FROM alpine:3.17.2
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-RUN apk update \
+RUN apk upgrade && apk update \
   && apk add --no-cache \
     python3 python3-dev \
     musl-dev gcc g++ make \
