@@ -9,7 +9,6 @@ steps:
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
       - BASE_REF=$_PULL_BASE_REF
-      - TAG=$_PULL_BASE_SHA
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
       - HOME=/root
     args:
