@@ -170,9 +170,12 @@ Example for Azure:
 ```yaml
 controller:
   service:
+    internal:
+      enabled: true
       annotations:
-        # Create internal LB
+        # Create internal ELB
         service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+        service.beta.kubernetes.io/azure-load-balancer-ipv4: X.X.X.X # Optional to set external private IP for Internal LB 
         # Any other annotation can be declared here.
 ```
 
