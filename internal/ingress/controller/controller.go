@@ -102,10 +102,11 @@ type Configuration struct {
 
 	EnableProfiling bool
 
-	EnableMetrics       bool
-	MetricsPerHost      bool
-	MetricsBuckets      *collectors.HistogramBuckets
-	ReportStatusClasses bool
+	EnableMetrics        bool
+	MetricsPerHost       bool
+	MetricsBuckets       *collectors.HistogramBuckets
+	ReportStatusClasses  bool
+	ExcludeSocketMetrics []string
 
 	FakeCertificate *ingress.SSLCert
 
