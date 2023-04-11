@@ -406,6 +406,8 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.service.internal.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. |
 | controller.service.internal.enabled | bool | `false` | Enables an additional internal load balancer (besides the external one). |
 | controller.service.internal.loadBalancerSourceRanges | list | `[]` | Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0. |
+| controller.service.internal.ports | object | `{}` | Custom port mapping for internal service |
+| controller.service.internal.targetPorts | object | `{}` | Custom target port mapping for internal service |
 | controller.service.ipFamilies | list | `["IPv4"]` | List of IP families (e.g. IPv4, IPv6) assigned to the service. This field is usually assigned automatically based on cluster configuration and the ipFamilyPolicy field. # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/ |
 | controller.service.ipFamilyPolicy | string | `"SingleStack"` | Represents the dual-stack-ness requested or required by this Service. Possible values are SingleStack, PreferDualStack or RequireDualStack. The ipFamilies and clusterIPs fields depend on the value of this field. # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/ |
 | controller.service.labels | object | `{}` |  |
