@@ -18,6 +18,7 @@ package ipwhitelist
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"sort"
 	"strings"
 
@@ -73,7 +74,15 @@ func (a ipwhitelist) Parse(ing *networking.Ingress) (interface{}, error) {
 		return &SourceRange{CIDR: defaultWhitelistSourceRange}, nil
 	}
 
-	values := strings.Split(val, ",")
+	var values []string
+
+	// Attempt to unmarshal the YAML list
+	err = yaml.Unmarshal([]byte(val), &values)
+	if err != nil || values == nil {
+		// If unmarshalling fails, attempt to split the comma-separated string
+		values = strings.Split(val, ",")
+	}
+
 	ipnets, ips, err := net.ParseIPNets(values...)
 	if err != nil && len(ips) == 0 {
 		return &SourceRange{CIDR: defaultWhitelistSourceRange}, ing_errors.LocationDenied{

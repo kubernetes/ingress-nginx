@@ -170,6 +170,14 @@ func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 			expectCidr: []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"},
 			expectErr:  false,
 		},
+		"test parse multiple valid cidr with newlines and comments": {
+			net: "- 2.2.2.2/32\n" +
+				"- 1.1.1.1/32\n" +
+				"# Comment describing this next IP\n" +
+				"- 3.3.3.0/24\n",
+			expectCidr: []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"},
+			expectErr:  false,
+		},
 	}
 
 	for testName, test := range tests {
