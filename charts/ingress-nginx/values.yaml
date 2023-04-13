@@ -165,7 +165,7 @@ controller:
   #         key: FOO
   #         name: secret-resource
 
-  # -- Use a `DaemonSet` or `Deployment`
+  # -- Use a `DaemonSet`, `Deployment` or `Both`
   kind: Deployment
   # -- Annotations to be added to the controller Deployment or DaemonSet
   ##
