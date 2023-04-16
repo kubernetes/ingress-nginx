@@ -40,7 +40,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 
-	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -267,7 +266,6 @@ var (
 		"buildOpentracing":                   buildOpentracing,
 		"buildOpentelemetry":                 buildOpentelemetry,
 		"proxySetHeader":                     proxySetHeader,
-		"buildInfluxDB":                      buildInfluxDB,
 		"enforceRegexModifier":               enforceRegexModifier,
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
@@ -281,7 +279,6 @@ var (
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
-		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
 		"buildServerName":                    buildServerName,
 		"buildCorsOriginRegex":               buildCorsOriginRegex,
 	}
@@ -1269,29 +1266,6 @@ func buildOpentelemetry(c interface{}, s interface{}) string {
 	return buf.String()
 }
 
-// buildInfluxDB produces the single line configuration
-// needed by the InfluxDB module to send request's metrics
-// for the current resource
-func buildInfluxDB(input interface{}) string {
-	cfg, ok := input.(influxdb.Config)
-	if !ok {
-		klog.Errorf("expected an 'influxdb.Config' type but %T was returned", input)
-		return ""
-	}
-
-	if !cfg.InfluxDBEnabled {
-		return ""
-	}
-
-	return fmt.Sprintf(
-		"influxdb server_name=%s host=%s port=%s measurement=%s enabled=true;",
-		cfg.InfluxDBServerName,
-		cfg.InfluxDBHost,
-		cfg.InfluxDBPort,
-		cfg.InfluxDBMeasurement,
-	)
-}
-
 func proxySetHeader(loc interface{}) string {
 	location, ok := loc.(*ingress.Location)
 	if !ok {
@@ -1789,25 +1763,6 @@ func shouldLoadAuthDigestModule(s interface{}) bool {
 			}
 
 			if location.BasicDigestAuth.Type == "digest" {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-// shouldLoadInfluxDBModule determines whether or not the ngx_http_auth_digest_module module needs to be loaded.
-func shouldLoadInfluxDBModule(s interface{}) bool {
-	servers, ok := s.([]*ingress.Server)
-	if !ok {
-		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
-		return false
-	}
-
-	for _, server := range servers {
-		for _, location := range server.Locations {
-			if location.InfluxDB.InfluxDBEnabled {
 				return true
 			}
 		}

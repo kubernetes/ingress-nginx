@@ -133,10 +133,6 @@ Do not try to edit it manually.
 
 - [enable the http2-push-preload directive](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/http2pushpreload.go#L34)
 
-### [influxdb-*](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/influxdb.go#L39)
-
-- [should send the request metric to the influxdb server](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/influxdb.go#L48)
-
 ### [whitelist-source-range](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/ipwhitelist.go#L27)
 
 - [should set valid ip whitelist range](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/annotations/ipwhitelist.go#L34)
@@ -460,10 +456,6 @@ Do not try to edit it manually.
 ### [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/framework/healthz.go#L)
 
 - [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/framework/healthz.go#L)
-
-### [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/framework/influxdb.go#L)
-
-- [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/framework/influxdb.go#L)
 
 ### [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/framework/k8s.go#L)
 
