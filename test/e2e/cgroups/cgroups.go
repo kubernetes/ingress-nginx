@@ -18,8 +18,11 @@ package cgroups
 
 import (
 	"github.com/onsi/ginkgo/v2"
+	"github.com/stretchr/testify/assert"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
+
+	"k8s.io/ingress-nginx/pkg/util/runtime"
 )
 
 var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
@@ -31,11 +34,11 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 	})
 
 	ginkgo.It("detects number of CPUs properly in cgroups v1", func() {
-
+		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
 	})
 
 	ginkgo.It("detects number of CPUs properly in cgroups v2", func() {
-
+		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
 	})
 
 	ginkgo.It("detects cgroups version", func() {
