@@ -30,7 +30,15 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 		f.NewSlowEchoDeployment()
 	})
 
-	ginkgo.It("run this test properly", func() {
+	ginkgo.It("detects number of CPUs properly in cgroups v1", func() {
+
+	})
+
+	ginkgo.It("detects number of CPUs properly in cgroups v2", func() {
+
+	})
+
+	ginkgo.It("detects cgroups version", func() {
 
 	})
 })
