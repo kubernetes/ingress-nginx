@@ -123,11 +123,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/opentracing-trust-incoming-span](#opentracing-trust-incoming-span)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-opentelemetry](#enable-opentelemetry)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-spans)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/enable-influxdb](#influxdb)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/influxdb-measurement](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
 |[nginx.ingress.kubernetes.io/enable-modsecurity](#modsecurity)|bool|
 |[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
@@ -895,29 +890,6 @@ nginx 0.25.0 and above
 nginx.ingress.kubernetes.io/modsecurity-snippet: |
 Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ```
-
-### InfluxDB
-
-Using `influxdb-*` annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
-using the [nginx-influxdb-module](https://github.com/influxdata/nginx-influxdb-module/).
-
-```yaml
-nginx.ingress.kubernetes.io/enable-influxdb: "true"
-nginx.ingress.kubernetes.io/influxdb-measurement: "nginx-reqs"
-nginx.ingress.kubernetes.io/influxdb-port: "8089"
-nginx.ingress.kubernetes.io/influxdb-host: "127.0.0.1"
-nginx.ingress.kubernetes.io/influxdb-server-name: "nginx-ingress"
-```
-
-For the `influxdb-host` parameter you have two options:
-
-- Use an InfluxDB server configured with the  [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/) enabled.
-- Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
-anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.7/plugins/outputs) like InfluxDB, Apache Kafka,
-Prometheus, etc.. (recommended)
-
-It's important to remember that there's no DNS resolver at this stage so you will have to configure
-an ip address to `nginx.ingress.kubernetes.io/influxdb-host`. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use `127.0.0.1`.
 
 ### Backend Protocol
 
